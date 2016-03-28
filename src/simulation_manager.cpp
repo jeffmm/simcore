@@ -57,31 +57,31 @@ void SimulationManager::CheckVariations() {
 }
 
 void SimulationManager::CreateVariations(int n_arr) {
-  int *size_arr = new int(n_arr);
-  int *i_arr = new int(n_arr);
-  int j_arr = 0;
-  for(YAML::iterator it=node.begin(); it!=node.end(); ++it) {
-    if (it->second.size() > 1) {
-      size_arr[j_arr] = it->second.size();
-      i_arr[j_arr] = 0;
-      j_arr++;
-    }
-  }
+  //int *size_arr = new int(n_arr);
+  //int *i_arr = new int(n_arr);
+  //int j_arr = 0;
+  //for(YAML::iterator it=node.begin(); it!=node.end(); ++it) {
+    //if (it->second.size() > 1) {
+      //size_arr[j_arr] = it->second.size();
+      //i_arr[j_arr] = 0;
+      //j_arr++;
+    //}
+  //}
 
-  int i_var = 0;
-  for (j_arr = 0; j_arr < n_arr; ++j_arr) {
-    for (int k_arr = 0; k_arr < size_arr[j_arr]; ++k_arr) {
-      std::ostringstream param_var_file;
-      param_var_file << param_file_ << i_var;
-      YAML::Node node = YAML::LoadFile(param_file_);
-      std::ofstream param_var((param_var_file.str()).c_str(), std::ios_base::out | std::ios_base::app);
-      for(YAML::iterator it=node.begin(); it!=node.end(); ++it) {
-        std::string param_name = it->first.as<std::string>();
-        std::string param_value = it->second.as<std::string>();
-        param_var << param_name << " : " << param_value << "\n";
-      }
-    }
-  }
+  //int i_var = 0;
+  //for (j_arr = 0; j_arr < n_arr; ++j_arr) {
+    //for (int k_arr = 0; k_arr < size_arr[j_arr]; ++k_arr) {
+      //std::ostringstream param_var_file;
+      //param_var_file << param_file_ << i_var;
+      //YAML::Node node = YAML::LoadFile(param_file_);
+      //std::ofstream param_var((param_var_file.str()).c_str(), std::ios_base::out | std::ios_base::app);
+      //for(YAML::iterator it=node.begin(); it!=node.end(); ++it) {
+        //std::string param_name = it->first.as<std::string>();
+        //std::string param_value = it->second.as<std::string>();
+        //param_var << param_name << " : " << param_value << "\n";
+      //}
+    //}
+  //}
 }
 
 void SimulationManager::ParseParams(std::string param_file) {
