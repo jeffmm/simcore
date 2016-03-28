@@ -1,0 +1,10 @@
+*.swp
+/cytoscore
+/src/*.o
+*.dSYM/*
+tags
+/frames
+/mov*
+/*.txt
+/data
+*ipynb_checkpoints

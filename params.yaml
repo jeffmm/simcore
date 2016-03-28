@@ -1,0 +1,63 @@
+# cytoscore.yaml
+pair_interaction_flag : [2, 4]
+seed : 218143769140
+validate_file_number: 20
+cell_list_flag: 1
+graph_flag : 0
+n_graph : 50  # number of frames between refreshing graphics
+potential_flag: 1
+mother_radius : 12 # radius of mother cell
+delta : .001
+n_filaments_free : 5 # maximum number of microtubules on one spb (there are two spbs in system)
+n_dim : 2
+n_periodic: 2
+particle_radius: .5 
+n_particles: 0 
+temp: 10
+n_validate : 1000
+persistence_length : 100
+friction_ratio : 2
+min_segment_length : 1
+max_segment_length : 2
+min_length : 20.01
+max_length : 20.01
+boundary_type : 1
+insert_type : 0  # 0 for Random, manual otherwise
+n_filaments_attached : 0
+n_spheres : 0
+n_steps : 500000 # number of steps for simulation
+dynamic_instability_flag : 0  # flags for simulation
+force_induced_catastrophe_flag : 0
+rigid_tether_flag : 1
+error_analysis_flag : 0
+grab_flag : 0
+grab_file : frames/frame
+save_state_flag : 0
+n_save_state : 100000
+metric_forces : 1
+theta_validation_flag : 0
+buckling_analysis_flag : 0
+buckle_rate : 0.1
+spring_buckling_init : 0
+time_analysis_flag : 1
+n_buckle_on : 1000000000
+n_buckle_off : 1
+buckle_parameter : 0.1
+n_bins : 1000
+daughter_radius : .1  # radius of daughter cell
+mother_daughter_dist : 20  # distance between mother-daughter cell centers
+sphere_radius : 12  # radius of spindle blob
+filament_diameter : 1  # diameter of microtubule
+spring_filament_sphere : 500 # spring constant for potential between spindleball and mts
+r_cutoff_sphere : 1.1225 # cutoffs for potentials
+r_cutoff_boundary : 1.1225 # cutoffs for potentials
+f_shrink_to_grow : 0.017  # Frequencies for dynamic instability
+f_shrink_to_pause : 0.0 
+f_pause_to_grow : 0.0
+f_pause_to_shrink : 0.0 
+f_grow_to_pause : 0.0 
+f_grow_to_shrink : 0.00554 
+v_poly : 0.44 
+v_depoly : 0.793 
+graph_diameter : 1
+graph_background : 0 # 1 is white, 0 is black
