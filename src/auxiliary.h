@@ -16,6 +16,8 @@
 #include <fstream>
 #include <sstream>
 
+// No u
+
 struct graph_struct {
   int n_spheros;
   int i_sphero;
