@@ -18,6 +18,7 @@ class SimulationManager {
     void ParseParams(std::string param_file);
     void GetSeed(std::string param_file);
     void CheckVariations();
+    void CreateVariations(int n_arr);
     void RunSimulations();
 
   public:
