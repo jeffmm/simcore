@@ -10,6 +10,7 @@
 #include "particle.h"
 #include "species.h"
 #include "cell_list.h"
+#include "cell_list_traditional.h"
 #include "potential_manager.h"
 
 #if defined(_OPENMP)
@@ -39,6 +40,8 @@ public:
     void velverlet();
     void output(FILE* erg, FILE* traj, int nfi);
     void calcPotential(int psid1, int psid2, double x[3], double y[3], double* fpote);
+    
+    void testCellListTraditional();
 
     std::pair<double, double> ukin();
     int nParticles();
@@ -56,6 +59,7 @@ protected:
     double dt_;
 
     CellList cell_list_;
+    CellListTraditional cell_list_traditional_;
     PotentialManager potential_manager_;
     std::unordered_map<int, BaseSpecies*> species_;
     std::vector<particle*> particles_;
