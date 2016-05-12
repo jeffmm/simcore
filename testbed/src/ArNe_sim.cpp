@@ -134,6 +134,8 @@ int main(int argc, char **argv) {
     // Dump everything to check
     ArNeSys->dump();
     ArNeSys->checkConsistency();
+    
+    ArNeSys->testCellListTraditional();
 
 
     // Create the potentials

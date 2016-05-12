@@ -128,6 +128,33 @@ SystemArch::generateCellList() {
 }
 
 
+// Test the traditional cell list
+void
+SystemArch::testCellListTraditional() {
+    // Determine the total number of particles
+    // And the box size
+    // And the largest cutoff radius
+    std::cout << "System generating new cell list\n";
+    double max_rcut = 0;
+    
+    for (int i = 0; i < nsys_; ++i) {
+        auto currentSpecies = getSpecies(i);
+        max_rcut = std::max(max_rcut, currentSpecies->getRcut());
+    }
+    
+    // Flatten the particles
+    //flattenParticles();
+    
+    // Create the cell list
+    // Fake dimensions to test higher dim stuff
+    //cell_list_traditional_.CreateCellList(nparticles_, max_rcut, (double[]){100.0,100.0,100.0});
+    double box[3] = {box_, box_, box_};
+    cell_list_traditional_.CreateCellList(nparticles_, max_rcut, box);
+    cell_list_traditional_.UpdateCellList(&particles_);
+    cell_list_traditional_.CheckCellList();
+}
+
+
 // Update the cell list
 void
 SystemArch::updateCellList() {

@@ -6,14 +6,19 @@
 #include <vector>
 #include <memory>
 
-#include "particleBase.h"
+#include "particle.h"
 
 class CellTraditional {
 public:
     CellTraditional() {
-        memcpy(adjacent_cells_, adjacent_cells_ + 26*sizeof(int), 0);
+        memcpy(adjacent_cells_, adjacent_cells_ + 27*sizeof(int), 0);
     }
     ~CellTraditional() {}
+    unsigned long GetMemoryFootprint() {
+        auto mysize = sizeof(*this);
+        auto vecsize = sizeof(int) * idxlist_.capacity();
+        return mysize + vecsize;
+    }
     
     int cell_id_; // ID of this cell
     int nparticles_; // Number of particles in this cell
@@ -28,7 +33,13 @@ public:
     ~CellListTraditional() {}
     
     void CreateCellList(int pN, double pRcut, double pBox[3]);
-    void UpdateCellList(std::vector<std::shared_ptr<particleBase>>& particles);
+    void UpdateCellList(std::vector<particle*>* particles);
+    void CheckCellList();
+    
+    unsigned long GetMemoryFootprint();
+    
+    // Simple getters
+    int ncells() { return ncells_; }
     
 
 private:
