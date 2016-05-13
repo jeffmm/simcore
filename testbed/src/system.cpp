@@ -231,7 +231,7 @@ SystemArch::forceMP() {
                     int jj = cell2->idxlist_[pidx2];
                     auto part2 = particles_[jj];
 
-                    calcPotential(part1->sid, part1->sid, part1->x, part2->x, f_epot);
+                    calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
                     epot += f_epot[3];
                     fx[ii] += f_epot[0];
                     fy[ii] += f_epot[1];
