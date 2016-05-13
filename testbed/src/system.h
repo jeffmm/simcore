@@ -37,11 +37,12 @@ public:
     void dumpPotentials();
     void checkConsistency();
     void forceMP();
+    void forceMP_traditional();
     void velverlet();
     void output(FILE* erg, FILE* traj, int nfi);
     void calcPotential(int psid1, int psid2, double x[3], double y[3], double* fpote);
     
-    void testCellListTraditional();
+    void generateCellListTraditional();
 
     std::pair<double, double> ukin();
     int nParticles();

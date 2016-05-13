@@ -129,13 +129,13 @@ int main(int argc, char **argv) {
     }
 
     // Initialize the engine
-    ArNeSys->generateCellList();
+    //ArNeSys->generateCellList();
 
     // Dump everything to check
     ArNeSys->dump();
     ArNeSys->checkConsistency();
     
-    ArNeSys->testCellListTraditional();
+    ArNeSys->generateCellListTraditional();
 
 
     // Create the potentials
@@ -146,7 +146,8 @@ int main(int argc, char **argv) {
     ArNeSys->dumpPotentials();
 
     // Finish initialization
-    ArNeSys->forceMP();
+    //ArNeSys->forceMP();
+    ArNeSys->forceMP_traditional();
     ArNeSys->ukin();
 
     erg = fopen(ergfile, "w");

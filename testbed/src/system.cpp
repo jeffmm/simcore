@@ -130,7 +130,7 @@ SystemArch::generateCellList() {
 
 // Test the traditional cell list
 void
-SystemArch::testCellListTraditional() {
+SystemArch::generateCellListTraditional() {
     // Determine the total number of particles
     // And the box size
     // And the largest cutoff radius
@@ -143,7 +143,7 @@ SystemArch::testCellListTraditional() {
     }
     
     // Flatten the particles
-    //flattenParticles();
+    flattenParticles();
     
     // Create the cell list
     // Fake dimensions to test higher dim stuff
@@ -304,6 +304,68 @@ SystemArch::forceMP() {
         part->f[2] = frc_[2*nparticles_ + i];
     }
     upot_ = epot;
+}
+
+
+// Traditional MP force generation routine
+void
+SystemArch::forceMP_traditional() {
+    double epot = 0.0;
+    
+#if defined(_OPENMP)
+#pragma omp parallel reduction(+:eopt)
+#endif
+    {
+        int tid;
+        double *fx, *fy, *fz;
+        double f_epot[4];
+        
+#if defined(_OPENMP)
+        tid = omp_get_thread_num();
+#else
+        tid = 0;
+#endif
+        
+        // Set up the pointers to the force superarray
+        fx = frc_.data() + (3*tid*nparticles_);
+        buffmd::azzero(fx, 3*nparticles_);
+        fy = frc_.data() + ((3*tid+1)*nparticles_);
+        fz = frc_.data() + ((3*tid+2)*nparticles_);
+        
+        // Loop over all cells, and compute interactions based on the adjacent cells!
+        
+        // Check within my own cell
+        int ncells = cell_list_traditional_.ncells();
+        for (int cidx = 0; cidx < ncells; cidx += nthreads_) {
+            // Set my index (threaded)
+            int cjdx = cidx + tid;
+            if (cjdx >= ncells) break;
+            
+            // Get the actual cell
+            auto c1 = cell_list_traditional_[cjdx];
+            // Loop over particles in my cell
+            for (int pidx1 = 0; pidx1 < c1->nparticles_ - 1; ++pidx1) {
+                int ii = c1->idxlist_[pidx1];
+                auto part1 = particles_[ii];
+                
+                // Get my interacting partner
+                for (int pidx2 = pidx1 + 1; pidx2 < c1->nparticles_; ++pidx2) {
+                    int jj = c1->idxlist_[pidx2];
+                    auto part2 = particles_[jj];
+                    
+                    // grab my potential and run with it
+                    calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
+                    fx[ii] += f_epot[0];
+                    fy[ii] += f_epot[1];
+                    fz[ii] += f_epot[2];
+                    fx[jj] -= f_epot[0];
+                    fy[jj] -= f_epot[1];
+                    fz[jj] -= f_epot[2];
+                } // interacting partner
+            } // first particle
+        } // Cell loop
+        
+    } // omp parallel reduction
 }
 
 
