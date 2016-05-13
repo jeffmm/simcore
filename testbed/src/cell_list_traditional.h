@@ -41,6 +41,10 @@ public:
     // Simple getters
     int ncells() { return ncells_; }
     
+    // Operators
+    CellTraditional* operator [](int cidx) {
+        return &clist_[cidx];
+    }
 
 private:
 
