@@ -129,14 +129,11 @@ int main(int argc, char **argv) {
     }
 
     // Initialize the engine
-    //ArNeSys->generateCellList();
+    ArNeSys->generateCellList();
 
     // Dump everything to check
     ArNeSys->dump();
     ArNeSys->checkConsistency();
-    
-    ArNeSys->generateCellListTraditional();
-
 
     // Create the potentials
     // The order matters for Newton's 3rd law
@@ -146,8 +143,7 @@ int main(int argc, char **argv) {
     ArNeSys->dumpPotentials();
 
     // Finish initialization
-    //ArNeSys->forceMP();
-    ArNeSys->forceMP_traditional();
+    ArNeSys->forceMP();
     ArNeSys->ukin();
 
     erg = fopen(ergfile, "w");

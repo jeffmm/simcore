@@ -7,41 +7,67 @@
 #include <cmath>
 
 #include "particle.h"
-#include "species.h"
 
 // Each actual cell has information about the ids of the particles
 struct _cell {
-    int nparticles;
-    int owner;
-    // Particle id list
-    std::vector<int> idxlist;
-    // Particle type list
-    std::vector<int> ptidxlist;
+    unsigned long GetMemoryFootprint() {
+        auto mysize = sizeof(*this);
+        auto vecsize = sizeof(int)*idxlist_.capacity();
+        return mysize + vecsize;
+    }
+    
+    int cell_id_; // ID of this cell
+    int nparticles_; // Number of particles in this cell
+    std::vector<int> idxlist_; // ID list of particles in this cell
 };
 typedef struct _cell cell_t;
 
 class CellList {
 public:
-    CellList();
-    void generateCells(int npart, double box, double rcut);
-    void updateCells(double box, std::vector<particle*>* particles);
-    int nCells();
-    int nPairs();
-    cell_t* getCell(int idx);
-    int getPair(int idx);
+    
+    CellList() {}
+    ~CellList() {}
+    
+    void CreateCellList(int pN, double pRcut, double pBox[3]);
+    void UpdateCellList(std::vector<particle*>* particles);
+    void CheckCellList();
+    
+    unsigned long GetMemoryFootprint();
+    
+    // Simple getters
+    int ncells() { return ncells_; }
+    int npairs() { return npairs_; }
+    int plist(int pairidx) {
+        return plist_[pairidx];
+    }
+    
+    // Operators
+    cell_t* operator [](int cidx) {
+        return &clist_[cidx];
+    }
+    
 
 protected:
-    int ngrid;
-    int ncell;
-    int npair;
-    int nidx, midx;
-    int nparticles;
-
-    double delta;
-    const double cellrat = 2.0;
-
-    std::vector<cell_t> clist;
-    std::vector<int> plist;
+    
+    // Inputs
+    int nparticles_;
+    double rcut_;
+    double box_[3];
+    
+    // Computed quantities
+    int ncells_;
+    int npairs_;
+    int nidx_;
+    int T_[3];
+    double S_[3];
+    double boxby2_[3];
+    
+    // Vector of the cells themselves, and pair list
+    std::vector<cell_t> clist_;
+    std::vector<int> plist_;
+    
+    const int cellrat_ = 2;
+    
 };
 
 #endif
