@@ -137,6 +137,25 @@ SystemArch::updateCellList() {
 }
 
 
+// Test out various cell lists
+void
+SystemArch::testCellLists() {
+    /*
+    double max_rcut = 0.0;
+
+    for (int i = 0; i < nsys_; ++i) {
+        auto currentSpecies = getSpecies(i);
+        max_rcut = std::max(max_rcut, currentSpecies->getRcut());
+    }
+
+    double mbox[3] = {box_, box_, box_};
+    cell_list_adj_.CreateCellList(nparticles_, max_rcut, mbox);
+    cell_list_adj_.UpdateCellList(&particles_);
+    cell_list_adj_.CheckCellList();
+    */
+}
+
+
 // Calculate the potential between two particles
 void
 SystemArch::calcPotential(int psid1, int psid2, double* x, double* y, double* fpote) {
