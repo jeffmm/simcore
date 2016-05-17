@@ -30,6 +30,7 @@ class SpaceProperties {
            **unit_cell_inv_;
     rng_properties rng_;
     system_parameters *params_;
+    space_struct s_struct;
 
   public:
     SpaceProperties();
@@ -52,8 +53,11 @@ class SpaceProperties {
     double **GetUnitCell();
     double **GetUnitCellInv();
     boundary_type_t GetType();
+    std::string GetTypeString();
     bool CheckInBounds(double *vec, double buffer);
     bool CheckSegmentInBounds(double *vec1, double *vec2, double buffer);
+    space_struct * GetStruct();
+    void UpdateSpaceStruct();
 };
 
 #endif // _CYTOSCORE_SPACE_PROPERTIES_H_

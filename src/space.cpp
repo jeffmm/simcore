@@ -8,7 +8,7 @@ void SpaceProperties::Init(system_parameters *params, long seed) {
   params_ = params;
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
-  radius_ = params_->mother_radius;
+  radius_ = params_->system_radius;
   d_radius_ = 0;
   m_d_dist_ = 0;
   r_cutoff_ = params_->r_cutoff_boundary;
@@ -34,6 +34,7 @@ void SpaceProperties::Init(system_parameters *params, long seed) {
   InitUnitCell();
   CalculateVolume();
   rng_.init(seed);
+  UpdateSpaceStruct();
 }
 
 void SpaceProperties::Clear() {
@@ -263,6 +264,25 @@ boundary_type_t SpaceProperties::GetType() {
   return boundary_type_;
 }
 
+std::string SpaceProperties::GetTypeString() {
+  std::string type;
+  switch (boundary_type_) {
+    case 0:
+      type = "sphere";
+      break;
+    case 1:
+      type = "cube";
+      break;
+    case 2:
+      type = "snowman";
+      break;
+    default:
+      type = "none";
+      break;
+  }
+  return type;
+}
+
 double *SpaceProperties::GetAPerp() {
     return a_perp_;
 }
@@ -273,4 +293,23 @@ double SpaceProperties::GetIntersectHeight() {
 
 double SpaceProperties::GetIntersectRadius() {
   return intersect_radius_;
+}
+
+void SpaceProperties::UpdateSpaceStruct() {
+  s_struct.n_dim = n_dim_;
+  s_struct.type = GetTypeString();
+  if (GetType() == 2) {
+    s_struct.bud = true;
+    s_struct.bud_height = m_d_dist_;
+    s_struct.bud_radius = d_radius_;
+  }
+  else {
+    s_struct.bud = false;
+  }
+  s_struct.radius = radius_;
+  s_struct.unit_cell = unit_cell_;
+}
+
+space_struct * SpaceProperties::GetStruct() {
+  return &s_struct;
 }

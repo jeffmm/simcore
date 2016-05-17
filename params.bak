@@ -1,0 +1,60 @@
+# snowman.yaml
+
+seed : 139450840680
+n_runs: 1
+run_name: cs
+persistence_length : 100
+friction_ratio : 2
+min_segment_length : 2
+max_segment_length : 8
+delta : .001
+min_length : 20.01
+max_length : 260.01
+boundary_type : 1
+n_dim : 3
+insert_type : 0  # 0 for Random, manual otherwise
+n_filaments_free : 1 # maximum number of microtubules on one spb (there are two spbs in system)
+n_filaments_attached : 0
+n_spheres : 0
+n_steps : 100000000 # number of steps for simulation
+dynamic_instability_flag : 0  # flags for simulation
+force_induced_catastrophe_flag : 0
+rigid_tether_flag : 1
+error_analysis_flag : 0
+graph_flag : 0
+grab_flag : 0
+grab_file : frames/frame
+pair_interaction_flag : 1
+save_state_flag : 0
+n_save_state : 100000
+metric_forces : 1
+n_validate : 10000000
+theta_validation_flag : 0
+position_correlation_flag : 1
+buckling_analysis_flag : 0
+buckle_rate : 0.1
+spring_buckling_init : 0
+time_analysis_flag : 1
+n_buckle_on : 1000000000
+n_buckle_off : 1
+buckle_parameter : 0.1
+n_bins : 2000
+n_graph : 200  # number of frames between refreshing graphics
+mother_radius : 20  # radius of mother cell
+daughter_radius : 80  # radius of daughter cell
+mother_daughter_dist : 160  # distance between mother-daughter cell centers
+sphere_radius : 12  # radius of spindle blob
+filament_diameter : 1  # diameter of microtubule
+spring_filament_sphere : 500 # spring constant for potential between spindleball and mts
+r_cutoff_sphere : 0.11225 # cutoffs for potentials
+r_cutoff_boundary : 1.1225 # cutoffs for potentials
+f_shrink_to_grow : 0.017  # Frequencies for dynamic instability
+f_shrink_to_pause : 0.0 
+f_pause_to_grow : 0.0
+f_pause_to_shrink : 0.0 
+f_grow_to_pause : 0.0 
+f_grow_to_shrink : 0.00554 
+v_poly : 0.44 
+v_depoly : 0.793 
+graph_diameter : 1
+graph_background : 1 # 1 is white, 0 is black

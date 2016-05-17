@@ -16,19 +16,11 @@
 #include <fstream>
 #include <sstream>
 
-// No u
-
 struct graph_struct {
-  int n_spheros;
-  int i_sphero;
-  double **h;
-  double **r;
-  double **u;
-  double *l;
-  double *diam;
-  double m_rad;
-  double d_rad;
-  double m_d_dist;
+  double r[3];
+  double u[3];
+  double length;
+  double diameter;
 };
 
 struct rng_properties { 
@@ -45,8 +37,18 @@ struct rng_properties {
   }
 };
 
+struct space_struct {
+  int n_dim;
+  bool bud;
+  double radius;
+  double bud_radius;
+  double bud_height;
+  double **unit_cell;
+  std::string type;
+};
+
 struct interaction {
-  int tid; // type of interacting object (to determine potential)
+  double *pot(double *r); // interaction potential (returns force)
   double *dr; // distance to object
   double rad; // interaction radius of object
 };
