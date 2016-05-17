@@ -135,7 +135,6 @@ int main(int argc, char **argv) {
     ArNeSys->dump();
     ArNeSys->checkConsistency();
 
-
     // Create the potentials
     // The order matters for Newton's 3rd law
     ArNeSys->addPotential(0, 0, lj126_ar);

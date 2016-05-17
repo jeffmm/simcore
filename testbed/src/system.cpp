@@ -123,15 +123,17 @@ SystemArch::generateCellList() {
     flattenParticles();
 
     // Create the cell list
-    cell_list_.generateCells(nparticles_, box_, max_rcut);
-    updateCellList();
+    double mbox[3] = {box_, box_, box_};
+    cell_list_.CreateCellList(nparticles_, max_rcut, mbox);
+    cell_list_.UpdateCellList(&particles_);
+    cell_list_.CheckCellList();
 }
 
 
 // Update the cell list
 void
 SystemArch::updateCellList() {
-    cell_list_.updateCells(box_, &particles_);
+    cell_list_.UpdateCellList(&particles_);
 }
 
 
@@ -183,29 +185,25 @@ SystemArch::forceMP() {
         fz = frc_.data() + ((3*tid+2)*nparticles_);
 
         // Check within my own cell
-        int ncells = cell_list_.nCells();
+        int ncells = cell_list_.ncells();
         for (int cidx = 0; cidx < ncells; cidx += nthreads_) {
             // set the index
             int cjdx = cidx + tid;
             if (cjdx >= ncells) break;
 
             // Get the actual cell
-            auto c1 = cell_list_.getCell(cjdx);
+            auto c1 = cell_list_[cjdx];
             // Loop over particles in said cell
-            for (int pidx1 = 0; pidx1 < c1->nparticles - 1; ++pidx1) {
-                // Get my species and base particle 
-                auto species1 = getSpecies(c1->ptidxlist[pidx1]);
-                int ii = c1->idxlist[pidx1];
+            for (int pidx1 = 0; pidx1 < c1->nparticles_ - 1; ++pidx1) {
+                int ii = c1->idxlist_[pidx1];
                 auto part1 = particles_[ii];
 
                 // Get my interacting partner
-                for(int pidx2 = pidx1 + 1; pidx2 < c1->nparticles; ++pidx2) {
-                    auto species2 = getSpecies(c1->ptidxlist[pidx2]);
-                    int jj = c1->idxlist[pidx2];
+                for(int pidx2 = pidx1 + 1; pidx2 < c1->nparticles_; ++pidx2) {
+                    int jj = c1->idxlist_[pidx2];
                     auto part2 = particles_[jj];
 
-                    //getPotential(species1->getSid(), species2->getSid())->CalcPotential(part1->x, part2->x, f_epot);
-                    calcPotential(species1->getSid(), species2->getSid(), part1->x, part2->x, f_epot);
+                    calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
                     epot += f_epot[3];
                     fx[ii] += f_epot[0];
                     fy[ii] += f_epot[1];
@@ -218,25 +216,22 @@ SystemArch::forceMP() {
         }  // Cell loop
 
         // Interactions across different cells
-        int npairs = cell_list_.nPairs();
+        int npairs = cell_list_.npairs();
         for (int pairidx = 0; pairidx < npairs; pairidx += nthreads_) {
             int pairjdx = pairidx + tid;
             if (pairjdx >= npairs) break;
-            auto cell1 = cell_list_.getCell(cell_list_.getPair(2*pairjdx  ));
-            auto cell2 = cell_list_.getCell(cell_list_.getPair(2*pairjdx+1));
+            auto cell1 = cell_list_[cell_list_.plist(2*pairjdx  )];
+            auto cell2 = cell_list_[cell_list_.plist(2*pairjdx+1)];
 
-            for (int pidx1 = 0; pidx1 < cell1->nparticles; ++pidx1) {
-                int ii = cell1->idxlist[pidx1];
-                auto species1 = getSpecies(cell1->ptidxlist[pidx1]);
+            for (int pidx1 = 0; pidx1 < cell1->nparticles_; ++pidx1) {
+                int ii = cell1->idxlist_[pidx1];
                 auto part1 = particles_[ii];
 
-                for (int pidx2 = 0; pidx2 < cell2->nparticles; ++pidx2) {
-                    int jj = cell2->idxlist[pidx2];
-                    auto species2 = getSpecies(cell2->ptidxlist[pidx2]);
+                for (int pidx2 = 0; pidx2 < cell2->nparticles_; ++pidx2) {
+                    int jj = cell2->idxlist_[pidx2];
                     auto part2 = particles_[jj];
 
-                    //getPotential(species1->getSid(), species2->getSid())->CalcPotential(part1->x, part2->x, f_epot);
-                    calcPotential(species1->getSid(), species2->getSid(), part1->x, part2->x, f_epot);
+                    calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
                     epot += f_epot[3];
                     fx[ii] += f_epot[0];
                     fy[ii] += f_epot[1];

@@ -86,6 +86,13 @@ namespace buffmd {
         while (x < -boxby2) x += box;
         return x;
     }
+    
+    __attribute__((always_inline,pure))
+    static inline double pbc2(double x, const double box) {
+        while (x > box) x -= box;
+        while (x < 0  ) x += box;
+        return x;
+    }
 
     __attribute((always_inline))
     static inline void azzero(double *d, const int n) {
@@ -95,6 +102,35 @@ namespace buffmd {
     }
 
     template<class... T> void unused(T&&...) {}
+    
+    // From bithacks online
+    __attribute__((always_inline))
+    static inline unsigned int nextpow2(unsigned int v) {
+        v--;
+        
+        v |= v >> 1;
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        v++;
+        
+        return v;
+    }
+    
+    __attribute__((always_inline))
+    static inline int cell_vec_to_linear(int cx, int cy, int cz, int nc[3]) {
+        return cx + cy*nc[0] + cz*nc[0]*nc[1];
+    }
+    // cidx = buffmd::cell_vec_to_linear((int[]){cx,cy,cz}, T_);
+    
+    __attribute__((always_inline))
+    static inline void cell_linear_to_vec(int cidx, int nc[3], int* cx) {
+        cx[0] = cidx % nc[0];
+        cx[1] = (cidx / nc[0]) % nc[1];
+        cx[2] = cidx / (nc[0] * nc[1]);
+    }
+    // buffmd::cell_linear_to_vec(cidx, T_, c_test);
 }
 
 #endif
