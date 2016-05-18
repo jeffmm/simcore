@@ -1,7 +1,7 @@
 // Most basic Cell List implementation I can think of
 // Operates on base particles, with some given cutoff
-#ifndef BUFFMD_CELLLIST_H_
-#define BUFFMD_CELLLIST_H_
+#ifndef BUFFMD_CELLLISTADJ_H_
+#define BUFFMD_CELLLISTADJ_H_
 
 #include <vector>
 #include <cmath>

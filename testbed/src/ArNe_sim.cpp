@@ -30,6 +30,9 @@ int main(int argc, char **argv) {
     unsigned int natoms = 0, nsteps = 0;
     int nprint = 0;
     double mass, eps, sigma, rcut, box, dt;
+    
+    // Set the skin ourselves for now
+    double skin = 1.0;
 
     // Read in the test files
     if(std::getline(input_file, line)) {
@@ -129,7 +132,7 @@ int main(int argc, char **argv) {
     }
 
     // Initialize the engine
-    ArNeSys->generateCellList();
+    ArNeSys->initMP(skin);
 
     // Dump everything to check
     ArNeSys->dump();
@@ -143,7 +146,8 @@ int main(int argc, char **argv) {
     ArNeSys->dumpPotentials();
 
     // Finish initialization
-    ArNeSys->forceMP();
+    //ArNeSys->forceCellsMP();
+    ArNeSys->forceNeighAP();
     ArNeSys->ukin();
 
     erg = fopen(ergfile, "w");
@@ -164,9 +168,12 @@ int main(int argc, char **argv) {
         ArNeSys->ukin();
 
         // update the cell list
-        if ((i_step % cellfreq) == 0)
-            ArNeSys->updateCellList();
+        //if ((i_step % cellfreq) == 0)
+        //    ArNeSys->updateCellList();
     }
-
+    
+    printf("********\n");
+    printf("Final statistics:\n");
+    ArNeSys->statistics(nsteps);
     return 0;
 }
