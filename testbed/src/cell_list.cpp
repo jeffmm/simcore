@@ -97,6 +97,7 @@ CellList::CreateCellList(int pN, double pRcut, double pBox[3]){
             ++npairs_;
         }
     }
+    printf("********\n");
     printf("Cell list has %dx%dx%d=%d cells of lengths {%.2f,%.2f,%.2f} "
            "with %d/%d pairs and %d particles/cell.\n", T_[0], T_[1], T_[2], ncells_, S_[0], S_[1], S_[2],
            npairs_, ncells_*(ncells_-1)/2, nidx_);
