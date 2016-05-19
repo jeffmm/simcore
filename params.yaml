@@ -1,8 +1,8 @@
 # params.yaml
 ---
 n_dim: 2
-n_periodic: 0
-system_radius: 10
+n_periodic: 2
+system_radius: 20
 daughter_radius: 5
 mother_daughter_dist: 22
 boundary_type: 1
@@ -10,7 +10,7 @@ n_dimer: 10
 dimer_diameter: 1
 dimer_length: 2
 dimer_eq_length: 2
-dimer_k_spring: 1000
+dimer_k_spring: 5
 graph_flag: 1
 n_graph: 1000
 delta: 0.00001
