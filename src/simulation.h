@@ -9,29 +9,27 @@
 //#include "parameters.h"
 #include "write_outputs.h"
 #include "graphics.h"
+#include "species.h"
 #include "simple.h"
-#include "species_base.h"
+#include "composite.h"
 #include "objects.h"
 //#include "particle_md_system.h"
 
 class Simulation {
 
   private:
-    int i_step,
-        i_run;
-    double time,
-           cpu_init_time;
+    int i_step_;
+    double time_,
+           cpu_init_time_;
     std::string run_name_;
     system_parameters params_;
-    rng_properties rng;
+    rng_properties rng_;
     
-    Graphics graphics;
-    graph_struct g_struct;
-    SpaceProperties space;
+    Graphics graphics_;
+    SpaceProperties space_;
     //IntegratorManager integrator;
     //ExternalForces forces;
     std::vector<SpeciesBase*> species_;
-    //std::vector<BrownianDimer> dimers_;
     void InitSimulation();
     void InitSpecies();
     void ClearSpecies();

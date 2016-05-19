@@ -4,10 +4,10 @@
 #include "auxiliary.h"
 #include "parameters.h"
 #include <yaml-cpp/yaml.h>
-#include "species_base.h"
+#include "composite.h"
 #include "bead.h"
 
-class BrownianDimer : public Species<Bead> {
+class BrownianDimer : public Composite<Bead> {
   private:
     /* Unique to BrownianDimer */
     double eq_length_;
@@ -19,11 +19,11 @@ class BrownianDimer : public Species<Bead> {
     void KickBeads();
     void UpdateOrientation();
     void InitRandom(double sys_radius); // Temporary, get space to do this
-    graph_struct g2_; // Drawing two spheros;
+    graph_struct g2_; // Drawing two spheros, one for each bead;
 
   public:
     //Constructor
-    BrownianDimer(int n_dim, double delta, long seed) : Species(n_dim, delta, seed) {
+    BrownianDimer(int n_dim, double delta, long seed) : Composite(n_dim, delta, seed) {
       for (int i=0; i<2; ++i) {
         Bead b(n_dim_, delta_, gsl_rng_get(rng_.r));
         elements_.push_back(b);
@@ -37,7 +37,7 @@ class BrownianDimer : public Species<Bead> {
     //Destructor
     ~BrownianDimer() {}
     //Copy constructor
-    BrownianDimer(const BrownianDimer& that) : Species(that) {
+    BrownianDimer(const BrownianDimer& that) : Composite(that) {
       eq_length_=that.eq_length_;
       k_spring_=that.k_spring_;
       g2_=that.g2_;
@@ -45,7 +45,7 @@ class BrownianDimer : public Species<Bead> {
     }
     //Assignment constructor
     BrownianDimer& operator=(BrownianDimer const& that) {
-      Species::operator=(that);
+      Composite::operator=(that);
       eq_length_=that.eq_length_;
       k_spring_=that.k_spring_;
       g2_=that.g2_;

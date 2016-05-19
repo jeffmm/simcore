@@ -1,17 +1,16 @@
-#ifndef _CYTOSCORE_SPECIES_BASE_H_
-#define _CYTOSCORE_SPECIES_BASE_H_
+#ifndef _CYTOSCORE_COMPOSITE_H_
+#define _CYTOSCORE_COMPOSITE_H_
 
 #include "auxiliary.h"
 #include "simple.h"
 #include "parameters.h"
 
-class SpeciesBase {
+class CompositeBase {
   protected:
     int n_dim_;
     int n_periodic_;
     double delta_;
     rng_properties rng_;
-    //std::vector<Simple*> elements_; // Generalize to simples
     graph_struct g_;
     space_struct *space_;
     double length_;
@@ -22,7 +21,7 @@ class SpeciesBase {
     double force_[3];
 
   public:
-    SpeciesBase(int n_dim, double delta, long seed) {
+    CompositeBase(int n_dim, double delta, long seed) {
       n_dim_=n_dim;
       delta_ = delta;
       memset(position_,0,sizeof(position_));
@@ -34,7 +33,7 @@ class SpeciesBase {
       diameter_ = 1;
       length_ = 0;
     }
-    SpeciesBase(const SpeciesBase& that) {
+    CompositeBase(const CompositeBase& that) {
       n_dim_ = that.n_dim_;
       delta_ = that.delta_;
       length_ = that.length_;
@@ -46,7 +45,7 @@ class SpeciesBase {
       rng_.init(gsl_rng_get(that.rng_.r));
       g_ = that.g_;
     }
-    SpeciesBase& operator=(SpeciesBase const& that) {
+    CompositeBase& operator=(CompositeBase const& that) {
       n_dim_ = that.n_dim_;
       delta_ = that.delta_;
       memcpy(position_,that.position_,sizeof(position_));
@@ -78,24 +77,24 @@ class SpeciesBase {
     virtual void UpdatePosition() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
     virtual void Init(system_parameters *params, space_struct *space) {}
-    virtual ~SpeciesBase() {}
+    virtual ~CompositeBase() {rng_.clear();}
 };
 
 template <typename T>
-class Species : public SpeciesBase {
+class Composite : public CompositeBase {
   protected:
     std::vector<T> elements_;
   public:
-    Species(int n_dim, double delta, long seed) : SpeciesBase(n_dim, delta, seed) {} 
+    Composite(int n_dim, double delta, long seed) : CompositeBase(n_dim, delta, seed) {} 
     //Destructor
-    virtual ~Species() {}
+    virtual ~Composite() {}
     //Copy constructor
-    Species(const Species& that) : SpeciesBase(that) {
+    Composite(const Composite& that) : CompositeBase(that) {
       elements_=that.elements_;
     }
     //Assignment constructor
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
+    Composite& operator=(Composite const& that) {
+      CompositeBase::operator=(that);
       elements_=that.elements_;
       return *this;
     }
@@ -116,4 +115,4 @@ class Species : public SpeciesBase {
       }
     }
 };
-#endif // _CYTOSCORE_SPECIES_BASE_H_
+#endif // _CYTOSCORE_COMPOSITE_H_
