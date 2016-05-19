@@ -9,6 +9,8 @@
 //#include "parameters.h"
 #include "write_outputs.h"
 #include "graphics.h"
+#include "simple.h"
+#include "species_base.h"
 #include "objects.h"
 //#include "particle_md_system.h"
 
@@ -28,19 +30,16 @@ class Simulation {
     SpaceProperties space;
     //IntegratorManager integrator;
     //ExternalForces forces;
-    //std::vector<ObjectSystemBase*> systems_;
-    std::vector<BrownianDimer> dimers_;
+    std::vector<SpeciesBase*> species_;
+    //std::vector<BrownianDimer> dimers_;
     void InitSimulation();
-    //void InitSpace();
-    void InitSystems();
-    //void InitGraphics();
-    //void InitOutputs();
+    void InitSpecies();
+    void ClearSpecies();
+    void InitOutputs();
     void RunSimulation();
     void ClearSimulation();
-    //void ClearSpace();
-    //void ClearGraphics();
     void Draw();
-    //void WriteOutputs();
+    void WriteOutputs();
     void GetGraphicsStructure();
     void Integrate();
     std::vector<graph_struct*> graph_array;

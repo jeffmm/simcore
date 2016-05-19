@@ -55,33 +55,98 @@ void rotate_3d_vector(double theta, double *a, double *b) {
 //Inverts symmetric "linear" 2D matrix
 //Input:  2x2 Matrix to be inverted (a)
 //Output: Inverted matrix ( b)
-void invert_sym_2d_matrix(double *a, double *b) {
+void invert_sym_2d_matrix(double **a, double **b) {
     double inv_det;
-    inv_det = a[0]*a[3] - a[1]*a[1];
+    inv_det = a[0][0]*a[1][1] - a[0][1]*a[0][1];
     inv_det = 1.0 / inv_det;
-    b[0] = a[3] * inv_det;
-    b[3] = a[0] * inv_det;
-    b[1] = b[2] = -a[1] * inv_det;
-
-    return;
+    b[0][0] = a[1][1] * inv_det;
+    b[1][1] = a[0][0] * inv_det;
+    b[1][0] = b[0][1] = -a[0][1] * inv_det;
 }
 
 //Inverts symmetric "linear" 3D matrix
 //Input:  3x3 Matrix to be inverted (a)
 //Output: Inverted matrix ( b)
-void invert_sym_3d_matrix(double *a, double *b) {
+void invert_sym_3d_matrix(double **a, double **b) {
     double inv_det;
-    inv_det = a[0] * (a[4]*a[8] - a[5]*a[7])
-        - a[1] * (a[3]*a[8] - a[5]*a[6])
-        + a[2] * (a[3]*a[7] - a[4]*a[6]);
+    inv_det = a[0][0] * (a[1][1]*a[2][2] - a[1][2]*a[2][1])
+        - a[0][1] * (a[1][0]*a[2][2] - a[1][2]*a[2][0])
+        + a[0][2] * (a[1][0]*a[2][1] - a[1][1]*a[2][0]);
     inv_det = 1.0/inv_det;
-    b[0] = inv_det * (a[4]*a[8] - a[5]*a[7]);
-    b[4] = inv_det * (a[0]*a[8] - a[2]*a[6]);
-    b[8] = inv_det * (a[0]*a[4] - a[1]*a[3]);
-    b[1] = b[3] = -inv_det * (a[3]*a[8] - a[5]*a[6]);
-    b[2] = b[6] = inv_det * (a[3]*a[7] - a[4]*a[6]);
-    b[5] = b[7] = -inv_det * (a[0]*a[7] - a[1]*a[6]);
-
-    return;
+    b[0][0] = inv_det * (a[1][1]*a[2][2] - a[1][2]*a[2][1]);
+    b[1][1] = inv_det * (a[0][0]*a[2][2] - a[0][2]*a[2][0]);
+    b[2][2] = inv_det * (a[0][0]*a[1][1] - a[0][1]*a[1][0]);
+    b[0][1] = b[1][0] = -inv_det * (a[1][0]*a[2][2] - a[1][2]*a[2][0]);
+    b[0][2] = b[2][0] = inv_det * (a[1][0]*a[2][1] - a[1][1]*a[2][0]);
+    b[1][2] = b[2][1] = -inv_det * (a[0][0]*a[2][1] - a[0][1]*a[2][0]);
 }
 
+void separation_vector(int n_dim, int n_periodic, double const * const r1, double const * const s1, double const * const r2, double const * const s2, double **unit_cell, double *dr) {
+
+  // First handle periodic subspace
+  double ds[3];
+  for (int i = 0; i < n_periodic; ++i) {  
+    ds[i] = s2[i] - s1[i];
+    ds[i] -= NINT(ds[i]);
+  }
+  for (int i = 0; i < n_periodic; ++i) {
+    dr[i] = 0.0;
+    for (int j = 0; j < n_periodic; ++j)
+      dr[i] += unit_cell[i][j] * ds[j];
+  }
+  // Then handle free subspace
+  for (int i = n_periodic; i < n_dim; ++i) 
+      dr[i] = r2[i] - r1[i];
+  return;
+}
+
+void periodic_boundary_conditions(int n_periodic, double **h, double **h_inv,
+                                         double *r, double *s) {
+  /* Compute scaled coordinate and apply periodic boundary conditions. */
+  for (int i = 0; i < n_periodic; ++i) {
+    s[i] = 0.0;
+    for (int j = 0; j < n_periodic; ++j)
+      s[i] += h_inv[i][j] * r[j];
+    s[i] -= NINT(s[i]);
+  }
+
+  /* Recompute real coordinates accounting for periodic boundary conditions. */
+  for (int i = 0; i < n_periodic; ++i) {
+    r[i] = 0.0;
+    for (int j = 0; j < n_periodic; ++j)
+      r[i] += h[i][j] * s[j];
+  }
+}
+
+/* Computes determinant of square matrix mat of size n using recursion*/
+double determinant(int n, double **mat) {
+  double det=0;
+  double **submat = new double*[n];
+  for (int i=0; i<n; ++i)
+    submat[i] = new double[n];
+  if (n == 1)
+    return mat[0][0];
+  if (n == 2)
+    return ((mat[0][0] * mat[1][1]) - (mat[1][0] * mat[0][1]));
+  else {
+    for(int c = 0; c < n; ++c) {
+      int subi = 0;
+      for(int i = 1; i < n; ++i) {
+        int subj = 0;
+        for(int j = 0; j < n; ++j) {
+          if (j == c) {
+            continue;
+          }
+          submat[subi][subj] = mat[i][j];
+          subj++;
+        }
+        subi++;
+      }
+      det = det + (pow(-1 ,c) * mat[0][c] * determinant(n - 1 ,submat));
+    }
+  }
+  for (int i=0; i<n; ++i)
+    delete[] submat[i];
+  delete[] submat;
+  return det;
+}

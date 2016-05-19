@@ -52,9 +52,6 @@ else if (param_name.compare("force_induced_catastrophe_flag") == 0){
 else if (param_name.compare("graph_flag") == 0){
   params_[i_var].graph_flag = atoi(param_value.c_str());
 }
-else if (param_name.compare("mother_daughter_dist") == 0){
-  params_[i_var].mother_daughter_dist = atof(param_value.c_str());
-}
 else if (param_name.compare("error_analysis_flag") == 0){
   params_[i_var].error_analysis_flag = atoi(param_value.c_str());
 }
@@ -67,26 +64,26 @@ else if (param_name.compare("grab_flag") == 0){
 else if (param_name.compare("pair_interaction_flag") == 0){
   params_[i_var].pair_interaction_flag = atoi(param_value.c_str());
 }
-else if (param_name.compare("n_save_state") == 0){
-  params_[i_var].n_save_state = atoi(param_value.c_str());
+else if (param_name.compare("sphere_radius") == 0){
+  params_[i_var].sphere_radius = atof(param_value.c_str());
+}
+else if (param_name.compare("time_flag") == 0){
+  params_[i_var].time_flag = atoi(param_value.c_str());
 }
 else if (param_name.compare("buckling_analysis_flag") == 0){
   params_[i_var].buckling_analysis_flag = atoi(param_value.c_str());
 }
-else if (param_name.compare("time_analysis_flag") == 0){
-  params_[i_var].time_analysis_flag = atoi(param_value.c_str());
-}
 else if (param_name.compare("save_state_flag") == 0){
   params_[i_var].save_state_flag = atoi(param_value.c_str());
+}
+else if (param_name.compare("n_save_state") == 0){
+  params_[i_var].n_save_state = atoi(param_value.c_str());
 }
 else if (param_name.compare("n_bins") == 0){
   params_[i_var].n_bins = atoi(param_value.c_str());
 }
 else if (param_name.compare("n_validate") == 0){
   params_[i_var].n_validate = atoi(param_value.c_str());
-}
-else if (param_name.compare("delta") == 0){
-  params_[i_var].delta = atof(param_value.c_str());
 }
 else if (param_name.compare("n_buckle_on") == 0){
   params_[i_var].n_buckle_on = atoi(param_value.c_str());
@@ -97,29 +94,38 @@ else if (param_name.compare("n_buckle_off") == 0){
 else if (param_name.compare("metric_forces") == 0){
   params_[i_var].metric_forces = atoi(param_value.c_str());
 }
+else if (param_name.compare("delta") == 0){
+  params_[i_var].delta = atof(param_value.c_str());
+}
 else if (param_name.compare("friction_ratio") == 0){
   params_[i_var].friction_ratio = atof(param_value.c_str());
 }
-else if (param_name.compare("sphere_radius") == 0){
-  params_[i_var].sphere_radius = atof(param_value.c_str());
-}
-else if (param_name.compare("filament_diameter") == 0){
-  params_[i_var].filament_diameter = atof(param_value.c_str());
+else if (param_name.compare("buckle_rate") == 0){
+  params_[i_var].buckle_rate = atof(param_value.c_str());
 }
 else if (param_name.compare("daughter_radius") == 0){
   params_[i_var].daughter_radius = atof(param_value.c_str());
 }
-else if (param_name.compare("max_length") == 0){
-  params_[i_var].max_length = atof(param_value.c_str());
+else if (param_name.compare("mother_daughter_dist") == 0){
+  params_[i_var].mother_daughter_dist = atof(param_value.c_str());
+}
+else if (param_name.compare("spring_buckling_init") == 0){
+  params_[i_var].spring_buckling_init = atof(param_value.c_str());
 }
 else if (param_name.compare("min_length") == 0){
   params_[i_var].min_length = atof(param_value.c_str());
 }
-else if (param_name.compare("min_segment_length") == 0){
-  params_[i_var].min_segment_length = atof(param_value.c_str());
+else if (param_name.compare("filament_diameter") == 0){
+  params_[i_var].filament_diameter = atof(param_value.c_str());
+}
+else if (param_name.compare("max_length") == 0){
+  params_[i_var].max_length = atof(param_value.c_str());
 }
 else if (param_name.compare("max_segment_length") == 0){
   params_[i_var].max_segment_length = atof(param_value.c_str());
+}
+else if (param_name.compare("min_segment_length") == 0){
+  params_[i_var].min_segment_length = atof(param_value.c_str());
 }
 else if (param_name.compare("persistence_length") == 0){
   params_[i_var].persistence_length = atof(param_value.c_str());
@@ -127,11 +133,8 @@ else if (param_name.compare("persistence_length") == 0){
 else if (param_name.compare("spring_filament_sphere") == 0){
   params_[i_var].spring_filament_sphere = atof(param_value.c_str());
 }
-else if (param_name.compare("spring_buckling_init") == 0){
-  params_[i_var].spring_buckling_init = atof(param_value.c_str());
-}
-else if (param_name.compare("buckle_rate") == 0){
-  params_[i_var].buckle_rate = atof(param_value.c_str());
+else if (param_name.compare("f_pause_to_grow") == 0){
+  params_[i_var].f_pause_to_grow = atof(param_value.c_str());
 }
 else if (param_name.compare("buckle_parameter") == 0){
   params_[i_var].buckle_parameter = atof(param_value.c_str());
@@ -139,23 +142,20 @@ else if (param_name.compare("buckle_parameter") == 0){
 else if (param_name.compare("r_cutoff_sphere") == 0){
   params_[i_var].r_cutoff_sphere = atof(param_value.c_str());
 }
-else if (param_name.compare("r_cutoff_boundary") == 0){
-  params_[i_var].r_cutoff_boundary = atof(param_value.c_str());
-}
 else if (param_name.compare("f_shrink_to_grow") == 0){
   params_[i_var].f_shrink_to_grow = atof(param_value.c_str());
+}
+else if (param_name.compare("r_cutoff_boundary") == 0){
+  params_[i_var].r_cutoff_boundary = atof(param_value.c_str());
 }
 else if (param_name.compare("f_shrink_to_pause") == 0){
   params_[i_var].f_shrink_to_pause = atof(param_value.c_str());
 }
-else if (param_name.compare("f_pause_to_grow") == 0){
-  params_[i_var].f_pause_to_grow = atof(param_value.c_str());
+else if (param_name.compare("f_grow_to_pause") == 0){
+  params_[i_var].f_grow_to_pause = atof(param_value.c_str());
 }
 else if (param_name.compare("f_pause_to_shrink") == 0){
   params_[i_var].f_pause_to_shrink = atof(param_value.c_str());
-}
-else if (param_name.compare("f_grow_to_pause") == 0){
-  params_[i_var].f_grow_to_pause = atof(param_value.c_str());
 }
 else if (param_name.compare("f_grow_to_shrink") == 0){
   params_[i_var].f_grow_to_shrink = atof(param_value.c_str());
@@ -165,9 +165,6 @@ else if (param_name.compare("v_poly") == 0){
 }
 else if (param_name.compare("v_depoly") == 0){
   params_[i_var].v_depoly = atof(param_value.c_str());
-}
-else if (param_name.compare("dimer_k_spring") == 0){
-  params_[i_var].dimer_k_spring = atof(param_value.c_str());
 }
 else if (param_name.compare("graph_diameter") == 0){
   params_[i_var].graph_diameter = atof(param_value.c_str());
@@ -179,23 +176,26 @@ else if ( param_name.compare("grab_file") == 0 ) {
 else if (param_name.compare("cell_list_flag") == 0){
   params_[i_var].cell_list_flag = atoi(param_value.c_str());
 }
-else if (param_name.compare("position_correlation_flag") == 0){
-  params_[i_var].position_correlation_flag = atoi(param_value.c_str());
-}
 else if (param_name.compare("rigid_tether_flag") == 0){
   params_[i_var].rigid_tether_flag = atoi(param_value.c_str());
-}
-else if (param_name.compare("graph_background") == 0){
-  params_[i_var].graph_background = atoi(param_value.c_str());
-}
-else if (param_name.compare("dimer_diameter") == 0){
-  params_[i_var].dimer_diameter = atof(param_value.c_str());
 }
 else if (param_name.compare("dimer_eq_length") == 0){
   params_[i_var].dimer_eq_length = atof(param_value.c_str());
 }
+else if (param_name.compare("position_correlation_flag") == 0){
+  params_[i_var].position_correlation_flag = atoi(param_value.c_str());
+}
+else if (param_name.compare("graph_background") == 0){
+  params_[i_var].graph_background = atoi(param_value.c_str());
+}
+else if (param_name.compare("dimer_k_spring") == 0){
+  params_[i_var].dimer_k_spring = atof(param_value.c_str());
+}
 else if (param_name.compare("dimer_length") == 0){
   params_[i_var].dimer_length = atof(param_value.c_str());
+}
+else if (param_name.compare("dimer_diameter") == 0){
+  params_[i_var].dimer_diameter = atof(param_value.c_str());
 }
 else if (param_name.compare("n_dimer") == 0){
   params_[i_var].n_dimer = atoi(param_value.c_str());
