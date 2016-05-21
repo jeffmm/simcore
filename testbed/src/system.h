@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include "properties.h"
 #include "particle.h"
 #include "species.h"
 #include "cell_list.h"
@@ -20,7 +21,7 @@
 
 class SystemArch {
 public:
-    SystemArch(int nparticles, double pBox, double pDt);
+    SystemArch(properties_t* pProperties);
     ~SystemArch();
     
     // Setters (adders)
@@ -35,7 +36,7 @@ public:
     int nParticles();
     
     // Shared data structure uses
-    void initMP(int pSkin);
+    void initMP();
     void flattenParticles();
     void generateCellList();
     void updateCellList();
@@ -61,15 +62,18 @@ protected:
     int next_pid_;
     int nthreads_;
 
-    double box_;
+    double box_[3];
     double upot_;
     double ukin_;
     double temperature_;
     double dt_;
     double skin_;
 
+    properties_t* system_properties_;
     CellList cell_list_;
+    
     //CellListAdj cell_list_adj_;
+    
     NeighborList neighbor_list_;
     PotentialManager potential_manager_;
     std::unordered_map<int, BaseSpecies*> species_;

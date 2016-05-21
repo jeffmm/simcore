@@ -6,6 +6,20 @@ Argon
 --------
 Cell List
 --------
-108     10000       1.78s       6.6Mb
+108     10000       1.72s       6.6Mb
 2916     1000       7.06s       9.6Mb
 78732      20       5.75s    1898.3Mb
+
+
+--------
+Cell List with Neighbor Lists compiled to the side
+--------
+108     10000       1.78s       6.6Mb
+2916    10000      60.77s       9.6Mb
+78732     100      18.41s    1899.5Mb
+--------
+Neighbor List All Pairs skin=1.0
+--------
+108     10000       1.80s       6.8Mb       (8/10k updates)
+2916    10000      49.52s      27.9Mb       (7/10k updates)
+78732     100      21.26s    2358.4Mb       (1/100 updates)

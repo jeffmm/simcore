@@ -107,7 +107,7 @@ NeighborList::print() {
     // average number of neighbors
     printf("********\n");
     printf("Neighbor List All Pairs\n");
-    printf("\t{rcut:%.2f}, {skin:%.2f}, {rcs2:%.2f}\n", rcut_, skin_, rcs2_);
+    printf("\t{rcut:%2.2f}, {skin:%2.2f}, {rcs2:%2.2f}\n", rcut_, skin_, rcs2_);
     int ntotlist = 0, maxlist = 0, minlist = INT_MAX;
     // The -1 is important because the last neighbor list is empty when we aren't
     // keeping every i -> j -> i pair (only keeping half)
@@ -116,7 +116,7 @@ NeighborList::print() {
         maxlist = std::max(maxlist, (int)neighbors_[i].size());
         minlist = std::min(minlist, (int)neighbors_[i].size());
     }
-    printf("\t{Neighbors stats -> {min:%d}, {max:%d}, {avg:%.2f}\n", minlist, maxlist, (float)ntotlist/(float)nparticles_);
+    printf("\t{Neighbors stats -> {min:%d}, {max:%d}, {avg:%2.2f}\n", minlist, maxlist, (float)ntotlist/(float)nparticles_);
     printf("\t{NeighborList size: %.1fMb}\n", (float)GetMemoryFootprint()/1024/1024.);
 }
 
