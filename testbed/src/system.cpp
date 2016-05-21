@@ -177,15 +177,13 @@ SystemArch::calcPotential(int psid1, int psid2, double* x, double* y, double* fp
 // Calculate the kinetic energy
 std::pair<double, double>
 SystemArch::ukin() {
-    std::pair<double, double> ukin = std::make_pair(0.0, 0.0);
+    ukin_ = 0.0;
+    temperature_ = 0.0;
     for (auto& sys : species_) {
-        auto uk_temp = sys.second->Ukin(&particles_);
-        ukin.first += uk_temp.first;
-        ukin.second += uk_temp.second;
+        ukin_ += sys.second->Ukin(&particles_);
     }
-    ukin_ = ukin.first;
-    temperature_ = ukin.second;
-    return ukin;
+    temperature_ = 2.0 * ukin_ / (3.0 * nparticles_ - 3.0)/kboltz;
+    return std::make_pair(ukin_, temperature_);
 }
 
 

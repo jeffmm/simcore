@@ -24,7 +24,7 @@ public:
     virtual void checkParticles();
 
     virtual particle* addParticle(int, int) = 0;
-    virtual std::pair<double, double> Ukin(std::vector<particle*>* particles);
+    virtual double Ukin(std::vector<particle*>* particles);
 
     int getSid();
     int getNParticles();
@@ -37,7 +37,6 @@ protected:
     int nparticles_;
     double rcut_;
     double ukin_;
-    double temp_;
     double meff_;
     std::string name_;
 };
