@@ -68,6 +68,8 @@ protected:
     double temperature_;
     double dt_;
     double skin_;
+    
+    const double kboltz = 0.0019872067;
 
     properties_t* system_properties_;
     CellList cell_list_;

@@ -103,10 +103,10 @@ int main(int argc, char **argv) {
     /*std::cout << "Setting Neon parameters\n";
     ArSpecies* NeSpec = new ArSpecies();
     // Hard code in the neon parameters, because
-    mass = 20.1797;
-    eps = 0.069;
-    sigma = 2.782;
-    rcut = 2.5*sigma;
+    //mass = 20.1797;
+    //eps = 0.069;
+    //sigma = 2.782;
+    //rcut = 2.5*sigma;
     NeSpec->setSpecies(mass, eps, sigma, rcut, 1, "Ne");
     ArNeSys->addSpecies(1, NeSpec);
     auto lj126_ne = potentialFactory<LJ126>(eps, sigma, rcut, box);*/
@@ -145,9 +145,10 @@ int main(int argc, char **argv) {
     ArNeSys->checkConsistency();
 
     // Create the potentials
-    // The order matters for Newton's 3rd law
     ArNeSys->addPotential(0, 0, lj126_ar);
     //ArNeSys->addPotential(1, 1, lj126_ne);
+    //ArNeSys->addPotential(0, 1, lj126_ar);
+    //ArNeSys->addPotential(1, 0, lj126_ar);
     // Write information
     ArNeSys->dumpPotentials();
 

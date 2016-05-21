@@ -6,7 +6,7 @@
 struct _properties {
     _properties(int pCellUpdFreq,
                 bool pUseCells) : cell_update_freq_(pCellUpdFreq),
-                                      use_cells_(pUseCells) {}
+                                  use_cells_(pUseCells) {}
     
     int nparticles_;
     int nspecies_;
