@@ -73,7 +73,6 @@ protected:
 
     properties_t* system_properties_;
     CellList cell_list_;
-    
     //CellListAdj cell_list_adj_;
     
     NeighborList neighbor_list_;

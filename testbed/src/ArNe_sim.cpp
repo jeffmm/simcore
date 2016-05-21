@@ -82,12 +82,12 @@ int main(int argc, char **argv) {
     
     // Set the system properties
     // Cell update frequency, use cells (implied not neighbors)
-    bool cells_or_neighbors = true;
+    bool cells_or_neighbors = false;
     system_properties = new properties_t(4, cells_or_neighbors);
     system_properties->nparticles_ = natoms;
     system_properties->box_[0] = system_properties->box_[1] = system_properties->box_[2] = box;
     system_properties->nspecies_ = 1;
-    system_properties->skin_ = 0.5;
+    system_properties->skin_ = 1.0;
     system_properties->dt_ = dt;
 
     // Create the ArNe system
