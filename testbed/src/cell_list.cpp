@@ -11,17 +11,19 @@
 // Independent of particle type, just need the best
 // rcutoff to generate this
 void
-CellList::CreateCellList(int pN, double pRcut, double pBox[3]){
+CellList::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
     double boxoffs[3];
     
     nparticles_ = pN;
     rcut_ = pRcut;
+    skin_ = pSkin;
+    rbuff_ = rcut_ + skin_;
     memcpy(box_, pBox, 3*sizeof(double));
     
     // Compute the number of cells on a side
     for (int i = 0; i < 3; ++i) {
         boxby2_[i] = 0.5*box_[i];
-        T_[i] = floor(cellrat_ * box_[i] / rcut_);
+        T_[i] = floor(cellrat_ * box_[i] / rbuff_);
         if (T_[i] < 3) {
             T_[i] = 3;
         }
@@ -79,17 +81,17 @@ CellList::CreateCellList(int pN, double pRcut, double pBox[3]){
             rz = buffmd::pbc(z1 - z2, boxby2_[2], box_[2]);
             
             // Check the cells on a line that are too far apart
-            if (fabs(rx) > rcut_ + S_[0]) continue;
-            if (fabs(ry) > rcut_ + S_[1]) continue;
-            if (fabs(rz) > rcut_ + S_[2]) continue;
+            if (fabs(rx) > rbuff_ + S_[0]) continue;
+            if (fabs(ry) > rbuff_ + S_[1]) continue;
+            if (fabs(rz) > rbuff_ + S_[2]) continue;
             
             // Check for cells in a plane that are too far apart
-            if (sqrt(rx*rx + ry*ry) > (rcut_ + sqrt(S_[0]*S_[0] + S_[1]*S_[1]))) continue;
-            if (sqrt(rx*rx + rz*rz) > (rcut_ + sqrt(S_[0]*S_[0] + S_[2]*S_[2]))) continue;
-            if (sqrt(ry*ry + rz*rz) > (rcut_ + sqrt(S_[1]*S_[1] + S_[2]*S_[2]))) continue;
+            if (sqrt(rx*rx + ry*ry) > (rbuff_ + sqrt(S_[0]*S_[0] + S_[1]*S_[1]))) continue;
+            if (sqrt(rx*rx + rz*rz) > (rbuff_ + sqrt(S_[0]*S_[0] + S_[2]*S_[2]))) continue;
+            if (sqrt(ry*ry + rz*rz) > (rbuff_ + sqrt(S_[1]*S_[1] + S_[2]*S_[2]))) continue;
             
             // Other cells too far apart in 3d
-            if (sqrt(rx*rx + ry*ry + rz*rz) > (sqrt(S_[0]*S_[0] + S_[1]*S_[1] + S_[2]*S_[2]) + rcut_)) continue;
+            if (sqrt(rx*rx + ry*ry + rz*rz) > (sqrt(S_[0]*S_[0] + S_[1]*S_[1] + S_[2]*S_[2]) + rbuff_)) continue;
             
             // Cells are close enough, add
             plist_[2*npairs_    ] = cidx;

@@ -22,6 +22,11 @@ SystemArch::SystemArch(properties_t* pProperties) {
     nparticles_ = system_properties_->nparticles_;
     memcpy(box_, system_properties_->box_, 3*sizeof(double));
     skin_ = system_properties_->skin_;
+    // Make sure that we don't accidentally use the wrong skin for
+    // the cell list (unless we're using it as part of a neighbor list
+    if (system_properties_->use_cells_) {
+        skin_ = 0.0;
+    }
     dt_ = system_properties_->dt_;
     
     ukin_ = 0.0;
@@ -138,7 +143,7 @@ SystemArch::generateCellList() {
     }
 
     // Create the cell list
-    cell_list_.CreateCellList(nparticles_, max_rcut, box_);
+    cell_list_.CreateCellList(nparticles_, max_rcut, skin_, box_);
     cell_list_.UpdateCellList(&particles_);
     cell_list_.CheckCellList();
 }
@@ -161,7 +166,7 @@ SystemArch::generateNeighborList() {
         max_rcut = std::max(max_rcut, current_species->getRcut());
     }
     
-    neighbor_list_.CreateNeighborList(nparticles_, max_rcut, max_rcut + skin_, box_);
+    neighbor_list_.CreateNeighborList(nparticles_, max_rcut, skin_, box_);
     neighbor_list_.UpdateNeighborList(&particles_);
     neighbor_list_.print();
 }
@@ -179,6 +184,8 @@ std::pair<double, double>
 SystemArch::ukin() {
     ukin_ = 0.0;
     temperature_ = 0.0;
+    // Get the kinetic energy of all particles
+    // Then calculate the temperature
     for (auto& sys : species_) {
         ukin_ += sys.second->Ukin(&particles_);
     }

@@ -13,9 +13,7 @@ class CellAdj {
 public:
     
     CellAdj() {}
-    ~CellAdj() {
-        //delete(idxlist_);
-    }
+    ~CellAdj() {}
 
     unsigned long GetMemoryFootprint() {
         auto mysize = sizeof(*this);
@@ -25,9 +23,8 @@ public:
 
     int cell_id_; // cell id
     int nparticles_; // number of particles in cell
-    int adj_cell_ids_[13]; // Adjacent cell ids (including this one)
+    int adj_cell_ids_[27]; // Adjacent cell ids (including this one)
     std::vector<int> idxlist_;
-    //int* idxlist_; // ID list of particles in cell
 };
 
 class CellListAdj {
@@ -36,16 +33,18 @@ public:
     CellListAdj() {}
     ~CellListAdj() {}
     
-    void CreateCellList(int pN, double pRcut, double pBox[3]);
+    void CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]);
     void UpdateCellList(std::vector<particle*>* particles);
     void CheckCellList();
+    
+    void SetRCut(double pRcut, double pSkin);
     
     unsigned long GetMemoryFootprint();
     
     // Simple getters
     int ncells() { return ncells_; }
     
-    // Operators
+    // Operators (getters)
     CellAdj* operator [](int cidx) {
         return &clist_[cidx];
     }
@@ -56,6 +55,7 @@ protected:
     // Inputs
     int nparticles_;
     double rcut_;
+    double skin_;
     double box_[3];
     
     // Computed quantities
@@ -71,8 +71,6 @@ protected:
     
     // Consts
     const int cellrat_ = 2;
-    const int allowed_adj_[13][3] = {{1,0,0},{-1,-1,0},{0,-1,0},{1,-1,0},{-1,1,-1},{0,1,-1},{1,1,-1},
-                                     {-1,0,-1},{0,0,-1},{1,0,-1},{-1,-1,-1},{0,-1,-1},{1,-1,-1}};
     
 };
 

@@ -12,7 +12,7 @@ Cell List
 
 
 --------
-Cell List with Neighbor Lists compiled to the side
+Cell Lists (skin=0.0)
 --------
 108     10000       1.78s       6.6Mb
 2916    10000      60.77s       9.6Mb
@@ -20,6 +20,6 @@ Cell List with Neighbor Lists compiled to the side
 --------
 Neighbor List All Pairs skin=1.0
 --------
-108     10000       1.80s       6.8Mb       (8/10k updates)
-2916    10000      49.52s      27.9Mb       (7/10k updates)
-78732     100      21.26s    2358.4Mb       (1/100 updates)
+108     10000       1.80s       6.8Mb       (356/10k updates)
+2916    10000      26.40s      16.5Mb       (432/10k updates)
+78732     100      29.37s    1344.7Mb       (4/100 updates)

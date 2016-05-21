@@ -11,15 +11,28 @@
 // Independent of particle type, just need the best
 // rcutoff to generate this
 void
-CellListAdj::CreateCellList(int pN, double pRcut, double pBox[3]){
+CellListAdj::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
     nparticles_ = pN;
     rcut_ = pRcut;
     memcpy(box_, pBox, 3*sizeof(double));
     
-    // Compute the number of cells on a side
+    SetRCut(rcut_, skin_);
+
+    printf("Cell list has %dx%dx%d=%d cells of lengths {%.2f,%.2f,%.2f} "
+           "with %d particles/cell.\n", T_[0], T_[1], T_[2], ncells_, S_[0], S_[1], S_[2],
+           nidx_);
+}
+
+// Update Rcut, which requires rebuilding and checking lots of stuff
+void
+CellListAdj::SetRCut(double pRcut, double pSkin) {
+    rcut_ = pRcut;
+    skin_ = pSkin;
+    
+    // Recompute the number of cells on a side
     for (int i = 0; i < 3; ++i) {
         boxby2_[i] = 0.5*box_[i];
-        T_[i] = floor(cellrat_ * box_[i] / rcut_);
+        T_[i] = floor(cellrat_ * box_[i] / (rcut_ + skin_));
         if (T_[i] < 3) {
             T_[i] = 3;
         }
@@ -49,49 +62,47 @@ CellListAdj::CreateCellList(int pN, double pRcut, double pBox[3]){
         clist_[i].idxlist_.clear();
         clist_[i].idxlist_.resize(nidx_);
     }
-
+    
     // Add the allowed adjacent cells to this one
     for (int cz = 0; cz < T_[2]; ++cz) {
         for (int cy = 0; cy < T_[1]; ++cy) {
             for (int cx = 0; cx < T_[0]; ++cx) {
                 // Get the linear index of this cell
                 int cidx = buffmd::cell_vec_to_linear(cx, cy, cz, T_);
-
                 int adj_cell_id = 0;
-
-                for (int avec = 0; avec < 13; ++avec) {
-                    int rx = cx + allowed_adj_[avec][0];
-                    int ry = cy + allowed_adj_[avec][1];
-                    int rz = cz + allowed_adj_[avec][2];
-
-                    while(rx < 0) {
-                        rx += T_[0];
+                
+                for (int dz = -1; dz <= 1; ++dz) {
+                    for (int dy = -1; dy <= 1; ++dy) {
+                        for (int dx = -1; dx <= 1; ++dx) {
+                            int rx = cx + dx;
+                            int ry = cy + dy;
+                            int rz = cz + dz;
+                            
+                            while(rx < 0) {
+                                rx += T_[0];
+                            }
+                            rx = rx % T_[0];
+                            
+                            while(ry < 0) {
+                                ry += T_[1];
+                            }
+                            ry = ry % T_[1];
+                            
+                            while(rz < 0) {
+                                rz += T_[2];
+                            }
+                            rz = rz % T_[2];
+                            
+                            int cjdx = buffmd::cell_vec_to_linear(rx, ry, rz, T_);
+                            clist_[cidx].adj_cell_ids_[adj_cell_id] = cjdx;
+                            adj_cell_id++;
+                        }
                     }
-                    rx = rx % T_[0];
-
-                    while(ry < 0) {
-                        ry += T_[1];
-                    }
-                    ry = ry % T_[1];
-
-                    while(rz < 0) {
-                        rz += T_[2];
-                    }
-                    rz = rz % T_[2];
-
-                    int cidx2 = buffmd::cell_vec_to_linear(rx, ry, rz, T_);
-                    clist_[cidx].adj_cell_ids_[adj_cell_id] = cidx2;
-                    adj_cell_id++;
-
                 }
-
+                
             }
         }
     }
-
-    printf("Cell list has %dx%dx%d=%d cells of lengths {%.2f,%.2f,%.2f} "
-           "with %d particles/cell.\n", T_[0], T_[1], T_[2], ncells_, S_[0], S_[1], S_[2],
-           nidx_);
 }
 
 
@@ -162,7 +173,7 @@ CellListAdj::CheckCellList() {
     printf("Exact middle cell adjacent members: \n");
     int midcidx = buffmd::cell_vec_to_linear(0,0,0,T_);
     printf("Cell %d adjacent members = \n\t{", midcidx);
-    for (int i = 0; i < 13; ++i) {
+    for (int i = 0; i < 27; ++i) {
         printf("%d,", clist_[midcidx].adj_cell_ids_[i]);
     }
 

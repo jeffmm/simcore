@@ -19,7 +19,7 @@ NeighborList::CreateNeighborList(int pN, double pRcut, double pSkin, double pBox
     rcut2_ = rcut_*rcut_;
     skin_ = pSkin;
     skin2_ = skin_*skin_;
-    rcs2_ = rcut2_ + skin2_ + 2*rcut_+skin_;
+    rcs2_ = rcut2_ + skin2_ + 2*rcut_*skin_;
     half_skin2_ = 0.25*skin2_;
     memcpy(box_, pBox, 3*sizeof(double));
     
