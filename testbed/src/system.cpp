@@ -1,9 +1,12 @@
+#include <cstdlib>
+
 #include "system.h"
 
-// Constructor
-SystemArch::SystemArch(int nparticles, double pBox, double pDt) {
-    next_pid_ = 0;
 
+// Constructor
+SystemArch::SystemArch(properties_t* pProperties) {
+    next_pid_ = 0;
+    
 #if defined(_OPENMP)
 #pragma omp parallel
     {
@@ -15,16 +18,19 @@ SystemArch::SystemArch(int nparticles, double pBox, double pDt) {
 #else
     nthreads_ = 1;
 #endif
-    nparticles_ = nparticles;
-    box_ = pBox;
+    system_properties_ = pProperties;
+    nparticles_ = system_properties_->nparticles_;
+    memcpy(box_, system_properties_->box_, 3*sizeof(double));
+    skin_ = system_properties_->skin_;
+    dt_ = system_properties_->dt_;
+    
     ukin_ = 0.0;
     temperature_ = 0.0;
-    dt_ = pDt;
-
+    
     // Set up the main particle list
     particles_.clear();
     particles_.resize(nparticles_);
-
+    
     // initialize the force superarray
     frc_.clear();
     frc_.resize(nthreads_ * 3 * nparticles_);
@@ -107,13 +113,14 @@ SystemArch::flattenParticles() {
 
 // Initialize the shared data structures, etc
 void
-SystemArch::initMP(int pSkin) {
-    skin_ = pSkin;
+SystemArch::initMP() {
     printf("********\n");
     printf("Initializing MP shared data structures\n");
     flattenParticles();
     generateCellList();
-    generateNeighborList();
+    if (!system_properties_->use_cells_) {
+        generateNeighborList();
+    }
 }
 
 
@@ -131,8 +138,7 @@ SystemArch::generateCellList() {
     }
 
     // Create the cell list
-    double mbox[3] = {box_, box_, box_};
-    cell_list_.CreateCellList(nparticles_, max_rcut, mbox);
+    cell_list_.CreateCellList(nparticles_, max_rcut, box_);
     cell_list_.UpdateCellList(&particles_);
     cell_list_.CheckCellList();
 }
@@ -155,8 +161,7 @@ SystemArch::generateNeighborList() {
         max_rcut = std::max(max_rcut, current_species->getRcut());
     }
     
-    double mbox[3] = {box_, box_, box_};
-    neighbor_list_.CreateNeighborList(nparticles_, max_rcut, max_rcut + skin_, mbox);
+    neighbor_list_.CreateNeighborList(nparticles_, max_rcut, max_rcut + skin_, box_);
     neighbor_list_.UpdateNeighborList(&particles_);
     neighbor_list_.print();
 }
@@ -398,8 +403,11 @@ SystemArch::velverlet() {
     }
 
     // Compute energies
-    //forceCellsMP();
-    forceNeighAP();
+    if (system_properties_->use_cells_) {
+        forceCellsMP();
+    } else {
+        forceNeighAP();
+    }
 
     // Update another half step
     for (int idx = 0; idx < nparticles_; ++idx) {
@@ -449,7 +457,7 @@ void
 SystemArch::dump() {
     std::cout << "********\n";
     std::cout << "System dump: \n";
-    printf("{nparticles: %d}, {box: %f}\n", nparticles_, box_);
+    printf("{nparticles: %d}, {box: (%f,%f,%f)}\n", nparticles_, box_[0], box_[1], box_[2]);
     for(auto sys : species_) {
         std::cout << "Species: ";
         sys.second->dump();

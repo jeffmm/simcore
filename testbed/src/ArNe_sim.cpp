@@ -12,12 +12,10 @@
 #include "ArSpecies.h"
 #include "system.h"
 #include "cell_list.h"
-
 #include "lennard_jones_12_6.h"
+#include "properties.h"
 
 #define BLEN 200
-
-const int cellfreq = 4;
 
 int main(int argc, char **argv) {
     // Get the input via command arguments
@@ -30,9 +28,7 @@ int main(int argc, char **argv) {
     unsigned int natoms = 0, nsteps = 0;
     int nprint = 0;
     double mass, eps, sigma, rcut, box, dt;
-    
-    // Set the skin ourselves for now
-    double skin = 1.0;
+    properties_t* system_properties;
 
     // Read in the test files
     if(std::getline(input_file, line)) {
@@ -83,10 +79,20 @@ int main(int argc, char **argv) {
         std::stringstream linestream(line);
         linestream >> nprint;
     }
+    
+    // Set the system properties
+    // Cell update frequency, use cells (implied not neighbors)
+    bool cells_or_neighbors = true;
+    system_properties = new properties_t(4, cells_or_neighbors);
+    system_properties->nparticles_ = natoms;
+    system_properties->box_[0] = system_properties->box_[1] = system_properties->box_[2] = box;
+    system_properties->nspecies_ = 1;
+    system_properties->skin_ = 0.5;
+    system_properties->dt_ = dt;
 
-    // Creat the ArNe system
+    // Create the ArNe system
     std::cout << "Creating Argon/Neon System\n";
-    auto ArNeSys = new SystemArch(natoms, box, dt);
+    auto ArNeSys = new SystemArch(system_properties);
 
     std::cout << "Setting Argon parameters\n";
     ArSpecies* ArSpec = new ArSpecies();
@@ -132,7 +138,7 @@ int main(int argc, char **argv) {
     }
 
     // Initialize the engine
-    ArNeSys->initMP(skin);
+    ArNeSys->initMP();
 
     // Dump everything to check
     ArNeSys->dump();
@@ -146,8 +152,11 @@ int main(int argc, char **argv) {
     ArNeSys->dumpPotentials();
 
     // Finish initialization
-    //ArNeSys->forceCellsMP();
-    ArNeSys->forceNeighAP();
+    if (system_properties->use_cells_) {
+        ArNeSys->forceCellsMP();
+    } else {
+        ArNeSys->forceNeighAP();
+    }
     ArNeSys->ukin();
 
     erg = fopen(ergfile, "w");
@@ -168,12 +177,15 @@ int main(int argc, char **argv) {
         ArNeSys->ukin();
 
         // update the cell list
-        //if ((i_step % cellfreq) == 0)
-        //    ArNeSys->updateCellList();
+        if ((i_step % system_properties->cell_update_freq_) == 0)
+            ArNeSys->updateCellList();
     }
     
     printf("********\n");
     printf("Final statistics:\n");
     ArNeSys->statistics(nsteps);
+    
+    delete(system_properties);
+    
     return 0;
 }
