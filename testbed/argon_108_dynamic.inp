@@ -1,0 +1,12 @@
+108               # natoms
+39.948            # mass in AMU
+0.2379            # epsilon in kcal/mol
+3.405             # sigma in angstrom
+8.5               # rcut in angstrom
+17.1580           # box length (in angstrom)
+argon_108_dynamic.rest    # restart
+argon_108_dynamic.xyz     # trajectory
+argon_108_dynamic.dat     # energies
+1000             # nr MD steps
+5.0               # MD time step (in fs)
+10               # output print frequency
