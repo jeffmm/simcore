@@ -132,4 +132,4 @@ Starting simulation with 108 atoms for 1000 steps.
 Final statistics:
 Neighbor List:
 	38/1000 updates/steps
-3.03s, 6.5Mb
+3.01s, 6.5Mb

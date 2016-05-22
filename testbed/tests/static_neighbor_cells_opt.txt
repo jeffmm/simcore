@@ -1,0 +1,39 @@
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '201307'
+  OMP_DYNAMIC = 'FALSE'
+  OMP_NESTED = 'FALSE'
+  OMP_NUM_THREADS = '8'
+  OMP_SCHEDULE = 'DYNAMIC'
+  OMP_PROC_BIND = 'FALSE'
+  OMP_PLACES = ''
+  OMP_STACKSIZE = '140734871482501'
+  OMP_WAIT_POLICY = 'PASSIVE'
+  OMP_THREAD_LIMIT = '4294967295'
+  OMP_MAX_ACTIVE_LEVELS = '2147483647'
+  OMP_CANCELLATION = 'FALSE'
+  OMP_DEFAULT_DEVICE = '0'
+OPENMP DISPLAY ENVIRONMENT END
+ArNe_sim(34272,0x700000187000) malloc: *** error for object 0x7ffb9a000470: pointer being freed was not allocated
+*** set a breakpoint in malloc_error_break to debug
+ArNe_sim(34272,0x700000393000) malloc: *** error for object 0x7ffb9a0007b0: pointer being freed was not allocated
+*** set a breakpoint in malloc_error_break to debug
+ArNe_sim(34272,0x70000020a000) malloc: *** error for object 0x7ffb9a000400: pointer being freed was not allocated
+*** set a breakpoint in malloc_error_break to debug
+ArNe_sim(34272,0x700000081000) malloc: *** error for object 0x7ffb9a000530: pointer being freed was not allocated
+*** set a breakpoint in malloc_error_break to debug
+ArNe_sim(34272,0x7fff761ee000) malloc: *** error for object 0x7ffb9a0006c0: pointer being freed was not allocated
+*** set a breakpoint in malloc_error_break to debug
+ArNe_sim(34272,0x700000310000) malloc: *** error for object 0x7ffb9a0006c0: pointer being freed was not allocated
+*** set a breakpoint in malloc_error_break to debug
+ArNe_sim(34272,0x70000028d000) malloc: *** error for object 0x7ffb9a000400: pointer being freed was not allocated
+*** set a breakpoint in malloc_error_break to debug
+Using Neighbor lists cell based for force computation
+Creating Argon/Neon System
+Runing OpenMP using 8 threads
+Setting Argon parameters
+********
+Initializing MP shared data structures
+********
+Cell list has 3x3x3=27 cells of lengths {5.72,5.72,5.72} with 351/351 pairs and 64 particles/cell.
+0.18s, 6.6Mb

@@ -10,10 +10,14 @@ CXXFLAGS	= -g -Wall -Wextra
 CXXFLAGS	+= -I/usr/local/include
 ifeq ($(CFG),test)
 	CXXFLAGS	+= -g -pg -O0
-	OPENMP		=
 else
 	CXXFLAGS	+= -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -msse3
+endif
+
+ifeq ($(USETHREADS),yes)
 	OPENMP		= -fopenmp
+else
+	OPENMP		=
 endif
 THREADS		= -std=c++11
 

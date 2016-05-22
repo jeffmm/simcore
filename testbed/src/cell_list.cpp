@@ -112,6 +112,8 @@ CellList::UpdateCellList(std::vector<particle*>* particles) {
     int midx = 0;
     int cx, cy, cz;
     
+    printf("Starting UpdateCellList\n");
+    
     for (int cidx = 0; cidx < ncells_; ++cidx) {
         clist_[cidx].nparticles_ = 0;
     }
@@ -127,8 +129,9 @@ CellList::UpdateCellList(std::vector<particle*>* particles) {
         //printf("p{%d}(%f,%f,%f) -> (%d,%d,%d) -> cell{%d}\n",
         //       i, p->x[0], p->x[1], p->x[2], cx, cy, cz, cidx);
         
-        idx = clist_[cidx].nparticles_;
-        clist_[cidx].idxlist_[idx] = i;
+        idx = clist_[cidx].nparticles_; // Current location in array
+        clist_[cidx].idxlist_[idx] = i; // Set the particle i in the array of cell cidx[idx]
+        p->cellid = cidx; // Set the cell id of this particle
         ++idx;
         clist_[cidx].nparticles_ = idx;
         if (idx > midx) midx = idx;
@@ -139,6 +142,7 @@ CellList::UpdateCellList(std::vector<particle*>* particles) {
         printf("Overflow in cell list: %d/%d particles/cells\n", midx, nidx_);
         exit(1);
     }
+    printf("Finished UpdateCellList\n");
 }
 
 

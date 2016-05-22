@@ -99,6 +99,7 @@ int main(int argc, char **argv) {
         force_type = FNEIGHBORS_CELL;
         std::cout << "Using Neighbor lists cell based for force computation\n";
     }
+    
     system_properties = new properties_t(4, force_type);
     system_properties->nparticles_ = natoms;
     system_properties->ndim_ = 3;

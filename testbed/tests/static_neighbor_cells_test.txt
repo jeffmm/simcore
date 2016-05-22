@@ -1,11 +1,16 @@
-Using Cell lists for force computation
+Using Neighbor lists cell based for force computation
 Creating Argon/Neon System
 Setting Argon parameters
 ********
 Initializing MP shared data structures
 ********
-Cell list has 4x4x4=64 cells of lengths {4.29,4.29,4.29} with 2016/2016 pairs and 64 particles/cell.
-	{CellList size: 64.7kb}, {Cell size: 288.0b}, {total size: 82.7kb}
+Cell list has 3x3x3=27 cells of lengths {5.72,5.72,5.72} with 351/351 pairs and 64 particles/cell.
+********
+Neighbor List Cells
+	{rcut:8.50}, {skin:1.00}, {rcs2:90.25}
+	{Neighbors stats -> {min:0}, {max:68}, {avg:35.52}
+	{NeighborList size: 0.1Mb}
+	{CellList size: 11.8kb}, {Cell size: 288.0b}, {total size: 19.4kb}
 ********
 System dump: 
 {nparticles: 108}, {box: (17.158000,17.158000,17.158000)}
@@ -130,4 +135,4 @@ Starting simulation with 108 atoms for 1000 steps.
 Final statistics:
 Neighbor List:
 	0/1000 updates/steps
-4.26s, 6.4Mb
+2.97s, 6.6Mb
