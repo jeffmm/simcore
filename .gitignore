@@ -1,10 +1,13 @@
 *.swp
 /cytoscore
+/configure_cytoscore
 /src/*.o
 *.dSYM/*
 tags
 /frames
 /mov*
 /*.txt
+/*.dat
+/*.xyz
 /data
 *ipynb_checkpoints

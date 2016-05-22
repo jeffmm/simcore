@@ -170,15 +170,19 @@ void Graphics::KeyInteraction() {
     }
 }
 
-void Graphics::Init(int n_dim, double **h, double background) {
-    n_dim_ = n_dim;
-    for (int i=0;i<3;++i)
-      background_color_[i] = background;
-    keep_going_ = 0;
-    InitColormap();
-    InitWindow(n_dim, h);
-    InitDiscoRectangle();
-    InitSpheroCylinder();
+void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_struct, double background) {
+  space_ = s_struct;
+  graph_array_ = graph_array;
+  n_dim_ = space_->n_dim;
+  unit_cell_ = space_->unit_cell;
+  boundary_type_ = space_->type;
+  for (int i=0;i<3;++i)
+    background_color_[i] = background;
+  keep_going_ = 0;
+  InitColormap();
+  InitWindow();
+  InitDiscoRectangle();
+  InitSpheroCylinder();
 }
 
 void Graphics::Clear() {
@@ -191,14 +195,14 @@ void Graphics::Clear() {
   glfwTerminate();
 }
 
-void Graphics::InitWindow(int n_dim, double **h) {
-    if (n_dim == 2)
-        Init2dWindow(h);
-    else if (n_dim == 3)
-        Init3dWindow(h);
+void Graphics::InitWindow() {
+  if (n_dim_ == 2)
+    Init2dWindow();
+  else if (n_dim_ == 3)
+    Init3dWindow();
 }
 
-void Graphics::Init2dWindow(double **h) {
+void Graphics::Init2dWindow() {
     // Defaults for window view and coloring
     xyzScale_ = 0.95;
     xTrans_ = yTrans_ = 0.0; // x,y translation
@@ -206,12 +210,12 @@ void Graphics::Init2dWindow(double **h) {
     alpha_ = 1.0; // transparency
 
     /* Compute size of the window respecting the aspect ratio. */
-    if (h[0][0] > h[1][1]) {
+    if (unit_cell_[0][0] > unit_cell_[1][1]) {
         windx_ = 800;
-        windy_ = (int) (windx_ * h[1][1] / h[0][0]);
+        windy_ = (int) (windx_ * unit_cell_[1][1] / unit_cell_[0][0]);
     } else {
         windy_ = 800;
-        windx_ = (int) (windy_ * h[0][0] / h[1][1]);
+        windx_ = (int) (windy_ * unit_cell_[0][0] / unit_cell_[1][1]);
     }
 
     { // Make dummy window so we can get GL extensions 
@@ -226,7 +230,7 @@ void Graphics::Init2dWindow(double **h) {
             error_exit("Failed to create display window\n");
         }
 
-        /* Wrangle in GL function pointers for GL version > 2.0 */
+        // Wrangle in GL function pointers for GL version > 2.0
         glewInit();
         glfwDestroyWindow(window_);
     }
@@ -257,23 +261,23 @@ void Graphics::Init2dWindow(double **h) {
     glClearColor(background_color_[0], background_color_[1], background_color_[2], 1.0);
 
     /* set up projection transform */
-    double xmin = -h[0][0] / 2.;
-    double xmax = h[0][0] / 2.;
-    double ymin = -h[1][1] / 2.;
-    double ymax = h[1][1] / 2.;
+    double xmin = -unit_cell_[0][0] / 2.;
+    double xmax = unit_cell_[0][0] / 2.;
+    double ymin = -unit_cell_[1][1] / 2.;
+    double ymax = unit_cell_[1][1] / 2.;
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D((GLdouble) (xmin - 0.05 * h[0][0]),
-               (GLdouble) (xmax + 0.05 * h[0][0]),
-               (GLdouble) (ymin - 0.05 * h[1][1]),
-               (GLdouble) (ymax + 0.05 * h[1][1])); //deprecated, but annoying
+    gluOrtho2D((GLdouble) (xmin - 0.05 * unit_cell_[0][0]),
+               (GLdouble) (xmax + 0.05 * unit_cell_[0][0]),
+               (GLdouble) (ymin - 0.05 * unit_cell_[1][1]),
+               (GLdouble) (ymax + 0.05 * unit_cell_[1][1])); //deprecated, but annoying
                                                     //to implement
 
     /* establish initial viewport */
     glViewport(0, 0, windx_, windy_);
 }
 
-void Graphics::Init3dWindow(double **h) {
+void Graphics::Init3dWindow() {
     xAngle_ = 90;
     yAngle_ = 0;
     zAngle_ = 90; 
@@ -285,7 +289,7 @@ void Graphics::Init3dWindow(double **h) {
     // typically use square boxes for now
     double a_perp_max = 0.0;
     for (int i = 0; i < 3; ++i)
-        a_perp_max = MAX(h[i][i], a_perp_max);
+        a_perp_max = MAX(unit_cell_[i][i], a_perp_max);
 
     cNear_ = -2.0 * a_perp_max; // clipping plane near
     cFar_ = 2.0 * a_perp_max; // clipping plane far
@@ -359,7 +363,7 @@ void Graphics::Init3dWindow(double **h) {
     glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     glEnable(GL_MULTISAMPLE);
 
-    zTrans_ = -1.5 * h[2][2];
+    zTrans_ = -1.5 * unit_cell_[2][2];
     glEnable(GL_DEPTH_TEST);    /* enable depth buffering */
     glDepthFunc(GL_LESS);       /* pedantic, GL_LESS is the default */
     glClearDepth(1.0);          /* pedantic, 1.0 is the default */
@@ -371,7 +375,7 @@ void Graphics::Init3dWindow(double **h) {
     /* set up projection transform */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(-60.0, 1.0, 1.5 * h[2][2] / 2.0, 10.0 * 1.5 * h[2][2] / 2.0); // deprecated
+    gluPerspective(-60.0, 1.0, 1.5 * unit_cell_[2][2] / 2.0, 10.0 * 1.5 * unit_cell_[2][2] / 2.0); // deprecated
 
     /* establish initial viewport */
     glViewport(0, 0, windx_, windy_);
@@ -416,7 +420,7 @@ void Graphics::InitColormap() { // Pretty straight forward. Builds
     }
 }
 
-void Graphics::DrawDiscorectangles(int n_spheros, double **r, double **u, double *length, double *sphero_diameter) {
+void Graphics::DrawDiscorectangles() {
     glMatrixMode(GL_MODELVIEW); // Make sure we're using the model transform
 
     // Tells gl to use the appropriate shader for the discorectangle
@@ -448,8 +452,9 @@ void Graphics::DrawDiscorectangles(int n_spheros, double **r, double **u, double
 
     // Set default bond color  
     GLfloat color[4] = {0.0, 0.0, 1.0, 1.0};
-    for (int i_bond = 0; i_bond < n_spheros; ++i_bond) {
-        double theta = atan2(u[i_bond][1], u[i_bond][0]); // rotation angle
+    for (auto it=graph_array_->begin(); it!=graph_array_->end(); ++it) {
+    //for (int i_bond = 0; i_bond < n_spheros; ++i_bond) {
+        double theta = atan2((*it)->u[1], (*it)->u[0]); // rotation angle
         
         if (color_switch_ == 1) { // basic theta dependent colorwheel
             double theta_color = theta + 1.5 * M_PI;
@@ -480,13 +485,13 @@ void Graphics::DrawDiscorectangles(int n_spheros, double **r, double **u, double
 
         glPushMatrix(); // Duplicate current modelview
         {
-            glTranslatef(r[i_bond][0], r[i_bond][1], 0.0); // Translate rod
+            glTranslatef((*it)->r[0], (*it)->r[1], 0.0); // Translate rod
             glRotatef((GLfloat) ((theta / M_PI) * 180.0 - 90.0), 0.0, 0.0, 1.0); // rotate rod
 
             // Tell shader about our spherocylinder parameters
-            double half_length = 0.5 * length[i_bond];
+            double half_length = 0.5 * (*it)->length;
             glUniform1f(discorectangle_.uniforms_.half_l, half_length);
-            glUniform1f(discorectangle_.uniforms_.diameter, sphero_diameter[i_bond]);
+            glUniform1f(discorectangle_.uniforms_.diameter, (*it)->diameter);
             glDrawElements(GL_TRIANGLES,
                            discorectangle_.n_triangles_*3,
                            GL_UNSIGNED_SHORT,
@@ -498,26 +503,25 @@ void Graphics::DrawDiscorectangles(int n_spheros, double **r, double **u, double
     glDisableVertexAttribArray(discorectangle_.attributes_.position); // Tell GL to forget about our vertex array
 }
 
-void Graphics::Draw2d(int n_bonds, double **h,
-                      double **r, double **u, double *length, double *sphero_diameter) {
+void Graphics::Draw2d() {
     KeyInteraction();
     UpdateWindow(); // Recalculate window parameters (in case of resize)
-    DrawDiscorectangles(n_bonds, r, u, length, sphero_diameter); 
-    DrawBoundary(h);
+    DrawDiscorectangles(); 
+    DrawBoundary();
     glfwSwapBuffers(window_); // Print frame to screen
 }
 
-void Graphics::Draw2d(int n_bonds, double **h, double **r, double **u, double *length, 
-                      double *sphero_diameter, double m_rad, double d_rad, double m_d_dist)
-{
-    KeyInteraction();
-    UpdateWindow(); // Recalculate window parameters (in case of resize)
-    DrawDiscorectangles(n_bonds, r, u, length, sphero_diameter); 
-    DrawBoundary(h, m_rad, d_rad, m_d_dist);
-    glfwSwapBuffers(window_); // Print frame to screen
-}
+//void Graphics::Draw2d(int n_bonds, double **r, double **u, double *length, 
+                      //double *sphero_diameter, double m_rad, double d_rad, double m_d_dist)
+//{
+    //KeyInteraction();
+    //UpdateWindow(); // Recalculate window parameters (in case of resize)
+    //DrawDiscorectangles(n_bonds, r, u, length, sphero_diameter); 
+    //DrawBoundary(h, m_rad, d_rad, m_d_dist);
+    //glfwSwapBuffers(window_); // Print frame to screen
+//}
 
-void Graphics::DrawSpheros(int n_spheros, double **r, double **u, double *length, double *sphero_diameter) {
+void Graphics::DrawSpheros() {
     glMatrixMode(GL_MODELVIEW); // Use modelview matrix
 
     /* Don't draw back facing triangles (as they would be occluded anyway */
@@ -545,23 +549,24 @@ void Graphics::DrawSpheros(int n_spheros, double **r, double **u, double *length
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, spherocylinder_.element_buffer_);
 
     GLfloat color[4] = {0.0, 0.0, 1.0, 1.0}; // default bond color
-    for (int i_bond = 0; i_bond < n_spheros; ++i_bond) {
+    //for (int i_bond = 0; i_bond < n_spheros; ++i_bond) {
+    for (auto it=graph_array_->begin(); it!=graph_array_->end(); ++it) {
         /* Determine phi rotation angle, amount to rotate about y. */
-        double phi = acos(u[i_bond][2]);
+        double phi = acos((*it)->u[2]);
 
         /* Determine theta rotation, amount to rotate about z. */
-        double length_xy = sqrt(SQR(u[i_bond][0]) + SQR(u[i_bond][1]));
+        double length_xy = sqrt(SQR((*it)->u[0]) + SQR((*it)->u[1]));
         double theta = 0.0;
         if (length_xy > 0.0) {
-            theta = acos(u[i_bond][0] / length_xy);
-            if (u[i_bond][1] < 0.0)
+            theta = acos((*it)->u[0] / length_xy);
+            if ((*it)->u[1] < 0.0)
                 theta = (2.0 * M_PI) - theta;
         }
 
         /* Select cylinder color. */
         if (color_switch_ == 1) {
             /* Convert from HSL to RGB coloring scheme, unique orientation coloring scheme */
-            double L = 0.3 * u[i_bond][2] + 0.5;
+            double L = 0.3 * (*it)->u[2] + 0.5;
             double C = (1 - ABS(2*L - 1));
             double H_prime = 3.0 * theta / M_PI;
             double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
@@ -624,14 +629,14 @@ void Graphics::DrawSpheros(int n_spheros, double **r, double **u, double *length
             glColor4fv(color);
 
         /* Get position of spherocylinder center. */
-        GLfloat v0 = r[i_bond][0];
-        GLfloat v1 = r[i_bond][1];
-        GLfloat v2 = r[i_bond][2];
+        GLfloat v0 = (*it)->r[0];
+        GLfloat v1 = (*it)->r[1];
+        GLfloat v2 = (*it)->r[2];
 
         /* Let the shader know the length of our bond */
-        GLfloat half_length = 0.5 * length[i_bond];
+        GLfloat half_length = 0.5 * (*it)->length;
         glUniform1f(spherocylinder_.uniforms_.half_l, half_length);
-        glUniform1f(spherocylinder_.uniforms_.diameter, sphero_diameter[i_bond]);
+        glUniform1f(spherocylinder_.uniforms_.diameter, (*it)->diameter);
         /* Make copy of modelview matrix to work on */
         glPushMatrix();
 
@@ -651,137 +656,126 @@ void Graphics::DrawSpheros(int n_spheros, double **r, double **u, double *length
     glDisableVertexAttribArray(spherocylinder_.attributes_.position);
 }
 
-void Graphics::DrawSpheres(int n_spheres, double **r, double sphere_diameter) { 
-    glMatrixMode(GL_MODELVIEW);
+//void Graphics::DrawSpheres(int n_spheres, double **r, double sphere_diameter) { 
+    //glMatrixMode(GL_MODELVIEW);
 
-    /* Don't draw back facing triangles (as they would be occluded anyway */
-    glEnable(GL_CULL_FACE);
-    /* Use vertex/fragment custom shader for spherocylinder */
-    glUseProgram(spherocylinder_.program_);
-    /* Get location of half_l parameter, this shouldn't need to be done everytime
-       but for whatever reason it wasn't grabbing the correct location at initialization */
-    spherocylinder_.uniforms_.half_l
-        = glGetUniformLocation(spherocylinder_.program_, "half_l");
-    spherocylinder_.uniforms_.diameter
-        = glGetUniformLocation(spherocylinder_.program_, "diameter");
-    /* Prep to send vertex data to shader */
-    glEnableVertexAttribArray(spherocylinder_.attributes_.position);
-    glBindBuffer(GL_ARRAY_BUFFER, spherocylinder_.vertex_buffer_);
-    glVertexAttribPointer(spherocylinder_.attributes_.position, // attribute
-                          3,                 // number of elements per vertex, here (x,y,z)
-                          GL_FLOAT,          // the type of each element
-                          GL_FALSE,          // take our values as-is
-                          0,                 // no extra data between each position
-                          (void*)0                  // offset of first element
-                          );
+    //[> Don't draw back facing triangles (as they would be occluded anyway <]
+    //glEnable(GL_CULL_FACE);
+    //[> Use vertex/fragment custom shader for spherocylinder <]
+    //glUseProgram(spherocylinder_.program_);
+    //[> Get location of half_l parameter, this shouldn't need to be done everytime
+       //but for whatever reason it wasn't grabbing the correct location at initialization */
+    //spherocylinder_.uniforms_.half_l
+        //= glGetUniformLocation(spherocylinder_.program_, "half_l");
+    //spherocylinder_.uniforms_.diameter
+        //= glGetUniformLocation(spherocylinder_.program_, "diameter");
+    //[> Prep to send vertex data to shader <]
+    //glEnableVertexAttribArray(spherocylinder_.attributes_.position);
+    //glBindBuffer(GL_ARRAY_BUFFER, spherocylinder_.vertex_buffer_);
+    //glVertexAttribPointer(spherocylinder_.attributes_.position, // attribute
+                          //3,                 // number of elements per vertex, here (x,y,z)
+                          //GL_FLOAT,          // the type of each element
+                          //GL_FALSE,          // take our values as-is
+                          //0,                 // no extra data between each position
+                          //(void*)0                  // offset of first element
+                          //);
 
-    /* Use the element buffer (numerical pointer to each set of vertices that make a triangle) */
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, spherocylinder_.element_buffer_);
+    //[> Use the element buffer (numerical pointer to each set of vertices that make a triangle) <]
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, spherocylinder_.element_buffer_);
     
-    /* A sphere is just a zero length spherocylinder! */
-    glUniform1f(spherocylinder_.uniforms_.half_l, 0.0);
-    glUniform1f(spherocylinder_.uniforms_.diameter,
-                sphere_diameter);
+    //[> A sphere is just a zero length spherocylinder! <]
+    //glUniform1f(spherocylinder_.uniforms_.half_l, 0.0);
+    //glUniform1f(spherocylinder_.uniforms_.diameter,
+                //sphere_diameter);
 
-    GLfloat color[4] = { 0.25, 0.0, 0.5, 1.0 };
-    glColor4fv(color);
+    //GLfloat color[4] = { 0.25, 0.0, 0.5, 1.0 };
+    //glColor4fv(color);
 
-    for (int i_sphere = 0; i_sphere < n_spheres; ++i_sphere) {
-        /* Get site coordinates */
-        GLfloat v0 = r[i_sphere][0];
-        GLfloat v1 = r[i_sphere][1];
-        GLfloat v2 = r[i_sphere][2];
+    //for (int i_sphere = 0; i_sphere < n_spheres; ++i_sphere) {
+        //[> Get site coordinates <]
+        //GLfloat v0 = r[i_sphere][0];
+        //GLfloat v1 = r[i_sphere][1];
+        //GLfloat v2 = r[i_sphere][2];
 
-        /* Make copy of modelview matrix to work on */
-        glPushMatrix();
+        //[> Make copy of modelview matrix to work on <]
+        //glPushMatrix();
 
-        /* Move sphere origin to new position */
-        glTranslatef(v0, v1, v2);
+        //[> Move sphere origin to new position <]
+        //glTranslatef(v0, v1, v2);
 
-        glDrawElements(GL_TRIANGLES,
-                       spherocylinder_.n_triangles_*3,
-                       GL_UNSIGNED_SHORT,
-                       (void*) 0);
+        //glDrawElements(GL_TRIANGLES,
+                       //spherocylinder_.n_triangles_*3,
+                       //GL_UNSIGNED_SHORT,
+                       //(void*) 0);
 
-        /* Reset modelview matrix */
-        glPopMatrix();
-    }
-    glDisableVertexAttribArray(spherocylinder_.attributes_.position);
-}
+        //[> Reset modelview matrix <]
+        //glPopMatrix();
+    //}
+    //glDisableVertexAttribArray(spherocylinder_.attributes_.position);
+//}
 
-void Graphics::Draw3d(int n_bonds, double **h,
-                      double **r, double **u, double *length,
-                      int n_sites, double **r_site,
-                      double *sphero_diameter,
-                      double sphere_diameter) {
+//void Graphics::Draw3d(int n_bonds,
+                      //double **r, double **u, double *length,
+                      //int n_sites, double **r_site,
+                      //double *sphero_diameter,
+                      //double sphere_diameter) {
+    //KeyInteraction();
+    //UpdateWindow();
+    //DrawSpheros(n_bonds, r, u, length, sphero_diameter);
+    //if (n_sites > n_bonds * 2) {
+        //DrawSpheres(n_sites - 2*n_bonds, &r_site[n_bonds*2], sphere_diameter);
+    //}
+    //DrawBoundary(h);
+    //glfwSwapBuffers(window_);
+//}
+
+void Graphics::Draw3d() {
     KeyInteraction();
     UpdateWindow();
-    DrawSpheros(n_bonds, r, u, length, sphero_diameter);
-    if (n_sites > n_bonds * 2) {
-        DrawSpheres(n_sites - 2*n_bonds, &r_site[n_bonds*2], sphere_diameter);
-    }
-    DrawBoundary(h);
+    DrawSpheros();
+    DrawBoundary();
     glfwSwapBuffers(window_);
 }
 
-void Graphics::Draw3d(int n_bonds, double **h,
-                      double **r, double **u, double *length,
-                      double *sphero_diameter) {
-    KeyInteraction();
-    UpdateWindow();
-    DrawSpheros(n_bonds, r, u, length, sphero_diameter);
-    DrawBoundary(h);
-    glfwSwapBuffers(window_);
-}
+//void Graphics::Draw3d(int n_bonds,
+                      //double **r, double **u, double *length,
+                      //double *sphero_diameter, double m_rad,
+                      //double d_rad, double m_d_dist) {
+    //KeyInteraction();
+    //UpdateWindow();
+    //DrawSpheros(n_bonds, r, u, length, sphero_diameter);
+    //DrawBoundary(h, m_rad, d_rad, m_d_dist);
+    //glfwSwapBuffers(window_);
+//}
 
-void Graphics::Draw3d(int n_bonds, double **h,
-                      double **r, double **u, double *length,
-                      double *sphero_diameter, double m_rad,
-                      double d_rad, double m_d_dist) {
-    KeyInteraction();
-    UpdateWindow();
-    DrawSpheros(n_bonds, r, u, length, sphero_diameter);
-    DrawBoundary(h, m_rad, d_rad, m_d_dist);
-    glfwSwapBuffers(window_);
-}
+//void Graphics::SetBoundaryType() {
+    //if (boundary_type_.compare("none") == 0) {
+        //std::cerr << "Error setting graphics boundary type of '" << boundary_type << "'\n";
+        //std::cerr << "Defaulting to no boundary\n";
+    //}
+//}
 
-void Graphics::SetBoundaryType(std::string boundary_type) {
-    if (boundary_type.compare("sphere") == 0) {
-        boundary_type_ = boundary_type;
-    }
-    else if (boundary_type.compare("cube") == 0) {
-        boundary_type_ = boundary_type;
-    }
-    else if (boundary_type.compare("snowman") == 0) {
-      boundary_type_ = boundary_type;
-    }
-    else {
-        std::cerr << "Error setting graphics boundary type of '" << boundary_type << "'\n";
-        std::cerr << "Defaulting to no boundary\n";
-    }
-}
+//void Graphics::DrawBoundary() {
+    //glUseProgram(0);
 
-void Graphics::DrawBoundary(double **h) {
-    glUseProgram(0);
+    //GLfloat color[4] = {0.5, 0.5, 0.5, 1.0};
+    //glColor4fv(color);
+    //if (boundary_type_.compare("sphere") == 0) {
+        //glDisable(GL_LIGHTING);
+        //glDisable(GL_CULL_FACE);
 
-    GLfloat color[4] = {0.5, 0.5, 0.5, 1.0};
-    glColor4fv(color);
-    if (boundary_type_.compare("sphere") == 0) {
-        glDisable(GL_LIGHTING);
-        glDisable(GL_CULL_FACE);
+        //[> Fixme: I'm not drawing anything <]
+        //// Turn on wireframe mode
+        //DrawWireSphere(0.5*unit_cell_[0][0], 16, 16);
 
-        /* Fixme: I'm not drawing anything */
-        // Turn on wireframe mode
-        DrawWireSphere(0.5*h[0][0], 16, 16);
-
-    }
-    else if (boundary_type_.compare("cube") == 0) {
-        DrawBox(h);
-    }
+    //}
+    //else if (boundary_type_.compare("cube") == 0) {
+        //DrawBox();
+    //}
     
-}
+//}
 
-void Graphics::DrawBoundary(double **h, double m_rad, double d_rad, double m_d_dist) {
+void Graphics::DrawBoundary() {
     glUseProgram(0);
 
     GLfloat color[4] = {0.5, 0.5, 0.5, 1.0};
@@ -792,14 +786,14 @@ void Graphics::DrawBoundary(double **h, double m_rad, double d_rad, double m_d_d
 
       /* Fixme: I'm not drawing anything */
       // Turn on wireframe mode
-      DrawWireSphere(0.5*h[0][0], 16, 16);
+      DrawWireSphere(0.5*unit_cell_[0][0], 16, 16);
 
     }
     else if (boundary_type_.compare("cube") == 0) {
-      DrawBox(h);
+      DrawBox();
     }
     else if (boundary_type_.compare("snowman") == 0) {
-      DrawSnowman(m_rad, d_rad, m_d_dist);
+      DrawSnowman();
     }
     
 }
@@ -833,80 +827,74 @@ void Graphics::DrawWireSphere(double r, int lats, int longs) {
     glEnable(GL_CULL_FACE);
 }
 
-void Graphics::DrawLoop(graph_struct g_struct) {
-  if (boundary_type_.compare("snowman") == 0)
-    DrawLoop(g_struct.n_spheros, g_struct.h, g_struct.r, g_struct.u,
-             g_struct.l, g_struct.diam, g_struct.m_rad,
-             g_struct.d_rad, g_struct.m_d_dist);
-  else
-    DrawLoop(g_struct.n_spheros, g_struct.h, g_struct.r,
-             g_struct.u, g_struct.l, g_struct.diam);
-}
+//void Graphics::DrawLoop(graph_struct g_struct) {
+  //if (boundary_type_.compare("snowman") == 0)
+    //DrawLoop(g_struct.n_spheros, g_struct.h, g_struct.r, g_struct.u,
+             //g_struct.l, g_struct.diam, g_struct.m_rad,
+             //g_struct.d_rad, g_struct.m_d_dist);
+  //else
+    //DrawLoop(g_struct.n_spheros, g_struct.h, g_struct.r,
+             //g_struct.u, g_struct.l, g_struct.diam);
+//}
 
-void Graphics::DrawLoop(int n_bonds, double **h,
-                        double **r, double **u, double *length,
-                        int n_sites, double **r_site,
-                        double *sphero_diameter,
-                        double sphere_diameter) {
-    do { Draw(n_bonds, h, r, u, length, n_sites, r_site, sphero_diameter, sphere_diameter); }
+//void Graphics::DrawLoop(int n_bonds,
+                        //double **r, double **u, double *length,
+                        //int n_sites, double **r_site,
+                        //double *sphero_diameter,
+                        //double sphere_diameter) {
+    //do { Draw(n_bonds, h, r, u, length, n_sites, r_site, sphero_diameter, sphere_diameter); }
+    //while (!keep_going_);
+    //return;
+//}
+
+//void Graphics::DrawLoop(int n_bonds,
+                        //double **r, double **u, double *length, double *sphero_diameter) {
+    //do { Draw(n_bonds, h, r, u, length, sphero_diameter); }
+    //while (!keep_going_);
+    //return;
+//}
+
+void Graphics::DrawLoop() {
+    do { Draw(); }
     while (!keep_going_);
     return;
 }
 
-void Graphics::DrawLoop(int n_bonds, double **h,
-                        double **r, double **u, double *length, double *sphero_diameter) {
-    do { Draw(n_bonds, h, r, u, length, sphero_diameter); }
-    while (!keep_going_);
-    return;
-}
+//void Graphics::Draw(graph_struct g_struct) {
+  //if (boundary_type_.compare("snowman") == 0)
+    //Draw(g_struct.n_spheros, g_struct.h, g_struct.r, g_struct.u,
+         //g_struct.l, g_struct.diam, g_struct.m_rad,
+         //g_struct.d_rad, g_struct.m_d_dist);
+  //else 
+    //Draw(g_struct.n_spheros, g_struct.h, g_struct.r, g_struct.u,
+         //g_struct.l, g_struct.diam); 
+//}
 
-void Graphics::DrawLoop(int n_bonds, double **h,
-                        double **r, double **u, double *length, double *sphero_diameter,
-                        double m_rad, double d_rad, double m_d_dist) {
-    do { Draw(n_bonds, h, r, u, length, sphero_diameter, m_rad, d_rad, m_d_dist); }
-    while (!keep_going_);
-    return;
-}
-
-void Graphics::Draw(graph_struct g_struct) {
-  if (boundary_type_.compare("snowman") == 0)
-    Draw(g_struct.n_spheros, g_struct.h, g_struct.r, g_struct.u,
-         g_struct.l, g_struct.diam, g_struct.m_rad,
-         g_struct.d_rad, g_struct.m_d_dist);
-  else 
-    Draw(g_struct.n_spheros, g_struct.h, g_struct.r, g_struct.u,
-         g_struct.l, g_struct.diam); 
-}
-
-void Graphics::Draw(int n_bonds, double **h,
-                    double **r, double **u, double *length,
-                    int n_sites, double **r_site,
-                    double *sphero_diameter,
-                    double sphere_diameter) {
+void Graphics::Draw() {
     if (n_dim_ == 2)
-        Draw2d(n_bonds, h, r, u, length, sphero_diameter);
+        Draw2d();
     else if (n_dim_ == 3)
-        Draw3d(n_bonds, h, r, u, length, n_sites, r_site, sphero_diameter, sphere_diameter);
+        Draw3d();
 }
 
-void Graphics::Draw(int n_bonds, double **h,
-                    double **r, double **u, double *length, double *sphero_diameter) {
-    if (n_dim_ == 2)
-        Draw2d(n_bonds, h, r, u, length, sphero_diameter);
-    else if (n_dim_ == 3)
-        Draw3d(n_bonds, h, r, u, length, sphero_diameter);
-}
+//void Graphics::Draw(int n_bonds,
+                    //double **r, double **u, double *length, double *sphero_diameter) {
+    //if (n_dim_ == 2)
+        //Draw2d(n_bonds, h, r, u, length, sphero_diameter);
+    //else if (n_dim_ == 3)
+        //Draw3d(n_bonds, h, r, u, length, sphero_diameter);
+//}
 
-void Graphics::Draw(int n_bonds, double **h,
-                    double **r, double **u, double *length, double *sphero_diameter,
-                    double m_rad, double d_rad, double m_d_dist) {
-    if (n_dim_ == 2)
-        Draw2d(n_bonds, h, r, u, length, sphero_diameter, m_rad, d_rad, m_d_dist);
-    else if (n_dim_ == 3)
-        Draw3d(n_bonds, h, r, u, length, sphero_diameter, m_rad, d_rad, m_d_dist);
-}
+//void Graphics::Draw(int n_bonds,
+                    //double **r, double **u, double *length, double *sphero_diameter,
+                    //double m_rad, double d_rad, double m_d_dist) {
+    //if (n_dim_ == 2)
+        //Draw2d(n_bonds, h, r, u, length, sphero_diameter, m_rad, d_rad, m_d_dist);
+    //else if (n_dim_ == 3)
+        //Draw3d(n_bonds, h, r, u, length, sphero_diameter, m_rad, d_rad, m_d_dist);
+//}
 
-void Graphics::DrawSquare(double **h) {
+void Graphics::DrawSquare() {
     glUseProgram(0);
 
     /* Draw the bounding box. */
@@ -916,25 +904,25 @@ void Graphics::DrawSquare(double **h) {
     glLineWidth(w);
     glColor4fv(box_color);
     glBegin(GL_LINE_LOOP);
-    v0 = -h[0][0] / 2 - h[0][1] / 2;
-    v1 = -h[1][1] / 2 - h[1][0] / 2;
+    v0 = -unit_cell_[0][0] / 2 - unit_cell_[0][1] / 2;
+    v1 = -unit_cell_[1][1] / 2 - unit_cell_[1][0] / 2;
     glVertex2f(v0, v1);
-    v0 = -h[0][0] / 2 + h[0][1] / 2;
-    v1 = h[1][1] / 2 - h[1][0] / 2;
+    v0 = -unit_cell_[0][0] / 2 + unit_cell_[0][1] / 2;
+    v1 = unit_cell_[1][1] / 2 - unit_cell_[1][0] / 2;
     glVertex2f(v0, v1);
-    v0 = h[0][0] / 2 + h[0][1] / 2;
-    v1 = h[1][1] / 2 + h[1][0] / 2;
+    v0 = unit_cell_[0][0] / 2 + unit_cell_[0][1] / 2;
+    v1 = unit_cell_[1][1] / 2 + unit_cell_[1][0] / 2;
     glVertex2f(v0, v1);
-    v0 = h[0][0] / 2 - h[0][1] / 2;
-    v1 = -h[1][1] / 2 + h[1][0] / 2;
+    v0 = unit_cell_[0][0] / 2 - unit_cell_[0][1] / 2;
+    v1 = -unit_cell_[1][1] / 2 + unit_cell_[1][0] / 2;
     glVertex2f(v0, v1);
-    v0 = -h[0][0] / 2 - h[0][1] / 2;
-    v1 = -h[1][1] / 2 - h[1][0] / 2;
+    v0 = -unit_cell_[0][0] / 2 - unit_cell_[0][1] / 2;
+    v1 = -unit_cell_[1][1] / 2 - unit_cell_[1][0] / 2;
     glVertex2f(v0, v1);
     glEnd();
 }
 
-void Graphics::DrawCube(double **h) {
+void Graphics::DrawCube() {
     int w;
     GLfloat v0, v1, v2;
 
@@ -948,75 +936,75 @@ void Graphics::DrawCube(double **h) {
     /* Draw the bounding box. */
     /* front face */
     glBegin(GL_LINE_LOOP);
-    v0 = 0.5 * (-h[0][0] - h[0][1] - h[0][2]);
-    v1 = 0.5 * (-h[1][0] - h[1][1] - h[1][2]);
-    v2 = 0.5 * (-h[2][0] - h[2][1] - h[2][2]);
+    v0 = 0.5 * (-unit_cell_[0][0] - unit_cell_[0][1] - unit_cell_[0][2]);
+    v1 = 0.5 * (-unit_cell_[1][0] - unit_cell_[1][1] - unit_cell_[1][2]);
+    v2 = 0.5 * (-unit_cell_[2][0] - unit_cell_[2][1] - unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (h[0][0] - h[0][1] - h[0][2]);
-    v1 = 0.5 * (h[1][0] - h[1][1] - h[1][2]);
-    v2 = 0.5 * (h[2][0] - h[2][1] - h[2][2]);
+    v0 = 0.5 * (unit_cell_[0][0] - unit_cell_[0][1] - unit_cell_[0][2]);
+    v1 = 0.5 * (unit_cell_[1][0] - unit_cell_[1][1] - unit_cell_[1][2]);
+    v2 = 0.5 * (unit_cell_[2][0] - unit_cell_[2][1] - unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (h[0][0] + h[0][1] - h[0][2]);
-    v1 = 0.5 * (h[1][0] + h[1][1] - h[1][2]);
-    v2 = 0.5 * (h[2][0] + h[2][1] - h[2][2]);
+    v0 = 0.5 * (unit_cell_[0][0] + unit_cell_[0][1] - unit_cell_[0][2]);
+    v1 = 0.5 * (unit_cell_[1][0] + unit_cell_[1][1] - unit_cell_[1][2]);
+    v2 = 0.5 * (unit_cell_[2][0] + unit_cell_[2][1] - unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-h[0][0] + h[0][1] - h[0][2]);
-    v1 = 0.5 * (-h[1][0] + h[1][1] - h[1][2]);
-    v2 = 0.5 * (-h[2][0] + h[2][1] - h[2][2]);
+    v0 = 0.5 * (-unit_cell_[0][0] + unit_cell_[0][1] - unit_cell_[0][2]);
+    v1 = 0.5 * (-unit_cell_[1][0] + unit_cell_[1][1] - unit_cell_[1][2]);
+    v2 = 0.5 * (-unit_cell_[2][0] + unit_cell_[2][1] - unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-h[0][0] - h[0][1] - h[0][2]);
-    v1 = 0.5 * (-h[1][0] - h[1][1] - h[1][2]);
-    v2 = 0.5 * (-h[2][0] - h[2][1] - h[2][2]);
+    v0 = 0.5 * (-unit_cell_[0][0] - unit_cell_[0][1] - unit_cell_[0][2]);
+    v1 = 0.5 * (-unit_cell_[1][0] - unit_cell_[1][1] - unit_cell_[1][2]);
+    v2 = 0.5 * (-unit_cell_[2][0] - unit_cell_[2][1] - unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-h[0][0] - h[0][1] + h[0][2]);
-    v1 = 0.5 * (-h[1][0] - h[1][1] + h[1][2]);
-    v2 = 0.5 * (-h[2][0] - h[2][1] + h[2][2]);
+    v0 = 0.5 * (-unit_cell_[0][0] - unit_cell_[0][1] + unit_cell_[0][2]);
+    v1 = 0.5 * (-unit_cell_[1][0] - unit_cell_[1][1] + unit_cell_[1][2]);
+    v2 = 0.5 * (-unit_cell_[2][0] - unit_cell_[2][1] + unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (h[0][0] - h[0][1] + h[0][2]);
-    v1 = 0.5 * (h[1][0] - h[1][1] + h[1][2]);
-    v2 = 0.5 * (h[2][0] - h[2][1] + h[2][2]);
+    v0 = 0.5 * (unit_cell_[0][0] - unit_cell_[0][1] + unit_cell_[0][2]);
+    v1 = 0.5 * (unit_cell_[1][0] - unit_cell_[1][1] + unit_cell_[1][2]);
+    v2 = 0.5 * (unit_cell_[2][0] - unit_cell_[2][1] + unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (h[0][0] - h[0][1] - h[0][2]);
-    v1 = 0.5 * (h[1][0] - h[1][1] - h[1][2]);
-    v2 = 0.5 * (h[2][0] - h[2][1] - h[2][2]);
-    glVertex3f(v0, v1, v2);
-    glEnd();
-    glBegin(GL_LINE_LOOP);
-    v0 = 0.5 * (-h[0][0] + h[0][1] - h[0][2]);
-    v1 = 0.5 * (-h[1][0] + h[1][1] - h[1][2]);
-    v2 = 0.5 * (-h[2][0] + h[2][1] - h[2][2]);
-    glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-h[0][0] + h[0][1] + h[0][2]);
-    v1 = 0.5 * (-h[1][0] + h[1][1] + h[1][2]);
-    v2 = 0.5 * (-h[2][0] + h[2][1] + h[2][2]);
-    glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (h[0][0] + h[0][1] + h[0][2]);
-    v1 = 0.5 * (h[1][0] + h[1][1] + h[1][2]);
-    v2 = 0.5 * (h[2][0] + h[2][1] + h[2][2]);
-    glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (h[0][0] + h[0][1] - h[0][2]);
-    v1 = 0.5 * (h[1][0] + h[1][1] - h[1][2]);
-    v2 = 0.5 * (h[2][0] + h[2][1] - h[2][2]);
+    v0 = 0.5 * (unit_cell_[0][0] - unit_cell_[0][1] - unit_cell_[0][2]);
+    v1 = 0.5 * (unit_cell_[1][0] - unit_cell_[1][1] - unit_cell_[1][2]);
+    v2 = 0.5 * (unit_cell_[2][0] - unit_cell_[2][1] - unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
     glEnd();
     glBegin(GL_LINE_LOOP);
-    v0 = 0.5 * (-h[0][0] - h[0][1] + h[0][2]);
-    v1 = 0.5 * (-h[1][0] - h[1][1] + h[1][2]);
-    v2 = 0.5 * (-h[2][0] - h[2][1] + h[2][2]);
+    v0 = 0.5 * (-unit_cell_[0][0] + unit_cell_[0][1] - unit_cell_[0][2]);
+    v1 = 0.5 * (-unit_cell_[1][0] + unit_cell_[1][1] - unit_cell_[1][2]);
+    v2 = 0.5 * (-unit_cell_[2][0] + unit_cell_[2][1] - unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-h[0][0] + h[0][1] + h[0][2]);
-    v1 = 0.5 * (-h[1][0] + h[1][1] + h[1][2]);
-    v2 = 0.5 * (-h[2][0] + h[2][1] + h[2][2]);
+    v0 = 0.5 * (-unit_cell_[0][0] + unit_cell_[0][1] + unit_cell_[0][2]);
+    v1 = 0.5 * (-unit_cell_[1][0] + unit_cell_[1][1] + unit_cell_[1][2]);
+    v2 = 0.5 * (-unit_cell_[2][0] + unit_cell_[2][1] + unit_cell_[2][2]);
+    glVertex3f(v0, v1, v2);
+    v0 = 0.5 * (unit_cell_[0][0] + unit_cell_[0][1] + unit_cell_[0][2]);
+    v1 = 0.5 * (unit_cell_[1][0] + unit_cell_[1][1] + unit_cell_[1][2]);
+    v2 = 0.5 * (unit_cell_[2][0] + unit_cell_[2][1] + unit_cell_[2][2]);
+    glVertex3f(v0, v1, v2);
+    v0 = 0.5 * (unit_cell_[0][0] + unit_cell_[0][1] - unit_cell_[0][2]);
+    v1 = 0.5 * (unit_cell_[1][0] + unit_cell_[1][1] - unit_cell_[1][2]);
+    v2 = 0.5 * (unit_cell_[2][0] + unit_cell_[2][1] - unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
     glEnd();
     glBegin(GL_LINE_LOOP);
-    v0 = 0.5 * (h[0][0] - h[0][1] + h[0][2]);
-    v1 = 0.5 * (h[1][0] - h[1][1] + h[1][2]);
-    v2 = 0.5 * (h[2][0] - h[2][1] + h[2][2]);
+    v0 = 0.5 * (-unit_cell_[0][0] - unit_cell_[0][1] + unit_cell_[0][2]);
+    v1 = 0.5 * (-unit_cell_[1][0] - unit_cell_[1][1] + unit_cell_[1][2]);
+    v2 = 0.5 * (-unit_cell_[2][0] - unit_cell_[2][1] + unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (h[0][0] + h[0][1] + h[0][2]);
-    v1 = 0.5 * (h[1][0] + h[1][1] + h[1][2]);
-    v2 = 0.5 * (h[2][0] + h[2][1] + h[2][2]);
+    v0 = 0.5 * (-unit_cell_[0][0] + unit_cell_[0][1] + unit_cell_[0][2]);
+    v1 = 0.5 * (-unit_cell_[1][0] + unit_cell_[1][1] + unit_cell_[1][2]);
+    v2 = 0.5 * (-unit_cell_[2][0] + unit_cell_[2][1] + unit_cell_[2][2]);
+    glVertex3f(v0, v1, v2);
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+    v0 = 0.5 * (unit_cell_[0][0] - unit_cell_[0][1] + unit_cell_[0][2]);
+    v1 = 0.5 * (unit_cell_[1][0] - unit_cell_[1][1] + unit_cell_[1][2]);
+    v2 = 0.5 * (unit_cell_[2][0] - unit_cell_[2][1] + unit_cell_[2][2]);
+    glVertex3f(v0, v1, v2);
+    v0 = 0.5 * (unit_cell_[0][0] + unit_cell_[0][1] + unit_cell_[0][2]);
+    v1 = 0.5 * (unit_cell_[1][0] + unit_cell_[1][1] + unit_cell_[1][2]);
+    v2 = 0.5 * (unit_cell_[2][0] + unit_cell_[2][1] + unit_cell_[2][2]);
     glVertex3f(v0, v1, v2);
     glEnd();
 
@@ -1024,21 +1012,24 @@ void Graphics::DrawCube(double **h) {
     glEnable(GL_LIGHTING);
 }
 
-void Graphics::DrawBox(double **h) {
+void Graphics::DrawBox() {
     if (n_dim_ == 2)
-        DrawSquare(h);
+        DrawSquare();
     else if (n_dim_ == 3)
-        DrawCube(h);
+        DrawCube();
 }
 
-void Graphics::DrawSnowman(double m_rad, double d_rad, double m_d_dist) {
+void Graphics::DrawSnowman() {
   if (n_dim_ == 2)
-    Draw2dSnowman(m_rad, d_rad, m_d_dist);
+    Draw2dSnowman();
   else if (n_dim_==3)
-    Draw3dSnowman(m_rad, d_rad, m_d_dist);
+    Draw3dSnowman();
 }
 
-void Graphics::Draw3dSnowman(double m_rad, double d_rad, double m_d_dist) {
+void Graphics::Draw3dSnowman() {
+  double m_rad = space_->radius;
+  double d_rad = space_->bud_radius;
+  double m_d_dist = space_->bud_height;
   glDisable(GL_LIGHTING);
   glDisable(GL_CULL_FACE);
   int lats = 12;
@@ -1095,7 +1086,10 @@ void Graphics::Draw3dSnowman(double m_rad, double d_rad, double m_d_dist) {
   glEnable(GL_CULL_FACE);
 }
 
-void Graphics::Draw2dSnowman(double m_rad, double d_rad, double m_d_dist) {
+void Graphics::Draw2dSnowman() {
+  double m_rad = space_->radius;
+  double d_rad = space_->bud_radius;
+  double m_d_dist = space_->bud_height;
   //glUseProgram(0);
 
   /* Draw the bounding box. */

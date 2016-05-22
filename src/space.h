@@ -24,12 +24,16 @@ class SpaceProperties {
            intersect_radius_, // radius of circle defined at mother-daughter cell intersection
            r_cutoff_, // WCA potential cutoff at boundary
            volume_,
+           uc_volume_,
            v_ratio_,
-           *a_perp_,
-           **unit_cell_,
-           **unit_cell_inv_;
+           **a_, // direct lattice vector
+           **b_, // reciprocal lattice vector
+           *a_perp_, // perp dist between opposite unit cell faces
+           **uc_,
+           **uc_inv_; // inverse unit cell matrix
     rng_properties rng_;
     system_parameters *params_;
+    space_struct s_struct;
 
   public:
     SpaceProperties();
@@ -48,12 +52,17 @@ class SpaceProperties {
     double GetDRadius();
     double GetMDDist();
     double GetVolume();
-    double* GetAPerp();
+    double **GetA();
+    double **GetB();
+    double *GetAPerp();
     double **GetUnitCell();
     double **GetUnitCellInv();
     boundary_type_t GetType();
+    std::string GetTypeString();
     bool CheckInBounds(double *vec, double buffer);
     bool CheckSegmentInBounds(double *vec1, double *vec2, double buffer);
+    space_struct * GetStruct();
+    void UpdateSpaceStruct();
 };
 
 #endif // _CYTOSCORE_SPACE_PROPERTIES_H_

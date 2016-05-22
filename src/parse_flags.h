@@ -29,10 +29,12 @@ static const std::string desc[n_flags][2] = {
 
 // Run parameters that needs to be carried forward should be stored here.
 struct run_options {
-  run_options() {n_runs = 1; debug = 0; file_flag = 0; run_name = "cs";}
+  run_options() {n_runs = 1; debug = 0; f_flag = 0; r_flag = 0; n_flag = 0; run_name = "cs";}
   int n_runs;
   int debug;
-  int file_flag;
+  int f_flag;
+  int r_flag;
+  int n_flag;
   std::string param_file;
   std::string run_name;
 };
@@ -89,13 +91,15 @@ run_options parse_opts(int argc, char *argv[]) {
         run_opts.debug = 1;
         break;
       case 'f':
-        run_opts.file_flag = 1;
+        run_opts.f_flag = 1;
         run_opts.param_file = optarg;
         break;
       case 'r':
+        run_opts.r_flag = 1;
         run_opts.run_name = optarg;
         break;
       case 'n':
+        run_opts.n_flag = 1;
         run_opts.n_runs = atoi(optarg);
         break;
       case '?':
