@@ -101,6 +101,7 @@ int main(int argc, char **argv) {
     }
     system_properties = new properties_t(4, force_type);
     system_properties->nparticles_ = natoms;
+    system_properties->ndim_ = 3;
     system_properties->box_[0] = system_properties->box_[1] = system_properties->box_[2] = box;
     system_properties->nspecies_ = 1;
     system_properties->skin_ = 1.0;

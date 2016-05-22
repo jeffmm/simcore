@@ -65,6 +65,7 @@ protected:
     int nsys_;
     int next_pid_;
     int nthreads_;
+    int ndim_;
 
     double box_[3];
     double upot_;
