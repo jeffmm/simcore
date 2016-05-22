@@ -3,10 +3,16 @@
 #ifndef BUFFMD_PROPERTIES_H_
 #define BUFFMD_PROPERTIES_H_
 
+enum ForceType : unsigned char {
+    FCELLS,
+    FNEIGHBORS_ALLPAIRS,
+    FNEIGHBORS_CELL
+};
+
 struct _properties {
     _properties(int pCellUpdFreq,
-                bool pUseCells) : cell_update_freq_(pCellUpdFreq),
-                                  use_cells_(pUseCells) {}
+                ForceType pFT) : cell_update_freq_(pCellUpdFreq),
+                                 scheme_(pFT) {}
     
     int nparticles_;
     int nspecies_;
@@ -14,7 +20,7 @@ struct _properties {
     double skin_;
     double dt_;
     
-    const bool use_cells_ = true;
+    const ForceType scheme_ = FCELLS;
     const int cell_update_freq_ = 4;
 };
 typedef struct _properties properties_t;

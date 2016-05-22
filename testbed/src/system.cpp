@@ -24,7 +24,7 @@ SystemArch::SystemArch(properties_t* pProperties) {
     skin_ = system_properties_->skin_;
     // Make sure that we don't accidentally use the wrong skin for
     // the cell list (unless we're using it as part of a neighbor list
-    if (system_properties_->use_cells_) {
+    if (system_properties_->scheme_ == FCELLS) {
         skin_ = 0.0;
     }
     dt_ = system_properties_->dt_;
@@ -122,9 +122,19 @@ SystemArch::initMP() {
     printf("********\n");
     printf("Initializing MP shared data structures\n");
     flattenParticles();
-    generateCellList();
-    if (!system_properties_->use_cells_) {
-        generateNeighborList();
+    switch(system_properties_->scheme_) {
+        case FCELLS:
+            generateCellList();
+            break;
+        case FNEIGHBORS_ALLPAIRS:
+            generateNeighborList();
+            break;
+        case FNEIGHBORS_CELL:
+            generateNeighborList();
+            break;
+        default:
+            fprintf(stderr,"Not a supported data structure type!\n");
+            exit(1);
     }
 }
 
@@ -172,6 +182,22 @@ SystemArch::generateNeighborList() {
 }
 
 
+// Generate the neighbor list (cells)
+void
+SystemArch::generateNeighborListCell() {
+    double max_rcut = 0.0;
+    
+    for (int i = 0; i < nsys_; ++i) {
+        auto current_species = getSpecies(i);
+        max_rcut = std::max(max_rcut, current_species->getRcut());
+    }
+    
+    neighbor_list_cell_.CreateNeighborList(nparticles_, max_rcut, skin_, box_);
+    neighbor_list_cell_.UpdateNeighborList(&particles_);
+    neighbor_list_cell_.print();
+}
+
+
 // Calculate the potential between two particles
 void
 SystemArch::calcPotential(int psid1, int psid2, double* x, double* y, double* fpote) {
@@ -211,6 +237,87 @@ SystemArch::forceNeighAP() {
         double *fx, *fy, *fz;
         double f_epot[4];
         auto neighbors = neighbor_list_.GetNeighbors();
+        
+#if defined(_OPENMP)
+        tid = omp_get_thread_num();
+#else
+        tid = 0;
+#endif
+        // Set up the pointers to the force superarray
+        fx = frc_.data() + (3*tid*nparticles_);
+        buffmd::azzero(fx, 3*nparticles_);
+        fy = frc_.data() + ((3*tid+1)*nparticles_);
+        fz = frc_.data() + ((3*tid+2)*nparticles_);
+        
+#pragma omp for reduction(+:epot) schedule(runtime) nowait
+        for (int idx = 0; idx < nparticles_; ++idx) {
+            // Iterate over the entries in our neighbor list
+            for (auto nldx = neighbors[idx].begin(); nldx != neighbors[idx].end(); nldx++) {
+                int jdx = nldx->idx_;
+                auto part1 = particles_[idx];
+                auto part2 = particles_[jdx];
+                // Calculate the potential (takes care of cutoff)
+                
+                calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
+                epot += f_epot[3];
+                fx[idx] += f_epot[0];
+                fy[idx] += f_epot[1];
+                fz[idx] += f_epot[2];
+                fx[jdx] -= f_epot[0];
+                fy[jdx] -= f_epot[1];
+                fz[jdx] -= f_epot[2];
+            }
+        } // pragma omp for reduction(+:epot) schedule(runtime) nowait
+        
+        // reduce once all threads have finished
+#if defined(_OPENMP)
+#pragma omp barrier
+#endif
+        int i = 1 + (3 * nparticles_ / nthreads_);
+        int fromidx = tid * i;
+        int toidx = fromidx + i;
+        if (toidx > 3*nparticles_) toidx = 3*nparticles_;
+        
+        // Reduce the forces
+        for (i = 1; i < nthreads_; ++i) {
+            int offs;
+            
+            offs = 3*i*nparticles_;
+            
+            for (int j = fromidx; j < toidx; ++j) {
+                frc_[j] += frc_[offs+j];
+            }
+        }
+    } // pragma omp parallel
+    
+    // Recombine into the particles
+    for (int i = 0; i < nparticles_; ++i) {
+        auto part = particles_[i];
+        part->f[0] = frc_[i];
+        part->f[1] = frc_[nparticles_ + i];
+        part->f[2] = frc_[2*nparticles_ + i];
+    }
+    upot_ = epot;
+}
+
+
+// Force calculation routine (in general, will replace forceMP)
+void
+SystemArch::forceNeighCell() {
+    
+    double epot = 0.0;
+    
+    // check the neighbor list for updates!
+    neighbor_list_cell_.CheckNeighborList(&particles_);
+    
+#if defined(_OPENMP)
+#pragma omp parallel
+#endif
+    {
+        int tid;
+        double *fx, *fy, *fz;
+        double f_epot[4];
+        auto neighbors = neighbor_list_cell_.GetNeighbors();
         
 #if defined(_OPENMP)
         tid = omp_get_thread_num();
@@ -408,10 +515,19 @@ SystemArch::velverlet() {
     }
 
     // Compute energies
-    if (system_properties_->use_cells_) {
-        forceCellsMP();
-    } else {
-        forceNeighAP();
+    switch(system_properties_->scheme_) {
+        case FCELLS:
+            forceCellsMP();
+            break;
+        case FNEIGHBORS_ALLPAIRS:
+            forceNeighAP();
+            break;
+        case FNEIGHBORS_CELL:
+            forceNeighCell();
+            break;
+        default:
+            fprintf(stderr,"Something has gone horribly wrong!\n");
+            exit(1);
     }
 
     // Update another half step

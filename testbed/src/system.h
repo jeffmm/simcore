@@ -13,6 +13,7 @@
 #include "cell_list.h"
 #include "cell_list_adj.h"
 #include "neighbor_list.h"
+#include "neighbor_list_cell.h"
 #include "potential_manager.h"
 
 #if defined(_OPENMP)
@@ -41,6 +42,7 @@ public:
     void generateCellList();
     void updateCellList();
     void generateNeighborList();
+    void generateNeighborListCell();
     
     // IO routines and information print
     void output(FILE* erg, FILE* traj, int nfi);
@@ -52,6 +54,7 @@ public:
     // Force calculation and integration
     void forceCellsMP();
     void forceNeighAP();
+    void forceNeighCell();
     void velverlet();
     void calcPotential(int psid1, int psid2, double x[3], double y[3], double* fpote);
     std::pair<double, double> ukin();
@@ -76,6 +79,7 @@ protected:
     //CellListAdj cell_list_adj_;
     
     NeighborList neighbor_list_;
+    NeighborListCell neighbor_list_cell_;
     PotentialManager potential_manager_;
     std::unordered_map<int, BaseSpecies*> species_;
     std::vector<particle*> particles_;
