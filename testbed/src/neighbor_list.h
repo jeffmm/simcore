@@ -30,7 +30,7 @@ public:
     
     void AllPairsUpdate(std::vector<particle*>* particles);
     
-    unsigned long GetMemoryFootprint();
+    virtual unsigned long GetMemoryFootprint();
     
     // Getters
     int GetNUpdates() { return n_updates_; }

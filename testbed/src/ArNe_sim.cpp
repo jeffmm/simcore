@@ -82,8 +82,8 @@ int main(int argc, char **argv) {
     
     // Set the system properties
     // Cell update frequency, use cells (implied not neighbors)
-    bool cells_or_neighbors = false;
-    system_properties = new properties_t(4, cells_or_neighbors);
+    ForceType force_type = FNEIGHBORS_ALLPAIRS;
+    system_properties = new properties_t(4, force_type);
     system_properties->nparticles_ = natoms;
     system_properties->box_[0] = system_properties->box_[1] = system_properties->box_[2] = box;
     system_properties->nspecies_ = 1;
@@ -153,10 +153,19 @@ int main(int argc, char **argv) {
     ArNeSys->dumpPotentials();
 
     // Finish initialization
-    if (system_properties->use_cells_) {
-        ArNeSys->forceCellsMP();
-    } else {
-        ArNeSys->forceNeighAP();
+    switch(system_properties->scheme_) {
+        case FCELLS:
+            ArNeSys->forceCellsMP();
+            break;
+        case FNEIGHBORS_ALLPAIRS:
+            ArNeSys->forceNeighAP();
+            break;
+        case FNEIGHBORS_CELL:
+            ArNeSys->forceNeighCell();
+            break;
+        default:
+            fprintf(stderr,"Something has gone horribly wrong!\n");
+            exit(1);
     }
     ArNeSys->ukin();
 
