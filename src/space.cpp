@@ -8,7 +8,7 @@ void SpaceProperties::Init(system_parameters *params, long seed) {
   params_ = params;
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
-  radius_ = params_->mother_radius;
+  radius_ = params_->system_radius;
   d_radius_ = 0;
   m_d_dist_ = 0;
   r_cutoff_ = params_->r_cutoff_boundary;
@@ -34,6 +34,7 @@ void SpaceProperties::Init(system_parameters *params, long seed) {
   InitUnitCell();
   CalculateVolume();
   rng_.init(seed);
+  UpdateSpaceStruct();
 }
 
 void SpaceProperties::Clear() {
@@ -44,37 +45,72 @@ void SpaceProperties::Clear() {
 
 void SpaceProperties::InitUnitCell() {
   // This needs to be changed to account for periodic boundary conditions
-  unit_cell_ = new double*[n_dim_];
-  unit_cell_inv_ = new double*[n_dim_];
+  uc_ = new double*[n_dim_];
+  uc_inv_ = new double*[n_dim_];
+  a_ = new double*[n_dim_];
+  b_ = new double*[n_dim_];
   a_perp_ = new double[n_dim_];
 
   for(int i=0; i<n_dim_; ++i) {
-      unit_cell_[i] = new double[n_dim_]; 
-      unit_cell_inv_[i] = new double[n_dim_];
+      uc_[i] = new double[n_dim_]; 
+      uc_inv_[i] = new double[n_dim_];
+      a_[i] = new double[n_dim_];
+      b_[i] = new double[n_dim_];
   }
 
   double h_param1 = 2.0 * radius_;
   double h_param2 = m_d_dist_ + d_radius_ + radius_;
-  double h_param = (h_param1 > h_param2 ? h_param1 : h_param2);
-  //FIXME Generalize for non-orthoganonal unit cell
-  for (int i=0; i<n_dim_; ++i)
+  double h_major = (h_param1 > h_param2 ? h_param1 : h_param2);
+  double h_minor;
+  if (boundary_type_ == SNOWMAN)
+    h_minor = (h_param1 > h_param2 ? h_param2 : h_param1);
+  else
+    h_minor = h_major;
+  for (int i=0; i<n_dim_; ++i) {
     for (int j=0; j<n_dim_; ++j) {
-      unit_cell_[i][j] = (i==j ? 1 : 0) * h_param;
-      unit_cell_inv_[i][j] = (i==j ? 1 : 0) / h_param;
+      uc_[i][j] = (i==j ? 1 : 0) * h_minor;
     }
-  for (int i=0; i<n_dim_; ++i) a_perp_[i] = h_param;
+  }
+  uc_[n_dim_-1][n_dim_-1] = h_major;
 
-//  MatrixInversion(n_dim_, unit_cell_, unit_cell_inv_);
+  /* Compute inverse unit cell matrix. */
+  if (n_dim_==2)
+    invert_sym_2d_matrix(uc_, uc_inv_);
+  if (n_dim_==3)
+    invert_sym_3d_matrix(uc_, uc_inv_);
+
+  /* Compute unit cell volume. */
+  uc_volume_ = determinant(n_dim_, uc_);
+
+  /* Set up direct and reciprocal lattice vectors. */
+  for (int i = 0; i < n_dim_; ++i)
+    for (int j = 0; j < n_dim_; ++j) {
+      a_[i][j] = uc_[j][i];
+      b_[i][j] = uc_inv_[i][j];
+    }
+
+  /* Compute perpendicular distances between opposite unit cell faces. */
+  for (int i = 0; i < n_dim_; ++i) {
+    double b_mag2 = 0.0;
+    for (int j = 0; j < n_dim_; ++j)
+      b_mag2 += SQR(b_[i][j]);
+    double b_mag = sqrt(b_mag2);
+    a_perp_[i] = 1.0 / b_mag;
+  }
 }
 
 void SpaceProperties::ClearUnitCell() {
   for (int i=0; i<n_dim_; ++i) {
-    delete[] unit_cell_[i];
-    delete[] unit_cell_inv_[i];
+    delete[] uc_[i];
+    delete[] uc_inv_[i];
+    delete[] a_[i];
+    delete[] b_[i];
   }
-  delete[] unit_cell_;
-  delete[] unit_cell_inv_;
+  delete[] uc_;
+  delete[] uc_inv_;
   delete[] a_perp_;
+  delete[] a_;
+  delete[] b_;
 }
 
 void SpaceProperties::CalculateVolume() {
@@ -252,19 +288,44 @@ double SpaceProperties::GetVolume() {
 }
 
 double **SpaceProperties::GetUnitCell() {
-  return unit_cell_;
+  return uc_;
 }
 
 double **SpaceProperties::GetUnitCellInv(){
-    return unit_cell_inv_;
+    return uc_inv_;
 }
 
 boundary_type_t SpaceProperties::GetType() {
   return boundary_type_;
 }
 
+std::string SpaceProperties::GetTypeString() {
+  std::string type;
+  switch (boundary_type_) {
+    case 0:
+      type = "sphere";
+      break;
+    case 1:
+      type = "cube";
+      break;
+    case 2:
+      type = "snowman";
+      break;
+    default:
+      type = "none";
+      break;
+  }
+  return type;
+}
+
 double *SpaceProperties::GetAPerp() {
     return a_perp_;
+}
+double **SpaceProperties::GetA() {
+    return a_;
+}
+double **SpaceProperties::GetB() {
+    return b_;
 }
 
 double SpaceProperties::GetIntersectHeight() {
@@ -273,4 +334,28 @@ double SpaceProperties::GetIntersectHeight() {
 
 double SpaceProperties::GetIntersectRadius() {
   return intersect_radius_;
+}
+
+void SpaceProperties::UpdateSpaceStruct() {
+  s_struct.n_dim = n_dim_;
+  s_struct.n_periodic = n_periodic_;
+  s_struct.type = GetTypeString();
+  if (GetType() == 2) {
+    s_struct.bud = true;
+    s_struct.bud_height = m_d_dist_;
+    s_struct.bud_radius = d_radius_;
+  }
+  else {
+    s_struct.bud = false;
+  }
+  s_struct.radius = radius_;
+  s_struct.unit_cell = uc_;
+  s_struct.unit_cell_inv = uc_inv_;
+  s_struct.a = a_;
+  s_struct.b = b_;
+  s_struct.a_perp = a_perp_;
+}
+
+space_struct * SpaceProperties::GetStruct() {
+  return &s_struct;
 }

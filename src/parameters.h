@@ -1,78 +1,77 @@
 #ifndef _CYTOSCORE_PARAMETERS_H_
 #define _CYTOSCORE_PARAMETERS_H_
 
-struct system_parameters { 
+// parameters.h, generated automatically using make_params
 
-  long seed; // seed for random number generator
-  int n_dim,
-      n_periodic,
-      insert_type, // 0 for Random, manual otherwise
-      boundary_type,
-      n_filaments_free, // number of free filaments in system
-      n_filaments_attached, // number of attached filaments (per sphere)
-      n_spheres, // number of spheres in system
-      n_steps, // number of steps for simulation
-      n_graph, // number of frames between refreshing graphics
-      dynamic_instability_flag,
-      force_induced_catastrophe_flag,
-      error_analysis_flag,
-      graph_flag,
-      grab_flag,
-      pair_interaction_flag,
-      buckling_analysis_flag,
-      time_analysis_flag,
-      theta_validation_flag,
-      save_state_flag,
-      cell_list_flag,
-      potential_flag,
-      n_save_state, // number of frames between saving the current system state, useful for debugging
-      n_bins,
-      n_validate,
-      n_buckle_on,
-      n_buckle_off,
-      metric_forces,
-      validate_file_number,
-      graph_background,
-      n_particles;
-  double delta, // time duration between each simulation step
-         friction_ratio,
-         mother_daughter_dist, // distance between mother-daughter cell centers
-         mother_radius, // radius of mother cell
-         daughter_radius, // radius of daughter cell
-         sphere_radius, // radius of sphere
-         filament_diameter, // diameter of filament
-         min_length,
-         max_length,
-         min_segment_length,
-         max_segment_length,
-         persistence_length, // persistence_length of microtubules
-         spring_filament_sphere, // spring constant for filament sphere attachments
-         spring_buckling_init, // initial spring constant for buckling forces
-         buckle_rate,
-         buckle_parameter,
-         r_cutoff_sphere, // cutoff for sphere wca
-         r_cutoff_boundary, // cutoff for boundary wca
-         f_shrink_to_grow, // Frequencies for dynamic instability
-         f_shrink_to_pause,
-         f_pause_to_grow,
-         f_pause_to_shrink,
-         f_grow_to_shrink,
-         f_grow_to_pause,
-         v_poly,
-         v_depoly,
-         graph_diameter,
-         particle_radius,
-         particle_mass,
-         temp;
-  
-  char *grab_file; // root directory to save bmp image of graphics to
+struct system_parameters {
 
-// Initialization of parameters to default values 
-  inline void init() {
-#include "parameter_defaults.h"
-  }
+  long seed = 7859459105545;
+  int n_dim = 3;
+  int n_periodic = 0;
+  int boundary_type = 0;
+  double system_radius = 400;
+  int insert_type = 0;
+  int n_filaments_free = 1;
+  int n_filaments_attached = 0;
+  int n_particles = 0;
+  int n_spheres = 0;
+  double particle_radius = 1;
+  double particle_mass = 1;
+  int n_steps = 100000000;
+  int n_graph = 1000;
+  int dynamic_instability_flag = 1;
+  int force_induced_catastrophe_flag = 1;
+  int graph_flag = 0;
+  int error_analysis_flag = 0;
+  int theta_validation_flag = 0;
+  int grab_flag = 0;
+  int pair_interaction_flag = 1;
+  double sphere_radius = 50;
+  int time_flag = 0;
+  int buckling_analysis_flag = 0;
+  int save_state_flag = 0;
+  int n_save_state = 100000;
+  int n_bins = 1000;
+  int n_validate = 10000;
+  int n_buckle_on = 1000000;
+  int n_buckle_off = 1000000;
+  int metric_forces = 1;
+  double delta = 0.001;
+  double friction_ratio = 2;
+  double buckle_rate = 0.001;
+  double daughter_radius = 300;
+  double mother_daughter_dist = 680;
+  double spring_buckling_init = 0;
+  double min_length = 10;
+  double filament_diameter = 1;
+  double max_length = 1000;
+  double max_segment_length = 5;
+  double min_segment_length = 3;
+  double persistence_length = 5000;
+  double spring_filament_sphere = 80;
+  double f_pause_to_grow = 0.01;
+  double buckle_parameter = 0.90;
+  double r_cutoff_sphere = 1.1225;
+  double f_shrink_to_grow = 0;
+  double r_cutoff_boundary = 1.1225;
+  double f_shrink_to_pause = 0.01;
+  double f_grow_to_pause = 0.01;
+  double f_pause_to_shrink = 0.01;
+  double f_grow_to_shrink = 0;
+  double v_poly = 0.01;
+  double v_depoly = 0.02;
+  double graph_diameter = 1;
+  char *grab_file;
+  int cell_list_flag = 0;
+  int rigid_tether_flag = 0;
+  double dimer_eq_length = 5;
+  int position_correlation_flag = 0;
+  int graph_background = 0;
+  double dimer_k_spring = 10;
+  double dimer_length = 5;
+  double dimer_diameter = 1;
+  int n_dimer = 1;
 
 };
-
 
 #endif // _CYTOSCORE_PARAMETERS_H_

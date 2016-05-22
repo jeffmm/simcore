@@ -7,42 +7,45 @@
 //#include "sphere.h"
 //#include "external_forces.h"
 //#include "parameters.h"
-//#include "write_outputs.h"
+#include "write_outputs.h"
 #include "graphics.h"
-#include "particle_md_system.h"
+#include "species.h"
+#include "simple.h"
+#include "composite.h"
+#include "objects.h"
+//#include "particle_md_system.h"
 
 class Simulation {
 
   private:
-    int i_step,
-        i_run;
-    double time,
-           cpu_init_time;
-    system_parameters *params;
-    rng_properties rng;
+    int i_step_;
+    double time_,
+           cpu_init_time_;
+    std::string run_name_;
+    system_parameters params_;
+    rng_properties rng_;
     
-    Graphics graphics;
-    graph_struct g_struct;
-    SpaceProperties space;
+    Graphics graphics_;
+    SpaceProperties space_;
     //IntegratorManager integrator;
     //ExternalForces forces;
-    std::vector<ObjectSystemBase*> systems_;
+    std::vector<SpeciesBase*> species_;
     void InitSimulation();
-    void InitSpace();
-    void InitSystems();
-    void InitGraphics();
+    void InitSpecies();
+    void ClearSpecies();
     void InitOutputs();
     void RunSimulation();
     void ClearSimulation();
-    void ClearSpace();
-    void ClearGraphics();
     void Draw();
     void WriteOutputs();
     void GetGraphicsStructure();
+    void Integrate();
+    std::vector<graph_struct*> graph_array;
 
   public:
-    Simulation(); // Debug mode
-    Simulation(std::string param_file, std::string run_name, int n_runs); // Output files with prefix run_name
+    Simulation();
+    ~Simulation();
+    void Run(system_parameters params, std::string name);
 };
 
 #endif // _CYTOSCORE_SIMULATION_H_  

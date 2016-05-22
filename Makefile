@@ -1,4 +1,4 @@
-PROG_LIST = cytoscore 
+PROG_LIST = cytoscore configure_cytoscore
 TEST_LIST = motor_test diffusion_test msd_analysis
 
 .PHONY : default

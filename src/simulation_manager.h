@@ -1,30 +1,35 @@
 #ifndef _CYTOSCORE_SIMULATION_MANAGER_H_
 #define _CYTOSCORE_SIMULATION_MANAGER_H_
 
-//#include "simulation.h"
+#include "simulation.h"
 #include <yaml-cpp/yaml.h>
 #include "auxiliary.h"
 
 class SimulationManager {
 
   private:
-    int n_runs_,
-        n_var_;
+    unsigned int n_runs_,
+                 n_var_;
     std::string run_name_;
     std::string param_file_;
-    //Simulation *sim_;
-    system_parameters params_;
+    Simulation *sim_;
+    system_parameters *params_;
     rng_properties rng_;
-    void ParseParams(std::string param_file);
-    void GetSeed(std::string param_file);
-    void CheckVariations();
-    void CreateVariations(int n_arr);
+    void ParseParams();
+    void InitVariations();
+    //void CreateVariations();
     void RunSimulations();
+    void ParseParameter(std::string param_name, std::string param_value, unsigned int i_var);
+    void PrintParams(system_parameters params, std::string name);
 
   public:
-    SimulationManager(); // Default to debug mode
-    SimulationManager(std::string param_file, std::string run_name, int n_runs);
-
+    SimulationManager();
+    ~SimulationManager();
+    void InitManager(std::string param_file);
+    void DebugMode();
+    void RunManager();
+    void SetNRuns(int n_runs);
+    void SetRunName(std::string run_name);
 };
 
 
