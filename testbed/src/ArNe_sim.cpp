@@ -85,6 +85,10 @@ int main(int argc, char **argv) {
     // Cell update frequency, use cells (implied not neighbors)
     // Ugly if else for now
     ForceType force_type = FCELLS;
+    if (strcmp(ftype.c_str(), "brute") == 0) {
+        force_type = BRUTEFORCE;
+        std::cout << "Using brute force method for force computation\n";
+    }
     if (strcmp(ftype.c_str(), "cells") == 0) {
         force_type = FCELLS;
         std::cout << "Using Cell lists for force computation\n";
@@ -166,6 +170,9 @@ int main(int argc, char **argv) {
 
     // Finish initialization
     switch(system_properties->scheme_) {
+        case BRUTEFORCE:
+            ArNeSys->forceBrute();
+            break;
         case FCELLS:
             ArNeSys->forceCellsMP();
             break;
@@ -199,8 +206,10 @@ int main(int argc, char **argv) {
         ArNeSys->ukin();
 
         // update the cell list
-        if ((i_step % system_properties->cell_update_freq_) == 0)
-            ArNeSys->updateCellList();
+        if (system_properties->scheme_ == FCELLS || system_properties->scheme_ == FNEIGHBORS_CELL) {
+            if ((i_step % system_properties->cell_update_freq_) == 0)
+                ArNeSys->updateCellList();
+        }
     }
     
     printf("********\n");

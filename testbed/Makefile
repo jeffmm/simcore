@@ -4,25 +4,20 @@ TARGET	= ArNe_sim
 
 #Compilers and flags
 CXX		= g++-5
-#CXX			= g++
 
 #Compiler flags
 CXXFLAGS	= -g -Wall -Wextra
 CXXFLAGS	+= -I/usr/local/include
-ifeq ($(CXX),g++-5)
+ifeq ($(CFG),test)
+	CXXFLAGS	+= -g -pg -O0
+	OPENMP		=
+else
 	CXXFLAGS	+= -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -msse3
 	OPENMP		= -fopenmp
-else
-	CXXFLAGS	+= -O3 -msse3
-	OPENMP		= 
 endif
 THREADS		= -std=c++11
 
-ifeq ($(CXX),g++-5)
-	LINKER	= g++-5 -o
-else
-	LINKER	= g++ -o
-endif
+LINKER	= g++-5 -o
 #Linking flags
 LFLAGS	= -Wall -I. -lm -I/usr/local/include
 GLFW3FLAGS = `pkg-config --static --libs glfw3`
@@ -33,7 +28,7 @@ OBJDIR	= obj
 BINDIR	= bin
 
 SOURCES		:= $(wildcard $(SRCDIR)/*.cpp)
-INCLUDES	:= $(wildcard $(SRCDIR)/*.hpp)
+INCLUDES	:= $(wildcard $(SRCDIR)/*.h)
 OBJECTS		:= $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 rm	= rm -f
 
