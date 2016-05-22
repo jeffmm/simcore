@@ -4,6 +4,7 @@
 #define BUFFMD_PROPERTIES_H_
 
 enum ForceType : unsigned char {
+    BRUTEFORCE,
     FCELLS,
     FNEIGHBORS_ALLPAIRS,
     FNEIGHBORS_CELL

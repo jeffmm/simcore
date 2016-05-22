@@ -123,6 +123,8 @@ SystemArch::initMP() {
     printf("Initializing MP shared data structures\n");
     flattenParticles();
     switch(system_properties_->scheme_) {
+        case BRUTEFORCE:
+            break;
         case FCELLS:
             generateCellList();
             break;
@@ -130,7 +132,7 @@ SystemArch::initMP() {
             generateNeighborList();
             break;
         case FNEIGHBORS_CELL:
-            generateNeighborList();
+            generateNeighborListCell();
             break;
         default:
             fprintf(stderr,"Not a supported data structure type!\n");
@@ -220,6 +222,83 @@ SystemArch::ukin() {
 }
 
 
+// Brute force calculation routine, for testing purposes ONLY!!!
+void
+SystemArch::forceBrute() {
+    
+    double epot = 0.0;
+    
+#if defined(_OPENMP)
+#pragma omp parallel
+#endif
+    {
+        int tid;
+        double *fx, *fy, *fz;
+        double f_epot[4];
+        
+#if defined(_OPENMP)
+        tid = omp_get_thread_num();
+#else
+        tid = 0;
+#endif
+        // Set up the pointers to the force superarray
+        fx = frc_.data() + (3*tid*nparticles_);
+        buffmd::azzero(fx, 3*nparticles_);
+        fy = frc_.data() + ((3*tid+1)*nparticles_);
+        fz = frc_.data() + ((3*tid+2)*nparticles_);
+        
+#if defined(_OPENMP)
+#pragma omp for reduction(+:epot) schedule(runtime) nowait
+#endif
+        for (int idx = 0; idx < nparticles_ - 1; ++idx) {
+            for (int jdx = idx + 1; jdx < nparticles_; ++jdx) {
+                auto part1 = particles_[idx];
+                auto part2 = particles_[jdx];
+                // Calculate the potential (takes care of cutoff)
+                
+                calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
+                epot += f_epot[3];
+                fx[idx] += f_epot[0];
+                fy[idx] += f_epot[1];
+                fz[idx] += f_epot[2];
+                fx[jdx] -= f_epot[0];
+                fy[jdx] -= f_epot[1];
+                fz[jdx] -= f_epot[2];
+            }
+        } // pragma omp for reduction(+:epot) schedule(runtime) nowait
+        
+        // reduce once all threads have finished
+#if defined(_OPENMP)
+#pragma omp barrier
+#endif
+        int i = 1 + (3 * nparticles_ / nthreads_);
+        int fromidx = tid * i;
+        int toidx = fromidx + i;
+        if (toidx > 3*nparticles_) toidx = 3*nparticles_;
+        
+        // Reduce the forces
+        for (i = 1; i < nthreads_; ++i) {
+            int offs;
+            
+            offs = 3*i*nparticles_;
+            
+            for (int j = fromidx; j < toidx; ++j) {
+                frc_[j] += frc_[offs+j];
+            }
+        }
+    } // pragma omp parallel
+    
+    // Recombine into the particles
+    for (int i = 0; i < nparticles_; ++i) {
+        auto part = particles_[i];
+        part->f[0] = frc_[i];
+        part->f[1] = frc_[nparticles_ + i];
+        part->f[2] = frc_[2*nparticles_ + i];
+    }
+    upot_ = epot;
+}
+
+
 // Force calculation routine (in general, will replace forceMP)
 void
 SystemArch::forceNeighAP() {
@@ -248,8 +327,10 @@ SystemArch::forceNeighAP() {
         buffmd::azzero(fx, 3*nparticles_);
         fy = frc_.data() + ((3*tid+1)*nparticles_);
         fz = frc_.data() + ((3*tid+2)*nparticles_);
-        
+
+#if defined(_OPENMP)
 #pragma omp for reduction(+:epot) schedule(runtime) nowait
+#endif
         for (int idx = 0; idx < nparticles_; ++idx) {
             // Iterate over the entries in our neighbor list
             for (auto nldx = neighbors[idx].begin(); nldx != neighbors[idx].end(); nldx++) {
@@ -516,6 +597,9 @@ SystemArch::velverlet() {
 
     // Compute energies
     switch(system_properties_->scheme_) {
+        case BRUTEFORCE:
+            forceBrute();
+            break;
         case FCELLS:
             forceCellsMP();
             break;

@@ -52,6 +52,7 @@ public:
     void statistics(int pNsteps);
     
     // Force calculation and integration
+    void forceBrute();
     void forceCellsMP();
     void forceNeighAP();
     void forceNeighCell();
