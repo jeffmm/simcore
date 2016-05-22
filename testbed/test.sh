@@ -15,6 +15,9 @@ echo "Cell List Scheme (static)"
 echo "Neighbor List All Pairs Scheme (static)"
 ./xtime.rb bin/ArNe_sim argon_108_static.inp allpairs &> tests/static_neighbor_allpairs_test.txt
 
+echo "Neighbor List Cells (static)"
+./xtime.rb bin/ArNe_sim argon_108_static.inp neighborcells &> tests/static_neighbor_cells_test.txt
+
 
 echo ""
 echo "Dynamic tests:"
@@ -27,6 +30,9 @@ echo "Cell List Scheme (dynamic)"
 
 echo "Neighbor List All Pairs Scheme (dynamic)"
 ./xtime.rb bin/ArNe_sim argon_108_dynamic.inp allpairs &> tests/dynamic_neighbor_allpairs_test.txt
+
+echo "Neighbor List Cells Scheme (dynamic)"
+./xtime.rb bin/ArNe_sim argon_108_dynamic.inp neighborcells &> tests/dynamic_neighbor_cells_test.txt
 
 make remove
 make
@@ -43,6 +49,9 @@ echo "Cell List Scheme (static, optimized)"
 echo "Neighbor List All Pairs Scheme (static, optimized)"
 ./xtime.rb bin/ArNe_sim argon_108_static.inp allpairs &> tests/static_neighbor_allpairs_opt.txt
 
+echo "Neighbor List Cells  Scheme (static, optimized)"
+./xtime.rb bin/ArNe_sim argon_108_static.inp neighborcells &> tests/static_neighbor_cells_opt.txt
+
 
 echo ""
 echo "Dynamic tests (optimized):"
@@ -55,3 +64,6 @@ echo "Cell List Scheme (dynamic, optimized)"
 
 echo "Neighbor List All Pairs Scheme (dynamic, optimized)"
 ./xtime.rb bin/ArNe_sim argon_108_dynamic.inp allpairs &> tests/dynamic_neighbor_allpairs_opt.txt
+
+echo "Neighbor List Cells Scheme (dynamic, optimized)"
+./xtime.rb bin/ArNe_sim argon_108_dynamic.inp neighborcells &> tests/dynamic_neighbor_cells_opt.txt

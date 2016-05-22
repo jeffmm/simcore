@@ -196,6 +196,7 @@ SystemArch::generateNeighborListCell() {
     }
     
     neighbor_list_cell_.CreateNeighborList(nparticles_, max_rcut, skin_, box_);
+    neighbor_list_cell_.SetNThreads(nthreads_);
     neighbor_list_cell_.UpdateNeighborList(&particles_);
     neighbor_list_cell_.print();
 }
@@ -218,7 +219,7 @@ SystemArch::ukin() {
     for (auto& sys : species_) {
         ukin_ += sys.second->Ukin(&particles_);
     }
-    temperature_ = 2.0 * ukin_ / (ndim_ * nParticles() - ndim_)/kboltz;
+    temperature_ = 2.0 * ukin_ / (ndim_ * nparticles_ - ndim_)/kboltz;
     //temperature_ = 2.0 * ukin_ / (3.0 * nparticles_ - 3.0)/kboltz;
     return std::make_pair(ukin_, temperature_);
 }
