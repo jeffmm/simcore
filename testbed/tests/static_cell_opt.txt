@@ -1,5 +1,22 @@
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '201307'
+  OMP_DYNAMIC = 'FALSE'
+  OMP_NESTED = 'FALSE'
+  OMP_NUM_THREADS = '8'
+  OMP_SCHEDULE = 'DYNAMIC'
+  OMP_PROC_BIND = 'FALSE'
+  OMP_PLACES = ''
+  OMP_STACKSIZE = '140735064653957'
+  OMP_WAIT_POLICY = 'PASSIVE'
+  OMP_THREAD_LIMIT = '4294967295'
+  OMP_MAX_ACTIVE_LEVELS = '2147483647'
+  OMP_CANCELLATION = 'FALSE'
+  OMP_DEFAULT_DEVICE = '0'
+OPENMP DISPLAY ENVIRONMENT END
 Using Cell lists for force computation
 Creating Argon/Neon System
+Runing OpenMP using 8 threads
 Setting Argon parameters
 ********
 Initializing MP shared data structures
@@ -130,4 +147,4 @@ Starting simulation with 108 atoms for 1000 steps.
 Final statistics:
 Neighbor List:
 	0/1000 updates/steps
-4.34s, 6.4Mb
+0.16s, 6.6Mb
