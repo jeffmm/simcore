@@ -19,7 +19,7 @@
 
 int main(int argc, char **argv) {
     // Get the input via command arguments
-    if (argc != 2)
+    if (argc != 3)
         return 1;
     std::ifstream input_file(argv[1]);
     std::string line;
@@ -28,6 +28,7 @@ int main(int argc, char **argv) {
     unsigned int natoms = 0, nsteps = 0;
     int nprint = 0;
     double mass, eps, sigma, rcut, box, dt;
+    std::string ftype(argv[2]);
     properties_t* system_properties;
 
     // Read in the test files
@@ -82,7 +83,18 @@ int main(int argc, char **argv) {
     
     // Set the system properties
     // Cell update frequency, use cells (implied not neighbors)
-    ForceType force_type = FNEIGHBORS_ALLPAIRS;
+    // Ugly if else for now
+    ForceType force_type = FCELLS;
+    if (strcmp(ftype.c_str(), "cells") == 0) {
+        force_type = FCELLS;
+        std::cout << "Using Cell lists for force computation\n";
+    } else if (strcmp(ftype.c_str(), "allpairs") == 0) {
+        force_type = FNEIGHBORS_ALLPAIRS;
+        std::cout << "Using Neighbor lists all pairs for force computation\n";
+    } else if (strcmp(ftype.c_str(), "neighborcells") == 0) {
+        force_type = FNEIGHBORS_CELL;
+        std::cout << "Using Neighbor lists cell based for force computation\n";
+    }
     system_properties = new properties_t(4, force_type);
     system_properties->nparticles_ = natoms;
     system_properties->box_[0] = system_properties->box_[1] = system_properties->box_[2] = box;
