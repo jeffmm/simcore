@@ -15,11 +15,12 @@ struct _properties {
                 ForceType pFT) : cell_update_freq_(pCellUpdFreq),
                                  scheme_(pFT) {}
     
-    int nparticles_;
-    int nspecies_;
-    double box_[3];
-    double skin_;
-    double dt_;
+    int nparticles_ = 0;
+    int nspecies_ = 0;
+    int ndim_ = 3;
+    double box_[3] = {0.0, 0.0, 0.0};;
+    double skin_ = 0.0;
+    double dt_ = 0.0;
     
     const ForceType scheme_ = FCELLS;
     const int cell_update_freq_ = 4;

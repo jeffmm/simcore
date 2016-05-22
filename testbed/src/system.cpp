@@ -20,6 +20,7 @@ SystemArch::SystemArch(properties_t* pProperties) {
 #endif
     system_properties_ = pProperties;
     nparticles_ = system_properties_->nparticles_;
+    ndim_ = system_properties_->ndim_;
     memcpy(box_, system_properties_->box_, 3*sizeof(double));
     skin_ = system_properties_->skin_;
     // Make sure that we don't accidentally use the wrong skin for
@@ -38,7 +39,7 @@ SystemArch::SystemArch(properties_t* pProperties) {
     
     // initialize the force superarray
     frc_.clear();
-    frc_.resize(nthreads_ * 3 * nparticles_);
+    frc_.resize(nthreads_ * ndim_ * nparticles_);
 }
 
 
@@ -207,7 +208,7 @@ SystemArch::calcPotential(int psid1, int psid2, double* x, double* y, double* fp
 }
 
 
-// Calculate the kinetic energy
+// Calculate the kinetic energy and temperature
 std::pair<double, double>
 SystemArch::ukin() {
     ukin_ = 0.0;
@@ -217,7 +218,8 @@ SystemArch::ukin() {
     for (auto& sys : species_) {
         ukin_ += sys.second->Ukin(&particles_);
     }
-    temperature_ = 2.0 * ukin_ / (3.0 * nparticles_ - 3.0)/kboltz;
+    temperature_ = 2.0 * ukin_ / (ndim_ * nParticles() - ndim_)/kboltz;
+    //temperature_ = 2.0 * ukin_ / (3.0 * nparticles_ - 3.0)/kboltz;
     return std::make_pair(ukin_, temperature_);
 }
 
@@ -242,6 +244,7 @@ SystemArch::forceBrute() {
         tid = 0;
 #endif
         // Set up the pointers to the force superarray
+        
         fx = frc_.data() + (3*tid*nparticles_);
         buffmd::azzero(fx, 3*nparticles_);
         fy = frc_.data() + ((3*tid+1)*nparticles_);
