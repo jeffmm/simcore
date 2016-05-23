@@ -15,12 +15,11 @@ BaseSpecies::~BaseSpecies() {
 }
 
 
-std::pair<double, double>
+double
 BaseSpecies::Ukin(std::vector<particle*>* particles) {
     buffmd::unused(particles);
     ukin_ = 0.0;
-    temp_ = 0.0;
-    return std::make_pair(ukin_, temp_);
+    return ukin_;
 }
 
 
