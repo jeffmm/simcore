@@ -12,7 +12,7 @@ public:
     template<typename... ARGS>
     ArSpecies(double pMass = 0.0,
               double pEps = 0.0,
-              ARGS&&... args) : Species<Ar> { std::forward<ARGS>(args)... },
+              ARGS&&... args) : Species { std::forward<ARGS>(args)... },
                                 mass(pMass), eps(pEps) {}
 
     template<typename... ARGS>
@@ -30,7 +30,7 @@ public:
         printf("{mass: %f}, {eps: %f}\n", mass, eps);
     }
 
-    virtual std::pair<double, double> Ukin(std::vector<particle*>* particles) {
+    virtual double Ukin(std::vector<particle*>* particles) {
         ukin_ = 0.0;
         for (auto it : *particles) {
             if (it->sid != sid_) continue;
@@ -38,12 +38,11 @@ public:
                      + it->v[2]*it->v[2];
         }
         ukin_ *= 0.5 * mvsq2e * mass;
-        temp_ = 2.0 * ukin_ / (3.0 * nparticles_ - 3.0)/kboltz;
-        return std::make_pair(ukin_, temp_);
+        return ukin_;
     }
 
     virtual void dump() {
-        printf("Argon\n\t");
+        printf("%s\n\t", name_.c_str());
         ArSpecies::print();
         Species::dump();
     }
@@ -55,7 +54,6 @@ public:
     // Constants for all argon particles
     double mass;
     double eps;
-    const double kboltz = 0.0019872067;
     const double mvsq2e = 2390.05736153349;
 };
 

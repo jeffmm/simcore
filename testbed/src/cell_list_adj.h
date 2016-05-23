@@ -1,7 +1,7 @@
 // Most basic Cell List implementation I can think of
 // Operates on base particles, with some given cutoff
-#ifndef BUFFMD_CELLLIST_H_
-#define BUFFMD_CELLLIST_H_
+#ifndef BUFFMD_CELLLISTADJ_H_
+#define BUFFMD_CELLLISTADJ_H_
 
 #include <vector>
 #include <cmath>
@@ -9,43 +9,43 @@
 #include "particle.h"
 
 // Each actual cell has information about the ids of the particles
-struct _cell {
+class CellAdj {
+public:
+    
+    CellAdj() {}
+    ~CellAdj() {}
+
     unsigned long GetMemoryFootprint() {
         auto mysize = sizeof(*this);
         auto vecsize = sizeof(int)*idxlist_.capacity();
         return mysize + vecsize;
     }
-    
-    int cell_id_; // ID of this cell
-    int nparticles_; // Number of particles in this cell
-    std::vector<int> idxlist_; // ID list of particles in this cell
-};
-typedef struct _cell cell_t;
 
-class CellList {
+    int cell_id_; // cell id
+    int nparticles_; // number of particles in cell
+    int adj_cell_ids_[27]; // Adjacent cell ids (including this one)
+    std::vector<int> idxlist_;
+};
+
+class CellListAdj {
 public:
     
-    CellList() {}
-    ~CellList() {}
+    CellListAdj() {}
+    ~CellListAdj() {}
     
     void CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]);
     void UpdateCellList(std::vector<particle*>* particles);
     void CheckCellList();
     
+    void SetRCut(double pRcut, double pSkin);
+    
     unsigned long GetMemoryFootprint();
     
     // Simple getters
     int ncells() { return ncells_; }
-    int npairs() { return npairs_; }
-    int plist(int pairidx) {
-        return plist_[pairidx];
-    }
-    std::vector<int>* pidtocid() {
-        return &p_c_;
-    }
     
-    // Operators
-    cell_t* operator [](int cidx) {
+    // Operators (getters)
+    CellAdj* operator [](int cidx) {
         return &clist_[cidx];
     }
     
@@ -56,7 +56,6 @@ protected:
     int nparticles_;
     double rcut_;
     double skin_;
-    double rbuff_; // Buffer of rcut + skin
     double box_[3];
     
     // Computed quantities
@@ -68,10 +67,9 @@ protected:
     double boxby2_[3];
     
     // Vector of the cells themselves, and pair list
-    std::vector<cell_t> clist_;
-    std::vector<int> plist_;
-    std::vector<int> p_c_; // Particle to cell indexer
+    std::vector<CellAdj> clist_;
     
+    // Consts
     const int cellrat_ = 2;
     
 };

@@ -59,6 +59,9 @@ public:
     double v[3]; // velocity
     double f[3]; // force
 
+    // Change in position since last neighbor/cell update
+    double dr_tot[3];
+
     const int pid; // particle id
     const int sid; //species id
 

@@ -5,27 +5,34 @@
 #include <iostream>
 #include <cassert>
 
-#include "cell_list.h"
+#include "cell_list_adj.h"
 
 // First, generate the cells
 // Independent of particle type, just need the best
 // rcutoff to generate this
 void
-CellList::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
-    double boxoffs[3];
-    
+CellListAdj::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
     nparticles_ = pN;
     rcut_ = pRcut;
-    skin_ = pSkin;
-    rbuff_ = rcut_ + skin_;
-    p_c_.clear();
-    p_c_.resize(nparticles_);
     memcpy(box_, pBox, 3*sizeof(double));
     
-    // Compute the number of cells on a side
+    SetRCut(rcut_, skin_);
+
+    printf("Cell list has %dx%dx%d=%d cells of lengths {%.2f,%.2f,%.2f} "
+           "with %d particles/cell.\n", T_[0], T_[1], T_[2], ncells_, S_[0], S_[1], S_[2],
+           nidx_);
+}
+
+// Update Rcut, which requires rebuilding and checking lots of stuff
+void
+CellListAdj::SetRCut(double pRcut, double pSkin) {
+    rcut_ = pRcut;
+    skin_ = pSkin;
+    
+    // Recompute the number of cells on a side
     for (int i = 0; i < 3; ++i) {
         boxby2_[i] = 0.5*box_[i];
-        T_[i] = floor(cellrat_ * box_[i] / rbuff_);
+        T_[i] = floor(cellrat_ * box_[i] / (rcut_ + skin_));
         if (T_[i] < 3) {
             T_[i] = 3;
         }
@@ -34,7 +41,6 @@ CellList::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
     // Compute S (side length) from this
     for (int i = 0; i < 3; ++i) {
         S_[i] = box_[i] / T_[i];
-        boxoffs[i] = boxby2_[i] - 0.5*S_[i];
     }
     
     // Compute various needed quantities
@@ -49,8 +55,6 @@ CellList::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
     
     clist_.clear();
     clist_.resize(ncells_);
-    plist_.clear();
-    plist_.resize(2*ncells_*ncells_);
     
     // Allocate index list within cells
     for (int i = 0; i < ncells_; ++i) {
@@ -59,62 +63,54 @@ CellList::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
         clist_[i].idxlist_.resize(nidx_);
     }
     
-
-    // Build the cell pair list
-    npairs_ = 0;
-    for (int cidx = 0; cidx < ncells_ - 1; ++cidx) {
-        double x1, x2, y1, y2, z1, z2, rx, ry, rz;
-        
-        int cx1[3];
-        buffmd::cell_linear_to_vec(cidx, T_, cx1);
-        x1 = cx1[0]*S_[0] - boxoffs[0];
-        y1 = cx1[1]*S_[1] - boxoffs[1];
-        z1 = cx1[2]*S_[2] - boxoffs[2];
-        
-        for (int cjdx = cidx+1; cjdx < ncells_; ++cjdx) {
-            int cx2[3];
-            buffmd::cell_linear_to_vec(cjdx, T_, cx2);
-            x2 = cx2[0]*S_[0] - boxoffs[0];
-            y2 = cx2[1]*S_[1] - boxoffs[1];
-            z2 = cx2[2]*S_[2] - boxoffs[2];
-            
-            rx = buffmd::pbc(x1 - x2, boxby2_[0], box_[0]);
-            ry = buffmd::pbc(y1 - y2, boxby2_[1], box_[1]);
-            rz = buffmd::pbc(z1 - z2, boxby2_[2], box_[2]);
-            
-            // Check the cells on a line that are too far apart
-            if (fabs(rx) > rbuff_ + S_[0]) continue;
-            if (fabs(ry) > rbuff_ + S_[1]) continue;
-            if (fabs(rz) > rbuff_ + S_[2]) continue;
-            
-            // Check for cells in a plane that are too far apart
-            if (sqrt(rx*rx + ry*ry) > (rbuff_ + sqrt(S_[0]*S_[0] + S_[1]*S_[1]))) continue;
-            if (sqrt(rx*rx + rz*rz) > (rbuff_ + sqrt(S_[0]*S_[0] + S_[2]*S_[2]))) continue;
-            if (sqrt(ry*ry + rz*rz) > (rbuff_ + sqrt(S_[1]*S_[1] + S_[2]*S_[2]))) continue;
-            
-            // Other cells too far apart in 3d
-            if (sqrt(rx*rx + ry*ry + rz*rz) > (sqrt(S_[0]*S_[0] + S_[1]*S_[1] + S_[2]*S_[2]) + rbuff_)) continue;
-            
-            // Cells are close enough, add
-            plist_[2*npairs_    ] = cidx;
-            plist_[2*npairs_ + 1] = cjdx;
-            ++npairs_;
+    // Add the allowed adjacent cells to this one
+    for (int cz = 0; cz < T_[2]; ++cz) {
+        for (int cy = 0; cy < T_[1]; ++cy) {
+            for (int cx = 0; cx < T_[0]; ++cx) {
+                // Get the linear index of this cell
+                int cidx = buffmd::cell_vec_to_linear(cx, cy, cz, T_);
+                int adj_cell_id = 0;
+                
+                for (int dz = -1; dz <= 1; ++dz) {
+                    for (int dy = -1; dy <= 1; ++dy) {
+                        for (int dx = -1; dx <= 1; ++dx) {
+                            int rx = cx + dx;
+                            int ry = cy + dy;
+                            int rz = cz + dz;
+                            
+                            while(rx < 0) {
+                                rx += T_[0];
+                            }
+                            rx = rx % T_[0];
+                            
+                            while(ry < 0) {
+                                ry += T_[1];
+                            }
+                            ry = ry % T_[1];
+                            
+                            while(rz < 0) {
+                                rz += T_[2];
+                            }
+                            rz = rz % T_[2];
+                            
+                            int cjdx = buffmd::cell_vec_to_linear(rx, ry, rz, T_);
+                            clist_[cidx].adj_cell_ids_[adj_cell_id] = cjdx;
+                            adj_cell_id++;
+                        }
+                    }
+                }
+                
+            }
         }
     }
-    printf("********\n");
-    printf("Cell list has %dx%dx%d=%d cells of lengths {%.2f,%.2f,%.2f} "
-           "with %d/%d pairs and %d particles/cell.\n", T_[0], T_[1], T_[2], ncells_, S_[0], S_[1], S_[2],
-           npairs_, ncells_*(ncells_-1)/2, nidx_);
 }
 
 
 // Update the cell list
 void
-CellList::UpdateCellList(std::vector<particle*>* particles) {
+CellListAdj::UpdateCellList(std::vector<particle*>* particles) {
     int midx = 0;
     int cx, cy, cz;
-    
-    //printf("Starting UpdateCellList\n");
     
     for (int cidx = 0; cidx < ncells_; ++cidx) {
         clist_[cidx].nparticles_ = 0;
@@ -131,9 +127,8 @@ CellList::UpdateCellList(std::vector<particle*>* particles) {
         //printf("p{%d}(%f,%f,%f) -> (%d,%d,%d) -> cell{%d}\n",
         //       i, p->x[0], p->x[1], p->x[2], cx, cy, cz, cidx);
         
-        idx = clist_[cidx].nparticles_; // Current location in array
-        clist_[cidx].idxlist_[idx] = i; // Set the particle i in the array of cell cidx[idx]
-        p_c_[i] = cidx; // Set the particle id->cell id
+        idx = clist_[cidx].nparticles_;
+        clist_[cidx].idxlist_[idx] = i;
         ++idx;
         clist_[cidx].nparticles_ = idx;
         if (idx > midx) midx = idx;
@@ -144,39 +139,45 @@ CellList::UpdateCellList(std::vector<particle*>* particles) {
         printf("Overflow in cell list: %d/%d particles/cells\n", midx, nidx_);
         exit(1);
     }
-    //printf("Finished UpdateCellList\n");
 }
 
 
 // Get the memory used by this class
 unsigned long
-CellList::GetMemoryFootprint() {
+CellListAdj::GetMemoryFootprint() {
     auto mysize = sizeof(*this);
-    auto vecsize = clist_.capacity()*sizeof(cell_t*);
-    auto pvecsize = plist_.capacity()*sizeof(int*);
-    return mysize + vecsize + pvecsize;
+    auto vecsize = clist_.capacity()*sizeof(CellAdj*);
+    return mysize + vecsize;
 }
 
 
 // Check the cell list for consistency
 void
-CellList::CheckCellList() {
+CellListAdj::CheckCellList() {
     // Check the consistency of this new cell list
-    cell_t* memorycell = &clist_[0];
-    printf("\t{CellList size: %.1fkb}, {Cell size: %.1fb}, "
+    CellAdj* memorycell = &clist_[0];
+    printf("\t{CellListAdj size: %.1fkb}, {Cell size: %.1fb}, "
            "{total size: %.1fkb}\n",
            (float)(GetMemoryFootprint())/1024,
            (float)memorycell->GetMemoryFootprint(),
            (float)(GetMemoryFootprint() + ncells_*memorycell->GetMemoryFootprint())/1024);
     int runningtot = 0;
     for (int cidx = 0; cidx < ncells_; ++cidx) {
-        cell_t* cell1 = &clist_[cidx];
+        CellAdj* cell1 = &clist_[cidx];
         assert(cell1->cell_id_ == cidx);
         int cx[3];
         buffmd::cell_linear_to_vec(cidx, T_, cx);
         //printf("Cell(%d){%d,%d,%d} -> [%d]\n", cidx, cx[0], cx[1], cx[2], cell1->nparticles_);
         runningtot += cell1->nparticles_;
     }
+    printf("Exact middle cell adjacent members: \n");
+    int midcidx = buffmd::cell_vec_to_linear(0,0,0,T_);
+    printf("Cell %d adjacent members = \n\t{", midcidx);
+    for (int i = 0; i < 27; ++i) {
+        printf("%d,", clist_[midcidx].adj_cell_ids_[i]);
+    }
+
+
     //printf("Pair list: \n");
     //for (int pairidx = 0; pairidx < npairs_; ++pairidx) {
     //    cell_t* c1 = &clist_[2*pairidx];
