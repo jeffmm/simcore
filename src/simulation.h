@@ -5,13 +5,13 @@
 #include "auxiliary.h"
 //#include "filament.h"
 //#include "sphere.h"
-//#include "external_forces.h"
+#include "forces.h"
 //#include "parameters.h"
 #include "write_outputs.h"
 #include "graphics.h"
 #include "species.h"
-#include "simple.h"
-#include "composite.h"
+//#include "simple.h"
+//#include "composite.h"
 #include "objects.h"
 //#include "particle_md_system.h"
 
@@ -28,7 +28,7 @@ class Simulation {
     Graphics graphics_;
     SpaceProperties space_;
     //IntegratorManager integrator;
-    //ExternalForces forces;
+    Forces forces_;
     std::vector<SpeciesBase*> species_;
     void InitSimulation();
     void InitSpecies();

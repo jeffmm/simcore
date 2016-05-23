@@ -3,6 +3,9 @@
 
 #include <gsl/gsl_rng.h>
 #include <vector>
+#include <array>
+#include <map>
+#include <tuple>
 #include <iostream>
 #include "allocate.h"
 #include "macros.h"

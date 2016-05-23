@@ -16,11 +16,11 @@ FFTFLAGS = -L/usr/lib64 -lfftw3
 CXX = $(CC)
 CXXFLAGS = $(CFLAGS)
 
-CYTOSCORE_OBJS = cytoscore_main.o simulation_manager.o simulation.o space.o allocate.o vector_algebra.o cpu.o error_exit.o generate_random_unit_vector.o graphics.o grabber.o writebmp.o
+CYTOSCORE_OBJS = cytoscore_main.o simulation_manager.o simulation.o object.o space.o forces.o cell_list.o allocate.o vector_algebra.o cpu.o error_exit.o generate_random_unit_vector.o graphics.o grabber.o writebmp.o
 
 CONFIGURE_OBJS = configure_cytoscore.o
 
-CYTOSCORE_OBJECT_OBJS = brownian_dimer.o
+CYTOSCORE_OBJECT_OBJS = md_bead.o brownian_dimer.o brownian_bead.o
 
 ../cytoscore:	$(CYTOSCORE_OBJS) $(CYTOSCORE_OBJECT_OBJS)
 	$(CC)  -o ../cytoscore $(CYTOSCORE_OBJS) $(CYTOSCORE_OBJECT_OBJS) $(GLXFLAGS) $(GSLFLAGS) -lm $(LNKFLAGS) 

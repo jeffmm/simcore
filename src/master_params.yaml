@@ -1,6 +1,6 @@
 # params_master.yaml file
 
-[objects] : [brownian_dimer]
+[objects] : [md_bead,brownian_dimer,brownian_bead]
 seed : [7859459105545,long] # seed for random number generator
 n_dim : [3,int]
 n_periodic : [0,int]
@@ -66,4 +66,10 @@ dimer_k_spring : [10, double]
 dimer_eq_length : [5, double]
 dimer_length : [5, double]
 dimer_diameter : [1, double]
-n_dimer: [1,int]
+n_dimer: [0,int]
+n_br_bead: [0, int]
+br_bead_diameter: [1,double]
+n_md_bead: [0,int]
+md_bead_diameter: [1,double]
+md_bead_mass: [1, double]
+cell_length: [10, double]

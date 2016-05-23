@@ -2,7 +2,7 @@
 #define _CYTOSCORE_SPECIES_H_
 
 #include "auxiliary.h"
-#include "parameters.h"
+#include "object.h"
 
 class SpeciesBase {
   protected:
@@ -31,6 +31,11 @@ class SpeciesBase {
     virtual void UpdatePositions() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
     virtual void Init() {}
+    virtual std::vector<Simple*> GetSimples() {
+      std::vector<Simple*> sim;
+      return sim;
+    }
+    virtual double GetTotalEnergy() {return 0;}
 };
 
 template <typename T>
@@ -54,10 +59,11 @@ class Species : public SpeciesBase {
       members_=that.members_;
       return *this;
     }
+    // Virtual functions
     virtual void Init() {
       for (int i=0; i<n_members_; ++i) {
-        T * member = new T(space_->n_dim, params_->delta, gsl_rng_get(rng_.r));
-        member->Init(params_, space_);
+        T * member = new T(params_, space_, gsl_rng_get(rng_.r));
+        member->Init();
         members_.push_back(member);
       }
     }
@@ -68,6 +74,14 @@ class Species : public SpeciesBase {
     virtual void UpdatePositions() {
       for (auto it=members_.begin(); it!=members_.end(); ++it)
         (*it)->UpdatePosition();
+    }
+    virtual std::vector<Simple*> GetSimples() {
+      std::vector<Simple*> simples;
+      for (auto it=members_.begin(); it!=members_.end(); ++it) {
+        std::vector<Simple*> sim_vec = (*it)->GetSimples();
+        simples.insert(simples.end(), sim_vec.begin(), sim_vec.end());
+      }
+      return simples;
     }
 };
 #endif // _CYTOSCORE_SPECIES_H_

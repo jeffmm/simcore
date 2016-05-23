@@ -1,9 +1,7 @@
 #include "brownian_dimer.h"
 
-void BrownianDimer::InitRandom(double sys_radius) {
-  generate_random_unit_vector(n_dim_, position_, rng_.r);
-  for (int i=0; i<n_dim_; ++i) 
-    position_[i] *= gsl_rng_uniform_pos(rng_.r)*sys_radius;
+void BrownianDimer::Init() {
+  Composite::InsertRandom(length_+diameter_);
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   double z = 0.5*length_;
   double pos[3];
@@ -12,15 +10,12 @@ void BrownianDimer::InitRandom(double sys_radius) {
       pos[i] = position_[i] + z*orientation_[i];
     i_bead->SetPosition(pos);
     i_bead->SetDiameter(diameter_);
+    i_bead->SetDiffusion();
+    i_bead->SetSpace(space_);
+    i_bead->UpdatePeriodic();
     z-=length_;
   }
-  UpdatePeriodic();
   UpdateOrientation();
-}
-
-void BrownianDimer::KickBeads() {
-  for (auto i_bead=elements_.begin(); i_bead!= elements_.end(); ++i_bead)
-    i_bead->KickBead();
 }
 
 void BrownianDimer::UpdateOrientation() {
@@ -53,22 +48,17 @@ void BrownianDimer::InternalForces() {
 }
 
 void BrownianDimer::UpdatePosition() {
-  ZeroForces();
-  KickBeads();
+  ZeroForce();
   InternalForces();
   Integrate();
 }
 
 void BrownianDimer::Integrate() {
   double pos[3] = {0, 0, 0};
-  for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
-    double const * const r = i_bead->GetPosition();
-    double const * const f = i_bead->GetForce();
-    for (int i=0; i<n_dim_; ++i)
-      pos[i] = r[i] + f[i] * delta_ / diameter_;
-    i_bead->SetPosition(pos);
-  }
-  UpdatePeriodic();
+  // We have no internal constraints beyond the spring force,
+  // the beads know how to update position and periodicity
+  for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) 
+    i_bead->UpdatePosition();
   UpdateOrientation();
 }
 
