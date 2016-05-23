@@ -263,35 +263,35 @@ bool SpaceProperties::CheckSegmentInBounds(double *vec1, double *vec2, double bu
   return true;
 }
 
-int SpaceProperties::GetDim() {
+int const SpaceProperties::GetDim() {
   return n_dim_;
 }
 
-int SpaceProperties::GetPeriodic() {
+int const SpaceProperties::GetPeriodic() {
   return n_periodic_;
 }
 
-double SpaceProperties::GetRadius() {
+double const SpaceProperties::GetRadius() {
   return radius_;
 }
 
-double SpaceProperties::GetDRadius() {
+double const SpaceProperties::GetDRadius() {
   return d_radius_;
 }
 
-double SpaceProperties::GetMDDist() {
+double const SpaceProperties::GetMDDist() {
   return m_d_dist_;
 }
 
-double SpaceProperties::GetVolume() {
+double const SpaceProperties::GetVolume() {
   return volume_;
 }
 
-double **SpaceProperties::GetUnitCell() {
+double const * const * const SpaceProperties::GetUnitCell() {
   return uc_;
 }
 
-double **SpaceProperties::GetUnitCellInv(){
+double const * const * const SpaceProperties::GetUnitCellInv(){
     return uc_inv_;
 }
 
@@ -318,21 +318,21 @@ std::string SpaceProperties::GetTypeString() {
   return type;
 }
 
-double *SpaceProperties::GetAPerp() {
+double const * const SpaceProperties::GetAPerp() {
     return a_perp_;
 }
-double **SpaceProperties::GetA() {
+double const * const * const SpaceProperties::GetA() {
     return a_;
 }
-double **SpaceProperties::GetB() {
+double const * const * const SpaceProperties::GetB() {
     return b_;
 }
 
-double SpaceProperties::GetIntersectHeight() {
+double const SpaceProperties::GetIntersectHeight() {
   return intersect_height_;
 }
 
-double SpaceProperties::GetIntersectRadius() {
+double const SpaceProperties::GetIntersectRadius() {
   return intersect_radius_;
 }
 
@@ -359,3 +359,11 @@ void SpaceProperties::UpdateSpaceStruct() {
 space_struct * SpaceProperties::GetStruct() {
   return &s_struct;
 }
+
+//void SpaceProperties::InsertRandom(double pos[3], double buffer) {
+  //double *p = new double[3];
+  //RandomCoordinate(p,buffer);
+  //memcpy(pos,p,3*sizeof(double));
+  //delete p;
+//}
+

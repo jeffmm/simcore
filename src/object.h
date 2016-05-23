@@ -11,34 +11,110 @@ class Object {
         
   protected:
     int n_dim_;
-    double *position_,
-           *orientation_,
-           *velocity_,
-           *force_,
-           radius_,
+    double position_[3],
+           scaled_position_[3],
+           prev_position_[3],
+           orientation_[3],
+           force_[3],
+           delta_,
+           diameter_,
            length_;
-    std::vector<interaction> interactions;
+    bool is_simple_;
+    space_struct *space_;
+    graph_struct g_;
+    rng_properties rng_;
+    virtual void InsertRandom(double buffer);
 
   public:
-    Object();
-    Object(int n_dim);
-    virtual ~Object();
-    const unsigned int GetObjectID() const;
-    virtual void ZeroForce();
-    virtual void SetPosition(double *new_position);
-    virtual void SetOrientation(double *new_orientation);
-    virtual void SetVelocity(double *new_velocity);
-    virtual void ApplyInteractions();
-    void Init(int n_dim);
-    void AddInteraction(interaction new_interaction);
-    double *GetPosition();
-    double *GetOrientation();
-    double *GetVelocity();
-    double *GetForce();
-    virtual void SetRadius(double new_radius);
-    virtual void SetLength(double new_length);
-    double GetRadius() const;
-    double GetLength() const;
+    Object(system_parameters *params, space_struct *space, long seed);
+    Object(const Object& that);
+    Object& operator=(Object const& that);
+
+    virtual ~Object() {rng_.clear();}
+    const unsigned int GetOID() {return oid_;}
+    bool IsSimple() {return is_simple_;}
+    void SetPosition(const double *const pos) {
+      memcpy(position_,pos,n_dim_*sizeof(double));
+    }
+    void SetScaledPosition(const double *const scaled_pos) {
+      memcpy(scaled_position_,scaled_pos,n_dim_*sizeof(double));
+    }
+    void SetOrientation(const double *const u) {
+      memcpy(orientation_,u,n_dim_*sizeof(double));
+    }
+    void SetPrevPosition() {
+      memcpy(prev_position_,position_,sizeof(position_));
+    }
+    void SetDiameter(double new_diameter) {diameter_ = new_diameter;}
+    void SetLength(double new_length) {length_ = new_length;}
+    void SetSpace(space_struct * space) {space_ = space;}
+    void ZeroForce() {memset(force_,0,sizeof(force_));}
+    void AddForce(const double *const f) {
+      for (int i=0; i<n_dim_; ++i)
+        force_[i]+=f[i];
+    }
+    double const * const GetPosition() {return position_;}
+    double const * const GetScaledPosition() {return scaled_position_;}
+    double const * const GetOrientation() {return orientation_;}
+    double const * const GetForce() {return force_;}
+    double const GetDiameter() {return diameter_;}
+    double const GetLength() {return length_;}
+    virtual void Init() {InsertRandom(length_+diameter_);}
+    virtual void Draw(std::vector<graph_struct*> * graph_array);
+    virtual void UpdatePeriodic();
 };
+
+class Simple : public Object {
+  public:
+    Simple(system_parameters *params, space_struct *space, long seed) :
+      Object(params, space, seed) {
+        is_simple_ = true;
+    }
+    virtual ~Simple() {}
+    Simple(const Simple& that) : Object(that) {}
+    Simple& operator=(Simple const& that) {
+      Object::operator=(that);
+      return *this;
+    }
+    virtual std::vector<Simple*> GetSimples() {
+      std::vector<Simple*> sim_vec;
+      sim_vec.push_back(this);
+      return sim_vec;
+    }
+};
+
+template <typename T>
+class Composite : public Object {
+  protected:
+    std::vector<T> elements_;
+  public:
+    Composite(system_parameters *params, space_struct *space, long seed) : Object(params, space, seed) {
+      is_simple_=false;
+    } 
+    //Destructor
+    virtual ~Composite() {}
+    //Copy constructor
+    Composite(const Composite& that) : Object(that) {
+      elements_=that.elements_;
+    }
+    //Assignment constructor
+    Composite& operator=(Composite const& that) {
+      Object::operator=(that);
+      elements_=that.elements_;
+      return *this;
+    }
+    virtual void ZeroForce() {
+      memset(force_, 0, sizeof(force_));
+      for (auto it=elements_.begin(); it!=elements_.end(); ++it)
+        it->ZeroForce();
+    }
+    virtual std::vector<Simple*> GetSimples() {
+      std::vector<Simple*> sim_vec;
+      for (auto it=elements_.begin(); it!=elements_.end(); ++it)
+        sim_vec.push_back(&(*it));
+      return sim_vec;
+    }
+};
+
 
 #endif // _CYTOSCORE_OBJECT_H_

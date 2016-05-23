@@ -1,8 +1,6 @@
 
 #include "simulation.h"
 
-unsigned int Simple::next_oid_ = 0;
-
 Simulation::Simulation() {}
 Simulation::~Simulation() {}
 
@@ -34,6 +32,7 @@ void Simulation::Integrate() {
 void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
+  forces_.Init(space_.GetStruct(), params_.cell_length);
   InitSpecies();
   if (params_.graph_flag) {
     GetGraphicsStructure();
@@ -62,8 +61,8 @@ void Simulation::Draw() {
   if (params_.graph_flag && i_step_%params_.n_graph==0) {
     GetGraphicsStructure();
     graphics_.Draw();
-    // Record bmp image of frame 
     if (params_.grab_flag) {
+      // Record bmp image of frame 
       grabber(graphics_.windx_, graphics_.windy_,
               params_.grab_file, (int) i_step_/params_.n_graph);
     }
@@ -86,6 +85,10 @@ void Simulation::InitOutputs() {
 void Simulation::WriteOutputs() {
   if (i_step_==0) {
     InitOutputs();
+    double tot_en=0;
+    for (auto it=species_.begin(); it!=species_.end(); ++it)
+      tot_en += (*it)->GetTotalEnergy();
+    std::cout << "Initial system energy: " << tot_en << std::endl;
     return;
   }
   if (params_.time_flag && i_step_ == params_.n_steps-1) {
@@ -94,6 +97,10 @@ void Simulation::WriteOutputs() {
     std::cout << "CPU Time: " << cpu_time << std::endl;
     std::cout << "Sim Time: " << time_ << std::endl;
     std::cout << "CPU Time/Sim Time: " << std::endl << cpu_time/time_ << std::endl;
+    double tot_en = 0;
+    for (auto it=species_.begin(); it!=species_.end(); ++it)
+      tot_en += (*it)->GetTotalEnergy();
+    std::cout << "Final system energy: " << tot_en << std::endl;
   }
 }
 
