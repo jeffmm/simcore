@@ -14,10 +14,10 @@ else
 	CXXFLAGS	+= -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -msse3
 endif
 
-ifeq ($(USETHREADS),yes)
-	OPENMP		= -fopenmp
+ifeq ($(USETHREADS),no)
+	OPENMP		= 
 else
-	OPENMP		=
+	OPENMP		= -fopenmp
 endif
 THREADS		= -std=c++11
 

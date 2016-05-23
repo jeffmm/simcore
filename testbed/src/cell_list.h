@@ -40,6 +40,9 @@ public:
     int plist(int pairidx) {
         return plist_[pairidx];
     }
+    std::vector<int>* pidtocid() {
+        return &p_c_;
+    }
     
     // Operators
     cell_t* operator [](int cidx) {
@@ -67,6 +70,7 @@ protected:
     // Vector of the cells themselves, and pair list
     std::vector<cell_t> clist_;
     std::vector<int> plist_;
+    std::vector<int> p_c_; // Particle to cell indexer
     
     const int cellrat_ = 2;
     
