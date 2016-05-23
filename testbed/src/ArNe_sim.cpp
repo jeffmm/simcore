@@ -116,7 +116,8 @@ int main(int argc, char **argv) {
     ArSpecies* ArSpec = new ArSpecies();
     ArSpec->setSpecies(mass, eps, sigma, rcut, 0, "Ar");
     ArNeSys->addSpecies(0, ArSpec);
-    auto lj126_ar = potentialFactory<LJ126>(eps, sigma, rcut, box);
+    //auto lj126_ar = potentialFactory<LJ126>(eps, sigma, rcut, box);
+    auto lj126_ar = new LJ126(eps, sigma, rcut, box);
 
     /*std::cout << "Setting Neon parameters\n";
     ArSpecies* NeSpec = new ArSpecies();

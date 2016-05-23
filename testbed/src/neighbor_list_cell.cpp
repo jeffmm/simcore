@@ -148,7 +148,7 @@ NeighborListCell::CellUpdate(std::vector<particle *> *particles) {
     
     for (int idx = 0; idx < nparticles_; ++idx) {
         // Get the cell containing this particle
-        int cidx = (*particles)[idx]->cellid;
+        //int cidx = (*particles)[idx]->cellid;
     }
     
     printf("Finished CellUpdate\n");
