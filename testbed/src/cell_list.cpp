@@ -18,6 +18,8 @@ CellList::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
     rcut_ = pRcut;
     skin_ = pSkin;
     rbuff_ = rcut_ + skin_;
+    p_c_.clear();
+    p_c_.resize(nparticles_);
     memcpy(box_, pBox, 3*sizeof(double));
     
     // Compute the number of cells on a side
@@ -112,7 +114,7 @@ CellList::UpdateCellList(std::vector<particle*>* particles) {
     int midx = 0;
     int cx, cy, cz;
     
-    printf("Starting UpdateCellList\n");
+    //printf("Starting UpdateCellList\n");
     
     for (int cidx = 0; cidx < ncells_; ++cidx) {
         clist_[cidx].nparticles_ = 0;
@@ -131,7 +133,7 @@ CellList::UpdateCellList(std::vector<particle*>* particles) {
         
         idx = clist_[cidx].nparticles_; // Current location in array
         clist_[cidx].idxlist_[idx] = i; // Set the particle i in the array of cell cidx[idx]
-        p->cellid = cidx; // Set the cell id of this particle
+        p_c_[i] = cidx; // Set the particle id->cell id
         ++idx;
         clist_[cidx].nparticles_ = idx;
         if (idx > midx) midx = idx;
@@ -142,7 +144,7 @@ CellList::UpdateCellList(std::vector<particle*>* particles) {
         printf("Overflow in cell list: %d/%d particles/cells\n", midx, nidx_);
         exit(1);
     }
-    printf("Finished UpdateCellList\n");
+    //printf("Finished UpdateCellList\n");
 }
 
 

@@ -61,9 +61,6 @@ public:
 
     // Change in position since last neighbor/cell update
     double dr_tot[3];
-    
-    // My cell (if applicable)
-    int cellid = -1;
 
     const int pid; // particle id
     const int sid; //species id
