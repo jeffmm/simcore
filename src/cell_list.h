@@ -45,6 +45,7 @@ class CellList {
     void Init(int n_dim, int n_periodic, double cell_length, double system_radius);
     void ClearCells() {cells_.clear();}
     void LoadSimples(std::vector<Simple*> sim_vec);
+    double const GetCellLength() { return cell_length_; }
     std::vector<cell_interaction> GetInteractions();
 
 };
