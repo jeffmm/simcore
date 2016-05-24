@@ -133,6 +133,9 @@ else if (param_name.compare("spring_filament_sphere") == 0){
 else if (param_name.compare("buckle_rate") == 0){
   params_[i_var].buckle_rate = atof(param_value.c_str());
 }
+else if (param_name.compare("cell_list_flag") == 0){
+  params_[i_var].cell_list_flag = atoi(param_value.c_str());
+}
 else if (param_name.compare("buckle_parameter") == 0){
   params_[i_var].buckle_parameter = atof(param_value.c_str());
 }
@@ -142,29 +145,32 @@ else if (param_name.compare("r_cutoff_sphere") == 0){
 else if (param_name.compare("r_cutoff_boundary") == 0){
   params_[i_var].r_cutoff_boundary = atof(param_value.c_str());
 }
-else if (param_name.compare("f_shrink_to_pause") == 0){
-  params_[i_var].f_shrink_to_pause = atof(param_value.c_str());
-}
 else if (param_name.compare("f_shrink_to_grow") == 0){
   params_[i_var].f_shrink_to_grow = atof(param_value.c_str());
-}
-else if (param_name.compare("f_grow_to_shrink") == 0){
-  params_[i_var].f_grow_to_shrink = atof(param_value.c_str());
 }
 else if (param_name.compare("f_pause_to_grow") == 0){
   params_[i_var].f_pause_to_grow = atof(param_value.c_str());
 }
-else if (param_name.compare("f_grow_to_pause") == 0){
-  params_[i_var].f_grow_to_pause = atof(param_value.c_str());
+else if (param_name.compare("f_shrink_to_pause") == 0){
+  params_[i_var].f_shrink_to_pause = atof(param_value.c_str());
 }
 else if (param_name.compare("f_pause_to_shrink") == 0){
   params_[i_var].f_pause_to_shrink = atof(param_value.c_str());
+}
+else if (param_name.compare("f_grow_to_shrink") == 0){
+  params_[i_var].f_grow_to_shrink = atof(param_value.c_str());
+}
+else if (param_name.compare("f_grow_to_pause") == 0){
+  params_[i_var].f_grow_to_pause = atof(param_value.c_str());
 }
 else if (param_name.compare("v_poly") == 0){
   params_[i_var].v_poly = atof(param_value.c_str());
 }
 else if (param_name.compare("v_depoly") == 0){
   params_[i_var].v_depoly = atof(param_value.c_str());
+}
+else if (param_name.compare("rigid_tether_flag") == 0){
+  params_[i_var].rigid_tether_flag = atoi(param_value.c_str());
 }
 else if (param_name.compare("graph_diameter") == 0){
   params_[i_var].graph_diameter = atof(param_value.c_str());
@@ -173,50 +179,47 @@ else if ( param_name.compare("grab_file") == 0 ) {
   params_[i_var].grab_file = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
   strcpy(params_[i_var].grab_file, param_value.c_str());
 }
-else if (param_name.compare("cell_list_flag") == 0){
-  params_[i_var].cell_list_flag = atoi(param_value.c_str());
-}
-else if (param_name.compare("rigid_tether_flag") == 0){
-  params_[i_var].rigid_tether_flag = atoi(param_value.c_str());
-}
-else if (param_name.compare("dimer_length") == 0){
-  params_[i_var].dimer_length = atof(param_value.c_str());
-}
-else if (param_name.compare("graph_background") == 0){
-  params_[i_var].graph_background = atoi(param_value.c_str());
-}
 else if (param_name.compare("position_correlation_flag") == 0){
   params_[i_var].position_correlation_flag = atoi(param_value.c_str());
-}
-else if (param_name.compare("dimer_eq_length") == 0){
-  params_[i_var].dimer_eq_length = atof(param_value.c_str());
 }
 else if (param_name.compare("dimer_k_spring") == 0){
   params_[i_var].dimer_k_spring = atof(param_value.c_str());
 }
-else if (param_name.compare("dimer_diameter") == 0){
-  params_[i_var].dimer_diameter = atof(param_value.c_str());
+else if (param_name.compare("graph_background") == 0){
+  params_[i_var].graph_background = atoi(param_value.c_str());
 }
-else if (param_name.compare("n_dimer") == 0){
-  params_[i_var].n_dimer = atoi(param_value.c_str());
+else if (param_name.compare("dimer_eq_length") == 0){
+  params_[i_var].dimer_eq_length = atof(param_value.c_str());
 }
-else if (param_name.compare("n_br_bead") == 0){
-  params_[i_var].n_br_bead = atoi(param_value.c_str());
-}
-else if (param_name.compare("n_md_bead") == 0){
-  params_[i_var].n_md_bead = atoi(param_value.c_str());
+else if (param_name.compare("dimer_length") == 0){
+  params_[i_var].dimer_length = atof(param_value.c_str());
 }
 else if (param_name.compare("br_bead_diameter") == 0){
   params_[i_var].br_bead_diameter = atof(param_value.c_str());
 }
-else if (param_name.compare("md_bead_diameter") == 0){
-  params_[i_var].md_bead_diameter = atof(param_value.c_str());
+else if (param_name.compare("dimer_diameter") == 0){
+  params_[i_var].dimer_diameter = atof(param_value.c_str());
+}
+else if (param_name.compare("n_br_bead") == 0){
+  params_[i_var].n_br_bead = atoi(param_value.c_str());
+}
+else if (param_name.compare("n_dimer") == 0){
+  params_[i_var].n_dimer = atoi(param_value.c_str());
+}
+else if (param_name.compare("n_md_bead") == 0){
+  params_[i_var].n_md_bead = atoi(param_value.c_str());
 }
 else if (param_name.compare("md_bead_mass") == 0){
   params_[i_var].md_bead_mass = atof(param_value.c_str());
 }
+else if (param_name.compare("md_bead_diameter") == 0){
+  params_[i_var].md_bead_diameter = atof(param_value.c_str());
+}
 else if (param_name.compare("cell_length") == 0){
   params_[i_var].cell_length = atof(param_value.c_str());
+}
+else if (param_name.compare("n_update_cells") == 0){
+  params_[i_var].n_update_cells = atoi(param_value.c_str());
 }
 else {
   std::cout << "  WARNING: Parameter " << param_name << " not recognized!\n";

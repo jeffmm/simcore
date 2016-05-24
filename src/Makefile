@@ -16,7 +16,7 @@ FFTFLAGS = -L/usr/lib64 -lfftw3
 CXX = $(CC)
 CXXFLAGS = $(CFLAGS)
 
-CYTOSCORE_OBJS = cytoscore_main.o simulation_manager.o simulation.o object.o space.o forces.o cell_list.o allocate.o vector_algebra.o cpu.o error_exit.o generate_random_unit_vector.o graphics.o grabber.o writebmp.o
+CYTOSCORE_OBJS = cytoscore_main.o simulation_manager.o simulation.o object.o forces.o cell_list.o space.o allocate.o vector_algebra.o cpu.o error_exit.o generate_random_unit_vector.o graphics.o grabber.o writebmp.o minimum_distance.o
 
 CONFIGURE_OBJS = configure_cytoscore.o
 

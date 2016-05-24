@@ -1,9 +1,11 @@
 #include "object.h"
 
 unsigned int Object::next_oid_ = 0;
+unsigned int Object::next_cid_ = 0;
 
-Object::Object(system_parameters *params, space_struct *space, long seed) {
+Object::Object(system_parameters *params, space_struct *space, long seed, unsigned int const sid) {
   oid_ = ++next_oid_;
+  sid_ = sid;
   space_ = space;
   n_dim_ = space_->n_dim; 
   delta_ = params->delta;
@@ -22,6 +24,8 @@ Object::Object(system_parameters *params, space_struct *space, long seed) {
 Object::Object(const Object& that) {
   n_dim_=that.n_dim_;
   oid_ = that.oid_;
+  cid_ = that.cid_;
+  sid_ = that.sid_;
   next_oid_=that.next_oid_;
   delta_ = that.delta_;
   memcpy(position_,that.position_,sizeof(position_));
@@ -40,6 +44,8 @@ Object::Object(const Object& that) {
 Object &Object::operator=(Object const& that) {
   n_dim_=that.n_dim_;
   oid_=that.oid_;
+  cid_=that.cid_;
+  sid_=that.sid_;
   next_oid_=that.next_oid_;
   delta_ = that.delta_;
   memcpy(position_,that.position_,sizeof(position_));
@@ -97,6 +103,7 @@ void Object::InsertRandom(double buffer) {
       }
     }
   }
+  UpdatePeriodic();
 }
 
 void Object::Draw(std::vector<graph_struct*> * graph_array) {

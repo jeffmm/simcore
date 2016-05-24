@@ -1,6 +1,8 @@
 
 #include "simulation.h"
 
+unsigned int SpeciesBase::next_sid_=0;
+
 Simulation::Simulation() {}
 Simulation::~Simulation() {}
 
@@ -18,6 +20,7 @@ void Simulation::RunSimulation() {
 
   for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
+    Interact();
     Integrate();
     Draw();
     WriteOutputs();
@@ -29,17 +32,24 @@ void Simulation::Integrate() {
     (*it)->UpdatePositions();
 }
 
+void Simulation::Interact() {
+  if (i_step_%params_.n_update_cells==0)
+    forces_.UpdateCellList(species_);
+  forces_.Interact();
+}
+
 void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
-  forces_.Init(space_.GetStruct(), params_.cell_length);
   InitSpecies();
+  forces_.Init(space_.GetStruct(), species_, params_.cell_length);
   if (params_.graph_flag) {
     GetGraphicsStructure();
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);
     graphics_.Init(&graph_array, space_.GetStruct(), background_color);
     graphics_.DrawLoop();
   }
+  InitOutputs();
 }
 
 void Simulation::InitSpecies() {
@@ -77,20 +87,17 @@ void Simulation::GetGraphicsStructure() {
 }
 
 void Simulation::InitOutputs() {
+  double tot_en=0;
+  for (auto it=species_.begin(); it!=species_.end(); ++it)
+    tot_en += (*it)->GetTotalEnergy();
+  std::cout << "Initial system energy: " << tot_en << std::endl;
   if (params_.time_flag) {
     cpu_init_time_ = cpu();
   }
 }
 
 void Simulation::WriteOutputs() {
-  if (i_step_==0) {
-    InitOutputs();
-    double tot_en=0;
-    for (auto it=species_.begin(); it!=species_.end(); ++it)
-      tot_en += (*it)->GetTotalEnergy();
-    std::cout << "Initial system energy: " << tot_en << std::endl;
-    return;
-  }
+  if (i_step_ == 0) return; // skip first step
   if (params_.time_flag && i_step_ == params_.n_steps-1) {
     double cpu_time = cpu() - cpu_init_time_;
     std::cout << "CPU Time for Initialization: " <<  cpu_init_time_ << std::endl;
