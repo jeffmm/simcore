@@ -12,7 +12,7 @@ class MDBead : public Bead {
     double mass_;
     double energy_;
   public:
-    MDBead(system_parameters *params, space_struct *space, long seed) : Bead(params, space, seed) {
+    MDBead(system_parameters *params, space_struct *space, long seed, unsigned int const sid) : Bead(params, space, seed, sid) {
       diameter_ = params->md_bead_diameter;
       mass_ = params->md_bead_mass;
     }

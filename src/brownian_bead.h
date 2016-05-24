@@ -9,7 +9,7 @@ class BrownianBead : public Bead {
     //void SetDiffusion();
     double diffusion_;
   public:
-    BrownianBead(system_parameters *params, space_struct *space, long seed) : Bead(params, space, seed) {
+    BrownianBead(system_parameters *params, space_struct *space, long seed, unsigned int const sid) : Bead(params, space, seed, sid) {
       diameter_=params->br_bead_diameter;
       SetDiffusion();
     }

@@ -8,8 +8,11 @@ class Object {
   private:
     unsigned int oid_;
     static unsigned int next_oid_;
+    static unsigned int next_cid_;
         
   protected:
+    unsigned int cid_;
+    unsigned int sid_;
     int n_dim_;
     double position_[3],
            scaled_position_[3],
@@ -24,14 +27,13 @@ class Object {
     graph_struct g_;
     rng_properties rng_;
     virtual void InsertRandom(double buffer);
-
+    unsigned int const NextCID() {return ++next_cid_;}
   public:
-    Object(system_parameters *params, space_struct *space, long seed);
+    Object(system_parameters *params, space_struct *space, long seed, unsigned int const sid);
     Object(const Object& that);
     Object& operator=(Object const& that);
 
     virtual ~Object() {rng_.clear();}
-    const unsigned int GetOID() {return oid_;}
     bool IsSimple() {return is_simple_;}
     void SetPosition(const double *const pos) {
       memcpy(position_,pos,n_dim_*sizeof(double));
@@ -62,12 +64,17 @@ class Object {
     virtual void Init() {InsertRandom(length_+diameter_);}
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePeriodic();
+    virtual void UpdatePosition() {};
+    unsigned int const GetOID() {return oid_;}
+    unsigned int const GetCID() {return cid_;}
+    unsigned int const GetSID() {return sid_;}
 };
 
 class Simple : public Object {
   public:
-    Simple(system_parameters *params, space_struct *space, long seed) :
-      Object(params, space, seed) {
+    Simple(system_parameters *params, space_struct *space, long seed, unsigned int const sid) :
+      Object(params, space, seed, sid) {
+        SetCID(GetOID());
         is_simple_ = true;
     }
     virtual ~Simple() {}
@@ -81,6 +88,7 @@ class Simple : public Object {
       sim_vec.push_back(this);
       return sim_vec;
     }
+    void SetCID(unsigned int const cid) {cid_=cid;}
 };
 
 template <typename T>
@@ -88,7 +96,8 @@ class Composite : public Object {
   protected:
     std::vector<T> elements_;
   public:
-    Composite(system_parameters *params, space_struct *space, long seed) : Object(params, space, seed) {
+    Composite(system_parameters *params, space_struct *space, long seed, unsigned int sid) : Object(params, space, seed, sid) {
+      cid_ = NextCID();
       is_simple_=false;
     } 
     //Destructor

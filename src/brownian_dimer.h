@@ -20,9 +20,10 @@ class BrownianDimer : public Composite<BrownianBead> {
 
   public:
     //Constructor
-    BrownianDimer(system_parameters *params, space_struct *space, long seed) : Composite(params, space, seed) {
+    BrownianDimer(system_parameters *params, space_struct *space, long seed, unsigned int const sid) : Composite(params, space, seed, sid) {
       for (int i=0; i<2; ++i) {
-        BrownianBead b(params, space, gsl_rng_get(rng_.r));
+        BrownianBead b(params, space, gsl_rng_get(rng_.r), GetSID());
+        b.SetCID(GetCID());
         elements_.push_back(b);
       }
       diameter_ = params->dimer_diameter;
