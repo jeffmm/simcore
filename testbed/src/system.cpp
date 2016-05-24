@@ -129,6 +129,9 @@ SystemArch::initMP() {
         case FCELLS:
             generateCellList();
             break;
+        case FCELLSADJ:
+            generateCellAdjList();
+            break;
         case FNEIGHBORS_ALLPAIRS:
             generateNeighborList();
             break;
@@ -166,6 +169,33 @@ SystemArch::generateCellList() {
 void
 SystemArch::updateCellList() {
     cell_list_.UpdateCellList(&particles_);
+}
+
+
+// Adjacent cell list
+void
+SystemArch::generateCellAdjList() {
+    // Determine the total number of particles
+    // And the box size
+    // And the largest cutoff radius
+    double max_rcut = 0;
+    
+    for (int i = 0; i < nsys_; ++i) {
+        auto currentSpecies = getSpecies(i);
+        max_rcut = std::max(max_rcut, currentSpecies->getRcut());
+    }
+    
+    // Create the cell list
+    cell_list_adj_.CreateCellList(nparticles_, max_rcut, skin_, box_);
+    cell_list_adj_.UpdateCellList(&particles_);
+    cell_list_adj_.CheckCellList();
+}
+
+
+// Moar adjacent cell list
+void
+SystemArch::updateCellAdjList() {
+    cell_list_adj_.UpdateCellList(&particles_);
 }
 
 
@@ -582,6 +612,96 @@ SystemArch::forceCellsMP() {
     upot_ = epot;
 }
 
+void
+SystemArch::forceCellsAdjMP() {
+    
+    double epot = 0.0;
+    
+#if defined(_OPENMP)
+#pragma omp parallel
+#endif
+    {
+        int tid;
+        double *fx, *fy, *fz;
+        double f_epot[4];
+        
+        std::vector<int>* pid_to_cid = cell_list_adj_.pidtocid();
+        
+#if defined(_OPENMP)
+        tid = omp_get_thread_num();
+#else
+        tid = 0;
+#endif
+        // Set up the pointers to the force superarray
+        fx = frc_.data() + (3*tid*nparticles_);
+        buffmd::azzero(fx, 3*nparticles_);
+        fy = frc_.data() + ((3*tid+1)*nparticles_);
+        fz = frc_.data() + ((3*tid+2)*nparticles_);
+        
+        // Loop over all particles in this loop, and get the cell id
+        // From that, only compare with particles that have a higher
+        // pid than we do - this prevents double counting!
+        
+#pragma omp for reduction(+:epot) schedule(runtime) nowait
+        for (int idx = 0; idx < nparticles_; ++idx) {
+            // Get our cell
+            int cidx = (*pid_to_cid)[idx];
+            auto cell1 = cell_list_adj_[cidx];
+            // Loop over other cells (including us) in the block of cells
+            for (int cjdx = 0; cjdx < 27; ++cjdx) {
+                auto cell2 = cell_list_adj_[cell1->adj_cell_ids_[cjdx]];
+                // Loop over it's particles
+                for (int jdx = 0; jdx < cell2->nparticles_; ++jdx) {
+                    int jjdx = cell2->idxlist_[jdx];
+                    // ONLY DO THE CALCULATION IF THE OTHER PID IS HIGHER!!!
+                    if (jjdx > idx) {
+                        auto part1 = particles_[idx];
+                        auto part2 = particles_[jjdx];
+                        
+                        calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
+                        epot += f_epot[3];
+                        fx[idx] += f_epot[0];
+                        fy[idx] += f_epot[1];
+                        fz[idx] += f_epot[2];
+                        fx[jjdx] -= f_epot[0];
+                        fy[jjdx] -= f_epot[1];
+                        fz[jjdx] -= f_epot[2];
+                    } // only do the calculation if the second id is higher
+                } // cell2 particle list
+            } // cells adjancent and equal to us
+        } // pragma omp for reduction(+:epot) schedule(runtime) nowait
+        
+        // reduce once all threads have finished
+#if defined(_OPENMP)
+#pragma omp barrier
+#endif
+        int i = 1 + (3 * nparticles_ / nthreads_);
+        int fromidx = tid * i;
+        int toidx = fromidx + i;
+        if (toidx > 3*nparticles_) toidx = 3*nparticles_;
+        
+        // Reduce the forces
+        for (i = 1; i < nthreads_; ++i) {
+            int offs;
+            
+            offs = 3*i*nparticles_;
+            
+            for (int j = fromidx; j < toidx; ++j) {
+                frc_[j] += frc_[offs+j];
+            }
+        }
+    } // pragma omp parallel
+    
+    // Recombine into the particles
+    for (int i = 0; i < nparticles_; ++i) {
+        auto part = particles_[i];
+        part->f[0] = frc_[i];
+        part->f[1] = frc_[nparticles_ + i];
+        part->f[2] = frc_[2*nparticles_ + i];
+    }
+    upot_ = epot;
+}
+
 
 // Position and velocity update
 void
@@ -606,6 +726,9 @@ SystemArch::velverlet() {
             break;
         case FCELLS:
             forceCellsMP();
+            break;
+        case FCELLSADJ:
+            forceCellsAdjMP();
             break;
         case FNEIGHBORS_ALLPAIRS:
             forceNeighAP();

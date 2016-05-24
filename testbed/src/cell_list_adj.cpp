@@ -14,7 +14,10 @@ void
 CellListAdj::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
     nparticles_ = pN;
     rcut_ = pRcut;
+    skin_ = pSkin;
     memcpy(box_, pBox, 3*sizeof(double));
+    p_c_.clear();
+    p_c_.resize(nparticles_);
     
     SetRCut(rcut_, skin_);
 
@@ -28,11 +31,12 @@ void
 CellListAdj::SetRCut(double pRcut, double pSkin) {
     rcut_ = pRcut;
     skin_ = pSkin;
+    rbuff_ = rcut_ + skin_;
     
     // Recompute the number of cells on a side
     for (int i = 0; i < 3; ++i) {
         boxby2_[i] = 0.5*box_[i];
-        T_[i] = floor(cellrat_ * box_[i] / (rcut_ + skin_));
+        T_[i] = floor(cellrat_ * box_[i] / rbuff_);
         if (T_[i] < 3) {
             T_[i] = 3;
         }
@@ -129,6 +133,7 @@ CellListAdj::UpdateCellList(std::vector<particle*>* particles) {
         
         idx = clist_[cidx].nparticles_;
         clist_[cidx].idxlist_[idx] = i;
+        p_c_[i] = cidx; // Set the particle id->cell id
         ++idx;
         clist_[cidx].nparticles_ = idx;
         if (idx > midx) midx = idx;
@@ -170,7 +175,7 @@ CellListAdj::CheckCellList() {
         //printf("Cell(%d){%d,%d,%d} -> [%d]\n", cidx, cx[0], cx[1], cx[2], cell1->nparticles_);
         runningtot += cell1->nparticles_;
     }
-    printf("Exact middle cell adjacent members: \n");
+    printf("Exact bottom cell adjacent members: \n");
     int midcidx = buffmd::cell_vec_to_linear(0,0,0,T_);
     printf("Cell %d adjacent members = \n\t{", midcidx);
     for (int i = 0; i < 27; ++i) {
