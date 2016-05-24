@@ -41,6 +41,8 @@ public:
     void flattenParticles();
     void generateCellList();
     void updateCellList();
+    void generateCellAdjList();
+    void updateCellAdjList();
     void generateNeighborList();
     void generateNeighborListCell();
     
@@ -54,6 +56,7 @@ public:
     // Force calculation and integration
     void forceBrute();
     void forceCellsMP();
+    void forceCellsAdjMP();
     void forceNeighAP();
     void forceNeighCell();
     void velverlet();
@@ -78,7 +81,7 @@ protected:
 
     properties_t* system_properties_;
     CellList cell_list_;
-    //CellListAdj cell_list_adj_;
+    CellListAdj cell_list_adj_;
     
     NeighborList neighbor_list_;
     NeighborListCell neighbor_list_cell_;

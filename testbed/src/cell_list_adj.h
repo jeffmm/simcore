@@ -43,6 +43,9 @@ public:
     
     // Simple getters
     int ncells() { return ncells_; }
+    std::vector<int>* pidtocid() {
+        return &p_c_;
+    }
     
     // Operators (getters)
     CellAdj* operator [](int cidx) {
@@ -56,6 +59,7 @@ protected:
     int nparticles_;
     double rcut_;
     double skin_;
+    double rbuff_;
     double box_[3];
     
     // Computed quantities
@@ -68,6 +72,7 @@ protected:
     
     // Vector of the cells themselves, and pair list
     std::vector<CellAdj> clist_;
+    std::vector<int> p_c_;
     
     // Consts
     const int cellrat_ = 2;

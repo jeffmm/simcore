@@ -92,6 +92,9 @@ int main(int argc, char **argv) {
     if (strcmp(ftype.c_str(), "cells") == 0) {
         force_type = FCELLS;
         std::cout << "Using Cell lists for force computation\n";
+    } else if (strcmp(ftype.c_str(), "cellsadj") == 0) {
+        force_type = FCELLSADJ;
+        std::cout << "Using Adjacent Cell lists for force computation\n";
     } else if (strcmp(ftype.c_str(), "allpairs") == 0) {
         force_type = FNEIGHBORS_ALLPAIRS;
         std::cout << "Using Neighbor lists all pairs for force computation\n";
@@ -179,6 +182,9 @@ int main(int argc, char **argv) {
         case FCELLS:
             ArNeSys->forceCellsMP();
             break;
+        case FCELLSADJ:
+            ArNeSys->forceCellsAdjMP();
+            break;
         case FNEIGHBORS_ALLPAIRS:
             ArNeSys->forceNeighAP();
             break;
@@ -209,7 +215,10 @@ int main(int argc, char **argv) {
         ArNeSys->ukin();
 
         // update the cell list
-        if (system_properties->scheme_ == FCELLS || system_properties->scheme_ == FNEIGHBORS_CELL) {
+        if (system_properties->scheme_ == FCELLS) {
+            if ((i_step % system_properties->cell_update_freq_) == 0)
+                ArNeSys->updateCellList();
+        } else if (system_properties->scheme_ == FCELLSADJ) {
             if ((i_step % system_properties->cell_update_freq_) == 0)
                 ArNeSys->updateCellList();
         }
