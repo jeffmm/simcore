@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
                 ArNeSys->updateCellList();
         } else if (system_properties->scheme_ == FCELLSADJ) {
             if ((i_step % system_properties->cell_update_freq_) == 0)
-                ArNeSys->updateCellList();
+                ArNeSys->updateCellAdjList();
         }
     }
     
