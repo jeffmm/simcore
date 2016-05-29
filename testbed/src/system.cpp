@@ -458,7 +458,8 @@ SystemArch::forceCellsAdjMP() {
 #endif
     {
         int tid;
-        double *fx, *fy, *fz;
+        double** fr;
+        fr = (double**)malloc(ndim_ * sizeof(double*));
         double f_epot[4];
         
         std::vector<int>* pid_to_cid = cell_list_adj_.pidtocid();
@@ -468,11 +469,13 @@ SystemArch::forceCellsAdjMP() {
 #else
         tid = 0;
 #endif
+
         // Set up the pointers to the force superarray
-        fx = frc_.data() + (3*tid*nparticles_);
-        buffmd::azzero(fx, 3*nparticles_);
-        fy = frc_.data() + ((3*tid+1)*nparticles_);
-        fz = frc_.data() + ((3*tid+2)*nparticles_);
+        for (int i = 0; i < ndim_; ++i) {
+            fr[i] = frc_.data() + ((ndim_*tid+i)*nparticles_);
+        }
+        buffmd::azzero(*fr, ndim_*nparticles_);
+
         
         // Loop over all particles in this loop, and get the cell id
         // From that, only compare with particles that have a higher
@@ -496,12 +499,10 @@ SystemArch::forceCellsAdjMP() {
                         
                         calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
                         epot += f_epot[3];
-                        fx[idx] += f_epot[0];
-                        fy[idx] += f_epot[1];
-                        fz[idx] += f_epot[2];
-                        fx[jjdx] -= f_epot[0];
-                        fy[jjdx] -= f_epot[1];
-                        fz[jjdx] -= f_epot[2];
+                        for (int i = 0; i < ndim_; ++i) {
+                            fr[i][idx] += f_epot[i];
+                            fr[i][jjdx] -= f_epot[i];
+                        }
                     } // only do the calculation if the second id is higher
                 } // cell2 particle list
             } // cells adjancent and equal to us
@@ -511,29 +512,30 @@ SystemArch::forceCellsAdjMP() {
 #if defined(_OPENMP)
 #pragma omp barrier
 #endif
-        int i = 1 + (3 * nparticles_ / nthreads_);
+        int i = 1 + (ndim_ * nparticles_ / nthreads_);
         int fromidx = tid * i;
         int toidx = fromidx + i;
-        if (toidx > 3*nparticles_) toidx = 3*nparticles_;
+        if (toidx > ndim_*nparticles_) toidx = ndim_*nparticles_;
         
         // Reduce the forces
         for (i = 1; i < nthreads_; ++i) {
             int offs;
             
-            offs = 3*i*nparticles_;
+            offs = ndim_*i*nparticles_;
             
             for (int j = fromidx; j < toidx; ++j) {
                 frc_[j] += frc_[offs+j];
             }
         }
+        delete(fr);
     } // pragma omp parallel
     
     // Recombine into the particles
     for (int i = 0; i < nparticles_; ++i) {
         auto part = particles_[i];
-        part->f[0] = frc_[i];
-        part->f[1] = frc_[nparticles_ + i];
-        part->f[2] = frc_[2*nparticles_ + i];
+        for (int idim = 0; idim < ndim_; ++idim) {
+            part->f[idim] = frc_[idim*nparticles_ + i];
+        }
     }
     upot_ = epot;
 }
@@ -553,7 +555,8 @@ SystemArch::forceNeighAP() {
 #endif
     {
         int tid;
-        double *fx, *fy, *fz;
+        double** fr;
+        fr = (double**)malloc(ndim_ * sizeof(double*));
         double f_epot[4];
         auto neighbors = neighbor_list_.GetNeighbors();
         
@@ -563,10 +566,10 @@ SystemArch::forceNeighAP() {
         tid = 0;
 #endif
         // Set up the pointers to the force superarray
-        fx = frc_.data() + (3*tid*nparticles_);
-        buffmd::azzero(fx, 3*nparticles_);
-        fy = frc_.data() + ((3*tid+1)*nparticles_);
-        fz = frc_.data() + ((3*tid+2)*nparticles_);
+        for (int i = 0; i < ndim_; ++i) {
+            fr[i] = frc_.data() + ((ndim_*tid+i)*nparticles_);
+        }
+        buffmd::azzero(*fr, ndim_*nparticles_);
 
 #if defined(_OPENMP)
 #pragma omp for reduction(+:epot) schedule(runtime) nowait
@@ -581,12 +584,10 @@ SystemArch::forceNeighAP() {
                 
                 calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
                 epot += f_epot[3];
-                fx[idx] += f_epot[0];
-                fy[idx] += f_epot[1];
-                fz[idx] += f_epot[2];
-                fx[jdx] -= f_epot[0];
-                fy[jdx] -= f_epot[1];
-                fz[jdx] -= f_epot[2];
+                for (int i = 0; i < ndim_; ++i) {
+                    fr[i][idx] += f_epot[i];
+                    fr[i][jdx] -= f_epot[i];
+                }
             }
         } // pragma omp for reduction(+:epot) schedule(runtime) nowait
         
@@ -594,29 +595,30 @@ SystemArch::forceNeighAP() {
 #if defined(_OPENMP)
 #pragma omp barrier
 #endif
-        int i = 1 + (3 * nparticles_ / nthreads_);
+        int i = 1 + (ndim_ * nparticles_ / nthreads_);
         int fromidx = tid * i;
         int toidx = fromidx + i;
-        if (toidx > 3*nparticles_) toidx = 3*nparticles_;
+        if (toidx > ndim_*nparticles_) toidx = ndim_*nparticles_;
         
         // Reduce the forces
         for (i = 1; i < nthreads_; ++i) {
             int offs;
             
-            offs = 3*i*nparticles_;
+            offs = ndim_*i*nparticles_;
             
             for (int j = fromidx; j < toidx; ++j) {
                 frc_[j] += frc_[offs+j];
             }
         }
+        delete(fr);
     } // pragma omp parallel
     
     // Recombine into the particles
     for (int i = 0; i < nparticles_; ++i) {
         auto part = particles_[i];
-        part->f[0] = frc_[i];
-        part->f[1] = frc_[nparticles_ + i];
-        part->f[2] = frc_[2*nparticles_ + i];
+        for (int idim = 0; idim < ndim_; ++idim) {
+            part->f[idim] = frc_[idim*nparticles_ + i];
+        }
     }
     upot_ = epot;
 }
@@ -636,7 +638,8 @@ SystemArch::forceNeighCell() {
 #endif
     {
         int tid;
-        double *fx, *fy, *fz;
+        double** fr;
+        fr = (double**)malloc(ndim_ * sizeof(double*));
         double f_epot[4];
         auto neighbors = neighbor_list_cell_.GetNeighbors();
         
@@ -646,10 +649,11 @@ SystemArch::forceNeighCell() {
         tid = 0;
 #endif
         // Set up the pointers to the force superarray
-        fx = frc_.data() + (3*tid*nparticles_);
-        buffmd::azzero(fx, 3*nparticles_);
-        fy = frc_.data() + ((3*tid+1)*nparticles_);
-        fz = frc_.data() + ((3*tid+2)*nparticles_);
+        // Set up the pointers to the force superarray
+        for (int i = 0; i < ndim_; ++i) {
+            fr[i] = frc_.data() + ((ndim_*tid+i)*nparticles_);
+        }
+        buffmd::azzero(*fr, ndim_*nparticles_);
         
 #pragma omp for reduction(+:epot) schedule(runtime) nowait
         for (int idx = 0; idx < nparticles_; ++idx) {
@@ -662,12 +666,10 @@ SystemArch::forceNeighCell() {
                 
                 calcPotential(part1->sid, part2->sid, part1->x, part2->x, f_epot);
                 epot += f_epot[3];
-                fx[idx] += f_epot[0];
-                fy[idx] += f_epot[1];
-                fz[idx] += f_epot[2];
-                fx[jdx] -= f_epot[0];
-                fy[jdx] -= f_epot[1];
-                fz[jdx] -= f_epot[2];
+                for (int i = 0; i < ndim_; ++i) {
+                    fr[i][idx] += f_epot[i];
+                    fr[i][jdx] -= f_epot[i];
+                }
             }
         } // pragma omp for reduction(+:epot) schedule(runtime) nowait
         
@@ -675,29 +677,30 @@ SystemArch::forceNeighCell() {
 #if defined(_OPENMP)
 #pragma omp barrier
 #endif
-        int i = 1 + (3 * nparticles_ / nthreads_);
+        int i = 1 + (ndim_ * nparticles_ / nthreads_);
         int fromidx = tid * i;
         int toidx = fromidx + i;
-        if (toidx > 3*nparticles_) toidx = 3*nparticles_;
+        if (toidx > ndim_*nparticles_) toidx = ndim_*nparticles_;
         
         // Reduce the forces
         for (i = 1; i < nthreads_; ++i) {
             int offs;
             
-            offs = 3*i*nparticles_;
+            offs = ndim_*i*nparticles_;
             
             for (int j = fromidx; j < toidx; ++j) {
                 frc_[j] += frc_[offs+j];
             }
         }
+        delete(fr);
     } // pragma omp parallel
     
     // Recombine into the particles
     for (int i = 0; i < nparticles_; ++i) {
         auto part = particles_[i];
-        part->f[0] = frc_[i];
-        part->f[1] = frc_[nparticles_ + i];
-        part->f[2] = frc_[2*nparticles_ + i];
+        for (int idim = 0; idim < ndim_; ++idim) {
+            part->f[idim] = frc_[idim*nparticles_ + i];
+        }
     }
     upot_ = epot;
 }
@@ -711,7 +714,7 @@ SystemArch::velverlet() {
         auto p = particles_[idx];
         auto pmeff = species_[p->sid]->getMeff();
         double dtmf = 0.5 * dt_ / pmeff;
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < ndim_; ++i) {
             p->v[i] += dtmf * p->f[i];
             p->x[i] += dt_ * p->v[i];
             // Accumulator for the neighbor list update
@@ -746,7 +749,7 @@ SystemArch::velverlet() {
         auto p = particles_[idx];
         auto pmeff = species_[p->sid]->getMeff();
         double dtmf = 0.5 * dt_ / pmeff;
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < ndim_; ++i) {
             p->v[i] += dtmf * p->f[i];
         }
     }
@@ -763,7 +766,11 @@ SystemArch::output(FILE* erg, FILE* traj, int nfi) {
     // Loop over base particles
     for (int i=0; i < nparticles_; ++i) {
         auto p = particles_[i];
-        fprintf(traj, "%s  %20.8f %20.8f %20.8f\n", p->name.c_str(), p->x[0], p->x[1], p->x[2]);
+        if (ndim_ == 3) {
+            fprintf(traj, "%s  %20.8f %20.8f %20.8f\n", p->name.c_str(), p->x[0], p->x[1], p->x[2]);
+        } else {
+            fprintf(traj, "%s  %20.8f %20.8f\n", p->name.c_str(), p->x[0], p->x[1]);
+        }
     }
 }
 
