@@ -1,5 +1,5 @@
-make remove
-make CFG=test
+make clean
+make debug
 
 echo "Running test on Argon 108 atoms"
 echo "Building with no optimizations, single threaded"
@@ -34,8 +34,9 @@ echo "Neighbor List All Pairs Scheme (dynamic)"
 echo "Neighbor List Cells Scheme (dynamic)"
 ./xtime.rb bin/ArNe_sim argon_108_dynamic.inp neighborcells &> tests/dynamic_neighbor_cells_test.txt
 
-make remove
-make
+make clean
+make release
+
 echo "Building with full optimizations, OpenMP"
 echo ""
 echo "Static tests (optimized):"
