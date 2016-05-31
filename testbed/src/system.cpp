@@ -480,8 +480,9 @@ SystemArch::forceCellsAdjMP() {
         // Loop over all particles in this loop, and get the cell id
         // From that, only compare with particles that have a higher
         // pid than we do - this prevents double counting!
-        
+#if defined(_OPENMP)
 #pragma omp for reduction(+:epot) schedule(runtime) nowait
+#endif
         for (int idx = 0; idx < nparticles_; ++idx) {
             // Get our cell
             int cidx = (*pid_to_cid)[idx];
@@ -654,8 +655,10 @@ SystemArch::forceNeighCell() {
             fr[i] = frc_.data() + ((ndim_*tid+i)*nparticles_);
         }
         buffmd::azzero(*fr, ndim_*nparticles_);
-        
+  
+#if defined(_OPENMP)
 #pragma omp for reduction(+:epot) schedule(runtime) nowait
+#endif
         for (int idx = 0; idx < nparticles_; ++idx) {
             // Iterate over the entries in our neighbor list
             for (auto nldx = neighbors[idx].begin(); nldx != neighbors[idx].end(); nldx++) {

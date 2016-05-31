@@ -12,11 +12,11 @@ OBJDIR = obj
 BINDIR = bin
 SRCEXT = cpp
 
-COMPILE_FLAGS = -std=c++11 -Wall -Wextra -fopenmp
-RCOMPILE_FLAGS = -D NDEBUG -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -msse3 
+COMPILE_FLAGS = -std=c++11 -Wall -Wextra
+RCOMPILE_FLAGS = -D NDEBUG -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -msse3 -fopenmp
 DCOMPILE_FLAGS = -D DEBUG -g
-LINK_FLAGS = -fopenmp
-RLINK_FLAGS = 
+LINK_FLAGS =
+RLINK_FLAGS = -fopenmp
 DLINK_FLGAS =
 
 INCLUDES = -I $(SRCDIR) -I/usr/local/include
