@@ -13,13 +13,13 @@ BINDIR = bin
 SRCEXT = cpp
 
 COMPILE_FLAGS = -std=c++11 -Wall -Wextra
-RCOMPILE_FLAGS = -D NDEBUG -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -msse3 -fopenmp
+RCOMPILE_FLAGS = -D NDEBUG -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -fopenmp -march=native
 DCOMPILE_FLAGS = -D DEBUG -g
 LINK_FLAGS =
 RLINK_FLAGS = -fopenmp
 DLINK_FLGAS =
 
-INCLUDES = -I $(SRCDIR) -I/usr/local/include
+INCLUDES = -I$(SRCDIR) -I/usr/local/include
 LIBS = -L/usr/local/lib
 
 UNAME_S:=$(shell uname -s)
@@ -73,7 +73,7 @@ debug: dirs
 
 .PHONY: dirs
 dirs:
-	mkdir -p $(dir $(OBJECTS))
+	mkdir -p $(OBJDIR)
 	mkdir -p $(BINDIR)
 
 .PHONY: clean
