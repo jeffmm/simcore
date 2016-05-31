@@ -26,7 +26,6 @@ NeighborListCell::CreateNeighborList(int pN, double pRcut, double pSkin, double 
 void
 NeighborListCell::UpdateNeighborList(std::vector<particle *> *particles) {
     // Purge the neighbor list
-    printf("Starting UpdateNeighborList\n");
     n_updates_++;
     for (int i = 0; i < nparticles_; ++i) {
         neighbors_[i].clear();
@@ -34,124 +33,85 @@ NeighborListCell::UpdateNeighborList(std::vector<particle *> *particles) {
     
     // Update the cell list
     cell_list_.UpdateCellList(particles);
+#ifdef DEBUG
+    cell_list_.dump();
+#endif
     
     // Call the cell update
     CellUpdate(particles);
+#ifdef DEBUG
+    dump();
+#endif
     
     // Reset the total distance traveled for updates
     for (int i = 0; i < nparticles_; ++i) {
         memset((*particles)[i]->dr_tot, 0, sizeof(double)*3);
     }
-    printf("Finished UpdateNeighborList\n");
 }
-
-
-// Cell update update
-// Doesn't work, some sort of synchronizationissue with the neighbor list
-/*void
-NeighborListCell::CellUpdate(std::vector<particle *> *particles) {
-    // Loop over the cells to build the neighbor list
-    printf("Starting CellUpdate\n");
-#if defined(_OPENMP)
-#pragma omp parallel
-#endif
-    {
-        int tid;
-#if defined(_OPENMP)
-        tid = omp_get_thread_num();
-#else
-        tid = 0;
-#endif
-        
-        // Check within my own cell
-        int ncells = cell_list_.ncells();
-        printf("Checking within my own cell, tid:%d\n", tid);
-        for (int cidx = 0; cidx < ncells; cidx += nthreads_) {
-            // set the index
-            int cjdx = cidx + tid;
-            if (cjdx >= ncells) break;
-            
-            // Get the actual cell
-            auto c1 = cell_list_[cjdx];
-            // Loop over particles in said cell
-            for (int pidx1 = 0; pidx1 < c1->nparticles_ - 1; ++pidx1) {
-                int idx = c1->idxlist_[pidx1];
-                auto p1 = (*particles)[idx];
-                
-                // Get my interacting partner
-                for(int pidx2 = pidx1 + 1; pidx2 < c1->nparticles_; ++pidx2) {
-                    int jdx = c1->idxlist_[pidx2];
-                    auto p2 = (*particles)[jdx];
-                    
-                    //printf("{c1:%d,c2:SAME}->{p1:%d,p2:%d}\n", c1->cell_id_, idx, jdx);
-                    
-                    double rx = buffmd::pbc(p1->x[0] - p2->x[0], boxby2_[0], box_[0]);
-                    double ry = buffmd::pbc(p1->x[1] - p2->x[1], boxby2_[1], box_[1]);
-                    double rz = buffmd::pbc(p1->x[2] - p2->x[2], boxby2_[2], box_[2]);
-                    double rsq = rx*rx + ry*ry + rz*rz;
-                    
-                    if (rsq < rcs2_) {
-                        //printf("\t->Adding to neighbor list n[%d] = %d\n", idx, jdx);
-                        neighbor_t new_neighbor;
-                        new_neighbor.idx_ = jdx;
-                        neighbors_[idx].push_back(new_neighbor);
-                    }
-                } // check interaction partner particles
-            } // check the actual particles
-        }  // Cell loop
-        
-        // Interactions across different cells
-        printf("Checking with interacting cells, tid:%d\n", tid);
-        int npairs = cell_list_.npairs();
-        for (int pairidx = 0; pairidx < npairs; pairidx += nthreads_) {
-            int pairjdx = pairidx + tid;
-            if (pairjdx >= npairs) break;
-            auto cell1 = cell_list_[cell_list_.plist(2*pairjdx  )];
-            auto cell2 = cell_list_[cell_list_.plist(2*pairjdx+1)];
-            
-            for (int pidx1 = 0; pidx1 < cell1->nparticles_; ++pidx1) {
-                int idx = cell1->idxlist_[pidx1];
-                auto p1 = (*particles)[idx];
-                
-                for (int pidx2 = 0; pidx2 < cell2->nparticles_; ++pidx2) {
-                    int jdx = cell2->idxlist_[pidx2];
-                    auto p2 = (*particles)[jdx];
-                    
-                    double rx = buffmd::pbc(p1->x[0] - p2->x[0], boxby2_[0], box_[0]);
-                    double ry = buffmd::pbc(p1->x[1] - p2->x[1], boxby2_[1], box_[1]);
-                    double rz = buffmd::pbc(p1->x[2] - p2->x[2], boxby2_[2], box_[2]);
-                    double rsq = rx*rx + ry*ry + rz*rz;
-                    
-                    if (rsq < rcs2_) {
-                        neighbor_t new_neighbor;
-                        new_neighbor.idx_ = jdx;
-                        neighbors_[idx].push_back(new_neighbor);
-                    }
-                } // Second particle
-            } // First particle
-        } // Pairs loops
-#if defined(_OPENMP)
-#pragma omp barrier
-#endif
-    } // omp loop
-    printf("Finished CellUpdate\n");
-}*/
 
 
 // Attempt 2 of cell list update
 // XXX: Work on stuff here when I want to
 void
 NeighborListCell::CellUpdate(std::vector<particle *> *particles) {
-    printf("Starting CellUpdate\n");
-    printf("WARNING: NOT IMPLEMENTED RIGHT NOW, EXITING!\n");
-    exit(1);
-    
-    for (int idx = 0; idx < nparticles_; ++idx) {
-        // Get the cell containing this particle
-        //int cidx = (*particles)[idx]->cellid;
-    }
-    
-    printf("Finished CellUpdate\n");
+
+#if defined(_OPENMP)
+#pragma omp parallel
+#endif
+    {
+        std::vector<int>* pid_to_cid = cell_list_.pidtocid();
+        
+        // Loop over all particles in this loop, and get the cell id
+        // From that, only compare with particles that have a higher
+        // pid than we do - this prevents double counting!
+#if defined(_OPENMP)
+#pragma omp for schedule(runtime) nowait
+#endif
+        for (int idx = 0; idx < nparticles_; ++idx) {
+#ifdef DEBUG
+            printf("Particle(%d), ", idx);
+#endif
+            // Get our cell
+            int cidx = (*pid_to_cid)[idx];
+            auto cell1 = cell_list_[cidx];
+#ifdef DEBUG
+            printf("cell1(%d)\n", cell1->cell_id_);
+#endif
+            // Loop over other cells (including us) in the block of cells
+            for (int cjdx = 0; cjdx < 27; ++cjdx) {
+                auto cell2 = cell_list_[cell1->adj_cell_ids_[cjdx]];
+#ifdef DEBUG
+                printf("\tcell2(%d): ", cell2->cell_id_);
+#endif
+                // Loop over it's particles
+                for (int jdx = 0; jdx < cell2->nparticles_; ++jdx) {
+                    int jjdx = cell2->idxlist_[jdx];
+#ifdef DEBUG
+                    printf("%d,", jjdx);
+#endif
+                    // ONLY DO THE CALCULATION IF THE OTHER PID IS HIGHER!!!
+                    if (jjdx > idx) {
+                        auto p1 = (*particles)[idx];
+                        auto p2 = (*particles)[jjdx];
+                        
+                        double rx = buffmd::pbc(p1->x[0] - p2->x[0], boxby2_[0], box_[0]);
+                        double ry = buffmd::pbc(p1->x[1] - p2->x[1], boxby2_[1], box_[1]);
+                        double rz = buffmd::pbc(p1->x[2] - p2->x[2], boxby2_[2], box_[2]);
+                        double rsq = rx*rx + ry*ry + rz*rz;
+                        
+                        if (rsq < rcs2_) {
+                            neighbor_t new_neighbor;
+                            new_neighbor.idx_ = jjdx;
+                            neighbors_[idx].push_back(new_neighbor);
+                        }
+                    } // only do the calculation if the second id is higher
+                } // cell2 particle list
+#ifdef DEBUG
+                printf("\n");
+#endif
+            } // cells adjancent and equal to us
+        } // pragma omp for reduction(+:epot) schedule(runtime) nowait
+    } // pragma omp parallel
 }
 
 
@@ -161,7 +121,7 @@ NeighborListCell::print() {
     // print out information like the cutoff radius, update distance
     // average number of neighbors
     printf("********\n");
-    printf("Neighbor List Cells\n");
+    printf("Neighbor List Cells (threads:%d)\n", nthreads_);
     printf("\t{rcut:%2.2f}, {skin:%2.2f}, {rcs2:%2.2f}\n", rcut_, skin_, rcs2_);
     int ntotlist = 0, maxlist = 0, minlist = INT_MAX;
     // The -1 is important because the last neighbor list is empty when we aren't
@@ -175,4 +135,30 @@ NeighborListCell::print() {
     printf("\t{NeighborList size: %.1fMb}\n", (float)GetMemoryFootprint()/1024/1024.);
     // Print out the interesting information from the cell list
     cell_list_.CheckCellList();
+}
+
+
+// Dump everythign in gory detail
+void
+NeighborListCell::dump() {
+    std::vector<int>* pid_to_cid = cell_list_.pidtocid();
+    printf("\n********\n");
+    printf("Dumping Neighbor List Cells!\n\n");
+    printf("Neighbor List Cells -> {n:%d}{threads:%d}\n", nparticles_, nthreads_);
+    // Loop through all particles
+    printf("Printing neighbors\n");
+    for (int idx = 0; idx < nparticles_; ++idx) {
+        int cidx = (*pid_to_cid)[idx];
+        printf("\tp(%d) -> {n:%lu}{cell:%d}\n", idx, neighbors_[idx].size(), cidx);
+        printf("\t neighbors: ");
+        for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
+            int jdx = nldx->idx_;
+            printf("%d,", jdx);
+        }
+        printf("\n");
+    }
+    printf("NOW DUMPING SUB CELL LIST!\n");
+    cell_list_.dump();
+    printf("DONE DUMPING SUB CELL LIST!\n");
+    printf("\n********\n");
 }

@@ -7,7 +7,7 @@ echo ""
 echo "Static tests:"
 
 echo "Brute Force Scheme (static)"
-OMP_NUM_THREADS=1 ./xtime.rb bin/ArNe_sim argon_108_static.inp brute &> tests/static_brute_test.txt
+./xtime.rb bin/ArNe_sim argon_108_static.inp brute &> tests/static_brute_test.txt
 
 echo "Cell List Scheme (static)"
 ./xtime.rb bin/ArNe_sim argon_108_static.inp cells &> tests/static_cell_test.txt

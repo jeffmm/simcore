@@ -789,6 +789,7 @@ SystemArch::nParticles() {
 void
 SystemArch::statistics(int pNsteps) {
     int nupdates = neighbor_list_.GetNUpdates();
+    nupdates += neighbor_list_cell_.GetNUpdates();
     printf("Neighbor List:\n");
     printf("\t%d/%d updates/steps\n", nupdates, pNsteps);
 }
