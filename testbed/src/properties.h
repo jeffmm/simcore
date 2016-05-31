@@ -23,8 +23,8 @@ struct _properties {
     double skin_ = 0.0;
     double dt_ = 0.0;
     
-    const ForceType scheme_ = FCELLS;
     const int cell_update_freq_ = 4;
+    const ForceType scheme_ = FCELLS;
 };
 typedef struct _properties properties_t;
 

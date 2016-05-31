@@ -76,9 +76,13 @@ NeighborList::UpdateNeighborList(std::vector<particle *> *particles) {
 void
 NeighborList::AllPairsUpdate(std::vector<particle *> *particles) {
     // Loop over all pairs and build the neighbor list
+#if defined(_OPENMP)
 #pragma omp parallel
+#endif
     {
+#if defined(_OPENMP)
 #pragma omp for schedule(runtime) nowait
+#endif
         for (int idx = 0; idx < nparticles_ - 1; ++idx) {
             for (int jdx = idx + 1; jdx < nparticles_; ++jdx) {
                 auto p1 = (*particles)[idx];
