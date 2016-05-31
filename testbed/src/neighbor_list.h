@@ -24,6 +24,7 @@ public:
     virtual ~NeighborList();
    
     virtual void print();
+    virtual void dump();
     virtual void CreateNeighborList(int pN, double pRcut, double pSkin, double pBox[3]);
     virtual void CheckNeighborList(std::vector<particle*>* particles);
     virtual void UpdateNeighborList(std::vector<particle*>* particles);
