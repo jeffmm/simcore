@@ -125,6 +125,15 @@ NeighborList::print() {
 }
 
 
+// Dump everything in gory detail
+void
+NeighborList::dump() {
+    printf("\n********\n");
+    printf("Dumping Neighbor List!\n\n");
+    printf("\n********\n");
+}
+
+
 // Memory footprint stuffs
 unsigned long
 NeighborList::GetMemoryFootprint() {

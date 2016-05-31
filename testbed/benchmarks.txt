@@ -21,3 +21,9 @@ Neighbor List All Pairs skin=1.0
 108     10000       1.72s       6.7Mb       (353/10k updates)
 2916    10000      25.36s      15.5Mb       (430/10k updates)
 78732     100      32.59s     212.9Mb       (4/100 updates)
+--------
+Neighbor List Cells skin=1.0
+--------
+108     10000       1.54s       1.7Mb       (355/10k updates)
+2916    10000      27.60s      10.4Mb       (432/10k updates)
+78732     100       7.30s     208.1Mb       (4/100 updates)

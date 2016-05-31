@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "particle.h"
-#include "cell_list.h"
+#include "cell_list_adj.h"
 #include "neighbor_list.h"
 
 #if defined(_OPENMP)
@@ -22,6 +22,7 @@ public:
     virtual ~NeighborListCell();
    
     virtual void print();
+    virtual void dump();
     virtual void CreateNeighborList(int pN, double pRcut, double pSkin, double pBox[3]);
     virtual void UpdateNeighborList(std::vector<particle*>* particles);
     
@@ -33,7 +34,7 @@ protected:
     
     // We inherit a ton of stuff from neighbor_list.h
     // But not cells
-    CellList cell_list_;
+    CellListAdj cell_list_;
     
     int nthreads_;
 };

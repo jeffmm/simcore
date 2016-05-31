@@ -36,6 +36,7 @@ public:
     void CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]);
     void UpdateCellList(std::vector<particle*>* particles);
     void CheckCellList();
+    void dump();
     
     void SetRCut(double pRcut, double pSkin);
     
@@ -73,9 +74,6 @@ protected:
     // Vector of the cells themselves, and pair list
     std::vector<CellAdj> clist_;
     std::vector<int> p_c_;
-    
-    // Consts
-    const int cellrat_ = 2;
     
 };
 
