@@ -68,27 +68,15 @@ NeighborListCell::CellUpdate(std::vector<particle *> *particles) {
 #pragma omp for schedule(runtime) nowait
 #endif
         for (int idx = 0; idx < nparticles_; ++idx) {
-#ifdef DEBUG
-            printf("Particle(%d), ", idx);
-#endif
             // Get our cell
             int cidx = (*pid_to_cid)[idx];
             auto cell1 = cell_list_[cidx];
-#ifdef DEBUG
-            printf("cell1(%d)\n", cell1->cell_id_);
-#endif
             // Loop over other cells (including us) in the block of cells
             for (int cjdx = 0; cjdx < 27; ++cjdx) {
                 auto cell2 = cell_list_[cell1->adj_cell_ids_[cjdx]];
-#ifdef DEBUG
-                printf("\tcell2(%d): ", cell2->cell_id_);
-#endif
                 // Loop over it's particles
                 for (int jdx = 0; jdx < cell2->nparticles_; ++jdx) {
                     int jjdx = cell2->idxlist_[jdx];
-#ifdef DEBUG
-                    printf("%d,", jjdx);
-#endif
                     // ONLY DO THE CALCULATION IF THE OTHER PID IS HIGHER!!!
                     if (jjdx > idx) {
                         auto p1 = (*particles)[idx];
@@ -106,9 +94,6 @@ NeighborListCell::CellUpdate(std::vector<particle *> *particles) {
                         }
                     } // only do the calculation if the second id is higher
                 } // cell2 particle list
-#ifdef DEBUG
-                printf("\n");
-#endif
             } // cells adjancent and equal to us
         } // pragma omp for reduction(+:epot) schedule(runtime) nowait
     } // pragma omp parallel
