@@ -1,0 +1,40 @@
+2015/05/31:
+
+Running benchmarks on all available calculation routines, with
+differing number of threads added (except serial brute, fuck that).
+
+argon_108: 10k steps
+argon_2916: 1k steps
+argon_78732: 20 steps
+
+n ->
+
+Brute
+--------
+108      2.04    1.52    1.19
+2916    85.16   43.29   24.82
+78732 1011.28  522.94  328.32
+
+Cells
+--------
+108      2.42    1.70    1.31
+2916    22.04   11.33    6.42
+78732   13.66    8.42    6.04
+
+Cells Adj
+--------
+108      2.49    1.84    1.35
+2916    93.64   48.16   28.00
+78732   27.90   14.16    8.30
+
+Neighbor List - All Pairs
+--------
+108      1.42    1.16    1.01
+2916     9.63    5.18    3.08
+78732   27.17   15.30    9.12
+
+Neighbor List - Cells Adjacent
+--------
+108      1.46    1.17    1.04
+2916    10.10    5.66    3.39
+78732    5.34    3.07    1.98
