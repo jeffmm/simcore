@@ -12,15 +12,20 @@
 // rcutoff to generate this
 void
 CellListAdj::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
+    printf("Creating cell list adj.\n");
     nparticles_ = pN;
     rcut_ = pRcut;
+    skin_ = pSkin;
     memcpy(box_, pBox, 3*sizeof(double));
+    p_c_.clear();
+    p_c_.resize(nparticles_);
     
     SetRCut(rcut_, skin_);
 
-    printf("Cell list has %dx%dx%d=%d cells of lengths {%.2f,%.2f,%.2f} "
-           "with %d particles/cell.\n", T_[0], T_[1], T_[2], ncells_, S_[0], S_[1], S_[2],
-           nidx_);
+    printf("Adj. Cell list has %dx%dx%d=%d cells of lengths {%.2f,%.2f,%.2f} "
+           "with %d particles/cell (tot:%d).\n", T_[0], T_[1], T_[2], ncells_, S_[0], S_[1], S_[2],
+           nidx_, nparticles_);
+    printf("Done creating cell list adj.\n");
 }
 
 // Update Rcut, which requires rebuilding and checking lots of stuff
@@ -28,11 +33,12 @@ void
 CellListAdj::SetRCut(double pRcut, double pSkin) {
     rcut_ = pRcut;
     skin_ = pSkin;
+    rbuff_ = rcut_ + skin_;
     
     // Recompute the number of cells on a side
     for (int i = 0; i < 3; ++i) {
         boxby2_[i] = 0.5*box_[i];
-        T_[i] = floor(cellrat_ * box_[i] / (rcut_ + skin_));
+        T_[i] = floor(box_[i] / rbuff_);
         if (T_[i] < 3) {
             T_[i] = 3;
         }
@@ -124,11 +130,10 @@ CellListAdj::UpdateCellList(std::vector<particle*>* particles) {
         cy = floor((buffmd::pbc(p->x[1], boxby2_[1], box_[1]) + boxby2_[1])/S_[1]);
         cz = floor((buffmd::pbc(p->x[2], boxby2_[2], box_[2]) + boxby2_[2])/S_[2]);
         int cidx = buffmd::cell_vec_to_linear(cx,cy,cz, T_);
-        //printf("p{%d}(%f,%f,%f) -> (%d,%d,%d) -> cell{%d}\n",
-        //       i, p->x[0], p->x[1], p->x[2], cx, cy, cz, cidx);
         
         idx = clist_[cidx].nparticles_;
         clist_[cidx].idxlist_[idx] = i;
+        p_c_[i] = cidx; // Set the particle id->cell id
         ++idx;
         clist_[cidx].nparticles_ = idx;
         if (idx > midx) midx = idx;
@@ -139,6 +144,36 @@ CellListAdj::UpdateCellList(std::vector<particle*>* particles) {
         printf("Overflow in cell list: %d/%d particles/cells\n", midx, nidx_);
         exit(1);
     }
+}
+
+
+// Print out everything in gory detail
+void
+CellListAdj::dump() {
+    printf("\n********\n");
+    printf("Dumping Adj. Cell List!\n\n");
+    printf("Adj. Cell list has %dx%dx%d=%d cells of lengths {%.2f,%.2f,%.2f} "
+           "with %d particles/cell (tot:%d).\n", T_[0], T_[1], T_[2], ncells_, S_[0], S_[1], S_[2],
+           nidx_, nparticles_);
+    // Loop over the cells, and print their information
+    printf("Printing cells!\n");
+    for (int cidx = 0; cidx < ncells_; ++cidx) {
+        assert(cidx == clist_[cidx].cell_id_);
+        auto cell1 = clist_[cidx];
+        printf("Cell(%d) -> {n:%d}\n", cell1.cell_id_, cell1.nparticles_);
+        // Print out the adjacent cell ids
+        printf("\t adj: ");
+        for (int i = 0; i < 27; ++i) {
+            printf("%d,", cell1.adj_cell_ids_[i]);
+        }
+        printf("\n");
+        printf("\t ids: ");
+        for (int idx = 0; idx < cell1.nparticles_; ++idx) {
+            printf("%d,", cell1.idxlist_[idx]);
+        }
+        printf("\n");
+    }
+    printf("\n********\n");
 }
 
 
@@ -170,7 +205,7 @@ CellListAdj::CheckCellList() {
         //printf("Cell(%d){%d,%d,%d} -> [%d]\n", cidx, cx[0], cx[1], cx[2], cell1->nparticles_);
         runningtot += cell1->nparticles_;
     }
-    printf("Exact middle cell adjacent members: \n");
+    printf("Exact bottom cell adjacent members: \n");
     int midcidx = buffmd::cell_vec_to_linear(0,0,0,T_);
     printf("Cell %d adjacent members = \n\t{", midcidx);
     for (int i = 0; i < 27; ++i) {
