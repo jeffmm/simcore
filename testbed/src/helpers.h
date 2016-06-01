@@ -133,4 +133,17 @@ namespace buffmd {
     // buffmd::cell_linear_to_vec(cidx, T_, c_test);
 }
 
+// Debug macro stuff, should be useful?
+#ifdef NDEBUG
+#define XTRACE(M, ...)
+#else
+#define XTRACE(M, ...) do { fprintf(stderr, "DEBUG %s:%d: " M "\n", __FILE__, __LINE__, ##__VA_ARGS__); } while(0)
+#endif
+
+#ifdef NDEBUG
+#define DPRINTF(M, ...)
+#else
+#define DPRINTF(M, ...) do { fprintf(stderr, "" M "", ##__VA_ARGS__); } while(0)
+#endif
+
 #endif
