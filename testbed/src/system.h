@@ -51,12 +51,14 @@ public:
     void dump();
     void dumpPotentials();
     void checkConsistency();
+    void printForces();
     void statistics(int pNsteps);
     
     // Force calculation and integration
     void forceBrute();
     void forceCellsMP();
     void forceCellsAdjMP();
+    void forceCellsAdjMP_int();
     void forceNeighAP();
     void forceNeighCell();
     void velverlet();

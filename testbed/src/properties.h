@@ -7,6 +7,7 @@ enum ForceType : unsigned char {
     BRUTEFORCE,
     FCELLS,
     FCELLSADJ,
+    FCELLSADJ_INT,
     FNEIGHBORS_ALLPAIRS,
     FNEIGHBORS_CELL
 };

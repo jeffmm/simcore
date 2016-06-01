@@ -8,6 +8,10 @@
 
 #include "particle.h"
 
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
+
 // Each actual cell has information about the ids of the particles
 class CellAdj {
 public:
@@ -35,10 +39,10 @@ public:
     
     void CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]);
     void UpdateCellList(std::vector<particle*>* particles);
-    void CheckCellList();
-    void dump();
-    
     void SetRCut(double pRcut, double pSkin);
+    void InteractionPairs(std::vector<std::pair<int, int>>* pPartPairs);
+    void CheckCellList();
+    void dump(); 
     
     unsigned long GetMemoryFootprint();
     
@@ -67,6 +71,7 @@ protected:
     int ncells_;
     int npairs_;
     int nidx_;
+    int nthreads_;
     int T_[3];
     double S_[3];
     double boxby2_[3];

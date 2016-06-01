@@ -13,7 +13,7 @@ BINDIR = bin
 SRCEXT = cpp
 
 COMPILE_FLAGS = -std=c++11 -Wall -Wextra
-RCOMPILE_FLAGS = -D NDEBUG -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -fopenmp -march=native
+RCOMPILE_FLAGS = -D NDEBUG -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -fopenmp -march=native -g
 DCOMPILE_FLAGS = -D DEBUG -g
 LINK_FLAGS =
 RLINK_FLAGS = -fopenmp
