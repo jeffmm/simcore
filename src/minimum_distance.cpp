@@ -87,68 +87,152 @@ input: number of spatial dimensions (n_dim)
 
 output: minimimum separation vector (r_min)
         pointer to squared minimum separation (r_min_mag2)
-        pointer to intersection of r_min with axis of first spherocylinder (lambda)
-        pointer to intersection of r_min with axis of second spherocylinder (mu). */
+        vector separating r_1 to point of contact on first sphero (contact1)
+        vector separating r_2 to point of contact on second sphero (contact2) */
+
 
 
 void min_distance_sphero(int n_dim, int n_periodic, double **h,
-                         double *r_1, double *s_1, double *u_1, double length_1,
-                         double *r_2, double *s_2, double *u_2, double length_2,
-                         double *r_min, double *r_min_mag2, double *lambda, double *mu) {
-  double dr_dot_u_1, dr_dot_u_2, u_1_dot_u_2, denom;
-  double ds[3], dr[3];
+                         double const * const r_1, double const * const s_1,
+                         double const * const u_1, double const length_1,
+                         double const * const r_2, double const * const s_2, 
+                         double const * const u_2, double const length_2,
+                         double *r_min, double *r_min_mag2, 
+                         double *contact1, double *contact2) {
+    int i, j;
+    double half_length_1, half_length_2,
+        dr_dot_u_1, dr_dot_u_2, u_1_dot_u_2, denom,
+        lambda_a, lambda_b, mu_a, mu_b, lambda_mag, mu_mag, r_min_mag2_a, r_min_mag2_b, lambda, mu;
+    double ds[3], dr[3], r_min_a[3], r_min_b[3];
 
-  /* Compute pair separation vector. */
-  for (int i = 0; i < n_periodic; ++i) {  /* First handle periodic subspace. */
-    ds[i] = s_2[i] - s_1[i];
-    ds[i] -= NINT(ds[i]);
-  }
-  for (int i = 0; i < n_periodic; ++i) {
-    dr[i] = 0.0;
-    for (int j = 0; j < n_periodic; ++j)
-      dr[i] += h[i][j] * ds[j];
-  }
-  for (int i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
-    dr[i] = r_2[i] - r_1[i];
+    /* Compute various constants. */
+    half_length_1 = 0.5 * length_1;
+    half_length_2 = 0.5 * length_2;
 
-  /* Compute minimum distance (see Allen et al., Adv. Chem. Phys. 86, 1 (1993)).
-     First consider two infinitely long lines. */
-  dr_dot_u_1 = dr_dot_u_2 = u_1_dot_u_2 = 0.0;
-  for (int i = 0; i < n_dim; ++i) {
-    dr_dot_u_1 += dr[i] * u_1[i];
-    dr_dot_u_2 += dr[i] * u_2[i];
-    u_1_dot_u_2 += u_1[i] * u_2[i];
-  }
-  denom = 1.0 - SQR(u_1_dot_u_2);
-  if (denom < SMALL) {
-    *lambda = dr_dot_u_1 / 2.0;
-    *mu = -dr_dot_u_2 / 2.0;
-  } else {
-    *lambda = (dr_dot_u_1 - u_1_dot_u_2 * dr_dot_u_2) / denom;
-    *mu = (-dr_dot_u_2 + u_1_dot_u_2 * dr_dot_u_1) / denom;
-  }
+    /* Compute pair separation vector. */
+    for (i = 0; i < n_periodic; ++i) {  /* First handle periodic subspace. */
+        ds[i] = s_2[i] - s_1[i];
+        ds[i] -= NINT(ds[i]);
+    }
+    for (i = 0; i < n_periodic; ++i) {
+        dr[i] = 0.0;
+        for (j = 0; j < n_periodic; ++j)
+            dr[i] += h[i][j] * ds[j];
+    }
+    for (i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
+        dr[i] = r_2[i] - r_1[i];
 
-/* Now take into account the fact that the two line segments are of finite length. */
-  if (*lambda < 0 || *lambda > length_1) {
-    *lambda = (*lambda < 0 ? 0 : length_1);
-    // Adjust mu.
-    *mu = -dr_dot_u_2 + *lambda * u_1_dot_u_2;
-  }
-  if (*mu < 0 || *mu > length_2) {
-    *mu = (*mu < 0 ? 0 : length_2);
-    // Adjust lambda.
-    *lambda = dr_dot_u_1 + *mu * u_1_dot_u_2;
-  }
-  if (*lambda < 0 || *lambda > length_1) {
-    *lambda = (*lambda < 0 ? 0 : length_1);
-  }
-  /* Calculate minimum distance between two spherocylinders. */
-  *r_min_mag2 = 0.0;
-  for (int i = 0; i < n_dim; ++i) {
-    r_min[i] = dr[i] - *lambda * u_1[i] + *mu * u_2[i];
-    *r_min_mag2 += SQR(r_min[i]);
-  }
-  return;
+    /* Compute minimum distance (see Allen et al., Adv. Chem. Phys. 86, 1 (1993)).
+       First consider two infinitely long lines. */
+    dr_dot_u_1 = dr_dot_u_2 = u_1_dot_u_2 = 0.0;
+    for (i = 0; i < n_dim; ++i) {
+        dr_dot_u_1 += dr[i] * u_1[i];
+        dr_dot_u_2 += dr[i] * u_2[i];
+        u_1_dot_u_2 += u_1[i] * u_2[i];
+    }
+    denom = 1.0 - SQR(u_1_dot_u_2);
+    if (denom < SMALL) {
+        lambda = dr_dot_u_1 / 2.0;
+        mu = -dr_dot_u_2 / 2.0;
+    } else {
+        lambda = (dr_dot_u_1 - u_1_dot_u_2 * dr_dot_u_2) / denom;
+        mu = (-dr_dot_u_2 + u_1_dot_u_2 * dr_dot_u_1) / denom;
+    }
+    lambda_mag = ABS(lambda);
+    mu_mag = ABS(mu);
+
+    /* Now take into account the fact that the two line segments are of finite length. */
+    if (lambda_mag > half_length_1 && mu_mag > half_length_2) {
+
+        /* Calculate first possible case. */
+        lambda_a = SIGN(half_length_1, lambda);
+        mu_a = -dr_dot_u_2 + lambda_a * u_1_dot_u_2;
+        mu_mag = ABS(mu_a);
+        if (mu_mag > half_length_2)
+            mu_a = SIGN(half_length_2, mu_a);
+
+        /* Calculate minimum distance between two spherocylinders. */
+        r_min_mag2_a = 0.0;
+        for (i = 0; i < n_dim; ++i) {
+            r_min_a[i] = dr[i] - lambda_a * u_1[i] + mu_a * u_2[i];
+            r_min_mag2_a += SQR(r_min_a[i]);
+        }
+
+        /* Calculate second possible case. */
+        mu_b = SIGN(half_length_2, mu);
+        lambda_b = dr_dot_u_1 + mu_b * u_1_dot_u_2;
+        lambda_mag = ABS(lambda_b);
+        if (lambda_mag > half_length_1)
+            lambda_b = SIGN(half_length_1, lambda_b);
+
+        /* Calculate minimum distance between two spherocylinders. */
+        r_min_mag2_b = 0.0;
+        for (i = 0; i < n_dim; ++i) {
+            r_min_b[i] = dr[i] - lambda_b * u_1[i] + mu_b * u_2[i];
+            r_min_mag2_b += SQR(r_min_b[i]);
+        }
+
+        /* Choose the minimum minimum distance. */
+        if (r_min_mag2_a < r_min_mag2_b) {
+            lambda = lambda_a;
+            mu = mu_a;
+            *r_min_mag2 = r_min_mag2_a;
+            for (i = 0; i < n_dim; ++i)
+                r_min[i] = r_min_a[i];
+        } else {
+            lambda = lambda_b;
+            mu = mu_b;
+            *r_min_mag2 = r_min_mag2_b;
+            for (i = 0; i < n_dim; ++i)
+                r_min[i] = r_min_b[i];
+        }
+    } else if (lambda_mag > half_length_1) {
+
+        /* Adjust lambda and mu. */
+        lambda = SIGN(half_length_1, lambda);
+        mu = -dr_dot_u_2 + lambda * u_1_dot_u_2;
+        mu_mag = ABS(mu);
+        if (mu_mag > half_length_2)
+            mu = SIGN(half_length_2, mu);
+
+        /* Calculate minimum distance between two spherocylinders. */
+        *r_min_mag2 = 0.0;
+        for (i = 0; i < n_dim; ++i) {
+            r_min[i] = dr[i] - lambda * u_1[i] + mu * u_2[i];
+            contact1[i] = lambda * u_1[i];
+            contact2[i] = mu * u_2[i];
+            *r_min_mag2 += SQR(r_min[i]);
+        }
+    } else if (mu_mag > half_length_2) {
+
+        /* Adjust lambda and mu. */
+        mu = SIGN(half_length_2, mu);
+        lambda = dr_dot_u_1 + mu * u_1_dot_u_2;
+        lambda_mag = ABS(lambda);
+        if (lambda_mag > half_length_1)
+            lambda = SIGN(half_length_1, lambda);
+
+        /* Calculate minimum distance between two spherocylinders. */
+        *r_min_mag2 = 0.0;
+        for (i = 0; i < n_dim; ++i) {
+            r_min[i] = dr[i] - lambda * u_1[i] + mu * u_2[i];
+            contact1[i] = lambda * u_1[i];
+            contact2[i] = mu * u_2[i];
+            *r_min_mag2 += SQR(r_min[i]);
+        }
+    } else {
+
+        /* Calculate minimum distance between two spherocylinders. */
+        *r_min_mag2 = 0.0;
+        for (i = 0; i < n_dim; ++i) {
+            r_min[i] = dr[i] - lambda * u_1[i] + mu * u_2[i];
+            contact1[i] = lambda * u_1[i];
+            contact2[i] = mu * u_2[i];
+            *r_min_mag2 += SQR(r_min[i]);
+        }
+    }
+
+    return;
 }
 
 /* Routine to calculate minimum distance between two spherocylinders and
@@ -325,47 +409,52 @@ void min_distance_sphero_dr(int n_dim, int n_periodic, double **h,
  pointer to squared minimum separation (r_min_mag2)
  pointer to intersection of r_min with axis of spherocylinder (mu). */
 
-
 void min_distance_sphere_sphero(int n_dim, int n_periodic, double **h,
-                                double *r_1, double *s_1,
-                                double *r_2, double *s_2, double *u_2, double length_2,
-                                double *r_min, double *r_min_mag2, double *mu) {
+                                double const * const r_1, double const * const s_1,
+                                double const * const r_2, double const * const s_2, 
+                                double const * const u_2, double const length_2,
+                                double *r_min, double *r_min_mag2,
+                                double *contact2) {
     int i, j;
-    double dr_dot_u_2;
+    double half_length_2, dr_dot_u_2, mu_mag, mu;
     double ds[3], dr[3];
+
+    /* Compute various constants. */
+    half_length_2 = 0.5 * length_2;
 
     /* Compute pair separation vector. */
     for (i = 0; i < n_periodic; ++i) {  /* First handle periodic subspace. */
-      ds[i] = s_2[i] - s_1[i];
-      ds[i] -= NINT(ds[i]);
+        ds[i] = s_2[i] - s_1[i];
+        ds[i] -= NINT(ds[i]);
     }
     for (i = 0; i < n_periodic; ++i) {
-      dr[i] = 0.0;
-      for (j = 0; j < n_periodic; ++j)
-        dr[i] += h[i][j] * ds[j];
+        dr[i] = 0.0;
+        for (j = 0; j < n_periodic; ++j)
+            dr[i] += h[i][j] * ds[j];
     }
     for (i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
-      dr[i] = r_2[i] - r_1[i];
+        dr[i] = r_2[i] - r_1[i];
 
     /* Compute minimum distance (see Allen et al., Adv. Chem. Phys. 86, 1 (1993)).
        First consider a point and an infinitely long line. */
     dr_dot_u_2 = 0.0;
     for (i = 0; i < n_dim; ++i)
-      dr_dot_u_2 += dr[i] * u_2[i];
-    *mu = -dr_dot_u_2;
+        dr_dot_u_2 += dr[i] * u_2[i];
+    mu = -dr_dot_u_2;
+    mu_mag = ABS(mu);
 
     /* Now take into account the fact that the line segment is of finite length. */
-    if (*mu < 0) 
-      *mu = 0.0;
-    else if (*mu > length_2)
-      *mu = length_2;
+    if (mu_mag > half_length_2)
+        mu = SIGN(half_length_2, mu);
 
     /* Calculate minimum distance between sphere and spherocylinder. */
     *r_min_mag2 = 0.0;
     for (i = 0; i < n_dim; ++i) {
-      r_min[i] = dr[i] + *mu * u_2[i];
-      *r_min_mag2 += SQR(r_min[i]);
+        r_min[i] = dr[i] + mu * u_2[i];
+        contact2[i] = mu * u_2[i];
+        *r_min_mag2 += SQR(r_min[i]);
     }
+
     return;
 }
 

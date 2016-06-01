@@ -34,6 +34,7 @@ void BrownianDimer::UpdateOrientation() {
     orientation_[i] = (dr[i])/length_;
     position_[i] = r1[i] + 0.5*length_*orientation_[i];
   }
+  UpdatePeriodic();
   for (auto i_bead=elements_.begin(); i_bead!= elements_.end(); ++i_bead)
     i_bead->SetOrientation(orientation_);
 }
@@ -49,16 +50,24 @@ void BrownianDimer::InternalForces() {
 
 void BrownianDimer::UpdatePosition() {
   ZeroForce();
+  ApplyInteractions();
   InternalForces();
   Integrate();
 }
 
+void BrownianDimer::ApplyInteractions() {
+   //We have no internal constraints
+  for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
+    i_bead->ApplyInteractions();
+  }
+}
+
 void BrownianDimer::Integrate() {
   double pos[3] = {0, 0, 0};
-  // We have no internal constraints beyond the spring force,
   // the beads know how to update position and periodicity
-  for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) 
+  for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
     i_bead->UpdatePosition();
+  }
   UpdateOrientation();
 }
 
@@ -69,20 +78,19 @@ void BrownianDimer::Draw(std::vector<graph_struct*> * graph_array) {
   double r[3];
   for (int i=0; i<n_dim_; ++i)
     r[i] = r1[i] + 0.25*length_*orientation_[i];
-  memcpy(g_.r,r,sizeof(r));
-  memcpy(g_.u,orientation_,sizeof(orientation_));
+  std::copy(r, r+3, g_.r);
+  std::copy(orientation_, orientation_+3, g_.u);
   g_.length = 0.5 * length_;
   g_.diameter = 0.5*diameter_;
   graph_array->push_back(&g_);
   for (int i=0; i<n_dim_; ++i)
     r[i] = r2[i] - 0.25*length_*orientation_[i];
-  memcpy(g2_.r,r,sizeof(r));
-  memcpy(g2_.u,orientation_,sizeof(orientation_));
+  std::copy(r, r+3, g2_.r);
+  std::copy(orientation_, orientation_+3, g2_.u);
   g2_.length = 0.5 * length_;
   g2_.diameter = 0.5*diameter_;
   graph_array->push_back(&g2_);
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead)
     i_bead->Draw(graph_array);
 }
-
 
