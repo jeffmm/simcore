@@ -21,7 +21,9 @@ class Object {
            force_[3],
            delta_,
            diameter_,
-           length_;
+           length_,
+           k_energy_,
+           p_energy_;
     bool is_simple_;
     space_struct *space_;
     graph_struct g_;
@@ -53,11 +55,15 @@ class Object {
     void SetDiameter(double new_diameter) {diameter_ = new_diameter;}
     void SetLength(double new_length) {length_ = new_length;}
     void SetSpace(space_struct * space) {space_ = space;}
-    void ZeroForce() {std::fill(force_,force_+3,0.0);}
+    void ZeroForce() {
+      std::fill(force_,force_+3,0.0);
+      p_energy_ = 0.0;
+    }
     void AddForce(double const * const f) {
       for (int i=0; i<n_dim_; ++i)
         force_[i]+=f[i];
     }
+    void AddPotential(double const p) {p_energy_ += p;}
     double const * const GetPosition() {return position_;}
     double const * const GetScaledPosition() {return scaled_position_;}
     double const * const GetOrientation() {return orientation_;}
@@ -69,6 +75,8 @@ class Object {
     virtual void UpdatePeriodic();
     virtual void UpdatePosition() {}
     virtual void ApplyInteractions() {}
+    virtual double const GetKineticEnergy() {return k_energy_;}
+    virtual double const GetPotentialEnergy() {return p_energy_;}
     unsigned int const GetOID() {return oid_;}
     unsigned int const GetCID() {return cid_;}
     SID const GetSID() {return sid_;}

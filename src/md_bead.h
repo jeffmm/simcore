@@ -5,13 +5,13 @@
 #include "bead.h"
 #include "auxiliary.h"
 #include "test_potential.h"
+#include "lennard_jones_12_6.h"
 
 class MDBead : public Bead {
   protected:
     double prev_force_[3];
     double velocity_[3];
     double mass_;
-    double energy_;
   public:
     MDBead(system_parameters *params, space_struct *space, long seed, SID sid) : Bead(params, space, seed, sid) {
       diameter_ = params->md_bead_diameter;
@@ -23,16 +23,16 @@ class MDBead : public Bead {
     void Init();
     void UpdatePosition();
     void Integrate();
-    void UpdateEnergy();
-    double const GetEnergy();
+    void UpdateKineticEnergy();
+    double const GetKineticEnergy();
 };
 
 class MDBeadSpecies : public Species<MDBead> {
   protected:
     void InitPotentials () {
-      AddPotential(SID::md_bead, SID::md_bead, new TestPotential(space_, 1));
-      AddPotential(SID::md_bead, SID::brownian_dimer, new TestPotential(space_, 1));
-      AddPotential(SID::md_bead, SID::brownian_bead, new TestPotential(space_, 1));
+      AddPotential(SID::md_bead, SID::md_bead, new LJ126(1.0,1.0,space_, 10));
+      AddPotential(SID::md_bead, SID::brownian_dimer, new TestPotential(space_, 10));
+      AddPotential(SID::md_bead, SID::brownian_bead, new TestPotential(space_, 10));
     }
 
   public:
@@ -46,12 +46,12 @@ class MDBeadSpecies : public Species<MDBead> {
       SpeciesBase::operator=(that);
       return *this;
     }
-    double GetTotalEnergy() {
-      double en=0;
-      for (auto it=members_.begin(); it!= members_.end(); ++it)
-        en += (*it)->GetEnergy();
-      return en;
-    }
+    //double GetTotalEnergy() {
+      //double en=0;
+      //for (auto it=members_.begin(); it!= members_.end(); ++it)
+        //en += (*it)->GetEnergy();
+      //return en;
+    //}
 
 };
 
