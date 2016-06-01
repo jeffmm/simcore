@@ -130,6 +130,7 @@ SystemArch::initMP() {
             generateCellList();
             break;
         case FCELLSADJ:
+        case FCELLSADJ_INT:
             generateCellAdjList();
             break;
         case FNEIGHBORS_ALLPAIRS:
@@ -452,7 +453,7 @@ void
 SystemArch::forceCellsAdjMP() {
     
     double epot = 0.0;
-    
+
 #if defined(_OPENMP)
 #pragma omp parallel
 #endif
@@ -531,6 +532,86 @@ SystemArch::forceCellsAdjMP() {
         delete(fr);
     } // pragma omp parallel
     
+    // Recombine into the particles
+    for (int i = 0; i < nparticles_; ++i) {
+        auto part = particles_[i];
+        for (int idim = 0; idim < ndim_; ++idim) {
+            part->f[idim] = frc_[idim*nparticles_ + i];
+        }
+    }
+    upot_ = epot;
+}
+
+
+// Adjacent cell with interactions returned
+void
+SystemArch::forceCellsAdjMP_int() {
+    double epot = 0.0;
+    std::vector<std::pair<int, int>> interactions;
+
+    cell_list_adj_.InteractionPairs(&interactions);
+
+#if defined(_OPENMP)
+#pragma omp parallel
+#endif
+    {
+        int tid;
+        double** fr;
+        fr = (double**)malloc(ndim_ * sizeof(double*));
+        double f_epot[4];
+        
+#if defined(_OPENMP)
+        tid = omp_get_thread_num();
+#else
+        tid = 0;
+#endif
+
+        // Set up the pointers to the force superarray
+        for (int i = 0; i < ndim_; ++i) {
+            fr[i] = frc_.data() + ((ndim_*tid+i)*nparticles_);
+        }
+        buffmd::azzero(*fr, ndim_*nparticles_);
+
+        // Loop over all interactions
+        int ninteractions = (int)interactions.size();
+#if defined(_OPENMP)
+#pragma omp for reduction(+:epot) schedule(runtime) nowait
+#endif
+        for (int iidx = 0; iidx < ninteractions; ++iidx) {
+            auto pidx1 = interactions[iidx].first;
+            auto pidx2 = interactions[iidx].second;
+            auto p1 = particles_[pidx1];
+            auto p2 = particles_[pidx2];
+
+            calcPotential(p1->sid, p2->sid, p1->x, p2->x, f_epot);
+            epot += f_epot[3];
+            for (int i = 0; i < ndim_; ++i) {
+                fr[i][pidx1] += f_epot[i];
+                fr[i][pidx2] -= f_epot[i];
+            }
+        } // pragma omp for reduction(+:epot) schedule(runtime) nowait
+        
+#if defined(_OPENMP)
+#pragma omp barrier
+#endif
+        int i = 1 + (ndim_ * nparticles_ / nthreads_);
+        int fromidx = tid * i;
+        int toidx = fromidx + i;
+        if (toidx > ndim_*nparticles_) toidx = ndim_*nparticles_;
+        
+        // Reduce the forces
+        for (i = 1; i < nthreads_; ++i) {
+            int offs;
+            
+            offs = ndim_*i*nparticles_;
+            
+            for (int j = fromidx; j < toidx; ++j) {
+                frc_[j] += frc_[offs+j];
+            }
+        }
+        delete(fr);
+    } // pragma omp parallel
+
     // Recombine into the particles
     for (int i = 0; i < nparticles_; ++i) {
         auto part = particles_[i];
@@ -736,6 +817,9 @@ SystemArch::velverlet() {
         case FCELLSADJ:
             forceCellsAdjMP();
             break;
+        case FCELLSADJ_INT:
+            forceCellsAdjMP_int();
+            break;
         case FNEIGHBORS_ALLPAIRS:
             forceNeighAP();
             break;
@@ -825,6 +909,18 @@ SystemArch::checkConsistency() {
     for(auto sys : species_) {
         sys.second->checkParticles();
     }
+}
+
+
+// Print the forces for debug
+void
+SystemArch::printForces() {
+#ifdef DEBUG
+    for (int idx = 0; idx < nparticles_; ++idx) {
+        auto p1 = particles_[idx];
+        printf("p(%d) -> f{%2.2f, %2.2f, %2.2f}\n", p1->pid, p1->f[0], p1->f[1], p1->f[2]);
+    }
+#endif
 }
 
 
