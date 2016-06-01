@@ -57,6 +57,8 @@ class SpeciesBase {
       std::vector<Simple*> sim;
       return sim;
     }
+    virtual double GetKineticEnergy() {return 0;}
+    virtual double GetPotentialEnergy() {return 0;}
     virtual double GetTotalEnergy() {return 0;}
     SID const GetSID() {return sid_;}
     std::vector<potential_pair> GetPotentials() {return potentials_;}
@@ -124,7 +126,23 @@ class Species : public SpeciesBase {
       }
       return simples;
     }
-
+    virtual double GetKineticEnergy() {
+      double ke=0;
+      for (auto it=members_.begin(); it!=members_.end(); ++it)
+        ke+=(*it)->GetKineticEnergy();
+      return ke;
+    }
+    virtual double GetPotentialEnergy() {
+      double pe=0;
+      for (auto it=members_.begin(); it!=members_.end(); ++it)
+        pe+=(*it)->GetPotentialEnergy();
+      return pe;
+    }
+    virtual double GetTotalEnergy() {
+      double ke = GetKineticEnergy();
+      double pe = GetPotentialEnergy();
+      return ke+pe;
+    }
 };
 
 #endif // _CYTOSCORE_SPECIES_H_

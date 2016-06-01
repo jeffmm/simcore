@@ -9,7 +9,7 @@ class PotentialBase {
     int n_dim_;
     double rcut_, rcut2_; // Cutoff radius
     std::string pot_name_;
-    space_struct* space_;
+    space_struct *space_;
   public:
     PotentialBase(space_struct* pSpace, double pRcut) : rcut_(pRcut), space_(pSpace) {
       pot_name_ = "Untitled";
@@ -17,10 +17,10 @@ class PotentialBase {
       n_dim_ = space_->n_dim;
     }
     virtual ~PotentialBase() {}
-    virtual void CalcPotential(double* dr,
+    virtual void CalcPotential(double *dr,
                        double dr_mag,
                        double buffer,
-                       double* fpot) {}
+                       double *fpote) {}
     double GetRCut() {return rcut_;}
     virtual void Print() {
       std::cout << pot_name_ << "\n";

@@ -9,27 +9,28 @@ void MDBead::Init() {
   }
 }
 void MDBead::UpdatePosition() {
+  ZeroForce();
   ApplyInteractions();
   Integrate();
   UpdatePeriodic();
   ClearInteractions();
-  ZeroForce();
 }
 void MDBead::Integrate() {
   for (int i=0; i<n_dim_; ++i) {
-    position_[i] = position_[i] + delta_ * velocity_[i] + 0.5* prev_force_[i] * SQR(delta_) / mass_;
     velocity_[i] = velocity_[i] + 0.5 * (prev_force_[i] + force_[i]) * delta_ / mass_;
+    position_[i] = position_[i] + delta_ * velocity_[i] + 0.5* force_[i] * SQR(delta_) / mass_;
+    //velocity_[i] = velocity_[i] + 0.5 * (prev_force_[i] + force_[i]) * delta_ / mass_;
     prev_force_[i] = force_[i];
   }
 }
-void MDBead::UpdateEnergy() {
+void MDBead::UpdateKineticEnergy() {
   double vel_mag_sqr = 0.0;
   for (int i=0; i<n_dim_; ++i)
     vel_mag_sqr += SQR(velocity_[i]);
-  energy_ = 0.5 * mass_ * vel_mag_sqr;
+  k_energy_ = 0.5 * mass_ * vel_mag_sqr;
 }
-double const MDBead::GetEnergy() {
-  UpdateEnergy();
-  return energy_;
+double const MDBead::GetKineticEnergy() {
+  UpdateKineticEnergy();
+  return k_energy_;
 }
 
