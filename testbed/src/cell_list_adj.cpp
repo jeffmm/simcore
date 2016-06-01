@@ -12,7 +12,6 @@
 // rcutoff to generate this
 void
 CellListAdj::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
-    printf("Creating cell list adj.\n");
     nparticles_ = pN;
     rcut_ = pRcut;
     skin_ = pSkin;
@@ -20,11 +19,16 @@ CellListAdj::CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]){
     p_c_.clear();
     p_c_.resize(nparticles_);
 
-#if defined(_OPENMP)
-    nthreads_ = omp_get_num_threads();
-#else
+    #if defined(_OPENMP)
+    #pragma omp parallel
+    {
+        if(0 == omp_get_thread_num()) {
+            nthreads_ = omp_get_num_threads();
+        }
+    }
+    #else
     nthreads_ = 1;
-#endif
+    #endif
     
     SetRCut(rcut_, skin_);
 
@@ -162,26 +166,35 @@ CellListAdj::InteractionPairs(std::vector<std::pair<int, int>>* pPartPairs) {
     // really shouldn't need to, but because of vector memory allocs, we were
     // running into segfaults when trying to access it correctly!
     // DOESN'T WORK RIGHT NOW!!!
-    printf("Interaction pairs have serious problems, don't use them!\n");
-    exit(1);
-    auto interact_pairs = *pPartPairs;
-    interact_pairs.clear();
+    //printf("Interaction pairs have serious problems, don't use them!\n");
+
+    (*pPartPairs).clear();
+    size_t *prefix;
    
-#if defined(_OPENMP)
-#pragma omp parallel
-#endif
+    #if defined(_OPENMP)
+    #pragma omp parallel
+    #endif
     {
-/*        int tid;
-#if defined(_OPENMP)
+        int tid;
+        #if defined(_OPENMP)
         tid = omp_get_thread_num();
-#else
+        #else
         tid = 0;
-#endif*/
+        #endif
+
+        #if defined(_OPENMP)
+        #pragma omp single
+        #endif
+        {
+            prefix = new size_t[nthreads_+1];
+            prefix[0] = 0;
+        }
+        std::vector<std::pair<int,int>> vec_private;
 
         // Loop over all particles and build the list
-#if defined(_OPENMP)
-#pragma omp for schedule(runtime) nowait
-#endif
+        #if defined(_OPENMP)
+        #pragma omp for schedule(runtime) nowait
+        #endif
         for (int idx = 0; idx < nparticles_; ++idx) {
             // Get our cell
             int cidx = p_c_[idx];
@@ -194,28 +207,25 @@ CellListAdj::InteractionPairs(std::vector<std::pair<int, int>>* pPartPairs) {
                     int jjdx = cell2.idxlist_[jdx];
                     // ONLY DO THE CALCULATION IF THE OTHER PID IS HIGHER!!!
                     if (jjdx > idx) {
-#if defined(_OPENMP)
-#pragma omp critical
-#endif
-                        {
-                            interact_pairs.push_back(std::make_pair(idx, jjdx));
-                        } // omp critical section
+                        vec_private.push_back(std::make_pair(idx, jjdx));
                     } // only do the calculation if the second id is higher
                 } // cell2 particle list
             } // cells adjancent and equal to us
         } // pragma omp for schedule(runtime)
+        prefix[tid+1] = vec_private.size();
 
-        // Reduce once threads have finished, reduce to main vector
-#if defined(_OPENMP)
-#pragma omp barrier
-#endif
+        #if defined(_OPENMP)
+        #pragma omp barrier
+        #pragma omp single
+        #endif
+        {
+            for (int i = 1; i < (nthreads_+1); ++i) prefix[i] += prefix[i-1];
+            (*pPartPairs).resize((*pPartPairs).size() + prefix[nthreads_]);
+        }
+        std::copy(vec_private.begin(), vec_private.end(), (*pPartPairs).begin() + prefix[tid]);
     } // omp parallel
-    
-#ifdef DEBUG
-    //for (auto it = interact_pairs->begin(); it != interact_pairs->end(); ++it) {
-    //    printf("\tInteraction(%d,%d)\n", it->first, it->second);
-    //}
-#endif
+
+    delete[] prefix;
 }
 
 
