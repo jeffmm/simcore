@@ -8,8 +8,11 @@ class Object {
   private:
     unsigned int oid_;
     static unsigned int next_oid_;
+    static unsigned int next_cid_;
         
   protected:
+    unsigned int cid_;
+    SID sid_;
     int n_dim_;
     double position_[3],
            scaled_position_[3],
@@ -23,33 +26,35 @@ class Object {
     space_struct *space_;
     graph_struct g_;
     rng_properties rng_;
+    std::vector<interaction> interactions_;
     virtual void InsertRandom(double buffer);
-
+    unsigned int const NextCID() {return ++next_cid_;}
   public:
-    Object(system_parameters *params, space_struct *space, long seed);
+    Object(system_parameters *params, space_struct *space, long seed, SID sid);
     Object(const Object& that);
     Object& operator=(Object const& that);
 
     virtual ~Object() {rng_.clear();}
-    const unsigned int GetOID() {return oid_;}
     bool IsSimple() {return is_simple_;}
     void SetPosition(const double *const pos) {
-      memcpy(position_,pos,n_dim_*sizeof(double));
+      std::copy(pos, pos+n_dim_, position_);
     }
     void SetScaledPosition(const double *const scaled_pos) {
-      memcpy(scaled_position_,scaled_pos,n_dim_*sizeof(double));
+      std::copy(scaled_pos, scaled_pos+n_dim_, scaled_position_);
     }
     void SetOrientation(const double *const u) {
-      memcpy(orientation_,u,n_dim_*sizeof(double));
+      std::copy(u, u+n_dim_, orientation_);
     }
     void SetPrevPosition() {
-      memcpy(prev_position_,position_,sizeof(position_));
+      std::copy(position_, position_+3,prev_position_);
     }
+    void GiveInteraction(interaction i) {interactions_.push_back(i);}
+    void ClearInteractions() {interactions_.clear();}
     void SetDiameter(double new_diameter) {diameter_ = new_diameter;}
     void SetLength(double new_length) {length_ = new_length;}
     void SetSpace(space_struct * space) {space_ = space;}
-    void ZeroForce() {memset(force_,0,sizeof(force_));}
-    void AddForce(const double *const f) {
+    void ZeroForce() {std::fill(force_,force_+3,0.0);}
+    void AddForce(double const * const f) {
       for (int i=0; i<n_dim_; ++i)
         force_[i]+=f[i];
     }
@@ -62,12 +67,18 @@ class Object {
     virtual void Init() {InsertRandom(length_+diameter_);}
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePeriodic();
+    virtual void UpdatePosition() {}
+    virtual void ApplyInteractions() {}
+    unsigned int const GetOID() {return oid_;}
+    unsigned int const GetCID() {return cid_;}
+    SID const GetSID() {return sid_;}
 };
 
 class Simple : public Object {
   public:
-    Simple(system_parameters *params, space_struct *space, long seed) :
-      Object(params, space, seed) {
+    Simple(system_parameters *params, space_struct *space, long seed, SID sid) :
+      Object(params, space, seed, sid) {
+        SetCID(GetOID());
         is_simple_ = true;
     }
     virtual ~Simple() {}
@@ -81,6 +92,8 @@ class Simple : public Object {
       sim_vec.push_back(this);
       return sim_vec;
     }
+    virtual void ApplyInteractions();
+    void SetCID(unsigned int const cid) {cid_=cid;}
 };
 
 template <typename T>
@@ -88,7 +101,8 @@ class Composite : public Object {
   protected:
     std::vector<T> elements_;
   public:
-    Composite(system_parameters *params, space_struct *space, long seed) : Object(params, space, seed) {
+    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {
+      cid_ = NextCID();
       is_simple_=false;
     } 
     //Destructor
@@ -104,7 +118,7 @@ class Composite : public Object {
       return *this;
     }
     virtual void ZeroForce() {
-      memset(force_, 0, sizeof(force_));
+      std::fill(force_,force_+3,0.0);
       for (auto it=elements_.begin(); it!=elements_.end(); ++it)
         it->ZeroForce();
     }

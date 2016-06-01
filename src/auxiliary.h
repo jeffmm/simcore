@@ -26,6 +26,15 @@ struct graph_struct {
   double diameter;
 };
 
+enum class SID : unsigned char {
+  none,
+  md_bead,
+  brownian_bead,
+  brownian_dimer
+};
+
+typedef std::pair<SID, SID> sid_pair;
+
 struct rng_properties { 
   gsl_rng *r;
   const gsl_rng_type *T;
@@ -55,11 +64,6 @@ struct space_struct {
   std::string type;
 };
 
-struct interaction {
-  double *pot(double *r); // interaction potential (returns force)
-  double *dr; // distance to object
-  double rad; // interaction radius of object
-};
 
 double cpu();
 void generate_random_unit_vector(int n_dim, double *vect, gsl_rng *r);
@@ -78,6 +82,15 @@ void invert_sym_2d_matrix(double **a, double **b);
 void invert_sym_3d_matrix(double **a, double **b); 
 void periodic_boundary_conditions(int n_periodic, double **h, double **h_inv,
                                          double *r, double *s);
+
+#include "potential_base.h"
+struct interaction {
+  PotentialBase *potential; // interaction potential (returns force)
+  double dr[3]; // separation vector from this obj to other obj
+  double contact[3]; // separation vector from position_ to point of contact
+  double buffer; // sum of 'skin depth' of both objects (sum of radii for spheres)
+  double dr_mag; //magnitude of dr separation vector
+};
 
 #endif // _AUXILIARY_H_
 
