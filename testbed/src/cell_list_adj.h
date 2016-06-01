@@ -36,6 +36,7 @@ public:
     void CreateCellList(int pN, double pRcut, double pSkin, double pBox[3]);
     void UpdateCellList(std::vector<particle*>* particles);
     void CheckCellList();
+    void dump();
     
     void SetRCut(double pRcut, double pSkin);
     
@@ -43,6 +44,9 @@ public:
     
     // Simple getters
     int ncells() { return ncells_; }
+    std::vector<int>* pidtocid() {
+        return &p_c_;
+    }
     
     // Operators (getters)
     CellAdj* operator [](int cidx) {
@@ -56,6 +60,7 @@ protected:
     int nparticles_;
     double rcut_;
     double skin_;
+    double rbuff_;
     double box_[3];
     
     // Computed quantities
@@ -68,9 +73,7 @@ protected:
     
     // Vector of the cells themselves, and pair list
     std::vector<CellAdj> clist_;
-    
-    // Consts
-    const int cellrat_ = 2;
+    std::vector<int> p_c_;
     
 };
 

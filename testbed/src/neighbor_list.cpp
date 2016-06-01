@@ -76,9 +76,13 @@ NeighborList::UpdateNeighborList(std::vector<particle *> *particles) {
 void
 NeighborList::AllPairsUpdate(std::vector<particle *> *particles) {
     // Loop over all pairs and build the neighbor list
+#if defined(_OPENMP)
 #pragma omp parallel
+#endif
     {
+#if defined(_OPENMP)
 #pragma omp for schedule(runtime) nowait
+#endif
         for (int idx = 0; idx < nparticles_ - 1; ++idx) {
             for (int jdx = idx + 1; jdx < nparticles_; ++jdx) {
                 auto p1 = (*particles)[idx];
@@ -118,6 +122,15 @@ NeighborList::print() {
     }
     printf("\t{Neighbors stats -> {min:%d}, {max:%d}, {avg:%2.2f}\n", minlist, maxlist, (float)ntotlist/(float)nparticles_);
     printf("\t{NeighborList size: %.1fMb}\n", (float)GetMemoryFootprint()/1024/1024.);
+}
+
+
+// Dump everything in gory detail
+void
+NeighborList::dump() {
+    printf("\n********\n");
+    printf("Dumping Neighbor List!\n\n");
+    printf("\n********\n");
 }
 
 
