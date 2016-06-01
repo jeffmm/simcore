@@ -3,17 +3,11 @@
 
 #include "space.h"
 #include "auxiliary.h"
-//#include "filament.h"
-//#include "sphere.h"
 #include "forces.h"
-//#include "parameters.h"
 #include "write_outputs.h"
 #include "graphics.h"
 #include "species.h"
-//#include "simple.h"
-//#include "composite.h"
 #include "objects.h"
-//#include "particle_md_system.h"
 
 class Simulation {
 
@@ -27,7 +21,6 @@ class Simulation {
     
     Graphics graphics_;
     SpaceProperties space_;
-    //IntegratorManager integrator;
     Forces forces_;
     std::vector<SpeciesBase*> species_;
     void InitSimulation();
@@ -40,6 +33,7 @@ class Simulation {
     void WriteOutputs();
     void GetGraphicsStructure();
     void Integrate();
+    void Interact();
     std::vector<graph_struct*> graph_array;
 
   public:
