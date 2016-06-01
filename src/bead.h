@@ -6,7 +6,7 @@
 
 class Bead : public Simple {
   public:
-    Bead(system_parameters *params, space_struct * space, long seed, unsigned int const sid) : Simple(params, space, seed, sid) {}
+    Bead(system_parameters *params, space_struct * space, long seed, SID sid) : Simple(params, space, seed, sid) {}
     ~Bead() {}
     Bead(const Bead& that) : Simple(that) {}
     Bead& operator=(Bead const& that) {Simple::operator=(that); return *this;} 

@@ -9,8 +9,10 @@ void MDBead::Init() {
   }
 }
 void MDBead::UpdatePosition() {
+  ApplyInteractions();
   Integrate();
   UpdatePeriodic();
+  ClearInteractions();
   ZeroForce();
 }
 void MDBead::Integrate() {
