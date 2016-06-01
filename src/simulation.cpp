@@ -85,10 +85,10 @@ void Simulation::GetGraphicsStructure() {
 }
 
 void Simulation::InitOutputs() {
-  double tot_en=0;
-  for (auto it=species_.begin(); it!=species_.end(); ++it)
-    tot_en += (*it)->GetTotalEnergy();
-  std::cout << "Initial system energy: " << tot_en << std::endl;
+  //double tot_en=0;
+  //for (auto it=species_.begin(); it!=species_.end(); ++it)
+    //tot_en += (*it)->GetTotalEnergy();
+  //std::cout << "Initial system energy: " << tot_en << std::endl;
   if (params_.time_flag) {
     cpu_init_time_ = cpu();
   }
@@ -102,10 +102,19 @@ void Simulation::WriteOutputs() {
     std::cout << "CPU Time: " << cpu_time << "\n";
     std::cout << "Sim Time: " << time_ << "\n";
     std::cout << "CPU Time/Sim Time: " << "\n" << cpu_time/time_ << std::endl;
-    double tot_en = 0;
-    for (auto it=species_.begin(); it!=species_.end(); ++it)
-      tot_en += (*it)->GetTotalEnergy();
-    std::cout << "Final system energy: " << tot_en << std::endl;
+    //double tot_en = 0;
+    //for (auto it=species_.begin(); it!=species_.end(); ++it)
+      //tot_en += (*it)->GetTotalEnergy();
+    //std::cout << "Final system energy: " << tot_en << std::endl;
   }
+
+  //if (i_step_%1000==0) {
+    //double tot_en=0;
+    //for (auto it=species_.begin(); it!=species_.end(); ++it) {
+      //tot_en += (*it)->GetTotalEnergy();
+    //}
+    //std::cout << "System energy: " << tot_en << std::endl;
+  //}
+
 }
 

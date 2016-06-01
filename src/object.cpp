@@ -19,6 +19,7 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   // Set some defaults
   diameter_ = 1;
   length_ = 0;
+  k_energy_ = 0;
   is_simple_=false;
 }
 
@@ -36,6 +37,8 @@ Object::Object(const Object& that) {
   std::copy(that.force_, that.force_+3, force_);
   diameter_ = that.diameter_;
   length_ = that.length_;
+  k_energy_ = that.k_energy_;
+  p_energy_ = that.p_energy_;
   space_ = that.space_;
   interactions_ = that.interactions_;
   g_ = that.g_;
@@ -57,6 +60,8 @@ Object &Object::operator=(Object const& that) {
   std::copy(that.force_, that.force_+3, force_);
   diameter_ = that.diameter_;
   length_ = that.length_;
+  k_energy_ = that.k_energy_;
+  p_energy_ = that.p_energy_;
   space_ = that.space_;
   interactions_ = that.interactions_;
   g_ = that.g_;
@@ -132,8 +137,9 @@ void Object::UpdatePeriodic() {
 void Simple::ApplyInteractions() {
   for (auto it=interactions_.begin(); it!= interactions_.end(); ++it) {
     auto ix=(*it);
-    double f[3];
+    double f[4];
     ix.potential->CalcPotential(ix.dr, ix.dr_mag, ix.buffer, f);
     AddForce(f);
+    AddPotential(f[n_dim_]);
   }
 }
