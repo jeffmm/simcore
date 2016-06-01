@@ -8,9 +8,11 @@ void BrownianBead::KickBead() {
 }
 void BrownianBead::UpdatePosition() {
   KickBead();
+  ApplyInteractions();
   for (int i=0; i<n_dim_; ++i)
     position_[i] = position_[i] + force_[i] * delta_ / diameter_;
   UpdatePeriodic();
+  ClearInteractions();
   ZeroForce();
 }
 

@@ -1,18 +1,21 @@
 #include "object.h"
 
 unsigned int Object::next_oid_ = 0;
+unsigned int Object::next_cid_ = 0;
 
-Object::Object(system_parameters *params, space_struct *space, long seed) {
+Object::Object(system_parameters *params, space_struct *space, long seed, SID sid) {
   oid_ = ++next_oid_;
+  sid_ = sid;
   space_ = space;
   n_dim_ = space_->n_dim; 
   delta_ = params->delta;
-  memset(position_,0,sizeof(position_));
-  memset(scaled_position_,0,sizeof(scaled_position_));
-  memset(orientation_,0,sizeof(orientation_));
-  memset(prev_position_,0,sizeof(prev_position_));
-  memset(force_,0,sizeof(force_));
+  std::fill(position_,position_+3,0.0);
+  std::fill(scaled_position_,scaled_position_+3,0.0);
+  std::fill(orientation_,orientation_+3,0.0);
+  std::fill(prev_position_,prev_position_+3,0.0);
+  std::fill(force_,force_+3,0.0);
   rng_.init(seed);
+  interactions_.clear();
   // Set some defaults
   diameter_ = 1;
   length_ = 0;
@@ -22,16 +25,19 @@ Object::Object(system_parameters *params, space_struct *space, long seed) {
 Object::Object(const Object& that) {
   n_dim_=that.n_dim_;
   oid_ = that.oid_;
+  cid_ = that.cid_;
+  sid_ = that.sid_;
   next_oid_=that.next_oid_;
   delta_ = that.delta_;
-  memcpy(position_,that.position_,sizeof(position_));
-  memcpy(scaled_position_,that.scaled_position_,sizeof(scaled_position_));
-  memcpy(orientation_,that.orientation_,sizeof(orientation_));
-  memcpy(prev_position_,that.prev_position_,sizeof(prev_position_));
-  memcpy(force_,that.force_,sizeof(force_));
+  std::copy(that.position_, that.position_+3, position_);
+  std::copy(that.scaled_position_, that.scaled_position_+3, scaled_position_);
+  std::copy(that.prev_position_, that.prev_position_+3, prev_position_);
+  std::copy(that.orientation_, that.orientation_+3, orientation_);
+  std::copy(that.force_, that.force_+3, force_);
   diameter_ = that.diameter_;
   length_ = that.length_;
   space_ = that.space_;
+  interactions_ = that.interactions_;
   g_ = that.g_;
   rng_.init(gsl_rng_get(that.rng_.r));
   is_simple_=that.is_simple_;
@@ -40,16 +46,19 @@ Object::Object(const Object& that) {
 Object &Object::operator=(Object const& that) {
   n_dim_=that.n_dim_;
   oid_=that.oid_;
+  cid_=that.cid_;
+  sid_=that.sid_;
   next_oid_=that.next_oid_;
   delta_ = that.delta_;
-  memcpy(position_,that.position_,sizeof(position_));
-  memcpy(scaled_position_,that.scaled_position_,sizeof(scaled_position_));
-  memcpy(orientation_,that.orientation_,sizeof(orientation_));
-  memcpy(prev_position_,that.prev_position_,sizeof(prev_position_));
-  memcpy(force_,that.force_,sizeof(force_));
+  std::copy(that.position_, that.position_+3, position_);
+  std::copy(that.scaled_position_, that.scaled_position_+3, scaled_position_);
+  std::copy(that.prev_position_, that.prev_position_+3, prev_position_);
+  std::copy(that.orientation_, that.orientation_+3, orientation_);
+  std::copy(that.force_, that.force_+3, force_);
   diameter_ = that.diameter_;
   length_ = that.length_;
   space_ = that.space_;
+  interactions_ = that.interactions_;
   g_ = that.g_;
   rng_.init(gsl_rng_get(that.rng_.r));
   is_simple_=that.is_simple_;
@@ -97,11 +106,12 @@ void Object::InsertRandom(double buffer) {
       }
     }
   }
+  UpdatePeriodic();
 }
 
 void Object::Draw(std::vector<graph_struct*> * graph_array) {
-  memcpy(g_.r,position_,sizeof(position_));
-  memcpy(g_.u,orientation_,sizeof(orientation_));
+  std::copy(position_, position_+3, g_.r);
+  std::copy(orientation_, orientation_+3, g_.u);
   g_.length = length_;
   g_.diameter = diameter_;
   graph_array->push_back(&g_);
@@ -111,10 +121,19 @@ void Object::UpdatePeriodic() {
   if (space_->n_periodic == 0)
     return;
   double r[3], s[3];
-  memcpy(r, position_, sizeof(position_));
-  memcpy(s, scaled_position_, sizeof(scaled_position_));
+  std::copy(orientation_, orientation_+3, g_.u);
+  std::copy(position_, position_+3, r);
+  std::copy(scaled_position_, scaled_position_+3, s);
   periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, r, s);
   SetPosition(r);
   SetScaledPosition(s);
 }
 
+void Simple::ApplyInteractions() {
+  for (auto it=interactions_.begin(); it!= interactions_.end(); ++it) {
+    auto ix=(*it);
+    double f[3];
+    ix.potential->CalcPotential(ix.dr, ix.dr_mag, ix.buffer, f);
+    AddForce(f);
+  }
+}

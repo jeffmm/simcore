@@ -22,8 +22,7 @@ class Cell {
     int const Count() {return simples_.size();}
     Cell * GetCellPtr() {return this;}
     int const GetNInteractions();
-    void InitInteractions();
-    std::vector<cell_interaction> GetInteractions();
+    std::vector<cell_interaction> PairInteractions();
 };
 
 typedef std::map<cell_index, Cell> cell_map;
