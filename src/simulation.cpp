@@ -1,8 +1,6 @@
 
 #include "simulation.h"
 
-unsigned int SpeciesBase::next_sid_=0;
-
 Simulation::Simulation() {}
 Simulation::~Simulation() {}
 
@@ -100,10 +98,10 @@ void Simulation::WriteOutputs() {
   if (i_step_ == 0) return; // skip first step
   if (params_.time_flag && i_step_ == params_.n_steps-1) {
     double cpu_time = cpu() - cpu_init_time_;
-    std::cout << "CPU Time for Initialization: " <<  cpu_init_time_ << std::endl;
-    std::cout << "CPU Time: " << cpu_time << std::endl;
-    std::cout << "Sim Time: " << time_ << std::endl;
-    std::cout << "CPU Time/Sim Time: " << std::endl << cpu_time/time_ << std::endl;
+    std::cout << "CPU Time for Initialization: " <<  cpu_init_time_ << "\n";
+    std::cout << "CPU Time: " << cpu_time << "\n";
+    std::cout << "Sim Time: " << time_ << "\n";
+    std::cout << "CPU Time/Sim Time: " << "\n" << cpu_time/time_ << std::endl;
     double tot_en = 0;
     for (auto it=species_.begin(); it!=species_.end(); ++it)
       tot_en += (*it)->GetTotalEnergy();

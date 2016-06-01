@@ -28,18 +28,21 @@ class LJ126 : public PotentialBase {
                                double* fpote) {
         std::fill(fpote, fpote + ndim_ + 1, 0.0);
      
-        double rx[3], rxs[3];
-        for (int i = 0; i < ndim_; ++i) {
-            rx[i] = x[i] - y[i];
-            rxs[i] = xs[i] - ys[i];
-        }
+        double rx[3];
+        // Automatically considers periodic boundary conditions
+        separation_vector(n_dim_, space_->n_periodic, x, xs, 
+                          y, ys, space_->unit_cell, rx);
+
+        //for (int i = 0; i < ndim_; ++i) {
+            //rx[i] = x[i] - y[i];
+            //rxs[i] = xs[i] - ys[i];
+        //}
         // Apply periodic boundary conditions
-        periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rx, rxs);
+        //periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rx, rxs);
         double rsq = 0.0;
         for (int i = 0; i < ndim_; ++i) {
             rsq += rx[i]*rx[i];
         }
-
         if (rsq < rcut2_) {
             double ffac, r6, rinv;
 
