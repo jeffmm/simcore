@@ -15,7 +15,7 @@ class SpeciesBase {
     rng_properties rng_;
     void SetSID(SID sid) {sid_=sid;}
     std::vector<potential_pair> potentials_;
-    virtual void InitPotentials() {}
+    virtual void InitPotentials(system_parameters *params) {}
     void AddPotential(SID sid1, SID sid2, PotentialBase * potential) {
       sid_pair sids = std::make_pair(sid1, sid2);
       potential_pair pot_pair = std::make_pair(sids,potential);
@@ -57,6 +57,8 @@ class SpeciesBase {
       std::vector<Simple*> sim;
       return sim;
     }
+    virtual double GetKineticEnergy() {return 0;}
+    virtual double GetPotentialEnergy() {return 0;}
     virtual double GetTotalEnergy() {return 0;}
     SID const GetSID() {return sid_;}
     std::vector<potential_pair> GetPotentials() {return potentials_;}
@@ -124,7 +126,26 @@ class Species : public SpeciesBase {
       }
       return simples;
     }
-
+    virtual double GetKineticEnergy() {
+      double ke=0;
+      for (auto it=members_.begin(); it!=members_.end(); ++it)
+        ke+=(*it)->GetKineticEnergy();
+      return ke;
+    }
+    virtual double GetPotentialEnergy() {
+      double pe=0;
+      for (auto it=members_.begin(); it!=members_.end(); ++it)
+        pe+=(*it)->GetPotentialEnergy();
+      // The total potential energy is going to be half of the
+      // potential energy felt by each particle. Potential energy is shared,
+      // so I need to avoid double counting.
+      return 0.5*pe;
+    }
+    virtual double GetTotalEnergy() {
+      double ke = GetKineticEnergy();
+      double pe = GetPotentialEnergy();
+      return ke+pe;
+    }
 };
 
 #endif // _CYTOSCORE_SPECIES_H_

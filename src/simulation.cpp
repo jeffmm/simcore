@@ -85,27 +85,57 @@ void Simulation::GetGraphicsStructure() {
 }
 
 void Simulation::InitOutputs() {
-  double tot_en=0;
-  for (auto it=species_.begin(); it!=species_.end(); ++it)
-    tot_en += (*it)->GetTotalEnergy();
-  std::cout << "Initial system energy: " << tot_en << std::endl;
+  //double tot_en=0;
+  //for (auto it=species_.begin(); it!=species_.end(); ++it)
+    //tot_en += (*it)->GetTotalEnergy();
+  //std::cout << "Initial system energy: " << tot_en << std::endl;
   if (params_.time_flag) {
     cpu_init_time_ = cpu();
   }
+  if (params_.energy_analysis_flag) {
+    std::ostringstream file_name;
+    file_name << run_name_ << "-energy.log";
+    std::ofstream en_file(file_name.str().c_str(), std::ios_base::out);
+    en_file << "#kinetic  #potential  #total\n";
+    en_file.close();
+  }
+
 }
 
 void Simulation::WriteOutputs() {
-  if (i_step_ == 0) return; // skip first step
+  if (i_step_ == 0) {
+    return; // skip first step
+  }
   if (params_.time_flag && i_step_ == params_.n_steps-1) {
     double cpu_time = cpu() - cpu_init_time_;
     std::cout << "CPU Time for Initialization: " <<  cpu_init_time_ << "\n";
     std::cout << "CPU Time: " << cpu_time << "\n";
     std::cout << "Sim Time: " << time_ << "\n";
     std::cout << "CPU Time/Sim Time: " << "\n" << cpu_time/time_ << std::endl;
-    double tot_en = 0;
-    for (auto it=species_.begin(); it!=species_.end(); ++it)
-      tot_en += (*it)->GetTotalEnergy();
-    std::cout << "Final system energy: " << tot_en << std::endl;
+    //double tot_en = 0;
+    //for (auto it=species_.begin(); it!=species_.end(); ++it)
+      //tot_en += (*it)->GetTotalEnergy();
+    //std::cout << "Final system energy: " << tot_en << std::endl;
   }
+
+  if (i_step_%1000==0 && params_.energy_analysis_flag) {
+    std::ostringstream file_name;
+    file_name << run_name_ << "-energy.log";
+    std::ofstream en_file(file_name.str().c_str(), std::ios_base::out | std::ios_base::app);
+    en_file.precision(16);
+    en_file.setf(std::ios::fixed, std::ios::floatfield);
+    double tot_en=0;
+    double k_en=0;
+    double p_en=0;
+    for (auto it=species_.begin(); it!=species_.end(); ++it) {
+      k_en += (*it)->GetKineticEnergy();
+      p_en += (*it)->GetPotentialEnergy();
+      tot_en += (*it)->GetTotalEnergy();
+    }
+    en_file << k_en << " " << p_en << " " << tot_en << "\n";
+    en_file.close();
+  }
+
+
 }
 

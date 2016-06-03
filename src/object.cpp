@@ -19,6 +19,7 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   // Set some defaults
   diameter_ = 1;
   length_ = 0;
+  k_energy_ = 0;
   is_simple_=false;
 }
 
@@ -36,6 +37,8 @@ Object::Object(const Object& that) {
   std::copy(that.force_, that.force_+3, force_);
   diameter_ = that.diameter_;
   length_ = that.length_;
+  k_energy_ = that.k_energy_;
+  p_energy_ = that.p_energy_;
   space_ = that.space_;
   interactions_ = that.interactions_;
   g_ = that.g_;
@@ -57,6 +60,8 @@ Object &Object::operator=(Object const& that) {
   std::copy(that.force_, that.force_+3, force_);
   diameter_ = that.diameter_;
   length_ = that.length_;
+  k_energy_ = that.k_energy_;
+  p_energy_ = that.p_energy_;
   space_ = that.space_;
   interactions_ = that.interactions_;
   g_ = that.g_;
@@ -120,20 +125,27 @@ void Object::Draw(std::vector<graph_struct*> * graph_array) {
 void Object::UpdatePeriodic() {
   if (space_->n_periodic == 0)
     return;
-  double r[3], s[3];
+  double r[3], s[3], rp[3], drp[3];
   std::copy(orientation_, orientation_+3, g_.u);
   std::copy(position_, position_+3, r);
   std::copy(scaled_position_, scaled_position_+3, s);
+  std::copy(prev_position_, prev_position_+3, rp);
+  for (int i=0; i<n_dim_; ++i)
+    drp[i] = r[i]-rp[i];
   periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, r, s);
   SetPosition(r);
   SetScaledPosition(s);
+  for (int i=0; i<n_dim_; ++i)
+    rp[i] = r[i]-drp[i];
+  SetPrevPosition(rp);
 }
 
 void Simple::ApplyInteractions() {
   for (auto it=interactions_.begin(); it!= interactions_.end(); ++it) {
     auto ix=(*it);
-    double f[3];
+    double f[4];
     ix.potential->CalcPotential(ix.dr, ix.dr_mag, ix.buffer, f);
     AddForce(f);
+    AddPotential(f[n_dim_]);
   }
 }
