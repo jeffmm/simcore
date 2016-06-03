@@ -147,5 +147,10 @@ void Simple::ApplyInteractions() {
     ix.potential->CalcPotential(ix.dr, ix.dr_mag, ix.buffer, f);
     AddForce(f);
     AddPotential(f[n_dim_]);
+    #ifdef DEBUG
+    printf("o(%d) = ", GetOID());
+    printf("{%2.2f, %2.2f}, ", GetPosition()[0], GetPosition()[1]);
+    printf("f{%2.2f, %2.2f, %2.2f}\n", force_[0], force_[1], p_energy_);
+    #endif
   }
 }
