@@ -137,7 +137,7 @@ void SimulationManager::ParseParams() {
    param_name with value for the i_var'th param structure
    *************************************/
 void SimulationManager::ParseParameter(std::string param_name, std::string param_value, unsigned int i_var) {
-#include "parse_params_body.cpp"
+#include "parse_params_body.h"
 }
 
 /****************************************
@@ -148,7 +148,7 @@ void SimulationManager::PrintParams(system_parameters params, std::string name) 
   std::ostringstream file_name;
   file_name << name << "-params.yaml";
   std::ofstream param_file((file_name.str()).c_str(), std::ios_base::out);
-#include "print_params_body.cpp"
+#include "print_params_body.h"
   param_file.close();
 }
 
