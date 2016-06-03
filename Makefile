@@ -6,8 +6,6 @@ OBJDIR = obj
 BINDIR = bin
 SRCEXT = cpp
 
-TARGET = $@
-
 COMPILE_FLAGS = -std=c++11
 RCOMPILE_FLAGS = -D NDEBUG -O3 -fopenmp
 DCOMPILE_FLAGS = -D DEBUG -g
@@ -70,16 +68,18 @@ endif
 
 # Now we have to figure out which we are building of the program list, since that matters
 # for things like not compiling more than one main
-MAIN_SOURCES = $(SRCDIR)/cytoscore_main.cpp $(SRCDIR)/configure_cytoscore.cpp
+CYTOSCORE_SOURCE = $(SRCDIR)/cytoscore_main.cpp
+CONFIGURE_CYTOSCORE_SOURCE = $(SRCDIR)/configure_cytoscore.cpp
+EXCLUDE_SOURCES = $(SRCDIR)/integrator_manager.cpp $(SRCDIR)/make_params.cpp
 
-SRCS = $(filter-out $(MAIN_SOURCES), $(SOURCES))
-ifeq ($(TARGET),cytoscore)
-	SRCS += $(SRCDIR)/cytoscore_main.cpp
-else ifeq ($(TARGET),configure_cytoscore)
-	SRCS += $(SRCDIR)/configure_cytoscore.cpp
-endif
+MAIN_SOURCES = $(CYTOSCORE_SOURCE) $(CONFIGURE_CYTOSCORE_SOURCE)
+
+# These are the common sources
+SRCS = $(filter-out $(MAIN_SOURCES) $(EXCLUDE_SOURCES), $(SOURCES))
 
 OBJECTS = $(SRCS:$(SRCDIR)/%.$(SRCEXT)=$(OBJDIR)/%.o)
+CYTOSCORE_MAIN_OBJ = $(CYTOSCORE_SOURCE:$(SRCDIR)/%.$(SRCEXT)=$(OBJDIR)/%.o)
+CONFIGURE_CYTOSCORE_OBJ = $(CONFIGURE_CYTOSCORE_SOURCE:$(SRCDIR)/%.$(SRCEXT)=$(OBJDIR)/%.o)
 DEPS = $(OBJECTS:.o=.d)
 
 .PHONY: dirs
@@ -92,17 +92,22 @@ clean:
 	$(RM) -r $(OBJDIR)
 	$(RM) -r $(BINDIR)
 
-cytoscore: dirs $(BINDIR)/$(TARGET)
-	@echo "Bulding $(BINDIR)/$(TARGET)"
+cytoscore: dirs $(BINDIR)/cytoscore
 
-$(BINDIR)/$(TARGET): $(OBJECTS)
-	$(CXX) $(OBJECTS) $(LDFLAGS) $(LIBS) -o $@
+configure_cytoscore: dirs $(BINDIR)/configure_cytoscore
+
+$(BINDIR)/cytoscore: $(OBJECTS) $(CYTOSCORE_MAIN_OBJ)
+	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@
+
+$(BINDIR)/configure_cytoscore: $(OBJECTS) $(CONFIGURE_CYTOSCORE_OBJ)
+	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@
 
 # add dependencies
 -include $(DEPS)
 
 # source file rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
+	@echo "normal objdir"
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
 
 

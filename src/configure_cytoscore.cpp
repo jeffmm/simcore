@@ -7,11 +7,11 @@
 
 void init_files();
 void write_params(std::string param_name, std::string param_value, std::string param_type);
-void write_parse_params_body_cpp(std::string param_name, std::string param_type);
+void write_parse_params_body_h(std::string param_name, std::string param_type);
 void write_parameters_h(std::string param_name, std::string param_value, std::string param_type);
 std::string parse_params_snippet(std::string param_name, std::string param_type);
 std::string parameters_snippet(std::string param_name, std::string param_value, std::string param_type);
-void write_print_params_body_cpp(std::string param_name);
+void write_print_params_body_h(std::string param_name);
 void cleanup_files();
 void write_objects(std::string *object_list,unsigned int size);
 
@@ -58,11 +58,11 @@ int main(int argc, char *argv[]) {
 
 void init_files() {
   // Init files
-  std::ofstream ppb_init("src/parse_params_body.cpp", std::ios_base::out);
-  ppb_init << "// parse_params_body.cpp, generated automatically using make_params\n\nif (param_name.compare(\"n_runs\") == 0 || param_name.compare(\"run_name\") == 0) {}\n";
+  std::ofstream ppb_init("src/parse_params_body.h", std::ios_base::out);
+  ppb_init << "// parse_params_body.h, generated automatically using make_params\n\nif (param_name.compare(\"n_runs\") == 0 || param_name.compare(\"run_name\") == 0) {}\n";
   ppb_init.close();
-  std::ofstream prpb_init("src/print_params_body.cpp", std::ios_base::out);
-  prpb_init << "// print_params_body.cpp, generated automatically using make_params\n\n";
+  std::ofstream prpb_init("src/print_params_body.h", std::ios_base::out);
+  prpb_init << "// print_params_body.h, generated automatically using make_params\n\n";
   prpb_init.close();
   std::ofstream sp_init("src/parameters.h", std::ios_base::out);
   sp_init << "#ifndef _CYTOSCORE_PARAMETERS_H_\n#define _CYTOSCORE_PARAMETERS_H_\n\n// parameters.h, generated automatically using make_params\n\nstruct system_parameters {\n\n";
@@ -74,14 +74,14 @@ void cleanup_files() {
   std::ofstream sp_cleanup("src/parameters.h", std::ios_base::out | std::ios_base::app);
   sp_cleanup << "\n};\n\n#endif // _CYTOSCORE_PARAMETERS_H_";
   sp_cleanup.close();
-  std::ofstream ppb_cleanup("src/parse_params_body.cpp", std::ios_base::out | std::ios_base::app);
+  std::ofstream ppb_cleanup("src/parse_params_body.h", std::ios_base::out | std::ios_base::app);
   ppb_cleanup << "else {\n  std::cout << \"  WARNING: Parameter \" << param_name << \" not recognized!\\n\";\n}\n";
   ppb_cleanup.close();
 }
 
 void write_params(std::string param_name, std::string param_value, std::string param_type) {
-  write_parse_params_body_cpp(param_name, param_type);
-  write_print_params_body_cpp(param_name);
+  write_parse_params_body_h(param_name, param_type);
+  write_print_params_body_h(param_name);
   write_parameters_h(param_name, param_value, param_type);
 }
 
@@ -93,16 +93,16 @@ void write_parameters_h(std::string param_name, std::string param_value, std::st
   sp_file.close();
 }
 
-void write_parse_params_body_cpp(std::string param_name, std::string param_type) {
-  std::string file_name = "src/parse_params_body.cpp";
+void write_parse_params_body_h(std::string param_name, std::string param_type) {
+  std::string file_name = "src/parse_params_body.h";
   std::ofstream ppb_file(file_name.c_str(), std::ios_base::out | std::ios_base::app);
   std::string snippet = parse_params_snippet(param_name, param_type);
   ppb_file << snippet;
   ppb_file.close();
 }
 
-void write_print_params_body_cpp(std::string param_name) {
-  std::string file_name = "src/print_params_body.cpp";
+void write_print_params_body_h(std::string param_name) {
+  std::string file_name = "src/print_params_body.h";
   std::ofstream prpb_file(file_name.c_str(), std::ios_base::out | std::ios_base::app);
   std::ostringstream snippet;
   if (param_name.compare("grab_file")==0)
