@@ -125,13 +125,19 @@ void Object::Draw(std::vector<graph_struct*> * graph_array) {
 void Object::UpdatePeriodic() {
   if (space_->n_periodic == 0)
     return;
-  double r[3], s[3];
+  double r[3], s[3], rp[3], drp[3];
   std::copy(orientation_, orientation_+3, g_.u);
   std::copy(position_, position_+3, r);
   std::copy(scaled_position_, scaled_position_+3, s);
+  std::copy(prev_position_, prev_position_+3, rp);
+  for (int i=0; i<n_dim_; ++i)
+    drp[i] = r[i]-rp[i];
   periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, r, s);
   SetPosition(r);
   SetScaledPosition(s);
+  for (int i=0; i<n_dim_; ++i)
+    rp[i] = r[i]-drp[i];
+  SetPrevPosition(rp);
 }
 
 void Simple::ApplyInteractions() {
