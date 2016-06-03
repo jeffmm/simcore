@@ -34,6 +34,7 @@ void Simulation::Interact() {
   if (i_step_%params_.n_update_cells==0)
     forces_.UpdateCellList(species_);
   forces_.Interact();
+  forces_.InteractCJE();
 }
 
 void Simulation::InitSimulation() {

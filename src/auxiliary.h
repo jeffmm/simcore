@@ -19,6 +19,10 @@
 #include <fstream>
 #include <sstream>
 
+#if defined(_OPENMP)
+#define ENABLE_OPENMP
+#endif
+
 struct graph_struct {
   double r[3];
   double u[3];
@@ -90,6 +94,17 @@ struct interaction {
   double contact[3]; // separation vector from position_ to point of contact
   double buffer; // sum of 'skin depth' of both objects (sum of radii for spheres)
   double dr_mag; //magnitude of dr separation vector
+};
+
+// XXX: CJE working title for now
+struct interactionmindist {
+    double dr_mag;
+    double dr_mag2;
+    double buffer_mag;
+    double buffer_mag2;
+    double dr[3];
+    double contact1[3];
+    double contact2[3];
 };
 
 #endif // _AUXILIARY_H_

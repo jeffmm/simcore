@@ -7,6 +7,9 @@
 #include "minimum_distance.h"
 #include "potential_manager.h"
 
+// CJE stuff here
+#include "force_brute.h"
+
 class Forces {
   private:
     int n_dim_,
@@ -23,11 +26,21 @@ class Forces {
     std::vector<cell_interaction> interactions_;
     CellList cell_list_;
     PotentialManager potentials_;
+
+    ForceBase* test_force_;
   public:
+    Forces() {
+        test_force_ = forceFactory<ForceBrute>();
+    }
+    ~Forces() {
+        delete(test_force_);
+    }
+
     void Init(space_struct *space, std::vector<SpeciesBase*> species, double cell_length);
     void UpdateCellList(std::vector<SpeciesBase*> species);
     void LoadSimples(std::vector<SpeciesBase*> species);
     void Interact();
+    void InteractCJE();
     void CheckOverlap(std::vector<SpeciesBase*> species);
     void InitPotentials(std::vector<SpeciesBase*> species);
     void MinimumDistance(cell_interaction ix);

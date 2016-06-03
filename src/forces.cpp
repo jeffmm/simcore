@@ -7,6 +7,12 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, double
   cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
   CheckOverlap(species);
   InitPotentials(species);
+
+  // XXX: Cje init my own forces
+  test_force_->Init(space, 0.0);
+  test_force_->LoadSimples(species);
+  test_force_->InitPotentials(species);
+  //test_force_->Interact();
 }
 
 void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
@@ -34,6 +40,10 @@ void Forces::LoadSimples(std::vector<SpeciesBase*> species) {
   }
 }
 
+void Forces::InteractCJE() {
+    test_force_->Interact();
+}
+
 void Forces::Interact() {
   for (auto it=interactions_.begin(); it!= interactions_.end(); ++it) {
     auto o1 = it->first;
@@ -45,6 +55,7 @@ void Forces::Interact() {
     if (pot == NULL) continue;
     MinimumDistance(*it);
     if (dr_mag_ > pot->GetRCut()) continue;
+    printf("Interacting derp (%d, %d)\n", o1->GetOID(), o2->GetOID());
     o1->GiveInteraction(FirstInteraction(pot));
     o2->GiveInteraction(SecondInteraction(pot));
   }
