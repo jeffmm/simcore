@@ -16,7 +16,7 @@ void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
       potentials_.AddPotential(jt->first.first,jt->first.second,jt->second);
   }
 
-  potentials_.Print();
+  //potentials_.Print();
 }
 
 void Forces::UpdateCellList(std::vector<SpeciesBase*> species) {
@@ -44,7 +44,7 @@ void Forces::Interact() {
     PotentialBase * pot = potentials_.GetPotential(o1->GetSID(), o2->GetSID());
     if (pot == NULL) continue;
     MinimumDistance(*it);
-    if (dr_mag_ - buffer_mag_ > pot->GetRCut()) continue;
+    if (dr_mag_ > pot->GetRCut()) continue;
     o1->GiveInteraction(FirstInteraction(pot));
     o2->GiveInteraction(SecondInteraction(pot));
   }
