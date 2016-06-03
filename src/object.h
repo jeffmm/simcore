@@ -19,6 +19,7 @@ class Object {
            prev_position_[3],
            orientation_[3],
            force_[3],
+           velocity_[3],
            delta_,
            diameter_,
            length_,
@@ -47,8 +48,11 @@ class Object {
     void SetOrientation(const double *const u) {
       std::copy(u, u+n_dim_, orientation_);
     }
-    void SetPrevPosition() {
-      std::copy(position_, position_+3,prev_position_);
+    void SetVelocity(const double *const v) {
+      std::copy(v, v+n_dim_, velocity_);
+    }
+    void SetPrevPosition(const double * const ppos) {
+      std::copy(ppos, ppos+n_dim_, prev_position_);
     }
     void GiveInteraction(interaction i) {interactions_.push_back(i);}
     void ClearInteractions() {interactions_.clear();}
