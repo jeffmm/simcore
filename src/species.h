@@ -15,7 +15,7 @@ class SpeciesBase {
     rng_properties rng_;
     void SetSID(SID sid) {sid_=sid;}
     std::vector<potential_pair> potentials_;
-    virtual void InitPotentials() {}
+    virtual void InitPotentials(system_parameters *params) {}
     void AddPotential(SID sid1, SID sid2, PotentialBase * potential) {
       sid_pair sids = std::make_pair(sid1, sid2);
       potential_pair pot_pair = std::make_pair(sids,potential);
@@ -136,7 +136,10 @@ class Species : public SpeciesBase {
       double pe=0;
       for (auto it=members_.begin(); it!=members_.end(); ++it)
         pe+=(*it)->GetPotentialEnergy();
-      return pe;
+      // The total potential energy is going to be half of the
+      // potential energy felt by each particle. Potential energy is shared,
+      // so I need to avoid double counting.
+      return 0.5*pe;
     }
     virtual double GetTotalEnergy() {
       double ke = GetKineticEnergy();

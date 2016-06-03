@@ -1,16 +1,16 @@
 # params.yaml
 ---
-seed: 329158164
+seed: 143589714364
 n_runs: 1
 n_dim: 2
 n_periodic: 2
 system_radius: 10
-daughter_radius: 5
+daughter_radius: 20
 mother_daughter_dist: 22
 boundary_type: 1
 n_dimer: 0
-n_md_bead: 100
-md_bead_diameter: 0.8
+n_md_bead: 80
+md_bead_diameter: 1
 md_bead_mass: 1
 n_br_bead: 0
 br_bead_diameter: 1.2
@@ -18,13 +18,17 @@ dimer_diameter: 1
 dimer_length: 2
 dimer_eq_length: 2
 dimer_k_spring: 5
-cell_length: 1.3
+#cell_length: [1.25,2,5]
+cell_length: 2.5
 graph_flag: 1
-n_graph: 500
+n_graph: 1000
 delta: 0.0001
+#delta: 0.00001
 n_steps: 1000000
 n_update_cells: 20
 time_flag: 1
+energy_analysis_flag: 1
+lj_epsilon: 1
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5

@@ -100,12 +100,23 @@ void separation_vector(int n_dim, int n_periodic, double const * const r1, doubl
   return;
 }
 
+/* 
+Inputs:
+   n_periodic, number of periodic dimensions
+   h, unit cell matrix
+   h_inv, inverse unit cell matrix
+   r, position
+   s, scaled position
+Outputs:
+   new position
+   new scaled position
+   */
 void periodic_boundary_conditions(int n_periodic, double **h, double **h_inv,
                                          double *r, double *s) {
   /* Compute scaled coordinate and apply periodic boundary conditions. */
   for (int i = 0; i < n_periodic; ++i) {
     s[i] = 0.0;
-    for (int j = 0; j < n_periodic; ++j)
+    for (int j = 0; j < n_periodic; ++j) 
       s[i] += h_inv[i][j] * r[j];
     s[i] -= NINT(s[i]);
   }
@@ -113,7 +124,7 @@ void periodic_boundary_conditions(int n_periodic, double **h, double **h_inv,
   /* Recompute real coordinates accounting for periodic boundary conditions. */
   for (int i = 0; i < n_periodic; ++i) {
     r[i] = 0.0;
-    for (int j = 0; j < n_periodic; ++j)
+    for (int j = 0; j < n_periodic; ++j) 
       r[i] += h[i][j] * s[j];
   }
 }
