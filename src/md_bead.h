@@ -20,11 +20,11 @@ class MDBead : public Bead {
     ~MDBead() {}
     MDBead(const MDBead& that) : Bead(that) {}
     MDBead& operator=(MDBead const& that) {Bead::operator=(that); return *this;} 
-    void Init();
-    void UpdatePosition();
-    void Integrate();
-    void UpdateKineticEnergy();
-    double const GetKineticEnergy();
+    virtual void Init();
+    virtual void UpdatePosition();
+    virtual void Integrate();
+    virtual void UpdateKineticEnergy();
+    virtual double const GetKineticEnergy();
 };
 
 class MDBeadSpecies : public Species<MDBead> {
@@ -48,6 +48,7 @@ class MDBeadSpecies : public Species<MDBead> {
     }
     void Init() {
       Species::Init();
+    }
       //double temp[3] = {-4,0,0};
       //members_[0]->SetPosition(temp);
       //temp[0] = 4;
@@ -63,7 +64,6 @@ class MDBeadSpecies : public Species<MDBead> {
       //for (auto it=members_.begin(); it!=members_.end(); ++it) {
         //(*it)->UpdatePeriodic();
       //}
-    }
     //double GetTotalEnergy() {
       //double en=0;
       //for (auto it=members_.begin(); it!= members_.end(); ++it)

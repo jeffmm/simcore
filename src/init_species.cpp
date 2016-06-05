@@ -13,6 +13,20 @@ if (params_.n_br_bead > 0) {
   species_.push_back(spcs);
 }
 #endif
+#ifdef _CYTOSCORE_NEON_H_
+if (params_.n_neon > 0) {
+  SpeciesBase * spcs = new NeonSpecies(params_.n_neon, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  spcs->Init();
+  species_.push_back(spcs);
+}
+#endif
+#ifdef _CYTOSCORE_ARGON_H_
+if (params_.n_argon > 0) {
+  SpeciesBase * spcs = new ArgonSpecies(params_.n_argon, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  spcs->Init();
+  species_.push_back(spcs);
+}
+#endif
 #ifdef _CYTOSCORE_MD_BEAD_H_
 if (params_.n_md_bead > 0) {
   SpeciesBase * spcs = new MDBeadSpecies(params_.n_md_bead, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));

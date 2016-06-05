@@ -7,6 +7,7 @@ void MDBead::Init() {
     velocity_[i] = 4*(gsl_rng_uniform_pos(rng_.r)-0.5);
     prev_position_[i] = position_[i] - delta_ * velocity_[i];
   }
+  orientation_[0] = 0;
 }
 void MDBead::UpdatePosition() {
   ZeroForce();
