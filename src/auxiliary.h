@@ -30,7 +30,9 @@ enum class SID : unsigned char {
   none,
   md_bead,
   brownian_bead,
-  brownian_dimer
+  brownian_dimer,
+  argon,
+  neon
 };
 
 typedef std::pair<SID, SID> sid_pair;

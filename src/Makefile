@@ -1,6 +1,6 @@
 CC = g++-5
 CXX = g++-5
-CFLAGS = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -O2 -std=c++11
+CFLAGS = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -g -DDEBUG -std=c++11
 LNKFLAGS = -lyaml-cpp -gnu
 
 ifeq ($(CC),icpc)
@@ -20,7 +20,7 @@ CYTOSCORE_OBJS = cytoscore_main.o simulation_manager.o simulation.o object.o for
 
 CONFIGURE_OBJS = configure_cytoscore.o
 
-CYTOSCORE_OBJECT_OBJS = md_bead.o brownian_dimer.o brownian_bead.o
+CYTOSCORE_OBJECT_OBJS = md_bead.o brownian_dimer.o brownian_bead.o argon.o neon.o
 
 ../cytoscore:	$(CYTOSCORE_OBJS) $(CYTOSCORE_OBJECT_OBJS)
 	$(CC)  -o ../cytoscore $(CYTOSCORE_OBJS) $(CYTOSCORE_OBJECT_OBJS) $(GLXFLAGS) $(GSLFLAGS) -lm $(LNKFLAGS) 

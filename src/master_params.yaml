@@ -1,6 +1,6 @@
 # params_master.yaml file
 
-[objects] : [md_bead,brownian_dimer,brownian_bead]
+[objects] : [md_bead,brownian_dimer,brownian_bead,argon,neon]
 seed : [7859459105545,long] # seed for random number generator
 n_dim : [3,int]
 n_periodic : [0,int]
@@ -76,3 +76,9 @@ cell_length: [10, double]
 n_update_cells: [10, int]
 energy_analysis_flag: [0, int]
 lj_epsilon: [1, double]
+argon_diameter: [1.5, double]
+neon_diameter: [0.8, double]
+argon_mass: [1, double]
+neon_mass: [0.5, double]
+n_argon: [0, int]
+n_neon: [0, int]
