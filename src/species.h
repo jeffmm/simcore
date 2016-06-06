@@ -50,6 +50,7 @@ class SpeciesBase {
       rng_.init(gsl_rng_get(that.rng_.r));
     }
     virtual void UpdatePositions() {}
+    virtual void UpdatePositionsMP() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
     virtual void Init() {}
     virtual void ReInit(unsigned int const cid) {}
@@ -111,12 +112,17 @@ class Species : public SpeciesBase {
     }
 
     virtual void Draw(std::vector<graph_struct*> * graph_array) {
+      printf("Starting speices::draw, graph_array:%p\n", graph_array);
       for (auto it=members_.begin(); it!=members_.end(); ++it)
         (*it)->Draw(graph_array);
     }
     virtual void UpdatePositions() {
       for (auto it=members_.begin(); it!=members_.end(); ++it)
         (*it)->UpdatePosition();
+    }
+    virtual void UpdatePositionsMP() {
+      for (auto it=members_.begin(); it!=members_.end(); ++it)
+        (*it)->UpdatePositionMP();
     }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> simples;

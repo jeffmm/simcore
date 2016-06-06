@@ -12,7 +12,6 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, double
   test_force_->Init(space, 0.0);
   test_force_->LoadSimples(species);
   test_force_->InitPotentials(species);
-  //test_force_->Interact();
 }
 
 void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
@@ -23,6 +22,20 @@ void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
   }
 
   //potentials_.Print();
+}
+
+void Forces::DumpAll() {
+    // Dump all the particles and their positions, forces, energy (2d)
+    #ifdef DEBUG
+    for (int i = 0; i < (int)simples_.size(); ++i) {
+        auto part = simples_[i];
+        auto oid = part->GetOID();
+        printf("\to(%d) = ", oid);
+        printf("x{%2.2f, %2.2f}, ", part->GetPosition()[0], part->GetPosition()[1]);
+        printf("f{%2.2f, %2.2f}, ", part->GetForce()[0], part->GetForce()[1]);
+        printf("u{%2.2f}, p{%2.2f}\n", part->GetKineticEnergy(), part->GetPotentialEnergy());
+    }
+    #endif
 }
 
 void Forces::UpdateCellList(std::vector<SpeciesBase*> species) {
@@ -40,7 +53,7 @@ void Forces::LoadSimples(std::vector<SpeciesBase*> species) {
   }
 }
 
-void Forces::InteractCJE() {
+void Forces::InteractMP() {
     test_force_->Interact();
 }
 
@@ -55,7 +68,6 @@ void Forces::Interact() {
     if (pot == NULL) continue;
     MinimumDistance(*it);
     if (dr_mag_ > pot->GetRCut()) continue;
-    printf("Interacting derp (%d, %d)\n", o1->GetOID(), o2->GetOID());
     o1->GiveInteraction(FirstInteraction(pot));
     o2->GiveInteraction(SecondInteraction(pot));
   }

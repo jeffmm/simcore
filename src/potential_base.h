@@ -22,6 +22,7 @@ class PotentialBase {
                        double buffer,
                        double *fpote) {}
     double GetRCut() {return rcut_;}
+    double GetRCut2() {return rcut2_;}
     virtual void Print() {
       std::cout << pot_name_ << "\n";
         printf("\t{rcut:%2.2f}\n", rcut_);

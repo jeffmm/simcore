@@ -33,14 +33,15 @@ class Forces {
         test_force_ = forceFactory<ForceBrute>();
     }
     ~Forces() {
-        delete(test_force_);
+        delete[] test_force_;
     }
 
     void Init(space_struct *space, std::vector<SpeciesBase*> species, double cell_length);
     void UpdateCellList(std::vector<SpeciesBase*> species);
     void LoadSimples(std::vector<SpeciesBase*> species);
     void Interact();
-    void InteractCJE();
+    void InteractMP();
+    void DumpAll();
     void CheckOverlap(std::vector<SpeciesBase*> species);
     void InitPotentials(std::vector<SpeciesBase*> species);
     void MinimumDistance(cell_interaction ix);

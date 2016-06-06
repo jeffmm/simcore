@@ -22,6 +22,7 @@ class MDBead : public Bead {
     MDBead& operator=(MDBead const& that) {Bead::operator=(that); return *this;} 
     void Init();
     void UpdatePosition();
+    void UpdatePositionMP();
     void Integrate();
     void UpdateKineticEnergy();
     double const GetKineticEnergy();

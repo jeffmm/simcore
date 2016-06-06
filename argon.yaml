@@ -1,4 +1,4 @@
-# params.yaml
+# argon.yaml
 ---
 seed: 143589714364
 n_runs: 1
@@ -10,7 +10,7 @@ mother_daughter_dist: 22
 boundary_type: 1
 n_dimer: 0
 #n_md_bead: 108
-n_md_bead: 10
+n_md_bead: 40
 #md_bead_diameter: 3.405
 md_bead_diameter: 1.0
 md_bead_mass: 1
