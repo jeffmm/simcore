@@ -15,6 +15,15 @@ void MDBead::UpdatePosition() {
   UpdatePeriodic();
   ClearInteractions();
 }
+
+// Update the position based on MP
+void MDBead::UpdatePositionMP() {
+    printf("MD bead UpdatePositionsMP\n");
+    Integrate();
+    UpdatePeriodic();
+    printf("MD bead UpdatePositionsMP return\n");
+}
+
 void MDBead::Integrate() {
   double delta2 = SQR(delta_);
   double temp_pos[3];

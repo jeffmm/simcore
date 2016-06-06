@@ -21,9 +21,8 @@ ForceBrute::UpdateScheme() {
 // Interactions between particles yay!
 void
 ForceBrute::Interact() {
-   
-    printf("Brute force interaction!\n");
-
+ 
+    printf("Brute force interact starting parallel section\n");
     #ifdef ENABLE_OPENMP
     #pragma omp parallel
     #endif
@@ -47,18 +46,16 @@ ForceBrute::Interact() {
         pr_energy = prc_energy_.data() + (tid * nparticles_);
         std::fill(pr_energy, pr_energy + nparticles_, 0.0);
 
+        printf("\t(%d) -> n(%d), ndim(%d), starting loop\n", tid, nparticles_, ndim_);
+
+        assert(nparticles_ == simples_.size());
         #ifdef ENABLE_OPENMP
         #pragma omp for schedule(runtime) nowait
         #endif
-        assert(nparticles_ == simples_.size());
         for (int idx = 0; idx < nparticles_ - 1; ++idx) {
             for (int jdx = idx + 1; jdx < nparticles_; ++jdx) {
                 auto part1 = simples_[idx];
                 auto part2 = simples_[jdx];
-
-                // Because the object id starts at 1, have to shift where we are back and forth
-                auto oid1x = part1->GetOID() - 1;
-                auto oid2x = part2->GetOID() - 1;
 
                 // Exclude composite object interactions
                 if (part1->GetCID() == part2->GetCID()) continue;
@@ -67,10 +64,14 @@ ForceBrute::Interact() {
                 PotentialBase *pot = potentials_.GetPotential(part1->GetSID(), part2->GetSID());
                 if (pot == nullptr) continue;
                 // Minimum distance here@@@@!!!!
-                // XXX: CJE ewwwwwww
+                // XXX: CJE ewwwwwww, more elegant way?
                 interactionmindist idm;
                 MinimumDistance(part1, part2, idm);
-                if (idm.dr_mag > pot->GetRCut()) continue;
+                if (idm.dr_mag2 > pot->GetRCut2()) continue;
+
+                // Obtain the mapping between particle oid and position in the force superarray
+                auto oid1x = oid_position_map_[part1->GetOID()];
+                auto oid2x = oid_position_map_[part2->GetOID()];
 
                 // Fire off the potential calculation
                 double fepot[4];
@@ -81,12 +82,6 @@ ForceBrute::Interact() {
                     fr[i][oid1x] += fepot[i];
                     fr[i][oid2x] -= fepot[i];
                 }
-                /*pr_energy[idx] += fepot[ndim_];
-                pr_energy[jdx] += fepot[ndim_];
-                for (int i = 0; i < ndim_; ++i) {
-                    fr[i][idx] += fepot[i];
-                    fr[i][jdx] -= fepot[i];
-                }*/
             }
         } // pragma omp for schedule(runtime) nowait
 
@@ -94,6 +89,7 @@ ForceBrute::Interact() {
         #ifdef ENABLE_OPENMP
         #pragma omp barrier
         #endif
+        printf("\t(%d) -> done with loop, reducing!\n", tid);
         // Everything is doubled to do energy
         // XXX: CJE maybe fix this later?
         int i = 1 + (ndim_ * nparticles_ / nthreads_);
@@ -131,22 +127,17 @@ ForceBrute::Interact() {
         delete(fr);
     } // pragma omp parallel
 
-    // Recombine into the particles and set them up to use it?
-    #ifdef DEBUG
-    printf("Brute force debug!\n");
-    printf("Particle forces and energies->\n");
+    printf("Brute force interact done with parallel section\n");
+
+    // XXX: CJE this is where we tell the particles what to do
     for (int i = 0; i < nparticles_; ++i) {
         auto part = simples_[i];
-        auto oid = part->GetOID();
-        if (prc_energy_[i] >= 0.0) continue;
-        if (ndim_ == 2) {
-            printf("\tp(%d,%d) = ", i, oid);
-            printf("{%2.2f, %2.2f}, ", part->GetPosition()[0], part->GetPosition()[1]);
-            printf("f{%2.2f, %2.2f, %2.2f}\n", frc_[i], frc_[nparticles_+i], prc_energy_[i]);
-        } else if (ndim_ == 3) {
-            printf("\tp(%d,%d) = f{%2.2f, %2.2f, %2.2f, %2.2f}\n", i, oid, frc_[i], frc_[nparticles_+i], frc_[2*nparticles_+i], prc_energy_[i]);
-        } 
+        auto oidx = oid_position_map_[part->GetOID()];
+        double subforce[3] = {frc_[oidx], frc_[nparticles_+oidx], frc_[2*nparticles_+oidx]};
+        // XXX: CJE Replace with actual torque
+        double subtorque[3] = {frc_[oidx], frc_[nparticles_+oidx], frc_[2*nparticles_+oidx]};
+        part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[oidx]);
     }
-    #endif
 
+    printf("Brute force interact returning\n");
 }

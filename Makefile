@@ -8,13 +8,13 @@ SRCEXT = cpp
 
 COMPILE_FLAGS = -std=c++11
 RCOMPILE_FLAGS = -D NDEBUG -O3 -fopenmp
-DCOMPILE_FLAGS = -D DEBUG -g
+DCOMPILE_FLAGS = -D DEBUG -g -fopenmp
 LINK_FLAGS = -gnu 
 RLINK_FLAGS = -fopenmp
-DLINK_FLAGS = 
+DLINK_FLAGS = -fopenmp
 
 INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl
-GLXLIBS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew -lpthread
+GLXLIBS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew 
 GSLLIBS = -lgsl -lgslcblas
 FFTLIBS = -L/usr/lib64 -lfftw3
 LIBS = -L/usr/local/lib $(GLXLIBS) $(GSLLIBS) $(FFTLIBS) -lyaml-cpp

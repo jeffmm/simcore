@@ -19,7 +19,9 @@ class Object {
            prev_position_[3],
            orientation_[3],
            force_[3],
+           torque_[3],
            velocity_[3],
+           anglevel_[3],
            delta_,
            diameter_,
            length_,
@@ -61,13 +63,19 @@ class Object {
     void SetSpace(space_struct * space) {space_ = space;}
     void ZeroForce() {
       std::fill(force_,force_+3,0.0);
+      std::fill(torque_,torque_+3,0.0);
       p_energy_ = 0.0;
     }
     void AddForce(double const * const f) {
       for (int i=0; i<n_dim_; ++i)
         force_[i]+=f[i];
     }
+    void AddTorque(double const * const t) {
+      for (int i=0; i<n_dim_; ++i)
+        torque_[i]+=t[i];
+    }
     void AddPotential(double const p) {p_energy_ += p;}
+    void AddForceTorqueEnergy(double const * const F, double const * const T, double const p);
     double const * const GetPosition() {return position_;}
     double const * const GetScaledPosition() {return scaled_position_;}
     double const * const GetOrientation() {return orientation_;}
@@ -78,6 +86,7 @@ class Object {
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePeriodic();
     virtual void UpdatePosition() {}
+    virtual void UpdatePositionMP() {}
     virtual void ApplyInteractions() {}
     virtual double const GetKineticEnergy() {return k_energy_;}
     virtual double const GetPotentialEnergy() {return p_energy_;}
@@ -131,6 +140,7 @@ class Composite : public Object {
     }
     virtual void ZeroForce() {
       std::fill(force_,force_+3,0.0);
+      std::fill(torque_,torque_+3,0.0);
       for (auto it=elements_.begin(); it!=elements_.end(); ++it)
         it->ZeroForce();
     }
