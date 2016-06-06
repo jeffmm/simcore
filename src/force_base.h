@@ -4,6 +4,8 @@
 #ifndef _CYTOSCORE_FORCE_BASE_H_
 #define _CYTOSCORE_FORCE_BASE_H_
 
+#include <unordered_map>
+
 #include "auxiliary.h"
 #include "species.h"
 #include "minimum_distance.h"
@@ -46,6 +48,7 @@ class ForceBase {
     std::vector<Simple*> simples_;
     std::vector<double> frc_; // Force superarray for threading
     std::vector<double> prc_energy_; // Energy superarray for threading
+    std::unordered_map<int, int> oid_position_map_; // oid to position mapping!!!
 
     // Classes for managers
     PotentialManager potentials_;

@@ -33,7 +33,10 @@ class Simulation {
     void WriteOutputs();
     void GetGraphicsStructure();
     void Integrate();
+    void IntegrateMP();
     void Interact();
+    void InteractMP();
+    void DumpAll(int i_step);
     std::vector<graph_struct*> graph_array;
 
   public:

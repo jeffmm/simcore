@@ -10,16 +10,20 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   n_dim_ = space_->n_dim; 
   delta_ = params->delta;
   std::fill(position_,position_+3,0.0);
+  std::fill(velocity_,velocity_+3,0.0);
+  std::fill(anglevel_,anglevel_+3,0.0);
   std::fill(scaled_position_,scaled_position_+3,0.0);
   std::fill(orientation_,orientation_+3,0.0);
   std::fill(prev_position_,prev_position_+3,0.0);
   std::fill(force_,force_+3,0.0);
+  std::fill(torque_, torque_+3, 0.0);
   rng_.init(seed);
   interactions_.clear();
   // Set some defaults
   diameter_ = 1;
   length_ = 0;
   k_energy_ = 0;
+  p_energy_ = 0;
   is_simple_=false;
 }
 
@@ -31,10 +35,13 @@ Object::Object(const Object& that) {
   next_oid_=that.next_oid_;
   delta_ = that.delta_;
   std::copy(that.position_, that.position_+3, position_);
+  std::copy(that.velocity_, that.velocity_+3, velocity_);
+  std::copy(that.anglevel_, that.anglevel_+3, anglevel_);
   std::copy(that.scaled_position_, that.scaled_position_+3, scaled_position_);
   std::copy(that.prev_position_, that.prev_position_+3, prev_position_);
   std::copy(that.orientation_, that.orientation_+3, orientation_);
   std::copy(that.force_, that.force_+3, force_);
+  std::copy(that.torque_, that.torque_+3, torque_);
   diameter_ = that.diameter_;
   length_ = that.length_;
   k_energy_ = that.k_energy_;
@@ -54,10 +61,13 @@ Object &Object::operator=(Object const& that) {
   next_oid_=that.next_oid_;
   delta_ = that.delta_;
   std::copy(that.position_, that.position_+3, position_);
+  std::copy(that.velocity_, that.velocity_+3, velocity_);
+  std::copy(that.anglevel_, that.anglevel_+3, anglevel_);
   std::copy(that.scaled_position_, that.scaled_position_+3, scaled_position_);
   std::copy(that.prev_position_, that.prev_position_+3, prev_position_);
   std::copy(that.orientation_, that.orientation_+3, orientation_);
   std::copy(that.force_, that.force_+3, force_);
+  std::copy(that.torque_, that.torque_+3, torque_);
   diameter_ = that.diameter_;
   length_ = that.length_;
   k_energy_ = that.k_energy_;
@@ -147,10 +157,14 @@ void Simple::ApplyInteractions() {
     ix.potential->CalcPotential(ix.dr, ix.dr_mag, ix.buffer, f);
     AddForce(f);
     AddPotential(f[n_dim_]);
-    #ifdef DEBUG
-    printf("o(%d) = ", GetOID());
-    printf("{%2.2f, %2.2f}, ", GetPosition()[0], GetPosition()[1]);
-    printf("f{%2.2f, %2.2f, %2.2f}\n", force_[0], force_[1], p_energy_);
-    #endif
   }
+}
+
+// Apply the force/torque/energy to this particle, override if necessary
+void Object::AddForceTorqueEnergy(double const * const F, double const * const T, double const p) {
+    // XXX: CJE assume that we need to zero out the force and energy first
+    ZeroForce();
+    AddForce(F);
+    AddTorque(T);
+    AddPotential(p);
 }
