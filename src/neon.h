@@ -4,18 +4,23 @@
 #include "species.h"
 #include "md_bead.h"
 #include "auxiliary.h"
-#include "test_potential.h"
 #include "lennard_jones_12_6.h"
 
 class Neon : public MDBead {
   public:
-    Neon(system_parameters *params, space_struct *space, long seed, SID sid) : MDBead(params, space, seed, sid) {
+    // Constructors, destructors, copy-constructors
+    Neon(system_parameters *params, space_struct *space, long seed, 
+        SID sid) : MDBead(params, space, seed, sid) {
+      // Set parameters unique to Neon
       diameter_ = params->neon_diameter;
       mass_ = params->neon_mass;
     }
     ~Neon() {}
     Neon(const Neon& that) : MDBead(that) {}
-    Neon& operator=(Neon const& that) {MDBead::operator=(that); return *this;} 
+    Neon& operator=(Neon const& that) {
+      MDBead::operator=(that); return *this;
+    }
+    // Define simple particle virtual functions for Neon
     void Init();
     void UpdatePosition() {MDBead::UpdatePosition();}
     void Integrate() {MDBead::Integrate();}
@@ -27,7 +32,10 @@ class NeonSpecies : public Species<Neon> {
   protected:
     void InitPotentials (system_parameters *params);
   public:
-    NeonSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
+    NeonSpecies(int n_members, system_parameters *params, 
+        space_struct *space, long seed) 
+      : Species(n_members, params, space, seed) {
+      // Set species ID for Neon
       SetSID(SID::neon);
       InitPotentials(params);
     }
@@ -40,7 +48,6 @@ class NeonSpecies : public Species<Neon> {
     void Init() {
       Species::Init();
     }
-
 };
 
 #endif // _CYTOSCORE_NEON_H_

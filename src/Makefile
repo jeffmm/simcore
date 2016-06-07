@@ -1,6 +1,6 @@
 CC = g++-5
 CXX = g++-5
-CFLAGS = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -g -DDEBUG -std=c++11
+CFLAGS = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -O2 -std=c++11
 LNKFLAGS = -lyaml-cpp -gnu
 
 ifeq ($(CC),icpc)

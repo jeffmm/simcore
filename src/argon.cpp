@@ -1,6 +1,5 @@
 #include "argon.h"
 
-
 void Argon::Init() {
   MDBead::Init();
 }
