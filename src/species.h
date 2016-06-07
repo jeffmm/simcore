@@ -48,6 +48,7 @@ class SpeciesBase {
       space_=that.space_;
       potentials_=that.potentials_;
       rng_.init(gsl_rng_get(that.rng_.r));
+        return *this;
     }
     virtual void UpdatePositions() {}
     virtual void UpdatePositionsMP() {}

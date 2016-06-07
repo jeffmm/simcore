@@ -29,7 +29,7 @@ ForceBrute::Interact() {
     {
         int tid;
         double **fr;
-        fr = (double**)malloc(ndim_ * sizeof(double*));
+        fr = (double**)malloc(3 * sizeof(double*));
         double *pr_energy;
 
         #ifdef ENABLE_OPENMP
@@ -39,12 +39,20 @@ ForceBrute::Interact() {
         #endif
 
         // Set up the pointers to the force superarray
-        for (int i = 0; i < ndim_; ++i) {
-            fr[i] = frc_.data() + ((ndim_*tid+i)*nparticles_);
+        // Do all 3 dimensions just to be safe
+        for (int i = 0; i < 3; ++i) {
+            fr[i] = frc_.data() + ((3*tid+i)*nparticles_);
         }
-        std::fill(&fr[0][0], &fr[0][0] + ndim_*nparticles_, 0.0);
+        //std::fill(&fr[0][0], &fr[0][0] + 3*nparticles_, 0.0);
+        for (int i = 0; i < 3*nparticles_; ++i) {
+            (*fr)[i] = 0.0;
+        }
+
         pr_energy = prc_energy_.data() + (tid * nparticles_);
-        std::fill(pr_energy, pr_energy + nparticles_, 0.0);
+        for (int i = 0; i < nparticles_; ++i) {
+            pr_energy[i] = 0.0;
+        }
+        //std::fill(pr_energy, pr_energy + nparticles_, 0.0);
 
         printf("\t(%d) -> n(%d), ndim(%d), starting loop\n", tid, nparticles_, ndim_);
 
@@ -92,7 +100,7 @@ ForceBrute::Interact() {
         printf("\t(%d) -> done with loop, reducing!\n", tid);
         // Everything is doubled to do energy
         // XXX: CJE maybe fix this later?
-        int i = 1 + (ndim_ * nparticles_ / nthreads_);
+        int i = 1 + (3 * nparticles_ / nthreads_);
         int ii = 1 + (nparticles_ / nthreads_);
 
         int fromidx = tid * i;
@@ -101,13 +109,13 @@ ForceBrute::Interact() {
         int toidx = fromidx + i;
         int toidx2 = fromidx2 + ii;
 
-        if (toidx > ndim_*nparticles_) toidx = ndim_*nparticles_;
+        if (toidx > 3*nparticles_) toidx = 3*nparticles_;
         if (toidx2 > nparticles_) toidx2 = nparticles_;
 
         // Reduce the forces
         for (i = 1; i < nthreads_; ++i) {
             int offs;
-            offs = ndim_ * i * nparticles_;
+            offs = 3 * i * nparticles_;
 
             for (int j = fromidx; j < toidx; ++j) {
                 frc_[j] += frc_[offs+j];
@@ -124,18 +132,25 @@ ForceBrute::Interact() {
             }
         }
 
-        delete(fr);
+        delete[] fr;
     } // pragma omp parallel
 
     printf("Brute force interact done with parallel section\n");
 
-    // XXX: CJE this is where we tell the particles what to do
+    // XXX: CJE this is where we tell the particles what to do?
+    printf("oidx map size(%d)\n", (int)oid_position_map_.size());
     for (int i = 0; i < nparticles_; ++i) {
         auto part = simples_[i];
-        auto oidx = oid_position_map_[part->GetOID()];
-        double subforce[3] = {frc_[oidx], frc_[nparticles_+oidx], frc_[2*nparticles_+oidx]};
-        // XXX: CJE Replace with actual torque
-        double subtorque[3] = {frc_[oidx], frc_[nparticles_+oidx], frc_[2*nparticles_+oidx]};
+        // This is upsetting apparently?
+        int oidx = oid_position_map_[part->GetOID()];
+        printf("particle(%d) -> position(%d)\n", part->GetOID(), oidx);
+        double subforce[3] = {0.0, 0.0, 0.0};
+        double subtorque[3] = {0.0, 0.0, 0.0};
+        for (int idim = 0; idim < ndim_; ++idim) {
+            subforce[i] = frc_[idim*nparticles_+oidx];
+            // XXX: CJE Replace with actual torque eventually
+            subtorque[i] = frc_[idim*nparticles_+oidx];
+        }
         part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[oidx]);
     }
 

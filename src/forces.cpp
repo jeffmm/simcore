@@ -54,7 +54,9 @@ void Forces::LoadSimples(std::vector<SpeciesBase*> species) {
 }
 
 void Forces::InteractMP() {
+    printf("Forces - InteractMP\n");
     test_force_->Interact();
+    printf("Forces done - InteractMP\n");
 }
 
 void Forces::Interact() {
