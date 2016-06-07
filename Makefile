@@ -7,11 +7,16 @@ BINDIR = bin
 SRCEXT = cpp
 
 COMPILE_FLAGS = -std=c++11
-RCOMPILE_FLAGS = -D NDEBUG -O3 -fopenmp
-DCOMPILE_FLAGS = -D DEBUG -g -fopenmp
+RCOMPILE_FLAGS = -D NDEBUG -O3 
+DCOMPILE_FLAGS = -D DEBUG -g
 LINK_FLAGS = -gnu 
-RLINK_FLAGS = -fopenmp
-DLINK_FLAGS = -fopenmp
+RLINK_FLAGS = 
+DLINK_FLAGS =
+
+ifeq ($(THREADING),eomp)
+	COMPILE_FLAGS += -fopenmp
+	LINK_FLAGS += -fopenmp
+endif
 
 INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl
 GLXLIBS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew 

@@ -5,6 +5,7 @@
 #define _CYTOSCORE_FORCE_BASE_H_
 
 #include <unordered_map>
+#include <memory>
 
 #include "auxiliary.h"
 #include "species.h"
@@ -19,7 +20,13 @@ class ForceBase {
   public:
 
     ForceBase() {}
-    virtual ~ForceBase() {}
+    virtual ~ForceBase() {
+        space_ = NULL;
+        simples_.clear();
+        frc_.clear();
+        prc_energy_.clear();
+        oid_position_map_.clear();
+    }
 
     virtual void Init(space_struct *pSpace, double pSkin);
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
@@ -57,8 +64,8 @@ class ForceBase {
 
 // Force factory using templates
 template<typename T, typename...ARGS, typename = typename std::enable_if<std::is_base_of<ForceBase, T>::value>::type>
-T* forceFactory(ARGS&&... args) {
-    T* mforce{ new T{std::forward<ARGS>(args)...} };
+std::shared_ptr<T> forceFactory(ARGS&&... args) {
+    std::shared_ptr<T> mforce{ new T{std::forward<ARGS>(args)...} };
     
     return mforce;
 }
