@@ -18,9 +18,9 @@ void Simulation::RunSimulation() {
 
   for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
+    printf("********\nStep %d\n********\n", i_step_);
     //Interact();
     //Integrate();
-    printf("********\nStep %d\n********\n", i_step_);
     InteractMP();
     IntegrateMP();
     //#ifdef DEBUG
@@ -44,8 +44,10 @@ void Simulation::Integrate() {
 }
 
 void Simulation::IntegrateMP() {
+  printf("Simulation::IntegrateMP begin\n");
   for (auto it=species_.begin(); it!=species_.end(); ++it)
     (*it)->UpdatePositionsMP();
+  printf("Simulation::IntegrateMP end\n");
 }
 
 void Simulation::Interact() {
@@ -55,7 +57,9 @@ void Simulation::Interact() {
 }
 
 void Simulation::InteractMP() {
+  printf("Simulation::InteractMP begin\n");
   forces_.InteractMP();
+  printf("Simulation::InteractMP end\n");
 }
 
 void Simulation::InitSimulation() {

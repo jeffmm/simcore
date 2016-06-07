@@ -5,6 +5,7 @@
 // Init the force
 void
 ForceBase::Init(space_struct *pSpace, double pSkin) {
+    printf("ForceBase::Init begin\n");
     space_ = pSpace;
     ndim_ = space_->n_dim;
     nperiodic_ = space_->n_periodic;
@@ -24,7 +25,7 @@ ForceBase::Init(space_struct *pSpace, double pSkin) {
     #else
     nthreads_ = 1;
     #endif
-
+    printf("ForceBase::Init end\n");
 }
 
 
@@ -32,6 +33,7 @@ ForceBase::Init(space_struct *pSpace, double pSkin) {
 // for now
 void
 ForceBase::InitPotentials(std::vector<SpeciesBase*> pSpecies) {
+    printf("ForceBase::InitPotentials begin\n");
     for (auto it = pSpecies.begin(); it != pSpecies.end(); ++it) {
         auto pot_vec = (*it)->GetPotentials();
         for (auto jt=pot_vec.begin(); jt!=pot_vec.end(); ++jt)
@@ -39,6 +41,7 @@ ForceBase::InitPotentials(std::vector<SpeciesBase*> pSpecies) {
     }
     
     potentials_.Print();
+    printf("ForceBase::InitPotentials end\n");
 }
 
 
@@ -46,7 +49,8 @@ ForceBase::InitPotentials(std::vector<SpeciesBase*> pSpecies) {
 // Calculate the force superarray size
 void
 ForceBase::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
-    
+   
+    printf("ForceBase::LoadSimples begin\n");
     // Load everything from the species bases
     // Also remember that the OIDs may not be in order, so account for that
     // via a mapping oid <-> position
@@ -73,11 +77,13 @@ ForceBase::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
     frc_.resize(nthreads_ * 3 * nparticles_);
     prc_energy_.clear();
     prc_energy_.resize(nthreads_ * nparticles_);
+    printf("ForceBase::LoadSimples end\n");
 }
 
 
 // Find the minimum distance beween two particles
 void ForceBase::MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd) {
+    //printf("ForceBase::MinimumDistance begin\n");
     double const * const r1 = o1->GetPosition();
     double const * const s1 = o1->GetScaledPosition();
     double const * const u1 = o1->GetOrientation();
@@ -113,4 +119,5 @@ void ForceBase::MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd)
                             r1, s1, u1, l1, r2, s2, u2, l2,
                             imd.dr, &imd.dr_mag2, imd.contact1, imd.contact2);
     imd.dr_mag = sqrt(imd.dr_mag2);
+    //printf("ForceBase::MinimumDistance end\n");
 }
