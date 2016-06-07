@@ -8,6 +8,9 @@
 #include <cstdio>
 #include <iostream>
 
+//XXX: CJE include threading stuff to check thread id of the context...
+#include<thread>
+
 void error_exit(const char *error_msg, ...);
 
 static void key_callback2d(GLFWwindow *window, int key, int scancode, int action, int mods) {
@@ -151,6 +154,7 @@ static void key_callback3d(GLFWwindow *window, int key, int scancode, int action
 }
 
 void Graphics::KeyInteraction() {
+    printf("Graphics::KeyInteraction begin\n");
     // Tell glfw where the graphics class is
     glfwSetWindowUserPointer(window_, static_cast<void*>(this));
     // Set the proper key callback, since 2d and 3d should have different key
@@ -160,6 +164,8 @@ void Graphics::KeyInteraction() {
     else if (n_dim_ == 3)
         glfwSetKeyCallback(window_, key_callback3d);
     // Check window for key presses/mouse interaction
+    std::thread::id this_id = std::this_thread::get_id();
+    std::cout << "KeyInteraction thread id " << this_id << std::endl;
     glfwPollEvents();
 
     // Exit program if you close graphics window
@@ -168,6 +174,7 @@ void Graphics::KeyInteraction() {
         glfwTerminate();
         exit(1);
     }
+    printf("Graphics::KeyInteraction end\n");
 }
 
 void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_struct, double background) {
@@ -244,6 +251,8 @@ void Graphics::Init2dWindow() {
         error_exit("Failed to create display window\n");
     }
 
+    std::thread::id this_id = std::this_thread::get_id();
+    std::cout << "Context created with thread id: " << this_id << std::endl;
     glfwMakeContextCurrent(window_); 
     glfwSwapInterval(0); // swap buffers immediately
     glewInit(); // re-initialize glew for current window context

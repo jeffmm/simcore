@@ -22,7 +22,7 @@ ForceBrute::UpdateScheme() {
 void
 ForceBrute::Interact() {
  
-    printf("Brute force interact starting parallel section\n");
+    printf("ForceBrute::Interact (begin parallel section)\n");
     #ifdef ENABLE_OPENMP
     #pragma omp parallel
     #endif
@@ -54,7 +54,7 @@ ForceBrute::Interact() {
         }
         //std::fill(pr_energy, pr_energy + nparticles_, 0.0);
 
-        printf("\t(%d) -> n(%d), ndim(%d), starting loop\n", tid, nparticles_, ndim_);
+        printf("\t(t%d) -> n(%d), ndim(%d), starting loop\n", tid, nparticles_, ndim_);
 
         assert(nparticles_ == simples_.size());
         #ifdef ENABLE_OPENMP
@@ -97,7 +97,7 @@ ForceBrute::Interact() {
         #ifdef ENABLE_OPENMP
         #pragma omp barrier
         #endif
-        printf("\t(%d) -> done with loop, reducing!\n", tid);
+        printf("\t(t%d) -> done with loop, reducing!\n", tid);
         // Everything is doubled to do energy
         // XXX: CJE maybe fix this later?
         int i = 1 + (3 * nparticles_ / nthreads_);
@@ -132,10 +132,10 @@ ForceBrute::Interact() {
             }
         }
 
-        delete[] fr;
+        free(fr);
     } // pragma omp parallel
 
-    printf("Brute force interact done with parallel section\n");
+    printf("ForceBrute::Interact done parallel section\n");
 
     // XXX: CJE this is where we tell the particles what to do?
     printf("oidx map size(%d)\n", (int)oid_position_map_.size());
@@ -143,16 +143,17 @@ ForceBrute::Interact() {
         auto part = simples_[i];
         // This is upsetting apparently?
         int oidx = oid_position_map_[part->GetOID()];
-        printf("particle(%d) -> position(%d)\n", part->GetOID(), oidx);
+        //printf("particle(%d) -> position(%d)\n", part->GetOID(), oidx);
         double subforce[3] = {0.0, 0.0, 0.0};
         double subtorque[3] = {0.0, 0.0, 0.0};
         for (int idim = 0; idim < ndim_; ++idim) {
-            subforce[i] = frc_[idim*nparticles_+oidx];
+            //printf("\tDimension(%d) -> frc{%p}, frc[%2.2f]\n", idim, &(frc_[idim*nparticles_+oidx]), frc_[idim*nparticles_+oidx]);
+            subforce[idim] = frc_[idim*nparticles_+oidx];
             // XXX: CJE Replace with actual torque eventually
-            subtorque[i] = frc_[idim*nparticles_+oidx];
+            subtorque[idim] = frc_[idim*nparticles_+oidx]; //XXX: CJE segfaults here?????
         }
         part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[oidx]);
     }
 
-    printf("Brute force interact returning\n");
+    printf("ForceBrute::Interact end\n");
 }
