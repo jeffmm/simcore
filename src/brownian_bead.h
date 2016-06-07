@@ -3,7 +3,7 @@
 
 #include "bead.h"
 #include "auxiliary.h"
-#include "test_potential.h"
+#include "lennard_jones_12_6.h"
 
 class BrownianBead : public Bead {
   private:
@@ -25,16 +25,12 @@ class BrownianBead : public Bead {
 #include "species.h"
 class BrownianBeadSpecies : public Species<BrownianBead> {
   protected:
-    void InitPotentials () {
-      AddPotential(SID::brownian_bead, SID::brownian_bead, new TestPotential(space_, 1));
-      AddPotential(SID::brownian_bead, SID::brownian_dimer, new TestPotential(space_, 1));
-      AddPotential(SID::brownian_bead, SID::md_bead, new TestPotential(space_, 1));
-    }
+    void InitPotentials(system_parameters *params);
 
   public:
     BrownianBeadSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::brownian_bead);
-      InitPotentials();
+      InitPotentials(params);
     }
     ~BrownianBeadSpecies() {}
     BrownianBeadSpecies(const BrownianBeadSpecies& that) : Species(that) {}

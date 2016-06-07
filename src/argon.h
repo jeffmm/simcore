@@ -4,7 +4,6 @@
 #include "species.h"
 #include "md_bead.h"
 #include "auxiliary.h"
-#include "test_potential.h"
 #include "lennard_jones_12_6.h"
 
 class Argon : public MDBead {

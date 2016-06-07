@@ -15,4 +15,10 @@ void BrownianBead::UpdatePosition() {
   ClearInteractions();
   ZeroForce();
 }
+void BrownianBeadSpecies::InitPotentials (system_parameters *params) {
+  AddPotential(SID::brownian_bead, SID::brownian_bead, 
+      new LJ126(params->lj_epsilon,params->br_bead_diameter,
+                space_, 2.5*params->br_bead_diameter));
+}
+
 
