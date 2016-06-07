@@ -4,6 +4,7 @@
 #include "auxiliary.h"
 //#include "object.h"
 #include "brownian_bead.h"
+#include "lennard_jones_12_6.h"
 
 class BrownianDimer : public Composite<BrownianBead> {
   private:
@@ -63,16 +64,12 @@ class BrownianDimer : public Composite<BrownianBead> {
 #include "species.h"
 class BrownianDimerSpecies : public Species<BrownianDimer> {
   protected:
-    void InitPotentials () {
-      AddPotential(SID::brownian_dimer, SID::brownian_dimer, new TestPotential(space_, 1));
-      AddPotential(SID::brownian_dimer, SID::md_bead, new TestPotential(space_, 1));
-      AddPotential(SID::brownian_dimer, SID::brownian_bead, new TestPotential(space_, 1));
-    }
+    void InitPotentials (system_parameters *params);
 
   public:
     BrownianDimerSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::brownian_dimer);
-      InitPotentials();
+      InitPotentials(params);
     }
     ~BrownianDimerSpecies() {}
     BrownianDimerSpecies(const BrownianDimerSpecies& that) : Species(that) {}
