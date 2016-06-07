@@ -62,14 +62,15 @@ ForceBase::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
     oid_position_map_.clear();
     for (int i = 0; i < nparticles_; ++i) {
         auto part = simples_[i];
-        auto oid = part->GetOID();
+        int oid = part->GetOID();
         // i is position in force superarray, oid is the actual oid
         oid_position_map_[oid] = i;
     }
 
     // Resize the force and potential energy superarrays
     frc_.clear();
-    frc_.resize(nthreads_ * ndim_ * nparticles_);
+    //frc_.resize(nthreads_ * ndim_ * nparticles_);
+    frc_.resize(nthreads_ * 3 * nparticles_);
     prc_energy_.clear();
     prc_energy_.resize(nthreads_ * nparticles_);
 }
