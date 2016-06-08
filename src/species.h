@@ -113,22 +113,17 @@ class Species : public SpeciesBase {
     }
 
     virtual void Draw(std::vector<graph_struct*> * graph_array) {
-      printf("Starting speices::draw, graph_array:%p\n", graph_array);
       for (auto it=members_.begin(); it!=members_.end(); ++it)
         (*it)->Draw(graph_array);
-      printf("Finishing species::draw\n");
     }
     virtual void UpdatePositions() {
       for (auto it=members_.begin(); it!=members_.end(); ++it)
         (*it)->UpdatePosition();
     }
     virtual void UpdatePositionsMP() {
-      printf("Species::UpdatePositionsMP begin\n");
-      printf("Updating species (SID:%d)\n", GetSID());
       for (auto it=members_.begin(); it!=members_.end(); ++it) {
         (*it)->UpdatePositionMP();
       }
-      printf("Species::UpdatePositionsMP end\n");
     }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> simples;

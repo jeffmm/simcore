@@ -18,14 +18,13 @@ void Simulation::RunSimulation() {
 
   for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
-    printf("********\nStep %d\n********\n", i_step_);
+    DPRINTF("********\nStep %d\n********\n", i_step_);
     //Interact();
     //Integrate();
     InteractMP();
     IntegrateMP();
-    //#ifdef DEBUG
+    // Only will run if DEBUG is enabled
     DumpAll(i_step_);
-    //#endif
     Draw();
     WriteOutputs();
   }
@@ -33,9 +32,7 @@ void Simulation::RunSimulation() {
 
 void Simulation::DumpAll(int i_step) {
     // Very yucky dump of all the particles and their positions and forces
-    printf("Step[%d]->\n", i_step);
     forces_.DumpAll();
-    printf("Step[%d] done!\n", i_step);
 }
 
 void Simulation::Integrate() {
@@ -44,10 +41,8 @@ void Simulation::Integrate() {
 }
 
 void Simulation::IntegrateMP() {
-  printf("Simulation::IntegrateMP begin\n");
   for (auto it=species_.begin(); it!=species_.end(); ++it)
     (*it)->UpdatePositionsMP();
-  printf("Simulation::IntegrateMP end\n");
 }
 
 void Simulation::Interact() {
@@ -57,9 +52,7 @@ void Simulation::Interact() {
 }
 
 void Simulation::InteractMP() {
-  printf("Simulation::InteractMP begin\n");
   forces_.InteractMP();
-  printf("Simulation::InteractMP end\n");
 }
 
 void Simulation::InitSimulation() {
@@ -93,7 +86,6 @@ void Simulation::ClearSimulation() {
 
 void Simulation::Draw() {
   if (params_.graph_flag && i_step_%params_.n_graph==0) {
-    printf("Start drawing\n");
     GetGraphicsStructure();
     graphics_.Draw();
     if (params_.grab_flag) {
@@ -101,7 +93,6 @@ void Simulation::Draw() {
       grabber(graphics_.windx_, graphics_.windy_,
               params_.grab_file, (int) i_step_/params_.n_graph);
     }
-    printf("Done drawing\n");
   }
 }
 
