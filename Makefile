@@ -30,7 +30,7 @@ else
 	GSLINCS = -I/usr/local/include
 	GSLLIBS = -L/usr/local/libs -lgsl -lgslcblas -lm
 	GLFW3INCS = -I/home/cedelmaier/common/glfw/include
-	GLFW3LIBS = -L/home/cedelmaier/common/glfw/build/src -lglfw3 -lGLEW -lGLU -lGL -lX11 -lXxf86vm -pthread -ldl -lXrandr -lXi -lXcursor -lXinerama
+	GLFW3LIBS = -L/home/cedelmaier/common/glfw/build/src -lglfw3 -lGLEW -lGLU -lGL -lX11 -lXxf86vm -lpthread -ldl -lXrandr -lXi -lXcursor -lXinerama
 	YAMLINCS = -I/home/cedelmaier/common/yaml-cpp/include
 	YAMLLIBS = -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
 	INCLUDES = $(GLFW3INCS) $(YAMLINCS) $(GSLINCS)
@@ -53,10 +53,10 @@ endif
 CC=$(CXX)
 ifeq ($(CC),icpc)
 	COMPILE_FLAGS += -Wno-deprecated
-	RCOMPILE_FLAGS += -openmp -DBOB_OMP
+	#RCOMPILE_FLAGS += -openmp -DBOB_OMP
 else
 	COMPILE_FLAGS += -Wno-deprecated-declarations -Wno-deprecated
-	RCOMPILE_FLAGS += -fopenmp -DBOB_OMP
+	#RCOMPILE_FLAGS += -fopenmp -DBOB_OMP
 endif
 
 # Combine compiler and linker flags
