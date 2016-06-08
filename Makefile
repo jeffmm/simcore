@@ -8,7 +8,7 @@ SRCEXT = cpp
 
 COMPILE_FLAGS = -std=c++11
 RCOMPILE_FLAGS = -D NDEBUG -O3 
-DCOMPILE_FLAGS = -D DEBUG -g
+DCOMPILE_FLAGS = -D DEBUG -O0 -g
 LINK_FLAGS = -gnu 
 RLINK_FLAGS = 
 DLINK_FLAGS =
@@ -16,6 +16,11 @@ DLINK_FLAGS =
 ifeq ($(THREADING),eomp)
 	COMPILE_FLAGS += -fopenmp
 	LINK_FLAGS += -fopenmp
+endif
+
+ifeq ($(NOGRAPH),yes)
+	COMPILE_FLAGS += -D NOGRAPH
+	LINK_FLAGS += -D NOGRAPH
 endif
 
 UNAME_S:=$(shell uname -s)
