@@ -107,5 +107,37 @@ struct interactionmindist {
     double contact2[3];
 };
 
+namespace cytohelpers {
+    // From bithacks online
+    __attribute__((always_inline))
+    static inline unsigned int nextpow2(unsigned int v) {
+        v--;
+
+        v |= v >> 1;
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        v++;
+
+        return v;
+    }
+
+    // Cell vector to linear id
+    __attribute__((always_inline))
+    static inline int cell_vec_to_linear(int cx, int cy, int cz, int nc[3]) {
+        return cx + cy*nc[0] + cz*nc[0]*nc[1];
+    }
+
+    // Cell linear id to vector id
+    __attribute__((always_inline))
+    static inline void cell_linear_to_vec(int cidx, int nc[3], int* cx) {
+        cx[0] = cidx % nc[0];
+        cx[1] = (cidx / nc[0]) % nc[1];
+        cx[2] = cidx / (nc[0] * nc[1]);
+    }
+
+}
+
 #endif // _AUXILIARY_H_
 
