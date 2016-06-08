@@ -12,6 +12,11 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, double
   test_force_->Init(space, 0.0);
   test_force_->LoadSimples(species);
   test_force_->InitPotentials(species);
+
+  // XXX: CJE test the microcell list?
+  test_microcell_f_->Init(space, 0.0);
+  test_microcell_f_->LoadSimples(species);
+  test_microcell_f_->InitPotentials(species);
 }
 
 void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
