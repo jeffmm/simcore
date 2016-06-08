@@ -7,6 +7,11 @@
 
 #include "auxiliary.h"
 
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
+#include <stdio.h>
+
 double cpu(void) {
     struct rusage ru;
     //int getrusage();
