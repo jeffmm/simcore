@@ -66,12 +66,7 @@ ForceBase::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
         oid_position_map_[oid] = i;
     }
 
-    // Resize the force and potential energy superarrays
-    //frc_.clear();
-    //frc_.resize(nthreads_ * ndim_ * nparticles_);
-    //frc_.resize(nthreads_ * 3 * nparticles_);
-    //prc_energy_.clear();
-    //prc_energy_.resize(nthreads_ * nparticles_);
+    // Create the force and potential energy superarrays
     frc_ = new double[nthreads_*3*nparticles_];
     prc_energy_ = new double[nthreads_*nparticles_];
 }

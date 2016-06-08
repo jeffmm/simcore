@@ -43,7 +43,7 @@ ForceBrute::Interact() {
         for (int i = 0; i < 3; ++i) {
             fr[i] = frc_ + ((3*tid+i)*nparticles_);
         }
-        //std::fill(&fr[0][0], &fr[0][0] + 3*nparticles_, 0.0);
+
         for (int i = 0; i < 3*nparticles_; ++i) {
             (*fr)[i] = 0.0;
         }
@@ -52,9 +52,6 @@ ForceBrute::Interact() {
         for (int i = 0; i < nparticles_; ++i) {
             pr_energy[i] = 0.0;
         }
-        //std::fill(pr_energy, pr_energy + nparticles_, 0.0);
-
-        DPRINTF("\t(t%d) -> n(%d), ndim(%d), starting loop\n", tid, nparticles_, ndim_);
 
         assert(nparticles_ == simples_.size());
         #ifdef ENABLE_OPENMP
@@ -97,7 +94,6 @@ ForceBrute::Interact() {
         #ifdef ENABLE_OPENMP
         #pragma omp barrier
         #endif
-        DPRINTF("\t(t%d) -> done with loop, reducing!\n", tid);
         // Everything is doubled to do energy
         // XXX: CJE maybe fix this later?
         int i = 1 + (3 * nparticles_ / nthreads_);
@@ -125,7 +121,7 @@ ForceBrute::Interact() {
         // Reduce the energies
         for (ii = 1; ii < nthreads_; ++ii) {
             int offs;
-            offs = i * nparticles_;
+            offs = ii * nparticles_;
 
             for (int jj = fromidx2; jj < toidx2; ++jj) {
                 prc_energy_[jj] += prc_energy_[offs + jj];
@@ -139,7 +135,6 @@ ForceBrute::Interact() {
     // XXX: CJE this is where we tell the particles what to do?
     for (int i = 0; i < nparticles_; ++i) {
         auto part = simples_[i];
-        // This is upsetting apparently?
         int oidx = oid_position_map_[part->GetOID()];
         double subforce[3] = {0.0, 0.0, 0.0};
         double subtorque[3] = {0.0, 0.0, 0.0};

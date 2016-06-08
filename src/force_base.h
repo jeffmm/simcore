@@ -55,10 +55,8 @@ class ForceBase {
     space_struct* space_;
 
     std::vector<Simple*> simples_;
-    //std::vector<double> frc_; // Force superarray for threading
-    //std::vector<double> prc_energy_; // Energy superarray for threading
-    double* frc_;
-    double* prc_energy_;
+    double* frc_; // Force superarray
+    double* prc_energy_; // Potential energy superarray
     std::unordered_map<int, int> oid_position_map_; // oid to position mapping!!!
 
     // Classes for managers
@@ -67,9 +65,15 @@ class ForceBase {
 
 
 // Force factory using templates
-template<typename T, typename...ARGS, typename = typename std::enable_if<std::is_base_of<ForceBase, T>::value>::type>
+/*template<typename T, typename...ARGS, typename = typename std::enable_if<std::is_base_of<ForceBase, T>::value>::type>
 std::shared_ptr<T> forceFactory(ARGS&&... args) {
     std::shared_ptr<T> mforce{ new T{std::forward<ARGS>(args)...} };
+    
+    return mforce;
+}*/
+template<typename T, typename...ARGS, typename = typename std::enable_if<std::is_base_of<ForceBase, T>::value>::type>
+T* forceFactory(ARGS&&... args) {
+    T* mforce{ new T{std::forward<ARGS>(args)...} };
     
     return mforce;
 }

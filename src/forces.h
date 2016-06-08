@@ -27,14 +27,15 @@ class Forces {
     CellList cell_list_;
     PotentialManager potentials_;
 
-    std::shared_ptr<ForceBase> test_force_;
-    //ForceBase* test_force_;
+    //std::shared_ptr<ForceBase> test_force_;
+    ForceBase* test_force_;
   public:
     Forces() {
         test_force_ = forceFactory<ForceBrute>();
     }
     ~Forces() {
         //delete[] test_force_;
+        delete(test_force_);
     }
 
     void Init(space_struct *space, std::vector<SpeciesBase*> species, double cell_length);
