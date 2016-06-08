@@ -18,13 +18,25 @@ ifeq ($(THREADING),eomp)
 	LINK_FLAGS += -fopenmp
 endif
 
-INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl
-GLXLIBS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew 
-GSLLIBS = -lgsl -lgslcblas
-FFTLIBS = -L/usr/lib64 -lfftw3
-LIBS = -L/usr/local/lib $(GLXLIBS) $(GSLLIBS) $(FFTLIBS) -lyaml-cpp
-
 UNAME_S:=$(shell uname -s)
+
+ifeq ($(UNAME_S),Darwin)
+	INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl
+	GLXLIBS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew 
+	GSLLIBS = -lgsl -lgslcblas
+	FFTLIBS = -L/usr/lib64 -lfftw3
+	LIBS = -L/usr/local/lib $(GLXLIBS) $(GSLLIBS) $(FFTLIBS) -lyaml-cpp
+else
+	GSLINCS = -I/usr/local/include
+	GSLLIBS = -L/usr/local/libs -lgsl -lgslcblas -lm
+	GLFW3INCS = -I/home/cedelmaier/common/glfw/include
+	GLFW3LIBS = -L/home/cedelmaier/common/glfw/build/src -lglfw3 -lGLEW -lGLU -lGL -lX11 -lXxf86vm -pthread -ldl -lXrandr -lXi -lXcursor -lXinerama
+	YAMLINCS = -I/home/cedelmaier/common/yaml-cpp/include
+	YAMLLIBS = -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
+	INCLUDES = $(GLFW3INCS) $(YAMLINCS) $(GSLINCS)
+	LIBS = $(GLFW3LIBS) $(YAMLLIBS) $(GSLLIBS)
+	export LD_LIBRARY_PATH=/home/cedelmaier/common/glfw/build/src:/home/cedelmaier/common/yaml-cpp/build:$LD_LIBRARY_PATH
+endif
 
 print-%: ; @echo $*=$($*)
 
@@ -102,7 +114,7 @@ cytoscore: dirs $(BINDIR)/cytoscore
 configure_cytoscore: dirs $(BINDIR)/configure_cytoscore
 
 $(BINDIR)/cytoscore: $(OBJECTS) $(CYTOSCORE_MAIN_OBJ)
-	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 $(BINDIR)/configure_cytoscore: $(OBJECTS) $(CONFIGURE_CYTOSCORE_OBJ)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@
