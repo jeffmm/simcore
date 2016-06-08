@@ -10,4 +10,11 @@
 #define SIGN(a,b)          ((b) >= 0.0 ? fabs(a) : -fabs(a))
 #define SIGNOF(x)          ((x) >= 0.0 ? 1 : -1)
 
+// Debugging print macros!
+#ifdef NDEBUG
+#define DPRINTF(M, ...)
+#else
+#define DPRINTF(M, ...) do { fprintf(stderr, "" M "", ##__VA_ARGS__); } while(0)
+#endif
+
 #endif //_MACROS_H

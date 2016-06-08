@@ -23,8 +23,10 @@ class ForceBase {
     virtual ~ForceBase() {
         space_ = NULL;
         simples_.clear();
-        frc_.clear();
-        prc_energy_.clear();
+        //frc_.clear();
+        //prc_energy_.clear();
+        delete[] frc_;
+        delete[] prc_energy_;
         oid_position_map_.clear();
     }
 
@@ -53,8 +55,10 @@ class ForceBase {
     space_struct* space_;
 
     std::vector<Simple*> simples_;
-    std::vector<double> frc_; // Force superarray for threading
-    std::vector<double> prc_energy_; // Energy superarray for threading
+    //std::vector<double> frc_; // Force superarray for threading
+    //std::vector<double> prc_energy_; // Energy superarray for threading
+    double* frc_;
+    double* prc_energy_;
     std::unordered_map<int, int> oid_position_map_; // oid to position mapping!!!
 
     // Classes for managers

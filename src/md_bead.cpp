@@ -18,10 +18,8 @@ void MDBead::UpdatePosition() {
 
 // Update the position based on MP
 void MDBead::UpdatePositionMP() {
-    printf("\t(p:%lu) MDBead::UpdatePositionMP begin\n", GetOID());
     Integrate();
     UpdatePeriodic();
-    printf("\t(p:%lu) MDBead::UpdatePositionMP end\n", GetOID());
 }
 
 void MDBead::Integrate() {
