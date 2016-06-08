@@ -9,6 +9,7 @@
 
 // CJE stuff here
 #include "force_brute.h"
+#include "force_microcell.h"
 
 class Forces {
   private:
@@ -29,9 +30,11 @@ class Forces {
 
     //std::shared_ptr<ForceBase> test_force_;
     ForceBase* test_force_;
+    ForceMicrocell* test_microcell_f_;
   public:
     Forces() {
         test_force_ = forceFactory<ForceBrute>();
+        test_microcell_f_ = forceFactory<ForceMicrocell>();
     }
     ~Forces() {
         //delete[] test_force_;
