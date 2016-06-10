@@ -1,4 +1,4 @@
-PROG_LIST = cytoscore configure_cytoscore
+PROG_LIST = simcore configure_simcore
 TEST_LIST = motor_test diffusion_test msd_analysis
 
 .PHONY : default
