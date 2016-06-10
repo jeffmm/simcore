@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_PARSE_FLAGS_H_
-#define _CYTOSCORE_PARSE_FLAGS_H_
+#ifndef _SIMCORE_PARSE_FLAGS_H_
+#define _SIMCORE_PARSE_FLAGS_H_
 #include <getopt.h>
 #include <string>
 
@@ -112,4 +112,4 @@ run_options parse_opts(int argc, char *argv[]) {
   return run_opts;
 }
 
-#endif // _CYTOSCORE_PARSE_FLAGS_H_
+#endif // _SIMCORE_PARSE_FLAGS_H_

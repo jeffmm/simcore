@@ -65,14 +65,14 @@ void init_files() {
   prpb_init << "// print_params_body.cpp, generated automatically using make_params\n\n";
   prpb_init.close();
   std::ofstream sp_init("src/parameters.h", std::ios_base::out);
-  sp_init << "#ifndef _CYTOSCORE_PARAMETERS_H_\n#define _CYTOSCORE_PARAMETERS_H_\n\n// parameters.h, generated automatically using make_params\n\nstruct system_parameters {\n\n";
+  sp_init << "#ifndef _SIMCORE_PARAMETERS_H_\n#define _SIMCORE_PARAMETERS_H_\n\n// parameters.h, generated automatically using make_params\n\nstruct system_parameters {\n\n";
   sp_init.close();
 
 }
 
 void cleanup_files() {
   std::ofstream sp_cleanup("src/parameters.h", std::ios_base::out | std::ios_base::app);
-  sp_cleanup << "\n};\n\n#endif // _CYTOSCORE_PARAMETERS_H_";
+  sp_cleanup << "\n};\n\n#endif // _SIMCORE_PARAMETERS_H_";
   sp_cleanup.close();
   std::ofstream ppb_cleanup("src/parse_params_body.cpp", std::ios_base::out | std::ios_base::app);
   ppb_cleanup << "else {\n  std::cout << \"  WARNING: Parameter \" << param_name << \" not recognized!\\n\";\n}\n";
@@ -166,10 +166,10 @@ std::string parse_params_snippet(std::string param_name, std::string param_type)
 
 void write_objects(std::string *object_list, unsigned int size) {
   std::ostringstream code;
-  code << "CC = g++-5\nCXX = g++-5\nCFLAGS = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -g -DDEBUG -std=c++11\nLNKFLAGS = -lyaml-cpp -gnu\n\nifeq ($(CC),icpc)\n\tOMPFLAGS = -openmp -DBOB_OMP -Wno-deprecated\nelse\n\tCFLAGS += -Wno-deprecated-declarations -Wno-deprecated\n\tOMPFLAGS =	-fopenmp -DBOB_OMP\nendif\n\nGLXFLAGS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew -lpthread\nGSLFLAGS = -L/usr/local/lib/ -I/usr/local/include/gsl/ -lgsl -lgslcblas\nFFTFLAGS = -L/usr/lib64 -lfftw3\nCXX = $(CC)\nCXXFLAGS = $(CFLAGS)\n\nCYTOSCORE_OBJS = cytoscore_main.o simulation_manager.o simulation.o object.o forces.o cell_list.o space.o allocate.o vector_algebra.o cpu.o error_exit.o generate_random_unit_vector.o graphics.o grabber.o writebmp.o minimum_distance.o\n\nCONFIGURE_OBJS = configure_cytoscore.o\n\nCYTOSCORE_OBJECT_OBJS =";
+  code << "CC = g++-5\nCXX = g++-5\nCFLAGS = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -g -DDEBUG -std=c++11\nLNKFLAGS = -lyaml-cpp -gnu\n\nifeq ($(CC),icpc)\n\tOMPFLAGS = -openmp -DBOB_OMP -Wno-deprecated\nelse\n\tCFLAGS += -Wno-deprecated-declarations -Wno-deprecated\n\tOMPFLAGS =	-fopenmp -DBOB_OMP\nendif\n\nGLXFLAGS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew -lpthread\nGSLFLAGS = -L/usr/local/lib/ -I/usr/local/include/gsl/ -lgsl -lgslcblas\nFFTFLAGS = -L/usr/lib64 -lfftw3\nCXX = $(CC)\nCXXFLAGS = $(CFLAGS)\n\nSIMCORE_OBJS = simcore_main.o simulation_manager.o simulation.o object.o forces.o cell_list.o space.o allocate.o vector_algebra.o cpu.o error_exit.o generate_random_unit_vector.o graphics.o grabber.o writebmp.o minimum_distance.o\n\nCONFIGURE_OBJS = configure_simcore.o\n\nSIMCORE_OBJECT_OBJS =";
   for (unsigned int i=0; i<size; ++i)
     code << " " << object_list[i] << ".o";
-  code << "\n\n../cytoscore:	$(CYTOSCORE_OBJS) $(CYTOSCORE_OBJECT_OBJS)\n\t$(CC)  -o ../cytoscore $(CYTOSCORE_OBJS) $(CYTOSCORE_OBJECT_OBJS) $(GLXFLAGS) $(GSLFLAGS) -lm $(LNKFLAGS) \n\n../configure_cytoscore: $(CONFIGURE_OBJS)\n\t$(CC) -o ../configure_cytoscore $(CONFIGURE_OBJS) $(GLXFLAGS) $(GSLFLAGS) -lm $(LNKFLAGS)\n";
+  code << "\n\n../simcore:	$(SIMCORE_OBJS) $(SIMCORE_OBJECT_OBJS)\n\t$(CC)  -o ../simcore $(SIMCORE_OBJS) $(SIMCORE_OBJECT_OBJS) $(GLXFLAGS) $(GSLFLAGS) -lm $(LNKFLAGS) \n\n../configure_simcore: $(CONFIGURE_OBJS)\n\t$(CC) -o ../configure_simcore $(CONFIGURE_OBJS) $(GLXFLAGS) $(GSLFLAGS) -lm $(LNKFLAGS)\n";
   std::ofstream makefile("src/Makefile", std::ios_base::out);
   makefile << code.str();
   makefile.close();

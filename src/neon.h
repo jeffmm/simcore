@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_NEON_H_
-#define _CYTOSCORE_NEON_H_
+#ifndef _SIMCORE_NEON_H_
+#define _SIMCORE_NEON_H_
 
 #include "species.h"
 #include "md_bead.h"
@@ -50,4 +50,4 @@ class NeonSpecies : public Species<Neon> {
     }
 };
 
-#endif // _CYTOSCORE_NEON_H_
+#endif // _SIMCORE_NEON_H_

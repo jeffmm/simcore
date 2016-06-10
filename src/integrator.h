@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_INTEGRATOR_H_
-#define _CYTOSCORE_INTEGRATOR_H_
+#ifndef _SIMCORE_INTEGRATOR_H_
+#define _SIMCORE_INTEGRATOR_H_
 
 #include "auxiliary.h"
 #include "object.h"
@@ -26,4 +26,4 @@ class Integrator {
 
 
 
-#endif // _CYTOSCORE_INTEGRATOR_H_
+#endif // _SIMCORE_INTEGRATOR_H_

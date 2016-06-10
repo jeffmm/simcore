@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_ARGON_H_
-#define _CYTOSCORE_ARGON_H_
+#ifndef _SIMCORE_ARGON_H_
+#define _SIMCORE_ARGON_H_
 
 #include "species.h"
 #include "md_bead.h"
@@ -42,4 +42,4 @@ class ArgonSpecies : public Species<Argon> {
     }
 };
 
-#endif // _CYTOSCORE_ARGON_H_
+#endif // _SIMCORE_ARGON_H_

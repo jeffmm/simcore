@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_PARTICLE_MD_H_
-#define _CYTOSCORE_PARTICLE_MD_H_
+#ifndef _SIMCORE_PARTICLE_MD_H_
+#define _SIMCORE_PARTICLE_MD_H_
 
 #include "object.h"
 
@@ -34,4 +34,4 @@ double ParticleMD::GetEnergy() const {
   return energy_;
 }
 
-#endif // _CYTOSCORE_PARTICLE_MD_H_
+#endif // _SIMCORE_PARTICLE_MD_H_

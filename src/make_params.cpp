@@ -63,14 +63,14 @@ void init_files() {
   prpb_init << "// print_params_body.cpp, generated automatically using make_params\n\n";
   prpb_init.close();
   std::ofstream sp_init("src/parameters.h", std::ios_base::out);
-  sp_init << "#ifndef _CYTOSCORE_PARAMETERS_H_\n#define _CYTOSCORE_PARAMETERS_H_\n\n// parameters.h, generated automatically using make_params\n\nstruct system_parameters {\n\n";
+  sp_init << "#ifndef _SIMCORE_PARAMETERS_H_\n#define _SIMCORE_PARAMETERS_H_\n\n// parameters.h, generated automatically using make_params\n\nstruct system_parameters {\n\n";
   sp_init.close();
 
 }
 
 void cleanup_files() {
   std::ofstream sp_cleanup("src/parameters.h", std::ios_base::out | std::ios_base::app);
-  sp_cleanup << "\n};\n\n#endif // _CYTOSCORE_PARAMETERS_H_";
+  sp_cleanup << "\n};\n\n#endif // _SIMCORE_PARAMETERS_H_";
   sp_cleanup.close();
   std::ofstream ppb_cleanup("src/parse_params_body.cpp", std::ios_base::out | std::ios_base::app);
   ppb_cleanup << "else {\n  std::cout << \"  WARNING: Parameter \" << param_name << \" not recognized!\\n\";\n}\n";

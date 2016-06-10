@@ -1,6 +1,6 @@
-#include "brownian_dimer.h"
+#include "br_dimer.h"
 
-void BrownianDimer::Init() {
+void BrDimer::Init() {
   Composite::InsertRandom(length_+diameter_);
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   double z = 0.5*length_;
@@ -18,7 +18,7 @@ void BrownianDimer::Init() {
   UpdateOrientation();
 }
 
-void BrownianDimer::UpdateOrientation() {
+void BrDimer::UpdateOrientation() {
   double const * const r1=elements_[0].GetPosition();
   double const * const r2=elements_[1].GetPosition();
   double const * const s1=elements_[0].GetScaledPosition();
@@ -39,7 +39,7 @@ void BrownianDimer::UpdateOrientation() {
     i_bead->SetOrientation(orientation_);
 }
 
-void BrownianDimer::InternalForces() {
+void BrDimer::InternalForces() {
   for (int i=0; i<n_dim_; ++i)
     force_[i] = k_spring_ * (length_-eq_length_) * orientation_[i];
   elements_[0].AddForce(force_);
@@ -48,21 +48,21 @@ void BrownianDimer::InternalForces() {
   elements_[1].AddForce(force_);
 }
 
-void BrownianDimer::UpdatePosition() {
+void BrDimer::UpdatePosition() {
   ZeroForce();
   ApplyInteractions();
   InternalForces();
   Integrate();
 }
 
-void BrownianDimer::ApplyInteractions() {
+void BrDimer::ApplyInteractions() {
    //We have no internal constraints
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
     i_bead->ApplyInteractions();
   }
 }
 
-void BrownianDimer::Integrate() {
+void BrDimer::Integrate() {
   double pos[3] = {0, 0, 0};
   // the beads know how to update position and periodicity
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
@@ -71,7 +71,7 @@ void BrownianDimer::Integrate() {
   UpdateOrientation();
 }
 
-void BrownianDimer::Draw(std::vector<graph_struct*> * graph_array) {
+void BrDimer::Draw(std::vector<graph_struct*> * graph_array) {
   // draw half of rod coming from each bead (looks good for periodic boundaries)
   double const * const r1 = elements_[0].GetPosition();
   double const * const r2 = elements_[1].GetPosition();
@@ -94,11 +94,11 @@ void BrownianDimer::Draw(std::vector<graph_struct*> * graph_array) {
     i_bead->Draw(graph_array);
 }
 
-void BrownianDimerSpecies::InitPotentials(system_parameters *params) {
-  AddPotential(SID::brownian_dimer, SID::brownian_dimer, new LJ126(params->lj_epsilon, params->br_bead_diameter, space_, 2.5*params->br_bead_diameter));
+void BrDimerSpecies::InitPotentials(system_parameters *params) {
+  AddPotential(SID::br_dimer, SID::br_dimer, new LJ126(params->lj_epsilon, params->br_bead_diameter, space_, 2.5*params->br_bead_diameter));
   double dimer_neon_diam = 0.5*(params->br_bead_diameter + params->neon_diameter);
   double dimer_argon_diam = 0.5*(params->br_bead_diameter + params->argon_diameter);
-  AddPotential(SID::neon, SID::brownian_dimer, new LJ126(params->lj_epsilon, dimer_neon_diam, space_, 2.5*dimer_neon_diam));
-  AddPotential(SID::argon, SID::brownian_dimer, new LJ126(params->lj_epsilon, dimer_argon_diam, space_, 2.5*dimer_argon_diam));
+  AddPotential(SID::neon, SID::br_dimer, new LJ126(params->lj_epsilon, dimer_neon_diam, space_, 2.5*dimer_neon_diam));
+  AddPotential(SID::argon, SID::br_dimer, new LJ126(params->lj_epsilon, dimer_argon_diam, space_, 2.5*dimer_argon_diam));
 }
 
