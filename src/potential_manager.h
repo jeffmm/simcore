@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_POTENTIAL_MANAGER_H_
-#define _CYTOSCORE_POTENTIAL_MANAGER_H_
+#ifndef _SIMCORE_POTENTIAL_MANAGER_H_
+#define _SIMCORE_POTENTIAL_MANAGER_H_
 
 #include "auxiliary.h"
 #include "potential_base.h"
@@ -41,5 +41,5 @@ class PotentialManager {
     }
 };
 
-#endif // _CYTOSCORE_POTENTIAL_MANAGER_H_
+#endif // _SIMCORE_POTENTIAL_MANAGER_H_
 

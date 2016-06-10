@@ -1,18 +1,18 @@
-#ifndef _CYTOSCORE_BROWNIAN_DIMER_H_
-#define _CYTOSCORE_BROWNIAN_DIMER_H_
+#ifndef _SIMCORE_BR_DIMER_H_
+#define _SIMCORE_BR_DIMER_H_
 
 #include "auxiliary.h"
 //#include "object.h"
-#include "brownian_bead.h"
+#include "br_bead.h"
 #include "lennard_jones_12_6.h"
 
-class BrownianDimer : public Composite<BrownianBead> {
+class BrDimer : public Composite<BrBead> {
   private:
-    /* Unique to BrownianDimer */
+    /* Unique to BrDimer */
     double eq_length_;
     double k_spring_;
 
-    /* Functions unique to Brownian Dimer */
+    /* Functions unique to Br Dimer */
     void Integrate();
     void InternalForces();
     void UpdateOrientation();
@@ -21,9 +21,9 @@ class BrownianDimer : public Composite<BrownianBead> {
 
   public:
     //Constructor
-    BrownianDimer(system_parameters *params, space_struct *space, long seed, SID sid) : Composite(params, space, seed, sid) {
+    BrDimer(system_parameters *params, space_struct *space, long seed, SID sid) : Composite(params, space, seed, sid) {
       for (int i=0; i<2; ++i) {
-        BrownianBead b(params, space, gsl_rng_get(rng_.r), GetSID());
+        BrBead b(params, space, gsl_rng_get(rng_.r), GetSID());
         b.SetCID(GetCID());
         elements_.push_back(b);
       }
@@ -33,15 +33,15 @@ class BrownianDimer : public Composite<BrownianBead> {
       k_spring_ = params->dimer_k_spring;
     }
     //Destructor
-    ~BrownianDimer() {}
+    ~BrDimer() {}
     //Copy constructor
-    BrownianDimer(const BrownianDimer& that) : Composite(that) {
+    BrDimer(const BrDimer& that) : Composite(that) {
       eq_length_=that.eq_length_;
       k_spring_=that.k_spring_;
       g2_=that.g2_;
     }
     //Assignment constructor
-    BrownianDimer& operator=(BrownianDimer const& that) {
+    BrDimer& operator=(BrDimer const& that) {
       Composite::operator=(that);
       eq_length_=that.eq_length_;
       k_spring_=that.k_spring_;
@@ -54,7 +54,7 @@ class BrownianDimer : public Composite<BrownianBead> {
     void Draw(std::vector<graph_struct*> * graph_array);
     void ApplyInteractions();
 
-    /* Functions unique to Brownian Dimer */
+    /* Functions unique to Br Dimer */
     double const GetKSpring() {return k_spring_;}
     double const GetEqLength() {return eq_length_;}
     void SetEqLength(double const eq_length) {eq_length_ = eq_length;}
@@ -62,21 +62,21 @@ class BrownianDimer : public Composite<BrownianBead> {
 };
 
 #include "species.h"
-class BrownianDimerSpecies : public Species<BrownianDimer> {
+class BrDimerSpecies : public Species<BrDimer> {
   protected:
     void InitPotentials (system_parameters *params);
 
   public:
-    BrownianDimerSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
-      SetSID(SID::brownian_dimer);
+    BrDimerSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
+      SetSID(SID::br_dimer);
       InitPotentials(params);
     }
-    ~BrownianDimerSpecies() {}
-    BrownianDimerSpecies(const BrownianDimerSpecies& that) : Species(that) {}
+    ~BrDimerSpecies() {}
+    BrDimerSpecies(const BrDimerSpecies& that) : Species(that) {}
     Species& operator=(Species const& that) {
       SpeciesBase::operator=(that);
       return *this;
     }
 };
 
-#endif // _CYTOSCORE_BROWNIAN_DIMER_H_
+#endif // _SIMCORE_BR_DIMER_H_

@@ -178,6 +178,13 @@ void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_s
   boundary_type_ = space_->type;
   for (int i=0;i<3;++i)
     background_color_[i] = background;
+  z_correct_ = 0;
+  if (boundary_type_.compare("snowman")==0) {
+    double m_rad = space_->radius;
+    double d_rad = space_->bud_radius;
+    double m_d_dist = space_->bud_height;
+    z_correct_ = 0.5 * (m_d_dist + m_rad + d_rad) - m_rad;
+  }
   keep_going_ = 0;
   InitColormap();
   InitWindow();
@@ -485,7 +492,7 @@ void Graphics::DrawDiscorectangles() {
 
         glPushMatrix(); // Duplicate current modelview
         {
-            glTranslatef((*it)->r[0], (*it)->r[1], 0.0); // Translate rod
+            glTranslatef((*it)->r[0], (*it)->r[1]-z_correct_, 0.0); // Translate rod
             glRotatef((GLfloat) ((theta / M_PI) * 180.0 - 90.0), 0.0, 0.0, 1.0); // rotate rod
 
             // Tell shader about our spherocylinder parameters
@@ -631,7 +638,7 @@ void Graphics::DrawSpheros() {
         /* Get position of spherocylinder center. */
         GLfloat v0 = (*it)->r[0];
         GLfloat v1 = (*it)->r[1];
-        GLfloat v2 = (*it)->r[2];
+        GLfloat v2 = (*it)->r[2]-z_correct_;
 
         /* Let the shader know the length of our bond */
         GLfloat half_length = 0.5 * (*it)->length;
@@ -1038,13 +1045,12 @@ void Graphics::Draw3dSnowman() {
   glLineWidth(1.0);
   double m_angle = acos((SQR(m_d_dist) + SQR(m_rad) - SQR(d_rad))/(2.0 * m_d_dist * m_rad));
   double d_angle = acos((SQR(m_d_dist) + SQR(d_rad) - SQR(m_rad))/(2.0 * m_d_dist * d_rad));
-  double z_correct = 0.5 * (m_d_dist + m_rad + d_rad) - m_rad;
   for(int i = 0; i <= lats; i++) {
     double lat0 = -0.5 * M_PI + (M_PI-m_angle)*(double) (i - 1) / lats;
-    double z0  = m_rad*sin(lat0) - z_correct;
+    double z0  = m_rad*sin(lat0) - z_correct_;
     double zr0 =  cos(lat0);
     double lat1 = -0.5 * M_PI + (M_PI-m_angle)*(double) i / lats;
-    double z1 = m_rad*sin(lat1) - z_correct;
+    double z1 = m_rad*sin(lat1) - z_correct_;
     double zr1 = cos(lat1);
     glBegin(GL_QUAD_STRIP);
     for(int j = 0; j <= longs; j++) {
@@ -1062,10 +1068,10 @@ void Graphics::Draw3dSnowman() {
   longs = 10;
   for(int i = 0; i <= lats; i++) {
     double lat0 = d_angle - 0.5 * M_PI + (M_PI-d_angle)*(double) (i) / lats;
-    double z0  = d_rad*sin(lat0)- z_correct;
+    double z0  = d_rad*sin(lat0)- z_correct_;
     double zr0 =  cos(lat0);
     double lat1 = d_angle - 0.5 * M_PI + (M_PI-d_angle)*(double) (i+1) / lats;
-    double z1 = d_rad*sin(lat1) - z_correct;
+    double z1 = d_rad*sin(lat1) - z_correct_;
     double zr1 = cos(lat1);
     glBegin(GL_QUAD_STRIP);
     for(int j = 0; j <= longs; j++) {
@@ -1140,11 +1146,12 @@ void Graphics::UpdateWindow() {
     glScalef(xyzScale_, xyzScale_, xyzScale_);
 
     /* Set square aspect ratio from current window size */
-    int width, height;
-    glfwGetFramebufferSize(window_, &width, &height);
+    // COMMENTED OUT TO GET RID OF UGLY 2D SNOWMAN - JEFFREY M MOORE
+    //int width, height;
+    //glfwGetFramebufferSize(window_, &width, &height);
     
-    int minsize = MIN(width, height);
-    glViewport((width - minsize)/2, (height - minsize)/2, minsize, minsize);
+    //int minsize = MIN(width, height);
+    //glViewport((width - minsize)/2, (height - minsize)/2, minsize, minsize);
 
     /* Clear background */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

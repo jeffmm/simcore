@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_VELOCITY_VERLET_H_
-#define _CYTOSCORE_VELOCITY_VERLET_H_
+#ifndef _SIMCORE_VELOCITY_VERLET_H_
+#define _SIMCORE_VELOCITY_VERLET_H_
 
 #include "integrator.h"
 
@@ -24,4 +24,4 @@ class VelocityVerlet : public Integrator<T> {
     void Integrate();
 };
 
-#endif // _CYTOSCORE_VELOCITY_VERLET_H_
+#endif // _SIMCORE_VELOCITY_VERLET_H_

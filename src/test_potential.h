@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_TEST_POTENTIAL_H_
-#define _CYTOSCORE_TEST_POTENTIAL_H_
+#ifndef _SIMCORE_TEST_POTENTIAL_H_
+#define _SIMCORE_TEST_POTENTIAL_H_
 
 #include "auxiliary.h"
 #include "potential_base.h"

@@ -1,9 +1,10 @@
 #include "forces.h"
 
-void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, double cell_length) {
+void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, double cell_length, int draw_flag) {
   space_=space;
   n_dim_ = space->n_dim;
   n_periodic_ = space->n_periodic;
+  draw_flag_ = draw_flag;
   cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
   CheckOverlap(species);
   InitPotentials(species);
@@ -35,6 +36,10 @@ void Forces::LoadSimples(std::vector<SpeciesBase*> species) {
 }
 
 void Forces::Interact() {
+  if (draw_flag_) {
+    draw_ = false;
+    draw_array_.clear();
+  }
   for (auto it=interactions_.begin(); it!= interactions_.end(); ++it) {
     auto o1 = it->first;
     auto o2 = it->second;
@@ -97,22 +102,37 @@ void Forces::MinimumDistance(cell_interaction ix) {
   std::fill(contact2_, contact2_+3, 0.0);
   buffer_mag_ = 0.5*(d1+d2);
   buffer_mag2_ = buffer_mag_*buffer_mag_;
-  if (l1 == 0 && l2 == 0)
+  if (l1 == 0 && l2 == 0) {
     min_distance_point_point(n_dim_, n_periodic_, space_->unit_cell, 
                              r1, s1, r2, s2, dr_, &dr_mag2_);
-  else if (l1 == 0 && l2 > 0) 
+  }
+  else if (l1 == 0 && l2 > 0) {
     min_distance_sphere_sphero(n_dim_, n_periodic_, space_->unit_cell,
                                r1, s1, r2, s2, u2, l2,
                                dr_, &dr_mag2_, contact2_);
-  else if (l1 > 0 && l2 == 0) 
+  }
+  else if (l1 > 0 && l2 == 0) {
     min_distance_sphere_sphero(n_dim_, n_periodic_, space_->unit_cell,
                                r2, s2, r1, s1, u1, l1,
                                dr_, &dr_mag2_, contact1_);
-  else if (l1 > 0 && l2 > 0)
+  }
+  else if (l1 > 0 && l2 > 0) {
     min_distance_sphero(n_dim_, n_periodic_, space_->unit_cell,
                         r1, s1, u1, l1, r2, s2, u2, l2,
                         dr_, &dr_mag2_, contact1_, contact2_);
+  }
   dr_mag_ = sqrt(dr_mag2_);
+  if (draw_flag_) {
+    draw_ = true;
+    graph_struct g_;
+    for (int i=0; i<n_dim_; ++i) {
+      g_.r[i] = r1[i] + contact1_[i] + 0.5*dr_[i];
+      g_.u[i] = dr_[i]/dr_mag_;
+    }
+    g_.length = dr_mag_;
+    g_.diameter = 0.1;
+    draw_array_.push_back(g_);
+  }
 }
 
 interaction Forces::FirstInteraction(PotentialBase *pot) {
@@ -137,4 +157,12 @@ interaction Forces::SecondInteraction(PotentialBase *pot) {
   ix.potential = pot;
   return ix;
 }
+
+void Forces::Draw(std::vector<graph_struct*> * graph_array) {
+  if (!draw_)
+    return;
+  for (auto it=draw_array_.begin(); it!=draw_array_.end(); ++it)
+    graph_array->push_back(&(*it));
+}
+
 

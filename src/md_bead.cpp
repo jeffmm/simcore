@@ -1,7 +1,7 @@
 #include "md_bead.h"
 
 void MDBead::Init() {
-  Bead::Init();
+  Simple::Init();
   for (int i=0; i<n_dim_; ++i) {
     orientation_[i] = 1.0/sqrt(n_dim_);
     velocity_[i] = 4*(gsl_rng_uniform_pos(rng_.r)-0.5);
@@ -45,6 +45,8 @@ double const MDBead::GetKineticEnergy() {
 void MDBeadSpecies::InitPotentials (system_parameters *params) {
   AddPotential(SID::md_bead, SID::md_bead, 
       // Set md_bead-md_bead interaction
-      new LJ126(params->lj_epsilon,params->md_bead_diameter,
-        space_, 2.5*params->md_bead_diameter));
+      //new LJ126(params->lj_epsilon,params->md_bead_diameter,
+        //space_, 2.5*params->md_bead_diameter));
+    new WCA(params->lj_epsilon,params->md_bead_diameter,
+        space_, pow(2.0,1.0/6.0) *params->md_bead_diameter));
 }

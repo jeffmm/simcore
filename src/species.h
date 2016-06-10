@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_SPECIES_H_
-#define _CYTOSCORE_SPECIES_H_
+#ifndef _SIMCORE_SPECIES_H_
+#define _SIMCORE_SPECIES_H_
 
 #include "auxiliary.h"
 #include "object.h"
@@ -148,4 +148,4 @@ class Species : public SpeciesBase {
     }
 };
 
-#endif // _CYTOSCORE_SPECIES_H_
+#endif // _SIMCORE_SPECIES_H_

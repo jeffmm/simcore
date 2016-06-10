@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_OBJECT_H_
-#define _CYTOSCORE_OBJECT_H_
+#ifndef _SIMCORE_OBJECT_H_
+#define _SIMCORE_OBJECT_H_
 
 #include "auxiliary.h"
 
@@ -41,4 +41,4 @@ class Object {
     double GetLength() const;
 };
 
-#endif // _CYTOSCORE_OBJECT_H_
+#endif // _SIMCORE_OBJECT_H_
