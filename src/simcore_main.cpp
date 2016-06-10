@@ -4,7 +4,7 @@
 #include "parse_flags.h"
 #include "simulation_manager.h"
 /*************************
-   ::Cytoscore Main::
+   ::SimCORE Main::
    Parse commandline flags and start simulation manager
 **************************/
 int main(int argc, char *argv[]) {

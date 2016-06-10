@@ -29,7 +29,7 @@ static const std::string desc[n_flags][2] = {
 
 // Run parameters that needs to be carried forward should be stored here.
 struct run_options {
-  run_options() {n_runs = 1; debug = 0; f_flag = 0; r_flag = 0; n_flag = 0; run_name = "cs";}
+  run_options() {n_runs = 1; debug = 0; f_flag = 0; r_flag = 0; n_flag = 0; run_name = "sc";}
   int n_runs;
   int debug;
   int f_flag;

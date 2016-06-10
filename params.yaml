@@ -1,4 +1,4 @@
-# params.yam
+# params.yaml
 ---
 seed : 32679122673370
 n_runs: 1
