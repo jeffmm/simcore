@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_POTENTIAL_BASE_H_
-#define _CYTOSCORE_POTENTIAL_BASE_H_
+#ifndef _SIMCORE_POTENTIAL_BASE_H_
+#define _SIMCORE_POTENTIAL_BASE_H_
 
 #include "auxiliary.h"
 
@@ -38,4 +38,4 @@ class PotentialBase {
 typedef std::pair<sid_pair, PotentialBase*> potential_pair;
 typedef std::map<sid_pair, PotentialBase*> potential_map;
 
-#endif // _CYTOSCORE_POTENTIAL_BASE_H_
+#endif // _SIMCORE_POTENTIAL_BASE_H_

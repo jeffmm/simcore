@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_SIMULATION_H_
-#define _CYTOSCORE_SIMULATION_H_
+#ifndef _SIMCORE_SIMULATION_H_
+#define _SIMCORE_SIMULATION_H_
 
 #include "space.h"
 #include "auxiliary.h"
@@ -42,4 +42,4 @@ class Simulation {
     void Run(system_parameters params, std::string name);
 };
 
-#endif // _CYTOSCORE_SIMULATION_H_  
+#endif // _SIMCORE_SIMULATION_H_  

@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_GRAPH_H_
-#define _CYTOSCORE_GRAPH_H_
+#ifndef _SIMCORE_GRAPH_H_
+#define _SIMCORE_GRAPH_H_
 
 class Graph {
 
@@ -7,4 +7,4 @@ class Graph {
 
 }
 
-#endif // _CYTOSCORE_GRAPH_H_
+#endif // _SIMCORE_GRAPH_H_

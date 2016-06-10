@@ -1,25 +1,26 @@
-#ifndef _CYTOSCORE_MD_BEAD_H_
-#define _CYTOSCORE_MD_BEAD_H_
+#ifndef _SIMCORE_MD_BEAD_H_
+#define _SIMCORE_MD_BEAD_H_
 
 #include "species.h"
-#include "bead.h"
+#include "object.h"
 #include "auxiliary.h"
 #include "lennard_jones_12_6.h"
+#include "wca.h"
 
-class MDBead : public Bead {
+class MDBead : public Simple {
   protected:
     double mass_;
   public:
     MDBead(system_parameters *params, space_struct *space, 
-        long seed, SID sid) : Bead(params, space, seed, sid) {
+        long seed, SID sid) : Simple(params, space, seed, sid) {
       // Set parameters unique to MD bead
       diameter_ = params->md_bead_diameter;
       mass_ = params->md_bead_mass;
     }
     ~MDBead() {}
-    MDBead(const MDBead& that) : Bead(that) {}
+    MDBead(const MDBead& that) : Simple(that) {}
     MDBead& operator=(MDBead const& that) {
-      Bead::operator=(that); return *this;
+      Simple::operator=(that); return *this;
     }
     virtual void Init();
     virtual void UpdatePosition();
@@ -49,4 +50,4 @@ class MDBeadSpecies : public Species<MDBead> {
     }
 };
 
-#endif // _CYTOSCORE_MD_BEAD_H_
+#endif // _SIMCORE_MD_BEAD_H_

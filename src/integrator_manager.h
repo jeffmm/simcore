@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_INTEGRATOR_MANAGER_H_
-#define _CYTOSCORE_INTEGRATOR_MANAGER_H_
+#ifndef _SIMCORE_INTEGRATOR_MANAGER_H_
+#define _SIMCORE_INTEGRATOR_MANAGER_H_
 
 #include "integrator.h"
 
@@ -18,4 +18,4 @@ class IntegratorManager {
 };
 
 
-#endif // _CYTOSCORE_INTEGRATOR_MANAGER_H_
+#endif // _SIMCORE_INTEGRATOR_MANAGER_H_

@@ -29,10 +29,11 @@ struct graph_struct {
 enum class SID : unsigned char {
   none,
   md_bead,
-  brownian_bead,
-  brownian_dimer,
+  br_bead,
+  br_dimer,
   argon,
-  neon
+  neon,
+  br_rod
 };
 
 typedef std::pair<SID, SID> sid_pair;

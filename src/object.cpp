@@ -105,7 +105,7 @@ void Object::InsertRandom(double buffer) {
       position_[n_dim_-1] += space_->bud_height;
     }
     else {
-      mag *= (space_->radius - buffer);
+      mag *= (R - buffer);
       for (int i=0; i<n_dim_; ++i) {
         position_[i] *= mag;
       }
@@ -117,6 +117,7 @@ void Object::InsertRandom(double buffer) {
 void Object::Draw(std::vector<graph_struct*> * graph_array) {
   std::copy(position_, position_+3, g_.r);
   std::copy(orientation_, orientation_+3, g_.u);
+  //g_.length = (length_-diameter_ > 0 ? length_-diameter_ : 0);
   g_.length = length_;
   g_.diameter = diameter_;
   graph_array->push_back(&g_);
