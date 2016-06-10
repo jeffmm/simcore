@@ -37,7 +37,7 @@ void SimulationManager::DebugMode() {
    *************************************/
 void SimulationManager::InitManager(std::string param_file) {
   n_runs_=1;  // default number of runs
-  run_name_="cs"; // default run name
+  run_name_="sc"; // default run name
   param_file_ = param_file;
   YAML::Node node = YAML::LoadFile(param_file_);
   long seed = 71348958934175; // default seed... should be overwritten
