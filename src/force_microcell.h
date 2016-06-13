@@ -14,11 +14,13 @@ class ForceMicrocell : public ForceBase {
 
     virtual void Init(space_struct* pSpace, double pSkin) {
         // Override this to call base class, then initmp
+        printf("ForceMicrocell::Init\n");
         ForceBase::Init(pSpace, pSkin);
         InitMP();
     }
 
     virtual void InitMP();
+    virtual void Finalize();
     virtual void UpdateScheme();
     virtual void Interact();
 

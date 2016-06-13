@@ -16,6 +16,7 @@ class ForceBrute : public ForceBase {
     // LoadSimples is the same
 
     virtual void InitMP();
+    virtual void Finalize();
     virtual void UpdateScheme();
     virtual void Interact();
 };
