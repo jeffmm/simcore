@@ -23,8 +23,6 @@ class ForceBase {
     virtual ~ForceBase() {
         space_ = NULL;
         simples_.clear();
-        //frc_.clear();
-        //prc_energy_.clear();
         delete[] frc_;
         delete[] trqc_;
         delete[] prc_energy_;
@@ -52,8 +50,9 @@ class ForceBase {
 
     // Derived/calculated quantities
     bool initialized_ = false;
-    int nthreads_;
-    int nparticles_;
+    int nthreads_ = 1;
+    int nparticles_ = 0;
+    double max_rcut_ = 0.0;
     
     space_struct* space_;
 

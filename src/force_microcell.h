@@ -12,12 +12,9 @@ class ForceMicrocell : public ForceBase {
     ForceMicrocell() {}
     virtual ~ForceMicrocell() {}
 
-    virtual void Init(space_struct* pSpace, double pSkin) {
-        // Override this to call base class, then initmp
-        printf("ForceMicrocell::Init\n");
-        ForceBase::Init(pSpace, pSkin);
-        InitMP();
-    }
+    // Override these functions, need special stuff
+    virtual void Init(space_struct* pSpace, double pSkin);
+    virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
 
     virtual void InitMP();
     virtual void Finalize();

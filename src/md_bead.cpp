@@ -52,7 +52,7 @@ void MDBeadSpecies::InitPotentials (system_parameters *params) {
   AddPotential(SID::md_bead, SID::md_bead, 
       // Set md_bead-md_bead interaction
       //new LJ126(params->lj_epsilon,params->md_bead_diameter,
-        //space_, 2.5*params->md_bead_diameter));
+      //  space_, 2.5*params->md_bead_diameter));
     new WCA(params->lj_epsilon,params->md_bead_diameter,
         space_, pow(2.0,1.0/6.0) *params->md_bead_diameter));
 }

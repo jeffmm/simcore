@@ -46,12 +46,16 @@ void Simulation::IntegrateMP() {
 }
 
 void Simulation::Interact() {
-  if (i_step_%params_.n_update_cells==0)
+  if (i_step_%params_.n_update_cells==0) {
     forces_.UpdateCellList(species_);
+  }
   forces_.Interact();
 }
 
 void Simulation::InteractMP() {
+  if (i_step_ % params_.n_update_cells == 0) {
+    forces_.UpdateScheme(species_);
+  }
   forces_.InteractMP();
 }
 

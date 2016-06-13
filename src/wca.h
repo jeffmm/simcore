@@ -11,7 +11,7 @@ class WCA : public PotentialBase {
     double shift_;
   public:
     WCA(double pEps, double pSigma, space_struct* pSpace, double pRcut) : PotentialBase(pSpace, pRcut), eps_(pEps), sigma_(pSigma) {
-      pot_name_ = "Lennard Jones 12-6";
+      pot_name_ = "WCA";
       c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
       c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
     }

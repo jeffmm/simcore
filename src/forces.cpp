@@ -10,16 +10,18 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, double
   InitPotentials(species);
 
   // XXX: Cje init my own forces
-  test_force_->Init(space, 0.0);
-  test_force_->LoadSimples(species);
-  test_force_->InitPotentials(species);
-  test_force_->Finalize();
+  //test_force_->Init(space, 0.0);
+  //test_force_->LoadSimples(species);
+  //test_force_->InitPotentials(species);
+  //test_force_->Finalize();
 
   // XXX: CJE test the microcell list?
   test_microcell_f_->Init(space, 0.0);
   test_microcell_f_->LoadSimples(species);
   test_microcell_f_->InitPotentials(species);
   test_microcell_f_->Finalize();
+  // XXX:
+  test_microcell_f_->UpdateScheme();
 }
 
 void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
@@ -53,6 +55,11 @@ void Forces::UpdateCellList(std::vector<SpeciesBase*> species) {
   interactions_ = cell_list_.GetInteractions();
 }
 
+void Forces::UpdateScheme(std::vector<SpeciesBase*> species) {
+  LoadSimples(species);
+  test_microcell_f_->UpdateScheme();
+}
+
 void Forces::LoadSimples(std::vector<SpeciesBase*> species) {
   simples_.clear();
   for (auto it=species.begin(); it!=species.end(); ++it) {
@@ -62,7 +69,8 @@ void Forces::LoadSimples(std::vector<SpeciesBase*> species) {
 }
 
 void Forces::InteractMP() {
-    test_force_->Interact();
+    //test_force_->Interact();
+    test_microcell_f_->Interact();
 }
 
 void Forces::Interact() {
