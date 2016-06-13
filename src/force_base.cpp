@@ -68,6 +68,7 @@ ForceBase::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
 
     // Create the force and potential energy superarrays
     frc_ = new double[nthreads_*3*nparticles_];
+    trqc_ = new double[nthreads_*3*nparticles_];
     prc_energy_ = new double[nthreads_*nparticles_];
 }
 

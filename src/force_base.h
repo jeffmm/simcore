@@ -26,6 +26,7 @@ class ForceBase {
         //frc_.clear();
         //prc_energy_.clear();
         delete[] frc_;
+        delete[] trqc_;
         delete[] prc_energy_;
         oid_position_map_.clear();
     }
@@ -58,6 +59,7 @@ class ForceBase {
 
     std::vector<Simple*> simples_;
     double* frc_; // Force superarray
+    double* trqc_; // torque superarray
     double* prc_energy_; // Potential energy superarray
     std::unordered_map<int, int> oid_position_map_; // oid to position mapping!!!
 
