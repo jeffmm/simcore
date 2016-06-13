@@ -1,7 +1,7 @@
 // Microcell list!
 
-#ifndef _CYTOSCORE_MICROCELL_LIST_H_
-#define _CYTOSCORE_MICROCELL_LIST_H_
+#ifndef _SIMCORE_MICROCELL_LIST_H_
+#define _SIMCORE_MICROCELL_LIST_H_
 
 #include "force_substructure_base.h"
 

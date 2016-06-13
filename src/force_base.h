@@ -1,8 +1,8 @@
 // Basic type of force, will depend on what is the underlying force generation structure
 // i.e. brute force, cell list, neighbor list, etc
 
-#ifndef _CYTOSCORE_FORCE_BASE_H_
-#define _CYTOSCORE_FORCE_BASE_H_
+#ifndef _SIMCORE_FORCE_BASE_H_
+#define _SIMCORE_FORCE_BASE_H_
 
 #include <unordered_map>
 #include <memory>
