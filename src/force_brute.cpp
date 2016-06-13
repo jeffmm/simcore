@@ -18,9 +18,22 @@ ForceBrute::UpdateScheme() {
 }
 
 
+// Finalize everything, here it is fine, but have to set 
+// the boolean flag
+void
+ForceBrute::Finalize() {
+    initialized_ = true;
+}
+
+
 // Interactions between particles yay!
 void
 ForceBrute::Interact() {
+
+    if (!initialized_) {
+        printf("ERROR: Finalized was not run for ForceBrute, exiting!\n");
+        exit(1);
+    }
  
     #ifdef ENABLE_OPENMP
     #pragma omp parallel
