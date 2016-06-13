@@ -35,6 +35,7 @@ class ForceBase {
     virtual void InitPotentials(std::vector<SpeciesBase*> pSpecies);
     virtual void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& idm);
 
+    virtual void Finalize() = 0; // AFter we do everything, we must finalize it for safety
     virtual void InitMP() = 0; // init the underlying scheme
     virtual void UpdateScheme() = 0; // updates the underlying scheme (cell, neighbor, etc)
     virtual void Interact() = 0; // Main interaction routine!!!!!!!
@@ -49,6 +50,7 @@ class ForceBase {
     double box_[3];
 
     // Derived/calculated quantities
+    bool initialized_ = false;
     int nthreads_;
     int nparticles_;
     
