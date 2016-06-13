@@ -1,6 +1,6 @@
 *.swp
-/cytoscore
-/configure_cytoscore
+/simcore
+/configure_simcore
 /src/*.o
 *.dSYM/*
 tags
@@ -11,3 +11,4 @@ tags
 /*.xyz
 /data
 *ipynb_checkpoints
+.DS_Store

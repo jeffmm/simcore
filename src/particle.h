@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_PARTICLE_H_
-#define _CYTOSCORE_PARTICLE_H_
+#ifndef _SIMCORE_PARTICLE_H_
+#define _SIMCORE_PARTICLE_H_
 
 #include "object.h"
 
@@ -13,4 +13,4 @@ Particle::Particle(int n_dim) : Object(n_dim) {
   simple_ = true;
 }
 
-#endif // _CYTOSCORE_PARTICLE_H_
+#endif // _SIMCORE_PARTICLE_H_

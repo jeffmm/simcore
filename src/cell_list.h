@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_CELL_LIST_H_
-#define _CYTOSCORE_CELL_LIST_H_
+#ifndef _SIMCORE_CELL_LIST_H_
+#define _SIMCORE_CELL_LIST_H_
 
 #include "auxiliary.h"
 #include "object.h"
@@ -49,4 +49,4 @@ class CellList {
 
 };
 
-#endif // _CYTOSCORE_CELL_LIST_H_
+#endif // _SIMCORE_CELL_LIST_H_
