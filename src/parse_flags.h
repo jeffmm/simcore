@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_PARSE_FLAGS_H_
-#define _CYTOSCORE_PARSE_FLAGS_H_
+#ifndef _SIMCORE_PARSE_FLAGS_H_
+#define _SIMCORE_PARSE_FLAGS_H_
 #include <getopt.h>
 #include <string>
 
@@ -29,7 +29,7 @@ static const std::string desc[n_flags][2] = {
 
 // Run parameters that needs to be carried forward should be stored here.
 struct run_options {
-  run_options() {n_runs = 1; debug = 0; f_flag = 0; r_flag = 0; n_flag = 0; run_name = "cs";}
+  run_options() {n_runs = 1; debug = 0; f_flag = 0; r_flag = 0; n_flag = 0; run_name = "sc";}
   int n_runs;
   int debug;
   int f_flag;
@@ -112,4 +112,4 @@ run_options parse_opts(int argc, char *argv[]) {
   return run_opts;
 }
 
-#endif // _CYTOSCORE_PARSE_FLAGS_H_
+#endif // _SIMCORE_PARSE_FLAGS_H_

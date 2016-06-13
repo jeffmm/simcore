@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_OBJECT_H_
-#define _CYTOSCORE_OBJECT_H_
+#ifndef _SIMCORE_OBJECT_H_
+#define _SIMCORE_OBJECT_H_
 
 #include "auxiliary.h"
 
@@ -117,8 +117,10 @@ class Simple : public Object {
     void SetCID(unsigned int const cid) {cid_=cid;}
 };
 
+template<typename...> class Composite;
+
 template <typename T>
-class Composite : public Object {
+class Composite<T> : public Object {
   protected:
     std::vector<T> elements_;
   public:
@@ -152,5 +154,44 @@ class Composite : public Object {
     }
 };
 
+template <typename T, typename V>
+class Composite<T,V> : public Object {
+  protected:
+    std::vector<T> elements_;
+    std::vector<V> v_elements_;
+  public:
+    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {
+      cid_ = NextCID();
+      is_simple_=false;
+    } 
+    //Destructor
+    virtual ~Composite() {}
+    //Copy constructor
+    Composite(const Composite& that) : Object(that) {
+      elements_=that.elements_;
+      v_elements_ = that.v_elements_;
+    }
+    //Assignment constructor
+    Composite& operator=(Composite const& that) {
+      Object::operator=(that);
+      elements_=that.elements_;
+      v_elements_ = that.v_elements_;
+      return *this;
+    }
+    virtual void ZeroForce() {
+      std::fill(force_,force_+3,0.0);
+      for (auto it=elements_.begin(); it!=elements_.end(); ++it)
+        it->ZeroForce();
+      for (auto it=v_elements_.begin(); it!=v_elements_.end(); ++it)
+        it->ZeroForce();
+    }
+    virtual std::vector<Simple*> GetSimples() {
+      std::vector<Simple*> sim_vec;
+      for (auto it=v_elements_.begin(); it!=v_elements_.end(); ++it)
+        sim_vec.push_back(&(*it));
+      return sim_vec;
+    }
+};
 
-#endif // _CYTOSCORE_OBJECT_H_
+
+#endif // _SIMCORE_OBJECT_H_

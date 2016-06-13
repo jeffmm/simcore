@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_INTERACTION_H_
-#define _CYTOSCORE_INTERACTION_H_
+#ifndef _SIMCORE_INTERACTION_H_
+#define _SIMCORE_INTERACTION_H_
 
 #include "auxiliary.h"
 
@@ -14,4 +14,4 @@ class Interaction : public InteractionBase {
 
 }
 
-#endif // _CYTOSCORE_INTERACTION_H_
+#endif // _SIMCORE_INTERACTION_H_

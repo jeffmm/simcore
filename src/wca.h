@@ -1,23 +1,19 @@
-#ifndef _SIMCORE_LJ126_H_
-#define _SIMCORE_LJ126_H_
+#ifndef _SIMCORE_WCA_H_
+#define _SIMCORE_WCA_H_
 
 #include "auxiliary.h"
 #include "potential_base.h"
 
-class LJ126 : public PotentialBase {
+class WCA : public PotentialBase {
   protected:
     double eps_, sigma_;
     double c12_, c6_;
     double shift_;
   public:
-    LJ126(double pEps, double pSigma, space_struct* pSpace, double pRcut) : PotentialBase(pSpace, pRcut), eps_(pEps), sigma_(pSigma) {
+    WCA(double pEps, double pSigma, space_struct* pSpace, double pRcut) : PotentialBase(pSpace, pRcut), eps_(pEps), sigma_(pSigma) {
       pot_name_ = "Lennard Jones 12-6";
       c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
       c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
-      // Shift potential so it goes to zero at rcut
-      double rcutinv = 1.0/pRcut;
-      double rcutinv6 = pow(rcutinv, 6.0);
-      shift_ = rcutinv6*(c12_*rcutinv6 - c6_);
     }
     virtual void Print() {
         PotentialBase::Print();
@@ -37,8 +33,8 @@ class LJ126 : public PotentialBase {
 
       ffac = -(12.0*c12_*r6 - 6.0*c6_)*r6*rinv;
       for (int i = 0; i < n_dim_; ++i) 
-        fpote[i] = dr[i]*ffac;
-      fpote[n_dim_] = r6*(c12_*r6 - c6_) - shift_;
+        fpote[i] = ffac*dr[i]/dr_mag;
+      fpote[n_dim_] = r6*(c12_*r6 - c6_) + eps_;
     }
 };
 

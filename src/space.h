@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_SPACE_PROPERTIES_H_
-#define _CYTOSCORE_SPACE_PROPERTIES_H_
+#ifndef _SIMCORE_SPACE_PROPERTIES_H_
+#define _SIMCORE_SPACE_PROPERTIES_H_
 
 #include <gsl/gsl_rng.h>
 #include <math.h>
@@ -66,4 +66,4 @@ class SpaceProperties {
     //static void InsertRandom(double pos[3], double buffer);
 };
 
-#endif // _CYTOSCORE_SPACE_PROPERTIES_H_
+#endif // _SIMCORE_SPACE_PROPERTIES_H_
