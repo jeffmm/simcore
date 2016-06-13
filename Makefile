@@ -90,18 +90,18 @@ endif
 
 # Now we have to figure out which we are building of the program list, since that matters
 # for things like not compiling more than one main
-CYTOSCORE_SOURCE = $(SRCDIR)/cytoscore_main.cpp
-CONFIGURE_CYTOSCORE_SOURCE = $(SRCDIR)/configure_cytoscore.cpp
-EXCLUDE_SOURCES = $(SRCDIR)/integrator_manager.cpp $(SRCDIR)/make_params.cpp
+SIMCORE_SOURCE = $(SRCDIR)/simcore_main.cpp
+CONFIGURE_SIMCORE_SOURCE = $(SRCDIR)/configure_simcore.cpp
+EXCLUDE_SOURCES = $(SRCDIR)/integrator_manager.cpp $(SRCDIR)/make_params.cpp $(SRCDIR)/br_rod.cpp
 
-MAIN_SOURCES = $(CYTOSCORE_SOURCE) $(CONFIGURE_CYTOSCORE_SOURCE)
+MAIN_SOURCES = $(SIMCORE_SOURCE) $(CONFIGURE_SIMCORE_SOURCE)
 
 # These are the common sources
 SRCS = $(filter-out $(MAIN_SOURCES) $(EXCLUDE_SOURCES), $(SOURCES))
 
 OBJECTS = $(SRCS:$(SRCDIR)/%.$(SRCEXT)=$(OBJDIR)/%.o)
-CYTOSCORE_MAIN_OBJ = $(CYTOSCORE_SOURCE:$(SRCDIR)/%.$(SRCEXT)=$(OBJDIR)/%.o)
-CONFIGURE_CYTOSCORE_OBJ = $(CONFIGURE_CYTOSCORE_SOURCE:$(SRCDIR)/%.$(SRCEXT)=$(OBJDIR)/%.o)
+SIMCORE_MAIN_OBJ = $(SIMCORE_SOURCE:$(SRCDIR)/%.$(SRCEXT)=$(OBJDIR)/%.o)
+CONFIGURE_SIMCORE_OBJ = $(CONFIGURE_SIMCORE_SOURCE:$(SRCDIR)/%.$(SRCEXT)=$(OBJDIR)/%.o)
 DEPS = $(OBJECTS:.o=.d)
 
 .PHONY: dirs
@@ -114,14 +114,14 @@ clean:
 	$(RM) -r $(OBJDIR)
 	$(RM) -r $(BINDIR)
 
-cytoscore: dirs $(BINDIR)/cytoscore
+simcore: dirs $(BINDIR)/simcore
 
-configure_cytoscore: dirs $(BINDIR)/configure_cytoscore
+configure_simcore: dirs $(BINDIR)/configure_simcore
 
-$(BINDIR)/cytoscore: $(OBJECTS) $(CYTOSCORE_MAIN_OBJ)
+$(BINDIR)/simcore: $(OBJECTS) $(SIMCORE_MAIN_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
-$(BINDIR)/configure_cytoscore: $(OBJECTS) $(CONFIGURE_CYTOSCORE_OBJ)
+$(BINDIR)/configure_simcore: $(OBJECTS) $(CONFIGURE_SIMCORE_OBJ)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@
 
 # add dependencies
