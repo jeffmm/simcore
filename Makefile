@@ -114,6 +114,11 @@ clean:
 	$(RM) -r $(OBJDIR)
 	$(RM) -r $(BINDIR)
 
+.PHONY : clean-output
+clean-output :
+	rm -f *.posit *.config *.thermo *.initial_config.* *.final_config *.final_config.* \
+	*.checkpoint.* *.checkpoint *.thermo_ext sphero.crosslinks.* test-log
+
 simcore: dirs $(BINDIR)/simcore
 
 configure_simcore: dirs $(BINDIR)/configure_simcore
