@@ -40,9 +40,8 @@ ForceBrute::Interact() {
     #endif
     {
         int tid;
-        //double **fr;
-        //fr = (double**)malloc(3 * sizeof(double*));
         double **fr = new double*[3];
+        double **tr = new double*[3];
         double *pr_energy;
 
         #ifdef ENABLE_OPENMP
@@ -51,14 +50,16 @@ ForceBrute::Interact() {
         tid = 0;
         #endif
 
-        // Set up the pointers to the force superarray
+        // Set up the pointers to the force  and torque superarrays
         // Do all 3 dimensions just to be safe
         for (int i = 0; i < 3; ++i) {
             fr[i] = frc_ + ((3*tid+i)*nparticles_);
+            tr[i] = trqc_ + ((3*tid+i)*nparticles_);
         }
 
         for (int i = 0; i < 3*nparticles_; ++i) {
             (*fr)[i] = 0.0;
+            (*tr)[i] = 0.0;
         }
 
         pr_energy = prc_energy_ + (tid * nparticles_);
@@ -94,11 +95,26 @@ ForceBrute::Interact() {
                 // Fire off the potential calculation
                 double fepot[4];
                 pot->CalcPotential(idm.dr, idm.dr_mag, idm.buffer_mag, fepot);
+
+                // Do the potential energies
                 pr_energy[oid1x] += fepot[ndim_];
                 pr_energy[oid2x] += fepot[ndim_];
+
+                // Do the forces
                 for (int i = 0; i < ndim_; ++i) {
                     fr[i][oid1x] += fepot[i];
                     fr[i][oid2x] -= fepot[i];
+                }
+
+                // Calculate the torques
+                double tau[3];
+                cross_product(idm.contact1, fepot, tau, ndim_);
+                for (int i = 0; i < ndim_; ++i) {
+                    tr[i][oid1x] += tau[i];
+                }
+                cross_product(idm.contact2, fepot, tau, ndim_);
+                for (int i = 0; i < ndim_; ++i) {
+                    tr[i][oid2x] -= tau[i];
                 }
             }
         } // pragma omp for schedule(runtime) nowait
@@ -128,6 +144,7 @@ ForceBrute::Interact() {
 
             for (int j = fromidx; j < toidx; ++j) {
                 frc_[j] += frc_[offs+j];
+                trqc_[j] += trqc_[offs+j];
             }
         }
 
@@ -141,7 +158,10 @@ ForceBrute::Interact() {
             }
         }
 
-        free(fr);
+        //free(fr);
+        //free(tr);
+        delete[] fr;
+        delete[] tr;
     } // pragma omp parallel
 
 
@@ -153,8 +173,7 @@ ForceBrute::Interact() {
         double subtorque[3] = {0.0, 0.0, 0.0};
         for (int idim = 0; idim < ndim_; ++idim) {
             subforce[idim] = frc_[idim*nparticles_+oidx];
-            // XXX: CJE Replace with actual torque eventually
-            subtorque[idim] = frc_[idim*nparticles_+oidx]; 
+            subtorque[idim] = trqc_[idim*nparticles_+oidx]; 
         }
         part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[oidx]);
     }
