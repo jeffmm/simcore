@@ -10,9 +10,9 @@ mother_daughter_dist: 22
 boundary_type: 1
 n_dimer: 0
 #n_md_bead: 108
-n_md_bead: 10
-#md_bead_diameter: 3.405
-md_bead_diameter: 1.0
+n_md_bead: 40
+md_bead_diameter: 3.405
+#md_bead_diameter: 1.0
 md_bead_mass: 1
 n_br_bead: 0
 br_bead_diameter: 1.2
@@ -27,7 +27,7 @@ n_graph: 100
 delta: 0.0001
 #delta: 0.00001
 #n_steps: 10000
-n_steps: 100
+n_steps: 10000
 n_update_cells: 10
 time_flag: 1
 energy_analysis_flag: 1
