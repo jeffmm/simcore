@@ -1,8 +1,8 @@
 // Brute force calculation of forces
 // O(N^2) at best
 
-#ifndef _CYTOSCORE_FORCE_BRUTE_H_
-#define _CYTOSCORE_FORCE_BRUTE_H_
+#ifndef _SIMCORE_FORCE_BRUTE_H_
+#define _SIMCORE_FORCE_BRUTE_H_
 
 #include "force_base.h"
 

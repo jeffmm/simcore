@@ -1,8 +1,8 @@
 // Force substructure base
 // IE Cell lists, neighbor lists, neighbor lists with cell lists
 
-#ifndef _CYTOSCORE_FORCE_SUBSTRUCTURE_BASE_H_
-#define _CYTOSCORE_FORCE_SUBSTRUCTURE_BASE_H_
+#ifndef _SIMCORE_FORCE_SUBSTRUCTURE_BASE_H_
+#define _SIMCORE_FORCE_SUBSTRUCTURE_BASE_H_
 
 #include "auxiliary.h"
 #include "species.h"

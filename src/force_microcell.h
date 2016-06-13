@@ -1,7 +1,7 @@
 // Microcell force computation
 
-#ifndef _CYTOSCORE_FORCE_MICROCELL_H_
-#define _CYTOSCORE_FORCE_MICROCELL_H_
+#ifndef _SIMCORE_FORCE_MICROCELL_H_
+#define _SIMCORE_FORCE_MICROCELL_H_
 
 #include "force_base.h"
 #include "microcell_list.h"
