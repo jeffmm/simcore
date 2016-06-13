@@ -134,7 +134,6 @@ $(BINDIR)/configure_simcore: $(OBJECTS) $(CONFIGURE_SIMCORE_OBJ)
 
 # source file rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
-	@echo "normal objdir"
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
 
 
