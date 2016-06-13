@@ -1,5 +1,5 @@
-#ifndef _CYTOSCORE_SIMULATION_MANAGER_H_
-#define _CYTOSCORE_SIMULATION_MANAGER_H_
+#ifndef _SIMCORE_SIMULATION_MANAGER_H_
+#define _SIMCORE_SIMULATION_MANAGER_H_
 
 #include "simulation.h"
 #include <yaml-cpp/yaml.h>
@@ -34,4 +34,4 @@ class SimulationManager {
 
 
 
-#endif // _CYTOSCORE_SIMULATION_MANAGER_H_ 
+#endif // _SIMCORE_SIMULATION_MANAGER_H_ 

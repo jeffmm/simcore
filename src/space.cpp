@@ -19,6 +19,8 @@ void SpaceProperties::Init(system_parameters *params, long seed) {
     boundary_type_ = (params_->boundary_type == 0 ? SPHERE : BOX);
   }
   else if (params_->boundary_type == 2) {
+    n_periodic_ = 0;
+    params_->n_periodic = 0;
     d_radius_ = params_->daughter_radius;
     m_d_dist_ = params_->mother_daughter_dist;
     if (d_radius_ > radius_) 

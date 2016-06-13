@@ -1,3 +1,5 @@
 #include "md_bead.h"
-#include "brownian_dimer.h"
-#include "brownian_bead.h"
+#include "br_dimer.h"
+#include "br_bead.h"
+#include "argon.h"
+#include "neon.h"
