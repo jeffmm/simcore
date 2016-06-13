@@ -27,7 +27,9 @@ class ForceSubstructureBase {
     // Inputs that are needed
     int ndim_;
     int nperiodic_;
-    double skin_;
+    double skin_ = 0.0;
+    double rcut_ = 0.0;
+    double rbuff_ = 0.0; // buffer of rcut + skin
     double box_[3];
 
     space_struct* space_;

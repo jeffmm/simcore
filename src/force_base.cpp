@@ -33,8 +33,10 @@ void
 ForceBase::InitPotentials(std::vector<SpeciesBase*> pSpecies) {
     for (auto it = pSpecies.begin(); it != pSpecies.end(); ++it) {
         auto pot_vec = (*it)->GetPotentials();
-        for (auto jt=pot_vec.begin(); jt!=pot_vec.end(); ++jt)
+        for (auto jt=pot_vec.begin(); jt!=pot_vec.end(); ++jt) {
             potentials_.AddPotential(jt->first.first,jt->first.second,jt->second);
+            max_rcut_ = std::max(max_rcut_, jt->second->GetRCut());
+        }
     }
     
     potentials_.Print();
