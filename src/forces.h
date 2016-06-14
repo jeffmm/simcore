@@ -24,6 +24,7 @@ class Forces {
            dr_mag2_,
            buffer_mag_,
            buffer_mag2_;
+    FTYPE force_type_;
     space_struct *space_;
     std::vector<Simple*> simples_; 
     std::vector<cell_interaction> interactions_;
@@ -31,20 +32,22 @@ class Forces {
     PotentialManager potentials_;
 
     //ForceBase* test_force_;
-    ForceMicrocell* test_microcell_f_;
+    //ForceMicrocell* test_microcell_f_;
+    ForceBase* force_module_;
   public:
     Forces() {
         //test_force_ = forceFactory<ForceBrute>();
-        test_microcell_f_ = forceFactory<ForceMicrocell>();
+        //test_microcell_f_ = forceFactory<ForceMicrocell>();
     }
     ~Forces() {
         //delete(test_force_);
-        delete(test_microcell_f_);
+        //delete(test_microcell_f_);
+        delete(force_module_);
     }
 
     std::vector<graph_struct> draw_array_;
   public:
-    void Init(space_struct *space, std::vector<SpeciesBase*> species, double cell_length, int draw_flag);
+    void Init(space_struct *space, std::vector<SpeciesBase*> species, int pIntFtype, double cell_length, int draw_flag);
     void UpdateScheme(std::vector<SpeciesBase*> species);
     void UpdateCellList(std::vector<SpeciesBase*> species);
     void LoadSimples(std::vector<SpeciesBase*> species);

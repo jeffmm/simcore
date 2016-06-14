@@ -7,7 +7,7 @@ BINDIR = bin
 SRCEXT = cpp
 
 COMPILE_FLAGS = -std=c++11
-RCOMPILE_FLAGS = -D NDEBUG -O3 
+RCOMPILE_FLAGS = -D NDEBUG -O2 -march=native
 DCOMPILE_FLAGS = -D DEBUG -O0 -g
 LINK_FLAGS = -gnu 
 RLINK_FLAGS = 
@@ -30,7 +30,8 @@ ifeq ($(UNAME_S),Darwin)
 	GLXLIBS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew 
 	GSLLIBS = -lgsl -lgslcblas
 	FFTLIBS = -L/usr/lib64 -lfftw3
-	LIBS = -L/usr/local/lib $(GLXLIBS) $(GSLLIBS) $(FFTLIBS) -lyaml-cpp
+	YAMLLIBS = -L/Users/cedelmaier/Projects/Biophysics/cytoscore/yaml-cpp/build -lyaml-cpp
+	LIBS = $(GLXLIBS) $(GSLLIBS) $(FFTLIBS) $(YAMLLIBS) -L/usr/local/lib
 else
 	GSLINCS = -I/usr/local/include
 	GSLLIBS = -L/usr/local/libs -lgsl -lgslcblas -lm
