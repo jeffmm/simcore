@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "forces.h"
 
 void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pIntFtype, double cell_length, int draw_flag) {
@@ -29,7 +31,7 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
         printf("Must specify a force substructure, exiting!\n");
         break;
   }
-  //cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
+  cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
   CheckOverlap(species);
   //InitPotentials(species);
 
@@ -110,6 +112,8 @@ void Forces::Interact() {
 }
 
 void Forces::CheckOverlap(std::vector<SpeciesBase*> species) {
+  auto starttime = std::chrono::steady_clock::now();
+
   bool overlap = true;
   int num = 0;
   do {
@@ -134,6 +138,8 @@ void Forces::CheckOverlap(std::vector<SpeciesBase*> species) {
     if (num > 10000)
       error_exit("ERROR: Too many overlaps detected. Check packing ratio for objects.\n");
   } while (overlap);
+  auto endtime = std::chrono::steady_clock::now();
+  std::cout << "Forces::CheckOverlap: " << std::chrono::duration<double, std::milli> (endtime-starttime).count() << "ms\n";
 }
 
 void Forces::MinimumDistance(cell_interaction ix) {
