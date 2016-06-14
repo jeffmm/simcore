@@ -10,6 +10,7 @@
 // CJE stuff here
 #include "force_brute.h"
 #include "force_microcell.h"
+#include "force_cell.h"
 
 class Forces {
   private:

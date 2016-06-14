@@ -126,8 +126,8 @@ MicrocellList::CreateSubstructure(double pRcut) {
 
     printf("********\n");
     printf("Microcell list (ndim=%d) has %dx%dx%d=%d cells of lengths {%.2f, %.2f, %.2f} "
-           "with %d/%d pairs and %d particles/cell.\n", ndim_, T_[0], T_[1], T_[2], ncells_, 
-           S_[0], S_[1], S_[2], npairs_, ncells_*(ncells_-1)/2, nidx_);
+           "with %d/%d pairs and %d particles/cell (tot %d).\n", ndim_, T_[0], T_[1], T_[2], ncells_, 
+           S_[0], S_[1], S_[2], npairs_, ncells_*(ncells_-1)/2, nidx_, nparticles_);
     std::cout << "MicrocellList::CreateSubstructure: " << std::chrono::duration<double, std::milli> (end-start).count() << "ms\n";
 }
 
