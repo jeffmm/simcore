@@ -25,7 +25,7 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
     case 3:
         printf("Using cells force substructure (not yet implemented)\n");
         force_type_ = FTYPE::cells;
-        exit(1);
+        force_module_ = forceFactory<ForceCell>();
         break;
     default:
         printf("Must specify a force substructure, exiting!\n");
