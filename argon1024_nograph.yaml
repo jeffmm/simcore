@@ -10,7 +10,6 @@ daughter_radius: 20
 mother_daughter_dist: 22
 boundary_type: 1
 n_dimer: 0
-#n_argon: 768
 n_argon: 1024
 argon_diameter: 3.405
 argon_mass: 39.948

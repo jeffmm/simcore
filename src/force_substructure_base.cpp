@@ -29,7 +29,7 @@ ForceSubstructureBase::Init(space_struct* pSpace, double pSkin) {
 // Load the simple particles into the master vector
 void
 ForceSubstructureBase::LoadFlatSimples(std::vector<Simple*> pSimples) {
-  
+ 
     // Load everything from the our given simples
     simples_.clear();
     simples_.insert(simples_.end(), pSimples.begin(), pSimples.end());
