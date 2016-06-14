@@ -245,6 +245,12 @@ else if (param_name.compare("n_argon") == 0){
 else if (param_name.compare("n_neon") == 0){
   params_[i_var].n_neon = atoi(param_value.c_str());
 }
+else if (param_name.compare("argon_rcutoff") == 0){
+  params_[i_var].argon_rcutoff = atof(param_value.c_str());
+}
+else if (param_name.compare("neon_rcutoff") == 0){
+  params_[i_var].neon_rcutoff = atof(param_value.c_str());
+}
 else if (param_name.compare("rod_length") == 0){
   params_[i_var].rod_length = atof(param_value.c_str());
 }

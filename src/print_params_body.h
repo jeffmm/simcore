@@ -83,6 +83,8 @@ param_file << "argon_mass : " << params.argon_mass << "\n";
 param_file << "neon_mass : " << params.neon_mass << "\n";
 param_file << "n_argon : " << params.n_argon << "\n";
 param_file << "n_neon : " << params.n_neon << "\n";
+param_file << "argon_rcutoff : " << params.argon_rcutoff << "\n";
+param_file << "neon_rcutoff : " << params.neon_rcutoff << "\n";
 param_file << "rod_length : " << params.rod_length << "\n";
 param_file << "rod_diameter : " << params.rod_diameter << "\n";
 param_file << "draw_interactions : " << params.draw_interactions << "\n";
