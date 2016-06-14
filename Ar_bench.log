@@ -1,0 +1,39 @@
+Running argon with the following:
+3.405 diameter (8.51 rcutoff)
+39.948 mass (AMU)
+
+256 atoms
+17.158 box radius (Angstroms)
+--------
+Baseline (Jeff's original version)
+Baseline     7.96s 
+
+Brute Force
+1           15.98s
+2            8.90s
+4            5.31s
+
+Microcells (8x8x8 cells, size 4.29 on a side)
+1            7.64s
+2            4.84s
+4            3.11s
+
+1024 atoms
+25.737 box radius
+--------
+Baseline    43.12s
+
+Microcells (12x12x12, size 4.29 on a side)
+1           40.03s
+2           26.25s
+4           19.06s
+
+4096 atoms
+51.474 box radius
+--------
+Baseline   117.15s
+
+Microcells (24x24x24, size 4.29 on a side)
+1          123.37s
+2           80.92s
+4           57.32s
