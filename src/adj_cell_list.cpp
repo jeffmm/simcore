@@ -44,7 +44,7 @@ AdjCellList::CreateSubstructure(double pRcut) {
     clist_.resize(ncells_);
 
     // Allocate the list index within cells
-    nadj_ = ndim_*ndim_*ndim_;
+    nadj_ = pow(3, ndim_);
     for (int i = 0; i < ncells_; ++i) {
         clist_[i].cell_id_ = i;
         clist_[i].adj_cell_ids_ = new int[nadj_];

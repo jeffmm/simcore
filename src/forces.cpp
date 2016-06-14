@@ -23,7 +23,7 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
         force_module_ = forceFactory<ForceMicrocell>();
         break;
     case 3:
-        printf("Using cells force substructure (not yet implemented)\n");
+        printf("Using cells force substructure\n");
         force_type_ = FTYPE::cells;
         force_module_ = forceFactory<ForceCell>();
         break;
