@@ -18,6 +18,14 @@ Microcells (8x8x8 cells, size 4.29 on a side)
 2            4.84s
 4            3.11s
 
+Adjacent Cells (4x4x4 cells, size 8.58 on a side)
+1            9.43s
+2            6.02s
+4            3.55s
+--------
+
+
+
 1024 atoms
 25.737 box radius
 --------
@@ -28,6 +36,14 @@ Microcells (12x12x12, size 4.29 on a side)
 2           26.25s
 4           19.06s
 
+Adjacent Cells (6x6x6, size 8.58 on a side)
+1           52.39s
+2           31.45s
+4           21.53s
+--------
+
+
+
 4096 atoms
 51.474 box radius
 --------
@@ -37,3 +53,8 @@ Microcells (24x24x24, size 4.29 on a side)
 1          123.37s
 2           80.92s
 4           57.32s
+
+Adjacent Cells (12x12x12, size 8.58 on a side)
+1          138.13s
+2           79.58s
+4           53.83s
