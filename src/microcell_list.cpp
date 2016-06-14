@@ -129,7 +129,6 @@ MicrocellList::CreateSubstructure(double pRcut) {
 void
 MicrocellList::UpdateCellList() {
     int midx = 0;
-    //int cx[3];
 
     // Clear the numbers in the cells
     for (int cidx = 0; cidx < ncells_; ++cidx) {
@@ -146,7 +145,6 @@ MicrocellList::UpdateCellList() {
         double dr2[3] = {0.0, 0.0, 0.0};
 
         auto part = simples_[i];
-        //auto oidx = part->GetOID();
         auto pr = part->GetPosition();
         auto prs = part->GetScaledPosition();
         // XXX: CJE must compute for arbitrary particle, maybe multiple cells (Rod)

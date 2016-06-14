@@ -31,17 +31,10 @@ class Forces {
     CellList cell_list_;
     PotentialManager potentials_;
 
-    //ForceBase* test_force_;
-    //ForceMicrocell* test_microcell_f_;
     ForceBase* force_module_;
   public:
-    Forces() {
-        //test_force_ = forceFactory<ForceBrute>();
-        //test_microcell_f_ = forceFactory<ForceMicrocell>();
-    }
+    Forces() {}
     ~Forces() {
-        //delete(test_force_);
-        //delete(test_microcell_f_);
         delete(force_module_);
     }
 
