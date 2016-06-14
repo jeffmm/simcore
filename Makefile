@@ -7,7 +7,7 @@ BINDIR = bin
 SRCEXT = cpp
 
 COMPILE_FLAGS = -std=c++11
-RCOMPILE_FLAGS = -D NDEBUG -O2 -march=native
+RCOMPILE_FLAGS = -D NDEBUG -O2 -march=native -g
 DCOMPILE_FLAGS = -D DEBUG -O0 -g
 LINK_FLAGS = -gnu 
 RLINK_FLAGS = 
