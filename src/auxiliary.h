@@ -40,6 +40,13 @@ enum class SID : unsigned char {
   br_rod
 };
 
+enum class FTYPE : unsigned char {
+  none,
+  allpairs,
+  microcells,
+  cells
+};
+
 typedef std::pair<SID, SID> sid_pair;
 
 struct rng_properties { 

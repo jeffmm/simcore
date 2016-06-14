@@ -8,7 +8,6 @@ void
 MicrocellList::CreateSubstructure(double pRcut) {
     double boxoffs[3];
 
-    printf("MicrocellList::CreateSubstructure\n");
     rcut_ = pRcut;
     rbuff_ = rcut_ + skin_;
     p_c_.clear();
@@ -18,6 +17,7 @@ MicrocellList::CreateSubstructure(double pRcut) {
     for (int i = 0; i < ndim_; ++i) {
         boxby2_[i] = 0.5*box_[i];
         T_[i] = floor(cellrat_ * box_[i] / rbuff_);
+        //T_[i] = floor(box_[i] / rbuff_);
         if (T_[i] < 3) {
             T_[i] = 3;
         }
@@ -129,7 +129,7 @@ MicrocellList::CreateSubstructure(double pRcut) {
 void
 MicrocellList::UpdateCellList() {
     int midx = 0;
-    int cx[3];
+    //int cx[3];
 
     // Clear the numbers in the cells
     for (int cidx = 0; cidx < ncells_; ++cidx) {
@@ -146,7 +146,7 @@ MicrocellList::UpdateCellList() {
         double dr2[3] = {0.0, 0.0, 0.0};
 
         auto part = simples_[i];
-        auto oidx = part->GetOID();
+        //auto oidx = part->GetOID();
         auto pr = part->GetPosition();
         auto prs = part->GetScaledPosition();
         // XXX: CJE must compute for arbitrary particle, maybe multiple cells (Rod)

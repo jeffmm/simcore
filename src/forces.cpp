@@ -1,27 +1,44 @@
 #include "forces.h"
 
-void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, double cell_length, int draw_flag) {
+void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pIntFtype, double cell_length, int draw_flag) {
   space_=space;
   n_dim_ = space->n_dim;
   n_periodic_ = space->n_periodic;
   draw_flag_ = draw_flag;
-  cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
+  //XXX: CJE switch on force type for now
+  switch (pIntFtype) {
+    case 0:
+        printf("Must specify a force substructure, exiting!\n");
+        exit(1);
+    case 1:
+        printf("Using all pairs (brute) force substructure\n");
+        force_type_ = FTYPE::allpairs;
+        force_module_ = forceFactory<ForceBrute>();
+        break;
+    case 2:
+        printf("Using microcells force substructure\n");
+        force_type_ = FTYPE::microcells;
+        force_module_ = forceFactory<ForceMicrocell>();
+        break;
+    case 3:
+        printf("Using cells force substructure (not yet implemented)\n");
+        force_type_ = FTYPE::cells;
+        exit(1);
+        break;
+    default:
+        printf("Must specify a force substructure, exiting!\n");
+        break;
+  }
+  //cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
   CheckOverlap(species);
-  InitPotentials(species);
+  //InitPotentials(species);
 
-  // XXX: Cje init my own forces
-  //test_force_->Init(space, 0.0);
-  //test_force_->LoadSimples(species);
-  //test_force_->InitPotentials(species);
-  //test_force_->Finalize();
-
-  // XXX: CJE test the microcell list?
-  test_microcell_f_->Init(space, 0.0);
-  test_microcell_f_->LoadSimples(species);
-  test_microcell_f_->InitPotentials(species);
-  test_microcell_f_->Finalize();
   // XXX:
-  test_microcell_f_->UpdateScheme();
+  force_module_->Init(space, 0.0);
+  force_module_->LoadSimples(species);
+  force_module_->InitPotentials(species);
+  force_module_->Finalize();
+  force_module_->UpdateScheme();
 }
 
 void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
@@ -57,7 +74,7 @@ void Forces::UpdateCellList(std::vector<SpeciesBase*> species) {
 
 void Forces::UpdateScheme(std::vector<SpeciesBase*> species) {
   LoadSimples(species);
-  test_microcell_f_->UpdateScheme();
+  force_module_->UpdateScheme();
 }
 
 void Forces::LoadSimples(std::vector<SpeciesBase*> species) {
@@ -69,8 +86,7 @@ void Forces::LoadSimples(std::vector<SpeciesBase*> species) {
 }
 
 void Forces::InteractMP() {
-    //test_force_->Interact();
-    test_microcell_f_->Interact();
+    force_module_->Interact();
 }
 
 void Forces::Interact() {

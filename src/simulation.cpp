@@ -18,13 +18,15 @@ void Simulation::RunSimulation() {
 
   for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
-    DPRINTF("********\nStep %d\n********\n", i_step_);
+    //DPRINTF("********\nStep %d\n********\n", i_step_);
     //Interact();
     //Integrate();
     InteractMP();
     IntegrateMP();
     // Only will run if DEBUG is enabled
+    #ifdef DEBUG
     DumpAll(i_step_);
+    #endif
     Draw();
     WriteOutputs();
   }
@@ -63,7 +65,7 @@ void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
   InitSpecies();
-  forces_.Init(space_.GetStruct(), species_, params_.cell_length, params_.draw_interactions);
+  forces_.Init(space_.GetStruct(), species_, params_.ftype, params_.cell_length, params_.draw_interactions);
   if (params_.graph_flag) {
     GetGraphicsStructure();
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);
