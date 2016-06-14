@@ -86,6 +86,8 @@ struct system_parameters {
   double neon_mass = 0.5;
   int n_argon = 0;
   int n_neon = 0;
+  double argon_rcutoff = 12.0;
+  double neon_rcutoff = 12.0;
   double rod_length = 3;
   double rod_diameter = 1;
   int draw_interactions = 0;
