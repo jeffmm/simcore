@@ -27,6 +27,14 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
         force_type_ = FTYPE::cells;
         force_module_ = forceFactory<ForceCell>();
         break;
+    case 4:
+        printf("Using neighbor lists all pairs substructure\n");
+        force_type_ = FTYPE::neighborallpairs;
+        exit(1);
+    case 5:
+        printf("Using neighbor list cells substructure\n");
+        force_type_ = FTYPE::neighborcells;
+        exit(1);
     default:
         printf("Must specify a force substructure, exiting!\n");
         break;
