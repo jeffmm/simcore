@@ -44,7 +44,9 @@ enum class FTYPE : unsigned char {
   none,
   allpairs,
   microcells,
-  cells
+  cells,
+  neighborallpairs,
+  neighborcells
 };
 
 typedef std::pair<SID, SID> sid_pair;
