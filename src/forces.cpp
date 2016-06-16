@@ -2,7 +2,7 @@
 
 #include "forces.h"
 
-void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pIntFtype, double cell_length, int draw_flag) {
+void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pIntFtype, double cell_length, int draw_flag, double pSkin) {
   space_=space;
   n_dim_ = space->n_dim;
   n_periodic_ = space->n_periodic;
@@ -18,25 +18,30 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
         printf("->Using all pairs (brute) force substructure\n");
         force_type_ = FTYPE::allpairs;
         force_module_ = forceFactory<ForceBrute>();
+        skin_ = 0.0;
         break;
     case 2:
         printf("->Using microcells force substructure\n");
         force_type_ = FTYPE::microcells;
         force_module_ = forceFactory<ForceMicrocell>();
+        skin_ = 0.0;
         break;
     case 3:
         printf("->Using cells force substructure\n");
         force_type_ = FTYPE::cells;
         force_module_ = forceFactory<ForceCell>();
+        skin_ = 0.0;
         break;
     case 4:
         printf("->Using neighbor lists all pairs substructure\n");
         force_type_ = FTYPE::neighborallpairs;
         force_module_ = forceFactory<ForceNeighborListAP>();
+        skin_ = pSkin;
         break;
     case 5:
         printf("->Using neighbor list cells substructure\n");
         force_type_ = FTYPE::neighborcells;
+        skin_ = pSkin;
         exit(1);
         break;
     default:
@@ -45,11 +50,11 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
   }
   //XXX: CJE needed for the check overlaps, change this
   cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
-  //CheckOverlap(species);
+  CheckOverlap(species);
   //InitPotentials(species);
 
   // Create the force submodule to do the calculations!
-  force_module_->Init(space, 0.0);
+  force_module_->Init(space, skin_);
   force_module_->LoadSimples(species);
   force_module_->InitPotentials(species);
   force_module_->Finalize();

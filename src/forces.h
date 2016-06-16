@@ -25,7 +25,8 @@ class Forces {
            dr_mag_,
            dr_mag2_,
            buffer_mag_,
-           buffer_mag2_;
+           buffer_mag2_,
+           skin_;
     FTYPE force_type_;
     space_struct *space_;
     std::vector<Simple*> simples_; 
@@ -42,7 +43,7 @@ class Forces {
 
     std::vector<graph_struct> draw_array_;
   public:
-    void Init(space_struct *space, std::vector<SpeciesBase*> species, int pIntFtype, double cell_length, int draw_flag);
+    void Init(space_struct *space, std::vector<SpeciesBase*> species, int pIntFtype, double cell_length, int draw_flag, double pSkin);
     void UpdateScheme(std::vector<SpeciesBase*> species);
     void UpdateCellList(std::vector<SpeciesBase*> species);
     void LoadSimples(std::vector<SpeciesBase*> species);
