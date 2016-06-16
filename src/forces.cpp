@@ -30,18 +30,20 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
     case 4:
         printf("Using neighbor lists all pairs substructure\n");
         force_type_ = FTYPE::neighborallpairs;
-        exit(1);
+        force_module_ = forceFactory<ForceNeighborListAP>();
+        break;
     case 5:
         printf("Using neighbor list cells substructure\n");
         force_type_ = FTYPE::neighborcells;
         exit(1);
+        break;
     default:
         printf("Must specify a force substructure, exiting!\n");
         break;
   }
   cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
   CheckOverlap(species);
-  //InitPotentials(species);
+  InitPotentials(species);
 
   // XXX:
   force_module_->Init(space, 0.0);

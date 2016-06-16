@@ -2,26 +2,29 @@ Running argon with the following:
 3.405 diameter (8.51 rcutoff)
 39.948 mass (AMU)
 
+Speedup = Tp/Ts (serial/parallel time)
+Efficiency = Sp/p (speedup/n processors)
+
 256 atoms
 17.158 box radius (Angstroms)
 --------
 Baseline (Jeff's original version)
-Baseline     7.96s 
+Baseline     7.96s      1       1
 
 Brute Force
-1           15.98s
-2            8.90s
-4            5.31s
+1           15.98s   0.50    0.50
+2            8.90s   0.89    0.45
+4            5.31s   1.50    0.37
 
 Microcells (8x8x8 cells, size 4.29 on a side)
-1            7.64s
-2            4.84s
-4            3.11s
+1            7.64s   1.04    1.04
+2            4.84s   1.64    0.82
+4            3.11s   2.56    0.64
 
 Adjacent Cells (4x4x4 cells, size 8.58 on a side)
-1            9.43s
-2            6.02s
-4            3.55s
+1            9.43s   0.84    0.84
+2            6.02s   1.32    0.66
+4            3.55s   2.24    0.56
 --------
 
 
@@ -29,17 +32,17 @@ Adjacent Cells (4x4x4 cells, size 8.58 on a side)
 1024 atoms
 25.737 box radius
 --------
-Baseline    43.12s
+Baseline    43.12s      1       1
 
 Microcells (12x12x12, size 4.29 on a side)
-1           40.03s
-2           26.25s
-4           19.06s
+1           40.03s   1.08    1.08
+2           26.25s   1.64    0.82
+4           19.06s   2.26    0.57
 
 Adjacent Cells (6x6x6, size 8.58 on a side)
-1           52.39s
-2           31.45s
-4           21.53s
+1           52.39s   0.82    0.82
+2           31.45s   1.37    0.69
+4           21.53s   2.00    0.50
 --------
 
 
@@ -47,14 +50,14 @@ Adjacent Cells (6x6x6, size 8.58 on a side)
 4096 atoms
 51.474 box radius
 --------
-Baseline   117.15s
+Baseline   117.15s      1       1
 
 Microcells (24x24x24, size 4.29 on a side)
-1          123.37s
-2           80.92s
-4           57.32s
+1          123.37s   0.95    0.95
+2           80.92s   1.45    0.72
+4           57.32s   2.04    0.51
 
 Adjacent Cells (12x12x12, size 8.58 on a side)
-1          138.13s
-2           79.58s
-4           53.83s
+1          138.13s   0.85    0.85
+2           79.58s   1.47    0.74
+4           53.83s   2.18    0.54
