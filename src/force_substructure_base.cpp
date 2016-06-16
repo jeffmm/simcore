@@ -18,7 +18,6 @@ ForceSubstructureBase::Init(space_struct* pSpace, double pSkin) {
     {
         if (0 == omp_get_thread_num()) {
             nthreads_ = omp_get_num_threads();
-            printf("Running ForceBase using %d threads\n", nthreads_);
         }
     }
     #else
