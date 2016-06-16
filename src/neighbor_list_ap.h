@@ -20,7 +20,7 @@ class NeighborListAP : public ForceSubstructureBase {
     virtual ~NeighborListAP() {
         delete[] neighbors_;
         printf("********\nNeighborList All Pairs stats\n");
-        printf("\tNupdates: %d\n", n_updates_);
+        printf("\tNupdates: %d, Skin:%2.2f\n", n_updates_, skin_);
     }
 
     // Init should be the same
