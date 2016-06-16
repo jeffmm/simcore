@@ -30,7 +30,6 @@ class NeighborListAP : public ForceSubstructureBase {
     // Main update function
     void CheckNeighborList(bool pForceUpdate = false); // Checks for update if needed
     void UpdateNeighborList(); //Actually does the update
-    void MinimumDistance(Simple *o1, Simple *o2, interactionmindist &idm);
 
     // Local all pairs update function
     void AllPairsUpdate();
