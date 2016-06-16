@@ -8,32 +8,34 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
   n_periodic_ = space->n_periodic;
   draw_flag_ = draw_flag;
   //XXX: CJE switch on force type for now
+  printf("********\n");
+  printf("Create Forces\n");
   switch (pIntFtype) {
     case 0:
         printf("Must specify a force substructure, exiting!\n");
         exit(1);
     case 1:
-        printf("Using all pairs (brute) force substructure\n");
+        printf("->Using all pairs (brute) force substructure\n");
         force_type_ = FTYPE::allpairs;
         force_module_ = forceFactory<ForceBrute>();
         break;
     case 2:
-        printf("Using microcells force substructure\n");
+        printf("->Using microcells force substructure\n");
         force_type_ = FTYPE::microcells;
         force_module_ = forceFactory<ForceMicrocell>();
         break;
     case 3:
-        printf("Using cells force substructure\n");
+        printf("->Using cells force substructure\n");
         force_type_ = FTYPE::cells;
         force_module_ = forceFactory<ForceCell>();
         break;
     case 4:
-        printf("Using neighbor lists all pairs substructure\n");
+        printf("->Using neighbor lists all pairs substructure\n");
         force_type_ = FTYPE::neighborallpairs;
         force_module_ = forceFactory<ForceNeighborListAP>();
         break;
     case 5:
-        printf("Using neighbor list cells substructure\n");
+        printf("->Using neighbor list cells substructure\n");
         force_type_ = FTYPE::neighborcells;
         exit(1);
         break;
@@ -41,11 +43,12 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
         printf("Must specify a force substructure, exiting!\n");
         break;
   }
+  //XXX: CJE needed for the check overlaps, change this
   cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
   CheckOverlap(species);
-  InitPotentials(species);
+  //InitPotentials(species);
 
-  // XXX:
+  // Create the force submodule to do the calculations!
   force_module_->Init(space, 0.0);
   force_module_->LoadSimples(species);
   force_module_->InitPotentials(species);

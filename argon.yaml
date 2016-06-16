@@ -16,7 +16,7 @@ argon_mass: 39.948
 graph_flag: 1
 n_graph: 100
 delta: 0.0001
-n_steps: 10000
+n_steps: 100000
 n_update_cells: 10
 time_flag: 1
 energy_analysis_flag: 1

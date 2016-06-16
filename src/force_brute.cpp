@@ -158,8 +158,6 @@ ForceBrute::Interact() {
             }
         }
 
-        //free(fr);
-        //free(tr);
         delete[] fr;
         delete[] tr;
     } // pragma omp parallel
