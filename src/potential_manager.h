@@ -33,6 +33,8 @@ class PotentialManager {
       return NULL;
     }
     void Print() {
+      printf("********\n");
+      printf("Potentials\n");
       for (auto pot=potentials_.begin(); pot!=potentials_.end(); ++pot)
       {
         printf("{%d,%d} : ",(int) pot->first.first, (int) pot->first.second);
