@@ -19,6 +19,7 @@ class BrBead : public Simple {
     void SetDiffusion() {diffusion_ = sqrt(24.0*diameter_/delta_);}
     void KickBead();
     void UpdatePosition();
+    void UpdatePositionMP();
 };
 
 #include "species.h"
