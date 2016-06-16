@@ -85,7 +85,7 @@ ForceBrute::Interact() {
                 // Minimum distance here@@@@!!!!
                 // XXX: CJE ewwwwwww, more elegant way?
                 interactionmindist idm;
-                MinimumDistance(part1, part2, idm);
+                MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
                 if (idm.dr_mag2 > pot->GetRCut2()) continue;
 
                 // Obtain the mapping between particle oid and position in the force superarray
