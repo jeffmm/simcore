@@ -31,6 +31,7 @@ NeighborListAP::CreateSubstructure(double pRcut) {
     n_updates_ = 0;
 
     auto end = std::chrono::steady_clock::now();
+    printf("-> {rcut: %2.2f}, {skin: %2.2f} = {rcs: %2.2f}, {half_skin:%2.2f}\n", rcut_, skin_, rcs2_, half_skin2_);
 
     std::cout << "NeighborListAP::CreateSubstructure: " << std::chrono::duration<double, std::milli> (end-start).count() << "ms\n";
 }
@@ -42,7 +43,6 @@ void
 NeighborListAP::CheckNeighborList(bool pForceUpdate) {
     nl_update_ = pForceUpdate;
     for (int idx = 0; idx < nparticles_; ++idx) {
-
         if (nl_update_)
             break;
 

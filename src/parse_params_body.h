@@ -263,6 +263,9 @@ else if (param_name.compare("draw_interactions") == 0){
 else if (param_name.compare("ftype") == 0){
   params_[i_var].ftype = atoi(param_value.c_str());
 }
+else if (param_name.compare("masterskin") == 0){
+  params_[i_var].masterskin = atof(param_value.c_str());
+}
 else {
   std::cout << "  WARNING: Parameter " << param_name << " not recognized!\n";
 }

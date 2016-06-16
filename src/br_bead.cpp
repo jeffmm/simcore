@@ -16,6 +16,16 @@ void BrBead::UpdatePosition() {
   ClearInteractions();
   ZeroForce();
 }
+
+void BrBead::UpdatePositionMP() {
+    KickBead();
+    for (int i = 0; i < n_dim_; ++i) {
+        position_[i] = position_[i] + force_[i] * delta_ / diameter_;
+        dr_tot_[i] += position_[i] + force_[i] * delta_ / diameter_;
+    }
+    UpdatePeriodic();
+}
+
 void BrBeadSpecies::InitPotentials (system_parameters *params) {
   AddPotential(SID::br_bead, SID::br_bead, 
       new WCA(params->lj_epsilon,params->br_bead_diameter,

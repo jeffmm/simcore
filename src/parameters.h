@@ -92,6 +92,7 @@ struct system_parameters {
   double rod_diameter = 1;
   int draw_interactions = 0;
   int ftype = 2;
+  double masterskin = 1.0;
 
 };
 

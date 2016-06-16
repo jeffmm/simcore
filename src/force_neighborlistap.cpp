@@ -41,7 +41,7 @@ ForceNeighborListAP::Finalize() {
 
 void
 ForceNeighborListAP::UpdateScheme() {
-    neighbor_list_.CheckNeighborList();
+    //neighbor_list_.CheckNeighborList();
 }
 
 
@@ -51,6 +51,8 @@ ForceNeighborListAP::Interact() {
         printf("ERROR: Finalized was not run for ForceNeighborListAPs, exiting!\n");
         exit(1);
     }
+
+    neighbor_list_.CheckNeighborList();
 
 
     #ifdef ENABLE_OPENMP
