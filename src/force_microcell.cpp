@@ -111,7 +111,7 @@ ForceMicrocell::Interact() {
                     if (pot == nullptr) continue;
                     // Minimum distance, easier somehow?  XXX:
                     interactionmindist idm;
-                    MinimumDistance(part1, part2, idm);
+                    MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
                     if (idm.dr_mag2 > pot->GetRCut2()) continue;
 
                     // Obtain the mapping between particle id and posiion in force superarray
@@ -171,7 +171,7 @@ ForceMicrocell::Interact() {
                     if (pot == nullptr) continue;
                     // Minimum distance, easier somehow?  XXX:
                     interactionmindist idm;
-                    MinimumDistance(part1, part2, idm);
+                    MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
                     if (idm.dr_mag2 > pot->GetRCut2()) continue;
 
                     // Obtain the mapping between particle id and posiion in force superarray

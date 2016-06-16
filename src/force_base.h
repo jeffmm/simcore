@@ -32,7 +32,6 @@ class ForceBase {
     virtual void Init(space_struct *pSpace, double pSkin);
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
     virtual void InitPotentials(std::vector<SpeciesBase*> pSpecies);
-    virtual void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& idm);
 
     virtual void Finalize() = 0; // AFter we do everything, we must finalize it for safety
     virtual void InitMP() = 0; // init the underlying scheme
@@ -67,13 +66,6 @@ class ForceBase {
 };
 
 
-// Force factory using templates
-/*template<typename T, typename...ARGS, typename = typename std::enable_if<std::is_base_of<ForceBase, T>::value>::type>
-std::shared_ptr<T> forceFactory(ARGS&&... args) {
-    std::shared_ptr<T> mforce{ new T{std::forward<ARGS>(args)...} };
-    
-    return mforce;
-}*/
 template<typename T, typename...ARGS, typename = typename std::enable_if<std::is_base_of<ForceBase, T>::value>::type>
 T* forceFactory(ARGS&&... args) {
     T* mforce{ new T{std::forward<ARGS>(args)...} };
