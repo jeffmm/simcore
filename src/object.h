@@ -17,6 +17,7 @@ class Object {
     double position_[3],
            scaled_position_[3],
            prev_position_[3],
+           dr_tot_[3], // total distance traveled accumulator for neighbor list
            orientation_[3],
            force_[3],
            torque_[3],
@@ -47,6 +48,9 @@ class Object {
     void SetScaledPosition(const double *const scaled_pos) {
       std::copy(scaled_pos, scaled_pos+n_dim_, scaled_position_);
     }
+    void SetDrTot(const double * const dr_tot) {
+      std::copy(dr_tot, dr_tot+n_dim_, dr_tot_);
+    }
     void SetOrientation(const double *const u) {
       std::copy(u, u+n_dim_, orientation_);
     }
@@ -66,6 +70,9 @@ class Object {
       std::fill(torque_,torque_+3,0.0);
       p_energy_ = 0.0;
     }
+    void ZeroDrTot() {
+      std::fill(dr_tot_,dr_tot_+3,0.0);
+    }
     void AddForce(double const * const f) {
       for (int i=0; i<n_dim_; ++i)
         force_[i]+=f[i];
@@ -78,6 +85,7 @@ class Object {
     void AddForceTorqueEnergy(double const * const F, double const * const T, double const p);
     double const * const GetPosition() {return position_;}
     double const * const GetScaledPosition() {return scaled_position_;}
+    double const * const GetDrTot() { return dr_tot_; }
     double const * const GetOrientation() {return orientation_;}
     double const * const GetForce() {return force_;}
     double const GetDiameter() {return diameter_;}
@@ -180,6 +188,7 @@ class Composite<T,V> : public Object {
     }
     virtual void ZeroForce() {
       std::fill(force_,force_+3,0.0);
+      std::fill(torque_,torque_+3,0.0);
       for (auto it=elements_.begin(); it!=elements_.end(); ++it)
         it->ZeroForce();
       for (auto it=v_elements_.begin(); it!=v_elements_.end(); ++it)
