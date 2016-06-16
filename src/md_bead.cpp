@@ -33,6 +33,7 @@ void MDBead::Integrate() {
       + ((force_[i]/mass_))*delta2;
     velocity_[i] =  (position_[i] - prev_position_[i])/(2.0*delta_);
     prev_position_[i] = temp_pos[i];
+    dr_tot_[i] += position_[i] - prev_position_[i];
   }
 }
 

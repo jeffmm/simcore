@@ -11,6 +11,7 @@
 #include "force_brute.h"
 #include "force_microcell.h"
 #include "force_cell.h"
+#include "force_neighborlistap.h"
 
 class Forces {
   private:
