@@ -18,7 +18,7 @@ void Simulation::RunSimulation() {
 
   for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
-    //DPRINTF("********\nStep %d\n********\n", i_step_);
+    DPRINTF("********\nStep %d\n********\n", i_step_);
     //Interact();
     //Integrate();
     InteractMP();

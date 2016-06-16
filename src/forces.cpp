@@ -45,7 +45,7 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
   }
   //XXX: CJE needed for the check overlaps, change this
   cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
-  CheckOverlap(species);
+  //CheckOverlap(species);
   //InitPotentials(species);
 
   // Create the force submodule to do the calculations!
