@@ -9,7 +9,7 @@ daughter_radius: 20
 mother_daughter_dist: 22
 boundary_type: 1
 n_dimer: 0
-n_md_bead: 80
+n_md_bead: 200
 md_bead_diameter: 1
 md_bead_mass: 1
 n_br_bead: 0
@@ -29,6 +29,7 @@ n_update_cells: 20
 time_flag: 1
 energy_analysis_flag: 1
 lj_epsilon: 1
+ftype: 1
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5
