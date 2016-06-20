@@ -23,6 +23,7 @@ class NeighborListCells : public ForceSubstructureBase {
     virtual void Init(space_struct *pSpace, double pSkin);
     virtual void LoadFlatSimples(std::vector<Simple*> pSimples);
     virtual void print();
+    virtual void dump();
     virtual void CreateSubstructure(double pRcut);
 
     // Main update function

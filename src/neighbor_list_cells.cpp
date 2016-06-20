@@ -177,3 +177,22 @@ NeighborListCells::print() {
     printf("\t--------\n");
     printf("\tStats: {min: %d}, {max: %d}, {avg: %2.2f}\n", minlist, maxlist, (float)ntotlist/(float)nparticles_);
 }
+
+
+// dump gory details
+void
+NeighborListCells::dump() {
+    #ifdef DEBUG
+    printf("********\n");
+    printf("%s -> dump\n", name_.c_str());
+    for (int idx = 0; idx < nparticles_; ++idx) {
+        printf("\t[%d] -> [", idx);
+        for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
+            int jdx = nldx->idx_;
+            printf("%d,", jdx);
+        }
+        printf("]\n");
+    }
+    cell_list_.dump();
+    #endif
+}

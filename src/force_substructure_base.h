@@ -21,6 +21,7 @@ class ForceSubstructureBase {
     virtual void LoadFlatSimples(std::vector<Simple*> pSimples);
 
     virtual void print() = 0; // print information
+    virtual void dump() = 0;
     virtual void CreateSubstructure(double pRcut) = 0; // Create the substructure - depends on type
 
   protected:

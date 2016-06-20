@@ -163,3 +163,11 @@ void
 ForceCell::printSpecifics() {
     cell_list_.print();
 }
+
+
+// dump gory details
+void
+ForceCell::dump() {
+    ForceBase::dump();
+    cell_list_.dump();
+}

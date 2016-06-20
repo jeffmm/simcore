@@ -158,3 +158,10 @@ ForceNeighborListCells::printSpecifics() {
     neighbor_list_.print();
 }
 
+
+// dump gory details
+void
+ForceNeighborListCells::dump() {
+    ForceBase::dump();
+    neighbor_list_.dump();
+}
