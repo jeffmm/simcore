@@ -11,29 +11,24 @@
 void
 NeighborListCells::Init(space_struct *pSpace, double pSkin) {
     // Call the base init
-    printf("NeighborListCells::Init begin\n");
     ForceSubstructureBase::Init(pSpace, pSkin);
 
     cell_list_.Init(pSpace, pSkin);
-    printf("NeighborListCells::Init end\n");
 }
 
 
 // Load flat simples must be overridden
 void
 NeighborListCells::LoadFlatSimples(std::vector<Simple*> pSimples) {
-    printf("NeighborListCells::LoadFlatSimples begin\n");
     // Call the base class version
     ForceSubstructureBase::LoadFlatSimples(pSimples);
 
     // Call the cell list version
     cell_list_.LoadFlatSimples(pSimples);
-    printf("NeighborListCells::LoadFlatSimples end\n");
 }
 
 void
 NeighborListCells::CreateSubstructure(double pRcut) {
-    printf("NeighborListCells::CreateSubstructure begin\n");
     auto start = std::chrono::steady_clock::now();
 
     rcut_ = pRcut;
@@ -63,7 +58,6 @@ NeighborListCells::CreateSubstructure(double pRcut) {
     cell_list_.UpdateCellList();
 
     std::cout << "NeighborListCells::CreateSubstructure: " << std::chrono::duration<double, std::milli> (end-start).count() << "ms\n";
-    printf("NeighborListCells::CreateSubstructure end\n");
 }
 
 
@@ -128,14 +122,14 @@ NeighborListCells::CellsUpdate() {
         #ifdef ENABLE_OPENMP
         #pragma omp for schedule(runtime) nowait
         #endif
-        for (int idx = 0; idx < nparticles_ - 1; ++idx) {
+        for (int idx = 0; idx < nparticles_; ++idx) {
             // Get our cell
             int cidx = (*pid_to_cid)[idx];
             auto cell1 = cell_list_[cidx];
             // Loop over all other cells (including this one)
             int nadj = cell_list_.nadj();
             for (int cjdx = 0; cjdx < nadj; ++cjdx) {
-                auto cell2 = cell_list_[cjdx];
+                auto cell2 = cell_list_[cell1->adj_cell_ids_[cjdx]];
                 // Loop over cell 2 particles
                 for (int jdx = 0; jdx < cell2->nparticles_; ++jdx) {
                     int jjdx = cell2->idxlist_[jdx];
