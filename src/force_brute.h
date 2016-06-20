@@ -9,12 +9,16 @@
 class ForceBrute : public ForceBase {
   public:
 
-    ForceBrute() {}
+    ForceBrute() {
+        name_ = "ForceBrute";
+    }
     virtual ~ForceBrute() {}
 
     // Init is the same
     // LoadSimples is the same
 
+    virtual void printSpecifics();
+    
     virtual void InitMP();
     virtual void Finalize();
     virtual void UpdateScheme();

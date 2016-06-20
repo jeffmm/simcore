@@ -1,6 +1,7 @@
 // implementation for neighbor lists (all pairs)
 
 #include <chrono>
+#include <climits>
 
 #include "neighbor_list_ap.h"
 
@@ -31,8 +32,6 @@ NeighborListAP::CreateSubstructure(double pRcut) {
     n_updates_ = 0;
 
     auto end = std::chrono::steady_clock::now();
-    printf("-> {rcut: %2.2f}, {skin: %2.2f} = {rcs: %2.2f}, {half_skin:%2.2f}\n", rcut_, skin_, rcs2_, half_skin2_);
-
     std::cout << "NeighborListAP::CreateSubstructure: " << std::chrono::duration<double, std::milli> (end-start).count() << "ms\n";
 }
 
@@ -110,4 +109,20 @@ NeighborListAP::AllPairsUpdate() {
             }
         } // pragma omp for schedule(runtime) nowait
     }
+}
+
+
+// print
+void
+NeighborListAP::print() {
+    printf("********\n");
+    printf("%s ->\n", name_.c_str());
+    printf("\t{rcut: %2.2f}, {skin: %2.2f} = {rcs2: %2.2f}, {half_skin2:%2.2f}\n", rcut_, skin_, rcs2_, half_skin2_);
+    int ntotlist = 0, maxlist = 0, minlist = INT_MAX;
+    for (int i = 0; i < nparticles_ -1; ++i) {
+        ntotlist += neighbors_[i].size();
+        maxlist = std::max(maxlist, (int)neighbors_[i].size());
+        minlist = std::min(minlist, (int)neighbors_[i].size());
+    }
+    printf("\tStats: {min: %d}, {max: %d}, {avg: %2.2f}\n", minlist, maxlist, (float)ntotlist/(float)nparticles_);
 }

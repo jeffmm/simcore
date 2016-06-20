@@ -18,7 +18,7 @@ ForceBase::Init(space_struct *pSpace, double pSkin) {
     {
         if (0 == omp_get_thread_num()) {
             nthreads_ = omp_get_num_threads();
-            printf("Running OpenMP using %d threads\n", nthreads_);
+            //printf("Running OpenMP using %d threads\n", nthreads_);
         }
     }
     #else
@@ -95,6 +95,9 @@ ForceBase::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double
     // Obtain the mapping between particle oid and position in the force superarray
     auto oid1x = oid_position_map_[part1->GetOID()];
     auto oid2x = oid_position_map_[part2->GetOID()];
+    #ifdef DEBUG
+    printf("\tInteracting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
+    #endif
 
     // Fire off the potential calculation
     double fepot[4];
@@ -139,4 +142,32 @@ ForceBase::ReduceParticlesMP() {
         part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[oidx]);
     }
 }
+
+
+// Print information about forces
+void
+ForceBase::print() {
+    printf("********\n");
+    printf("%s ->\n", name_.c_str());
+    printf("\t{nthreads:%d}, {ndim:%d}, {nperiodic:%d}, {n:%d}\n", nthreads_, ndim_, nperiodic_, nparticles_);
+    printf("\t{box:%2.2f}, {max_rcut:%2.2f}, {skin:%2.2f}\n", box_[0], max_rcut_, skin_);
+    printSpecifics();
+}
+
+
+// Dump all of the information (very icky)
+void
+ForceBase::dump() {
+    #ifdef DEBUG
+    for (int i = 0; i < (int)simples_.size(); ++i) {
+        auto part = simples_[i];
+        auto oid = part->GetOID();
+        printf("\to(%d) = ", oid);
+        printf("x{%2.2f, %2.2f}, ", part->GetPosition()[0], part->GetPosition()[1]);
+        printf("f{%2.2f, %2.2f}, ", part->GetForce()[0], part->GetForce()[1]);
+        printf("u{%2.2f}, p{%2.2f}\n", part->GetKineticEnergy(), part->GetPotentialEnergy());
+    }
+    #endif
+}
+
 

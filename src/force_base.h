@@ -33,6 +33,11 @@ class ForceBase {
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
     virtual void InitPotentials(std::vector<SpeciesBase*> pSpecies);
 
+    // IO routines of awfulness
+    virtual void print();
+    virtual void printSpecifics() = 0; // must be overridden
+    virtual void dump();
+
     void InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy);
     void ReduceParticlesMP();
 
@@ -55,6 +60,7 @@ class ForceBase {
     int nthreads_ = 1;
     int nparticles_ = 0;
     double max_rcut_ = 0.0;
+    std::string name_ = "ForceBase";
     
     space_struct* space_;
 

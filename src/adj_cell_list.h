@@ -27,7 +27,9 @@ class Adjcell {
 class AdjCellList : public ForceSubstructureBase {
   public:
 
-    AdjCellList() {}
+    AdjCellList() {
+        name_ = "AdjCellList";
+    }
     virtual ~AdjCellList() {
         for (int i = 0; i < ncells_; ++i) {
             delete[] clist_[i].adj_cell_ids_;
@@ -36,6 +38,7 @@ class AdjCellList : public ForceSubstructureBase {
 
     // Init should be the same
     // Load Simples should be the same
+    virtual void print();
     virtual void CreateSubstructure(double pRcut);
 
     // Local function for updating cell list

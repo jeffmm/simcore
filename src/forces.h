@@ -12,6 +12,7 @@
 #include "force_microcell.h"
 #include "force_cell.h"
 #include "force_neighborlist_ap.h"
+#include "force_neighborlist_cells.h"
 
 class Forces {
   private:
