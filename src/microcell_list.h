@@ -27,7 +27,7 @@ class MicrocellList : public ForceSubstructureBase {
   public:
 
     MicrocellList() {
-        name_ = "Microcell List";
+        name_ = "MicrocellList";
     }
     virtual ~MicrocellList() {}
 

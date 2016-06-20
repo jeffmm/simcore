@@ -1,6 +1,7 @@
 // implementation for adjacent cell list
 
 #include <chrono>
+#include <climits>
 
 #include "adj_cell_list.h"
 
@@ -8,7 +9,6 @@
 
 void
 AdjCellList::CreateSubstructure(double pRcut) {
-    printf("AdjCellList::CreateSubstructure begin\n");
     auto start = std::chrono::steady_clock::now();
 
     rcut_ = pRcut;
@@ -127,7 +127,6 @@ AdjCellList::CreateSubstructure(double pRcut) {
 
     auto end = std::chrono::steady_clock::now();
     std::cout << "AdjCellList::CreateSubstructure: " << std::chrono::duration<double, std::milli> (end-start).count() << "ms\n";
-    printf("AdjCellList::CreateSubstructure end\n");
 }
 
 
@@ -188,6 +187,14 @@ AdjCellList::print() {
            "with %d adj. cells, and %d particles/cell (n: %d).\n", T_[0], T_[1], T_[2], ncells_, 
            S_[0], S_[1], S_[2], nadj_, nidx_, nparticles_);
     printf("\t{rcut: %2.2f}, {skin: %2.2f} = {rbuff: %2.2f}\n", rcut_, skin_, rbuff_);
+    int ntotcells = 0, maxcell = 0, mincell = INT_MAX;
+    for (int cidx = 0; cidx < ncells_; ++cidx) {
+        auto cell1 = clist_[cidx];
+        ntotcells += cell1.nparticles_;
+        maxcell = std::max(maxcell, cell1.nparticles_);
+        mincell = std::min(mincell, cell1.nparticles_);
+    }
+    printf("\tStats: {min: %d}, {max: %d}, {avg: %2.2f}\n", mincell, maxcell, (float)ntotcells/(float)ncells_);
 }
 
 
