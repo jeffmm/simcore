@@ -21,6 +21,7 @@ class NeighborListAP : public ForceSubstructureBase {
     // Init should be the same
     // Load Simples should be the same
     virtual void print();
+    virtual void dump();
     virtual void CreateSubstructure(double pRcut);
 
     // Main update function

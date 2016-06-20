@@ -17,6 +17,7 @@ class ForceNeighborListCells : public ForceBase {
     // Override these functions, need special stuff
     virtual void Init(space_struct* pSpace, double pSkin);
     virtual void printSpecifics();
+    virtual void dump();
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
 
     virtual void InitMP();
