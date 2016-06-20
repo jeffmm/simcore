@@ -85,6 +85,7 @@ class Object {
     void AddForceTorqueEnergy(double const * const F, double const * const T, double const p);
     double const * const GetPosition() {return position_;}
     double const * const GetScaledPosition() {return scaled_position_;}
+    // XXX: JMM Return the composite vs simple DR Tot (the actual version, so that we can use it on composite objects)
     double const * const GetDrTot() { return dr_tot_; }
     double const * const GetOrientation() {return orientation_;}
     double const * const GetForce() {return force_;}

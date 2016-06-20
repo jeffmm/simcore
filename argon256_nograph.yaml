@@ -22,6 +22,7 @@ time_flag: 1
 energy_analysis_flag: 1
 lj_epsilon: 0.2379
 ftype: 4
+masterskin: 1.0
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5

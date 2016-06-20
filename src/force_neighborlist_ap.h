@@ -1,7 +1,7 @@
-// Microcell force computation
+// Neighbor List all pairs force calculation
 
-#ifndef _SIMCORE_FORCE_NEIGHBORLISTAP_H_
-#define _SIMCORE_FORCE_NEIGHBORLISTAP_H_
+#ifndef _SIMCORE_FORCE_NEIGHBORLIST_AP_H_
+#define _SIMCORE_FORCE_NEIGHBORLIST_AP_H_
 
 #include "force_base.h"
 #include "neighbor_list_ap.h"

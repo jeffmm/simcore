@@ -7,7 +7,7 @@
 
 struct _neighbor {
     int idx_;
-    double value_;
+    double value_; // exists to piggyback calculation onto
 };
 typedef struct _neighbor neighbor_t;
 

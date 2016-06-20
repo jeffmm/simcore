@@ -1,4 +1,4 @@
-// implementation for microcell list
+// implementation for adjacent cell list
 
 #include <chrono>
 
