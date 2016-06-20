@@ -123,7 +123,6 @@ ForceBrute::Interact() {
         #ifdef ENABLE_OPENMP
         #pragma omp barrier
         #endif
-        // Everything is doubled to do energy
         // XXX: CJE maybe fix this later?
         int i = 1 + (3 * nparticles_ / nthreads_);
         int ii = 1 + (nparticles_ / nthreads_);

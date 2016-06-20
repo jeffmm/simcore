@@ -1,8 +1,8 @@
-// Implementation for force microcells
+// Implementation for force neighbor list all pairs
 
 #include <cassert>
 
-#include "force_neighborlistap.h"
+#include "force_neighborlist_ap.h"
 
 // Overridden init method to call initmp
 void
@@ -33,7 +33,6 @@ void
 ForceNeighborListAP::Finalize() {
     // Should be ready to finalize if we have loaded and init'ed
     neighbor_list_.CreateSubstructure(max_rcut_); 
-    //UpdateScheme();
     neighbor_list_.CheckNeighborList(true);
     initialized_ = true;
 }
@@ -41,6 +40,8 @@ ForceNeighborListAP::Finalize() {
 
 void
 ForceNeighborListAP::UpdateScheme() {
+    // We check on each force calculation if we need to update
+    // the neighbor list, so doesn't matter here.
     //neighbor_list_.CheckNeighborList();
 }
 
@@ -147,7 +148,6 @@ ForceNeighborListAP::Interact() {
         #ifdef ENABLE_OPENMP
         #pragma omp barrier
         #endif
-        // Everything is doubled to do energy
         // XXX: CJE maybe fix this later?
         int i = 1 + (3 * nparticles_ / nthreads_);
         int ii = 1 + (nparticles_ / nthreads_);
@@ -182,8 +182,6 @@ ForceNeighborListAP::Interact() {
             }
         }
 
-        //free(fr);
-        //free(tr);
         delete[] fr;
         delete[] tr;
     } // pragma omp parallel
