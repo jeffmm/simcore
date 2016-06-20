@@ -17,11 +17,11 @@ graph_flag: 0
 n_graph: 100
 delta: 0.0001
 n_steps: 10000
-n_update_cells: 5
+n_update_cells: 10
 time_flag: 1
 energy_analysis_flag: 1
 lj_epsilon: 0.2379
-ftype: 4
+ftype: 5
 masterskin: 1.0
 #[brownian_dimer]:
     #num: [2,4]
