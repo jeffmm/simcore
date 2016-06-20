@@ -189,3 +189,23 @@ AdjCellList::print() {
            S_[0], S_[1], S_[2], nadj_, nidx_, nparticles_);
     printf("\t{rcut: %2.2f}, {skin: %2.2f} = {rbuff: %2.2f}\n", rcut_, skin_, rbuff_);
 }
+
+
+// dump gory details
+void
+AdjCellList::dump() {
+    #ifdef DEBUG
+    printf("********\n");
+    printf("%s -> dump\n", name_.c_str());
+    for (int cidx = 0; cidx < ncells_; ++cidx) {
+        int cx[3] = {0, 0, 0};
+        cytohelpers::cell_linear_to_vec(cidx, T_, cx);
+        auto cell1 = clist_[cidx];
+        printf("cell{%d}[%d,%d,%d](n: %d) -> [", cidx, cx[0], cx[1], cx[2], cell1.nparticles_);
+        for (int idx = 0; idx < cell1.nparticles_; ++idx) {
+            printf("%d,", cell1.idxlist_[idx]);
+        }
+        printf("]\n");
+    }
+    #endif
+}

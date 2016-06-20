@@ -183,3 +183,11 @@ void
 ForceMicrocell::printSpecifics() {
     microcell_list_.print();
 }
+
+
+// dump gory details
+void
+ForceMicrocell::dump() {
+    ForceBase::dump();
+    microcell_list_.dump();
+}

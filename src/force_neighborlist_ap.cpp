@@ -157,3 +157,11 @@ void
 ForceNeighborListAP::printSpecifics() {
     neighbor_list_.print();
 }
+
+
+// dump gory details
+void
+ForceNeighborListAP::dump() {
+    ForceBase::dump();
+    neighbor_list_.dump();
+}

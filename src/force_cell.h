@@ -19,6 +19,7 @@ class ForceCell : public ForceBase {
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
 
     virtual void printSpecifics();
+    virtual void dump();
 
     virtual void InitMP();
     virtual void Finalize();
