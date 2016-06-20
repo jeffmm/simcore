@@ -8,6 +8,7 @@
 
 void
 AdjCellList::CreateSubstructure(double pRcut) {
+    printf("AdjCellList::CreateSubstructure begin\n");
     auto start = std::chrono::steady_clock::now();
 
     rcut_ = pRcut;
@@ -125,13 +126,8 @@ AdjCellList::CreateSubstructure(double pRcut) {
     }
 
     auto end = std::chrono::steady_clock::now();
-
-    printf("********\n");
-    printf("Adjacent cell list (ndim=%d) has %dx%dx%d=%d cells of lengths {%.2f, %.2f, %.2f} "
-           "and %d particles/cell (tot %d).\n", ndim_, T_[0], T_[1], T_[2], ncells_, 
-           S_[0], S_[1], S_[2], nidx_, nparticles_);
-    printf("-> {rcut: %2.2f}, {skin: %2.2f} = {rbuff: %2.2f}\n", rcut_, skin_, rbuff_);
     std::cout << "AdjCellList::CreateSubstructure: " << std::chrono::duration<double, std::milli> (end-start).count() << "ms\n";
+    printf("AdjCellList::CreateSubstructure end\n");
 }
 
 
@@ -180,4 +176,16 @@ AdjCellList::UpdateCellList() {
         printf("Overflow in cell list: %d/%d particles/cells\n", midx, nidx_);
         exit(1);
     }
+}
+
+
+// print
+void
+AdjCellList::print() {
+    printf("********\n");
+    printf("%s ->\n", name_.c_str());
+    printf("\t%dx%dx%d=%d cells of lengths {%.2f, %.2f, %.2f} "
+           "with %d adj. cells, and %d particles/cell (n: %d).\n", T_[0], T_[1], T_[2], ncells_, 
+           S_[0], S_[1], S_[2], nadj_, nidx_, nparticles_);
+    printf("\t{rcut: %2.2f}, {skin: %2.2f} = {rbuff: %2.2f}\n", rcut_, skin_, rbuff_);
 }

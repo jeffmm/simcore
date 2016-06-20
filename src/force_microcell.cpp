@@ -176,3 +176,10 @@ ForceMicrocell::Interact() {
 
     ReduceParticlesMP();
 }
+
+
+// print specific information
+void
+ForceMicrocell::printSpecifics() {
+    microcell_list_.print();
+}

@@ -156,3 +156,10 @@ ForceCell::Interact() {
 
     ReduceParticlesMP();
 }
+
+
+// print specifics
+void
+ForceCell::printSpecifics() {
+    cell_list_.print();
+}

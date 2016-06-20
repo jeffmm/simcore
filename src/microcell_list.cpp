@@ -117,12 +117,6 @@ MicrocellList::CreateSubstructure(double pRcut) {
                 x[0]+0.5*S_[0], x[1]+0.5*S_[1], x[2]+0.5*S_[2]);
     }
     #endif
-
-    printf("********\n");
-    printf("Microcell list (ndim=%d) has %dx%dx%d=%d cells of lengths {%.2f, %.2f, %.2f} "
-           "with %d/%d pairs and %d particles/cell (tot %d).\n", ndim_, T_[0], T_[1], T_[2], ncells_, 
-           S_[0], S_[1], S_[2], npairs_, ncells_*(ncells_-1)/2, nidx_, nparticles_);
-    printf("-> {rcut: %2.2f}, {skin: %2.2f} = {rbuff: %2.2f}\n", rcut_, skin_, rbuff_);
 }
 
 
@@ -171,4 +165,16 @@ MicrocellList::UpdateCellList() {
         printf("Overflow in cell list: %d/%d particles/cells\n", midx, nidx_);
         exit(1);
     }
+}
+
+
+// print out the information
+void
+MicrocellList::print() {
+    printf("********\n");
+    printf("%s ->\n", name_.c_str());
+    printf("\t%dx%dx%d=%d cells of lengths {%.2f, %.2f, %.2f} "
+           "with %d/%d pairs and %d particles/cell (n: %d).\n", T_[0], T_[1], T_[2], ncells_, 
+           S_[0], S_[1], S_[2], npairs_, ncells_*(ncells_-1)/2, nidx_, nparticles_);
+    printf("\t{rcut: %2.2f}, {skin: %2.2f} = {rbuff: %2.2f}\n", rcut_, skin_, rbuff_);
 }

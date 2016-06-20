@@ -125,3 +125,9 @@ ForceBrute::Interact() {
 
     ReduceParticlesMP();
 }
+
+
+void
+ForceBrute::printSpecifics() {
+    printf("\tNo specifics for brute force\n");
+}

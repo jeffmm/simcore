@@ -26,11 +26,14 @@ class Microcell {
 class MicrocellList : public ForceSubstructureBase {
   public:
 
-    MicrocellList() {}
+    MicrocellList() {
+        name_ = "Microcell List";
+    }
     virtual ~MicrocellList() {}
 
     // Init should be the same
     // Load Simples should be the same
+    virtual void print();
     virtual void CreateSubstructure(double pRcut);
 
     // Local function for updating cell list
