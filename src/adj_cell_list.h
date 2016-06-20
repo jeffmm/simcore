@@ -1,4 +1,4 @@
-// Microcell list!
+// Adjacent cell list
 
 #ifndef _SIMCORE_ADJ_CELL_LIST_H_
 #define _SIMCORE_ADJ_CELL_LIST_H_

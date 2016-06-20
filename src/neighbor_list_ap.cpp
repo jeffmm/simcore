@@ -13,8 +13,8 @@ NeighborListAP::CreateSubstructure(double pRcut) {
     rcut_ = pRcut;
     rcut2_ = rcut_*rcut_;
 
-    // XXX: CJE for now overwrite skin to something until we add
-    // it via params
+    // Make sure that if we don't have a skin to make it
+    // something...
     if (skin_ <= 0.0)
         skin_ = 1.0;
 

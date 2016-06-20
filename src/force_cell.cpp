@@ -1,4 +1,4 @@
-// Implementation for force microcells
+// Implementation for force adjacent cells
 
 #include <cassert>
 

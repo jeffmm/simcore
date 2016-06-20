@@ -1,4 +1,4 @@
-// Microcell force computation
+// Cell force computation
 
 #ifndef _SIMCORE_FORCE_CELL_H_
 #define _SIMCORE_FORCE_CELL_H_
