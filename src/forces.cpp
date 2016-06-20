@@ -42,7 +42,7 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
         printf("->Using neighbor list cells substructure\n");
         force_type_ = FTYPE::neighborcells;
         skin_ = pSkin;
-        exit(1);
+        force_module_ = forceFactory<ForceNeighborListCells>();
         break;
     default:
         printf("Must specify a force substructure, exiting!\n");
@@ -59,6 +59,7 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
   force_module_->InitPotentials(species);
   force_module_->Finalize();
   force_module_->UpdateScheme();
+  force_module_->print();
 }
 
 void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
@@ -74,14 +75,7 @@ void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
 void Forces::DumpAll() {
     // Dump all the particles and their positions, forces, energy (2d)
     #ifdef DEBUG
-    for (int i = 0; i < (int)simples_.size(); ++i) {
-        auto part = simples_[i];
-        auto oid = part->GetOID();
-        printf("\to(%d) = ", oid);
-        printf("x{%2.2f, %2.2f}, ", part->GetPosition()[0], part->GetPosition()[1]);
-        printf("f{%2.2f, %2.2f}, ", part->GetForce()[0], part->GetForce()[1]);
-        printf("u{%2.2f}, p{%2.2f}\n", part->GetKineticEnergy(), part->GetPotentialEnergy());
-    }
+    force_module_->dump();
     #endif
 }
 

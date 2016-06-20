@@ -9,12 +9,16 @@
 class ForceNeighborListAP : public ForceBase {
   public:
 
-    ForceNeighborListAP() {}
+    ForceNeighborListAP() {
+        name_ = "ForceNeighborListAP";
+    }
     virtual ~ForceNeighborListAP() {}
 
     // Override these functions, need special stuff
     virtual void Init(space_struct* pSpace, double pSkin);
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
+
+    virtual void printSpecifics();
 
     virtual void InitMP();
     virtual void Finalize();
