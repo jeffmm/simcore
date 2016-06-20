@@ -33,6 +33,9 @@ class ForceBase {
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
     virtual void InitPotentials(std::vector<SpeciesBase*> pSpecies);
 
+    void InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy);
+    void ReduceParticlesMP();
+
     virtual void Finalize() = 0; // AFter we do everything, we must finalize it for safety
     virtual void InitMP() = 0; // init the underlying scheme
     virtual void UpdateScheme() = 0; // updates the underlying scheme (cell, neighbor, etc)
