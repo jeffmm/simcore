@@ -51,6 +51,7 @@ class BrDimer : public Composite<BrBead> {
     /* Define virtual functions */
     void Init();
     void UpdatePosition();
+    void UpdatePositionMP();
     void Draw(std::vector<graph_struct*> * graph_array);
     void ApplyInteractions();
 

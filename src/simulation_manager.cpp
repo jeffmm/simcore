@@ -1,6 +1,10 @@
 #include "simulation_manager.h"
 
-SimulationManager::SimulationManager() {}
+bool debug_trace;
+
+SimulationManager::SimulationManager() {
+  debug_trace = false;
+}
 SimulationManager::~SimulationManager() {
   // Delete system_parameters structure, initialized in InitVariations
   delete[] params_;
@@ -25,8 +29,9 @@ void SimulationManager::RunManager() {
    TODO Create a series of simulation runs that captures validation data
    *************************************/
 void SimulationManager::DebugMode() {
-  warning("Debug mode incomplete! Exiting!"); //FIXME
-  exit(1);
+  //warning("Debug mode incomplete! Exiting!"); //FIXME
+  //exit(1);
+  debug_trace = true;
 }
 
 

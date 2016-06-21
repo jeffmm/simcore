@@ -1,6 +1,6 @@
 # params_master.yaml file
 
-[objects] : [md_bead,br_dimer,br_bead,argon,neon]
+#[objects] : [md_bead,br_dimer,br_bead,argon,neon]
 seed : [7859459105545,long] # seed for random number generator
 n_dim : [3,int]
 n_periodic : [0,int]
