@@ -55,6 +55,11 @@ void BrDimer::UpdatePosition() {
   Integrate();
 }
 
+void BrDimer::UpdatePositionMP() {
+  InternalForces();
+  Integrate();
+}
+
 void BrDimer::ApplyInteractions() {
    //We have no internal constraints
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
@@ -66,7 +71,7 @@ void BrDimer::Integrate() {
   double pos[3] = {0, 0, 0};
   // the beads know how to update position and periodicity
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
-    i_bead->UpdatePosition();
+    i_bead->UpdatePositionMP();
   }
   UpdateOrientation();
 }

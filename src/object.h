@@ -85,8 +85,7 @@ class Object {
     void AddForceTorqueEnergy(double const * const F, double const * const T, double const p);
     double const * const GetPosition() {return position_;}
     double const * const GetScaledPosition() {return scaled_position_;}
-    // XXX: JMM Return the composite vs simple DR Tot (the actual version, so that we can use it on composite objects)
-    double const * const GetDrTot() { return dr_tot_; }
+    virtual double const * const GetDrTot() { return dr_tot_; }
     double const * const GetOrientation() {return orientation_;}
     double const * const GetForce() {return force_;}
     double const GetDiameter() {return diameter_;}
@@ -161,6 +160,20 @@ class Composite<T> : public Object {
         sim_vec.push_back(&(*it));
       return sim_vec;
     }
+    virtual double const * const GetDrTot() { 
+      double dr_max=0;
+      for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
+        double dr_mag = 0;
+        double const * const dr = it->GetDrTot();
+        for (int i=0; i<n_dim_; ++i)
+          dr_mag += dr[i]*dr[i];
+        if (dr_mag > dr_max) {
+          dr_max = dr_mag;
+          std::copy(dr, dr+3, dr_tot_);
+        }
+      }
+      return dr_tot_;
+    }
 };
 
 template <typename T, typename V>
@@ -200,6 +213,20 @@ class Composite<T,V> : public Object {
       for (auto it=v_elements_.begin(); it!=v_elements_.end(); ++it)
         sim_vec.push_back(&(*it));
       return sim_vec;
+    }
+    virtual double const * const GetDrTot() { 
+      double dr_max=0;
+      for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
+        double dr_mag = 0;
+        double const * const dr = it->GetDrTot();
+        for (int i=0; i<n_dim_; ++i)
+          dr_mag += dr[i]*dr[i];
+        if (dr_mag > dr_max) {
+          dr_max = dr_mag;
+          std::copy(dr, dr+3, dr_tot_);
+        }
+      }
+      return dr_tot_;
     }
 };
 

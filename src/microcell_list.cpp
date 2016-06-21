@@ -103,18 +103,20 @@ MicrocellList::CreateSubstructure(double pRcut) {
 
     #ifdef DEBUG
     // Write out the cell locations and extent
-    for (int cidx = 0; cidx < ncells_; ++cidx) {
-        int cx[3] = {0, 0, 0};
-        double x[3] = {0.0, 0.0, 0.0};
-        cytohelpers::cell_linear_to_vec(cidx, T_, cx);
-        for (int idim = 0; idim < ndim_; ++idim) {
-            x[idim] = cx[idim]*S_[idim] - boxoffs[idim];
-        }
-        printf("cell{%d}[%d,%d,%d] -> (%2.2f, %2.2f, %2.2f), ",
-                cidx, cx[0], cx[1], cx[2], x[0], x[1], x[2]);
-        printf("lo(%2.2f, %2.2f, %2.2f) - hi(%2.2f, %2.2f, %2.2f)\n",
-                x[0]-0.5*S_[0], x[1]-0.5*S_[1], x[2]-0.5*S_[2],
-                x[0]+0.5*S_[0], x[1]+0.5*S_[1], x[2]+0.5*S_[2]);
+    if (debug_trace) {
+      for (int cidx = 0; cidx < ncells_; ++cidx) {
+          int cx[3] = {0, 0, 0};
+          double x[3] = {0.0, 0.0, 0.0};
+          cytohelpers::cell_linear_to_vec(cidx, T_, cx);
+          for (int idim = 0; idim < ndim_; ++idim) {
+              x[idim] = cx[idim]*S_[idim] - boxoffs[idim];
+          }
+          printf("cell{%d}[%d,%d,%d] -> (%2.2f, %2.2f, %2.2f), ",
+                  cidx, cx[0], cx[1], cx[2], x[0], x[1], x[2]);
+          printf("lo(%2.2f, %2.2f, %2.2f) - hi(%2.2f, %2.2f, %2.2f)\n",
+                  x[0]-0.5*S_[0], x[1]-0.5*S_[1], x[2]-0.5*S_[2],
+                  x[0]+0.5*S_[0], x[1]+0.5*S_[1], x[2]+0.5*S_[2]);
+      }
     }
     #endif
 

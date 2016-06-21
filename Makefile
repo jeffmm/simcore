@@ -120,9 +120,9 @@ clean-output :
 	rm -f *.posit *.config *.thermo *.initial_config.* *.final_config *.final_config.* \
 	*.checkpoint.* *.checkpoint *.thermo_ext sphero.crosslinks.* test-log
 
-simcore: dirs $(BINDIR)/simcore
+simcore: dirs $(BINDIR)/simcore;cp $(BINDIR)/simcore simcore
 
-configure_simcore: dirs $(BINDIR)/configure_simcore
+configure_simcore: dirs $(BINDIR)/configure_simcore;cp $(BINDIR)/configure_simcore configure_simcore
 
 $(BINDIR)/simcore: $(OBJECTS) $(SIMCORE_MAIN_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
@@ -136,5 +136,3 @@ $(BINDIR)/configure_simcore: $(OBJECTS) $(CONFIGURE_SIMCORE_OBJ)
 # source file rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
-
-

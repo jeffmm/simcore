@@ -23,6 +23,8 @@
 #define ENABLE_OPENMP
 #endif
 
+extern bool debug_trace;
+
 struct graph_struct {
   double r[3];
   double u[3];
