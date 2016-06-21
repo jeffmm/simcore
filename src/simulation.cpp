@@ -18,14 +18,16 @@ void Simulation::RunSimulation() {
 
   for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
-    DPRINTF("********\nStep %d\n********\n", i_step_);
+    if (debug_trace)
+      DPRINTF("********\nStep %d\n********\n", i_step_);
     //Interact();
     //Integrate();
     InteractMP();
     IntegrateMP();
     // Only will run if DEBUG is enabled
     #ifdef DEBUG
-    DumpAll(i_step_);
+    if (debug_trace)
+      DumpAll(i_step_);
     #endif
     Draw();
     WriteOutputs();
