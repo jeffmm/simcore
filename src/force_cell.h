@@ -9,12 +9,17 @@
 class ForceCell : public ForceBase {
   public:
 
-    ForceCell() {}
+    ForceCell() {
+        name_ = "ForceCell";
+    }
     virtual ~ForceCell() {}
 
     // Override these functions, need special stuff
     virtual void Init(space_struct* pSpace, double pSkin);
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
+
+    virtual void printSpecifics();
+    virtual void dump();
 
     virtual void InitMP();
     virtual void Finalize();

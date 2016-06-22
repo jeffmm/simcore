@@ -3,12 +3,32 @@
 #include <chrono>
 #include <climits>
 
-#include "neighbor_list_ap.h"
+#include "neighbor_list_cells.h"
 
 #include "minimum_distance.h"
 
+// Init must call the cell list stuff too
 void
-NeighborListAP::CreateSubstructure(double pRcut) {
+NeighborListCells::Init(space_struct *pSpace, double pSkin) {
+    // Call the base init
+    ForceSubstructureBase::Init(pSpace, pSkin);
+
+    cell_list_.Init(pSpace, pSkin);
+}
+
+
+// Load flat simples must be overridden
+void
+NeighborListCells::LoadFlatSimples(std::vector<Simple*> pSimples) {
+    // Call the base class version
+    ForceSubstructureBase::LoadFlatSimples(pSimples);
+
+    // Call the cell list version
+    cell_list_.LoadFlatSimples(pSimples);
+}
+
+void
+NeighborListCells::CreateSubstructure(double pRcut) {
     auto start = std::chrono::steady_clock::now();
 
     rcut_ = pRcut;
@@ -32,14 +52,19 @@ NeighborListAP::CreateSubstructure(double pRcut) {
     n_updates_ = 0;
 
     auto end = std::chrono::steady_clock::now();
-    std::cout << "NeighborListAP::CreateSubstructure: " << std::chrono::duration<double, std::milli> (end-start).count() << "ms\n";
+
+    // Also create the cell list substructure here!!!!!!!
+    cell_list_.CreateSubstructure(pRcut);
+    cell_list_.UpdateCellList();
+
+    std::cout << "NeighborListCells::CreateSubstructure: " << std::chrono::duration<double, std::milli> (end-start).count() << "ms\n";
 }
 
 
 // Check to see if the neighbor list needs updating based on
 // accumulators
 void
-NeighborListAP::CheckNeighborList(bool pForceUpdate) {
+NeighborListCells::CheckNeighborList(bool pForceUpdate) {
     nl_update_ = pForceUpdate;
     for (int idx = 0; idx < nparticles_; ++idx) {
         if (nl_update_)
@@ -63,15 +88,18 @@ NeighborListAP::CheckNeighborList(bool pForceUpdate) {
 
 // Update the neighbor list
 void
-NeighborListAP::UpdateNeighborList() {
+NeighborListCells::UpdateNeighborList() {
     // Purge the neighbor list
     n_updates_++;
     for (int i = 0; i < nparticles_; ++i) {
         neighbors_[i].clear();
     }
 
+    // Update the cell list
+    cell_list_.UpdateCellList();
+
     // Call the all pairs update
-    AllPairsUpdate();
+    CellsUpdate();
 
     // Reset the accumulators
     for (int i = 0; i < nparticles_; ++i) {
@@ -81,40 +109,54 @@ NeighborListAP::UpdateNeighborList() {
 }
 
 
-// All pairs update routine
+// Cell list based update routine
 void
-NeighborListAP::AllPairsUpdate() {
-    // Loop over all pairs to build the neighbor list (simple, but O(N^2))
+NeighborListCells::CellsUpdate() {
+    // Loop over cells to build neighbor list (O(N))
     #ifdef ENABLE_OPENMP
     #pragma omp parallel
     #endif
     {
+        std::vector<int> *pid_to_cid = cell_list_.pidtocid();
+
         #ifdef ENABLE_OPENMP
         #pragma omp for schedule(runtime) nowait
         #endif
-        for (int idx = 0; idx < nparticles_ - 1; ++idx) {
-            for (int jdx = idx + 1; jdx < nparticles_; ++jdx) {
-                auto p1 = simples_[idx];
-                auto p2 = simples_[jdx];
+        for (int idx = 0; idx < nparticles_; ++idx) {
+            // Get our cell
+            int cidx = (*pid_to_cid)[idx];
+            auto cell1 = cell_list_[cidx];
+            // Loop over all other cells (including this one)
+            int nadj = cell_list_.nadj();
+            for (int cjdx = 0; cjdx < nadj; ++cjdx) {
+                auto cell2 = cell_list_[cell1->adj_cell_ids_[cjdx]];
+                // Loop over cell 2 particles
+                for (int jdx = 0; jdx < cell2->nparticles_; ++jdx) {
+                    int jjdx = cell2->idxlist_[jdx];
+                    if (jjdx > idx) {
+                        auto part1 = simples_[idx];
+                        auto part2 = simples_[jjdx];
 
-                // Minimum distance
-                interactionmindist idm;
-                MinimumDistance(p1, p2, idm, ndim_, nperiodic_, space_);
+                        // Minimum distance
+                        interactionmindist idm;
+                        MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
 
-                if (idm.dr_mag2 < rcs2_) {
-                    neighbor_t new_neighbor;
-                    new_neighbor.idx_ = jdx;
-                    neighbors_[idx].push_back(new_neighbor);
+                        if (idm.dr_mag2 < rcs2_) {
+                            neighbor_t new_neighbor;
+                            new_neighbor.idx_ = jjdx;
+                            neighbors_[idx].push_back(new_neighbor);
+                        }
+                    }
                 }
             }
         } // pragma omp for schedule(runtime) nowait
-    }
+    } // pragma omp parallel
 }
 
 
 // print
 void
-NeighborListAP::print() {
+NeighborListCells::print() {
     printf("********\n");
     printf("%s ->\n", name_.c_str());
     printf("\t{rcut: %2.2f}, {skin: %2.2f} = {rcs2: %2.2f}, {half_skin2:%2.2f}\n", rcut_, skin_, rcs2_, half_skin2_);
@@ -125,12 +167,16 @@ NeighborListAP::print() {
         minlist = std::min(minlist, (int)neighbors_[i].size());
     }
     printf("\tStats: {min: %d}, {max: %d}, {avg: %2.2f}\n", minlist, maxlist, (float)ntotlist/(float)nparticles_);
+    printf("Subsubstructure ->\n");
+    printf("--------\n");
+    cell_list_.print();
+    printf("--------\n");
 }
 
 
 // dump gory details
 void
-NeighborListAP::dump() {
+NeighborListCells::dump() {
     #ifdef DEBUG
     printf("********\n");
     printf("%s -> dump\n", name_.c_str());
@@ -142,5 +188,6 @@ NeighborListAP::dump() {
         }
         printf("]\n");
     }
+    cell_list_.dump();
     #endif
 }

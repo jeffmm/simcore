@@ -94,6 +94,7 @@ struct system_parameters {
   int time_flag = 0;
   int save_state_flag = 0;
   int n_bins = 1000;
+  char *potfile;
 
 };
 

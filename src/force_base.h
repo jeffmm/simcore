@@ -31,7 +31,15 @@ class ForceBase {
 
     virtual void Init(space_struct *pSpace, double pSkin);
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
-    virtual void InitPotentials(std::vector<SpeciesBase*> pSpecies);
+    virtual void InitPotentials(PotentialManager *pPotentials);
+
+    // IO routines of awfulness
+    virtual void print();
+    virtual void printSpecifics() = 0; // must be overridden
+    virtual void dump();
+
+    void InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy);
+    void ReduceParticlesMP();
 
     virtual void Finalize() = 0; // AFter we do everything, we must finalize it for safety
     virtual void InitMP() = 0; // init the underlying scheme
@@ -52,6 +60,7 @@ class ForceBase {
     int nthreads_ = 1;
     int nparticles_ = 0;
     double max_rcut_ = 0.0;
+    std::string name_ = "ForceBase";
     
     space_struct* space_;
 
@@ -62,7 +71,7 @@ class ForceBase {
     std::unordered_map<int, int> oid_position_map_; // oid to position mapping!!!
 
     // Classes for managers
-    PotentialManager potentials_;
+    PotentialManager *potentials_;
 };
 
 

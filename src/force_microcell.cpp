@@ -103,45 +103,8 @@ ForceMicrocell::Interact() {
                     int jj = c1->idxlist_[pidx2];
                     auto part2 = simples_[jj];
 
-                    // Exclude composite object self interactions
-                    if (part1->GetCID() == part2->GetCID()) continue;
-
-                    // Calculate the potential here
-                    PotentialBase *pot = potentials_.GetPotential(part1->GetSID(), part2->GetSID());
-                    if (pot == nullptr) continue;
-                    // Minimum distance, easier somehow?  XXX:
-                    interactionmindist idm;
-                    MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
-                    if (idm.dr_mag2 > pot->GetRCut2()) continue;
-
-                    // Obtain the mapping between particle id and posiion in force superarray
-                    auto oid1x = oid_position_map_[part1->GetOID()];
-                    auto oid2x = oid_position_map_[part2->GetOID()];
-
-                    // Fire off the potential calculation
-                    double fepot[4];
-                    pot->CalcPotential(idm.dr, idm.dr_mag, idm.buffer_mag, fepot);
-
-                    // Do the potential energies
-                    pr_energy[oid1x] += fepot[ndim_];
-                    pr_energy[oid2x] += fepot[ndim_];
-
-                    // Do the forces
-                    for (int i = 0; i < ndim_; ++i) {
-                        fr[i][oid1x] += fepot[i];
-                        fr[i][oid2x] -= fepot[i];
-                    }
-
-                    // Do the torques
-                    double tau[3];
-                    cross_product(idm.contact1, fepot, tau, ndim_);
-                    for (int i = 0; i < ndim_; ++i) {
-                        tr[i][oid1x] += tau[i];
-                    }
-                    cross_product(idm.contact2, fepot, tau, ndim_);
-                    for (int i = 0; i < ndim_; ++i) {
-                        tr[i][oid2x] -= tau[i];
-                    }
+                    // Do the interaction
+                    InteractParticlesMP(part1, part2, fr, tr, pr_energy);
                 }
             }
         } // cell loop
@@ -163,45 +126,8 @@ ForceMicrocell::Interact() {
                     int jj = cell2->idxlist_[pidx2];
                     auto part2 = simples_[jj];
 
-                    // Exclude composite object self interactions
-                    if (part1->GetCID() == part2->GetCID()) continue;
-
-                    // Calculate the potential here
-                    PotentialBase *pot = potentials_.GetPotential(part1->GetSID(), part2->GetSID());
-                    if (pot == nullptr) continue;
-                    // Minimum distance, easier somehow?  XXX:
-                    interactionmindist idm;
-                    MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
-                    if (idm.dr_mag2 > pot->GetRCut2()) continue;
-
-                    // Obtain the mapping between particle id and posiion in force superarray
-                    auto oid1x = oid_position_map_[part1->GetOID()];
-                    auto oid2x = oid_position_map_[part2->GetOID()];
-
-                    // Fire off the potential calculation
-                    double fepot[4];
-                    pot->CalcPotential(idm.dr, idm.dr_mag, idm.buffer_mag, fepot);
-
-                    // Do the potential energies
-                    pr_energy[oid1x] += fepot[ndim_];
-                    pr_energy[oid2x] += fepot[ndim_];
-
-                    // Do the forces
-                    for (int i = 0; i < ndim_; ++i) {
-                        fr[i][oid1x] += fepot[i];
-                        fr[i][oid2x] -= fepot[i];
-                    }
-
-                    // Do the torques
-                    double tau[3];
-                    cross_product(idm.contact1, fepot, tau, ndim_);
-                    for (int i = 0; i < ndim_; ++i) {
-                        tr[i][oid1x] += tau[i];
-                    }
-                    cross_product(idm.contact2, fepot, tau, ndim_);
-                    for (int i = 0; i < ndim_; ++i) {
-                        tr[i][oid2x] -= tau[i];
-                    }
+                    // Do the interaction
+                    InteractParticlesMP(part1, part2, fr, tr, pr_energy);
                 }
             }
         } // pair list
@@ -248,16 +174,20 @@ ForceMicrocell::Interact() {
         delete[] tr;
     } // pragma omp parallel
 
-    // XXX: CJE this is where we tell the particles what to do?
-    for (int i = 0; i < nparticles_; ++i) {
-        auto part = simples_[i];
-        int oidx = oid_position_map_[part->GetOID()];
-        double subforce[3] = {0.0, 0.0, 0.0};
-        double subtorque[3] = {0.0, 0.0, 0.0};
-        for (int idim = 0; idim < ndim_; ++idim) {
-            subforce[idim] = frc_[idim*nparticles_+oidx];
-            subtorque[idim] = trqc_[idim*nparticles_+oidx]; 
-        }
-        part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[oidx]);
-    }
+    ReduceParticlesMP();
+}
+
+
+// print specific information
+void
+ForceMicrocell::printSpecifics() {
+    microcell_list_.print();
+}
+
+
+// dump gory details
+void
+ForceMicrocell::dump() {
+    ForceBase::dump();
+    microcell_list_.dump();
 }
