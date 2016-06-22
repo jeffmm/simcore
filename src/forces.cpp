@@ -129,9 +129,11 @@ void Forces::CheckOverlap(std::vector<SpeciesBase*> species) {
     num++;
     overlap=false;
     UpdateCellList(species);
+    std::cout << "N interactions: " << interactions_.size() << "\n";
     for (auto it=interactions_.begin(); it!= interactions_.end(); ++it) {
       if (it->first->GetCID() == it->second->GetCID()) continue;
       MinimumDistance(*it);
+      std::cout << buffer_mag2_ << " " << dr_mag2_ << "\n";
       if (dr_mag2_ < buffer_mag2_) {
         overlap = true;
         SID const sid = it->second->GetSID();
