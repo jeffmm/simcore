@@ -54,7 +54,6 @@ class Forces {
     void DumpAll();
     void CheckOverlap(std::vector<SpeciesBase*> species);
     void InitPotentials(std::vector<SpeciesBase*> species);
-    void MinimumDistance(cell_interaction ix);
     void Draw(std::vector<graph_struct*> * graph_array);
     interaction FirstInteraction(PotentialBase *pot);
     interaction SecondInteraction(PotentialBase *pot);
