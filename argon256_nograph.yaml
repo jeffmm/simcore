@@ -16,13 +16,15 @@ argon_mass: 39.948
 graph_flag: 0
 n_graph: 100
 delta: 0.0001
-n_steps: 10000
+#n_steps: 10000
+n_steps: 1
 n_update_cells: 10
 time_flag: 1
 energy_analysis_flag: 1
 lj_epsilon: 0.2379
-ftype: 5
+ftype: 3
 masterskin: 1.0
+potfile: argon_pot.yaml
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5

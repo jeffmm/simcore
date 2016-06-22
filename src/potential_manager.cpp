@@ -73,3 +73,11 @@ void PotentialManager::Print() {
                             pot->second->Print();
     }
 }
+
+double PotentialManager::GetMaxRCut() {
+    double max_rcut = 0.0;
+    for (auto it = potentials_.begin(); it != potentials_.end(); ++it) {
+        max_rcut = std::max(max_rcut, it->second->GetRCut());
+    }
+    return max_rcut;
+}

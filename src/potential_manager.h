@@ -27,6 +27,8 @@ class PotentialManager {
     void RegisterPotentials();
     void ParsePotentials();
 
+    double GetMaxRCut();
+
     void AddPotential(SID sid1, SID sid2, PotentialBase *pot);
     PotentialBase * GetPotential(SID sid1, SID sid2);
     void Print();

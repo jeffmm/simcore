@@ -32,6 +32,9 @@ ForceBase::Init(space_struct *pSpace, double pSkin) {
 void
 ForceBase::InitPotentials(PotentialManager *pPotentials) {
     potentials_ = pPotentials;
+
+    // Determine the maximum rcut
+    max_rcut_ = potentials_->GetMaxRCut();
 }
 
 
