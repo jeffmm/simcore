@@ -44,7 +44,6 @@ class WCA : public PotentialBase {
         PotentialBase::Init(pSpace, ipot, node);
 
         // Now, let's look at the particular yaml node we are supposed to be interested in
-        rcut_   = node["potentials"][ipot]["rcut"].as<double>();
         eps_    = node["potentials"][ipot]["eps"].as<double>();
         sigma_  = node["potentials"][ipot]["sigma"].as<double>();
 
