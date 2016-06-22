@@ -41,3 +41,10 @@ if (params_.n_rod > 0) {
   species_.push_back(spcs);
 }
 #endif
+#ifdef _SIMCORE_MD_KMC_BEAD_H_
+if (params_.n_md_kmc_bead > 0) {
+  SpeciesBase * spcs = new MDKMCBeadSpecies(params_.n_md_kmc_bead, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  spcs->Init();
+  species_.push_back(spcs);
+}
+#endif

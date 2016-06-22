@@ -13,9 +13,10 @@ class MDKMCBead : public Simple {
   public:
     MDKMCBead(system_parameters *params, space_struct *space, 
         long seed, SID sid) : Simple(params, space, seed, sid) {
-      // Set parameters unique to MD bead
-      diameter_ = params->md_bead_diameter;
-      mass_ = params->md_bead_mass;
+      // Set parameters unique to MD KMC bead
+      diameter_ = params->md_kmc_bead_diameter;
+      mass_ = params->md_kmc_bead_mass;
+      is_kmc_ = true;
     }
     ~MDKMCBead() {}
     MDKMCBead(const MDKMCBead& that) : Simple(that) {}
@@ -37,7 +38,7 @@ class MDKMCBeadSpecies : public Species<MDKMCBead> {
     MDKMCBeadSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
-      SetSID(SID::md_bead);
+      SetSID(SID::md_kmc_bead);
       InitPotentials(params);
     }
     ~MDKMCBeadSpecies() {}
