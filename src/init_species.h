@@ -34,3 +34,10 @@ if (params_.n_md_bead > 0) {
   species_.push_back(spcs);
 }
 #endif
+#ifdef _SIMCORE_BR_SIMPLE_ROD_H_
+if (params_.n_rod > 0) {
+  SpeciesBase * spcs = new BrSimpleRodSpecies(params_.n_rod, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  spcs->Init();
+  species_.push_back(spcs);
+}
+#endif

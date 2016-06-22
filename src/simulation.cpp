@@ -79,7 +79,7 @@ void Simulation::InitSimulation() {
 }
 
 void Simulation::InitSpecies() {
-#include "init_species.cpp"
+#include "init_species.h"
 }
 void Simulation::ClearSpecies() {
   for (auto it=species_.begin(); it!=species_.end(); ++it)
