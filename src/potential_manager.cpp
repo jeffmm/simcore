@@ -81,3 +81,5 @@ double PotentialManager::GetMaxRCut() {
     }
     return max_rcut;
 }
+
+#undef REGISTER_POTENTIAL
