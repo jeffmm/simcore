@@ -125,6 +125,10 @@ class Simple : public Object {
     }
     virtual void ApplyInteractions();
     void SetCID(unsigned int const cid) {cid_=cid;}
+    virtual void AddDr() {
+      for (int i=0; i<n_dim_; ++i)
+        dr_tot_[i] += position_[i] - prev_position_[i];
+    }
 };
 
 template<typename...> class Composite;
@@ -175,6 +179,11 @@ class Composite<T> : public Object {
         }
       }
       return dr_tot_;
+    }
+    virtual void ZeroDrTot() {
+      for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
+        it->ZeroDrTot();
+      }
     }
 };
 
@@ -230,6 +239,12 @@ class Composite<T,V> : public Object {
       }
       return dr_tot_;
     }
+    virtual void ZeroDrTot() {
+      for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
+        it->ZeroDrTot();
+      }
+    }
+
 };
 
 // *********

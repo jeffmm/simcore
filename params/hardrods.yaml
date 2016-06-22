@@ -8,7 +8,7 @@ system_radius: 30
 daughter_radius: 5
 mother_daughter_dist: 12
 boundary_type: 1
-n_rod: 100
+n_rod: 10
 rod_diameter: 1
 rod_length: 4
 n_dimer: 0

@@ -19,6 +19,7 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   std::fill(prev_position_,prev_position_+3,0.0);
   std::fill(force_,force_+3,0.0);
   std::fill(torque_, torque_+3, 0.0);
+  std::fill(dr_tot_, dr_tot_+3, 0.0);
   rng_.init(seed);
   interactions_.clear();
   // Set some defaults
@@ -44,6 +45,7 @@ Object::Object(const Object& that) {
   std::copy(that.orientation_, that.orientation_+3, orientation_);
   std::copy(that.force_, that.force_+3, force_);
   std::copy(that.torque_, that.torque_+3, torque_);
+  std::copy(that.dr_tot_, that.dr_tot_+3, dr_tot_);
   diameter_ = that.diameter_;
   length_ = that.length_;
   k_energy_ = that.k_energy_;
@@ -70,6 +72,7 @@ Object &Object::operator=(Object const& that) {
   std::copy(that.orientation_, that.orientation_+3, orientation_);
   std::copy(that.force_, that.force_+3, force_);
   std::copy(that.torque_, that.torque_+3, torque_);
+  std::copy(that.dr_tot_, that.dr_tot_+3, dr_tot_);
   diameter_ = that.diameter_;
   length_ = that.length_;
   k_energy_ = that.k_energy_;
