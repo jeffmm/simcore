@@ -93,7 +93,7 @@ endif
 # for things like not compiling more than one main
 SIMCORE_SOURCE = $(SRCDIR)/simcore_main.cpp
 CONFIGURE_SIMCORE_SOURCE = $(SRCDIR)/configure_simcore.cpp
-EXCLUDE_SOURCES = $(SRCDIR)/integrator_manager.cpp $(SRCDIR)/make_params.cpp $(SRCDIR)/br_rod.cpp
+EXCLUDE_SOURCES = $(SRCDIR)/integrator_manager.cpp $(SRCDIR)/make_params.cpp 
 
 MAIN_SOURCES = $(SIMCORE_SOURCE) $(CONFIGURE_SIMCORE_SOURCE)
 
