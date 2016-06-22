@@ -91,3 +91,4 @@ param_file << "buckling_analysis_flag : " << params.buckling_analysis_flag << "\
 param_file << "time_flag : " << params.time_flag << "\n";
 param_file << "save_state_flag : " << params.save_state_flag << "\n";
 param_file << "n_bins : " << params.n_bins << "\n";
+param_file << "potfile : " << params.potfile << "\n";

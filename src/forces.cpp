@@ -2,15 +2,17 @@
 
 #include "forces.h"
 
-void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pIntFtype, double cell_length, int draw_flag, double pSkin) {
-  space_=space;
-  n_dim_ = space->n_dim;
-  n_periodic_ = space->n_periodic;
-  draw_flag_ = draw_flag;
+// Pass in the main system properties information
+void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> species) {
+  params_ = pParams;
+  space_ = pSpace;
+  n_dim_ = space_->n_dim;
+  n_periodic_ = space_->n_periodic;
+  draw_flag_ = params_->draw_interactions;
   //XXX: CJE switch on force type for now
   printf("********\n");
   printf("Create Forces\n");
-  switch (pIntFtype) {
+  switch (params_->ftype) {
     case 0:
         printf("Must specify a force substructure, exiting!\n");
         exit(1);
@@ -36,52 +38,41 @@ void Forces::Init(space_struct *space, std::vector<SpeciesBase*> species, int pI
         printf("->Using neighbor lists all pairs substructure\n");
         force_type_ = FTYPE::neighborallpairs;
         force_module_ = forceFactory<ForceNeighborListAP>();
-        skin_ = pSkin;
+        skin_ = params_->masterskin;
         break;
     case 5:
         printf("->Using neighbor list cells substructure\n");
         force_type_ = FTYPE::neighborcells;
-        skin_ = pSkin;
-        exit(1);
+        force_module_ = forceFactory<ForceNeighborListCells>();
+        skin_ = params_->masterskin;
         break;
     default:
         printf("Must specify a force substructure, exiting!\n");
         break;
-  }
+   }
   //XXX: CJE needed for the check overlaps, change this
-  cell_list_.Init(n_dim_, n_periodic_, cell_length, space->radius);
+  cell_list_.Init(n_dim_, n_periodic_, params_->cell_length, space_->radius);
   CheckOverlap(species);
-  //InitPotentials(species);
+  InitPotentials(species);
 
   // Create the force submodule to do the calculations!
-  force_module_->Init(space, skin_);
+  force_module_->Init(space_, skin_);
   force_module_->LoadSimples(species);
-  force_module_->InitPotentials(species);
+  force_module_->InitPotentials(&potentials_);
   force_module_->Finalize();
   force_module_->UpdateScheme();
+  force_module_->print();
 }
 
 void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
-  for (auto it=species.begin(); it!= species.end(); ++it) {
-    auto pot_vec = (*it)->GetPotentials();
-    for (auto jt=pot_vec.begin(); jt!=pot_vec.end(); ++jt)
-      potentials_.AddPotential(jt->first.first,jt->first.second,jt->second);
-  }
-
-  //potentials_.Print();
+  // Ask the potential manager to parse the potentials file
+  potentials_.Init(space_, params_->potfile);
 }
 
 void Forces::DumpAll() {
     // Dump all the particles and their positions, forces, energy (2d)
     #ifdef DEBUG
-    for (int i = 0; i < (int)simples_.size(); ++i) {
-        auto part = simples_[i];
-        auto oid = part->GetOID();
-        printf("\to(%d) = ", oid);
-        printf("x{%2.2f, %2.2f}, ", part->GetPosition()[0], part->GetPosition()[1]);
-        printf("f{%2.2f, %2.2f}, ", part->GetForce()[0], part->GetForce()[1]);
-        printf("u{%2.2f}, p{%2.2f}\n", part->GetKineticEnergy(), part->GetPotentialEnergy());
-    }
+    force_module_->dump();
     #endif
 }
 

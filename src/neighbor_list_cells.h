@@ -1,25 +1,27 @@
 // Microcell list!
 
-#ifndef _SIMCORE_NEIGHBOR_LIST_AP_H_
-#define _SIMCORE_NEIGHBOR_LIST_AP_H_
+#ifndef _SIMCORE_NEIGHBOR_LIST_CELLS_H_
+#define _SIMCORE_NEIGHBOR_LIST_CELLS_H_
 
 #include "force_substructure_base.h"
 #include "neighbor_list_generic.h"
+#include "adj_cell_list.h"
 
-class NeighborListAP : public ForceSubstructureBase {
+class NeighborListCells : public ForceSubstructureBase {
   public:
 
-    NeighborListAP() {
-        name_ = "NeighborListAP";
+    NeighborListCells() {
+        name_ = "NeighborListCells";
     }
-    virtual ~NeighborListAP() {
+    virtual ~NeighborListCells() {
         delete[] neighbors_;
-        printf("********\nNeighborList All Pairs stats\n");
+        printf("********\nNeighborList Cells stats\n");
         printf("\tNupdates: %d, Skin:%2.2f\n", n_updates_, skin_);
     }
 
-    // Init should be the same
-    // Load Simples should be the same
+    // Override init for the cell list
+    virtual void Init(space_struct *pSpace, double pSkin);
+    virtual void LoadFlatSimples(std::vector<Simple*> pSimples);
     virtual void print();
     virtual void dump();
     virtual void CreateSubstructure(double pRcut);
@@ -28,8 +30,8 @@ class NeighborListAP : public ForceSubstructureBase {
     void CheckNeighborList(bool pForceUpdate = false); // Checks for update if needed
     void UpdateNeighborList(); //Actually does the update
 
-    // Local all pairs update function
-    void AllPairsUpdate();
+    // Local cells update function
+    void CellsUpdate();
 
     // Getters
     int GetNUpdates() { return n_updates_; }
@@ -49,6 +51,9 @@ class NeighborListAP : public ForceSubstructureBase {
 
     // The neighbor list itself
     nl_list* neighbors_;
+
+    // Our underlying cell list
+    AdjCellList cell_list_;
 
 };
 

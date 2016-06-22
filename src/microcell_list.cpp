@@ -1,5 +1,7 @@
 // implementation for microcell list
 
+#include <climits>
+
 #include "microcell_list.h"
 
 #include "minimum_distance.h"
@@ -100,31 +102,6 @@ MicrocellList::CreateSubstructure(double pRcut) {
             ++npairs_;
         }
     }
-
-    #ifdef DEBUG
-    // Write out the cell locations and extent
-    if (debug_trace) {
-      for (int cidx = 0; cidx < ncells_; ++cidx) {
-          int cx[3] = {0, 0, 0};
-          double x[3] = {0.0, 0.0, 0.0};
-          cytohelpers::cell_linear_to_vec(cidx, T_, cx);
-          for (int idim = 0; idim < ndim_; ++idim) {
-              x[idim] = cx[idim]*S_[idim] - boxoffs[idim];
-          }
-          printf("cell{%d}[%d,%d,%d] -> (%2.2f, %2.2f, %2.2f), ",
-                  cidx, cx[0], cx[1], cx[2], x[0], x[1], x[2]);
-          printf("lo(%2.2f, %2.2f, %2.2f) - hi(%2.2f, %2.2f, %2.2f)\n",
-                  x[0]-0.5*S_[0], x[1]-0.5*S_[1], x[2]-0.5*S_[2],
-                  x[0]+0.5*S_[0], x[1]+0.5*S_[1], x[2]+0.5*S_[2]);
-      }
-    }
-    #endif
-
-    printf("********\n");
-    printf("Microcell list (ndim=%d) has %dx%dx%d=%d cells of lengths {%.2f, %.2f, %.2f} "
-           "with %d/%d pairs and %d particles/cell (tot %d).\n", ndim_, T_[0], T_[1], T_[2], ncells_, 
-           S_[0], S_[1], S_[2], npairs_, ncells_*(ncells_-1)/2, nidx_, nparticles_);
-    printf("-> {rcut: %2.2f}, {skin: %2.2f} = {rbuff: %2.2f}\n", rcut_, skin_, rbuff_);
 }
 
 
@@ -173,4 +150,44 @@ MicrocellList::UpdateCellList() {
         printf("Overflow in cell list: %d/%d particles/cells\n", midx, nidx_);
         exit(1);
     }
+}
+
+
+// print out the information
+void
+MicrocellList::print() {
+    printf("********\n");
+    printf("%s ->\n", name_.c_str());
+    printf("\t%dx%dx%d=%d cells of lengths {%.2f, %.2f, %.2f} "
+           "with %d/%d pairs and %d particles/cell (n: %d).\n", T_[0], T_[1], T_[2], ncells_, 
+           S_[0], S_[1], S_[2], npairs_, ncells_*(ncells_-1)/2, nidx_, nparticles_);
+    printf("\t{rcut: %2.2f}, {skin: %2.2f} = {rbuff: %2.2f}\n", rcut_, skin_, rbuff_);
+    int ntotcells = 0, maxcell = 0, mincell = INT_MAX;
+    for (int cidx = 0; cidx < ncells_; ++cidx) {
+        auto cell1 = clist_[cidx];
+        ntotcells += cell1.nparticles_;
+        maxcell = std::max(maxcell, cell1.nparticles_);
+        mincell = std::min(mincell, cell1.nparticles_);
+    }
+    printf("\tStats: {min: %d}, {max: %d}, {avg: %2.2f}\n", mincell, maxcell, (float)ntotcells/(float)ncells_);
+}
+
+
+// dump all information
+void
+MicrocellList::dump() {
+    #ifdef DEBUG
+    printf("********\n");
+    printf("%s -> dump\n", name_.c_str());
+    for (int cidx = 0; cidx < ncells_; ++cidx) {
+        int cx[3] = {0, 0, 0};
+        cytohelpers::cell_linear_to_vec(cidx, T_, cx);
+        auto cell1 = clist_[cidx];
+        printf("cell{%d}[%d,%d,%d](n: %d) -> [", cidx, cx[0], cx[1], cx[2], cell1.nparticles_);
+        for (int idx = 0; idx < cell1.nparticles_; ++idx) {
+            printf("%d,", cell1.idxlist_[idx]);
+        }
+        printf("]\n");
+    }
+    #endif
 }
