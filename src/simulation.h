@@ -32,7 +32,6 @@ class Simulation {
     void Draw();
     void WriteOutputs();
     void GetGraphicsStructure();
-    void KineticMonteCarloMP();
     void Integrate();
     void IntegrateMP();
     void Interact();
