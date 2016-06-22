@@ -123,6 +123,7 @@ void Object::InsertRandom(double buffer) {
       }
     }
   }
+  generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   UpdatePeriodic();
 }
 

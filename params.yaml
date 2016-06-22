@@ -4,11 +4,14 @@ seed : 32679122673370
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-system_radius: 4
+system_radius: 30
 daughter_radius: 5
 mother_daughter_dist: 12
 boundary_type: 1
-n_dimer: 2
+n_rod: 100
+rod_diameter: 1
+rod_length: 4
+n_dimer: 0
 n_md_bead: 0
 md_bead_diameter: 1
 md_bead_mass: 1
@@ -18,7 +21,7 @@ dimer_diameter: 1
 dimer_length: 2
 dimer_eq_length: 2
 dimer_k_spring: 5
-cell_length: 1.5
+cell_length: 8
 graph_flag: 1
 n_graph: 100
 graph_background: 1

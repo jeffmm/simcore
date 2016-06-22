@@ -2,6 +2,7 @@
 #define _AUXILIARY_H_
 
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 #include <vector>
 #include <array>
 #include <map>
@@ -39,7 +40,8 @@ enum class SID : unsigned char {
   br_dimer,
   argon,
   neon,
-  br_rod
+  br_rod,
+  br_simple_rod
 };
 
 enum class FTYPE : unsigned char {
