@@ -90,3 +90,4 @@ param_file << "rod_diameter : " << params.rod_diameter << "\n";
 param_file << "draw_interactions : " << params.draw_interactions << "\n";
 param_file << "ftype : " << params.ftype << "\n";
 param_file << "masterskin : " << params.masterskin << "\n";
+param_file << "potfile : " << params.potfile << "\n";

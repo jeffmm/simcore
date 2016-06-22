@@ -166,10 +166,11 @@ NeighborListCells::print() {
         maxlist = std::max(maxlist, (int)neighbors_[i].size());
         minlist = std::min(minlist, (int)neighbors_[i].size());
     }
-    printf("\t--------\n");
-    cell_list_.print();
-    printf("\t--------\n");
     printf("\tStats: {min: %d}, {max: %d}, {avg: %2.2f}\n", minlist, maxlist, (float)ntotlist/(float)nparticles_);
+    printf("Subsubstructure ->\n");
+    printf("--------\n");
+    cell_list_.print();
+    printf("--------\n");
 }
 
 
