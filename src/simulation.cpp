@@ -19,11 +19,8 @@ void Simulation::RunSimulation() {
   for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
     DPRINTF("********\nStep %d\n********\n", i_step_);
-    // Do the same as earlier code
-    // KMC
-    // Interactions
-    // Integrate
-    KineticMonteCarloMP();
+    //Interact();
+    //Integrate();
     InteractMP();
     IntegrateMP();
     // Only will run if DEBUG is enabled
@@ -38,10 +35,6 @@ void Simulation::RunSimulation() {
 void Simulation::DumpAll(int i_step) {
     // Very yucky dump of all the particles and their positions and forces
     forces_.DumpAll();
-}
-
-void Simulation::KineticMonteCarloMP() {
-
 }
 
 void Simulation::Integrate() {

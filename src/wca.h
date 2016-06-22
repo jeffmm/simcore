@@ -48,6 +48,11 @@ class WCA : public PotentialBase {
         eps_    = node["potentials"][ipot]["eps"].as<double>();
         sigma_  = node["potentials"][ipot]["sigma"].as<double>();
 
+        // For WCA potentials, the rcutoff is actually important, as it must be
+        // restricted to be at 2^(1/6)sigma
+
+        rcut_ = pow(2.0, 1.0/6.0)*sigma_;
+
         rcut2_ = rcut_*rcut_;
         c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
         c6_  = 4.0 * eps_ * pow(sigma_,  6.0);

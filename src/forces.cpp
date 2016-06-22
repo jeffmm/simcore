@@ -61,6 +61,7 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
   force_module_->InitPotentials(&potentials_);
   force_module_->Finalize();
   force_module_->UpdateScheme();
+  force_module_->print();
 }
 
 void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
