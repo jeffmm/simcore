@@ -14,7 +14,7 @@
 #ifdef NDEBUG
 #define DPRINTF(M, ...)
 #else
-#define DPRINTF(M, ...) do { fprintf(stderr, "" M "", ##__VA_ARGS__); } while(0)
+#define DPRINTF(M, ...) do { fprintf(stdout, "" M "", ##__VA_ARGS__); } while(0)
 #endif
 
 #endif //_MACROS_H

@@ -2,11 +2,11 @@
 
 #include <cassert>
 
-#include "force_neighborlist_ap.h"
+#include "force_neighborlist_cells.h"
 
 // Overridden init method to call initmp
 void
-ForceNeighborListAP::Init(space_struct* pSpace, double pSkin) {
+ForceNeighborListCells::Init(space_struct* pSpace, double pSkin) {
     // Override this to call base class, then initmp
     ForceBase::Init(pSpace, pSkin);
     InitMP();
@@ -15,7 +15,7 @@ ForceNeighborListAP::Init(space_struct* pSpace, double pSkin) {
 
 // Overridden load simples method (needed for finalize)
 void
-ForceNeighborListAP::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
+ForceNeighborListCells::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
     // Run the base class version
     ForceBase::LoadSimples(pSpecies);
 
@@ -24,13 +24,13 @@ ForceNeighborListAP::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
 }
 
 void
-ForceNeighborListAP::InitMP() {
+ForceNeighborListCells::InitMP() {
     neighbor_list_.Init(space_, skin_);
 }
 
 
 void
-ForceNeighborListAP::Finalize() {
+ForceNeighborListCells::Finalize() {
     // Should be ready to finalize if we have loaded and init'ed
     neighbor_list_.CreateSubstructure(max_rcut_); 
     neighbor_list_.CheckNeighborList(true);
@@ -39,7 +39,7 @@ ForceNeighborListAP::Finalize() {
 
 
 void
-ForceNeighborListAP::UpdateScheme() {
+ForceNeighborListCells::UpdateScheme() {
     // We check on each force calculation if we need to update
     // the neighbor list, so doesn't matter here.
     //neighbor_list_.CheckNeighborList();
@@ -47,9 +47,9 @@ ForceNeighborListAP::UpdateScheme() {
 
 
 void
-ForceNeighborListAP::Interact() {
+ForceNeighborListCells::Interact() {
     if (!initialized_) {
-        printf("ERROR: Finalized was not run for ForceNeighborListAPs, exiting!\n");
+        printf("ERROR: Finalized was not run for ForceNeighborListCells, exiting!\n");
         exit(1);
     }
 
@@ -154,14 +154,14 @@ ForceNeighborListAP::Interact() {
 
 // print specifics
 void
-ForceNeighborListAP::printSpecifics() {
+ForceNeighborListCells::printSpecifics() {
     neighbor_list_.print();
 }
 
 
 // dump gory details
 void
-ForceNeighborListAP::dump() {
+ForceNeighborListCells::dump() {
     ForceBase::dump();
     neighbor_list_.dump();
 }
