@@ -91,7 +91,8 @@ ForceBase::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double
     auto oid1x = oid_position_map_[part1->GetOID()];
     auto oid2x = oid_position_map_[part2->GetOID()];
     #ifdef DEBUG
-    printf("\tInteracting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
+    if (debug_trace)
+        printf("\tInteracting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
     #endif
 
     // Fire off the potential calculation

@@ -8,6 +8,7 @@ void MDKMCBead::Init() {
     prev_position_[i] = position_[i] - delta_ * velocity_[i];
   }
   orientation_[0] = 0; // Set default color to red
+  orientation_[1] -=orientation_[1];
 }
 void MDKMCBead::UpdatePosition() {
   ZeroForce();
@@ -50,10 +51,10 @@ double const MDKMCBead::GetKineticEnergy() {
 }
 
 void MDKMCBeadSpecies::InitPotentials (system_parameters *params) {
-  AddPotential(SID::md_bead, SID::md_bead, 
-      // Set md_bead-md_bead interaction
-      new LJ126(params->lj_epsilon,params->md_bead_diameter,
-        space_, 2.5*params->md_bead_diameter));
-    //new WCA(params->lj_epsilon,params->md_bead_diameter,
-     //   space_, pow(2.0,1.0/6.0) *params->md_bead_diameter));
+  AddPotential(SID::md_kmc_bead, SID::md_kmc_bead, 
+      // Set md_kmc_bead-md_kmc_bead interaction
+      new LJ126(params->lj_epsilon,params->md_kmc_bead_diameter,
+        space_, 2.5*params->md_kmc_bead_diameter));
+    //new WCA(params->lj_epsilon,params->md_kmc_bead_diameter,
+     //   space_, pow(2.0,1.0/6.0) *params->md_kmc_bead_diameter));
 }

@@ -29,6 +29,7 @@ class Object {
            k_energy_,
            p_energy_;
     bool is_simple_;
+    bool is_kmc_ = false;
     space_struct *space_;
     graph_struct g_;
     rng_properties rng_;
@@ -42,6 +43,7 @@ class Object {
 
     virtual ~Object() {rng_.clear();}
     bool IsSimple() {return is_simple_;}
+    bool IsKMC() { return is_kmc_; }
     void SetPosition(const double *const pos) {
       std::copy(pos, pos+n_dim_, position_);
     }
