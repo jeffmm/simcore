@@ -27,12 +27,16 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
         force_type_ = FTYPE::microcells;
         force_module_ = forceFactory<ForceMicrocell>();
         skin_ = 0.0;
+        printf("ERROR: Currently deprecated on account of composite objects, exiting\n");
+        exit(1);
         break;
     case 3:
         printf("->Using cells force substructure\n");
         force_type_ = FTYPE::cells;
         force_module_ = forceFactory<ForceCell>();
         skin_ = 0.0;
+        printf("ERROR: Currently deprecated on account of composite objects, exiting\n");
+        exit(1);
         break;
     case 4:
         printf("->Using neighbor lists all pairs substructure\n");
@@ -45,6 +49,8 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
         force_type_ = FTYPE::neighborcells;
         force_module_ = forceFactory<ForceNeighborListCells>();
         skin_ = params_->masterskin;
+        printf("ERROR: Currently deprecated on account of composite objects, exiting\n");
+        exit(1);
         break;
     default:
         printf("Must specify a force substructure, exiting!\n");
