@@ -19,6 +19,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "helpers.h"
+
 #if defined(_OPENMP)
 #define ENABLE_OPENMP
 #endif
@@ -39,6 +41,28 @@ enum class SID : unsigned char {
   neon,
   br_rod
 };
+
+//XXX: CJE I HATE THIS WITH THE FUCKING DYING PASSION
+//OF A THOUSAND SUNS!!!!
+inline SID StringToSID(std::string &s) {
+    if (s == "none")
+        return SID::none;
+    else if (s == "md_bead")
+        return SID::md_bead;
+    else if (s == "br_bead")
+        return SID::br_bead;
+    else if (s == "br_dimer")
+        return SID::br_dimer;
+    else if (s == "argon")
+        return SID::argon;
+    else if (s == "neon")
+        return SID::neon;
+    else if (s == "br_rod")
+        return SID::br_rod;
+    else
+        std::cout << "Go fuck yourself!\n";
+    return SID::none;
+}
 
 enum class FTYPE : unsigned char {
   none,

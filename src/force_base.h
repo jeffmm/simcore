@@ -31,7 +31,7 @@ class ForceBase {
 
     virtual void Init(space_struct *pSpace, double pSkin);
     virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
-    virtual void InitPotentials(std::vector<SpeciesBase*> pSpecies);
+    virtual void InitPotentials(PotentialManager *pPotentials);
 
     // IO routines of awfulness
     virtual void print();
@@ -71,7 +71,7 @@ class ForceBase {
     std::unordered_map<int, int> oid_position_map_; // oid to position mapping!!!
 
     // Classes for managers
-    PotentialManager potentials_;
+    PotentialManager *potentials_;
 };
 
 

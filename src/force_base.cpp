@@ -30,16 +30,8 @@ ForceBase::Init(space_struct *pSpace, double pSkin) {
 // XXX: CJE just copy the current scheme for adding potentials
 // for now
 void
-ForceBase::InitPotentials(std::vector<SpeciesBase*> pSpecies) {
-    for (auto it = pSpecies.begin(); it != pSpecies.end(); ++it) {
-        auto pot_vec = (*it)->GetPotentials();
-        for (auto jt=pot_vec.begin(); jt!=pot_vec.end(); ++jt) {
-            potentials_.AddPotential(jt->first.first,jt->first.second,jt->second);
-            max_rcut_ = std::max(max_rcut_, jt->second->GetRCut());
-        }
-    }
-    
-    potentials_.Print();
+ForceBase::InitPotentials(PotentialManager *pPotentials) {
+    potentials_ = pPotentials;
 }
 
 
@@ -84,7 +76,7 @@ ForceBase::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double
     if (part1->GetCID() == part2->GetCID()) return;
 
     // Calculate the potential here
-    PotentialBase *pot = potentials_.GetPotential(part1->GetSID(), part2->GetSID());
+    PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
     if (pot == nullptr) return;
     // Minimum distance here@@@@!!!!
     // XXX: CJE ewwwwwww, more elegant way?

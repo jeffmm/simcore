@@ -10,6 +10,9 @@ class LJ126 : public PotentialBase {
     double c12_, c6_;
     double shift_;
   public:
+    LJ126() : PotentialBase(nullptr, 0.0), eps_(0.0), sigma_(0.0) {
+      pot_name_ = "Lennard Jones 12-6";
+    }
     LJ126(double pEps, double pSigma, space_struct* pSpace, double pRcut) : PotentialBase(pSpace, pRcut), eps_(pEps), sigma_(pSigma) {
       pot_name_ = "Lennard Jones 12-6";
       c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
@@ -21,7 +24,8 @@ class LJ126 : public PotentialBase {
     }
     virtual void Print() {
         PotentialBase::Print();
-        std::cout << "\t{eps:" << eps_ << "}, {sigma:" << sigma_ << "}, {c6:" << c6_ << "}, {c12:" << c12_ << "}\n";
+        std::cout << "\t{eps:" << eps_ << "}, {sigma:" << sigma_ << "}, {c6:" << c6_ << "}, {c12:" 
+                  << c12_ << "}, {shift:" << shift_ << "}\n";
     }
     // X and Y are real positions, XS and YS are scaled positions
     virtual void CalcPotential(double *dr,
@@ -39,6 +43,23 @@ class LJ126 : public PotentialBase {
       for (int i = 0; i < n_dim_; ++i) 
         fpote[i] = dr[i]*ffac;
       fpote[n_dim_] = r6*(c12_*r6 - c6_) - shift_;
+    }
+
+    virtual void Init(space_struct *pSpace, int ipot, YAML::Node &node) {
+        PotentialBase::Init(pSpace, ipot, node);
+
+        // Now, let's look at the particular yaml node we are supposed to be interested in
+        rcut_   = node["potentials"][ipot]["rcut"].as<double>();
+        eps_    = node["potentials"][ipot]["eps"].as<double>();
+        sigma_  = node["potentials"][ipot]["sigma"].as<double>();
+
+        rcut2_ = rcut_*rcut_;
+        c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
+        c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
+        // Shift potential so it goes to zero at rcut
+        double rcutinv = 1.0/rcut_;
+        double rcutinv6 = pow(rcutinv, 6.0);
+        shift_ = rcutinv6*(c12_*rcutinv6 - c6_);
     }
 };
 
