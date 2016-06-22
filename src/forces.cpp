@@ -67,14 +67,6 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
 void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
   // Ask the potential manager to parse the potentials file
   potentials_.Init(space_, params_->potfile);
-  
-  /*for (auto it=species.begin(); it!= species.end(); ++it) {
-    auto pot_vec = (*it)->GetPotentials();
-    for (auto jt=pot_vec.begin(); jt!=pot_vec.end(); ++jt)
-      potentials_.AddPotential(jt->first.first,jt->first.second,jt->second);
-  }*/
-
-  //potentials_.Print();
 }
 
 void Forces::DumpAll() {
