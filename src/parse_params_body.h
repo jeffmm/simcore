@@ -266,6 +266,10 @@ else if (param_name.compare("ftype") == 0){
 else if (param_name.compare("masterskin") == 0){
   params_[i_var].masterskin = atof(param_value.c_str());
 }
+else if ( param_name.compare("potfile") == 0 ) {
+  params_[i_var].potfile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
+  strcpy(params_[i_var].potfile, param_value.c_str());
+}
 else {
   std::cout << "  WARNING: Parameter " << param_name << " not recognized!\n";
 }

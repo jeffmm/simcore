@@ -93,6 +93,7 @@ struct system_parameters {
   int draw_interactions = 0;
   int ftype = 2;
   double masterskin = 1.0;
+  char *potfile;
 
 };
 

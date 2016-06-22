@@ -72,8 +72,7 @@ void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
   InitSpecies();
-  forces_.Init(space_.GetStruct(), species_, params_.ftype, params_.cell_length, params_.draw_interactions,
-          params_.masterskin);
+  forces_.Init(&params_, space_.GetStruct(), species_);
   if (params_.graph_flag) {
     GetGraphicsStructure();
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);
