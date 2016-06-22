@@ -63,6 +63,8 @@ inline SID StringToSID(std::string &s) {
         return SID::neon;
     else if (s == "br_rod")
         return SID::br_rod;
+    else if (s == "br_simple_rod")
+        return SID::br_simple_rod;
     else
         std::cout << "Go fuck yourself!\n";
     return SID::none;
