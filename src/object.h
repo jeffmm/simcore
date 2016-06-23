@@ -90,6 +90,7 @@ class Object {
     virtual double const * const GetDrTot() { return dr_tot_; }
     double const * const GetOrientation() {return orientation_;}
     double const * const GetForce() {return force_;}
+    double const * const GetTorque() {return torque_;}
     double const GetDiameter() {return diameter_;}
     double const GetLength() {return length_;}
     virtual void Init() {InsertRandom(length_+diameter_);}
@@ -157,8 +158,7 @@ class Composite<T> : public Object {
     virtual void ZeroForce() {
       std::fill(force_,force_+3,0.0);
       std::fill(torque_,torque_+3,0.0);
-      for (auto it=elements_.begin(); it!=elements_.end(); ++it)
-        it->ZeroForce();
+      p_energy_ = 0;
     }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim_vec;
@@ -214,10 +214,7 @@ class Composite<T,V> : public Object {
     virtual void ZeroForce() {
       std::fill(force_,force_+3,0.0);
       std::fill(torque_,torque_+3,0.0);
-      for (auto it=elements_.begin(); it!=elements_.end(); ++it)
-        it->ZeroForce();
-      for (auto it=v_elements_.begin(); it!=v_elements_.end(); ++it)
-        it->ZeroForce();
+      p_energy_ = 0;
     }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim_vec;

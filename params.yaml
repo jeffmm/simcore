@@ -8,7 +8,7 @@ system_radius: 30
 daughter_radius: 5
 mother_daughter_dist: 12
 boundary_type: 1
-n_rod: 1
+n_rod: 30
 rod_diameter: 1
 rod_length: 10
 n_dimer: 0
@@ -21,7 +21,7 @@ dimer_diameter: 1
 dimer_length: 2
 dimer_eq_length: 2
 dimer_k_spring: 5
-cell_length: 8
+cell_length: 5
 graph_flag: 1
 n_graph: 100
 graph_background: 1
@@ -36,7 +36,7 @@ n_argon: 0
 grab_flag: 0
 grab_file: frames/frame
 draw_interactions: 0
-ftype: 4
+ftype: 1
 potfile: params/hardrods_pot.yaml
 #[brownian_dimer]:
     #num: [2,4]

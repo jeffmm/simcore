@@ -25,6 +25,7 @@ class BrRod : public Composite<Site,Bond> {
     void UpdateOrientation();
     void GetBodyFrame();
     void AddRandomDisplacement();
+    void ApplyForcesTorques();
 
   public:
     BrRod(system_parameters *params, space_struct * space, long seed, SID sid) 
