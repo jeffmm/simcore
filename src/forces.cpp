@@ -168,7 +168,7 @@ void Forces::CheckOverlap(std::vector<SpeciesBase*> species) {
                 }
             }
         }
-        if (num > 5)
+        if (num > 10000)
             error_exit("ERROR: Too many overlaps detected. Check packing ratio for objects.\n");
     } while (overlap);
 }
