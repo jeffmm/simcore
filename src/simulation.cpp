@@ -50,14 +50,14 @@ void Simulation::IntegrateMP() {
 
 void Simulation::Interact() {
   if (i_step_%params_.n_update_cells==0) {
-    forces_.UpdateCellList(species_);
+    forces_.UpdateCellList();
   }
   forces_.Interact();
 }
 
 void Simulation::InteractMP() {
   if (i_step_ % params_.n_update_cells == 0) {
-    forces_.UpdateScheme(species_);
+    forces_.UpdateScheme();
   }
   forces_.InteractMP();
 }
@@ -70,7 +70,7 @@ void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
   InitSpecies();
-  forces_.Init(&params_, space_.GetStruct(), species_);
+  forces_.Init(&params_, space_.GetStruct(), &species_);
   if (params_.graph_flag) {
     GetGraphicsStructure();
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);

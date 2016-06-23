@@ -181,6 +181,7 @@ class Composite<T> : public Object {
       return dr_tot_;
     }
     virtual void ZeroDrTot() {
+      std::fill(dr_tot_,dr_tot_+3,0.0);
       for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
         it->ZeroDrTot();
       }
@@ -237,6 +238,7 @@ class Composite<T,V> : public Object {
       return dr_tot_;
     }
     virtual void ZeroDrTot() {
+      std::fill(dr_tot_,dr_tot_+3,0.0);
       for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
         it->ZeroDrTot();
       }

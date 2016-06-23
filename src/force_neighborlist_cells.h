@@ -15,10 +15,10 @@ class ForceNeighborListCells : public ForceBase {
     virtual ~ForceNeighborListCells() {}
 
     // Override these functions, need special stuff
-    virtual void Init(space_struct* pSpace, double pSkin);
+    virtual void Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin);
     virtual void printSpecifics();
     virtual void dump();
-    virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
+    virtual void LoadSimples();
 
     virtual void InitMP();
     virtual void Finalize();
