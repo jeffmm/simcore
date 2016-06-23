@@ -1,7 +1,8 @@
 potentials:
   - type : WCA
-    sid1 : br_rod
-    sid2 : br_rod
+    sid1 : md_bead
+    sid2 : md_bead
     rcut: 2.5
     eps: 1
     sigma: 1
+    
