@@ -2,11 +2,6 @@
 
 void BrRod::Init() {
   InsertRandom(0.5*length_+diameter_);
-  printf("Inserted rod: \n");
-  printf("  pos : {%f, %f, %f}\n",position_[0],position_[1],position_[2]);
-  printf("  u : {%f, %f, %f}\n",orientation_[0],orientation_[1],orientation_[2]);
-  printf("  l : %f\n",length_);
-  printf("  d : %f\n",diameter_);
   SetDiffusion();
   std::fill(body_frame_, body_frame_+6, 0.0);
   // Init bond lengths and diameter

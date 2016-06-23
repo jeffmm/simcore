@@ -29,8 +29,8 @@ class ForceBase {
         oid_position_map_.clear();
     }
 
-    virtual void Init(space_struct *pSpace, double pSkin);
-    virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
+    virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin);
+    virtual void LoadSimples();
     virtual void InitPotentials(PotentialManager *pPotentials);
 
     // IO routines of awfulness
@@ -63,6 +63,8 @@ class ForceBase {
     std::string name_ = "ForceBase";
     
     space_struct* space_;
+
+    std::vector<SpeciesBase*> *species_;
 
     std::vector<Simple*> simples_;
     double* frc_; // Force superarray

@@ -15,8 +15,8 @@ class ForceNeighborListAP : public ForceBase {
     virtual ~ForceNeighborListAP() {}
 
     // Override these functions, need special stuff
-    virtual void Init(space_struct* pSpace, double pSkin);
-    virtual void LoadSimples(std::vector<SpeciesBase*> pSpecies);
+    virtual void Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin);
+    virtual void LoadSimples();
 
     virtual void printSpecifics();
     virtual void dump();
