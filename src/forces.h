@@ -33,6 +33,7 @@ class Forces {
     space_struct *space_;
     std::vector<Simple*> simples_; 
     std::vector<cell_interaction> interactions_;
+    std::vector<SpeciesBase*> *species_;
     CellList cell_list_;
     PotentialManager potentials_;
 
@@ -45,15 +46,15 @@ class Forces {
 
     std::vector<graph_struct> draw_array_;
   public:
-    void Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> species);
-    void UpdateScheme(std::vector<SpeciesBase*> species);
-    void UpdateCellList(std::vector<SpeciesBase*> species);
-    void LoadSimples(std::vector<SpeciesBase*> species);
+    void Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies);
+    void UpdateScheme();
+    void UpdateCellList();
+    void LoadSimples();
     void Interact();
     void InteractMP();
     void DumpAll();
-    void CheckOverlap(std::vector<SpeciesBase*> species);
-    void InitPotentials(std::vector<SpeciesBase*> species);
+    void CheckOverlap();
+    void InitPotentials();
     void Draw(std::vector<graph_struct*> * graph_array);
     interaction FirstInteraction(PotentialBase *pot);
     interaction SecondInteraction(PotentialBase *pot);

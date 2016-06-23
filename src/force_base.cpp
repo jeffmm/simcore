@@ -4,8 +4,9 @@
 
 // Init the force
 void
-ForceBase::Init(space_struct *pSpace, double pSkin) {
+ForceBase::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
     space_ = pSpace;
+    species_ = pSpecies;
     ndim_ = space_->n_dim;
     nperiodic_ = space_->n_periodic;
     skin_ = pSkin;
@@ -41,14 +42,14 @@ ForceBase::InitPotentials(PotentialManager *pPotentials) {
 // Load the simple particles into the master vector
 // Calculate the force superarray size
 void
-ForceBase::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
+ForceBase::LoadSimples() {
    
     // Load everything from the species bases
     // Also remember that the OIDs may not be in order, so account for that
     // via a mapping oid <-> position
-    nsys_ = pSpecies.size();
+    nsys_ = species_->size();
     simples_.clear();
-    for (auto it = pSpecies.begin(); it != pSpecies.end(); ++it) {
+    for (auto it = species_->begin(); it != species_->end(); ++it) {
         std::vector<Simple*> sim_vec = (*it)->GetSimples();
         simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
     }
