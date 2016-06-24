@@ -5,3 +5,10 @@ potentials:
     rcut: 2.5
     eps: 1
     sigma: 1
+  - type : WCA
+    sid1 : br_rod
+    sid2 : md_bead
+    rcut: 3
+    eps: 1
+    sigma: 0.6
+
