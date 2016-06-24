@@ -4,7 +4,7 @@ void MDBead::Init() {
   Simple::Init();
   for (int i=0; i<n_dim_; ++i) {
     orientation_[i] = 1.0/sqrt(n_dim_);
-    velocity_[i] = 4*(gsl_rng_uniform_pos(rng_.r)-0.5);
+    velocity_[i] = 20*(gsl_rng_uniform_pos(rng_.r)-0.5);
     prev_position_[i] = position_[i] - delta_ * velocity_[i];
   }
   orientation_[0] = 0; // Set default color to red
