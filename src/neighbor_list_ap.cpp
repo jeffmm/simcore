@@ -41,20 +41,12 @@ NeighborListAP::CreateSubstructure(double pRcut) {
 void
 NeighborListAP::CheckNeighborList(bool pForceUpdate) {
     nl_update_ = pForceUpdate;
-    for (int idx = 0; idx < nparticles_; ++idx) {
-        if (nl_update_)
-            break;
-
-        auto part = simples_[idx];
-        auto pr = part->GetDrTot();
-
-        double dr2 = 0.0;
-        for (int i = 0; i < ndim_; ++i) {
-            dr2 += pr[i]*pr[i];
-        }
-        nl_update_ = dr2 > half_skin2_;
+    for (auto spec = species_->begin(); spec!=species_->end(); ++spec) {
+      if (nl_update_)
+        break;
+      double dr2 = (*spec)->GetDrMax();
+      nl_update_ = dr2 > half_skin2_;
     }
-
     if (nl_update_) {
         UpdateNeighborList();
     }
@@ -74,9 +66,8 @@ NeighborListAP::UpdateNeighborList() {
     AllPairsUpdate();
 
     // Reset the accumulators
-    for (int i = 0; i < nparticles_; ++i) {
-        auto part = simples_[i];
-        part->ZeroDrTot();
+    for (auto spec = species_->begin(); spec!=species_->end(); ++spec) {
+      (*spec)->ZeroDr();
     }
 }
 

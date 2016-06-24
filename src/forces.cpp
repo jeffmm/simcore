@@ -4,9 +4,10 @@
 #include "object.h"
 
 // Pass in the main system properties information
-void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> species) {
+void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies) {
   params_ = pParams;
   space_ = pSpace;
+  species_ = pSpecies;
   n_dim_ = space_->n_dim;
   n_periodic_ = space_->n_periodic;
   draw_flag_ = params_->draw_interactions;
@@ -59,19 +60,19 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
    }
   //XXX: CJE needed for the check overlaps, change this
   //cell_list_.Init(n_dim_, n_periodic_, params_->cell_length, space_->radius);
-  InitPotentials(species);
-  CheckOverlap(species);
+  InitPotentials();
+  CheckOverlap();
 
   // Create the force submodule to do the calculations!
-  force_module_->Init(space_, skin_);
-  force_module_->LoadSimples(species);
+  force_module_->Init(space_, species_, skin_);
+  force_module_->LoadSimples();
   force_module_->InitPotentials(&potentials_);
   force_module_->Finalize();
   force_module_->UpdateScheme();
   force_module_->print();
 }
 
-void Forces::InitPotentials(std::vector<SpeciesBase*> species) {
+void Forces::InitPotentials() {
   // Ask the potential manager to parse the potentials file
   potentials_.Init(space_, params_->potfile);
 }
@@ -83,22 +84,22 @@ void Forces::DumpAll() {
     #endif
 }
 
-void Forces::UpdateCellList(std::vector<SpeciesBase*> species) {
-  LoadSimples(species);
+void Forces::UpdateCellList() {
+  LoadSimples();
   interactions_.clear();
   cell_list_.LoadSimples(simples_);
   interactions_ = cell_list_.GetInteractions();
 }
 
-void Forces::UpdateScheme(std::vector<SpeciesBase*> species) {
-  LoadSimples(species);
+void Forces::UpdateScheme() {
+  LoadSimples();
   force_module_->UpdateScheme();
 }
 
-void Forces::LoadSimples(std::vector<SpeciesBase*> species) {
+void Forces::LoadSimples() {
   simples_.clear();
-  for (auto it=species.begin(); it!=species.end(); ++it) {
-    std::vector<Simple*> sim_vec = (*it)->GetSimples();
+  for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
+    std::vector<Simple*> sim_vec = (*spec)->GetSimples();
     simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
   }
 }
@@ -112,22 +113,22 @@ void Forces::Interact() {
     draw_ = false;
     draw_array_.clear();
   }
-  for (auto it=interactions_.begin(); it!= interactions_.end(); ++it) {
-    auto o1 = it->first;
-    auto o2 = it->second;
+  for (auto ix=interactions_.begin(); ix!= interactions_.end(); ++ix) {
+    auto o1 = ix->first;
+    auto o2 = ix->second;
     if (o1->GetOID() == o2->GetOID()) 
       error_exit("ERROR: Got self-interaction.\n");
     if (o1->GetCID() == o2->GetCID()) continue;
     PotentialBase * pot = potentials_.GetPotential(o1->GetSID(), o2->GetSID());
     if (pot == NULL) continue;
-    //MinimumDistance(*it);
+    //MinimumDistance(*ix);
     if (dr_mag_ > pot->GetRCut()) continue;
     o1->GiveInteraction(FirstInteraction(pot));
     o2->GiveInteraction(SecondInteraction(pot));
   }
 }
 
-void Forces::CheckOverlap(std::vector<SpeciesBase*> species) {
+void Forces::CheckOverlap() {
     // very yucky brute force method of checking overlaps
     // load all the particles
 
@@ -136,7 +137,7 @@ void Forces::CheckOverlap(std::vector<SpeciesBase*> species) {
     do {
         num++;
         overlap = false;
-        LoadSimples(species);
+        LoadSimples();
         for (int idx = 0; idx < simples_.size() - 1 && !overlap; ++idx) {
             for (int jdx = idx + 1; jdx < simples_.size() && !overlap; ++jdx) {
                 auto part1 = simples_[idx];
@@ -163,7 +164,7 @@ void Forces::CheckOverlap(std::vector<SpeciesBase*> species) {
                     overlap = true;
                     auto sid = part2->GetSID();
                     auto cid = part2->GetCID();
-                    for (auto spec = species.begin(); spec != species.end(); ++spec) {
+                    for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
                         if ((*spec)->GetSID() == sid) {
                             (*spec)->ReInit(cid);
                         }

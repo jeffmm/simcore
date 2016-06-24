@@ -20,7 +20,7 @@ class NeighborListCells : public ForceSubstructureBase {
     }
 
     // Override init for the cell list
-    virtual void Init(space_struct *pSpace, double pSkin);
+    virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin);
     virtual void LoadFlatSimples(std::vector<Simple*> pSimples);
     virtual void print();
     virtual void dump();

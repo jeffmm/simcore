@@ -55,6 +55,8 @@ class SpeciesBase {
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
     virtual void Init() {}
     virtual void ReInit(unsigned int const cid) {}
+    virtual double GetDrMax() {};
+    virtual void ZeroDr() {};
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim;
       return sim;
@@ -152,6 +154,23 @@ class Species : public SpeciesBase {
       double ke = GetKineticEnergy();
       double pe = GetPotentialEnergy();
       return ke+pe;
+    }
+    virtual double GetDrMax() {
+      double dr_mag2_max = 0.0;
+      for (auto it=members_.begin(); it!=members_.end(); ++it) {
+        double dr_mag2 = 0.0;
+        double const * const dr = (*it)->GetDrTot();
+        for (int i=0; i<space_->n_dim; ++i)
+          dr_mag2 += dr[i]*dr[i];
+        if (dr_mag2 > dr_mag2_max)
+          dr_mag2_max = dr_mag2;
+      }
+      return dr_mag2_max;
+    }
+    virtual void ZeroDr() {
+      for (auto it=members_.begin(); it!=members_.end(); ++it) {
+        (*it)->ZeroDrTot();
+      }
     }
 };
 
