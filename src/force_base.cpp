@@ -74,31 +74,35 @@ ForceBase::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
 // the force substructure
 void
 ForceBase::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy) {
-    // We are assuming the force/torque/energy superarrays are already set
-    // Exclude composite object interactions
-    if (part1->GetCID() == part2->GetCID()) return;
+  // We are assuming the force/torque/energy superarrays are already set
+  // Exclude composite object interactions
+  if (part1->GetCID() == part2->GetCID()) return;
 
-    // Calculate the potential here
-    PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
-    if (pot == nullptr) return;
-    // Minimum distance here@@@@!!!!
-    // XXX: CJE ewwwwwww, more elegant way?
-    interactionmindist idm;
-    MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
-    if (idm.dr_mag2 > pot->GetRCut2()) return;
+  // Calculate the potential here
+  PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
+  if (pot == nullptr) return;
+  // Minimum distance here@@@@!!!!
+  // XXX: CJE ewwwwwww, more elegant way?
+  interactionmindist idm;
+  MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
+  if (idm.dr_mag2 > pot->GetRCut2()) return;
 
-    // Obtain the mapping between particle oid and position in the force superarray
-    auto oid1x = oid_position_map_[part1->GetOID()];
-    auto oid2x = oid_position_map_[part2->GetOID()];
-    #ifdef DEBUG
-    if (debug_trace)
-        printf("\tInteracting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
-    #endif
+  // Obtain the mapping between particle oid and position in the force superarray
+  auto oid1x = oid_position_map_[part1->GetOID()];
+  auto oid2x = oid_position_map_[part2->GetOID()];
+  #ifdef DEBUG
+  if (debug_trace)
+    printf("\tInteracting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
+  #endif
 
-    // Fire off the potential calculation
-    double fepot[4];
-    pot->CalcPotential(idm.dr, idm.dr_mag, idm.buffer_mag, fepot);
+  // Fire off the potential calculation
+  double fepot[4];
+  pot->CalcPotential(idm.dr, idm.dr_mag, idm.buffer_mag, fepot);
 
+  // Switch on whether or not we are doing a mc or force calculation
+  if (pot->IsKMC()) {
+
+  } else {
     // Do the potential energies
     pr_energy[oid1x] += fepot[ndim_];
     pr_energy[oid2x] += fepot[ndim_];
@@ -119,6 +123,7 @@ ForceBase::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double
     for (int i = 0; i < ndim_; ++i) {
         tr[i][oid2x] -= tau[i];
     }
+  }
 }
 
 

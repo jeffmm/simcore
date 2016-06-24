@@ -148,6 +148,9 @@ void Forces::CheckOverlap(std::vector<SpeciesBase*> species) {
                 PotentialBase *pot = potentials_.GetPotential(part1->GetSID(), part2->GetSID());
                 if (pot == nullptr) continue;
 
+                // Check to see if overlap on this is allowed (KMC stuff)
+                if (pot->CanOverlap()) continue;
+
                 // Can possibly overlap, check
                 interactionmindist idm;
                 MinimumDistance(part1, part2, idm, n_dim_, n_periodic_, space_);
@@ -168,7 +171,7 @@ void Forces::CheckOverlap(std::vector<SpeciesBase*> species) {
                 }
             }
         }
-        if (num > 5)
+        if (num > 10000)
             error_exit("ERROR: Too many overlaps detected. Check packing ratio for objects.\n");
     } while (overlap);
 }
