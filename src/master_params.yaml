@@ -37,8 +37,8 @@ mother_daughter_dist : [680,double] # distance between mother-daughter cell cent
 daughter_radius : [300,double] # radius of daughter cell
 sphere_radius : [50,double] # radius of spindle blob
 filament_diameter : [1,double] # diameter of microtubule
-min_length : [10,double]
-max_length : [1000,double]
+min_rod_length : [2,double]
+max_rod_length : [1000,double]
 min_segment_length : [3,double]
 max_segment_length : [5,double]
 persistence_length : [5000,double] 
@@ -48,14 +48,14 @@ buckle_rate : [0.001,double]
 buckle_parameter : [0.90,double]
 r_cutoff_sphere : [1.1225,double]
 r_cutoff_boundary : [1.1225,double]
-f_shrink_to_grow : [0,double] # Frequencies for dynamic instability
-f_shrink_to_pause : [0.01,double]
-f_pause_to_grow : [0.01,double]
-f_pause_to_shrink : [0.01,double]
-f_grow_to_pause : [0.01,double]
-f_grow_to_shrink : [0,double]
-v_poly : [0.01,double]
-v_depoly : [0.02,double]
+f_shrink_to_grow : [0.017,double] # Frequencies for dynamic instability
+f_shrink_to_pause : [0.0,double]
+f_pause_to_grow : [0.0,double]
+f_pause_to_shrink : [0.0,double]
+f_grow_to_pause : [0.0,double]
+f_grow_to_shrink : [0.00554,double]
+v_poly : [0.44,double]
+v_depoly : [0.793,double]
 graph_diameter : [1,double]
 grab_file : [0,char]
 cell_list_flag : [0,int]

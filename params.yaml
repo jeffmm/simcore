@@ -1,32 +1,36 @@
 # params.yaml
 ---
-seed : 32679122673370
+seed : 14359031445
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-system_radius: 30
+system_radius: 20
 daughter_radius: 5
-mother_daughter_dist: 12
+mother_daughter_dist: 0
 boundary_type: 1
-n_rod: 60
+n_rod: 1
 rod_diameter: 1
-rod_length: 10
+rod_length: 15
+dynamic_instability_flag: 1
+force_induced_catastrophe_flag: 0
 n_dimer: 0
 n_md_bead: 0
-md_bead_diameter: 1
-md_bead_mass: 1
+md_bead_diameter: 0.2
+md_bead_mass: 0.1
 n_br_bead: 0
 br_bead_diameter: 1
 dimer_diameter: 1
 dimer_length: 2
 dimer_eq_length: 2
 dimer_k_spring: 5
-cell_length: 5
-graph_flag: 1
+max_rod_length: 100
+min_rod_length: 1
+cell_length: 4
+graph_flag: 0
 n_graph: 100
 graph_background: 1
-delta: 0.00001
-n_steps: 1000000
+delta: 0.0001
+n_steps: 10
 n_update_cells: 20
 time_flag: 1
 energy_analysis_flag: 1
@@ -37,6 +41,8 @@ grab_flag: 0
 grab_file: frames/frame
 draw_interactions: 0
 ftype: 4
+v_poly: 0.44
+v_depoly: 0.793
 potfile: params/hardrods_pot.yaml
 #[brownian_dimer]:
     #num: [2,4]
