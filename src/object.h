@@ -35,7 +35,6 @@ class Object {
     rng_properties rng_;
     std::vector<interaction> interactions_;
     virtual void InsertRandom(double buffer);
-    unsigned int const NextCID() {return ++next_cid_;}
   public:
     Object(system_parameters *params, space_struct *space, long seed, SID sid);
     Object(const Object& that);
@@ -44,6 +43,8 @@ class Object {
     virtual ~Object() {rng_.clear();}
     bool IsSimple() {return is_simple_;}
     bool IsKMC() { return is_kmc_; }
+    void InitCID() { cid_ = ++next_cid_;}
+    void InitOID() { oid_ = ++next_oid_;}
     void SetPosition(const double *const pos) {
       std::copy(pos, pos+n_dim_, position_);
     }
@@ -140,7 +141,7 @@ class Composite<T> : public Object {
     std::vector<T> elements_;
   public:
     Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {
-      cid_ = NextCID();
+      InitCID();
       is_simple_=false;
     } 
     //Destructor
@@ -195,7 +196,7 @@ class Composite<T,V> : public Object {
     std::vector<V> v_elements_;
   public:
     Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {
-      cid_ = NextCID();
+      InitCID();
       is_simple_=false;
     } 
     //Destructor
