@@ -6,18 +6,18 @@
 
 // Overridden init method to call initmp
 void
-ForceMicrocell::Init(space_struct* pSpace, double pSkin) {
+ForceMicrocell::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
     // Override this to call base class, then initmp
-    ForceBase::Init(pSpace, pSkin);
+    ForceBase::Init(pSpace, pSpecies, pSkin);
     InitMP();
 }
 
 
 // Overridden load simples method (needed for finalize)
 void
-ForceMicrocell::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
+ForceMicrocell::LoadSimples() {
     // Run the base class version
-    ForceBase::LoadSimples(pSpecies);
+    ForceBase::LoadSimples();
 
     // Load the flat simples into the cell list
     microcell_list_.LoadFlatSimples(simples_);
@@ -25,7 +25,7 @@ ForceMicrocell::LoadSimples(std::vector<SpeciesBase*> pSpecies) {
 
 void
 ForceMicrocell::InitMP() {
-    microcell_list_.Init(space_, skin_);
+    microcell_list_.Init(space_, species_, skin_);
 }
 
 

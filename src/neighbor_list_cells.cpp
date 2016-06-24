@@ -9,11 +9,11 @@
 
 // Init must call the cell list stuff too
 void
-NeighborListCells::Init(space_struct *pSpace, double pSkin) {
+NeighborListCells::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
     // Call the base init
-    ForceSubstructureBase::Init(pSpace, pSkin);
+    ForceSubstructureBase::Init(pSpace, pSpecies, pSkin);
 
-    cell_list_.Init(pSpace, pSkin);
+    cell_list_.Init(pSpace, pSpecies, pSkin);
 }
 
 
@@ -66,18 +66,11 @@ NeighborListCells::CreateSubstructure(double pRcut) {
 void
 NeighborListCells::CheckNeighborList(bool pForceUpdate) {
     nl_update_ = pForceUpdate;
-    for (int idx = 0; idx < nparticles_; ++idx) {
-        if (nl_update_)
-            break;
-
-        auto part = simples_[idx];
-        auto pr = part->GetDrTot();
-
-        double dr2 = 0.0;
-        for (int i = 0; i < ndim_; ++i) {
-            dr2 += pr[i]*pr[i];
-        }
-        nl_update_ = dr2 > half_skin2_;
+    for (auto spec = species_->begin(); spec!=species_->end(); ++spec) {
+      if (nl_update_)
+        break;
+      double dr2 = (*spec)->GetDrMax();
+      nl_update_ = dr2 > half_skin2_;
     }
 
     if (nl_update_) {
@@ -102,9 +95,8 @@ NeighborListCells::UpdateNeighborList() {
     CellsUpdate();
 
     // Reset the accumulators
-    for (int i = 0; i < nparticles_; ++i) {
-        auto part = simples_[i];
-        part->ZeroDrTot();
+    for (auto spec = species_->begin(); spec!=species_->end(); ++spec) {
+      (*spec)->ZeroDr();
     }
 }
 
