@@ -76,7 +76,8 @@ ForceBase::LoadSimples() {
 void
 ForceBase::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy) {
     // We are assuming the force/torque/energy superarrays are already set
-    // Exclude composite object interactions
+    // XXX: JMM We should allow certain self-interactions
+    // Exclude composite object interactions for now
     if (part1->GetCID() == part2->GetCID()) return;
 
     // Calculate the potential here
