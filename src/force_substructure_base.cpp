@@ -4,8 +4,9 @@
 
 // Initialize
 void
-ForceSubstructureBase::Init(space_struct* pSpace, double pSkin) {
+ForceSubstructureBase::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
     space_ = pSpace;
+    species_ = pSpecies;
     ndim_ = space_->n_dim;
     nperiodic_ = space_->n_periodic;
     skin_ = pSkin;

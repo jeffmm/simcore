@@ -17,7 +17,7 @@ class ForceSubstructureBase {
     ForceSubstructureBase() {}
     virtual ~ForceSubstructureBase() {}
 
-    virtual void Init(space_struct *pSpace, double pSkin);
+    virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin);
     virtual void LoadFlatSimples(std::vector<Simple*> pSimples);
 
     virtual void print() = 0; // print information
@@ -36,6 +36,7 @@ class ForceSubstructureBase {
 
     space_struct* space_;
     std::vector<Simple*> simples_;
+    std::vector<SpeciesBase*> *species_;
 
     // Derived quantities
     int nthreads_;

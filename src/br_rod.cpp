@@ -2,11 +2,6 @@
 
 void BrRod::Init() {
   InsertRandom(0.5*length_+diameter_);
-  printf("Inserted rod: \n");
-  printf("  pos : {%f, %f, %f}\n",position_[0],position_[1],position_[2]);
-  printf("  u : {%f, %f, %f}\n",orientation_[0],orientation_[1],orientation_[2]);
-  printf("  l : %f\n",length_);
-  printf("  d : %f\n",diameter_);
   SetDiffusion();
   std::fill(body_frame_, body_frame_+6, 0.0);
   // Init bond lengths and diameter
@@ -15,14 +10,28 @@ void BrRod::Init() {
     bond->SetDiameter(diameter_);
   }
   // Set positions for sites and bonds
+  UpdatePeriodic();
   UpdateSiteBondPositions();
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
+    bond->UpdatePeriodic();
+}
+
+void BrRod::ApplyForcesTorques() {
+  ZeroForce();
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
+    AddForce(bond->GetForce());
+    AddTorque(bond->GetTorque());
+  }
 }
 
 void BrRod::UpdatePositionMP() {
+  ApplyForcesTorques();
   Integrate();
   UpdatePeriodic();
   // Update end site positions for tracking trajectory for neighbors
   UpdateSiteBondPositions();
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
+    bond->UpdatePeriodic();
 }
 
 void BrRod::UpdateSiteBondPositions() {
@@ -44,7 +53,7 @@ void BrRod::UpdateSiteBondPositions() {
   for (int i=0; i<n_dim_; ++i)
     pos[i] = position_[i] + 0.5*(child_length_-length_)*orientation_[i];
   // XXX Get rid of prints, k, JMM
-  int k=1;
+  int k=0;
   double u[3];
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
     bond->SetPosition(pos);
@@ -56,11 +65,6 @@ void BrRod::UpdateSiteBondPositions() {
       bond->SetOrientation(u);
     }
     // Set next bond COM
-    printf("bond %d:\n",k);
-    printf("  pos : {%f, %f, %f}\n",pos[0],pos[1],pos[2]);
-    printf("  u : {%f, %f, %f}\n",orientation_[0],orientation_[1],orientation_[2]);
-    printf("  l : %f\n",bond->GetLength());
-    printf("  d : %f\n",bond->GetDiameter());
     for (int i=0; i<n_dim_; ++i)
       pos[i] += orientation_[i] * child_length_;
     k++;
