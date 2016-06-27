@@ -64,6 +64,7 @@ ForceNeighborListAP::Interact() {
         double **fr = new double*[3];
         double **tr = new double*[3];
         double *pr_energy;
+        double *kmc_energy;
 
         auto neighbors = neighbor_list_.GetNeighbors();
 
@@ -86,8 +87,10 @@ ForceNeighborListAP::Interact() {
         }
 
         pr_energy = prc_energy_ + (tid * nparticles_);
+        kmc_energy = kmc_energy_ + (tid * nparticles_);
         for (int i = 0; i < nparticles_; ++i) {
             pr_energy[i] = 0.0;
+            kmc_energy[i] = 0.0;
         }
 
         assert(nparticles_ == simples_.size());
@@ -102,7 +105,7 @@ ForceNeighborListAP::Interact() {
                 auto part2 = simples_[jdx];
 
                 // Do the interaction
-                InteractParticlesMP(part1, part2, fr, tr, pr_energy);
+                InteractParticlesMP(part1, part2, fr, tr, pr_energy, kmc_energy);
             }
         } // pragma omp for schedule(runtime) nowait
 
@@ -141,6 +144,7 @@ ForceNeighborListAP::Interact() {
 
             for (int jj = fromidx2; jj < toidx2; ++jj) {
                 prc_energy_[jj] += prc_energy_[offs + jj];
+                kmc_energy_[jj] += kmc_energy_[offs + jj];
             }
         }
 
