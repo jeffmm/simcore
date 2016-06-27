@@ -43,38 +43,52 @@ ForceBase::InitPotentials(PotentialManager *pPotentials) {
 // Calculate the force superarray size
 void
 ForceBase::LoadSimples() {
+  // Clear out things from before (if they exist)
+  if (frc_ != nullptr) {
+    delete[] frc_;
+  }
+  if (trqc_ != nullptr) {
+    delete[] trqc_;
+  }
+  if (prc_energy_ != nullptr) {
+    delete[] prc_energy_;
+  }
+  if (kmc_energy_ != nullptr) {
+    delete[] kmc_energy_;
+  }
    
-    // Load everything from the species bases
-    // Also remember that the OIDs may not be in order, so account for that
-    // via a mapping oid <-> position
-    nsys_ = species_->size();
-    simples_.clear();
-    for (auto it = species_->begin(); it != species_->end(); ++it) {
-        std::vector<Simple*> sim_vec = (*it)->GetSimples();
-        simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
-    }
-    nparticles_ = (int)simples_.size();
+  // Load everything from the species bases
+  // Also remember that the OIDs may not be in order, so account for that
+  // via a mapping oid <-> position
+  nsys_ = species_->size();
+  simples_.clear();
+  for (auto it = species_->begin(); it != species_->end(); ++it) {
+      std::vector<Simple*> sim_vec = (*it)->GetSimples();
+      simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
+  }
+  nparticles_ = (int)simples_.size();
 
-    // Ugh, figure out the OID stuff
-    oid_position_map_.clear();
-    for (int i = 0; i < nparticles_; ++i) {
-        auto part = simples_[i];
-        int oid = part->GetOID();
-        // i is position in force superarray, oid is the actual oid
-        oid_position_map_[oid] = i;
-    }
+  // Ugh, figure out the OID stuff
+  oid_position_map_.clear();
+  for (int i = 0; i < nparticles_; ++i) {
+      auto part = simples_[i];
+      int oid = part->GetOID();
+      // i is position in force superarray, oid is the actual oid
+      oid_position_map_[oid] = i;
+  }
 
-    // Create the force and potential energy superarrays
-    frc_ = new double[nthreads_*3*nparticles_];
-    trqc_ = new double[nthreads_*3*nparticles_];
-    prc_energy_ = new double[nthreads_*nparticles_];
+  // Create the force and potential energy superarrays
+  frc_ = new double[nthreads_*3*nparticles_];
+  trqc_ = new double[nthreads_*3*nparticles_];
+  prc_energy_ = new double[nthreads_*nparticles_];
+  kmc_energy_ = new double[nthreads_*nparticles_];
 }
 
 
 // Main interaction routine for particles (once they have been determined by
 // the force substructure
 void
-ForceBase::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy) {
+ForceBase::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
   // We are assuming the force/torque/energy superarrays are already set
   // Exclude composite object interactions
   if (part1->GetCID() == part2->GetCID()) return;
@@ -102,7 +116,14 @@ ForceBase::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double
 
   // Switch on whether or not we are doing a mc or force calculation
   if (pot->IsKMC()) {
-
+    // Figure out which particle is the kmc particle
+    SID kmc_target = pot->GetKMCTarget();
+    if (kmc_target == part1->GetSID()) {
+      kmc_energy[oid1x] += fepot[ndim_];
+    }
+    if (kmc_target == part2->GetSID()) {
+      kmc_energy[oid2x] += fepot[ndim_];
+    }
   } else {
     // Do the potential energies
     pr_energy[oid1x] += fepot[ndim_];
@@ -141,7 +162,7 @@ ForceBase::ReduceParticlesMP() {
             subforce[idim] = frc_[idim*nparticles_+oidx];
             subtorque[idim] = trqc_[idim*nparticles_+oidx]; 
         }
-        part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[oidx]);
+        part->AddForceTorqueEnergyKMC(subforce, subtorque, prc_energy_[oidx], kmc_energy_[oidx]);
     }
 }
 

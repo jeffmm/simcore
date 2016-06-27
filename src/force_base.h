@@ -38,7 +38,12 @@ class ForceBase {
     virtual void printSpecifics() = 0; // must be overridden
     virtual void dump();
 
-    void InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy);
+    void InteractParticlesMP(Simple *part1,
+                             Simple* part2,
+                             double **fr,
+                             double **tr,
+                             double *pr_energy,
+                             double *kmc_energy);
     void ReduceParticlesMP();
 
     virtual void Finalize() = 0; // AFter we do everything, we must finalize it for safety
@@ -70,6 +75,7 @@ class ForceBase {
     double* frc_; // Force superarray
     double* trqc_; // torque superarray
     double* prc_energy_; // Potential energy superarray
+    double* kmc_energy_; // kmc energy superarray
     std::unordered_map<int, int> oid_position_map_; // oid to position mapping!!!
 
     // Classes for managers

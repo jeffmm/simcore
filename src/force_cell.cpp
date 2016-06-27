@@ -60,6 +60,7 @@ ForceCell::Interact() {
         double **fr = new double*[3];
         double **tr = new double*[3];
         double *pr_energy;
+        double *kmc_energy;
 
         std::vector<int>* pid_to_cid = cell_list_.pidtocid();
 
@@ -81,8 +82,10 @@ ForceCell::Interact() {
         }
 
         pr_energy = prc_energy_ + (tid*nparticles_);
+        kmc_energy = kmc_energy_ + (tid*nparticles_);
         for (int i = 0; i < nparticles_; ++i) {
             pr_energy[i] = 0.0;
+            kmc_energy[i] = 0.0;
         }
 
         assert(nparticles_ == simples_.size());
@@ -106,7 +109,7 @@ ForceCell::Interact() {
                         auto part2 = simples_[jjdx];
 
                         // Interact
-                        InteractParticlesMP(part1, part2, fr, tr, pr_energy);
+                        InteractParticlesMP(part1, part2, fr, tr, pr_energy, kmc_energy);
                     } // only do this calculation if the second pid is higher
                 } // cell2 particle list
             } // cells adjacent  and equal to us
@@ -147,6 +150,7 @@ ForceCell::Interact() {
 
             for (int jj = fromidx2; jj < toidx2; ++jj) {
                 prc_energy_[jj] += prc_energy_[offs + jj];
+                kmc_energy_[jj] += kmc_energy_[offs + jj];
             }
         }
 
