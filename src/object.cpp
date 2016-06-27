@@ -168,12 +168,13 @@ void Simple::ApplyInteractions() {
 }
 
 // Apply the force/torque/energy to this particle, override if necessary
-void Object::AddForceTorqueEnergy(double const * const F, double const * const T, double const p) {
+void Object::AddForceTorqueEnergyKMC(double const * const F, double const * const T, double const p, double const k) {
     // XXX: CJE assume that we need to zero out the force and energy first
     ZeroForce();
     AddForce(F);
     AddTorque(T);
     AddPotential(p);
+    AddKMCEnergy(k);
 }
 
 // Find the minimum distance beween two particles

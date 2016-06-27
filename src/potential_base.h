@@ -11,6 +11,7 @@ class PotentialBase {
     bool is_kmc_ = false; // Is this a kinetic monte carlo potential (no forces?)
     int n_dim_;
     double rcut_, rcut2_; // Cutoff radius
+    SID kmc_target_; // KMC target (if there is one)
     std::string pot_name_;
     space_struct *space_;
   public:
@@ -31,6 +32,7 @@ class PotentialBase {
     double GetRCut2() {return rcut2_;}
     const bool CanOverlap() { return can_overlap_; }
     const bool IsKMC() { return is_kmc_; }
+    const SID GetKMCTarget() { return kmc_target_; }
     virtual void Print() {
       std::cout << pot_name_ << "\n";
         printf("\t{rcut:%2.2f}\n", rcut_);
@@ -45,6 +47,10 @@ class PotentialBase {
       }
       if (node["potentials"][ipot]["kmc"]) {
         is_kmc_ = node["potentials"][ipot]["kmc"].as<bool>();
+        // Must specifcy a kmc_target for particles
+        std::string kmc_sid_str = node["potentials"][ipot]["kmc_target"].as<std::string>();
+        SID kmc_sid = StringToSID(kmc_sid_str);
+        kmc_target_ = kmc_sid;
       }
   }
 };

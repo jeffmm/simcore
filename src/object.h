@@ -27,7 +27,8 @@ class Object {
            diameter_,
            length_,
            k_energy_,
-           p_energy_;
+           p_energy_,
+           kmc_energy_;
     bool is_simple_;
     bool is_kmc_ = false;
     space_struct *space_;
@@ -72,6 +73,7 @@ class Object {
       std::fill(force_,force_+3,0.0);
       std::fill(torque_,torque_+3,0.0);
       p_energy_ = 0.0;
+      kmc_energy_ = 0.0;
     }
     void ZeroDrTot() {
       std::fill(dr_tot_,dr_tot_+3,0.0);
@@ -85,7 +87,8 @@ class Object {
         torque_[i]+=t[i];
     }
     void AddPotential(double const p) {p_energy_ += p;}
-    void AddForceTorqueEnergy(double const * const F, double const * const T, double const p);
+    void AddKMCEnergy(double const k) {kmc_energy_ += k;}
+    void AddForceTorqueEnergyKMC(double const * const F, double const * const T, double const p, double const k);
     double const * const GetPosition() {return position_;}
     double const * const GetScaledPosition() {return scaled_position_;}
     virtual double const * const GetDrTot() { return dr_tot_; }
@@ -102,6 +105,7 @@ class Object {
     virtual void ApplyInteractions() {}
     virtual double const GetKineticEnergy() {return k_energy_;}
     virtual double const GetPotentialEnergy() {return p_energy_;}
+    virtual double const GetKMCEnergy() {return kmc_energy_;}
     unsigned int const GetOID() {return oid_;}
     unsigned int const GetCID() {return cid_;}
     SID const GetSID() {return sid_;}
@@ -160,6 +164,7 @@ class Composite<T> : public Object {
       std::fill(force_,force_+3,0.0);
       std::fill(torque_,torque_+3,0.0);
       p_energy_ = 0;
+      kmc_energy_ = 0;
     }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim_vec;
@@ -217,6 +222,7 @@ class Composite<T,V> : public Object {
       std::fill(force_,force_+3,0.0);
       std::fill(torque_,torque_+3,0.0);
       p_energy_ = 0;
+      kmc_energy_ = 0;
     }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim_vec;
