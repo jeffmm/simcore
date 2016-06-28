@@ -17,8 +17,8 @@ class ForceSubstructureBase {
     ForceSubstructureBase() {}
     virtual ~ForceSubstructureBase() {}
 
-    virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin);
-    virtual void LoadFlatSimples(std::vector<Simple*> pSimples);
+    virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin);
+    virtual void LoadFlatSimples();
 
     virtual void print() = 0; // print information
     virtual void dump() = 0;
@@ -35,7 +35,7 @@ class ForceSubstructureBase {
     double box_[3];
 
     space_struct* space_;
-    std::vector<Simple*> simples_;
+    std::vector<Simple*> *simples_;
     std::vector<SpeciesBase*> *species_;
 
     // Derived quantities

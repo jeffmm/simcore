@@ -15,7 +15,7 @@ class ForceCell : public ForceBase {
     virtual ~ForceCell() {}
 
     // Override these functions, need special stuff
-    virtual void Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin);
+    virtual void Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin);
     virtual void LoadSimples();
 
     virtual void printSpecifics();

@@ -85,8 +85,8 @@ NeighborListAP::AllPairsUpdate() {
         #endif
         for (int idx = 0; idx < nparticles_ - 1; ++idx) {
             for (int jdx = idx + 1; jdx < nparticles_; ++jdx) {
-                auto p1 = simples_[idx];
-                auto p2 = simples_[jdx];
+                auto p1 = (*simples_)[idx];
+                auto p2 = (*simples_)[jdx];
 
                 // Minimum distance
                 interactionmindist idm;

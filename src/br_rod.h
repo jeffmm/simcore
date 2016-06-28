@@ -83,7 +83,6 @@ class BrRod : public Composite<Site,Bond> {
           //b.InitOID();
           v_elements_.push_back(b);
         }
-        printf("n_bonds is %d, v_elements is %d\n",n_bonds_, v_elements_.size());
       }
     ~BrRod() {}
     BrRod(const BrRod& that) : Composite(that) {
