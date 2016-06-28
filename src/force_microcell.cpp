@@ -6,9 +6,9 @@
 
 // Overridden init method to call initmp
 void
-ForceMicrocell::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
+ForceMicrocell::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin) {
     // Override this to call base class, then initmp
-    ForceBase::Init(pSpace, pSpecies, pSkin);
+    ForceBase::Init(pSpace, pSpecies, pSimples, pSkin);
     InitMP();
 }
 
@@ -20,12 +20,12 @@ ForceMicrocell::LoadSimples() {
     ForceBase::LoadSimples();
 
     // Load the flat simples into the cell list
-    microcell_list_.LoadFlatSimples(simples_);
+    microcell_list_.LoadFlatSimples();
 }
 
 void
 ForceMicrocell::InitMP() {
-    microcell_list_.Init(space_, species_, skin_);
+    microcell_list_.Init(space_, species_, simples_, skin_);
 }
 
 
@@ -85,7 +85,7 @@ ForceMicrocell::Interact() {
             pr_energy[i] = 0.0;
         }
 
-        assert(nparticles_ == simples_.size());
+        assert(nparticles_ == simples_->size());
         int ncells = microcell_list_.ncells();
         // Check within my own cell
         for (int cidx = 0; cidx < ncells; cidx += nthreads_) {
@@ -98,12 +98,12 @@ ForceMicrocell::Interact() {
             // Loop over particles in said cell
             for (int pidx1 = 0; pidx1 < c1->nparticles_ - 1; ++pidx1) {
                 int ii = c1->idxlist_[pidx1]; // note,the location, not the oidx
-                auto part1 = simples_[ii];
+                auto part1 = (*simples_)[ii];
 
                 // Get my interacting partner
                 for (int pidx2 = pidx1 + 1; pidx2 < c1->nparticles_; ++pidx2) {
                     int jj = c1->idxlist_[pidx2];
-                    auto part2 = simples_[jj];
+                    auto part2 = (*simples_)[jj];
 
                     // Do the interaction
                     InteractParticlesMP(part1, part2, fr, tr, pr_energy, kmc_energy);
@@ -122,11 +122,11 @@ ForceMicrocell::Interact() {
 
             for (int pidx1 = 0; pidx1 < cell1->nparticles_; ++pidx1) {
                 int ii = cell1->idxlist_[pidx1];
-                auto part1 = simples_[ii];
+                auto part1 = (*simples_)[ii];
 
                 for (int pidx2 = 0; pidx2 < cell2->nparticles_; ++pidx2) {
                     int jj = cell2->idxlist_[pidx2];
-                    auto part2 = simples_[jj];
+                    auto part2 = (*simples_)[jj];
 
                     // Do the interaction
                     InteractParticlesMP(part1, part2, fr, tr, pr_energy, kmc_energy);

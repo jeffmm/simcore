@@ -70,14 +70,14 @@ ForceBrute::Interact() {
             kmc_energy[i] = 0.0;
         }
 
-        assert(nparticles_ == simples_.size());
+        assert(nparticles_ == simples_->size());
         #ifdef ENABLE_OPENMP
         #pragma omp for schedule(runtime) nowait
         #endif
         for (int idx = 0; idx < nparticles_ - 1; ++idx) {
             for (int jdx = idx + 1; jdx < nparticles_; ++jdx) {
-                auto part1 = simples_[idx];
-                auto part2 = simples_[jdx];
+                auto part1 = (*simples_)[idx];
+                auto part2 = (*simples_)[jdx];
 
                 // Do the interaction itself from ForceBase
                 InteractParticlesMP(part1, part2, fr, tr, pr_energy, kmc_energy);

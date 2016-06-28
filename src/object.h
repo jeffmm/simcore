@@ -115,7 +115,7 @@ class Simple : public Object {
   public:
     Simple(system_parameters *params, space_struct *space, long seed, SID sid) :
       Object(params, space, seed, sid) {
-        SetCID(GetOID());
+        InitCID();
         is_simple_ = true;
     }
     virtual ~Simple() {}

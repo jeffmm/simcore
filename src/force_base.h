@@ -22,14 +22,14 @@ class ForceBase {
     ForceBase() {}
     virtual ~ForceBase() {
         space_ = NULL;
-        simples_.clear();
+        simples_ = NULL;
         delete[] frc_;
         delete[] trqc_;
         delete[] prc_energy_;
         oid_position_map_.clear();
     }
 
-    virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin);
+    virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin);
     virtual void LoadSimples();
     virtual void InitPotentials(PotentialManager *pPotentials);
 
@@ -71,11 +71,11 @@ class ForceBase {
 
     std::vector<SpeciesBase*> *species_;
 
-    std::vector<Simple*> simples_;
-    double* frc_; // Force superarray
-    double* trqc_; // torque superarray
-    double* prc_energy_; // Potential energy superarray
-    double* kmc_energy_; // kmc energy superarray
+    std::vector<Simple*> *simples_;
+    double* frc_ = nullptr; // Force superarray
+    double* trqc_ = nullptr; // torque superarray
+    double* prc_energy_ = nullptr; // Potential energy superarray
+    double* kmc_energy_ = nullptr; // kmc energy superarray
     std::unordered_map<int, int> oid_position_map_; // oid to position mapping!!!
 
     // Classes for managers

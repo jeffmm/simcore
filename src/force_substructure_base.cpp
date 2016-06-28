@@ -4,9 +4,10 @@
 
 // Initialize
 void
-ForceSubstructureBase::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
+ForceSubstructureBase::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin) {
     space_ = pSpace;
     species_ = pSpecies;
+    simples_ = pSimples;
     ndim_ = space_->n_dim;
     nperiodic_ = space_->n_periodic;
     skin_ = pSkin;
@@ -28,10 +29,6 @@ ForceSubstructureBase::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSp
 
 // Load the simple particles into the master vector
 void
-ForceSubstructureBase::LoadFlatSimples(std::vector<Simple*> pSimples) {
- 
-    // Load everything from the our given simples
-    simples_.clear();
-    simples_.insert(simples_.end(), pSimples.begin(), pSimples.end());
-    nparticles_ = (int)simples_.size();
+ForceSubstructureBase::LoadFlatSimples() {
+    nparticles_ = (int)simples_->size();
 }

@@ -149,7 +149,7 @@ AdjCellList::UpdateCellList() {
         double dr[3] = {0.0, 0.0, 0.0};
         double dr2[3] = {0.0, 0.0, 0.0};
 
-        auto part = simples_[i];
+        auto part = (*simples_)[i];
         auto pr = part->GetPosition();
         auto prs = part->GetScaledPosition();
         // XXX: CJE must compute for arbitrary particle, maybe multiple cells (Rod)

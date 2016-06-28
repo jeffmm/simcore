@@ -6,9 +6,9 @@
 
 // Overridden init method to call initmp
 void
-ForceCell::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
+ForceCell::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin) {
     // Override this to call base class, then initmp
-    ForceBase::Init(pSpace, pSpecies, pSkin);
+    ForceBase::Init(pSpace, pSpecies, pSimples, pSkin);
     InitMP();
 }
 
@@ -20,12 +20,12 @@ ForceCell::LoadSimples() {
     ForceBase::LoadSimples();
 
     // Load the flat simples into the cell list
-    cell_list_.LoadFlatSimples(simples_);
+    cell_list_.LoadFlatSimples();
 }
 
 void
 ForceCell::InitMP() {
-    cell_list_.Init(space_, species_, skin_);
+    cell_list_.Init(space_, species_, simples_, skin_);
 }
 
 
@@ -88,7 +88,7 @@ ForceCell::Interact() {
             kmc_energy[i] = 0.0;
         }
 
-        assert(nparticles_ == simples_.size());
+        assert(nparticles_ == simples_->size());
         #ifdef ENABLE_OPENMP
         #pragma omp for schedule(runtime) nowait
         #endif
@@ -105,8 +105,8 @@ ForceCell::Interact() {
                     int jjdx = cell2->idxlist_[jdx];
                     // ONLY DO THE CALCULATION IF THE OTHER PID IS HIGHER!!!
                     if (jjdx > idx) {
-                        auto part1 = simples_[idx];
-                        auto part2 = simples_[jjdx];
+                        auto part1 = (*simples_)[idx];
+                        auto part2 = (*simples_)[jjdx];
 
                         // Interact
                         InteractParticlesMP(part1, part2, fr, tr, pr_energy, kmc_energy);
