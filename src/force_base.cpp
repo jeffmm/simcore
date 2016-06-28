@@ -4,9 +4,10 @@
 
 // Init the force
 void
-ForceBase::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
+ForceBase::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin) {
     space_ = pSpace;
     species_ = pSpecies;
+    simples_ = pSimples;
     ndim_ = space_->n_dim;
     nperiodic_ = space_->n_periodic;
     skin_ = pSkin;
@@ -61,17 +62,17 @@ ForceBase::LoadSimples() {
   // Also remember that the OIDs may not be in order, so account for that
   // via a mapping oid <-> position
   nsys_ = species_->size();
-  simples_.clear();
+  simples_->clear();
   for (auto it = species_->begin(); it != species_->end(); ++it) {
       std::vector<Simple*> sim_vec = (*it)->GetSimples();
-      simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
+      simples_->insert(simples_->end(), sim_vec.begin(), sim_vec.end());
   }
-  nparticles_ = (int)simples_.size();
+  nparticles_ = (int)simples_->size();
 
   // Ugh, figure out the OID stuff
   oid_position_map_.clear();
   for (int i = 0; i < nparticles_; ++i) {
-      auto part = simples_[i];
+      auto part = (*simples_)[i];
       int oid = part->GetOID();
       // i is position in force superarray, oid is the actual oid
       oid_position_map_[oid] = i;
@@ -154,7 +155,7 @@ void
 ForceBase::ReduceParticlesMP() {
     // XXX: CJE this is where we tell the particles what to do?
     for (int i = 0; i < nparticles_; ++i) {
-        auto part = simples_[i];
+        auto part = (*simples_)[i];
         int oidx = oid_position_map_[part->GetOID()];
         double subforce[3] = {0.0, 0.0, 0.0};
         double subtorque[3] = {0.0, 0.0, 0.0};
@@ -182,8 +183,8 @@ ForceBase::print() {
 void
 ForceBase::dump() {
     #ifdef DEBUG
-    for (int i = 0; i < (int)simples_.size(); ++i) {
-        auto part = simples_[i];
+    for (int i = 0; i < (int)simples_->size(); ++i) {
+        auto part = (*simples_)[i];
         auto oid = part->GetOID();
         printf("\to(%d) = ", oid);
         printf("x{%2.2f, %2.2f}, ", part->GetPosition()[0], part->GetPosition()[1]);

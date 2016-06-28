@@ -5,10 +5,10 @@ potentials:
     rcut: 2.5
     eps: 1
     sigma: 1
-  - type : WCA
+  - type : LJ126
     sid1 : br_rod
     sid2 : md_bead
-    rcut: 3
+    rcut: 2.5
     eps: 1
-    sigma: 0.6
+    sigma: 1
 

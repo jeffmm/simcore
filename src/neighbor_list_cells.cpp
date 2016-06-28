@@ -9,22 +9,22 @@
 
 // Init must call the cell list stuff too
 void
-NeighborListCells::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
+NeighborListCells::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin) {
     // Call the base init
-    ForceSubstructureBase::Init(pSpace, pSpecies, pSkin);
+    ForceSubstructureBase::Init(pSpace, pSpecies, pSimples, pSkin);
 
-    cell_list_.Init(pSpace, pSpecies, pSkin);
+    cell_list_.Init(pSpace, pSpecies, pSimples, pSkin);
 }
 
 
 // Load flat simples must be overridden
 void
-NeighborListCells::LoadFlatSimples(std::vector<Simple*> pSimples) {
+NeighborListCells::LoadFlatSimples() {
     // Call the base class version
-    ForceSubstructureBase::LoadFlatSimples(pSimples);
+    ForceSubstructureBase::LoadFlatSimples();
 
     // Call the cell list version
-    cell_list_.LoadFlatSimples(pSimples);
+    cell_list_.LoadFlatSimples();
 }
 
 void
@@ -126,8 +126,8 @@ NeighborListCells::CellsUpdate() {
                 for (int jdx = 0; jdx < cell2->nparticles_; ++jdx) {
                     int jjdx = cell2->idxlist_[jdx];
                     if (jjdx > idx) {
-                        auto part1 = simples_[idx];
-                        auto part2 = simples_[jjdx];
+                        auto part1 = (*simples_)[idx];
+                        auto part2 = (*simples_)[jjdx];
 
                         // Minimum distance
                         interactionmindist idm;

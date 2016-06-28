@@ -64,7 +64,8 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
   CheckOverlap();
 
   // Create the force submodule to do the calculations!
-  force_module_->Init(space_, species_, skin_);
+  force_module_->Init(space_, species_, &simples_, skin_);
+  LoadSimples();
   force_module_->LoadSimples();
   force_module_->InitPotentials(&potentials_);
   force_module_->Finalize();
@@ -93,6 +94,7 @@ void Forces::UpdateCellList() {
 
 void Forces::UpdateScheme() {
   LoadSimples();
+  force_module_->LoadSimples();
   force_module_->UpdateScheme();
 }
 

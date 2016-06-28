@@ -6,9 +6,9 @@
 
 // Overridden init method to call initmp
 void
-ForceNeighborListCells::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin) {
+ForceNeighborListCells::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin) {
     // Override this to call base class, then initmp
-    ForceBase::Init(pSpace, pSpecies, pSkin);
+    ForceBase::Init(pSpace, pSpecies, pSimples, pSkin);
     InitMP();
 }
 
@@ -20,12 +20,12 @@ ForceNeighborListCells::LoadSimples() {
     ForceBase::LoadSimples();
 
     // Load the flat simples into the cell list
-    neighbor_list_.LoadFlatSimples(simples_);
+    neighbor_list_.LoadFlatSimples();
 }
 
 void
 ForceNeighborListCells::InitMP() {
-    neighbor_list_.Init(space_, species_, skin_);
+    neighbor_list_.Init(space_, species_, simples_, skin_);
 }
 
 
@@ -93,7 +93,7 @@ ForceNeighborListCells::Interact() {
             kmc_energy[i] = 0.0;
         }
 
-        assert(nparticles_ == simples_.size());
+        assert(nparticles_ == simples_->size());
         #ifdef ENABLE_OPENMP
         #pragma omp for schedule(runtime) nowait
         #endif
@@ -101,8 +101,8 @@ ForceNeighborListCells::Interact() {
             // Iterate over our neighbors
             for (auto nldx = neighbors[idx].begin(); nldx != neighbors[idx].end(); ++nldx) {
                 int jdx = nldx->idx_;
-                auto part1 = simples_[idx];
-                auto part2 = simples_[jdx];
+                auto part1 = (*simples_)[idx];
+                auto part2 = (*simples_)[jdx];
 
                 // Do the interaction
                 InteractParticlesMP(part1, part2, fr, tr, pr_energy, kmc_energy);
