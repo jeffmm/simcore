@@ -80,6 +80,7 @@ class BrRod : public Composite<Site,Bond> {
         for (int i=0; i<n_bonds_; ++i) {
           Bond b(params, space, gsl_rng_get(rng_.r), GetSID());
           b.SetCID(GetCID());
+          b.SetRID(GetRID());
           //b.InitOID();
           v_elements_.push_back(b);
         }

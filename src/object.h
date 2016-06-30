@@ -8,10 +8,11 @@ class Object {
   private:
     unsigned int oid_;
     static unsigned int next_oid_;
-    static unsigned int next_cid_;
-        
+    static unsigned int next_rid_;
+
   protected:
     unsigned int cid_;
+    unsigned int rid_;
     SID sid_;
     int n_dim_;
     double position_[3],
@@ -29,7 +30,7 @@ class Object {
            k_energy_,
            p_energy_,
            kmc_energy_;
-    bool is_simple_;
+    bool is_rigid_ = false;
     bool is_kmc_ = false;
     space_struct *space_;
     graph_struct g_;
@@ -42,10 +43,11 @@ class Object {
     Object& operator=(Object const& that);
 
     virtual ~Object() {rng_.clear();}
-    bool IsSimple() {return is_simple_;}
+    bool IsRigid() {return is_rigid_;}
     bool IsKMC() { return is_kmc_; }
-    void InitCID() { cid_ = ++next_cid_;}
     void InitOID() { oid_ = ++next_oid_;}
+    void InitCID() { cid_ = oid_;}
+    void InitRID() { rid_ = ++next_rid_;}
     void SetPosition(const double *const pos) {
       std::copy(pos, pos+n_dim_, position_);
     }
@@ -106,18 +108,18 @@ class Object {
     virtual double const GetKineticEnergy() {return k_energy_;}
     virtual double const GetPotentialEnergy() {return p_energy_;}
     virtual double const GetKMCEnergy() {return kmc_energy_;}
+    void SetCID(unsigned int const cid) {cid_=cid;}
+    void SetRID(unsigned int const rid) {rid_=rid;}
     unsigned int const GetOID() {return oid_;}
     unsigned int const GetCID() {return cid_;}
+    unsigned int const GetRID() {return rid_;}
     SID const GetSID() {return sid_;}
 };
 
 class Simple : public Object {
   public:
     Simple(system_parameters *params, space_struct *space, long seed, SID sid) :
-      Object(params, space, seed, sid) {
-        InitCID();
-        is_simple_ = true;
-    }
+      Object(params, space, seed, sid) {}
     virtual ~Simple() {}
     Simple(const Simple& that) : Object(that) {}
     Simple& operator=(Simple const& that) {
@@ -130,10 +132,74 @@ class Simple : public Object {
       return sim_vec;
     }
     virtual void ApplyInteractions();
-    void SetCID(unsigned int const cid) {cid_=cid;}
     virtual void AddDr() {
       for (int i=0; i<n_dim_; ++i)
         dr_tot_[i] += position_[i] - prev_position_[i];
+    }
+    virtual double const GetRigidLength() {return length_;}
+    virtual double const GetRigidDiameter() {return diameter_;}
+    virtual double const * const GetRigidPosition() {return position_;}
+    virtual double const * const GetRigidScaledPosition() {return scaled_position_;}
+    virtual double const * const GetRigidOrientation() {return orientation_;}
+    virtual void Draw(std::vector<graph_struct*> * graph_array) {
+      Object::Draw(graph_array);
+    }
+
+};
+
+class Rigid : public Simple {
+  protected:
+    double rigid_position_[3],
+           rigid_scaled_position_[3],
+           rigid_orientation_[3],
+           rigid_length_,
+           rigid_diameter_;
+  public:
+    Rigid(system_parameters *params, space_struct *space, long seed, SID sid) :
+      Simple(params, space, seed, sid) {
+        std::fill(rigid_position_,rigid_position_+3,0.0);
+        std::fill(rigid_orientation_,rigid_orientation_+3,0.0);
+        std::fill(rigid_scaled_position_,rigid_scaled_position_+3,0.0);
+        rigid_length_=0;
+        rigid_diameter_=1;
+        is_rigid_ = true;
+    }
+    virtual ~Rigid() {}
+    Rigid(const Rigid& that) : Simple(that) {
+      std::copy(that.rigid_position_,that.rigid_position_+3,rigid_position_);
+      std::copy(that.rigid_scaled_position_,that.rigid_scaled_position_+3,rigid_scaled_position_);
+      std::copy(that.rigid_orientation_,that.rigid_orientation_+3,rigid_orientation_);
+      rigid_length_ = that.rigid_length_;
+      rigid_diameter_ = that.rigid_diameter_;
+    }
+    Rigid& operator=(Rigid const& that) {
+      Simple::operator=(that);
+      std::copy(that.rigid_position_,that.rigid_position_+3,rigid_position_);
+      std::copy(that.rigid_scaled_position_,that.rigid_scaled_position_+3,rigid_scaled_position_);
+      std::copy(that.rigid_orientation_,that.rigid_orientation_+3,rigid_orientation_);
+      rigid_length_ = that.rigid_length_;
+      rigid_diameter_ = that.rigid_diameter_;
+      return *this;
+    }
+    //virtual void InsertRandom(double buffer) {
+      //Simple::InsertRandom(buffer);
+      //std::copy(position_,position_+3,rigid_position_);
+      //std::copy(orientation_,orientation_+3,rigid_orientation_);
+      //rigid_length_ = length_;
+      //rigid_diameter_ = diameter_;
+    //}
+    void SetRigidLength(double len) {rigid_length_=len;}
+    void SetRigidDiameter(double d) {rigid_diameter_=d;}
+    void SetRigidPosition(double *pos) {std::copy(pos, pos+3,rigid_position_);}
+    void SetRigidScaledPosition(double *scaled_pos) {std::copy(scaled_pos, scaled_pos+3,rigid_scaled_position_);}
+    void SetRigidOrientation(double *u) {std::copy(u, u+3, rigid_orientation_);}
+    virtual double const GetRigidLength() {return rigid_length_;}
+    virtual double const GetRigidDiameter() {return rigid_diameter_;}
+    virtual double const * const GetRigidPosition() {return rigid_position_;}
+    virtual double const * const GetRigidScaledPosition() {return rigid_scaled_position_;}
+    virtual double const * const GetRigidOrientation() {return rigid_orientation_;}
+    virtual void Draw(std::vector<graph_struct*> * graph_array) {
+      Simple::Draw(graph_array);
     }
 };
 
@@ -144,10 +210,7 @@ class Composite<T> : public Object {
   protected:
     std::vector<T> elements_;
   public:
-    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {
-      InitCID();
-      is_simple_=false;
-    } 
+    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {} 
     //Destructor
     virtual ~Composite() {}
     //Copy constructor
@@ -200,10 +263,7 @@ class Composite<T,V> : public Object {
     std::vector<T> elements_;
     std::vector<V> v_elements_;
   public:
-    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {
-      InitCID();
-      is_simple_=false;
-    } 
+    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {} 
     //Destructor
     virtual ~Composite() {}
     //Copy constructor

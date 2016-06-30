@@ -3,10 +3,12 @@
 #include "minimum_distance.h"
 
 unsigned int Object::next_oid_ = 0;
-unsigned int Object::next_cid_ = 0;
+unsigned int Object::next_rid_ = 0;
 
 Object::Object(system_parameters *params, space_struct *space, long seed, SID sid) {
   oid_ = ++next_oid_;
+  rid_ = ++next_rid_;
+  cid_ = oid_;
   sid_ = sid;
   space_ = space;
   n_dim_ = space_->n_dim; 
@@ -27,7 +29,7 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   length_ = 0;
   k_energy_ = 0;
   p_energy_ = 0;
-  is_simple_=false;
+  is_rigid_=false;
 }
 
 Object::Object(const Object& that) {
@@ -35,6 +37,7 @@ Object::Object(const Object& that) {
   oid_ = that.oid_;
   cid_ = that.cid_;
   sid_ = that.sid_;
+  rid_ = that.rid_;
   next_oid_=that.next_oid_;
   delta_ = that.delta_;
   std::copy(that.position_, that.position_+3, position_);
@@ -54,7 +57,7 @@ Object::Object(const Object& that) {
   interactions_ = that.interactions_;
   g_ = that.g_;
   rng_.init(gsl_rng_get(that.rng_.r));
-  is_simple_=that.is_simple_;
+  is_rigid_=that.is_rigid_;
 }
 
 Object &Object::operator=(Object const& that) {
@@ -62,6 +65,7 @@ Object &Object::operator=(Object const& that) {
   oid_=that.oid_;
   cid_=that.cid_;
   sid_=that.sid_;
+  rid_=that.rid_;
   next_oid_=that.next_oid_;
   delta_ = that.delta_;
   std::copy(that.position_, that.position_+3, position_);
@@ -81,12 +85,14 @@ Object &Object::operator=(Object const& that) {
   interactions_ = that.interactions_;
   g_ = that.g_;
   rng_.init(gsl_rng_get(that.rng_.r));
-  is_simple_=that.is_simple_;
+  is_rigid_=that.is_rigid_;
   return *this;
 }
 
 void Object::InsertRandom(double buffer) {
   double mag;
+  if (space_->n_periodic == n_dim_)
+    buffer = 0;
   double R = space_->radius;
   if (R - buffer < 0) 
     error_exit("ERROR: Object #%d is too large to place in system.\n",GetOID());
@@ -179,39 +185,39 @@ void Object::AddForceTorqueEnergyKMC(double const * const F, double const * cons
 
 // Find the minimum distance beween two particles
 void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim, int& nperiodic, space_struct *space) {
-    double const * const r1 = o1->GetPosition();
-    double const * const s1 = o1->GetScaledPosition();
-    double const * const u1 = o1->GetOrientation();
-    double const * const r2 = o2->GetPosition();
-    double const * const s2 = o2->GetScaledPosition();
-    double const * const u2 = o2->GetOrientation();
-    double const l1 = o1->GetLength();
-    double const l2 = o2->GetLength();
-    double const d1 = o1->GetDiameter();
-    double const d2 = o2->GetDiameter();
-    /* TODO: Think about how best to do this for general shapes, like 2d
-       polygons that can represent the local surface of more complex 3d
-       shapes. Perhaps assume all local surface to be triangular polygons.*/
-    imd.dr_mag2 = 0;
-    std::fill(imd.dr, imd.dr+3, 0.0);
-    std::fill(imd.contact1, imd.contact1+3, 0.0);
-    std::fill(imd.contact2, imd.contact2+3, 0.0);
-    imd.buffer_mag = 0.5*(d1+d2);
-    imd.buffer_mag2 = imd.buffer_mag*imd.buffer_mag;
-    if (l1 == 0 && l2 == 0)
-        min_distance_point_point(ndim, nperiodic, space->unit_cell, 
-                                 r1, s1, r2, s2, imd.dr, &imd.dr_mag2);
-    else if (l1 == 0 && l2 > 0) 
-        min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
-                                   r1, s1, r2, s2, u2, l2,
-                                   imd.dr, &imd.dr_mag2, imd.contact2);
-    else if (l1 > 0 && l2 == 0) 
-        min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
-                                   r2, s2, r1, s1, u1, l1,
-                                   imd.dr, &imd.dr_mag2, imd.contact1);
-    else if (l1 > 0 && l2 > 0)
-        min_distance_sphero(ndim, nperiodic, space->unit_cell,
-                            r1, s1, u1, l1, r2, s2, u2, l2,
-                            imd.dr, &imd.dr_mag2, imd.contact1, imd.contact2);
-    imd.dr_mag = sqrt(imd.dr_mag2);
+  double const * const r1 = o1->GetRigidPosition();
+  double const * const s1 = o1->GetRigidScaledPosition();
+  double const * const u1 = o1->GetRigidOrientation();
+  double const l1 = o1->GetRigidLength();
+  double const d1 = o1->GetRigidDiameter();
+  double const * const r2 = o2->GetRigidPosition();
+  double const * const s2 = o2->GetRigidScaledPosition();
+  double const * const u2 = o2->GetRigidOrientation();
+  double const l2 = o2->GetRigidLength();
+  double const d2 = o2->GetRigidDiameter();
+  /* TODO: Think about how best to do this for general shapes, like 2d
+     polygons that can represent the local surface of more complex 3d
+     shapes. Perhaps assume all local surface to be triangular polygons.*/
+  imd.dr_mag2 = 0;
+  std::fill(imd.dr, imd.dr+3, 0.0);
+  std::fill(imd.contact1, imd.contact1+3, 0.0);
+  std::fill(imd.contact2, imd.contact2+3, 0.0);
+  imd.buffer_mag = 0.5*(d1+d2);
+  imd.buffer_mag2 = imd.buffer_mag*imd.buffer_mag;
+  if (l1 == 0 && l2 == 0)
+    min_distance_point_point(ndim, nperiodic, space->unit_cell, 
+                 r1, s1, r2, s2, imd.dr, &imd.dr_mag2);
+  else if (l1 == 0 && l2 > 0) 
+    min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
+                   r1, s1, r2, s2, u2, l2,
+                   imd.dr, &imd.dr_mag2, imd.contact2);
+  else if (l1 > 0 && l2 == 0) 
+    min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
+                   r2, s2, r1, s1, u1, l1,
+                   imd.dr, &imd.dr_mag2, imd.contact1);
+  else if (l1 > 0 && l2 > 0)
+    min_distance_sphero(ndim, nperiodic, space->unit_cell,
+              r1, s1, u1, l1, r2, s2, u2, l2,
+              imd.dr, &imd.dr_mag2, imd.contact1, imd.contact2);
+  imd.dr_mag = sqrt(imd.dr_mag2);
 }
