@@ -5,14 +5,14 @@
 #include "object.h"
 #include "auxiliary.h"
 
-class Bond : public Simple {
+class Bond : public Rigid {
   public:
     Bond(system_parameters *params, space_struct *space, 
-        long seed, SID sid) : Simple(params, space, seed, sid) {}
+        long seed, SID sid) : Rigid(params, space, seed, sid) {}
     ~Bond() {}
-    Bond(const Bond& that) : Simple(that) {}
+    Bond(const Bond& that) : Rigid(that) {}
     Bond& operator=(Bond const& that) {
-      Simple::operator=(that); return *this;
+      Rigid::operator=(that); return *this;
     }
     void Init();
     void Draw(std::vector<graph_struct*> * graph_array);
