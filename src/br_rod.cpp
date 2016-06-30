@@ -7,6 +7,11 @@ void BrRod::Init() {
   std::fill(body_frame_, body_frame_+6, 0.0);
   // Init bond lengths and diameter
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
+    bond->SetRigidPosition(position_);
+    bond->SetRigidScaledPosition(scaled_position_);
+    bond->SetRigidOrientation(orientation_);
+    bond->SetRigidLength(length_);
+    bond->SetRigidDiameter(diameter_);
     bond->SetLength(child_length_);
     bond->SetDiameter(diameter_);
   }
@@ -49,7 +54,7 @@ void BrRod::UpdatePositionMP() {
   //if (dynamic_instability_flag_)
     //DynamicInstability();
   UpdateSiteBondPositions();
-  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
     bond->UpdatePeriodic();
 }
 
@@ -74,6 +79,11 @@ void BrRod::UpdateSiteBondPositions() {
   int k=0; // XXX JMM temporary solution for debugging, visualization
   double u[3];
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
+    bond->SetRigidPosition(position_);
+    bond->SetRigidLength(length_);
+    bond->SetRigidDiameter(diameter_);
+    bond->SetRigidScaledPosition(scaled_position_);
+    bond->SetRigidOrientation(orientation_);
     bond->SetPosition(pos);
     if (k%2 == 0)
       bond->SetOrientation(orientation_);
@@ -87,8 +97,6 @@ void BrRod::UpdateSiteBondPositions() {
       pos[i] += orientation_[i] * child_length_;
     k++;
   }
-  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
-    bond->UpdatePeriodic();
 }
 
 /* Integration scheme taken from Yu-Guo Tao,
@@ -299,7 +307,7 @@ void BrRod::DynamicInstability() {
 }
 
 void BrRod::Draw(std::vector<graph_struct*> * graph_array) {
-  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
     bond->Draw(graph_array);
 }
 
