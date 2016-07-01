@@ -1,6 +1,5 @@
 // print_params_body.h, generated automatically using make_params
 
-param_file << "force_induced_catastrophe_flag : " << params.force_induced_catastrophe_flag << "\n";
 param_file << "seed : " << params.seed << "\n";
 param_file << "n_dim : " << params.n_dim << "\n";
 param_file << "n_periodic : " << params.n_periodic << "\n";
@@ -16,16 +15,17 @@ param_file << "particle_mass : " << params.particle_mass << "\n";
 param_file << "n_steps : " << params.n_steps << "\n";
 param_file << "n_graph : " << params.n_graph << "\n";
 param_file << "dynamic_instability_flag : " << params.dynamic_instability_flag << "\n";
-param_file << "graph_flag : " << params.graph_flag << "\n";
 param_file << "error_analysis_flag : " << params.error_analysis_flag << "\n";
+param_file << "force_induced_catastrophe_flag : " << params.force_induced_catastrophe_flag << "\n";
+param_file << "graph_flag : " << params.graph_flag << "\n";
 param_file << "grab_flag : " << params.grab_flag << "\n";
-param_file << "theta_validation_flag : " << params.theta_validation_flag << "\n";
 param_file << "pair_interaction_flag : " << params.pair_interaction_flag << "\n";
-param_file << "sphere_radius : " << params.sphere_radius << "\n";
 param_file << "time_flag : " << params.time_flag << "\n";
+param_file << "theta_validation_flag : " << params.theta_validation_flag << "\n";
 param_file << "buckling_analysis_flag : " << params.buckling_analysis_flag << "\n";
-param_file << "save_state_flag : " << params.save_state_flag << "\n";
 param_file << "n_save_state : " << params.n_save_state << "\n";
+param_file << "sphere_radius : " << params.sphere_radius << "\n";
+param_file << "save_state_flag : " << params.save_state_flag << "\n";
 param_file << "n_bins : " << params.n_bins << "\n";
 param_file << "n_validate : " << params.n_validate << "\n";
 param_file << "n_buckle_on : " << params.n_buckle_on << "\n";
@@ -95,3 +95,4 @@ param_file << "rod_diameter : " << params.rod_diameter << "\n";
 param_file << "ftype : " << params.ftype << "\n";
 param_file << "draw_interactions : " << params.draw_interactions << "\n";
 param_file << "potfile : " << params.potfile << "\n";
+param_file << "max_overlap : " << params.max_overlap << "\n";

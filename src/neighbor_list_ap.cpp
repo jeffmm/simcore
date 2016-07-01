@@ -112,7 +112,27 @@ NeighborListAP::AllPairsUpdate() {
         }
       }
     } // pragma omp for schedule(runtime) nowait
+  } // pragma omp parallel
+  #ifdef ENABLE_OPENMP
+  {
+    // Clean up any existing rid-rid interactions
+    std::set< std::pair<int, int> > rid_interactions;
+    for (int idx=0; idx<nparticles_; ++idx) {
+      for (auto nb = neighbors_[idx].begin(); nb != neighbors_[idx].end();) {
+        if (!rid_interactions.insert(std::make_pair(nb->rid_me_,nb->rid_you_)).second ||
+            !rid_interactions.insert(std::make_pair(nb->rid_you_,nb->rid_me_)).second) {
+          //if (debug_trace)
+            //printf("Removing interaction pair (%d, %d)\n",nb->rid_you_,nb->rid_me_);
+          neighbors_[idx].erase(nb);
+        }
+        else {
+          ++nb;
+        }
+      }
+    }
+
   }
+  #endif
 }
 
 

@@ -1,9 +1,6 @@
 // parse_params_body.h, generated automatically using make_params
 
 if (param_name.compare("n_runs") == 0 || param_name.compare("run_name") == 0) {}
-else if (param_name.compare("force_induced_catastrophe_flag") == 0){
-  params_[i_var].force_induced_catastrophe_flag = atoi(param_value.c_str());
-}
 else if (param_name.compare("seed") == 0){
   params_[i_var].seed = atol(param_value.c_str());
 }
@@ -49,35 +46,38 @@ else if (param_name.compare("n_graph") == 0){
 else if (param_name.compare("dynamic_instability_flag") == 0){
   params_[i_var].dynamic_instability_flag = atoi(param_value.c_str());
 }
-else if (param_name.compare("graph_flag") == 0){
-  params_[i_var].graph_flag = atoi(param_value.c_str());
-}
 else if (param_name.compare("error_analysis_flag") == 0){
   params_[i_var].error_analysis_flag = atoi(param_value.c_str());
+}
+else if (param_name.compare("force_induced_catastrophe_flag") == 0){
+  params_[i_var].force_induced_catastrophe_flag = atoi(param_value.c_str());
+}
+else if (param_name.compare("graph_flag") == 0){
+  params_[i_var].graph_flag = atoi(param_value.c_str());
 }
 else if (param_name.compare("grab_flag") == 0){
   params_[i_var].grab_flag = atoi(param_value.c_str());
 }
-else if (param_name.compare("theta_validation_flag") == 0){
-  params_[i_var].theta_validation_flag = atoi(param_value.c_str());
-}
 else if (param_name.compare("pair_interaction_flag") == 0){
   params_[i_var].pair_interaction_flag = atoi(param_value.c_str());
-}
-else if (param_name.compare("sphere_radius") == 0){
-  params_[i_var].sphere_radius = atof(param_value.c_str());
 }
 else if (param_name.compare("time_flag") == 0){
   params_[i_var].time_flag = atoi(param_value.c_str());
 }
+else if (param_name.compare("theta_validation_flag") == 0){
+  params_[i_var].theta_validation_flag = atoi(param_value.c_str());
+}
 else if (param_name.compare("buckling_analysis_flag") == 0){
   params_[i_var].buckling_analysis_flag = atoi(param_value.c_str());
 }
-else if (param_name.compare("save_state_flag") == 0){
-  params_[i_var].save_state_flag = atoi(param_value.c_str());
-}
 else if (param_name.compare("n_save_state") == 0){
   params_[i_var].n_save_state = atoi(param_value.c_str());
+}
+else if (param_name.compare("sphere_radius") == 0){
+  params_[i_var].sphere_radius = atof(param_value.c_str());
+}
+else if (param_name.compare("save_state_flag") == 0){
+  params_[i_var].save_state_flag = atoi(param_value.c_str());
 }
 else if (param_name.compare("n_bins") == 0){
   params_[i_var].n_bins = atoi(param_value.c_str());
@@ -281,6 +281,9 @@ else if (param_name.compare("draw_interactions") == 0){
 else if ( param_name.compare("potfile") == 0 ) {
   params_[i_var].potfile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
   strcpy(params_[i_var].potfile, param_value.c_str());
+}
+else if (param_name.compare("max_overlap") == 0){
+  params_[i_var].max_overlap = atoi(param_value.c_str());
 }
 else {
   std::cout << "  WARNING: Parameter " << param_name << " not recognized!\n";

@@ -9,6 +9,7 @@ class WCA : public PotentialBase {
     double eps_, sigma_;
     double c12_, c6_;
     double shift_;
+    double fcut_;
   public:
     WCA() : PotentialBase(nullptr, 0.0), eps_(0.0), sigma_(0.0) {
       pot_name_ = "WCA";
@@ -35,6 +36,10 @@ class WCA : public PotentialBase {
       r6 = rinv*rinv*rinv;
 
       ffac = -(12.0*c12_*r6 - 6.0*c6_)*r6*rinv;
+      // Cut off the force at fcut
+      if (ABS(ffac) > fcut_) {
+        ffac = SIGNOF(ffac) * fcut_;
+      }
       for (int i = 0; i < n_dim_; ++i) 
         fpote[i] = ffac*dr[i]/dr_mag;
       fpote[n_dim_] = r6*(c12_*r6 - c6_) + eps_;
@@ -46,6 +51,7 @@ class WCA : public PotentialBase {
         // Now, let's look at the particular yaml node we are supposed to be interested in
         eps_    = node["potentials"][ipot]["eps"].as<double>();
         sigma_  = node["potentials"][ipot]["sigma"].as<double>();
+        fcut_ = node["potentials"][ipot]["fcut"].as<double>();
 
         // For WCA potentials, the rcutoff is actually important, as it must be
         // restricted to be at 2^(1/6)sigma

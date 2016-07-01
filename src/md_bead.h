@@ -14,7 +14,7 @@ class MDBead : public Simple {
     MDBead(system_parameters *params, space_struct *space, 
         long seed, SID sid) : Simple(params, space, seed, sid) {
       // Set parameters unique to MD bead
-      SetCID(999);
+      //SetCID(999);
       diameter_ = params->md_bead_diameter;
       mass_ = params->md_bead_mass;
     }

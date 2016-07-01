@@ -10,6 +10,7 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
   species_ = pSpecies;
   n_dim_ = space_->n_dim;
   n_periodic_ = space_->n_periodic;
+  max_overlap_ = params_->max_overlap;
   draw_flag_ = params_->draw_interactions;
   //XXX: CJE switch on force type for now
   printf("********\n");
@@ -174,7 +175,7 @@ void Forces::CheckOverlap() {
                 }
             }
         }
-        if (num > 10000)
+        if (num > max_overlap_)
             error_exit("ERROR: Too many overlaps detected. Check packing ratio for objects.\n");
     } while (overlap);
 }

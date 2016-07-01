@@ -17,8 +17,9 @@
 class Forces {
   private:
     int n_dim_,
-        n_periodic_;
-    int draw_flag_;
+        n_periodic_,
+        max_overlap_,
+        draw_flag_;
     bool draw_;
     double dr_[3],
            contact1_[3],
