@@ -15,7 +15,7 @@ class SpeciesBase {
     rng_properties rng_;
     void SetSID(SID sid) {sid_=sid;}
     std::vector<potential_pair> potentials_;
-    virtual void InitPotentials(system_parameters *params) {}
+    //virtual void InitPotentials(system_parameters *params) {}
     void AddPotential(SID sid1, SID sid2, PotentialBase * potential) {
       sid_pair sids = std::make_pair(sid1, sid2);
       potential_pair pot_pair = std::make_pair(sids,potential);

@@ -26,10 +26,10 @@ void BrBead::UpdatePositionMP() {
     UpdatePeriodic();
 }
 
-void BrBeadSpecies::InitPotentials (system_parameters *params) {
-  AddPotential(SID::br_bead, SID::br_bead, 
-      new WCA(params->lj_epsilon,params->br_bead_diameter,
-                space_, pow(2.0, 1.0/6.0)*params->br_bead_diameter));
-}
+//void BrBeadSpecies::InitPotentials (system_parameters *params) {
+  //AddPotential(SID::br_bead, SID::br_bead, 
+      //new WCA(params->lj_epsilon,params->br_bead_diameter,
+                //space_, pow(2.0, 1.0/6.0)*params->br_bead_diameter));
+//}
 
 

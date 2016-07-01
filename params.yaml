@@ -1,23 +1,23 @@
 # params.yaml
 ---
-seed : 43185917383215
+seed : 43185917383213
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-system_radius: 20
+system_radius: 10
 daughter_radius: 5
 mother_daughter_dist: 0
 boundary_type: 1
-n_rod: 20
+n_rod: 5
 rod_diameter: 1
-rod_length: 10
-dynamic_instability_flag: 1
-force_induced_catastrophe_flag: 1
+rod_length: 5
+dynamic_instability_flag: 0
+force_induced_catastrophe_flag: 0
 n_dimer: 0
 n_md_bead: 0
 md_bead_diameter: 0.3
 md_bead_mass: 0.1
-n_br_bead: 0
+n_br_bead: 20
 br_bead_diameter: 1
 dimer_diameter: 1
 dimer_length: 2

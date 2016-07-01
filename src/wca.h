@@ -9,12 +9,11 @@ class WCA : public PotentialBase {
     double eps_, sigma_;
     double c12_, c6_;
     double shift_;
-    double fcut_;
   public:
-    WCA() : PotentialBase(nullptr, 0.0), eps_(0.0), sigma_(0.0) {
+    WCA() : PotentialBase(nullptr, 0.0, 0.0), eps_(0.0), sigma_(0.0) {
       pot_name_ = "WCA";
     }
-    WCA(double pEps, double pSigma, space_struct* pSpace, double pRcut) : PotentialBase(pSpace, pRcut), eps_(pEps), sigma_(pSigma) {
+    WCA(double pEps, double pSigma, space_struct* pSpace, double pRcut, double pFcut) : PotentialBase(pSpace, pRcut, pFcut), eps_(pEps), sigma_(pSigma) {
       pot_name_ = "WCA";
       c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
       c6_  = 4.0 * eps_ * pow(sigma_,  6.0);

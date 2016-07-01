@@ -39,13 +39,13 @@ class BrSimpleRod : public Simple {
 
 class BrSimpleRodSpecies : public Species<BrSimpleRod> {
   protected:
-    void InitPotentials(system_parameters *params);
+    //void InitPotentials(system_parameters *params);
   public:
     BrSimpleRodSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
       SetSID(SID::br_simple_rod);
-      InitPotentials(params);
+      //InitPotentials(params);
     }
     ~BrSimpleRodSpecies() {}
     BrSimpleRodSpecies(const BrSimpleRodSpecies& that) : Species(that) {}

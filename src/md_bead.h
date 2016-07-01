@@ -33,13 +33,13 @@ class MDBead : public Simple {
 
 class MDBeadSpecies : public Species<MDBead> {
   protected:
-    void InitPotentials (system_parameters *params);
+    //void InitPotentials (system_parameters *params);
   public:
     MDBeadSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
       SetSID(SID::md_bead);
-      InitPotentials(params);
+      //InitPotentials(params);
     }
     ~MDBeadSpecies() {}
     MDBeadSpecies(const MDBeadSpecies& that) : Species(that) {}

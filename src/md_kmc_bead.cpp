@@ -50,11 +50,11 @@ double const MDKMCBead::GetKineticEnergy() {
   return k_energy_;
 }
 
-void MDKMCBeadSpecies::InitPotentials (system_parameters *params) {
-  AddPotential(SID::md_kmc_bead, SID::md_kmc_bead, 
-      // Set md_kmc_bead-md_kmc_bead interaction
-      new LJ126(params->lj_epsilon,params->md_kmc_bead_diameter,
-        space_, 2.5*params->md_kmc_bead_diameter));
-    //new WCA(params->lj_epsilon,params->md_kmc_bead_diameter,
-     //   space_, pow(2.0,1.0/6.0) *params->md_kmc_bead_diameter));
-}
+//void MDKMCBeadSpecies::InitPotentials (system_parameters *params) {
+  //AddPotential(SID::md_kmc_bead, SID::md_kmc_bead, 
+      //// Set md_kmc_bead-md_kmc_bead interaction
+      //new LJ126(params->lj_epsilon,params->md_kmc_bead_diameter,
+        //space_, 2.5*params->md_kmc_bead_diameter));
+    ////new WCA(params->lj_epsilon,params->md_kmc_bead_diameter,
+     ////   space_, pow(2.0,1.0/6.0) *params->md_kmc_bead_diameter));
+//}

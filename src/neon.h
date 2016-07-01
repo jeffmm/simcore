@@ -30,14 +30,14 @@ class Neon : public MDBead {
 
 class NeonSpecies : public Species<Neon> {
   protected:
-    void InitPotentials (system_parameters *params);
+    //void InitPotentials (system_parameters *params);
   public:
     NeonSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
       // Set species ID for Neon
       SetSID(SID::neon);
-      InitPotentials(params);
+      //InitPotentials(params);
     }
     ~NeonSpecies() {}
     NeonSpecies(const NeonSpecies& that) : Species(that) {}

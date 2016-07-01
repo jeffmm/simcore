@@ -24,12 +24,12 @@ class Argon : public MDBead {
 
 class ArgonSpecies : public Species<Argon> {
   protected:
-    void InitPotentials (system_parameters *params);
+    //void InitPotentials (system_parameters *params);
 
   public:
     ArgonSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::argon);
-      InitPotentials(params);
+      //InitPotentials(params);
     }
     ~ArgonSpecies() {}
     ArgonSpecies(const ArgonSpecies& that) : Species(that) {}
