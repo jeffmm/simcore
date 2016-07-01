@@ -1,23 +1,23 @@
 # params.yaml
 ---
-seed : 13485913453758
+seed : 43185917383215
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-system_radius: 10
+system_radius: 20
 daughter_radius: 5
 mother_daughter_dist: 0
 boundary_type: 1
-n_rod: 1
+n_rod: 20
 rod_diameter: 1
-rod_length: 8
+rod_length: 10
 dynamic_instability_flag: 1
 force_induced_catastrophe_flag: 1
 n_dimer: 0
 n_md_bead: 0
-md_bead_diameter: 0.2
-md_bead_mass: 0.2
-n_br_bead: 30
+md_bead_diameter: 0.3
+md_bead_mass: 0.1
+n_br_bead: 0
 br_bead_diameter: 1
 dimer_diameter: 1
 dimer_length: 2
@@ -25,11 +25,12 @@ dimer_eq_length: 2
 dimer_k_spring: 5
 max_rod_length: 100
 min_rod_length: 1
+max_overlap: 100000
 cell_length: 4
 graph_flag: 1
-n_graph: 1000
+n_graph: 100
 graph_background: 1
-delta: 0.00001
+delta: 0.0001
 n_steps: 5000000
 n_update_cells: 20
 time_flag: 1

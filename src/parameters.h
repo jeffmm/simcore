@@ -5,7 +5,6 @@
 
 struct system_parameters {
 
-  int force_induced_catastrophe_flag = 1;
   long seed = 7859459105545;
   int n_dim = 3;
   int n_periodic = 0;
@@ -21,16 +20,17 @@ struct system_parameters {
   int n_steps = 100000000;
   int n_graph = 1000;
   int dynamic_instability_flag = 1;
-  int graph_flag = 0;
   int error_analysis_flag = 0;
+  int force_induced_catastrophe_flag = 1;
+  int graph_flag = 0;
   int grab_flag = 0;
-  int theta_validation_flag = 0;
   int pair_interaction_flag = 1;
-  double sphere_radius = 50;
   int time_flag = 0;
+  int theta_validation_flag = 0;
   int buckling_analysis_flag = 0;
-  int save_state_flag = 0;
   int n_save_state = 100000;
+  double sphere_radius = 50;
+  int save_state_flag = 0;
   int n_bins = 1000;
   int n_validate = 10000;
   int n_buckle_on = 1000000;
@@ -98,6 +98,7 @@ struct system_parameters {
   int ftype = 2;
   int draw_interactions = 0;
   char *potfile;
+  int max_overlap = 10000;
 
 };
 
