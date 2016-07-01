@@ -20,7 +20,7 @@ ForceBase::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::
     {
         if (0 == omp_get_thread_num()) {
             nthreads_ = omp_get_num_threads();
-            //printf("Running OpenMP using %d threads\n", nthreads_);
+            printf("Running OpenMP using %d threads\n", nthreads_);
         }
     }
     #else
