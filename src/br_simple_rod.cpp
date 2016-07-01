@@ -125,9 +125,9 @@ void BrSimpleRod::SetDiffusion() {
   rand_sigma_rot_ = sqrt(2.0*delta_/gamma_rot_);
 }
 
-void BrSimpleRodSpecies::InitPotentials (system_parameters *params) {
-  AddPotential(SID::br_simple_rod, SID::br_simple_rod, 
-      // Set br_rod-br_rod interaction
-      new WCA(params->lj_epsilon,params->rod_diameter,
-        space_, pow(2, 1.0/6.0)*params->rod_diameter));
-}
+//void BrSimpleRodSpecies::InitPotentials (system_parameters *params) {
+  //AddPotential(SID::br_simple_rod, SID::br_simple_rod, 
+      //// Set br_rod-br_rod interaction
+      //new WCA(params->lj_epsilon,params->rod_diameter,
+        //space_, pow(2, 1.0/6.0)*params->rod_diameter));
+//}

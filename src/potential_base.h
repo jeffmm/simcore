@@ -11,11 +11,12 @@ class PotentialBase {
     bool is_kmc_ = false; // Is this a kinetic monte carlo potential (no forces?)
     int n_dim_;
     double rcut_, rcut2_; // Cutoff radius
+    double fcut_; // Force cutoff
     SID kmc_target_; // KMC target (if there is one)
     std::string pot_name_;
     space_struct *space_;
   public:
-    PotentialBase(space_struct* pSpace, double pRcut) : rcut_(pRcut), space_(pSpace) {
+    PotentialBase(space_struct* pSpace, double pRcut, double pFcut) : rcut_(pRcut), space_(pSpace), fcut_(pFcut) {
       pot_name_ = "Untitled";
       rcut2_ = rcut_ * rcut_;
       if (space_ != nullptr)

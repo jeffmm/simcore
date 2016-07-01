@@ -99,11 +99,11 @@ void BrDimer::Draw(std::vector<graph_struct*> * graph_array) {
     i_bead->Draw(graph_array);
 }
 
-void BrDimerSpecies::InitPotentials(system_parameters *params) {
-  AddPotential(SID::br_dimer, SID::br_dimer, new LJ126(params->lj_epsilon, params->br_bead_diameter, space_, 2.5*params->br_bead_diameter));
-  double dimer_neon_diam = 0.5*(params->br_bead_diameter + params->neon_diameter);
-  double dimer_argon_diam = 0.5*(params->br_bead_diameter + params->argon_diameter);
-  AddPotential(SID::neon, SID::br_dimer, new LJ126(params->lj_epsilon, dimer_neon_diam, space_, 2.5*dimer_neon_diam));
-  AddPotential(SID::argon, SID::br_dimer, new LJ126(params->lj_epsilon, dimer_argon_diam, space_, 2.5*dimer_argon_diam));
-}
+//void BrDimerSpecies::InitPotentials(system_parameters *params) {
+  //AddPotential(SID::br_dimer, SID::br_dimer, new LJ126(params->lj_epsilon, params->br_bead_diameter, space_, 2.5*params->br_bead_diameter));
+  //double dimer_neon_diam = 0.5*(params->br_bead_diameter + params->neon_diameter);
+  //double dimer_argon_diam = 0.5*(params->br_bead_diameter + params->argon_diameter);
+  //AddPotential(SID::neon, SID::br_dimer, new LJ126(params->lj_epsilon, dimer_neon_diam, space_, 2.5*dimer_neon_diam));
+  //AddPotential(SID::argon, SID::br_dimer, new LJ126(params->lj_epsilon, dimer_argon_diam, space_, 2.5*dimer_argon_diam));
+//}
 

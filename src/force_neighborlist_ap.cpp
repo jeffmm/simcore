@@ -151,7 +151,6 @@ ForceNeighborListAP::Interact() {
     delete[] fr;
     delete[] tr;
   } // pragma omp parallel
-
   ReduceParticlesMP();
 }
 
