@@ -7,7 +7,7 @@
 // Potential base class for all external(or maybe even internal) potentials
 class TestPotential : public PotentialBase {
   public:
-    TestPotential(space_struct *pSpace, double pRcut) : PotentialBase(pSpace, pRcut) {
+    TestPotential(space_struct *pSpace, double pRcut, double pFcut) : PotentialBase(pSpace, pRcut, pFcut) {
       pot_name_ = "Test Potential";
     }
     virtual ~TestPotential() {}

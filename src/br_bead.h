@@ -25,12 +25,12 @@ class BrBead : public Simple {
 #include "species.h"
 class BrBeadSpecies : public Species<BrBead> {
   protected:
-    void InitPotentials(system_parameters *params);
+    //void InitPotentials(system_parameters *params);
 
   public:
     BrBeadSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::br_bead);
-      InitPotentials(params);
+      //InitPotentials(params);
     }
     ~BrBeadSpecies() {}
     BrBeadSpecies(const BrBeadSpecies& that) : Species(that) {}

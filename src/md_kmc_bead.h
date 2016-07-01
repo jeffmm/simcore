@@ -33,13 +33,13 @@ class MDKMCBead : public Simple {
 
 class MDKMCBeadSpecies : public Species<MDKMCBead> {
   protected:
-    void InitPotentials (system_parameters *params);
+    //void InitPotentials (system_parameters *params);
   public:
     MDKMCBeadSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
       SetSID(SID::md_kmc_bead);
-      InitPotentials(params);
+      //InitPotentials(params);
     }
     ~MDKMCBeadSpecies() {}
     MDKMCBeadSpecies(const MDKMCBeadSpecies& that) : Species(that) {}

@@ -145,13 +145,13 @@ class BrRod : public Composite<Site,Bond> {
 
 class BrRodSpecies : public Species<BrRod> {
   protected:
-    void InitPotentials(system_parameters *params);
+    //void InitPotentials(system_parameters *params);
   public:
     BrRodSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
       SetSID(SID::br_rod);
-      InitPotentials(params);
+      //InitPotentials(params);
     }
     ~BrRodSpecies() {}
     BrRodSpecies(const BrRodSpecies& that) : Species(that) {}

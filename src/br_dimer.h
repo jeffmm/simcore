@@ -65,12 +65,12 @@ class BrDimer : public Composite<BrBead> {
 #include "species.h"
 class BrDimerSpecies : public Species<BrDimer> {
   protected:
-    void InitPotentials (system_parameters *params);
+    //void InitPotentials (system_parameters *params);
 
   public:
     BrDimerSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::br_dimer);
-      InitPotentials(params);
+      //InitPotentials(params);
     }
     ~BrDimerSpecies() {}
     BrDimerSpecies(const BrDimerSpecies& that) : Species(that) {}

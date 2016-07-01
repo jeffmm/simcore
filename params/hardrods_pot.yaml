@@ -6,7 +6,7 @@ potentials:
     fcut: 100
     eps: 1
     sigma: 1
-  - type : WCA
+  - type : LJ126
     sid1 : br_rod
     sid2 : br_bead
     fcut: 100

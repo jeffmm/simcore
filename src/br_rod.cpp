@@ -311,11 +311,11 @@ void BrRod::Draw(std::vector<graph_struct*> * graph_array) {
     bond->Draw(graph_array);
 }
 
-void BrRodSpecies::InitPotentials (system_parameters *params) {
-  AddPotential(SID::br_simple_rod, SID::br_simple_rod, 
-      // Set br_rod-br_rod interaction
-      new WCA(params->lj_epsilon,params->rod_diameter,
-        space_, pow(2, 1.0/6.0)*params->rod_diameter));
-}
+//void BrRodSpecies::InitPotentials (system_parameters *params) {
+  //AddPotential(SID::br_simple_rod, SID::br_simple_rod, 
+      //// Set br_rod-br_rod interaction
+      //new WCA(params->lj_epsilon,params->rod_diameter,
+        //space_, pow(2, 1.0/6.0)*params->rod_diameter));
+//}
 
 

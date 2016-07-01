@@ -10,10 +10,10 @@ class LJ126 : public PotentialBase {
     double c12_, c6_;
     double shift_;
   public:
-    LJ126() : PotentialBase(nullptr, 0.0), eps_(0.0), sigma_(0.0) {
+    LJ126() : PotentialBase(nullptr, 0.0, 0.0), eps_(0.0), sigma_(0.0) {
       pot_name_ = "Lennard Jones 12-6";
     }
-    LJ126(double pEps, double pSigma, space_struct* pSpace, double pRcut) : PotentialBase(pSpace, pRcut), eps_(pEps), sigma_(pSigma) {
+    LJ126(double pEps, double pSigma, space_struct* pSpace, double pRcut, double pFcut) : PotentialBase(pSpace, pRcut, pFcut), eps_(pEps), sigma_(pSigma) {
       pot_name_ = "Lennard Jones 12-6";
       c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
       c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
@@ -40,6 +40,8 @@ class LJ126 : public PotentialBase {
       r6 = rinv*rinv*rinv;
 
       ffac = -(12.0*c12_*r6 - 6.0*c6_)*r6*rinv;
+      if (ABS(ffac) > fcut_)
+        ffac = SIGNOF(ffac) * fcut_;
       for (int i = 0; i < n_dim_; ++i) 
         fpote[i] = dr[i]*ffac;
       fpote[n_dim_] = r6*(c12_*r6 - c6_) - shift_;
@@ -52,6 +54,7 @@ class LJ126 : public PotentialBase {
         rcut_   = node["potentials"][ipot]["rcut"].as<double>();
         eps_    = node["potentials"][ipot]["eps"].as<double>();
         sigma_  = node["potentials"][ipot]["sigma"].as<double>();
+        fcut_   = node["potentials"][ipot]["fcut"].as<double>();
 
         rcut2_ = rcut_*rcut_;
         c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
