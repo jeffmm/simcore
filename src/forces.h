@@ -6,6 +6,7 @@
 #include "cell_list.h"
 #include "minimum_distance.h"
 #include "potential_manager.h"
+#include "particle_tracking.h"
 
 // CJE stuff here
 #include "force_brute.h"
@@ -37,6 +38,7 @@ class Forces {
     std::vector<SpeciesBase*> *species_;
     CellList cell_list_;
     PotentialManager potentials_;
+    ParticleTracking tracking_;
 
     ForceBase* force_module_;
   public:
