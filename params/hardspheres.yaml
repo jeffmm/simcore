@@ -29,7 +29,7 @@ n_update_cells: 20
 time_flag: 1
 energy_analysis_flag: 1
 lj_epsilon: 1
-ftype: 4
+ftype: 1
 potfile: params/hardspheres_pot.yaml
 #[brownian_dimer]:
     #num: [2,4]

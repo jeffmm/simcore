@@ -62,6 +62,11 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
   //XXX: CJE needed for the check overlaps, change this
   //cell_list_.Init(n_dim_, n_periodic_, params_->cell_length, space_->radius);
   InitPotentials();
+  // XXX CJE: Particle tracking here
+  tracking_.Init(space_, species_, skin_, force_type_);
+  tracking_.InitPotentials(&potentials_);
+  tracking_.InitTracking();
+
   CheckOverlap();
 
   // Create the force submodule to do the calculations!
@@ -72,6 +77,9 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
   force_module_->Finalize();
   force_module_->UpdateScheme();
   force_module_->print();
+
+  printf("TESTING, EXITING\n");
+  exit(1);
 }
 
 void Forces::InitPotentials() {
@@ -83,6 +91,7 @@ void Forces::DumpAll() {
     // Dump all the particles and their positions, forces, energy (2d)
     #ifdef DEBUG
     force_module_->dump();
+    tracking_.Dump();
     #endif
 }
 
