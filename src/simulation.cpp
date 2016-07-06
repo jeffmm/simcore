@@ -48,17 +48,7 @@ void Simulation::IntegrateMP() {
     (*it)->UpdatePositionsMP();
 }
 
-void Simulation::Interact() {
-  if (i_step_%params_.n_update_cells==0) {
-    forces_.UpdateCellList();
-  }
-  forces_.Interact();
-}
-
 void Simulation::InteractMP() {
-  if (i_step_ % params_.n_update_cells == 0) {
-    forces_.UpdateScheme();
-  }
   forces_.InteractMP();
 }
 

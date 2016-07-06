@@ -23,45 +23,35 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
   nthreads_ = 1;
   #endif
 
-  //XXX: CJE switch on force type for now
+  // Switch for interaction substructure type
   printf("********\n");
   printf("Creating UberEngine\n");
   switch (params_->ftype) {
     case 0:
-        printf("Must specify a force substructure, exiting!\n");
+        printf("Must specify a tracking substructure, exiting!\n");
         exit(1);
     case 1:
-        //printf("->Using all pairs (brute) force substructure\n");
         force_type_ = FTYPE::allpairs;
-        force_module_ = forceFactory<ForceBrute>();
         skin_ = 0.0;
         break;
     case 2:
-        printf("->Using microcells force substructure\n");
         force_type_ = FTYPE::microcells;
-        force_module_ = forceFactory<ForceMicrocell>();
         skin_ = 0.0;
         printf("ERROR: Currently deprecated on account of composite objects, exiting\n");
         exit(1);
         break;
     case 3:
-        printf("->Using cells force substructure\n");
         force_type_ = FTYPE::cells;
-        force_module_ = forceFactory<ForceCell>();
         skin_ = 0.0;
         printf("ERROR: Currently deprecated on account of composite objects, exiting\n");
         exit(1);
         break;
     case 4:
-        printf("->Using neighbor lists all pairs substructure\n");
         force_type_ = FTYPE::neighborallpairs;
-        force_module_ = forceFactory<ForceNeighborListAP>();
         skin_ = params_->masterskin;
         break;
     case 5:
-       printf("->Using neighbor list cells substructure\n");
         force_type_ = FTYPE::neighborcells;
-        force_module_ = forceFactory<ForceNeighborListCells>();
         skin_ = params_->masterskin;
         printf("ERROR: Currently deprecated on account of composite objects, exiting\n");
         exit(1);
@@ -79,25 +69,14 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
   tracking_.CheckOverlaps(max_overlap_);
   tracking_.Print();
 
-  //CheckOverlap();
-
   fengine_.Init(space_, &tracking_, skin_);
   fengine_.InitPotentials(&potentials_);
   fengine_.InitMP();
   fengine_.Print();
 
   // Run one step to make sure that we're all good
-  tracking_.UpdateTracking();
+  tracking_.UpdateTracking(true);
   fengine_.Interact();
-
-  // Create the force submodule to do the calculations!
-  //force_module_->Init(space_, species_, &simples_, skin_);
-  //LoadSimples();
-  //force_module_->LoadSimples();
-  //force_module_->InitPotentials(&potentials_);
-  //force_module_->Finalize();
-  //force_module_->UpdateScheme();
-  //force_module_->print();
 
 }
 
@@ -109,134 +88,19 @@ void Forces::InitPotentials() {
 void Forces::DumpAll() {
     // Dump all the particles and their positions, forces, energy (2d)
     #ifdef DEBUG
-    //force_module_->dump();
     tracking_.Dump();
     fengine_.Dump();
     #endif
 }
 
-void Forces::UpdateCellList() {
-  LoadSimples();
-  interactions_.clear();
-  cell_list_.LoadSimples(simples_);
-  interactions_ = cell_list_.GetInteractions();
-}
-
-void Forces::UpdateScheme() {
-  //LoadSimples();
-  //force_module_->LoadSimples();
-  //force_module_->UpdateScheme();
-}
-
-void Forces::LoadSimples() {
-  simples_.clear();
-  for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
-    std::vector<Simple*> sim_vec = (*spec)->GetSimples();
-    simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
-  }
-}
-
 void Forces::InteractMP() {
   tracking_.UpdateTracking();
   fengine_.Interact();
-    //force_module_->Interact();
-}
-
-void Forces::Interact() {
-  std::cerr << "Forces::Interact is deprecated\n";
-  exit(1);
-  if (draw_flag_) {
-    draw_ = false;
-    draw_array_.clear();
-  }
-  for (auto ix=interactions_.begin(); ix!= interactions_.end(); ++ix) {
-    auto o1 = ix->first;
-    auto o2 = ix->second;
-    if (o1->GetOID() == o2->GetOID()) 
-      error_exit("ERROR: Got self-interaction.\n");
-    if (o1->GetCID() == o2->GetCID()) continue;
-    PotentialBase * pot = potentials_.GetPotential(o1->GetSID(), o2->GetSID());
-    if (pot == NULL) continue;
-    //MinimumDistance(*ix);
-    if (dr_mag_ > pot->GetRCut()) continue;
-    o1->GiveInteraction(FirstInteraction(pot));
-    o2->GiveInteraction(SecondInteraction(pot));
-  }
-}
-
-void Forces::CheckOverlap() {
-    // very yucky brute force method of checking overlaps
-    // load all the particles
-
-    bool overlap = true;
-    int num = 0;
-    do {
-        num++;
-        overlap = false;
-        LoadSimples();
-        for (int idx = 0; idx < simples_.size() - 1 && !overlap; ++idx) {
-            for (int jdx = idx + 1; jdx < simples_.size() && !overlap; ++jdx) {
-                auto part1 = simples_[idx];
-                auto part2 = simples_[jdx];
-
-                if (part1->GetCID() == part2->GetCID()) continue;
-
-                // Check to see if interacting
-                PotentialBase *pot = potentials_.GetPotential(part1->GetSID(), part2->GetSID());
-                if (pot == nullptr) continue;
-
-                // Check to see if overlap on this is allowed (KMC stuff)
-                if (pot->CanOverlap()) continue;
-
-                // Can possibly overlap, check
-                interactionmindist idm;
-                MinimumDistance(part1, part2, idm, n_dim_, n_periodic_, space_);
-                if (idm.dr_mag2 < idm.buffer_mag2) {
-                    if (debug_trace) {
-                        printf("Overlap detected [oid: %d,%d], [idx: %d, %d], [sid: %d, %d], [cid: %d, %d] -> (%2.2f, %2.2f)\n",
-                                part1->GetOID(), part2->GetOID(), idx, jdx, part1->GetSID(), part2->GetSID(), 
-                                part1->GetCID(), part2->GetCID(), idm.buffer_mag2, idm.dr_mag2);
-                    }
-                    overlap = true;
-                    auto sid = part2->GetSID();
-                    auto cid = part2->GetCID();
-                    for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-                        if ((*spec)->GetSID() == sid) {
-                            (*spec)->ReInit(cid);
-                        }
-                    }
-                }
-            }
-        }
-        if (num > max_overlap_)
-            error_exit("ERROR: Too many overlaps detected. Check packing ratio for objects.\n");
-    } while (overlap);
-}
-
-interaction Forces::FirstInteraction(PotentialBase *pot) {
-  interaction ix;
-  std::copy(dr_, dr_+3, ix.dr);
-  std::copy(contact1_, contact1_+3, ix.contact);
-  ix.buffer = buffer_mag_;
-  ix.dr_mag = dr_mag_;
-  ix.potential = pot;
-  return ix;
-}
-
-interaction Forces::SecondInteraction(PotentialBase *pot) {
-  interaction ix;
-  std::copy(dr_, dr_+3, ix.dr);
-  // switch direction of dr
-  for (int i=0; i<3; ++i)
-    ix.dr[i] = -ix.dr[i];
-  std::copy(contact2_, contact2_+3, ix.contact);
-  ix.buffer = buffer_mag_;
-  ix.dr_mag = dr_mag_;
-  ix.potential = pot;
-  return ix;
 }
 
 void Forces::Draw(std::vector<graph_struct*> * graph_array) {
+  std::cerr << "Drawing forces currently doesn't work, exiting\n";
+  exit(1);
   if (!draw_)
     return;
   for (auto it=draw_array_.begin(); it!=draw_array_.end(); ++it)
