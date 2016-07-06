@@ -14,14 +14,23 @@ class ParticleTracking {
     ParticleTracking() {}
     ~ParticleTracking() {
       delete[] neighbors_;
+      printf("********\n");
+      printf("ParticleTracking Stats ->\n");
+      printf("\tUpdates: %d\n", tracking_->NUpdates());
     }
 
     void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin, FTYPE pFtype);
     void LoadSimples();
     void InitPotentials(PotentialManager *pPotentials);
     void InitTracking();
+    void CheckOverlaps(int pMaxOverlaps);
 
     void UpdateTracking(bool pForceUpdate = false);
+
+    // Getters and setters
+    const nl_list* GetNeighbors() {return neighbors_;}
+    const int GetNSimples() {return nsimples_;}
+    std::vector<Simple*>* GetSimples() {return &simples_;}
 
     void Print();
     void Dump();

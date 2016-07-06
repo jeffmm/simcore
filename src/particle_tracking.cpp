@@ -27,7 +27,6 @@ void ParticleTracking::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSp
   {
     if (0 == omp_get_thread_num()) {
       nthreads_ = omp_get_num_threads();
-      printf("Running OpenMP using %d threads\n", nthreads_);
     }
   }
   #else
@@ -75,14 +74,62 @@ void ParticleTracking::InitTracking() {
   tracking_->Init(space_, &simples_, skin_);
   tracking_->CreateSubstructure(skin_, &neighbors_);
   tracking_->UpdateTracking(true);
-
-  Print();
 }
 
 // Check if we need an update
 // and do it if needed
 void ParticleTracking::UpdateTracking(bool pForceUpdate) {
   tracking_->UpdateTracking(pForceUpdate);
+}
+
+// Check the overlaps
+void ParticleTracking::CheckOverlaps(int pMaxOverlaps) {
+  // XXX CJE fix this to use substructure
+  // very yucky brute force method of checking overlaps
+  // load all the particles
+  bool overlap = true;
+  int num = 0;
+  do {
+    num++;
+    overlap = false;
+    LoadSimples();
+    for (int idx = 0; idx < simples_.size() - 1 && !overlap; ++idx) {
+      for (int jdx = idx + 1; jdx < simples_.size() && !overlap; ++jdx) {
+        auto part1 = simples_[idx];
+        auto part2 = simples_[jdx];
+
+        if (part1->GetCID() == part2->GetCID()) continue;
+
+        // Check to see if interacting
+        PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
+        if (pot == nullptr) continue;
+
+        // Check to see if overlap on this is allowed (KMC stuff)
+        if (pot->CanOverlap()) continue;
+
+        // Can possibly overlap, check
+        interactionmindist idm;
+        MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
+        if (idm.dr_mag2 < idm.buffer_mag2) {
+          if (debug_trace) {
+            printf("Overlap detected [oid: %d,%d], [idx: %d, %d], [sid: %d, %d], [cid: %d, %d] -> (%2.2f, %2.2f)\n",
+                    part1->GetOID(), part2->GetOID(), idx, jdx, part1->GetSID(), part2->GetSID(), 
+                    part1->GetCID(), part2->GetCID(), idm.buffer_mag2, idm.dr_mag2);
+          }
+          overlap = true;
+          auto sid = part2->GetSID();
+          auto cid = part2->GetCID();
+          for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+            if ((*spec)->GetSID() == sid) {
+              (*spec)->ReInit(cid);
+            }
+          }
+        }
+      }
+    }
+    if (num > pMaxOverlaps)
+        error_exit("ERROR: Too many overlaps detected. Check packing ratio for objects.\n");
+  } while (overlap);
 }
 
 // Print out interesting information

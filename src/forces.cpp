@@ -12,15 +12,26 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
   n_periodic_ = space_->n_periodic;
   max_overlap_ = params_->max_overlap;
   draw_flag_ = params_->draw_interactions;
+  #ifdef ENABLE_OPENMP
+  #pragma omp parallel
+  {
+     if (0 == omp_get_thread_num()) {
+         nthreads_ = omp_get_num_threads();
+     }
+  }
+  #else
+  nthreads_ = 1;
+  #endif
+
   //XXX: CJE switch on force type for now
   printf("********\n");
-  printf("Create Forces\n");
+  printf("Creating UberEngine\n");
   switch (params_->ftype) {
     case 0:
         printf("Must specify a force substructure, exiting!\n");
         exit(1);
     case 1:
-        printf("->Using all pairs (brute) force substructure\n");
+        //printf("->Using all pairs (brute) force substructure\n");
         force_type_ = FTYPE::allpairs;
         force_module_ = forceFactory<ForceBrute>();
         skin_ = 0.0;
@@ -48,7 +59,7 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
         skin_ = params_->masterskin;
         break;
     case 5:
-        printf("->Using neighbor list cells substructure\n");
+       printf("->Using neighbor list cells substructure\n");
         force_type_ = FTYPE::neighborcells;
         force_module_ = forceFactory<ForceNeighborListCells>();
         skin_ = params_->masterskin;
@@ -59,27 +70,35 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
         printf("Must specify a force substructure, exiting!\n");
         break;
    }
-  //XXX: CJE needed for the check overlaps, change this
-  //cell_list_.Init(n_dim_, n_periodic_, params_->cell_length, space_->radius);
   InitPotentials();
-  // XXX CJE: Particle tracking here
+
+  // Initialize the particle tracking
   tracking_.Init(space_, species_, skin_, force_type_);
   tracking_.InitPotentials(&potentials_);
   tracking_.InitTracking();
+  tracking_.CheckOverlaps(max_overlap_);
+  tracking_.Print();
 
-  CheckOverlap();
+  //CheckOverlap();
+
+  fengine_.Init(space_, &tracking_, skin_);
+  fengine_.InitPotentials(&potentials_);
+  fengine_.InitMP();
+  fengine_.Print();
+
+  // Run one step to make sure that we're all good
+  tracking_.UpdateTracking();
+  fengine_.Interact();
 
   // Create the force submodule to do the calculations!
-  force_module_->Init(space_, species_, &simples_, skin_);
-  LoadSimples();
-  force_module_->LoadSimples();
-  force_module_->InitPotentials(&potentials_);
-  force_module_->Finalize();
-  force_module_->UpdateScheme();
-  force_module_->print();
+  //force_module_->Init(space_, species_, &simples_, skin_);
+  //LoadSimples();
+  //force_module_->LoadSimples();
+  //force_module_->InitPotentials(&potentials_);
+  //force_module_->Finalize();
+  //force_module_->UpdateScheme();
+  //force_module_->print();
 
-  printf("TESTING, EXITING\n");
-  exit(1);
 }
 
 void Forces::InitPotentials() {
@@ -90,8 +109,9 @@ void Forces::InitPotentials() {
 void Forces::DumpAll() {
     // Dump all the particles and their positions, forces, energy (2d)
     #ifdef DEBUG
-    force_module_->dump();
+    //force_module_->dump();
     tracking_.Dump();
+    fengine_.Dump();
     #endif
 }
 
@@ -103,9 +123,9 @@ void Forces::UpdateCellList() {
 }
 
 void Forces::UpdateScheme() {
-  LoadSimples();
-  force_module_->LoadSimples();
-  force_module_->UpdateScheme();
+  //LoadSimples();
+  //force_module_->LoadSimples();
+  //force_module_->UpdateScheme();
 }
 
 void Forces::LoadSimples() {
@@ -117,10 +137,14 @@ void Forces::LoadSimples() {
 }
 
 void Forces::InteractMP() {
-    force_module_->Interact();
+  tracking_.UpdateTracking();
+  fengine_.Interact();
+    //force_module_->Interact();
 }
 
 void Forces::Interact() {
+  std::cerr << "Forces::Interact is deprecated\n";
+  exit(1);
   if (draw_flag_) {
     draw_ = false;
     draw_array_.clear();

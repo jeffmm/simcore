@@ -110,7 +110,7 @@ class Object {
     virtual double const GetKMCEnergy() {return kmc_energy_;}
     void SetCID(unsigned int const cid) {cid_=cid;}
     void SetRID(unsigned int const rid) {rid_=rid;}
-    unsigned int const GetOID() {return oid_;}
+    unsigned int const GetOID() const {return oid_;}
     unsigned int const GetCID() {return cid_;}
     unsigned int const GetRID() {return rid_;}
     SID const GetSID() {return sid_;}
