@@ -133,13 +133,23 @@ void periodic_boundary_conditions(int n_periodic, double **h, double **h_inv,
 double determinant(int n, double **mat) {
   double det=0;
   double **submat = new double*[n];
-  for (int i=0; i<n; ++i)
+  for (int i=0; i<n; ++i) {
     submat[i] = new double[n];
-  if (n == 1)
+  }
+  if (n == 1) {
+    for (int i = 0; i < n; ++i) {
+      delete[] submat[i];
+    }
+    delete[] submat;
     return mat[0][0];
-  if (n == 2)
+  }
+  if (n == 2) {
+    for (int i = 0; i < n; ++i) {
+      delete[] submat[i];
+    }
+    delete[] submat;
     return ((mat[0][0] * mat[1][1]) - (mat[1][0] * mat[0][1]));
-  else {
+  } else {
     for(int c = 0; c < n; ++c) {
       int subi = 0;
       for(int i = 1; i < n; ++i) {
