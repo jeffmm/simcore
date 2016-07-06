@@ -34,7 +34,6 @@ class Simulation {
     void GetGraphicsStructure();
     void Integrate();
     void IntegrateMP();
-    void Interact();
     void InteractMP();
     void KineticMonteCarloMP();
     void DumpAll(int i_step);

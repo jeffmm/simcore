@@ -21,9 +21,9 @@ n_update_cells: 10
 time_flag: 1
 energy_analysis_flag: 1
 lj_epsilon: 0.2379
-ftype: 5
+ftype: 1
 masterskin: 1.0
-potfile: argon_pot.yaml
+potfile: params/argon_pot.yaml
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5

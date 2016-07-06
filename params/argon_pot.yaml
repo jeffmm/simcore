@@ -3,5 +3,6 @@ potentials:
     sid1 : argon
     sid2 : argon
     rcut: 12.0
+    fcut: 100
     eps: 0.2379
     sigma: 3.405

@@ -4,6 +4,6 @@ potentials:
     sid2 : md_bead
     rcut: 2.5
     eps: 1
-    fcut: 100
+    fcut: 1000
     sigma: 1
     

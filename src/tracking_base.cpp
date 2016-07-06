@@ -4,9 +4,10 @@
 
 // Initialize
 void
-TrackingBase::Init(space_struct* pSpace, std::vector<Simple*> *pSimples, double pSkin) {
+TrackingBase::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin) {
     space_ = pSpace;
     simples_ = pSimples;
+    species_ = pSpecies;
     ndim_ = space_->n_dim;
     nperiodic_ = space_->n_periodic;
     skin_ = pSkin;

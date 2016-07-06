@@ -8,6 +8,7 @@
 #include "potential_manager.h"
 #include "tracking_base.h"
 #include "tracking_allpairs.h"
+#include "tracking_neighborlist_ap.h"
 
 class ParticleTracking {
   public:

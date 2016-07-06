@@ -10,6 +10,9 @@ void TrackingAllPairs::CreateSubstructure(double pRcut, nl_list** pNeighbors) {
 
 void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
   if (first_ || pForceUpdate) {
+    for (int i = 0; i < nsimples_; ++i) {
+      neighbors_[i].clear();
+    }
     first_ = false;
     nupdates_++;
     // Loop over all particles, not double counting, and add
