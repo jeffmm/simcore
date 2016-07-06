@@ -55,7 +55,7 @@ class SpeciesBase {
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
     virtual void Init() {}
     virtual void ReInit(unsigned int const cid) {}
-    virtual double GetDrMax() {};
+    virtual double GetDrMax() {return 0.0;}
     virtual void ZeroDr() {};
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim;
