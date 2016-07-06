@@ -11,6 +11,7 @@ void TrackingAllPairs::CreateSubstructure(double pRcut, nl_list** pNeighbors) {
 void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
   if (first_ || pForceUpdate) {
     first_ = false;
+    nupdates_++;
     // Loop over all particles, not double counting, and add
     // unique interactions to the mix
     #ifdef ENABLE_OPENMP
@@ -47,7 +48,7 @@ void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
     {
       // Clean up any existing rid-rid interactions
       std::set< std::pair<int, int> > rid_interactions;
-      for (int idx=0; idx<nparticles_; ++idx) {
+      for (int idx=0; idx<nsimples_; ++idx) {
         for (auto nb = neighbors_[idx].begin(); nb != neighbors_[idx].end();) {
           if (!rid_interactions.insert(std::make_pair(nb->rid_me_,nb->rid_you_)).second ||
               !rid_interactions.insert(std::make_pair(nb->rid_you_,nb->rid_me_)).second) {

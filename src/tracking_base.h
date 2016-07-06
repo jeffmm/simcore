@@ -26,12 +26,14 @@ class TrackingBase {
     virtual void UpdateTracking(bool pForceUpdate = false) = 0; // Update the tracking information for whatever we are
 
     std::string Name() const {return name_;}
+    const int NUpdates() {return nupdates_;}
 
   protected:
 
     // Inputs that are needed
     int ndim_;
     int nperiodic_;
+    int nupdates_;
     double skin_ = 0.0;
     double rcut_ = 0.0;
     double rbuff_ = 0.0; // buffer of rcut + skin

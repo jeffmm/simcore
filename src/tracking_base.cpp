@@ -25,5 +25,6 @@ TrackingBase::Init(space_struct* pSpace, std::vector<Simple*> *pSimples, double 
     nthreads_ = 1;
     #endif
     nsimples_ = (int)simples_->size();
+    nupdates_ = 0;
 }
 
