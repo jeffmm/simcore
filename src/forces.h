@@ -4,9 +4,14 @@
 #include "auxiliary.h"
 #include "species.h"
 #include "cell_list.h"
+#include "interaction_engine.h"
 #include "minimum_distance.h"
 #include "potential_manager.h"
 #include "particle_tracking.h"
+
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif
 
 // CJE stuff here
 #include "force_brute.h"
@@ -20,7 +25,8 @@ class Forces {
     int n_dim_,
         n_periodic_,
         max_overlap_,
-        draw_flag_;
+        draw_flag_,
+        nthreads_;
     bool draw_;
     double dr_[3],
            contact1_[3],
@@ -39,6 +45,7 @@ class Forces {
     CellList cell_list_;
     PotentialManager potentials_;
     ParticleTracking tracking_;
+    InteractionEngine fengine_; //fengine = force engine.  get it?
 
     ForceBase* force_module_;
   public:
