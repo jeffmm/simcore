@@ -39,6 +39,10 @@ void ParticleTracking::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSp
       printf("\tUsing all pairs particle tracking substructure\n");
       tracking_ = trackingFactory<TrackingAllPairs>();
       break;
+    case FTYPE::neighborallpairs:
+      printf("\tUsing neighbor list-all pairs tracking substructure\n");
+      tracking_ = trackingFactory<TrackingNeighborListAP>();
+      break;
     default:
       printf("Must specify a particle tracking substructure, exiting!\n");
       exit(1);
@@ -71,8 +75,8 @@ void ParticleTracking::InitTracking() {
 
   // Create the neighbor list based on the tracking criteria
   // IE Brute
-  tracking_->Init(space_, &simples_, skin_);
-  tracking_->CreateSubstructure(skin_, &neighbors_);
+  tracking_->Init(space_, species_, &simples_, skin_);
+  tracking_->CreateSubstructure(rcut_, &neighbors_);
   tracking_->UpdateTracking(true);
 }
 

@@ -18,7 +18,7 @@ class TrackingBase {
     TrackingBase() {}
     virtual ~TrackingBase() {}
 
-    virtual void Init(space_struct *pSpace, std::vector<Simple*> *pSimples, double pSkin);
+    virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin);
 
     virtual void print() = 0; // print information
     virtual void dump() = 0;
@@ -36,11 +36,11 @@ class TrackingBase {
     int nupdates_;
     double skin_ = 0.0;
     double rcut_ = 0.0;
-    double rbuff_ = 0.0; // buffer of rcut + skin
     double box_[3];
 
     space_struct* space_;
     std::vector<Simple*> *simples_;
+    std::vector<SpeciesBase*> *species_;
     nl_list* neighbors_;
 
     // Derived quantities
