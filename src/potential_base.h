@@ -12,7 +12,7 @@ class PotentialBase {
     int n_dim_;
     double rcut_, rcut2_; // Cutoff radius
     double fcut_; // Force cutoff
-    SID kmc_target_; // KMC target (if there is one)
+    SID kmc_target_ = SID::none; // KMC target (if there is one)
     std::string pot_name_;
     space_struct *space_;
   public:
@@ -36,7 +36,8 @@ class PotentialBase {
     const SID GetKMCTarget() { return kmc_target_; }
     virtual void Print() {
       std::cout << pot_name_ << "\n";
-        printf("\t{rcut:%2.2f}\n", rcut_);
+      printf("\t{rcut:%2.2f}, {kmc: %s}, {kmc_target: %d}\n", rcut_, is_kmc_ ? "true" : "false",
+            (int)kmc_target_);
     }
 
     virtual void Init(space_struct *pSpace, int ipot, YAML::Node &node) {

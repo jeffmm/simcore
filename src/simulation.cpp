@@ -35,7 +35,7 @@ void Simulation::RunSimulation() {
 
 void Simulation::DumpAll(int i_step) {
     // Very yucky dump of all the particles and their positions and forces
-    forces_.DumpAll();
+    uengine_.DumpAll();
 }
 
 void Simulation::Integrate() {
@@ -49,18 +49,18 @@ void Simulation::IntegrateMP() {
 }
 
 void Simulation::InteractMP() {
-  forces_.InteractMP();
+  uengine_.InteractMP();
 }
 
 void Simulation::KineticMonteCarloMP() {
-
+  uengine_.StepKMC();
 }
 
 void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
   InitSpecies();
-  forces_.Init(&params_, space_.GetStruct(), &species_);
+  uengine_.Init(&params_, space_.GetStruct(), &species_);
   if (params_.graph_flag) {
     GetGraphicsStructure();
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);
@@ -103,7 +103,7 @@ void Simulation::GetGraphicsStructure() {
   for (auto it=species_.begin(); it!=species_.end(); ++it)
     (*it)->Draw(&graph_array);
   if (params_.draw_interactions)
-    forces_.Draw(&graph_array);
+    uengine_.Draw(&graph_array);
 }
 
 void Simulation::InitOutputs() {
