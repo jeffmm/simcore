@@ -29,7 +29,7 @@ class ParticleTracking {
     void UpdateTracking(bool pForceUpdate = false);
 
     // Getters and setters
-    const nl_list* GetNeighbors() {return neighbors_;}
+    nl_list* GetNeighbors() {return neighbors_;}
     const int GetNSimples() {return nsimples_;}
     std::vector<Simple*>* GetSimples() {return &simples_;}
 

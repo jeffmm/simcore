@@ -63,6 +63,7 @@ void MDKMCBead::StepKMC() {
     if (roll < n_exp_) {
       printf("Successful KMC move {nexp: %2.2f}, {roll: %2.2f}\n", n_exp_, roll);
       bound_ = true;
+      // Figure out which friend to fall on, whooooos it gonna be....
     }
   }
 }
