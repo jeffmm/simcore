@@ -102,7 +102,7 @@ void InteractionEngine::Interact() {
         auto part2 = (*simples_)[jdx];
 
         // Do the interaction
-        InteractParticlesMP(part1, part2, fr, tr, pr_energy, kmc_energy);
+        InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy);
       }
     } // pragma omp for schedule(runtime) nowait
 
@@ -119,7 +119,7 @@ void InteractionEngine::Interact() {
 }
 
 // Main interaction routine for particles 
-void InteractionEngine::InteractParticlesMP(Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
+void InteractionEngine::InteractParticlesMP(neighbor_t *neighbor, Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
   // We are assuming the force/torque/energy superarrays are already set
   // Exclude composite object interactions
   if (part1->GetCID() == part2->GetCID()) return;
