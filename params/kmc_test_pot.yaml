@@ -7,4 +7,14 @@ potentials:
     fcut: 100
     eps: 1
     sigma: 1
+
+  - type : SphereSquareWell
+    sid1: md_bead
+    sid2: md_kmc_bead
+    overlap: true
+    rcut: 0.75
+    fcut: 100
+    depth: 1.0
+    kmc: true
+    kmc_target: md_kmc_bead
     

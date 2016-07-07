@@ -1,8 +1,9 @@
-#ifndef _SIMCORE_FORCES_H_
-#define _SIMCORE_FORCES_H_
+#ifndef _SIMCORE_UBERENGINE_H_
+#define _SIMCORE_UBERENGINE_H_
 
 #include "auxiliary.h"
 #include "interaction_engine.h"
+#include "kmc_engine.h"
 #include "minimum_distance.h"
 #include "potential_manager.h"
 #include "particle_tracking.h"
@@ -12,7 +13,7 @@
 #include <omp.h>
 #endif
 
-class Forces {
+class UberEngine {
   private:
     int n_dim_,
         n_periodic_,
@@ -36,18 +37,20 @@ class Forces {
     PotentialManager potentials_;
     ParticleTracking tracking_;
     InteractionEngine fengine_; //fengine = force engine.  get it?
+    kmcEngine kengine_;
 
   public:
-    Forces() {}
-    ~Forces() {}
+    UberEngine() {}
+    ~UberEngine() {}
 
     std::vector<graph_struct> draw_array_;
   public:
     void Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies);
     void InteractMP();
+    void StepKMC();
     void DumpAll();
     void InitPotentials();
     void Draw(std::vector<graph_struct*> * graph_array);
 };
 
-#endif // _SIMCORE_FORCES_H_
+#endif // _SIMCORE_UBERENGINE_H_

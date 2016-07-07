@@ -30,6 +30,7 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   k_energy_ = 0;
   p_energy_ = 0;
   is_rigid_=false;
+  is_kmc_=false;
 }
 
 Object::Object(const Object& that) {
@@ -58,6 +59,7 @@ Object::Object(const Object& that) {
   g_ = that.g_;
   rng_.init(gsl_rng_get(that.rng_.r));
   is_rigid_=that.is_rigid_;
+  is_kmc_=that.is_kmc_;
 }
 
 Object &Object::operator=(Object const& that) {
@@ -86,6 +88,7 @@ Object &Object::operator=(Object const& that) {
   g_ = that.g_;
   rng_.init(gsl_rng_get(that.rng_.r));
   is_rigid_=that.is_rigid_;
+  is_kmc_=that.is_kmc_;
   return *this;
 }
 

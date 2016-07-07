@@ -3,11 +3,11 @@
 
 #include "space.h"
 #include "auxiliary.h"
-#include "forces.h"
 #include "write_outputs.h"
 #include "graphics.h"
 #include "species.h"
 #include "objects.h"
+#include "uberengine.h"
 
 class Simulation {
 
@@ -21,7 +21,7 @@ class Simulation {
     
     Graphics graphics_;
     SpaceProperties space_;
-    Forces forces_;
+    UberEngine uengine_;
     std::vector<SpeciesBase*> species_;
     void InitSimulation();
     void InitSpecies();

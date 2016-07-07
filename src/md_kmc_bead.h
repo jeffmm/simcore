@@ -10,6 +10,12 @@
 class MDKMCBead : public Simple {
   protected:
     double mass_;
+
+    // kmc stuff
+    double n_exp_; // number of expected for this particular bead
+    double eps_eff_ = 30910;
+    double on_rate_ = 0.003916;
+    bool bound_;
   public:
     MDKMCBead(system_parameters *params, space_struct *space, 
         long seed, SID sid) : Simple(params, space, seed, sid) {
@@ -17,6 +23,7 @@ class MDKMCBead : public Simple {
       diameter_ = params->md_kmc_bead_diameter;
       mass_ = params->md_kmc_bead_mass;
       is_kmc_ = true;
+      bound_ = false;
     }
     ~MDKMCBead() {}
     MDKMCBead(const MDKMCBead& that) : Simple(that) {}
@@ -26,20 +33,27 @@ class MDKMCBead : public Simple {
     virtual void Init();
     virtual void UpdatePosition();
     virtual void UpdatePositionMP();
+    virtual void UpdateProbability();
     virtual void Integrate();
     virtual void UpdateKineticEnergy();
     virtual double const GetKineticEnergy();
+
+    // kmc specifics
+    virtual void StepKMC();
+    double const GetNExp() {return n_exp_;}
 };
 
 class MDKMCBeadSpecies : public Species<MDKMCBead> {
   protected:
     //void InitPotentials (system_parameters *params);
+    double n_exp_;
   public:
     MDKMCBeadSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
       SetSID(SID::md_kmc_bead);
       //InitPotentials(params);
+      is_kmc_ = true;
     }
     ~MDKMCBeadSpecies() {}
     MDKMCBeadSpecies(const MDKMCBeadSpecies& that) : Species(that) {}
@@ -50,6 +64,10 @@ class MDKMCBeadSpecies : public Species<MDKMCBead> {
     void Init() {
       Species::Init();
     }
+
+    virtual void PrepKMC();
+    virtual void StepKMC();
+    void UpdateProbability();
 };
 
 #endif // _SIMCORE_MD_KMC_BEAD_H_

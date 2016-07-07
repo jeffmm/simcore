@@ -50,11 +50,39 @@ double const MDKMCBead::GetKineticEnergy() {
   return k_energy_;
 }
 
-//void MDKMCBeadSpecies::InitPotentials (system_parameters *params) {
-  //AddPotential(SID::md_kmc_bead, SID::md_kmc_bead, 
-      //// Set md_kmc_bead-md_kmc_bead interaction
-      //new LJ126(params->lj_epsilon,params->md_kmc_bead_diameter,
-        //space_, 2.5*params->md_kmc_bead_diameter));
-    ////new WCA(params->lj_epsilon,params->md_kmc_bead_diameter,
-     ////   space_, pow(2.0,1.0/6.0) *params->md_kmc_bead_diameter));
-//}
+// kmc stuff
+void MDKMCBead::UpdateProbability() {
+  n_exp_ = 0.0;
+  double binding_affinity = eps_eff_ * on_rate_ * delta_;
+  n_exp_ += binding_affinity * kmc_energy_;
+}
+
+void MDKMCBead::StepKMC() {
+  if (!bound_ && n_exp_ > 0.0) {
+    double roll = gsl_rng_uniform(rng_.r);
+    if (roll < n_exp_) {
+      printf("Successful KMC move {nexp: %2.2f}, {roll: %2.2f}\n", n_exp_, roll);
+      bound_ = true;
+    }
+  }
+}
+
+
+// Species kmc stuff
+void MDKMCBeadSpecies::PrepKMC() {
+  UpdateProbability();
+}
+
+void MDKMCBeadSpecies::UpdateProbability() {
+  n_exp_ = 0.0;
+  for (auto kmcit = members_.begin(); kmcit != members_.end(); ++kmcit) {
+    (*kmcit)->UpdateProbability();
+    n_exp_ += (*kmcit)->GetNExp();
+  }
+}
+
+void MDKMCBeadSpecies::StepKMC() {
+  for (auto kmcit = members_.begin(); kmcit != members_.end(); ++kmcit) {
+    (*kmcit)->StepKMC();
+  }
+}

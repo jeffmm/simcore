@@ -11,6 +11,10 @@
 #include "particle_tracking.h"
 #include "potential_manager.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif
+
 class InteractionEngine {
   public:
     InteractionEngine() {}
@@ -28,7 +32,7 @@ class InteractionEngine {
 
     void Interact();
     void InteractParticlesMP(Simple *part1,
-                             Simple* part2,
+                             Simple *part2,
                              double **fr,
                              double **tr,
                              double *pr_energy,
