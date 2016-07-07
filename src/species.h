@@ -10,6 +10,7 @@ class SpeciesBase {
     SID sid_;
   protected:
     int n_members_;
+    bool is_kmc_;
     system_parameters *params_;
     space_struct *space_;
     rng_properties rng_;
@@ -27,6 +28,7 @@ class SpeciesBase {
       n_members_ = n_members;
       params_ = params;
       space_ = space;
+      is_kmc_ = false;
       rng_.init(seed);
     }
     virtual ~SpeciesBase() {
@@ -40,6 +42,7 @@ class SpeciesBase {
       params_=that.params_;
       space_=that.space_;
       potentials_=that.potentials_;
+      is_kmc_ = that.is_kmc_;
       rng_.init(gsl_rng_get(that.rng_.r));
     }
     SpeciesBase& operator=(SpeciesBase const& that) {
@@ -47,6 +50,7 @@ class SpeciesBase {
       params_=that.params_;
       space_=that.space_;
       potentials_=that.potentials_;
+      is_kmc_=that.is_kmc_;
       rng_.init(gsl_rng_get(that.rng_.r));
         return *this;
     }
@@ -65,6 +69,9 @@ class SpeciesBase {
     virtual double GetPotentialEnergy() {return 0;}
     virtual double GetTotalEnergy() {return 0;}
     SID const GetSID() {return sid_;}
+    bool IsKMC() {return is_kmc_;}
+    virtual void PrepKMC() {}
+    virtual void StepKMC() {}
     std::vector<potential_pair> GetPotentials() {return potentials_;}
 };
 

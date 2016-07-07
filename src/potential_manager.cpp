@@ -4,6 +4,7 @@
 #include "helpers.h"
 #include "lennard_jones_12_6.h"
 #include "wca.h"
+#include "sphere_square_well.h"
 #include <yaml-cpp/yaml.h>
 
 #define REGISTER_POTENTIAL(n) pot_factory_.register_class<n>(#n);
@@ -28,6 +29,7 @@ void
 PotentialManager::RegisterPotentials() {
   REGISTER_POTENTIAL(LJ126);
   REGISTER_POTENTIAL(WCA);
+  REGISTER_POTENTIAL(SphereSquareWell);
 }
 
 void

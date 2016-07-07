@@ -1,10 +1,10 @@
 #include <chrono>
 
-#include "forces.h"
+#include "UberEngine.h"
 #include "object.h"
 
 // Pass in the main system properties information
-void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies) {
+void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies) {
   params_ = pParams;
   space_ = pSpace;
   species_ = pSpecies;
@@ -69,10 +69,14 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
   tracking_.CheckOverlaps(max_overlap_);
   tracking_.Print();
 
+  // Initialize the interaction engine
   fengine_.Init(space_, &tracking_, skin_);
   fengine_.InitPotentials(&potentials_);
   fengine_.InitMP();
   fengine_.Print();
+
+  // Initialize the kmc engine
+  kengine_.Init(space_, species_, &tracking_);
 
   // Run one step to make sure that we're all good
   tracking_.UpdateTracking(true);
@@ -80,12 +84,12 @@ void Forces::Init(system_parameters *pParams, space_struct *pSpace, std::vector<
 
 }
 
-void Forces::InitPotentials() {
+void UberEngine::InitPotentials() {
   // Ask the potential manager to parse the potentials file
   potentials_.Init(space_, params_->potfile);
 }
 
-void Forces::DumpAll() {
+void UberEngine::DumpAll() {
     // Dump all the particles and their positions, forces, energy (2d)
     #ifdef DEBUG
     tracking_.Dump();
@@ -93,12 +97,16 @@ void Forces::DumpAll() {
     #endif
 }
 
-void Forces::InteractMP() {
+void UberEngine::InteractMP() {
   tracking_.UpdateTracking();
   fengine_.Interact();
 }
 
-void Forces::Draw(std::vector<graph_struct*> * graph_array) {
+void UberEngine::StepKMC() {
+  kengine_.StepKMC();
+}
+
+void UberEngine::Draw(std::vector<graph_struct*> * graph_array) {
   std::cerr << "Drawing forces currently doesn't work, exiting\n";
   exit(1);
   if (!draw_)

@@ -114,6 +114,10 @@ class Object {
     unsigned int const GetCID() {return cid_;}
     unsigned int const GetRID() {return rid_;}
     SID const GetSID() {return sid_;}
+
+    // KMC specific stuff
+    virtual void UpdateProbability() {}
+    virtual void StepKMC() {}
 };
 
 class Simple : public Object {
