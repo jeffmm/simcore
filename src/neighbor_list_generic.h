@@ -6,7 +6,7 @@ struct _neighbor {
     int idx_;
     int rid_me_;
     int rid_you_;
-    double value_; // exists to piggyback calculation onto
+    double kmc_; // exists to piggyback calculation onto, usually partition function or somesuch
 };
 typedef struct _neighbor neighbor_t;
 

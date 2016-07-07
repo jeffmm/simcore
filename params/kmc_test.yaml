@@ -26,12 +26,13 @@ graph_flag: 1
 n_graph: 1000
 delta: 0.0001
 #delta: 0.00001
-n_steps: 1000000
+#n_steps: 1000000
+n_steps: 10
 n_update_cells: 20
 time_flag: 1
 energy_analysis_flag: 1
 lj_epsilon: 1
-ftype: 1
+ftype: 4
 potfile: params/kmc_test_pot.yaml
 #[brownian_dimer]:
     #num: [2,4]

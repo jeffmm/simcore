@@ -31,7 +31,8 @@ class InteractionEngine {
     void InitMP();
 
     void Interact();
-    void InteractParticlesMP(Simple *part1,
+    void InteractParticlesMP(neighbor_t *neighbor,
+                             Simple *part1,
                              Simple *part2,
                              double **fr,
                              double **tr,
