@@ -4,7 +4,7 @@
 #include "object.h"
 
 // Pass in the main system properties information
-void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies) {
+void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, long seed) {
   params_ = pParams;
   space_ = pSpace;
   species_ = pSpecies;
@@ -12,6 +12,7 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   n_periodic_ = space_->n_periodic;
   max_overlap_ = params_->max_overlap;
   draw_flag_ = params_->draw_interactions;
+  rng_.init(seed);
   #ifdef ENABLE_OPENMP
   #pragma omp parallel
   {
@@ -76,7 +77,8 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   fengine_.Print();
 
   // Initialize the kmc engine
-  kengine_.Init(space_, species_, &tracking_);
+  kengine_.Init(space_, species_, &tracking_, gsl_rng_get(rng_.r));
+  kengine_.InitMP();
 
   // Run one step to make sure that we're all good
   tracking_.UpdateTracking(true);

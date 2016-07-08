@@ -38,6 +38,7 @@ class UberEngine {
     ParticleTracking tracking_;
     InteractionEngine fengine_; //fengine = force engine.  get it?
     kmcEngine kengine_;
+    rng_properties rng_;
 
   public:
     UberEngine() {}
@@ -45,7 +46,7 @@ class UberEngine {
 
     std::vector<graph_struct> draw_array_;
   public:
-    void Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies);
+    void Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, long seed);
     void InteractMP();
     void StepKMC();
     void DumpAll();

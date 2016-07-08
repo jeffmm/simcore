@@ -101,8 +101,10 @@ void InteractionEngine::Interact() {
         auto part1 = (*simples_)[idx];
         auto part2 = (*simples_)[jdx];
 
-        // Do the interaction
-        InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy);
+        // Do the interactions
+        //InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy);
+        InteractParticlesMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
+        KMCParticlesMP(&(*nldx), idx, jdx);
       }
     } // pragma omp for schedule(runtime) nowait
 
@@ -119,14 +121,19 @@ void InteractionEngine::Interact() {
 }
 
 // Main interaction routine for particles 
-void InteractionEngine::InteractParticlesMP(neighbor_t *neighbor, Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
+//void InteractionEngine::InteractParticlesMP(neighbor_t *neighbor, Simple *part1, Simple* part2, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
+void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
   // We are assuming the force/torque/energy superarrays are already set
   // Exclude composite object interactions
+  if (idx < jdx) return; // Exclude double counting in force routines
+  auto part1 = (*simples_)[idx];
+  auto part2 = (*simples_)[jdx];
   if (part1->GetCID() == part2->GetCID()) return;
 
   // Calculate the potential here
   PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
-  if (pot == nullptr) return;
+  if (pot == nullptr) return; // no interaction
+  if (pot->IsKMC()) return; // do not do kmc interactions here, bail before min calc
   // Minimum distance here@@@@!!!!
   // XXX: CJE ewwwwwww, more elegant way?
   interactionmindist idm;
@@ -138,45 +145,66 @@ void InteractionEngine::InteractParticlesMP(neighbor_t *neighbor, Simple *part1,
   auto oid2x = oid_position_map_[part2->GetOID()];
   #ifdef DEBUG
   if (debug_trace)
-    printf("\tInteracting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
+    printf("\tPOT Interacting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
   #endif
 
   // Fire off the potential calculation
   double fepot[4];
   pot->CalcPotential(idm.dr, idm.dr_mag, idm.buffer_mag, fepot);
 
-  // Switch on whether or not we are doing a mc or force calculation
-  if (pot->IsKMC()) {
-    // Figure out which particle is the kmc particle
-    SID kmc_target = pot->GetKMCTarget();
-    if (kmc_target == part1->GetSID()) {
-      kmc_energy[oid1x] += fepot[ndim_];
-    }
-    if (kmc_target == part2->GetSID()) {
-      kmc_energy[oid2x] += fepot[ndim_];
-    }
-  } else {
-    // Do the potential energies
-    pr_energy[oid1x] += fepot[ndim_];
-    pr_energy[oid2x] += fepot[ndim_];
+  // Do the potential energies
+  pr_energy[oid1x] += fepot[ndim_];
+  pr_energy[oid2x] += fepot[ndim_];
 
-    // Do the forces
-    for (int i = 0; i < ndim_; ++i) {
-        fr[i][oid1x] += fepot[i];
-        fr[i][oid2x] -= fepot[i];
-    }
-
-    // Calculate the torques
-    double tau[3];
-    cross_product(idm.contact1, fepot, tau, ndim_);
-    for (int i = 0; i < ndim_; ++i) {
-        tr[i][oid1x] += tau[i];
-    }
-    cross_product(idm.contact2, fepot, tau, ndim_);
-    for (int i = 0; i < ndim_; ++i) {
-        tr[i][oid2x] -= tau[i];
-    }
+  // Do the forces
+  for (int i = 0; i < ndim_; ++i) {
+      fr[i][oid1x] += fepot[i];
+      fr[i][oid2x] -= fepot[i];
   }
+
+  // Calculate the torques
+  double tau[3];
+  cross_product(idm.contact1, fepot, tau, ndim_);
+  for (int i = 0; i < ndim_; ++i) {
+      tr[i][oid1x] += tau[i];
+  }
+  cross_product(idm.contact2, fepot, tau, ndim_);
+  for (int i = 0; i < ndim_; ++i) {
+      tr[i][oid2x] -= tau[i];
+  }
+}
+
+// Do the KMC interactions separately, they depend on the nl_list
+// being 2-way
+void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx) {
+  auto part1 = (*simples_)[idx];
+  auto part2 = (*simples_)[jdx];
+
+  // Calculate the potential here
+  PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
+  if (pot == nullptr) return; // no interaction
+  if (!pot->IsKMC()) return; // do the kmc interactions here, bail before min calc
+  SID kmc_target = pot->GetKMCTarget();
+  if (part1->GetSID() != kmc_target) return; // only do the kmc calc once for the target
+  // Minimum distance here@@@@!!!!
+  // XXX: CJE ewwwwwww, more elegant way?
+  interactionmindist idm;
+  MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
+  if (idm.dr_mag2 > pot->GetRCut2()) return;
+
+  #ifdef DEBUG
+  // Obtain the mapping between particle oid and position in the force superarray
+  auto oid1x = oid_position_map_[part1->GetOID()];
+  auto oid2x = oid_position_map_[part2->GetOID()];
+  if (debug_trace)
+    printf("\tKMC Interacting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
+  #endif
+
+  // Fire off the potential calculation
+  double fepot[4];
+  pot->CalcPotential(idm.dr, idm.dr_mag, idm.buffer_mag, fepot);
+
+  neighbor->kmc_ = fepot[ndim_];
 }
 
 // Reduce the particles back to their main versions
@@ -211,6 +239,7 @@ void InteractionEngine::Dump() {
       auto oid = part->GetOID();
       printf("\to(%d) = ", oid);
       printf("x{%2.2f, %2.2f}, ", part->GetPosition()[0], part->GetPosition()[1]);
+      printf("v{%2.2f, %2.2f}, ", part->GetVelocity()[0], part->GetVelocity()[1]);
       printf("f{%2.2f, %2.2f}, ", part->GetForce()[0], part->GetForce()[1]);
       printf("u{%2.2f}, p{%2.2f}\n", part->GetKineticEnergy(), part->GetPotentialEnergy());
     }

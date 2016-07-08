@@ -51,35 +51,53 @@ double const MDKMCBead::GetKineticEnergy() {
 }
 
 // kmc stuff
-void MDKMCBead::UpdateProbability() {
+void MDKMCBead::PrepKMC(std::vector<neighbor_t>* neighbors) {
   n_exp_ = 0.0;
+  neighbors_ = neighbors;
   double binding_affinity = eps_eff_ * on_rate_ * delta_;
-  n_exp_ += binding_affinity * kmc_energy_;
+  for (auto nldx = neighbors_->begin(); nldx != neighbors_->end(); ++nldx) {
+    n_exp_ += binding_affinity * nldx->kmc_;
+  }
+  if (debug_trace)
+    printf("%d -> {nexp: %2.4f}\n", GetOID(), n_exp_);
 }
 
 void MDKMCBead::StepKMC() {
   if (!bound_ && n_exp_ > 0.0) {
     double roll = gsl_rng_uniform(rng_.r);
     if (roll < n_exp_) {
-      printf("Successful KMC move {nexp: %2.2f}, {roll: %2.2f}\n", n_exp_, roll);
+      printf("[%d] Successful KMC move {nexp: %2.4f}, {roll: %2.4f}\n", GetOID(), n_exp_, roll);
       bound_ = true;
       // Figure out which friend to fall on, whooooos it gonna be....
+      double pos = 0.0;
+      double binding_affinity = eps_eff_ * on_rate_ * delta_;
+      for (auto nldx = neighbors_->begin(); nldx != neighbors_->end(); ++nldx) {
+        pos += binding_affinity * nldx->kmc_;
+        if (pos > roll) {
+          // Found it!
+          int jdx = nldx->idx_;
+          printf("[%d] Attaching to [index:%d] {pos: %2.4f}\n", GetOID(), jdx, pos);
+          break;
+        }
+      }
     }
   }
+  exit(1);
+}
+
+void MDKMCBead::Attach(int idx) {
+  attachidx_ = idx;
 }
 
 
 // Species kmc stuff
 void MDKMCBeadSpecies::PrepKMC() {
-  UpdateProbability();
-}
-
-void MDKMCBeadSpecies::UpdateProbability() {
   n_exp_ = 0.0;
   for (auto kmcit = members_.begin(); kmcit != members_.end(); ++kmcit) {
-    (*kmcit)->UpdateProbability();
     n_exp_ += (*kmcit)->GetNExp();
   }
+  if (debug_trace)
+    printf("MDKMCBeadSpecies->n_exp: %2.4f\n", n_exp_);
 }
 
 void MDKMCBeadSpecies::StepKMC() {

@@ -2,6 +2,7 @@
 #define _SIMCORE_OBJECT_H_
 
 #include "auxiliary.h"
+#include "neighbor_list_generic.h"
 
 class Object {
 
@@ -36,6 +37,7 @@ class Object {
     graph_struct g_;
     rng_properties rng_;
     std::vector<interaction> interactions_;
+    std::vector<neighbor_t>* neighbors_;
     virtual void InsertRandom(double buffer);
   public:
     Object(system_parameters *params, space_struct *space, long seed, SID sid);
@@ -93,12 +95,14 @@ class Object {
     void AddForceTorqueEnergyKMC(double const * const F, double const * const T, double const p, double const k);
     double const * const GetPosition() {return position_;}
     double const * const GetScaledPosition() {return scaled_position_;}
+    double const * const GetVelocity() {return velocity_;}
     virtual double const * const GetDrTot() { return dr_tot_; }
     double const * const GetOrientation() {return orientation_;}
     double const * const GetForce() {return force_;}
     double const * const GetTorque() {return torque_;}
     double const GetDiameter() {return diameter_;}
     double const GetLength() {return length_;}
+    double const GetDelta() {return delta_;}
     virtual void Init() {InsertRandom(length_+diameter_);}
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePeriodic();
@@ -116,8 +120,9 @@ class Object {
     SID const GetSID() {return sid_;}
 
     // KMC specific stuff
-    virtual void UpdateProbability() {}
+    virtual void PrepKMC(std::vector<neighbor_t>* neighbors) {}
     virtual void StepKMC() {}
+    rng_properties* GetRNG() {return &rng_;}
 };
 
 class Simple : public Object {
