@@ -147,7 +147,7 @@ void ParticleTracking::Print() {
     maxlist = std::max(maxlist, (int)neighbors_[i].size());
     minlist = std::min(minlist, (int)neighbors_[i].size());
   }
-  printf("\tStats: {min: %d}, {max: %d}, {avg: %2.2f}\n", minlist, maxlist, (float)ntotlist/(float)nsimples_);
+  printf("\tStats: {min: %d}, {max: %d}, {avg: %2.2f}\n", minlist, maxlist, (float)ntotlist/(float)nsimples_/2.);
   tracking_->print();
 }
 

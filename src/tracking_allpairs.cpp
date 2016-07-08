@@ -25,8 +25,9 @@ void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
       #ifdef ENABLE_OPENMP
       #pragma omp for schedule(runtime) nowait
       #endif
-      for (int idx = 0; idx < nsimples_ - 1; ++idx) {
-        for (int jdx = idx + 1; jdx < nsimples_; ++jdx) {
+      for (int idx = 0; idx < nsimples_; ++idx) {
+        for (int jdx = 0; jdx < nsimples_; ++jdx) {
+          if (idx == jdx) continue;
           auto p1 = (*simples_)[idx];
           auto p2 = (*simples_)[jdx];
           int rid1 = p1->GetRID();
@@ -34,8 +35,7 @@ void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
           // Only insert object if rigid ID is unique
           // std::set only allows insertion of unique elements
           // Check if insertion fails because RID is not unique
-          if (!rid_interactions.insert(std::make_pair(rid1,rid2)).second || 
-              !rid_interactions.insert(std::make_pair(rid2,rid1)).second)
+          if (!rid_interactions.insert(std::make_pair(rid1, rid2)).second)
             continue;
           if (p1->GetCID() == p2->GetCID()) continue;
 
@@ -53,8 +53,7 @@ void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
       std::set< std::pair<int, int> > rid_interactions;
       for (int idx=0; idx<nsimples_; ++idx) {
         for (auto nb = neighbors_[idx].begin(); nb != neighbors_[idx].end();) {
-          if (!rid_interactions.insert(std::make_pair(nb->rid_me_,nb->rid_you_)).second ||
-              !rid_interactions.insert(std::make_pair(nb->rid_you_,nb->rid_me_)).second) {
+          if (!rid_interactions.insert(std::make_pair(nb->rid_me_,nb->rid_you_)).second) {
               //if (debug_trace)
                 //printf("Removing interaction pair (%d, %d)\n",nb->rid_you_,nb->rid_me_);
             neighbors_[idx].erase(nb);

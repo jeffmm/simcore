@@ -60,7 +60,7 @@ void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
   InitSpecies();
-  uengine_.Init(&params_, space_.GetStruct(), &species_);
+  uengine_.Init(&params_, space_.GetStruct(), &species_, gsl_rng_get(rng_.r));
   if (params_.graph_flag) {
     GetGraphicsStructure();
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);

@@ -16,6 +16,7 @@ class MDKMCBead : public Simple {
     double eps_eff_ = 30910;
     double on_rate_ = 0.003916;
     bool bound_;
+    int attachidx_;
   public:
     MDKMCBead(system_parameters *params, space_struct *space, 
         long seed, SID sid) : Simple(params, space, seed, sid) {
@@ -33,14 +34,19 @@ class MDKMCBead : public Simple {
     virtual void Init();
     virtual void UpdatePosition();
     virtual void UpdatePositionMP();
-    virtual void UpdateProbability();
     virtual void Integrate();
     virtual void UpdateKineticEnergy();
     virtual double const GetKineticEnergy();
 
     // kmc specifics
+    virtual void PrepKMC(std::vector<neighbor_t>* neighbors);
     virtual void StepKMC();
     double const GetNExp() {return n_exp_;}
+    void SetNExp(double n) {n_exp_=n;}
+    bool const GetBound() {return bound_;}
+    void SetBound(bool bound) {bound_=bound;}
+    void Attach(int idx);
+    int const GetAttach() {return attachidx_;}
 };
 
 class MDKMCBeadSpecies : public Species<MDKMCBead> {
@@ -67,7 +73,6 @@ class MDKMCBeadSpecies : public Species<MDKMCBead> {
 
     virtual void PrepKMC();
     virtual void StepKMC();
-    void UpdateProbability();
 };
 
 #endif // _SIMCORE_MD_KMC_BEAD_H_
