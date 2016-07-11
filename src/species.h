@@ -11,6 +11,7 @@ class SpeciesBase {
   protected:
     int n_members_;
     bool is_kmc_;
+    double delta_;
     system_parameters *params_;
     space_struct *space_;
     rng_properties rng_;
@@ -30,6 +31,7 @@ class SpeciesBase {
       space_ = space;
       is_kmc_ = false;
       rng_.init(seed);
+      delta_ = params->delta;
     }
     virtual ~SpeciesBase() {
       rng_.clear();
@@ -44,6 +46,7 @@ class SpeciesBase {
       potentials_=that.potentials_;
       is_kmc_ = that.is_kmc_;
       rng_.init(gsl_rng_get(that.rng_.r));
+      delta_=that.delta_;
     }
     SpeciesBase& operator=(SpeciesBase const& that) {
       sid_=that.sid_;
@@ -52,7 +55,8 @@ class SpeciesBase {
       potentials_=that.potentials_;
       is_kmc_=that.is_kmc_;
       rng_.init(gsl_rng_get(that.rng_.r));
-        return *this;
+      delta_=that.delta_;
+      return *this;
     }
     virtual void UpdatePositions() {}
     virtual void UpdatePositionsMP() {}
@@ -72,6 +76,8 @@ class SpeciesBase {
     bool IsKMC() {return is_kmc_;}
     virtual void PrepKMC() {}
     virtual void StepKMC() {}
+    virtual void DumpKMC() {}
+    double const GetDelta() {return delta_;}
     std::vector<potential_pair> GetPotentials() {return potentials_;}
 };
 

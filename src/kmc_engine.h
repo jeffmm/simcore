@@ -18,6 +18,7 @@ class kmcEngine {
     void InitMP();
     void StepKMC();
     void PrepKMC();
+    void Dump();
 
     // Hardcoded function for now
     void HardcodedBindUnbind();

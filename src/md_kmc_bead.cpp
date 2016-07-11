@@ -20,8 +20,20 @@ void MDKMCBead::UpdatePosition() {
 
 // Update the position based on MP
 void MDKMCBead::UpdatePositionMP() {
+  if (!bound_) {
     Integrate();
-    UpdatePeriodic();
+  } else {
+    SelfSetPosition();
+  }
+  UpdatePeriodic();
+}
+
+// We are attached to someone else somewhere, so use
+// that instead, just calculate th dr_tot
+void MDKMCBead::SelfSetPosition() {
+  for (int i = 0; i < n_dim_; ++i) {
+    dr_tot_[i] += position_[i] - prev_position_[i];
+  }
 }
 
 // Basic verlet integrator, very stable
@@ -53,36 +65,15 @@ double const MDKMCBead::GetKineticEnergy() {
 // kmc stuff
 void MDKMCBead::PrepKMC(std::vector<neighbor_t>* neighbors) {
   n_exp_ = 0.0;
+  if (bound_) return; //NOT expected to bind in this timestep
   neighbors_ = neighbors;
   double binding_affinity = eps_eff_ * on_rate_ * delta_;
   for (auto nldx = neighbors_->begin(); nldx != neighbors_->end(); ++nldx) {
     n_exp_ += binding_affinity * nldx->kmc_;
   }
-  if (debug_trace)
-    printf("%d -> {nexp: %2.4f}\n", GetOID(), n_exp_);
 }
 
 void MDKMCBead::StepKMC() {
-  if (!bound_ && n_exp_ > 0.0) {
-    double roll = gsl_rng_uniform(rng_.r);
-    if (roll < n_exp_) {
-      printf("[%d] Successful KMC move {nexp: %2.4f}, {roll: %2.4f}\n", GetOID(), n_exp_, roll);
-      bound_ = true;
-      // Figure out which friend to fall on, whooooos it gonna be....
-      double pos = 0.0;
-      double binding_affinity = eps_eff_ * on_rate_ * delta_;
-      for (auto nldx = neighbors_->begin(); nldx != neighbors_->end(); ++nldx) {
-        pos += binding_affinity * nldx->kmc_;
-        if (pos > roll) {
-          // Found it!
-          int jdx = nldx->idx_;
-          printf("[%d] Attaching to [index:%d] {pos: %2.4f}\n", GetOID(), jdx, pos);
-          break;
-        }
-      }
-    }
-  }
-  exit(1);
 }
 
 void MDKMCBead::Attach(int idx) {
@@ -96,12 +87,31 @@ void MDKMCBeadSpecies::PrepKMC() {
   for (auto kmcit = members_.begin(); kmcit != members_.end(); ++kmcit) {
     n_exp_ += (*kmcit)->GetNExp();
   }
-  if (debug_trace)
-    printf("MDKMCBeadSpecies->n_exp: %2.4f\n", n_exp_);
 }
 
 void MDKMCBeadSpecies::StepKMC() {
+  nbound_ = 0;
+  nfree_ = 0;
   for (auto kmcit = members_.begin(); kmcit != members_.end(); ++kmcit) {
+    if ((*kmcit)->GetBound()) {
+      nbound_++;
+    } else {
+      nfree_++;
+    }
     (*kmcit)->StepKMC();
+  }
+}
+
+void MDKMCBeadSpecies::DumpKMC() {
+  // print out the information appropriate to kmc
+  if (debug_trace) {
+    printf("Species[MDKMCBeadSpecies] -> dump\n");
+    printf("\t{n_exp(this delta): %2.4f}\n", n_exp_);
+    printf("\t{nfree:  %d}\n", nfree_);
+    printf("\t{nbound: %d}\n", nbound_);
+    for (auto kmcit = members_.begin(); kmcit != members_.end(); ++kmcit) {
+      printf("\t\t[%d] -> {n_exp: %2.4f}, {bound: %s}, {parent index: %d}\n", (*kmcit)->GetOID(), (*kmcit)->GetNExp(), (*kmcit)->GetBound() ? "true " : "false",
+          (*kmcit)->GetAttach());
+    }
   }
 }
