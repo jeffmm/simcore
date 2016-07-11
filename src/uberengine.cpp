@@ -96,6 +96,7 @@ void UberEngine::DumpAll() {
     #ifdef DEBUG
     tracking_.Dump();
     fengine_.Dump();
+    kengine_.Dump();
     #endif
 }
 

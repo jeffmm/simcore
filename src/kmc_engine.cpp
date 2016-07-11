@@ -39,11 +39,11 @@ void kmcEngine::StepKMC() {
 
   HardcodedBindUnbind();
   // Ask each species to do their own StepKMC
-  /*for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+  for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if ((*spec)->IsKMC()) {
       (*spec)->StepKMC();
     }
-  }*/
+  }
 }
 
 // XXX CJE fix this later
@@ -67,12 +67,38 @@ void kmcEngine::HardcodedBindUnbind() {
         break;
     }
   }
+
+  for (int idx = 0; idx < nsimples_; ++idx) {
+    auto part = (*simples_)[idx];
+    if (!part->IsKMC()) continue;
+    // Dynamic cast to MDKMCBead
+    MDKMCBead *pkmcbead = dynamic_cast<MDKMCBead*>(part);
+    // If we are bound, update position and velocity to the attached part
+    if (pkmcbead->GetBound()) {
+      pkmcbead->SetNExp(0.0);
+      auto aidx = pkmcbead->GetAttach();
+      auto part2 = (*simples_)[aidx];
+      auto apos = part2->GetRigidPosition();
+      auto apos_scaled = part2->GetRigidScaledPosition();
+      auto vpos = part2->GetVelocity();
+
+      auto mpos = pkmcbead->GetRigidPosition();
+      if (debug_trace)
+        printf("[%d,%d] attached [%d,%d], (%2.2f, %2.2f) -> setting (%2.2f, %2.2f)\n",
+              idx, pkmcbead->GetOID(), aidx, part2->GetOID(), mpos[0], mpos[1],
+              apos[0], apos[1]);
+      pkmcbead->SetPrevPosition(mpos);
+      pkmcbead->SetPosition(apos);
+      pkmcbead->SetScaledPosition(apos_scaled);
+      pkmcbead->SetVelocity(vpos);
+    }
+  }
 }
 
 // XXX CJE fix this later
 void kmcEngine::HardcodedBind() {
-  double eps_eff_ = 30910;
-  double on_rate_ = 0.003916;
+  double eps_eff_ = 30910*2;
+  double on_rate_ = 0.003916*2;
   // Loop over particles and get both if interacting
   for (int idx = 0; idx < nsimples_; ++idx) {
     auto part = (*simples_)[idx];
@@ -85,9 +111,9 @@ void kmcEngine::HardcodedBind() {
       auto rng = pkmcbead->GetRNG();
       double roll = gsl_rng_uniform(rng->r);
       if (roll < nexp) {
-        printf("[%d] Successful KMC move {nexp: %2.4f}, {roll: %2.4f}\n", pkmcbead->GetOID(), nexp, roll);
+        if (debug_trace)
+          printf("[%d] Successful KMC move {nexp: %2.4f}, {roll: %2.4f}\n", pkmcbead->GetOID(), nexp, roll);
         pkmcbead->SetBound(true);
-        pkmcbead->SetNExp(0.0);
         // Figure out where to attach
         double pos = 0.0;
         auto neighbors = tracking_->GetNeighbors();
@@ -97,37 +123,77 @@ void kmcEngine::HardcodedBind() {
             int jdx = nldx->idx_;
             auto part2 = (*simples_)[jdx];
             MDBead* pbead = dynamic_cast<MDBead*>(part2);
-            printf("[%d,%d] Attaching to [%d,%d] {pos: %2.4f}\n", idx, pkmcbead->GetOID(), jdx, pbead->GetOID(), pos);
+            if (debug_trace)
+              printf("[%d,%d] Attaching to [%d,%d] {pos: %2.4f}\n", idx, pkmcbead->GetOID(), jdx, pbead->GetOID(), pos);
             pkmcbead->Attach(jdx);
             break;
           }
         } //which one to attach to
       } // successful kmc move
     } // are we already bound?
-
-    // If we are bound, update position and velocity to the attached part
-    if (pkmcbead->GetBound()) {
-      pkmcbead->SetNExp(0.0);
-      auto aidx = pkmcbead->GetAttach();
-      auto part2 = (*simples_)[aidx];
-      auto apos = part2->GetRigidPosition();
-      auto apos_scaled = part2->GetRigidScaledPosition();
-      auto vpos = part2->GetVelocity();
-
-      auto mpos = pkmcbead->GetRigidPosition();
-      printf("[%d,%d] attached [%d,%d], (%2.2f, %2.2f) -> setting (%2.2f, %2.2f)\n",
-              idx, pkmcbead->GetOID(), aidx, part2->GetOID(), mpos[0], mpos[1],
-              apos[0], apos[1]);
-      pkmcbead->SetPrevPosition(mpos);
-      pkmcbead->SetPosition(apos);
-      pkmcbead->SetScaledPosition(apos_scaled);
-      pkmcbead->SetVelocity(vpos);
-    }
   }
 }
 
 void kmcEngine::HardcodedUnbind() {
+  double on_rate_ = 0.003916*2*10000; //artificially inflate
 
+  // number off is a species wide binomial question
+  for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+    if (!(*spec)->IsKMC()) continue;
+    // dynamic cast to what we know it is
+    SpeciesBase* specp = (*spec);
+    MDKMCBeadSpecies* pkmcbspec = dynamic_cast<MDKMCBeadSpecies*>(specp);
+    int nbound = pkmcbspec->GetNBound();
+    double poff_single = on_rate_ * pkmcbspec->GetDelta();
+    int noff = (int)gsl_ran_binomial(rng_.r, poff_single, nbound);
+    if (debug_trace)
+      printf("[species] {poffsingle: %2.8f, noff: %d}\n", poff_single, noff);
+    for (int i = 0; i < noff; ++i) {
+      int idxloc = -1;
+      bool foundidx = false;
+      int idxoff = (int)gsl_rng_uniform(rng_.r) * nbound;
+      // Find the one to remove
+      for (int idx = 0; idx < nsimples_; ++idx) {
+        auto part = (*simples_)[idx];
+        if (!part->IsKMC()) continue;
+        // Dynamic cast to MDKMCBead
+        MDKMCBead* pkmcbead = dynamic_cast<MDKMCBead*>(part);
+        if (!pkmcbead->GetBound()) continue; // must be attached
+        idxloc++;
+        if (idxloc == idxoff) {
+          if (debug_trace)
+            printf("[%d] Successful KMC move {unbind}, {idxoff=idxloc=%d}\n", pkmcbead->GetOID(), idxloc);
+          double randr[3];
+          double mag2 = 0.0;
+          double myrcut = 0.75;
+          double myrcut2 = 0.75*0.75;
+          do {
+            mag2 = 0.0;
+            for (int i = 0; i < ndim_; ++i) {
+              double mrand = gsl_rng_uniform(rng_.r);
+              printf("mrand: %2.4f\n", mrand);
+              randr[i] = 2*myrcut*(mrand - 0.5);
+              mag2 += SQR(randr[i]);
+            }
+          } while (mag2 > myrcut2);
+          // Randomly set our position based on randr
+          auto prevpos = pkmcbead->GetRigidPosition();
+          pkmcbead->SetPosition(randr);
+          pkmcbead->SetBound(false);
+          if (debug_trace)
+            printf("[%d,%d] Detached from [idx:%d] (%2.6f, %2.6f) -> (%2.6f, %2.6f)\n", idx, pkmcbead->GetOID(), pkmcbead->GetAttach(),
+                prevpos[0], prevpos[1], pkmcbead->GetRigidPosition()[0], pkmcbead->GetRigidPosition()[1]);
+          pkmcbead->Attach(-1);
+
+          foundidx = true;
+          break;
+        }
+      }
+
+      if (foundidx)
+        break;
+    }
+  }
 }
 
 // Prepare and update probabilities of the kmc engine
@@ -145,4 +211,16 @@ void kmcEngine::PrepKMC() {
       (*spec)->PrepKMC();
     }
   }
+}
+
+void kmcEngine::Dump() {
+  #ifdef DEBUG
+  printf("--------\n");
+  printf("kmcEngine -> dump\n");
+  for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+    if ((*spec)->IsKMC()) {
+      (*spec)->DumpKMC();
+    }
+  }
+  #endif
 }
