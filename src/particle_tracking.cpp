@@ -154,7 +154,7 @@ void ParticleTracking::Print() {
 // Dump the gory details of the neighbor list
 void ParticleTracking::Dump() {
   #ifdef DEBUG
-  printf("********\n");
+  printf("--------\n");
   printf("%s -> dump\n", tracking_->Name().c_str());
   for (int idx = 0; idx < nsimples_; ++idx) {
     printf("\t[%d] -> [", idx);

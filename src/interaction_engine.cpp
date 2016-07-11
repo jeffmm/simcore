@@ -234,6 +234,8 @@ void InteractionEngine::Print() {
 void InteractionEngine::Dump() {
   #ifdef DEBUG
   if (debug_trace) {
+    printf("--------\n");
+    printf("InteractionEngine -> dump\n");
     for (int i = 0; i < nsimples_; ++i) {
       auto part = (*simples_)[i];
       auto oid = part->GetOID();
