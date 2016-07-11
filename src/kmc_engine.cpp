@@ -171,7 +171,6 @@ void kmcEngine::HardcodedUnbind() {
             mag2 = 0.0;
             for (int i = 0; i < ndim_; ++i) {
               double mrand = gsl_rng_uniform(rng_.r);
-              printf("mrand: %2.4f\n", mrand);
               randr[i] = 2*myrcut*(mrand - 0.5);
               mag2 += SQR(randr[i]);
             }
