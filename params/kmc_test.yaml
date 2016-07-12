@@ -35,7 +35,8 @@ time_flag: 1
 energy_analysis_flag: 1
 lj_epsilon: 1
 ftype: 4
-potfile: params/kmc_test.pot
+potfile: params/kmc_test.pot.yaml
+kmcfile: params/kmc_test.kmc.yaml
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5

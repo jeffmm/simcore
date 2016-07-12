@@ -145,7 +145,7 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
   auto oid2x = oid_position_map_[part2->GetOID()];
   #ifdef DEBUG
   if (debug_trace)
-    printf("\tPOT Interacting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
+    printf("\tPOT Interacting[%d:%d] (dr2:%2.8f)\n", oid1x, oid2x, idm.dr_mag2);
   #endif
 
   // Fire off the potential calculation
@@ -197,7 +197,7 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
   auto oid1x = oid_position_map_[part1->GetOID()];
   auto oid2x = oid_position_map_[part2->GetOID()];
   if (debug_trace)
-    printf("\tKMC Interacting[%d:%d] (dr2:%2.2f)\n", oid1x, oid2x, idm.dr_mag2);
+    printf("\tKMC Interacting[%d:%d] (dr2:%2.8f)\n", oid1x, oid2x, idm.dr_mag2);
   #endif
 
   // Fire off the potential calculation
