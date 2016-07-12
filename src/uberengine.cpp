@@ -77,8 +77,9 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   fengine_.Print();
 
   // Initialize the kmc engine
-  kengine_.Init(space_, species_, &tracking_, gsl_rng_get(rng_.r));
+  kengine_.Init(space_, species_, &tracking_, gsl_rng_get(rng_.r), params_->kmcfile);
   kengine_.InitMP();
+  kengine_.Print();
 
   // Run one step to make sure that we're all good
   tracking_.UpdateTracking(true);
@@ -106,7 +107,7 @@ void UberEngine::InteractMP() {
 }
 
 void UberEngine::StepKMC() {
-  kengine_.StepKMC();
+  kengine_.RunKMC();
 }
 
 void UberEngine::Draw(std::vector<graph_struct*> * graph_array) {
