@@ -32,6 +32,9 @@ void MdMdkmcBindUnbind::RunKMC(SpeciesBase *spec1, SpeciesBase *spec2) {
     g[j] = swapme;
   }
 
+  if (debug_trace)
+    printf("MDKMC module %d -> %d\n", g[0], g[1]);
+
   for (int i = 0; i < 2; ++i) {
     switch (g[i]) {
       case 0:
@@ -55,6 +58,8 @@ void MdMdkmcBindUnbind::Bind() {
     MDKMCBead *pkmcbead = dynamic_cast<MDKMCBead*>(part1);
     double binding_affinity = eps_eff_ * on_rate_ * pkmcbead->GetDelta();
     auto nexp = pkmcbead->GetNExp();
+    if (nexp <  std::numeric_limits<double>::epsilon() &&
+        nexp > -std::numeric_limits<double>::epsilon()) nexp = 0.0;
     if (!pkmcbead->GetBound() && nexp > 0.0) {
       auto mrng = pkmcbead->GetRNG();
       double roll = gsl_rng_uniform(mrng->r);
