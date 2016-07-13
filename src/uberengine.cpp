@@ -64,25 +64,25 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   InitPotentials();
 
   // Initialize the particle tracking
-  tracking_.Init(space_, species_, skin_, force_type_);
-  tracking_.InitPotentials(&potentials_);
-  tracking_.InitTracking();
-  tracking_.CheckOverlaps(max_overlap_);
-  tracking_.Print();
+  ptrack_.Init(space_, species_, skin_, force_type_);
+  ptrack_.InitPotentials(&potentials_);
+  ptrack_.InitTracking();
+  ptrack_.CheckOverlaps(max_overlap_);
+  ptrack_.Print();
 
   // Initialize the interaction engine
-  fengine_.Init(space_, &tracking_, skin_);
+  fengine_.Init(space_, &ptrack_, skin_);
   fengine_.InitPotentials(&potentials_);
   fengine_.InitMP();
   fengine_.Print();
 
   // Initialize the kmc engine
-  kengine_.Init(space_, species_, &tracking_, gsl_rng_get(rng_.r), params_->kmcfile);
+  kengine_.Init(space_, species_, &ptrack_, gsl_rng_get(rng_.r), params_->kmcfile);
   kengine_.InitMP();
   kengine_.Print();
 
   // Run one step to make sure that we're all good
-  tracking_.UpdateTracking(true);
+  ptrack_.UpdateTracking(true);
   fengine_.Interact();
 
 }
@@ -95,14 +95,14 @@ void UberEngine::InitPotentials() {
 void UberEngine::DumpAll() {
     // Dump all the particles and their positions, forces, energy (2d)
     #ifdef DEBUG
-    tracking_.Dump();
+    ptrack_.Dump();
     fengine_.Dump();
     kengine_.Dump();
     #endif
 }
 
 void UberEngine::InteractMP() {
-  tracking_.UpdateTracking();
+  ptrack_.UpdateTracking();
   fengine_.Interact();
 }
 

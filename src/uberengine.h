@@ -32,10 +32,9 @@ class UberEngine {
     system_parameters *params_;
     FTYPE force_type_;
     space_struct *space_;
-    std::vector<Simple*> simples_; 
     std::vector<SpeciesBase*> *species_;
     PotentialManager potentials_;
-    ParticleTracking tracking_;
+    ParticleTracking ptrack_;
     InteractionEngine fengine_; //fengine = force engine.  get it?
     kmcEngine kengine_;
     rng_properties rng_;
