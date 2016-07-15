@@ -1,5 +1,6 @@
 // Implementation file for particle tracking (bookkeeping)
 
+#include <cassert>
 #include <climits>
 
 #include "particle_tracking.h"
@@ -54,13 +55,20 @@ void ParticleTracking::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSp
 
 // Load our simples array
 void ParticleTracking::LoadSimples() {
+  int ntot = 0;
+
   nsys_ = species_->size();
+  nmembers_.clear();
+  nmembers_.resize(nsys_);
   simples_.clear();
-  for (auto it = species_->begin(); it != species_->end(); ++it) {
-    std::vector<Simple*> sim_vec = (*it)->GetSimples();
+  for (int ispec = 0; ispec < nsys_; ++ispec) {
+    nmembers_[ispec] = (*species_)[ispec]->GetNMembers();
+    std::vector<Simple*> sim_vec = (*species_)[ispec]->GetSimples();
     simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
+    ntot += nmembers_[ispec];
   }
   nsimples_ = (int)simples_.size();
+  assert(nsimples_ == ntot);
 }
 
 // Attach to the potential manager
@@ -83,6 +91,23 @@ void ParticleTracking::InitTracking() {
 // Check if we need an update
 // and do it if needed
 void ParticleTracking::UpdateTracking(bool pForceUpdate) {
+  trigger_update_ = false;
+  for (int ispec = 0; ispec < nsys_; ++ispec) {
+    if (nmembers_[ispec] != (*species_)[ispec]->GetNMembers()) {
+      // Force a complete rebuild
+
+      // Load the simples again, then pass onto tracking
+      LoadSimples();
+      if (neighbors_ != nullptr) {
+        delete[] neighbors_;
+      }
+      neighbors_ = new nl_list[nsimples_];
+      tracking_->Rebuild(&neighbors_);
+      pForceUpdate = true;
+      trigger_update_ = true;
+    }
+  }
+
   tracking_->UpdateTracking(pForceUpdate);
 }
 

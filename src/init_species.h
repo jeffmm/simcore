@@ -48,3 +48,10 @@ if (params_.n_md_kmc_bead > 0) {
   species_.push_back(spcs);
 }
 #endif
+#ifdef _SIMCORE_BR_IMPLICIT_H_
+if (params_.n_br_implicit > 0) {
+  SpeciesBase * spcs = new BrImplicitBeadSpecies(params_.n_br_implicit, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  spcs->Init();
+  species_.push_back(spcs);
+}
+#endif

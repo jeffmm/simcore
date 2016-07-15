@@ -29,3 +29,7 @@ TrackingBase::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, st
     nupdates_ = 0;
 }
 
+void TrackingBase::Rebuild(nl_list **pNeighbors) {
+  neighbors_ = (*pNeighbors);
+  nsimples_ = (int)simples_->size();
+}
