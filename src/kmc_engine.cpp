@@ -43,14 +43,14 @@ void kmcEngine::InitMP() {
   nsimples_ = tracking_->GetNSimples();
   simples_ = tracking_->GetSimples();
 
-  // Initialize based on fname
-  std::cout << "********\n";
-  std::cout << "KMC Load ->\n";
-  std::cout << "  file: " << fname_ << std::endl;
   ParseKMC();
 }
 
 void kmcEngine::ParseKMC() {
+  // Initialize based on fname
+  std::cout << "********\n";
+  std::cout << "KMC Load ->\n";
+  std::cout << "  file: " << fname_ << std::endl;
   YAML::Node node = YAML::LoadFile(fname_);
 
   nkmcs_ = node["kmc"].size();
@@ -75,6 +75,11 @@ void kmcEngine::AddKMC(SID sid1, SID sid2, KMCBase *kmc) {
 
 // Run the overall kmc routine one step
 void kmcEngine::RunKMC() {
+  // Check to see if an update was triggered
+  if (tracking_->TriggerUpdate()) {
+    nsimples_ = tracking_->GetNSimples();
+    simples_ = tracking_->GetSimples();
+  }
   // Prepare the kmc probabilities, etc
   PrepKMC();
 

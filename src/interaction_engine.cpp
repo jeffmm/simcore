@@ -69,6 +69,9 @@ void InteractionEngine::InitMP() {
 void InteractionEngine::Interact() {
 
   // XXX Check reinit?
+  if (tracking_->TriggerUpdate()) {
+    InitMP();
+  }
 
   #ifdef ENABLE_OPENMP
   #pragma omp parallel

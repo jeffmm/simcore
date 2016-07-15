@@ -74,6 +74,7 @@ class SpeciesBase {
     virtual double GetTotalEnergy() {return 0;}
     SID const GetSID() {return sid_;}
     bool IsKMC() {return is_kmc_;}
+    int const GetNMembers() {return n_members_;}
     virtual void PrepKMC() {}
     virtual void StepKMC() {}
     virtual void DumpKMC() {}
@@ -125,6 +126,13 @@ class Species : public SpeciesBase {
           ++it;
         }
       }
+    }
+
+    virtual void AddMember() {
+      T* newmember = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      newmember->Init();
+      members_.push_back(newmember);
+      n_members_++;
     }
 
     virtual void Draw(std::vector<graph_struct*> * graph_array) {

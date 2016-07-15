@@ -32,11 +32,13 @@ class ParticleTracking {
     nl_list* GetNeighbors() {return neighbors_;}
     const int GetNSimples() {return nsimples_;}
     std::vector<Simple*>* GetSimples() {return &simples_;}
+    const bool TriggerUpdate() {return trigger_update_;}
 
     void Print();
     void Dump();
 
   private:
+    bool trigger_update_;
     int ndim_;
     int nperiodic_;
     int nthreads_;
@@ -56,6 +58,8 @@ class ParticleTracking {
     // It's just how we build it that's different
     nl_list* neighbors_;
     TrackingBase* tracking_;
+
+    std::vector<int> nmembers_; // number of members in each species we have
 };
 
 #endif
