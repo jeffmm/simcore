@@ -9,6 +9,7 @@ void MDKMCBead::Init() {
   }
   orientation_[0] = 0; // Set default color to red
   orientation_[1] -=orientation_[1];
+  n_exp_ = 0.0;
 }
 void MDKMCBead::UpdatePosition() {
   ZeroForce();

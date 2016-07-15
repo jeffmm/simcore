@@ -60,7 +60,6 @@ param_file << "graph_diameter : " << params.graph_diameter << "\n";
 if (params.grab_flag) {
   param_file << "grab_file : " << params.grab_file << "\n";
 }
-param_file << "energy_analysis_flag : " << params.energy_analysis_flag << "\n";
 param_file << "rigid_tether_flag : " << params.rigid_tether_flag << "\n";
 param_file << "position_correlation_flag : " << params.position_correlation_flag << "\n";
 param_file << "graph_background : " << params.graph_background << "\n";
@@ -71,6 +70,8 @@ param_file << "dimer_diameter : " << params.dimer_diameter << "\n";
 param_file << "n_dimer : " << params.n_dimer << "\n";
 param_file << "n_br_bead : " << params.n_br_bead << "\n";
 param_file << "br_bead_diameter : " << params.br_bead_diameter << "\n";
+param_file << "n_br_implicit : " << params.n_br_implicit << "\n";
+param_file << "br_implicit_diameter : " << params.br_implicit_diameter << "\n";
 param_file << "n_md_bead : " << params.n_md_bead << "\n";
 param_file << "md_bead_diameter : " << params.md_bead_diameter << "\n";
 param_file << "md_bead_mass : " << params.md_bead_mass << "\n";
@@ -79,6 +80,7 @@ param_file << "md_kmc_bead_diameter : " << params.md_kmc_bead_diameter << "\n";
 param_file << "md_kmc_bead_mass : " << params.md_kmc_bead_mass << "\n";
 param_file << "cell_length : " << params.cell_length << "\n";
 param_file << "n_update_cells : " << params.n_update_cells << "\n";
+param_file << "energy_analysis_flag : " << params.energy_analysis_flag << "\n";
 param_file << "lj_epsilon : " << params.lj_epsilon << "\n";
 param_file << "argon_diameter : " << params.argon_diameter << "\n";
 param_file << "neon_diameter : " << params.neon_diameter << "\n";

@@ -176,9 +176,6 @@ else if ( param_name.compare("grab_file") == 0 ) {
   params_[i_var].grab_file = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
   strcpy(params_[i_var].grab_file, param_value.c_str());
 }
-else if (param_name.compare("energy_analysis_flag") == 0){
-  params_[i_var].energy_analysis_flag = atoi(param_value.c_str());
-}
 else if (param_name.compare("rigid_tether_flag") == 0){
   params_[i_var].rigid_tether_flag = atoi(param_value.c_str());
 }
@@ -209,6 +206,12 @@ else if (param_name.compare("n_br_bead") == 0){
 else if (param_name.compare("br_bead_diameter") == 0){
   params_[i_var].br_bead_diameter = atof(param_value.c_str());
 }
+else if (param_name.compare("n_br_implicit") == 0){
+  params_[i_var].n_br_implicit = atoi(param_value.c_str());
+}
+else if (param_name.compare("br_implicit_diameter") == 0){
+  params_[i_var].br_implicit_diameter = atof(param_value.c_str());
+}
 else if (param_name.compare("n_md_bead") == 0){
   params_[i_var].n_md_bead = atoi(param_value.c_str());
 }
@@ -232,6 +235,9 @@ else if (param_name.compare("cell_length") == 0){
 }
 else if (param_name.compare("n_update_cells") == 0){
   params_[i_var].n_update_cells = atoi(param_value.c_str());
+}
+else if (param_name.compare("energy_analysis_flag") == 0){
+  params_[i_var].energy_analysis_flag = atoi(param_value.c_str());
 }
 else if (param_name.compare("lj_epsilon") == 0){
   params_[i_var].lj_epsilon = atof(param_value.c_str());

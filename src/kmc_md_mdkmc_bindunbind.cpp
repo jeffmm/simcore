@@ -46,7 +46,7 @@ void MdMdkmcBindUnbind::RunKMC(SpeciesBase *spec1, SpeciesBase *spec2) {
     }
   }
 
-  FinishKMC();
+  FinishKMC(spec1);
 }
 
 void MdMdkmcBindUnbind::Bind() {
@@ -160,7 +160,7 @@ void MdMdkmcBindUnbind::Unbind(SpeciesBase *spec) {
   } // how many to remove?
 }
 
-void MdMdkmcBindUnbind::FinishKMC() {
+void MdMdkmcBindUnbind::FinishKMC(SpeciesBase* spec) {
   // Finish the kmc stuff, attach, set positions, etc
   for (int idx = 0; idx < nsimples_; ++idx) {
     auto part = (*simples_)[idx];
@@ -184,4 +184,8 @@ void MdMdkmcBindUnbind::FinishKMC() {
       pkmcbead->SetVelocity(vpos);
     }
   }
+
+  // XXX CJE add a particle to this species
+  //MDKMCBeadSpecies *pkmcbspec = dynamic_cast<MDKMCBeadSpecies*>(spec);
+  //pkmcbspec->AddMember();
 }

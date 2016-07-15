@@ -63,7 +63,6 @@ struct system_parameters {
   double v_depoly = 0.793;
   double graph_diameter = 1;
   char *grab_file;
-  int energy_analysis_flag = 0;
   int rigid_tether_flag = 0;
   int position_correlation_flag = 0;
   int graph_background = 0;
@@ -74,6 +73,8 @@ struct system_parameters {
   int n_dimer = 0;
   int n_br_bead = 0;
   double br_bead_diameter = 1;
+  int n_br_implicit = 0;
+  double br_implicit_diameter = 1;
   int n_md_bead = 0;
   double md_bead_diameter = 1;
   double md_bead_mass = 1;
@@ -82,6 +83,7 @@ struct system_parameters {
   double md_kmc_bead_mass = 1;
   double cell_length = 10;
   int n_update_cells = 10;
+  int energy_analysis_flag = 0;
   double lj_epsilon = 1;
   double argon_diameter = 1.5;
   double neon_diameter = 0.8;

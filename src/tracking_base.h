@@ -24,6 +24,7 @@ class TrackingBase {
     virtual void dump() = 0;
     virtual void CreateSubstructure(double pRcut, nl_list** pNeighbors) = 0; // Create the substructure - depends on type
     virtual void UpdateTracking(bool pForceUpdate = false) = 0; // Update the tracking information for whatever we are
+    virtual void Rebuild(nl_list **pNeighbors);
 
     std::string Name() const {return name_;}
     const int NUpdates() {return nupdates_;}

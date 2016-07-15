@@ -22,14 +22,14 @@ dimer_length: 2
 dimer_eq_length: 2
 dimer_k_spring: 5
 cell_length: 2.5
-graph_flag: 1
+graph_flag: 0
 n_graph: 1000
 delta: 0.0001
 #delta: 0.00001
 #n_steps: 1000000
 #n_steps: 100000
-n_steps: 10000
-#n_steps: 1000
+#n_steps: 10000
+n_steps: 1000
 #n_steps: 10
 #n_steps: 20
 #n_steps: 100
