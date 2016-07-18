@@ -231,6 +231,7 @@ void min_distance_sphero(int n_dim, int n_periodic, double **h,
       contact_1[i] = lambda * u_1[i];
       contact_2[i] = mu * u_2[i];
     }
+
     return;
 }
 
