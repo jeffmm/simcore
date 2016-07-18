@@ -170,7 +170,7 @@ void Simple::ApplyInteractions() {
   for (auto it=interactions_.begin(); it!= interactions_.end(); ++it) {
     auto ix=(*it);
     double f[4];
-    ix.potential->CalcPotential(ix.dr, ix.dr_mag, ix.buffer, f);
+    //ix.potential->CalcPotential(ix.dr, ix.dr_mag, ix.buffer, f);
     AddForce(f);
     AddPotential(f[n_dim_]);
   }

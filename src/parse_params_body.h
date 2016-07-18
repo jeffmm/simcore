@@ -206,11 +206,11 @@ else if (param_name.compare("n_br_bead") == 0){
 else if (param_name.compare("br_bead_diameter") == 0){
   params_[i_var].br_bead_diameter = atof(param_value.c_str());
 }
-else if (param_name.compare("n_br_implicit") == 0){
-  params_[i_var].n_br_implicit = atoi(param_value.c_str());
+else if (param_name.compare("n_br_walker") == 0){
+  params_[i_var].n_br_walker = atoi(param_value.c_str());
 }
-else if (param_name.compare("br_implicit_diameter") == 0){
-  params_[i_var].br_implicit_diameter = atof(param_value.c_str());
+else if (param_name.compare("br_walker_diameter") == 0){
+  params_[i_var].br_walker_diameter = atof(param_value.c_str());
 }
 else if (param_name.compare("n_md_bead") == 0){
   params_[i_var].n_md_bead = atoi(param_value.c_str());

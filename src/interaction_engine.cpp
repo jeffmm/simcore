@@ -104,6 +104,8 @@ void InteractionEngine::Interact() {
         auto part1 = (*simples_)[idx];
         auto part2 = (*simples_)[jdx];
 
+        printf("IE [%d:%d -> %d:%d]\n", part1->GetRID(), part1->GetSID(), part2->GetRID(), part2->GetSID());
+
         // Do the interactions
         //InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy);
         InteractParticlesMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
@@ -135,6 +137,7 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
 
   // Calculate the potential here
   PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
+  printf("\tPOT [%d -> %d], %p\n", part1->GetRID(), part2->GetRID(), pot);
   if (pot == nullptr) return; // no interaction
   if (pot->IsKMC()) return; // do not do kmc interactions here, bail before min calc
   // Minimum distance here@@@@!!!!
@@ -153,7 +156,7 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
 
   // Fire off the potential calculation
   double fepot[4];
-  pot->CalcPotential(idm.dr, idm.dr_mag, idm.buffer_mag, fepot);
+  pot->CalcPotential(&idm, part1, part2, fepot);
 
   // Do the potential energies
   pr_energy[oid1x] += fepot[ndim_];
@@ -185,6 +188,7 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
 
   // Calculate the potential here
   PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
+  printf("\tKMC [%d -> %d], %p\n", part1->GetRID(), part2->GetRID(), pot);
   if (pot == nullptr) return; // no interaction
   if (!pot->IsKMC()) return; // do the kmc interactions here, bail before min calc
   SID kmc_target = pot->GetKMCTarget();
@@ -205,7 +209,7 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
 
   // Fire off the potential calculation
   double fepot[4];
-  pot->CalcPotential(idm.dr, idm.dr_mag, idm.buffer_mag, fepot);
+  pot->CalcPotential(&idm, part1, part2, fepot);
 
   neighbor->kmc_ = fepot[ndim_];
 }

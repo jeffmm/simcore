@@ -2,12 +2,9 @@
 
 #include <cassert>
 
+#include "kmc_br_bindunbind.h"
 #include "kmc_md_mdkmc_bindunbind.h"
 #include "kmc_engine.h"
-
-// XXX hack to get hardcoded version working
-#include "md_bead.h"
-#include "md_kmc_bead.h"
 
 #define REGISTER_KMC(n) kmc_factory_.register_class<n>(#n);
 
@@ -35,6 +32,7 @@ void kmcEngine::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, 
 
 // Register the available KMC modules
 void kmcEngine::RegisterKMC() {
+  REGISTER_KMC(BrBindUnbind);
   REGISTER_KMC(MdMdkmcBindUnbind);
 }
 
