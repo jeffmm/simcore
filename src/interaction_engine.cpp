@@ -104,8 +104,6 @@ void InteractionEngine::Interact() {
         auto part1 = (*simples_)[idx];
         auto part2 = (*simples_)[jdx];
 
-        printf("IE [%d:%d -> %d:%d]\n", part1->GetRID(), part1->GetSID(), part2->GetRID(), part2->GetSID());
-
         // Do the interactions
         //InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy);
         InteractParticlesMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
@@ -137,7 +135,6 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
 
   // Calculate the potential here
   PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
-  printf("\tPOT [%d -> %d], %p\n", part1->GetRID(), part2->GetRID(), pot);
   if (pot == nullptr) return; // no interaction
   if (pot->IsKMC()) return; // do not do kmc interactions here, bail before min calc
   // Minimum distance here@@@@!!!!
@@ -188,7 +185,6 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
 
   // Calculate the potential here
   PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
-  printf("\tKMC [%d -> %d], %p\n", part1->GetRID(), part2->GetRID(), pot);
   if (pot == nullptr) return; // no interaction
   if (!pot->IsKMC()) return; // do the kmc interactions here, bail before min calc
   SID kmc_target = pot->GetKMCTarget();
@@ -245,12 +241,15 @@ void InteractionEngine::Dump() {
     printf("InteractionEngine -> dump\n");
     for (int i = 0; i < nsimples_; ++i) {
       auto part = (*simples_)[i];
-      auto oid = part->GetOID();
-      printf("\to(%d) = ", oid);
+      /*auto oid = part->GetOID();
+      auto rid = part->GetRID();
+      auto cid = part->GetCID();
+      printf("\to(%d,%d,%d) = ", oid, rid, cid);
       printf("x{%2.2f, %2.2f}, ", part->GetPosition()[0], part->GetPosition()[1]);
-      printf("v{%2.2f, %2.2f}, ", part->GetVelocity()[0], part->GetVelocity()[1]);
+      printf("r{%2.2f, %2.2f}, ", part->GetRigidPosition()[0], part->GetRigidPosition()[1]);
       printf("f{%2.2f, %2.2f}, ", part->GetForce()[0], part->GetForce()[1]);
-      printf("u{%2.2f}, p{%2.2f}\n", part->GetKineticEnergy(), part->GetPotentialEnergy());
+      printf("u{%2.2f}, p{%2.2f}\n", part->GetKineticEnergy(), part->GetPotentialEnergy());*/
+      part->Dump();
     }
   }
   #endif
