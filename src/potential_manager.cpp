@@ -1,10 +1,13 @@
 // Implementatino for potential manager
 
 #include "potential_manager.h"
+
 #include "helpers.h"
 #include "lennard_jones_12_6.h"
-#include "wca.h"
+#include "sphere_line_well.h"
 #include "sphere_square_well.h"
+#include "wca.h"
+
 #include <yaml-cpp/yaml.h>
 
 #define REGISTER_POTENTIAL(n) pot_factory_.register_class<n>(#n);
@@ -30,6 +33,7 @@ PotentialManager::RegisterPotentials() {
   REGISTER_POTENTIAL(LJ126);
   REGISTER_POTENTIAL(WCA);
   REGISTER_POTENTIAL(SphereSquareWell);
+  REGISTER_POTENTIAL(SphereLineWell);
 }
 
 void

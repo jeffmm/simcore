@@ -55,3 +55,10 @@ if (params_.n_br_implicit > 0) {
   species_.push_back(spcs);
 }
 #endif
+#ifdef _SIMCORE_BR_WALKER_H_
+if (params_.n_br_walker > 0) {
+  SpeciesBase * spcs = new BrWalkerSpecies(params_.n_br_walker, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  spcs->Init();
+  species_.push_back(spcs);
+}
+#endif

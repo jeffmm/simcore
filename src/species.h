@@ -10,6 +10,7 @@ class SpeciesBase {
     SID sid_;
   protected:
     int n_members_;
+    bool kmc_update_;
     bool is_kmc_;
     double delta_;
     system_parameters *params_;
@@ -30,6 +31,7 @@ class SpeciesBase {
       params_ = params;
       space_ = space;
       is_kmc_ = false;
+      kmc_update_ = false;
       rng_.init(seed);
       delta_ = params->delta;
     }
@@ -45,6 +47,7 @@ class SpeciesBase {
       space_=that.space_;
       potentials_=that.potentials_;
       is_kmc_ = that.is_kmc_;
+      kmc_update_ = that.kmc_update_;
       rng_.init(gsl_rng_get(that.rng_.r));
       delta_=that.delta_;
     }
@@ -54,6 +57,7 @@ class SpeciesBase {
       space_=that.space_;
       potentials_=that.potentials_;
       is_kmc_=that.is_kmc_;
+      kmc_update_ = that.kmc_update_;
       rng_.init(gsl_rng_get(that.rng_.r));
       delta_=that.delta_;
       return *this;
@@ -74,7 +78,8 @@ class SpeciesBase {
     virtual double GetTotalEnergy() {return 0;}
     SID const GetSID() {return sid_;}
     bool IsKMC() {return is_kmc_;}
-    int const GetNMembers() {return n_members_;}
+    bool const GetUpdate() {return kmc_update_;}
+    void SetUpdate(bool update) {kmc_update_=update;}
     virtual void PrepKMC() {}
     virtual void StepKMC() {}
     virtual void DumpKMC() {}

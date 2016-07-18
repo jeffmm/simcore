@@ -58,8 +58,6 @@ class ParticleTracking {
     // It's just how we build it that's different
     nl_list* neighbors_;
     TrackingBase* tracking_;
-
-    std::vector<int> nmembers_; // number of members in each species we have
 };
 
 #endif

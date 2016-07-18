@@ -27,14 +27,15 @@ class LJ126 : public PotentialBase {
         std::cout << "\t{eps:" << eps_ << "}, {sigma:" << sigma_ << "}, {c6:" << c6_ << "}, {c12:" 
                   << c12_ << "}, {shift:" << shift_ << "}\n";
     }
-    // X and Y are real positions, XS and YS are scaled positions
-    virtual void CalcPotential(double *dr,
-                               double dr_mag,
-                               double buffer,
+
+    virtual void CalcPotential(interactionmindist *idm,
+                               Simple *part1,
+                               Simple *part2,
                                double *fpote) {
       std::fill(fpote, fpote + n_dim_ + 1, 0.0);
-      double rmag = dr_mag;
+      double rmag = idm->dr_mag;
       double ffac, r6, rinv;
+      double *dr = idm->dr;
 
       rinv = 1.0/(rmag*rmag);
       r6 = rinv*rinv*rinv;

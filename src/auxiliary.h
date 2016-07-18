@@ -45,7 +45,7 @@ enum class SID : unsigned char {
   br_rod,
   br_simple_rod,
   md_kmc_bead,
-  br_implicit
+  br_walker
 };
 
 //XXX: CJE I HATE THIS WITH THE FUCKING DYING PASSION
@@ -69,8 +69,8 @@ inline SID StringToSID(std::string &s) {
         return SID::br_simple_rod;
     else if (s == "md_kmc_bead")
         return SID::md_kmc_bead;
-    else if (s == "br_implicit")
-        return SID::br_implicit;
+    else if (s == "br_walker")
+        return SID::br_walker;
     else
         std::cout << "Go fuck yourself!\n";
     return SID::none;
@@ -135,7 +135,7 @@ void invert_sym_3d_matrix(double **a, double **b);
 void periodic_boundary_conditions(int n_periodic, double **h, double **h_inv,
                                          double *r, double *s);
 
-#include "potential_base.h"
+class PotentialBase;
 struct interaction {
   PotentialBase *potential; // interaction potential (returns force)
   double dr[3]; // separation vector from this obj to other obj

@@ -73,8 +73,8 @@ struct system_parameters {
   int n_dimer = 0;
   int n_br_bead = 0;
   double br_bead_diameter = 1;
-  int n_br_implicit = 0;
-  double br_implicit_diameter = 1;
+  int n_br_walker = 0;
+  double br_walker_diameter = 1;
   int n_md_bead = 0;
   double md_bead_diameter = 1;
   double md_bead_mass = 1;

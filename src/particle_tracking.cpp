@@ -55,20 +55,13 @@ void ParticleTracking::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSp
 
 // Load our simples array
 void ParticleTracking::LoadSimples() {
-  int ntot = 0;
-
   nsys_ = species_->size();
-  nmembers_.clear();
-  nmembers_.resize(nsys_);
   simples_.clear();
   for (int ispec = 0; ispec < nsys_; ++ispec) {
-    nmembers_[ispec] = (*species_)[ispec]->GetNMembers();
     std::vector<Simple*> sim_vec = (*species_)[ispec]->GetSimples();
     simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
-    ntot += nmembers_[ispec];
   }
   nsimples_ = (int)simples_.size();
-  assert(nsimples_ == ntot);
 }
 
 // Attach to the potential manager
@@ -93,7 +86,8 @@ void ParticleTracking::InitTracking() {
 void ParticleTracking::UpdateTracking(bool pForceUpdate) {
   trigger_update_ = false;
   for (int ispec = 0; ispec < nsys_; ++ispec) {
-    if (nmembers_[ispec] != (*species_)[ispec]->GetNMembers()) {
+    if ((*species_)[ispec]->GetUpdate()) {
+      (*species_)[ispec]->SetUpdate(false);
       // Force a complete rebuild
 
       // Load the simples again, then pass onto tracking
