@@ -18,13 +18,14 @@ class SphereSquareWell : public PotentialBase {
       PotentialBase::Print();
       std::cout << "\t{depth:" << depth_ << "}\n";
     }
-    // X and Y are real positions, XS and YS are scaled positions
-    virtual void CalcPotential(double *dr,
-                               double dr_mag,
-                               double buffer,
+
+    virtual void CalcPotential(interactionmindist *idm,
+                               Simple *part1,
+                               Simple *part2,
                                double *fpote) {
       std::fill(fpote, fpote + n_dim_ + 1, 0.0);
       // 0 force, return depth when inside well
+      double dr_mag = idm->dr_mag;
       if (dr_mag < rcut_) {
         fpote[n_dim_] = depth_;
       } else {

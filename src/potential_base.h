@@ -4,6 +4,9 @@
 #include "auxiliary.h"
 #include <yaml-cpp/yaml.h>
 
+// Forward declare Simples
+class Simple;
+
 // Potential base class for all external(or maybe even internal) potentials
 class PotentialBase {
   protected:
@@ -25,10 +28,13 @@ class PotentialBase {
         n_dim_ = 0;
     }
     virtual ~PotentialBase() {}
-    virtual void CalcPotential(double *dr,
-                       double dr_mag,
-                       double buffer,
-                       double *fpote) {}
+    virtual void CalcPotential(interactionmindist *idm,
+                               Simple *part1,
+                               Simple *part2,
+                               double *fpote) {
+      printf("ERROR, CalcPotential not set correctly\n");
+      exit(1);
+    }
     double GetRCut() {return rcut_;}
     double GetRCut2() {return rcut2_;}
     const bool CanOverlap() { return can_overlap_; }
