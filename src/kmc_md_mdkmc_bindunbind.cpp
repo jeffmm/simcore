@@ -5,8 +5,12 @@
 #include "md_bead.h"
 #include "md_kmc_bead.h"
 
-void MdMdkmcBindUnbind::Init(space_struct *pSpace, ParticleTracking *pTracking, int ikmc, YAML::Node &node, long seed) {
-  KMCBase::Init(pSpace, pTracking, ikmc, node, seed);
+void MdMdkmcBindUnbind::Init(space_struct *pSpace,
+                             ParticleTracking *pTracking,
+                             SpeciesBase *spec1,
+                             SpeciesBase *spec2,
+                             int ikmc, YAML::Node &node, long seed) {
+  KMCBase::Init(pSpace, pTracking, spec1, spec2, ikmc, node, seed);
 
   // Grab our specific claims
   eps_eff_  = node["kmc"][ikmc]["eps_eff"].as<double>();

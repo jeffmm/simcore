@@ -4,6 +4,7 @@ void BrWalker::Init() {
   Simple::Init();
   orientation_[0] = 0; // Set default color to red
   orientation_[1] -=orientation_[1];
+  n_exp_ = 0.0;
 }
 
 void BrWalker::KickBead() {
@@ -24,18 +25,27 @@ void BrWalker::UpdatePosition() {
 }
 
 void BrWalker::UpdatePositionMP() {
+  // If bound, the position is set by the kmc engine module
+  if (!bound_) {
     KickBead();
     for (int i = 0; i < n_dim_; ++i) {
         position_[i] = position_[i] + force_[i] * delta_ / diameter_;
         dr_tot_[i] += position_[i] + force_[i] * delta_ / diameter_;
     }
-    UpdatePeriodic();
+  }
+  UpdatePeriodic();
 }
 
-//void BrWalkerSpecies::InitPotentials (system_parameters *params) {
-  //AddPotential(SID::br_bead, SID::br_bead, 
-      //new WCA(params->lj_epsilon,params->br_bead_diameter,
-                //space_, pow(2.0, 1.0/6.0)*params->br_bead_diameter));
-//}
+// kmc stuff
+void BrWalker::PrepKMC(std::vector<neighbor_t>* neighbors) {
 
+}
 
+void BrWalker::StepKMC() {
+
+}
+
+void BrWalker::Attach(int idx, double pos) {
+  attachidx_ = idx;
+  attachpos_ = pos;
+}
