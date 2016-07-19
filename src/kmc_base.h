@@ -9,6 +9,7 @@
 class KMCBase {
   protected:
     int ndim_;
+    int nperiodic_;
 
     rng_properties rng_;
     space_struct *space_;
@@ -29,6 +30,7 @@ class KMCBase {
                       int ikmc, YAML::Node &node, long seed) {
       space_ = pSpace;
       ndim_ = space_->n_dim;
+      nperiodic_ = space_->n_periodic;
       rng_.init(seed);
       tracking_ = pTracking;
       std::string sid1s   = node["kmc"][ikmc]["sid1"].as<std::string>();

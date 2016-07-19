@@ -32,6 +32,10 @@ void BrWalker::UpdatePositionMP() {
         position_[i] = position_[i] + force_[i] * delta_ / diameter_;
         dr_tot_[i] += position_[i] + force_[i] * delta_ / diameter_;
     }
+  } else {
+    for (int i = 0; i < n_dim_; ++i) {
+      dr_tot_[i] += position_[i] - prev_position_[i];
+    }
   }
   UpdatePeriodic();
 }
