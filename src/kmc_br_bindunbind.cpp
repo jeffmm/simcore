@@ -19,6 +19,7 @@ void BrBindUnbind::Init(space_struct *pSpace,
   on_rate_  = node["kmc"][ikmc]["on_rate"].as<double>();
   alpha_    = node["kmc"][ikmc]["alpha"].as<double>();
   mrcut_    = node["kmc"][ikmc]["rcut"].as<double>();
+  velocity_ = node["kmc"][ikmc]["velocity"].as<double>();
 }
 
 void BrBindUnbind::Print() {
@@ -254,7 +255,6 @@ void BrBindUnbind::UpdateKMC() {
     BrWalker *pwalker = dynamic_cast<BrWalker*>(part);
     // If we're bound, update the position to the attached
     if (pwalker->GetBound()) {
-      nbound++;
       pwalker->SetNExp(0.0);
       auto aidx = pwalker->GetAttach().first;
       auto cross_pos = pwalker->GetAttach().second; // relative to the -end of the rod!!
@@ -264,6 +264,10 @@ void BrBindUnbind::UpdateKMC() {
       auto r_rod = part2->GetRigidPosition();
       auto u_rod = part2->GetRigidOrientation();
       auto l_rod = part2->GetRigidLength();
+
+      // If we are moving with some velocity, do that
+      cross_pos += velocity_ * pwalker->GetDelta();
+      pwalker->Attach(aidx, cross_pos);
 
       double rxnew[3];
       for (int i = 0; i < ndim_; ++i) {
@@ -276,6 +280,7 @@ void BrBindUnbind::UpdateKMC() {
                rxnew[0], rxnew[1]);
       pwalker->SetPrevPosition(r_x);
       pwalker->SetPosition(rxnew);
+      nbound++;
     } else {
       nfree++;
     }
