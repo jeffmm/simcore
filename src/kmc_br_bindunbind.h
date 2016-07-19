@@ -10,6 +10,7 @@ class BrBindUnbind : public KMCBase {
     double on_rate_;
     double alpha_;
     double mrcut_;
+    double velocity_;
 
     int nsimples_;
     std::vector<Simple*>* simples_;

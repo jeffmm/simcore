@@ -3,7 +3,8 @@
 void BrWalker::Init() {
   Simple::Init();
   orientation_[0] = 0; // Set default color to red
-  orientation_[1] -=orientation_[1];
+  orientation_[1] = 1;
+  orientation_[2] = 1;
   n_exp_ = 0.0;
 }
 
