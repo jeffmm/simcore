@@ -113,7 +113,63 @@ void BrBindUnbind::Bind() {
             // This must remain a simple (groan)
             if (debug_trace)
               printf("[%d,%d] Attaching to [%d,%d] {localpos: %2.4f}\n", idx, pwalker->GetOID(), nldx->idx_, part2->GetOID(), pos);
-            pwalker->Attach(nldx->idx_, 0.0); // XXX FIXME
+
+            // Here, we do more complicated stuff.  Calculate the coordinate along
+            // the rod s.t. the line vector is perpendicular to the separation vec
+            // (closest point along carrier line).  In this frame, the position
+            // of the xlink should be gaussian distributed
+            double r_x[3];
+            double r_rod[3];
+            double s_rod[3];
+            double u_rod[3];
+            std::copy(pwalker->GetRigidPosition(), pwalker->GetRigidPosition()+ndim_, r_x);
+            std::copy(part2->GetRigidPosition(), part2->GetRigidPosition()+ndim_, r_rod);
+            std::copy(part2->GetRigidScaledPosition(), part2->GetRigidScaledPosition()+ndim_, s_rod);
+            std::copy(part2->GetRigidOrientation(), part2->GetRigidOrientation()+ndim_, u_rod);
+            double l_rod = part2->GetRigidLength();
+            double *s_1 = NULL; // FIXME from robert
+            double rcontact[3];
+            double dr[3];
+            min_distance_point_carrier_line(ndim_, nperiodic_,
+                                            space_->unit_cell, r_x, s_1,
+                                            r_rod, s_rod, u_rod, l_rod,
+                                            dr, rcontact);
+
+            // Back calculate mu
+            double mu = 0.0;
+            for (int i = 0; i < ndim_; ++i) {
+              if (u_rod[i] > 0.0) {
+                mu = rcontact[i]/u_rod[i];
+                break;
+              }
+            }
+            double r_min[3];
+            double r_min_mag2 = 0.0;
+            for (int i = 0; i < ndim_; ++i) {
+              r_min[i] = -mu * u_rod[i] - dr[i];
+              r_min_mag2 += SQR(r_min[i]);
+            }
+            double mrcut2 = mrcut_*mrcut_;
+            double a = sqrt(1.0 - r_min_mag2); //FIXME is this right for 1.0? or mrcut2?
+            if (isnan(a))
+              a = 0.0;
+
+            double crosspos = 0.0;
+            for (int i = 0; i < 100; ++i) {
+              double uroll = gsl_rng_uniform(mrng->r);
+              crosspos = (uroll - 0.5)*a + mu + 0.5*l_rod;
+
+              if (crosspos >= 0 && crosspos <= l_rod)
+                break;
+              if (i == 99) {
+                crosspos = -mu + 0.5*l_rod;
+                if (crosspos < 0)
+                  crosspos = 0;
+                else if (crosspos > l_rod)
+                  crosspos = l_rod;
+              }
+            }
+            pwalker->Attach(nldx->idx_, crosspos); 
             break;
           } // found the one to attach to
         } // look @ neighbors
@@ -164,15 +220,8 @@ void BrBindUnbind::Unbind() {
           randr[i] = randr[i] + prevpos[i];
         }
         pwalker->SetPosition(randr);
+        pwalker->SetPrevPosition(prevpos);
         pwalker->SetBound(false);
-        // Set a random velocity
-        double newvel[3];
-        double newvelpos[3];
-        for (int i = 0; i < ndim_; ++i) {
-          newvel[i] = 4*(gsl_rng_uniform_pos(mrng->r) -0.5);
-          newvelpos[i] = randr[i] - newvel[i]*pwalker->GetDelta();
-        }
-        pwalker->SetPrevPosition(newvelpos); 
         if (debug_trace) {
           auto attachid = pwalker->GetAttach();
           auto part2 = (*simples_)[attachid.first];
@@ -185,10 +234,8 @@ void BrBindUnbind::Unbind() {
         foundidx = true;
         break;
       } // found the one to detach
-    } // loop over all simples
+    } // loop over all simples to detach
 
-    if (foundidx)
-      break;
   } // how many to remove?
 }
 
@@ -210,17 +257,25 @@ void BrBindUnbind::UpdateKMC() {
       nbound++;
       pwalker->SetNExp(0.0);
       auto aidx = pwalker->GetAttach().first;
+      auto cross_pos = pwalker->GetAttach().second; // relative to the -end of the rod!!
+      auto r_x = pwalker->GetRigidPosition();
+      
       auto part2 = (*simples_)[aidx];
-      auto apos = part2->GetRigidPosition();
-      auto vpos = part2->GetVelocity();
-      auto mpos = pwalker->GetRigidPosition();
+      auto r_rod = part2->GetRigidPosition();
+      auto u_rod = part2->GetRigidOrientation();
+      auto l_rod = part2->GetRigidLength();
+
+      double rxnew[3];
+      for (int i = 0; i < ndim_; ++i) {
+        rxnew[i] = r_rod[i] - 0.5 * u_rod[i] * l_rod + cross_pos * u_rod[i];
+      }
+
       if (debug_trace)
         printf("[%d,%d] attached [%d,%d], (%2.4f, %2.4f) -> setting -> (%2.4f, %2.4f)\n",
-               idx, pwalker->GetOID(), aidx, part2->GetOID(), mpos[0], mpos[1],
-               apos[0], apos[1]);
-      pwalker->SetPrevPosition(mpos);
-      pwalker->SetPosition(apos);
-      pwalker->SetVelocity(vpos);
+               idx, pwalker->GetOID(), aidx, part2->GetOID(), r_x[0], r_x[1],
+               rxnew[0], rxnew[1]);
+      pwalker->SetPrevPosition(r_x);
+      pwalker->SetPosition(rxnew);
     } else {
       nfree++;
     }
