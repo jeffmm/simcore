@@ -15,12 +15,18 @@ class KMCBase {
     ParticleTracking *tracking_;
     SID sid1_;
     SID sid2_;
+    SpeciesBase *spec1_;
+    SpeciesBase *spec2_;
 
   public:
     KMCBase() {}
     virtual ~KMCBase() {}
 
-    virtual void Init(space_struct *pSpace, ParticleTracking *pTracking, int ikmc, YAML::Node &node, long seed) {
+    virtual void Init(space_struct *pSpace,
+                      ParticleTracking *pTracking,
+                      SpeciesBase *spec1,
+                      SpeciesBase *spec2,
+                      int ikmc, YAML::Node &node, long seed) {
       space_ = pSpace;
       ndim_ = space_->n_dim;
       rng_.init(seed);
@@ -29,10 +35,19 @@ class KMCBase {
       std::string sid2s   = node["kmc"][ikmc]["sid2"].as<std::string>();
       sid1_ = StringToSID(sid1s);
       sid2_ = StringToSID(sid2s);
+      spec1_ = spec1;
+      spec2_ = spec2;
     }
-    virtual void RunKMC(SpeciesBase *spec1, SpeciesBase *spec2) {}
+    virtual void PrepKMC() {}
+    virtual void StepKMC() {}
+    virtual void UpdateKMC() {}
+
     virtual void Print() {
       printf("\tsids: [%d, %d]\n", sid1_, sid2_);
+    }
+    virtual void Dump() {
+      printf("ERROR, need to override this function!\n");
+      exit(1);
     }
 };
 

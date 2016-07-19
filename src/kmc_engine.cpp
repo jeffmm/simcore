@@ -59,8 +59,16 @@ void kmcEngine::ParseKMC() {
     std::string sid2s   = node["kmc"][ikmc]["sid2"].as<std::string>();
     SID sid1 = StringToSID(sid1s);
     SID sid2 = StringToSID(sid2s);
+    // Find the 2 species
+    SpeciesBase *spec1, *spec2;
+    for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+      if ((*spec)->GetSID() == sid1)
+        spec1 = (*spec);
+      if ((*spec)->GetSID() == sid2)
+        spec2 = (*spec);
+    }
     KMCBase *new_kmc = (KMCBase*) kmc_factory_.construct(kmcname);
-    new_kmc->Init(space_, tracking_, ikmc, node, gsl_rng_get(rng_.r));
+    new_kmc->Init(space_, tracking_, spec1, spec2, ikmc, node, gsl_rng_get(rng_.r));
     AddKMC(sid1, sid2, new_kmc);
   }
 }
@@ -90,18 +98,11 @@ void kmcEngine::RunKMC() {
 
 // Prepare and update probabilities of the kmc engine
 void kmcEngine::PrepKMC() {
-  // Have to go through the neighbor list and ask what things are doing...
-  auto neighbors = tracking_->GetNeighbors();
-  for (int idx = 0; idx < nsimples_; ++idx) {
-    auto part = (*simples_)[idx];
-    if (!part->IsKMC()) continue;
-    part->PrepKMC(&neighbors[idx]);
-  }
-  // Ask the species to prepare
-  for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-    if ((*spec)->IsKMC()) {
-      (*spec)->PrepKMC();
-    }
+  // Move through the map and ask it to do the kmc prep
+  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
+    if (debug_trace)
+      printf("PrepKMC [%d,%d]\n", kmc->first.first, kmc->first.second);
+    kmc->second->PrepKMC();
   }
 }
 
@@ -111,25 +112,19 @@ void kmcEngine::StepKMC() {
   // Loop over species pairs - we know that some self interact, but
   // some interact between species, and it is keyed on who is #1
   // and who is #2
-  for (auto spec1 = species_->begin(); spec1 != species_->end(); ++spec1) {
-    for (auto spec2 = species_->begin(); spec2 != species_->end(); ++spec2) {
-      SID sid1 = (*spec1)->GetSID();
-      SID sid2 = (*spec2)->GetSID();
-
-      KMCBase *kmc = kmc_map_[std::make_pair(sid1, sid2)];
-      if (kmc == nullptr) continue;
-      kmc->RunKMC(*spec1, *spec2);
-    }
+  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
+    if (debug_trace)
+      printf("StepKMC [%d,%d]\n", kmc->first.first, kmc->first.second);
+    kmc->second->StepKMC();
   }
 }
 
 // Ask each species to do their own update on the kmc step
 void kmcEngine::UpdateKMC() {
-  // Ask each species to do their own update
-  for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-    if ((*spec)->IsKMC()) {
-      (*spec)->StepKMC();
-    }
+  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
+    if (debug_trace)
+      printf("UpdateKMC [%d,%d]\n", kmc->first.first, kmc->first.second);
+    kmc->second->UpdateKMC();
   }
 }
 
@@ -146,10 +141,8 @@ void kmcEngine::Dump() {
   #ifdef DEBUG
   printf("--------\n");
   printf("kmcEngine -> dump\n");
-  for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-    if ((*spec)->IsKMC()) {
-      (*spec)->DumpKMC();
-    }
+  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
+    kmc->second->Dump();
   }
   #endif
 }
