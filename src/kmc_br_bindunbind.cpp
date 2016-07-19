@@ -4,24 +4,59 @@
 
 #include "br_walker.h"
 #include "br_rod.h"
-#include "md_bead.h"
-#include "md_kmc_bead.h"
 
-void BrBindUnbind::Init(space_struct *pSpace, ParticleTracking *pTracking, int ikmc, YAML::Node &node, long seed) {
-  KMCBase::Init(pSpace, pTracking, ikmc, node, seed);
+void BrBindUnbind::Init(space_struct *pSpace,
+                        ParticleTracking *pTracking,
+                        SpeciesBase *spec1,
+                        SpeciesBase *spec2,
+                        int ikmc,
+                        YAML::Node &node,
+                        long seed) {
+  KMCBase::Init(pSpace, pTracking, spec1, spec2, ikmc, node, seed);
 
   // Grab our specific claims
   eps_eff_  = node["kmc"][ikmc]["eps_eff"].as<double>();
   on_rate_  = node["kmc"][ikmc]["on_rate"].as<double>();
+  alpha_    = node["kmc"][ikmc]["alpha"].as<double>();
+  mrcut_    = node["kmc"][ikmc]["rcut"].as<double>();
 }
 
 void BrBindUnbind::Print() {
   printf("BR Walker - BR Rod KMC Module\n");
   KMCBase::Print();
-  printf("\t{eps_eff: %2.8f}, {on_rate: %2.8f}\n", eps_eff_, on_rate_);
+  printf("\t{eps_eff: %2.8f}, {on_rate: %2.8f}, {alpha: %2.4f}, {rcut: %2.2f}\n", eps_eff_, on_rate_,
+      alpha_, mrcut_);
 }
 
-void BrBindUnbind::RunKMC(SpeciesBase *spec1, SpeciesBase *spec2) {
+void BrBindUnbind::PrepKMC() {
+  simples_ = tracking_->GetSimples();
+  nsimples_ = tracking_->GetNSimples();
+
+  // Prepare each particle/species for the upcoming kmc step
+  if (!spec1_->IsKMC()) return;
+  BrWalkerSpecies* pwspec = dynamic_cast<BrWalkerSpecies*>(spec1_);
+  double ntot = 0.0;
+  for (int idx = 0; idx < nsimples_; ++idx) {
+    auto part1 = (*simples_)[idx];
+    if (!part1->IsKMC() || (part1->GetSID() != sid1_)) continue;
+    // We know we have a BrWalker
+    BrWalker *pwalker = dynamic_cast<BrWalker*>(part1);
+    pwalker->SetNExp(0.0);
+    if (pwalker->GetBound()) continue;
+    auto neighbors = tracking_->GetNeighbors();
+    double binding_affinity = eps_eff_ * on_rate_ * alpha_ * pwalker->GetDelta();
+    double nexp = 0.0;
+    for (auto nldx = neighbors[idx].begin(); nldx != neighbors[idx].end(); ++nldx) {
+      nexp += binding_affinity * nldx->kmc_;
+    }
+    pwalker->SetNExp(nexp);
+    ntot += nexp;
+  }
+
+  pwspec->SetNExp(ntot);
+}
+
+void BrBindUnbind::StepKMC() {
   simples_ = tracking_->GetSimples();
   nsimples_ = tracking_->GetNSimples();
 
@@ -35,7 +70,7 @@ void BrBindUnbind::RunKMC(SpeciesBase *spec1, SpeciesBase *spec2) {
   }
 
   if (debug_trace)
-    printf("MDKMC module %d -> %d\n", g[0], g[1]);
+    printf("BR ROD module %d -> %d\n", g[0], g[1]);
 
   for (int i = 0; i < 2; ++i) {
     switch (g[i]) {
@@ -43,12 +78,10 @@ void BrBindUnbind::RunKMC(SpeciesBase *spec1, SpeciesBase *spec2) {
         Bind();
         break;
       case 1:
-        Unbind(spec1);
+        Unbind();
         break;
     }
   }
-
-  FinishKMC(spec1);
 }
 
 void BrBindUnbind::Bind() {
@@ -57,18 +90,18 @@ void BrBindUnbind::Bind() {
     auto part1 = (*simples_)[idx];
     if ((!part1->IsKMC()) || (part1->GetSID() != sid1_)) continue;
     // Dynamic cast to MDKMCBead, we know it has the correct SID
-    MDKMCBead *pkmcbead = dynamic_cast<MDKMCBead*>(part1);
-    double binding_affinity = eps_eff_ * on_rate_ * pkmcbead->GetDelta();
-    auto nexp = pkmcbead->GetNExp();
+    BrWalker *pwalker = dynamic_cast<BrWalker*>(part1);
+    double binding_affinity = eps_eff_ * on_rate_ * alpha_ * pwalker->GetDelta();
+    auto nexp = pwalker->GetNExp();
     if (nexp <  std::numeric_limits<double>::epsilon() &&
         nexp > -std::numeric_limits<double>::epsilon()) nexp = 0.0;
-    if (!pkmcbead->GetBound() && nexp > 0.0) {
-      auto mrng = pkmcbead->GetRNG();
+    if (!pwalker->GetBound() && nexp > 0.0) {
+      auto mrng = pwalker->GetRNG();
       double roll = gsl_rng_uniform(mrng->r);
       if (roll < nexp) {
         if (debug_trace)
-          printf("[%d] Successful KMC move {bind}, {nexp: %2.4f}, {roll: %2.4f}\n", pkmcbead->GetOID(), nexp, roll);
-        pkmcbead->SetBound(true);
+          printf("[%d] Successful KMC move {bind}, {nexp: %2.4f}, {roll: %2.4f}\n", pwalker->GetOID(), nexp, roll);
+        pwalker->SetBound(true);
         // Figure out where to attach
         double pos = 0.0;
         auto neighbors = tracking_->GetNeighbors();
@@ -77,11 +110,10 @@ void BrBindUnbind::Bind() {
           if (part2->GetSID() != sid2_) continue;
           pos += binding_affinity * nldx->kmc_;
           if (pos > roll) {
-            // We know this is an MDBead, cast
-            MDBead *pbead = dynamic_cast<MDBead*>(part2);
+            // This must remain a simple (groan)
             if (debug_trace)
-              printf("[%d,%d] Attaching to [%d,%d] {localpos: %2.4f}\n", idx, pkmcbead->GetOID(), nldx->idx_, pbead->GetOID(), pos);
-            pkmcbead->Attach(nldx->idx_);
+              printf("[%d,%d] Attaching to [%d,%d] {localpos: %2.4f}\n", idx, pwalker->GetOID(), nldx->idx_, part2->GetOID(), pos);
+            pwalker->Attach(nldx->idx_, 0.0); // XXX FIXME
             break;
           } // found the one to attach to
         } // look @ neighbors
@@ -90,16 +122,14 @@ void BrBindUnbind::Bind() {
   } // Loop over all particles, looking for mdkmcbead
 }
 
-void BrBindUnbind::Unbind(SpeciesBase *spec) {
-  double fake_rate = on_rate_ * 10000; // artificially inflate offrate
-
+void BrBindUnbind::Unbind() {
   // This is done on the species level
-  MDKMCBeadSpecies *pkmcbspec = dynamic_cast<MDKMCBeadSpecies*>(spec);
-  int nbound = pkmcbspec->GetNBound();
-  double poff_single = fake_rate * pkmcbspec->GetDelta();
+  BrWalkerSpecies *pwspec = dynamic_cast<BrWalkerSpecies*>(spec1_);
+  int nbound = pwspec->GetNBound();
+  double poff_single = on_rate_ * alpha_ * pwspec->GetDelta();
   int noff = (int)gsl_ran_binomial(rng_.r, poff_single, nbound);
   if (debug_trace)
-    printf("[species] {poffsingle: %2.8f, noff: %d}\n", poff_single, noff);
+    printf("[BrWalkerSpecies] {poffsingle: %2.8f, noff: %d}\n", poff_single, noff);
   // Remove noff
   for (int i = 0; i < noff; ++i) {
     int idxloc = -1;
@@ -109,24 +139,23 @@ void BrBindUnbind::Unbind(SpeciesBase *spec) {
     for (int idx = 0; idx < nsimples_; ++idx) {
       auto part = (*simples_)[idx];
       if ((!part->IsKMC()) || (part->GetSID() != sid1_)) continue;
-      MDKMCBead *pkmcbead = dynamic_cast<MDKMCBead*>(part);
-      if (!pkmcbead->GetBound()) continue;
+      BrWalker *pwalker = dynamic_cast<BrWalker*>(part);
+      if (!pwalker->GetBound()) continue;
       idxloc++;
       if (idxloc == idxoff) {
         if (debug_trace)
-          printf("[%d] Successful KMC move {unbind}, {idxoff=idxloc=%d}\n", pkmcbead->GetOID(), idxloc);
+          printf("[%d] Successful KMC move {unbind}, {idxoff=idxloc=%d}\n", pwalker->GetOID(), idxloc);
         double randr[3];
         double mag2 = 0.0;
-        double mrcut = 0.75;
-        double mrcut2 = mrcut * mrcut;
-        auto mrng = pkmcbead->GetRNG();
+        double mrcut2 = mrcut_ * mrcut_;
+        auto mrng = pwalker->GetRNG();
         double prevpos[3];
-        std::copy(pkmcbead->GetRigidPosition(), pkmcbead->GetRigidPosition()+ndim_, prevpos);
+        std::copy(pwalker->GetRigidPosition(), pwalker->GetRigidPosition()+ndim_, prevpos);
         do {
           mag2 = 0.0;
           for (int i = 0; i < ndim_; ++i) {
             double mrand = gsl_rng_uniform(mrng->r);
-            randr[i] = 2*mrcut*(mrand - 0.5);
+            randr[i] = 2*mrcut_*(mrand - 0.5);
             mag2 += SQR(randr[i]);
           }
         } while (mag2 > mrcut2);
@@ -134,24 +163,25 @@ void BrBindUnbind::Unbind(SpeciesBase *spec) {
         for (int i = 0; i < ndim_; ++i) {
           randr[i] = randr[i] + prevpos[i];
         }
-        pkmcbead->SetPosition(randr);
-        pkmcbead->SetBound(false);
+        pwalker->SetPosition(randr);
+        pwalker->SetBound(false);
         // Set a random velocity
         double newvel[3];
         double newvelpos[3];
         for (int i = 0; i < ndim_; ++i) {
           newvel[i] = 4*(gsl_rng_uniform_pos(mrng->r) -0.5);
-          newvelpos[i] = randr[i] - newvel[i]*pkmcbead->GetDelta();
+          newvelpos[i] = randr[i] - newvel[i]*pwalker->GetDelta();
         }
-        pkmcbead->SetPrevPosition(newvelpos); 
+        pwalker->SetPrevPosition(newvelpos); 
         if (debug_trace) {
-          auto part2 = (*simples_)[pkmcbead->GetAttach()];
-          printf("[%d,%d] Detached from [%d,%d] (%2.8f, %2.8f) -> (%2.8f, %2.8f)\n", idx, pkmcbead->GetOID(),
-              pkmcbead->GetAttach(), part2->GetOID(),
+          auto attachid = pwalker->GetAttach();
+          auto part2 = (*simples_)[attachid.first];
+          printf("[%d,%d] Detached from [%d,%d] (%2.8f, %2.8f) -> (%2.8f, %2.8f)\n", idx, pwalker->GetOID(),
+              attachid.first, part2->GetOID(),
               part2->GetRigidPosition()[0], part2->GetRigidPosition()[1],
-              pkmcbead->GetRigidPosition()[0], pkmcbead->GetRigidPosition()[1]);
+              pwalker->GetRigidPosition()[0], pwalker->GetRigidPosition()[1]);
         }
-        pkmcbead->Attach(-1);
+        pwalker->Attach(-1, 0.0);
         foundidx = true;
         break;
       } // found the one to detach
@@ -162,28 +192,53 @@ void BrBindUnbind::Unbind(SpeciesBase *spec) {
   } // how many to remove?
 }
 
-void BrBindUnbind::FinishKMC(SpeciesBase* spec) {
+void BrBindUnbind::UpdateKMC() {
+  simples_ = tracking_->GetSimples();
+  nsimples_ = tracking_->GetNSimples();
+
+  int nbound = 0;
+  int nfree = 0;
+
   // Finish the kmc stuff, attach, set positions, etc
   for (int idx = 0; idx < nsimples_; ++idx) {
     auto part = (*simples_)[idx];
     if ((!part->IsKMC()) || (part->GetSID() != sid1_)) continue;
     // Dynamic Cast
-    MDKMCBead *pkmcbead = dynamic_cast<MDKMCBead*>(part);
+    BrWalker *pwalker = dynamic_cast<BrWalker*>(part);
     // If we're bound, update the position to the attached
-    if (pkmcbead->GetBound()) {
-      pkmcbead->SetNExp(0.0);
-      auto aidx = pkmcbead->GetAttach();
+    if (pwalker->GetBound()) {
+      nbound++;
+      pwalker->SetNExp(0.0);
+      auto aidx = pwalker->GetAttach().first;
       auto part2 = (*simples_)[aidx];
       auto apos = part2->GetRigidPosition();
       auto vpos = part2->GetVelocity();
-      auto mpos = pkmcbead->GetRigidPosition();
+      auto mpos = pwalker->GetRigidPosition();
       if (debug_trace)
         printf("[%d,%d] attached [%d,%d], (%2.4f, %2.4f) -> setting -> (%2.4f, %2.4f)\n",
-               idx, pkmcbead->GetOID(), aidx, part2->GetOID(), mpos[0], mpos[1],
+               idx, pwalker->GetOID(), aidx, part2->GetOID(), mpos[0], mpos[1],
                apos[0], apos[1]);
-      pkmcbead->SetPrevPosition(mpos);
-      pkmcbead->SetPosition(apos);
-      pkmcbead->SetVelocity(vpos);
+      pwalker->SetPrevPosition(mpos);
+      pwalker->SetPosition(apos);
+      pwalker->SetVelocity(vpos);
+    } else {
+      nfree++;
     }
+  }
+
+  BrWalkerSpecies *pwspec = dynamic_cast<BrWalkerSpecies*>(spec1_);
+  pwspec->SetNBound(nbound);
+  pwspec->SetNFree(nfree);
+}
+
+void BrBindUnbind::Dump() {
+  // print out the information appropriate to kmc
+  if (debug_trace) {
+    BrWalkerSpecies *pwspec = dynamic_cast<BrWalkerSpecies*>(spec1_);
+    printf("BrBindUnbind -> dump\n");
+    printf("\t{n_exp(this delta): %2.4f}\n", pwspec->GetNExp());
+    printf("\t{nfree:  %d}\n", pwspec->GetNFree());
+    printf("\t{nbound: %d}\n", pwspec->GetNBound());
+    pwspec->DumpKMC();
   }
 }

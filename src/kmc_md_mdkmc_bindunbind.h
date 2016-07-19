@@ -15,10 +15,14 @@ class MdMdkmcBindUnbind : public KMCBase {
     void Bind();
     void Unbind(SpeciesBase* spec);
     void FinishKMC(SpeciesBase* spec);
+    void RunKMC(SpeciesBase *spec1, SpeciesBase *spec2);
 
   public:
-    virtual void Init(space_struct *pSpace, ParticleTracking *pTracking, int ikmc, YAML::Node &node, long seed);
-    virtual void RunKMC(SpeciesBase *spec1, SpeciesBase *spec2);
+    virtual void Init(space_struct *pSpace, ParticleTracking *pTracking,
+        SpeciesBase *spec1, SpeciesBase *spec2, int ikmc, YAML::Node &node, long seed);
+    virtual void PrepKMC() {}
+    virtual void StepKMC() {}
+    virtual void UpdateKMC() {}
     virtual void Print();
 };
 
