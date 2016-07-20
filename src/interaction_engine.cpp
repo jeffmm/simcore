@@ -2,9 +2,10 @@
 
 #include "interaction_engine.h"
 
-void InteractionEngine::Init(space_struct *pSpace, ParticleTracking *pTracking, double pSkin) {
+void InteractionEngine::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, ParticleTracking *pTracking, double pSkin) {
   space_ = pSpace;
   tracking_ = pTracking;
+  species_ = pSpecies;
   skin_= pSkin;
   ndim_ = space_->n_dim;
   nperiodic_ = space_->n_periodic;
@@ -34,6 +35,7 @@ void InteractionEngine::InitPotentials(PotentialManager *pPotentials) {
 void InteractionEngine::InitMP() {
   nsimples_ = tracking_->GetNSimples();
   simples_ = tracking_->GetSimples();
+  oid_position_map_ = tracking_->GetOIDPositionMap();
 
   // Clear out things from before (if they exist)
   if (frc_ != nullptr) {
@@ -47,14 +49,6 @@ void InteractionEngine::InitMP() {
   }
   if (kmc_energy_ != nullptr) {
     delete[] kmc_energy_;
-  }
-
-  // Ugh, figure out the OID stuff
-  oid_position_map_.clear();
-  for (int i = 0; i < nsimples_; ++i) {
-    auto part = (*simples_)[i];
-    int oid = part->GetOID();
-    oid_position_map_[oid] = i;
   }
 
   // Create the force and potential energy superarrays
@@ -144,8 +138,8 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
   if (idm.dr_mag2 > pot->GetRCut2()) return;
 
   // Obtain the mapping between particle oid and position in the force superarray
-  auto oid1x = oid_position_map_[part1->GetOID()];
-  auto oid2x = oid_position_map_[part2->GetOID()];
+  auto oid1x = (*oid_position_map_)[part1->GetOID()];
+  auto oid2x = (*oid_position_map_)[part2->GetOID()];
   #ifdef DEBUG
   if (debug_trace)
     printf("\tPOT Interacting[%d:%d] (dr2:%2.8f)\n", oid1x, oid2x, idm.dr_mag2);
@@ -197,8 +191,8 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
 
   #ifdef DEBUG
   // Obtain the mapping between particle oid and position in the force superarray
-  auto oid1x = oid_position_map_[part1->GetOID()];
-  auto oid2x = oid_position_map_[part2->GetOID()];
+  auto oid1x = (*oid_position_map_)[part1->GetOID()];
+  auto oid2x = (*oid_position_map_)[part2->GetOID()];
   if (debug_trace)
     printf("\tKMC Interacting[%d:%d] (dr2:%2.8f)\n", oid1x, oid2x, idm.dr_mag2);
   #endif
@@ -214,7 +208,7 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
 void InteractionEngine::ReduceParticlesMP() {
   for (int i = 0; i < nsimples_; ++i) {
     auto part = (*simples_)[i];
-    int oidx = oid_position_map_[part->GetOID()];
+    int oidx = (*oid_position_map_)[part->GetOID()];
     double subforce[3] = {0.0, 0.0, 0.0};
     double subtorque[3] = {0.0, 0.0, 0.0};
     for (int idim = 0; idim < ndim_; ++idim) {
@@ -234,22 +228,15 @@ void InteractionEngine::Print() {
 }
 
 // Dump all the glorious information
+// from the species level
 void InteractionEngine::Dump() {
   #ifdef DEBUG
   if (debug_trace) {
     printf("--------\n");
     printf("InteractionEngine -> dump\n");
-    for (int i = 0; i < nsimples_; ++i) {
-      auto part = (*simples_)[i];
-      /*auto oid = part->GetOID();
-      auto rid = part->GetRID();
-      auto cid = part->GetCID();
-      printf("\to(%d,%d,%d) = ", oid, rid, cid);
-      printf("x{%2.2f, %2.2f}, ", part->GetPosition()[0], part->GetPosition()[1]);
-      printf("r{%2.2f, %2.2f}, ", part->GetRigidPosition()[0], part->GetRigidPosition()[1]);
-      printf("f{%2.2f, %2.2f}, ", part->GetForce()[0], part->GetForce()[1]);
-      printf("u{%2.2f}, p{%2.2f}\n", part->GetKineticEnergy(), part->GetPotentialEnergy());*/
-      part->Dump();
+    for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+      printf("Species[%d] ->\n", (*spec)->GetSID());
+      (*spec)->Dump();
     }
   }
   #endif

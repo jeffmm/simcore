@@ -46,6 +46,7 @@ enum class SID : unsigned char {
   br_simple_rod,
   md_kmc_bead,
   br_walker,
+  xlink_head,
   xlink
 };
 
@@ -72,6 +73,8 @@ inline SID StringToSID(std::string &s) {
         return SID::md_kmc_bead;
     else if (s == "br_walker")
         return SID::br_walker;
+    else if (s == "xlink_head")
+        return SID::xlink_head;
     else if (s == "xlink")
         return SID::xlink;
     else

@@ -18,10 +18,10 @@ n_md_bead: 0
 md_bead_diameter: 1
 md_bead_mass: 1
 #n_br_walker: 100
-#n_br_walker: 1
-#br_walker_diameter: 2
-n_xlink: 1
-xlink_diameter: 2
+n_br_walker: 1
+br_walker_diameter: 2
+#n_xlink: 1
+#xlink_diameter: 1
 dimer_diameter: 1
 dimer_length: 2
 dimer_eq_length: 2
@@ -39,7 +39,7 @@ n_steps: 100000
 #n_steps: 100
 #n_steps: 10
 #n_steps: 2
-#n_steps: 311
+#n_steps: 15612
 n_update_cells: 20
 time_flag: 1
 energy_analysis_flag: 1
@@ -50,8 +50,8 @@ grab_flag: 0
 grab_file: frames/frame
 draw_interactions: 0
 ftype: 4
-potfile: params/xlink_test.pot.yaml
-kmcfile: params/xlink_test.kmc.yaml
+potfile: params/walker_test.pot.yaml
+kmcfile: params/walker_test.kmc.yaml
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5

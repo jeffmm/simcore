@@ -8,10 +8,10 @@ potentials:
     sigma: 1
 
   - type : SphereLineWell
-    sid1 : xlink_head
+    sid1 : br_walker
     sid2 : br_rod
     overlap : true
     rcut: 1.5
     fcut: 100
     kmc: true
-    kmc_target: xlink_head
+    kmc_target: br_walker
