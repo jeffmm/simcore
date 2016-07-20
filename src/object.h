@@ -118,7 +118,12 @@ class Object {
     unsigned int const GetCID() {return cid_;}
     unsigned int const GetRID() {return rid_;}
     SID const GetSID() {return sid_;}
-    virtual void Dump() {}
+    virtual void Dump() {
+      printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
+      printf("x(%2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1]);
+      printf("f(%2.2f, %2.2f), ", GetForce()[0], GetForce()[1]);
+      printf("u(%2.2f), p(%2.2f)\n", GetKineticEnergy(), GetPotentialEnergy());
+    }
 
     // KMC specific stuff
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors) {}

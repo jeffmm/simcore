@@ -212,6 +212,12 @@ else if (param_name.compare("n_br_walker") == 0){
 else if (param_name.compare("br_walker_diameter") == 0){
   params_[i_var].br_walker_diameter = atof(param_value.c_str());
 }
+else if (param_name.compare("n_xlink") == 0){
+  params_[i_var].n_xlink = atoi(param_value.c_str());
+}
+else if (param_name.compare("xlink_diameter") == 0){
+  params_[i_var].xlink_diameter = atof(param_value.c_str());
+}
 else if (param_name.compare("n_md_bead") == 0){
   params_[i_var].n_md_bead = atoi(param_value.c_str());
 }
@@ -226,6 +232,10 @@ else if (param_name.compare("n_md_kmc_bead") == 0){
 }
 else if (param_name.compare("md_kmc_bead_diameter") == 0){
   params_[i_var].md_kmc_bead_diameter = atof(param_value.c_str());
+}
+else if ( param_name.compare("kmcfile") == 0 ) {
+  params_[i_var].kmcfile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
+  strcpy(params_[i_var].kmcfile, param_value.c_str());
 }
 else if (param_name.compare("md_kmc_bead_mass") == 0){
   params_[i_var].md_kmc_bead_mass = atof(param_value.c_str());
@@ -287,10 +297,6 @@ else if (param_name.compare("masterskin") == 0){
 else if ( param_name.compare("potfile") == 0 ) {
   params_[i_var].potfile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
   strcpy(params_[i_var].potfile, param_value.c_str());
-}
-else if ( param_name.compare("kmcfile") == 0 ) {
-  params_[i_var].kmcfile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
-  strcpy(params_[i_var].kmcfile, param_value.c_str());
 }
 else if (param_name.compare("max_overlap") == 0){
   params_[i_var].max_overlap = atoi(param_value.c_str());
