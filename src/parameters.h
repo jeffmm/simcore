@@ -75,11 +75,14 @@ struct system_parameters {
   double br_bead_diameter = 1;
   int n_br_walker = 0;
   double br_walker_diameter = 1;
+  int n_xlink = 0;
+  double xlink_diameter = 1;
   int n_md_bead = 0;
   double md_bead_diameter = 1;
   double md_bead_mass = 1;
   int n_md_kmc_bead = 0;
   double md_kmc_bead_diameter = 1;
+  char *kmcfile;
   double md_kmc_bead_mass = 1;
   double cell_length = 10;
   int n_update_cells = 10;
@@ -100,7 +103,6 @@ struct system_parameters {
   int ftype = 2;
   double masterskin = 1.0;
   char *potfile;
-  char *kmcfile;
   int max_overlap = 10000;
 
 };

@@ -45,7 +45,8 @@ enum class SID : unsigned char {
   br_rod,
   br_simple_rod,
   md_kmc_bead,
-  br_walker
+  br_walker,
+  xlink
 };
 
 //XXX: CJE I HATE THIS WITH THE FUCKING DYING PASSION
@@ -71,6 +72,8 @@ inline SID StringToSID(std::string &s) {
         return SID::md_kmc_bead;
     else if (s == "br_walker")
         return SID::br_walker;
+    else if (s == "xlink")
+        return SID::xlink;
     else
         std::cout << "Go fuck yourself!\n";
     return SID::none;

@@ -62,3 +62,10 @@ if (params_.n_br_walker > 0) {
   species_.push_back(spcs);
 }
 #endif
+#ifdef _SIMCORE_XLINK_H_
+if (params_.n_xlink > 0) {
+  SpeciesBase * spcs = new XlinkSpecies(params_.n_xlink, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  spcs->Init();
+  species_.push_back(spcs);
+}
+#endif
