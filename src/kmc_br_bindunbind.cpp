@@ -267,6 +267,11 @@ void BrBindUnbind::UpdateKMC() {
 
       // If we are moving with some velocity, do that
       cross_pos += velocity_ * pwalker->GetDelta();
+      if (cross_pos > l_rod) {
+        cross_pos = l_rod;
+      } else if (cross_pos < 0.0) {
+        cross_pos = 0.0;
+      }
       pwalker->Attach(aidx, cross_pos);
 
       double rxnew[3];
