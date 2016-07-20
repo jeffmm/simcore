@@ -83,6 +83,7 @@ class SpeciesBase {
     virtual void PrepKMC() {}
     virtual void StepKMC() {}
     virtual void DumpKMC() {}
+    virtual void Dump() {}
     double const GetDelta() {return delta_;}
     std::vector<potential_pair> GetPotentials() {return potentials_;}
 };
@@ -196,6 +197,11 @@ class Species : public SpeciesBase {
     virtual void ZeroDr() {
       for (auto it=members_.begin(); it!=members_.end(); ++it) {
         (*it)->ZeroDrTot();
+      }
+    }
+    virtual void Dump() {
+      for (auto it = members_.begin(); it != members_.end(); ++it) {
+        (*it)->Dump();
       }
     }
 };

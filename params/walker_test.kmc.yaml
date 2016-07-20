@@ -1,6 +1,6 @@
 kmc:
-  - type: XlinkKMC
-    sid1: xlink
+  - type: BrBindUnbind
+    sid1: br_walker
     sid2: br_rod
     eps_eff: 30910
     on_rate: 0.003916
@@ -8,6 +8,6 @@ kmc:
     #on_rate: 1.0
     alpha: 1.299
     rcut: 1.5
-    velocity: -0.142
-    #velocity: 10.0
+    #velocity: -0.142
+    velocity: 5.0
 

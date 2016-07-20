@@ -62,6 +62,14 @@ void ParticleTracking::LoadSimples() {
     simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
   }
   nsimples_ = (int)simples_.size();
+
+  // Ugh, figure out the OID stuff
+  oid_position_map_.clear();
+  for (int i = 0; i < nsimples_; ++i) {
+    auto part = simples_[i];
+    int oid = part->GetOID();
+    oid_position_map_[oid] = i;
+  }
 }
 
 // Attach to the potential manager

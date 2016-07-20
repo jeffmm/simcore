@@ -128,6 +128,7 @@ class Object {
     // KMC specific stuff
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors) {}
     virtual void StepKMC() {}
+    virtual void DumpKMC() {}
     rng_properties* GetRNG() {return &rng_;}
 };
 
