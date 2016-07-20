@@ -5,15 +5,15 @@ void Xlink::Init() {
   // Give each bead the location of the main position!
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
     i_bead->SetPosition(position_);
+    i_bead->SetPrevPosition(position_);
     i_bead->SetDiameter(diameter_);
     i_bead->SetDiffusion();
     i_bead->SetSpace(space_);
     i_bead->UpdatePeriodic();
+    i_bead->SetBound(false);
   }
 
   UpdateOrientation();
-
-  Dump();
 }
 
 void Xlink::UpdateOrientation() {
@@ -53,14 +53,21 @@ void Xlink::InternalForces() {
   elements_[1].AddForce(force_);*/
 }
 
-void Xlink::UpdatePosition() {
-  ZeroForce();
-  ApplyInteractions();
-  InternalForces();
-  Integrate();
+void Xlink::CheckBoundState() {
+  auto head0 = elements_.begin();
+  auto head1 = elements_.begin()+1;
+  bool bound0 = head0->GetBound();
+  bool bound1 = head1->GetBound();
+  if (bound0 || bound1) {
+    bound_ = singly;
+  }
+  if (bound0 && bound1) {
+    bound_ = doubly;
+  }
 }
 
 void Xlink::UpdatePositionMP() {
+  CheckBoundState();
   InternalForces();
   Integrate();
 }
@@ -74,12 +81,11 @@ void Xlink::ApplyInteractions() {
 
 void Xlink::Integrate() {
   // Different actions due to being free, singly, or doubly bound
-  if (!bound_) {
-    // Diffuses around
-    DiffuseXlink();
-    UpdateOrientation();
-  } else {
-
+  switch(bound_) {
+    case unbound:
+      DiffuseXlink();
+      UpdateOrientation();
+      break;
   }
   /*double pos[3] = {0, 0, 0};
   // the beads know how to update position and periodicity
@@ -95,6 +101,7 @@ void Xlink::DiffuseXlink() {
   auto head1 = elements_.begin()+1;
   head0->UpdatePositionMP();
   head1->SetPosition(head0->GetRigidPosition());
+  SetPosition(head0->GetRigidPosition());
 }
 
 void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
@@ -119,12 +126,4 @@ void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead)
     i_bead->Draw(graph_array);
 }
-
-//void XlinkSpecies::InitPotentials(system_parameters *params) {
-  //AddPotential(SID::br_dimer, SID::br_dimer, new LJ126(params->lj_epsilon, params->br_bead_diameter, space_, 2.5*params->br_bead_diameter));
-  //double dimer_neon_diam = 0.5*(params->br_bead_diameter + params->neon_diameter);
-  //double dimer_argon_diam = 0.5*(params->br_bead_diameter + params->argon_diameter);
-  //AddPotential(SID::neon, SID::br_dimer, new LJ126(params->lj_epsilon, dimer_neon_diam, space_, 2.5*dimer_neon_diam));
-  //AddPotential(SID::argon, SID::br_dimer, new LJ126(params->lj_epsilon, dimer_argon_diam, space_, 2.5*dimer_argon_diam));
-//}
 

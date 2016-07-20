@@ -71,7 +71,7 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   ptrack_.Print();
 
   // Initialize the interaction engine
-  fengine_.Init(space_, &ptrack_, skin_);
+  fengine_.Init(space_, species_, &ptrack_, skin_);
   fengine_.InitPotentials(&potentials_);
   fengine_.InitMP();
   fengine_.Print();

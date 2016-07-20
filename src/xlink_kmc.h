@@ -1,0 +1,40 @@
+#ifndef _SIMCORE_XLINK_KMC_H_
+#define _SIMCORE_XLINK_KMC_H_
+
+#include "auxiliary.h"
+#include "kmc_base.h"
+
+class Xlink;
+
+class XlinkKMC : public KMCBase {
+  protected:
+    double eps_eff_;
+    double on_rate_;
+    double alpha_;
+    double mrcut_;
+    double velocity_;
+
+    int nsimples_;
+    std::vector<Simple*>* simples_;
+    std::unordered_map<int, int>* oid_position_map_;
+    nl_list *neighbors_;
+
+    void KMC_0_1();
+    void KMC_1_0();
+    void Update_0_1(Xlink *xit);
+    void UpdateStage1(Xlink *xit);
+
+  public:
+    virtual void Init(space_struct *pSpace, ParticleTracking *pTracking,
+        SpeciesBase *spec1, SpeciesBase *spec2, int ikmc, YAML::Node &node,
+        long seed);
+    virtual void Print();
+    virtual void Dump();
+
+    virtual void PrepKMC();
+    virtual void StepKMC();
+    virtual void UpdateKMC();
+
+};
+
+#endif

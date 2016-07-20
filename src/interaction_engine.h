@@ -23,10 +23,9 @@ class InteractionEngine {
       delete[] trqc_;
       delete[] prc_energy_;
       delete[] kmc_energy_;
-      oid_position_map_.clear();
     }
 
-    void Init(space_struct *pSpace, ParticleTracking *pTracking, double pSkin);
+    void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, ParticleTracking *pTracking, double pSkin);
     void InitPotentials(PotentialManager *pPotentials);
     void InitMP();
 
@@ -63,12 +62,13 @@ class InteractionEngine {
     double* trqc_ = nullptr; // torque superarray
     double* prc_energy_ = nullptr; // Potential energy superarray
     double* kmc_energy_ = nullptr; // kmc energy superarray
-    std::unordered_map<int, int> oid_position_map_; // oid to position mapping!!!
 
     space_struct *space_;
     ParticleTracking *tracking_;
     PotentialManager *potentials_;
     std::vector<Simple*>* simples_;
+    std::vector<SpeciesBase*>* species_;
+    std::unordered_map<int, int>* oid_position_map_;
 };
 
 // Helper functions for the setup/teardown of the MP
