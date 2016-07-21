@@ -15,6 +15,9 @@ class XlinkKMC : public KMCBase {
     double velocity_;
 
     int nsimples_;
+
+    std::ofstream kmc_file;
+
     std::vector<Simple*>* simples_;
     std::unordered_map<int, int>* oid_position_map_;
     nl_list *neighbors_;
@@ -22,7 +25,7 @@ class XlinkKMC : public KMCBase {
     void KMC_0_1();
     void KMC_1_0();
     void Update_0_1(Xlink *xit);
-    void UpdateStage1(Xlink *xit);
+    void UpdateStage1(Xlink *xit, int *nbound1);
 
   public:
     virtual void Init(space_struct *pSpace, ParticleTracking *pTracking,
@@ -34,6 +37,9 @@ class XlinkKMC : public KMCBase {
     virtual void PrepKMC();
     virtual void StepKMC();
     virtual void UpdateKMC();
+
+    virtual void PrepOutputs();
+    virtual void WriteOutputs();
 
 };
 

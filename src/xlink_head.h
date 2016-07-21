@@ -37,6 +37,11 @@ class XlinkHead : public Simple {
     void SetBound(bool bound) {bound_=bound;}
     void Attach(int idx, double pos);
     std::pair<int, double> GetAttach() {return std::make_pair(attachidx_, attachpos_);}
+
+    virtual void DumpKMC() {
+      printf("\t\thead[%d] -> {n_exp: %2.4f}, {bound: %s}, {pidx: %d, %2.4f}\n", GetOID(), GetNExp(),
+          GetBound() ? "true" : "false", GetAttach().first, GetAttach().second);
+    }
 };
 
 #include "species.h"

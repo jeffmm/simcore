@@ -23,7 +23,6 @@ class Xlink : public Composite<XlinkHead> {
     void Integrate();
     void InternalForces();
     void UpdateOrientation();
-    void CheckBoundState();
     graph_struct g2_; // Drawing two spheros, one for each bead;
 
   public:
@@ -77,6 +76,7 @@ class Xlink : public Composite<XlinkHead> {
     /* Functions unique to Xlink */
     void DiffuseXlink();
     std::vector<XlinkHead>* GetHeads() {return &elements_;}
+    void CheckBoundState();
 
     double const GetKSpring() {return k_spring_;}
     double const GetEqLength() {return eq_length_;}
@@ -90,6 +90,8 @@ class Xlink : public Composite<XlinkHead> {
       auto head0 = elements_.begin();
       auto head1 = elements_.begin()+1;
       printf("\t\t[%d] -> {n_exp: %2.4f (%2.4f, %2.4f)}\n", GetOID(), n_exp_, head0->GetNExp(), head1->GetNExp());
+      head0->DumpKMC();
+      head1->DumpKMC();
     }
 };
 
@@ -97,7 +99,8 @@ class Xlink : public Composite<XlinkHead> {
 class XlinkSpecies : public Species<Xlink> {
   protected:
     double n_exp_ = 0.0;
-    int nbound_ = 0.0;
+    int nbound1_[2] = {0, 0};
+    int nbound2_ = 0.0;
     int nfree_ = 0.0;
 
   public:
@@ -117,8 +120,10 @@ class XlinkSpecies : public Species<Xlink> {
     void SetNExp(double n) {n_exp_=n;}
     int const GetNFree() {return nfree_;}
     void SetNFree(int n) {nfree_=n;}
-    int const GetNBound() {return nbound_;}
-    void SetNBound(int n) {nbound_=n;}
+    const int* const GetNBound1() {return nbound1_;}
+    void SetNBound1(int n0, int n1) {nbound1_[0]=n0; nbound1_[1]=n1;}
+    int const GetNBound2() {return nbound2_;}
+    void SetNBound2(int n) {nbound2_=n;}
 
     virtual void DumpKMC() {
       for (auto it = members_.begin(); it != members_.end(); ++it) {

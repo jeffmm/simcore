@@ -131,19 +131,12 @@ void BrBindUnbind::Bind() {
             double *s_1 = NULL; // FIXME from robert
             double rcontact[3];
             double dr[3];
+            double mu = 0.0;
             min_distance_point_carrier_line(ndim_, nperiodic_,
                                             space_->unit_cell, r_x, s_1,
                                             r_rod, s_rod, u_rod, l_rod,
-                                            dr, rcontact);
+                                            dr, rcontact, &mu);
 
-            // Back calculate mu
-            double mu = 0.0;
-            for (int i = 0; i < ndim_; ++i) {
-              if (u_rod[i] > 0.0) {
-                mu = rcontact[i]/u_rod[i];
-                break;
-              }
-            }
             double r_min[3];
             double r_min_mag2 = 0.0;
             for (int i = 0; i < ndim_; ++i) {

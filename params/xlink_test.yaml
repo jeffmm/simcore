@@ -39,7 +39,7 @@ n_steps: 100000
 #n_steps: 100
 #n_steps: 10
 #n_steps: 2
-#n_steps: 311
+#n_steps: 15758
 n_update_cells: 20
 time_flag: 1
 energy_analysis_flag: 1
