@@ -51,6 +51,8 @@ class UberEngine {
     void DumpAll();
     void InitPotentials();
     void Draw(std::vector<graph_struct*> * graph_array);
+    void PrepOutputs();
+    void WriteOutputs();
 };
 
 #endif // _SIMCORE_UBERENGINE_H_

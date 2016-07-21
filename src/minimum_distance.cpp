@@ -39,7 +39,7 @@ output: vector that points from point to line along minimum distance between
 void min_distance_point_carrier_line(int n_dim, int n_periodic, double **h,
                                      double *r_point, double *s_point,
                                      double *r_line, double *s_line, double *u_line,
-                                     double length, double *dr, double *r_contact) {
+                                     double length, double *dr, double *r_contact, double *mu_ret) {
 
     int i, j;
     double ds[3], mu;
@@ -68,6 +68,7 @@ void min_distance_point_carrier_line(int n_dim, int n_periodic, double **h,
         r_contact[i] = mu * u_line[i];
         dr[i] = r_line[i] + r_contact[i] - r_point[i];
     }
+    *mu_ret = mu;
 }
 
 /* Routine to calculate minimum distance between two spherocylinders, for any number of

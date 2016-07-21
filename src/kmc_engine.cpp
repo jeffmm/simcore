@@ -148,3 +148,15 @@ void kmcEngine::Dump() {
   }
   #endif
 }
+
+void kmcEngine::PrepOutputs() {
+  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
+    kmc->second->PrepOutputs(); 
+  }
+}
+
+void kmcEngine::WriteOutputs() {
+  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
+    kmc->second->WriteOutputs(); 
+  }
+}

@@ -119,4 +119,11 @@ void UberEngine::Draw(std::vector<graph_struct*> * graph_array) {
     graph_array->push_back(&(*it));
 }
 
+void UberEngine::PrepOutputs() {
+  // KMC
+  kengine_.PrepOutputs();
+}
 
+void UberEngine::WriteOutputs() {
+  kengine_.WriteOutputs();
+}

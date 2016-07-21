@@ -9,7 +9,8 @@ void min_distance_point_point(int n_dim, int n_periodic, double **unit_cell,
 void min_distance_point_carrier_line(int n_dim, int n_periodic, double **h,
                                      double *r_point, double *s_point,
                                      double *r_line, double *s_line, double *u_line,
-                                     double length, double *dr, double *r_contact);
+                                     double length, double *dr, double *r_contact,
+                                     double *mu_ret);
 
 //void min_distance_sphero(int n_dim, int n_periodic, double **h,
                          //double *r_1, double *s_1, double *u_1, double length_1,

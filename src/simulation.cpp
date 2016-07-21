@@ -122,6 +122,10 @@ void Simulation::InitOutputs() {
     en_file.close();
   }
 
+  {
+    uengine_.PrepOutputs();
+  }
+
 }
 
 void Simulation::WriteOutputs() {
@@ -158,6 +162,10 @@ void Simulation::WriteOutputs() {
     en_file.close();
   }
 
+  // XXX CJE FIXME write outputs more clearly
+  if (i_step_%1000==0) {
+    uengine_.WriteOutputs();
+  }
 
 }
 
