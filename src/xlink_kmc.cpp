@@ -34,7 +34,6 @@ void XlinkKMC::Print() {
 }
 
 void XlinkKMC::PrepKMC() {
-  printf("XlinkKMC::PrepKMC begin\n");
   simples_ = tracking_->GetSimples();
   nsimples_ = tracking_->GetNSimples();
   oid_position_map_ = tracking_->GetOIDPositionMap();
@@ -63,7 +62,6 @@ void XlinkKMC::PrepKMC() {
 }
 
 void XlinkKMC::Update_0_1(Xlink* xit) {
-  printf("XlinkKMC::Update_0_1 begin\n");
   double nexp_xlink = 0.0;
   auto heads = xit->GetHeads();
   // XXX FIXME
@@ -83,8 +81,6 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
 }
 
 void XlinkKMC::StepKMC() {
-  printf("XlinkKMC::StepKMC begin\n");
-
   simples_ = tracking_->GetSimples();
   nsimples_ = tracking_->GetNSimples();
   oid_position_map_ = tracking_->GetOIDPositionMap();
@@ -115,8 +111,6 @@ void XlinkKMC::StepKMC() {
 }
 
 void XlinkKMC::KMC_0_1() {
-  printf("XlinkKMC::KMC_0_1 begin\n");
-
   // Loop over the xlinks to see who binds
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
@@ -147,7 +141,7 @@ void XlinkKMC::KMC_0_1() {
           pos += binding_affinity * nldx->kmc_;
           if (pos > roll) {
             if (debug_trace)
-              printf("[%d,%d] Attaching to [%d,%d] {loc: %2.4f}\n", idx, head->GetOID(), nldx->idx_, part2->GetOID(), pos);
+              printf("[%d,%d] Attaching to [%d,%d]\n", idx, head->GetOID(), nldx->idx_, part2->GetOID());
 
             // Here, we do more complicated stuff.  Calculate the coordinate along
             // the rod s.t. the line vector is perpendicular to the separation vec
@@ -165,19 +159,12 @@ void XlinkKMC::KMC_0_1() {
             double *s_1 = NULL; // FIXME from robert
             double rcontact[3];
             double dr[3];
+            double mu = 0.0;
             min_distance_point_carrier_line(ndim_, nperiodic_,
                                             space_->unit_cell, r_x, s_1,
                                             r_rod, s_rod, u_rod, l_rod,
-                                            dr, rcontact);
+                                            dr, rcontact, &mu);
 
-            // Back calculate mu
-            double mu = 0.0;
-            for (int i = 0; i < ndim_; ++i) {
-              if (u_rod[i] > 0.0) {
-                mu = rcontact[i]/u_rod[i];
-                break;
-              }
-            }
             double r_min[3];
             double r_min_mag2 = 0.0;
             for (int i = 0; i < ndim_; ++i) {
@@ -185,7 +172,8 @@ void XlinkKMC::KMC_0_1() {
               r_min_mag2 += SQR(r_min[i]);
             }
             double mrcut2 = mrcut_*mrcut_;
-            double a = sqrt(1.0 - r_min_mag2); //FIXME is this right for 1.0? or mrcut2?
+            double a = sqrt(mrcut2 - r_min_mag2);
+            //double a = sqrt(1.0 - r_min_mag2); //FIXME is this right for 1.0? or mrcut2?
             if (isnan(a))
               a = 0.0;
 
@@ -204,8 +192,11 @@ void XlinkKMC::KMC_0_1() {
                   crosspos = l_rod;
               }
             }
-            head->Attach(nldx->idx_, crosspos); 
+            head->Attach(nldx->idx_, crosspos);
+            if (debug_trace)
+              printf("\t{mu: %2.4f}, {crosspos: %2.4f}\n", mu, crosspos);
             head->SetBound(true);
+            (*xit)->CheckBoundState();
             break;
           } // the actual neighbor to fall on
         } // loop over neighbors to figure out which to attach to
@@ -215,36 +206,60 @@ void XlinkKMC::KMC_0_1() {
 }
 
 void XlinkKMC::KMC_1_0() {
-  printf("XlinkKMC::KMC_1_0 begin\n");
-  return;
-  // This is done on the species level
-  BrWalkerSpecies *pwspec = dynamic_cast<BrWalkerSpecies*>(spec1_);
-  int nbound = pwspec->GetNBound();
-  double poff_single = on_rate_ * alpha_ * pwspec->GetDelta();
-  int noff = (int)gsl_ran_binomial(rng_.r, poff_single, nbound);
+  XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
+  auto xlinks = pxspec->GetXlinks();
+  int nbound1[2];
+  std::copy(pxspec->GetNBound1(), pxspec->GetNBound1()+2, nbound1);
+  // XXX FIXME fix the on rates
+  double poff_single_a = 100 * on_rate_ * alpha_ * pxspec->GetDelta();
+  double poff_single_b = 100 * on_rate_ * alpha_ * pxspec->GetDelta();
+
+  int noff[2] = {(int)gsl_ran_binomial(rng_.r, poff_single_a, nbound1[0]),
+                 (int)gsl_ran_binomial(rng_.r, poff_single_b, nbound1[1])};
   if (debug_trace)
-    printf("[BrWalkerSpecies] {poffsingle: %2.8f, noff: %d}\n", poff_single, noff);
-  // Remove noff
-  for (int i = 0; i < noff; ++i) {
+    printf("[Xlink] {poff_single: (%2.8f, %2.8f)}, {noff: (%d, %d)}\n",
+        poff_single_a, poff_single_b, noff[0], noff[1]);
+
+  for (int i = 0; i < (noff[0] + noff[1]); ++i) {
+    int head_type = i < noff[1];
     int idxloc = -1;
+    int idxoff = gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
     bool foundidx = false;
-    int idxoff = gsl_rng_uniform_int(rng_.r, nbound);
+
     // Find the one to remove
-    for (int idx = 0; idx < nsimples_; ++idx) {
-      auto part = (*simples_)[idx];
-      if ((!part->IsKMC()) || (part->GetSID() != sid1_)) continue;
-      BrWalker *pwalker = dynamic_cast<BrWalker*>(part);
-      if (!pwalker->GetBound()) continue;
+    for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
+      if ((*xit)->GetBoundState() != singly) continue;
+      auto heads = (*xit)->GetHeads();
+      // Check to increment only in the case we have the correctly
+      // bound head
+      if (!(*heads)[head_type].GetBound()) continue;
       idxloc++;
       if (idxloc == idxoff) {
+        auto head0 = heads->begin();
+        auto head1 = heads->begin()+1;
+
+        // Figure out which head attached
+        // Do some fancy aliasing to make this easier
+        XlinkHead *attachedhead;
+        XlinkHead *nonattachead;
+        if (head_type == 0) {
+          attachedhead = &(*head0);
+          nonattachead = &(*head1);
+        } else {
+          attachedhead = &(*head1);
+          nonattachead = &(*head0);
+        }
+
         if (debug_trace)
-          printf("[%d] Successful KMC move {unbind}, {idxoff=idxloc=%d}\n", pwalker->GetOID(), idxloc);
+          printf("[x:%d,head:%d] Successful KMC move {1 -> 0}, {idxoff=idxloc=%d}, {head: %d}\n",
+              (*xit)->GetOID(), attachedhead->GetOID(), idxloc, head_type);
+        // Place withint some random distance of the attach point
         double randr[3];
         double mag2 = 0.0;
         double mrcut2 = mrcut_ * mrcut_;
-        auto mrng = pwalker->GetRNG();
+        auto mrng = attachedhead->GetRNG();
         double prevpos[3];
-        std::copy(pwalker->GetRigidPosition(), pwalker->GetRigidPosition()+ndim_, prevpos);
+        std::copy(attachedhead->GetRigidPosition(), attachedhead->GetRigidPosition()+ndim_, prevpos);
         do {
           mag2 = 0.0;
           for (int i = 0; i < ndim_; ++i) {
@@ -252,40 +267,46 @@ void XlinkKMC::KMC_1_0() {
             randr[i] = 2*mrcut_*(mrand - 0.5);
             mag2 += SQR(randr[i]);
           }
-        } while (mag2 > mrcut2);
+        } while(mag2 > mrcut2);
         // Randomly set position based on randr
         for (int i = 0; i < ndim_; ++i) {
           randr[i] = randr[i] + prevpos[i];
         }
-        pwalker->SetPosition(randr);
-        pwalker->SetPrevPosition(prevpos);
-        pwalker->SetBound(false);
+        attachedhead->SetPosition(randr);
+        attachedhead->SetPrevPosition(prevpos);
+        nonattachead->SetPosition(randr);
+        nonattachead->SetPrevPosition(prevpos);
+        attachedhead->SetBound(false);
+        (*xit)->CheckBoundState();
+
         if (debug_trace) {
-          auto attachid = pwalker->GetAttach();
+          auto attachid = attachedhead->GetAttach();
+          auto idx = (*oid_position_map_)[attachedhead->GetOID()];
           auto part2 = (*simples_)[attachid.first];
-          printf("[%d,%d] Detached from [%d,%d] (%2.8f, %2.8f) -> (%2.8f, %2.8f)\n", idx, pwalker->GetOID(),
-              attachid.first, part2->GetOID(),
-              part2->GetRigidPosition()[0], part2->GetRigidPosition()[1],
-              pwalker->GetRigidPosition()[0], pwalker->GetRigidPosition()[1]);
+          printf("[%d,%d] Detached from [%d,%d] (%2.8f, %2.8f) -> (%2.8f, %2.8f)\n",
+             idx, attachedhead->GetOID(), attachid.first, part2->GetOID(),
+             prevpos[0], prevpos[1],
+             attachedhead->GetRigidPosition()[0], attachedhead->GetRigidPosition()[1]);
         }
-        pwalker->Attach(-1, 0.0);
+
+
+        attachedhead->Attach(-1, 0.0);
         foundidx = true;
         break;
-      } // found the one to detach
-    } // loop over all simples to detach
 
-  } // how many to remove?
+      } // found it!
+    } // find the one to remove
+
+  } // How many to remove
 }
 
 void XlinkKMC::UpdateKMC() {
-  printf("XlinkKMC::UpdateKMC begin\n");
-
   simples_ = tracking_->GetSimples();
   nsimples_ = tracking_->GetNSimples();
   oid_position_map_ = tracking_->GetOIDPositionMap();
   neighbors_ = tracking_->GetNeighbors();
 
-  int nbound_1 = 0;
+  int nbound_1[2] = {0, 0};
   int nbound_2 = 0;
   int nfree = 0;
 
@@ -299,18 +320,17 @@ void XlinkKMC::UpdateKMC() {
         nfree++;
         break;
       case singly:
-        UpdateStage1(*xit);
-        nbound_1++;
+        UpdateStage1(*xit, nbound_1);
         break;
     }
   }
 
   pxspec->SetNFree(nfree);
-  pxspec->SetNBound(nbound_1);
+  pxspec->SetNBound1(nbound_1[0], nbound_1[1]);
+  pxspec->SetNBound2(nbound_2);
 }
 
-void XlinkKMC::UpdateStage1(Xlink *xit) {
-  printf("XlinkKMC::UpdateStage1 begin\n");
+void XlinkKMC::UpdateStage1(Xlink *xit, int *nbound1) {
 
   // Set nexp to zero for all involved
   xit->SetNExp(0.0);
@@ -327,14 +347,15 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   if (head0->GetBound()) {
     attachedhead = &(*head0);
     nonattachead = &(*head1);
+    nbound1[0]++;
   } else if (head1->GetBound()) {
     attachedhead = &(*head1);
     nonattachead = &(*head0);
+    nbound1[1]++;
   } else {
     printf("Something has gone horribly wrong\n");
     exit(1);
   }
-  printf("Attached [%d], non [%d]\n", attachedhead->GetOID(), nonattachead->GetOID());
   auto aidx = attachedhead->GetAttach().first;
   auto cross_pos = attachedhead->GetAttach().second; // relative to the -end of the rod!!
   auto r_x = attachedhead->GetRigidPosition();
@@ -375,7 +396,29 @@ void XlinkKMC::Dump() {
     printf("XlinkKMC -> dump\n");
     printf("\t{n_exp(this delta): %2.4f}\n", pxspec->GetNExp());
     printf("\t{nfree:  %d}\n", pxspec->GetNFree());
-    printf("\t{nbound: %d}\n", pxspec->GetNBound());
+    printf("\t{nbound1: %d,%d}\n", pxspec->GetNBound1()[0], pxspec->GetNBound1()[1]);
+    printf("\t{nbound2: %d}\n", pxspec->GetNBound2());
     pxspec->DumpKMC();
   }
+}
+
+void XlinkKMC::PrepOutputs() {
+  std::ostringstream file_name;
+  file_name << "sc-kmc-XlinkKMC.log";
+  kmc_file.open(file_name.str().c_str(), std::ios_base::out);
+  kmc_file << "#ntot #nfree #nbound1[0] #nbound1[1] #nbound2\n";
+  kmc_file.close();
+}
+
+void XlinkKMC::WriteOutputs() {
+  XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
+  std::ostringstream file_name;
+  file_name << "sc-kmc-XlinkKMC.log";
+  kmc_file.open(file_name.str().c_str(), std::ios_base::out | std::ios_base::app);
+  kmc_file.precision(16);
+  kmc_file.setf(std::ios::fixed, std::ios::floatfield);
+  kmc_file << pxspec->GetNMembers() << " " << pxspec->GetNFree() << " " <<
+    pxspec->GetNBound1()[0] << " " << pxspec->GetNBound1()[1] << " " << 
+    pxspec->GetNBound2() << "\n";
+  kmc_file.close();
 }

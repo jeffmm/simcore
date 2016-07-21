@@ -28,6 +28,8 @@ class kmcEngine {
     void UpdateKMC();
     void Print();
     void Dump();
+    void PrepOutputs();
+    void WriteOutputs();
 
     void AddKMC(SID sid1, SID sid2, KMCBase *kmc);
     void RegisterKMC();

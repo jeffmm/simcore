@@ -142,11 +142,11 @@ void ParticleTracking::CheckOverlaps(int pMaxOverlaps) {
         interactionmindist idm;
         MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
         if (idm.dr_mag2 < idm.buffer_mag2) {
-          if (debug_trace) {
+          /*if (debug_trace) {
             printf("Overlap detected [oid: %d,%d], [idx: %d, %d], [sid: %d, %d], [cid: %d, %d] -> (%2.2f, %2.2f)\n",
                     part1->GetOID(), part2->GetOID(), idx, jdx, part1->GetSID(), part2->GetSID(), 
                     part1->GetCID(), part2->GetCID(), idm.buffer_mag2, idm.dr_mag2);
-          }
+          }*/
           overlap = true;
           auto sid = part2->GetSID();
           auto cid = part2->GetCID();

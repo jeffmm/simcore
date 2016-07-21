@@ -54,6 +54,7 @@ void Xlink::InternalForces() {
 }
 
 void Xlink::CheckBoundState() {
+  bound_ = unbound;
   auto head0 = elements_.begin();
   auto head1 = elements_.begin()+1;
   bool bound0 = head0->GetBound();

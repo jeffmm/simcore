@@ -85,6 +85,7 @@ class SpeciesBase {
     virtual void DumpKMC() {}
     virtual void Dump() {}
     double const GetDelta() {return delta_;}
+    int const GetNMembers() {return n_members_;}
     std::vector<potential_pair> GetPotentials() {return potentials_;}
 };
 
