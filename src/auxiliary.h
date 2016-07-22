@@ -119,6 +119,7 @@ struct space_struct {
 
 double cpu();
 void generate_random_unit_vector(int n_dim, double *vect, gsl_rng *r);
+void dummy_function();
 void rotate_orientation_vector(int n_dim, double *vect1, double *vect2);
 double dot_product(int n_dim, double *a, double *b);
 double determinant(int n, double **mat);

@@ -17,7 +17,7 @@ n_dimer: 0
 n_md_bead: 0
 md_bead_diameter: 0.3
 md_bead_mass: 0.1
-n_br_bead: 20
+n_br_bead: 0
 br_bead_diameter: 1
 dimer_diameter: 1
 dimer_length: 2
@@ -45,6 +45,7 @@ ftype: 4
 v_poly: 0.44
 v_depoly: 0.793
 potfile: params/hardrods_pot.yaml
+kmcfile: params/hardrods_pot.yaml
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5

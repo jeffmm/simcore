@@ -118,7 +118,8 @@ class Object {
     unsigned int const GetCID() {return cid_;}
     unsigned int const GetRID() {return rid_;}
     SID const GetSID() {return sid_;}
-    virtual void Dump() {}
+    virtual void Dump() {};
+    virtual int GetCount() {return 0;}
 
     // KMC specific stuff
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors) {}
@@ -161,6 +162,7 @@ class Simple : public Object {
       printf("f(%2.2f, %2.2f), ", GetForce()[0], GetForce()[1]);
       printf("u(%2.2f), p(%2.2f)\n", GetKineticEnergy(), GetPotentialEnergy());
     }
+    virtual int GetCount() {return 1;}
 
 };
 
@@ -272,6 +274,19 @@ class Composite<T> : public Object {
         it->ZeroDrTot();
       }
     }
+    virtual void Dump() {
+      printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
+      printf("x(%2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1]);
+      printf("f(%2.2f, %2.2f), ", GetForce()[0], GetForce()[1]);
+      printf("ke(%2.2f), pe(%2.2f)\n", GetKineticEnergy(), GetPotentialEnergy());
+      for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
+        it->Dump();
+      }
+    }
+    
+    virtual int GetCount() {
+      return elements_.size();
+    }
 };
 
 template <typename T, typename V>
@@ -326,6 +341,18 @@ class Composite<T,V> : public Object {
       for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
         it->ZeroDrTot();
       }
+    }
+    virtual void Dump() {
+      printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
+      printf("x(%2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1]);
+      printf("f(%2.2f, %2.2f), ", GetForce()[0], GetForce()[1]);
+      printf("ke(%2.2f), pe(%2.2f)\n", GetKineticEnergy(), GetPotentialEnergy());
+      for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
+        it->Dump();
+      }
+    }
+    virtual int GetCount() {
+      return v_elements_.size();
     }
 
 };
