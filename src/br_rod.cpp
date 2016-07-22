@@ -51,8 +51,8 @@ void BrRod::UpdatePositionMP() {
   Integrate();
   UpdatePeriodic();
   // Update end site positions for tracking trajectory for neighbors
-  //if (dynamic_instability_flag_)
-    //DynamicInstability();
+  if (dynamic_instability_flag_)
+    DynamicInstability();
   UpdateSiteBondPositions();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
     bond->UpdatePeriodic();
@@ -63,7 +63,7 @@ void BrRod::UpdateSiteBondPositions() {
   elements_[0].SetPrevPosition(elements_[0].GetPosition());
   elements_[1].SetPrevPosition(elements_[1].GetPosition());
   double pos[3];
-  // then update site positions based on new COM and orientation
+   //then update site positions based on new COM and orientation
   for (int i=0; i<n_dim_; ++i)
     pos[i] = position_[i] - 0.5 * length_ * orientation_[i];
   elements_[0].SetPosition(pos);
@@ -125,7 +125,7 @@ void BrRod::Integrate() {
   }
   //Add the random displacement dr(t)
   AddRandomDisplacement();
-  // Update the orientation due to torques and random rotation
+  //Update the orientation due to torques and random rotation
   UpdateOrientation();
 }
 
@@ -290,10 +290,10 @@ void BrRod::DynamicInstability() {
   if (child_length_ > max_child_length_) {
     n_bonds_++;
     child_length_ = length_/n_bonds_;
-    //Bond b(*bond_ptr_);
+    Bond b(v_elements_[0]);
     // Give the new bond a unique OID
-    //b.InitOID();
-    //v_elements_.push_back(b);
+    b.InitOID();
+    v_elements_.push_back(b);
   }
   else if (child_length_ < min_length_ && v_elements_.size() > 1)  {
     n_bonds_--;
