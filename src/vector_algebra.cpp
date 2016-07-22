@@ -171,3 +171,5 @@ double determinant(int n, double **mat) {
   delete[] submat;
   return det;
 }
+
+void dummy_function() {return;}
