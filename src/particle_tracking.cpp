@@ -93,6 +93,21 @@ void ParticleTracking::InitTracking() {
 // and do it if needed
 void ParticleTracking::UpdateTracking(bool pForceUpdate) {
   trigger_update_ = false;
+  int simples_count = 0;
+  for (auto ispec = species_->begin(); ispec != species_->end(); ++ispec)
+    simples_count += (*ispec)->GetCount();
+  if (simples_count != nsimples_) {
+    pForceUpdate = true;
+    nsimples_ = simples_count;
+    LoadSimples();
+    if (neighbors_ != nullptr) {
+      delete[] neighbors_;
+    }
+    neighbors_ = new nl_list[nsimples_];
+    tracking_->Rebuild(&neighbors_);
+    pForceUpdate = true;
+    trigger_update_ = true;
+  }
   for (int ispec = 0; ispec < nsys_; ++ispec) {
     if ((*species_)[ispec]->GetUpdate()) {
       (*species_)[ispec]->SetUpdate(false);

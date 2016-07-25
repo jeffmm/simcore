@@ -17,13 +17,13 @@ class SpeciesBase {
     space_struct *space_;
     rng_properties rng_;
     void SetSID(SID sid) {sid_=sid;}
-    std::vector<potential_pair> potentials_;
+    //std::vector<potential_pair> potentials_;
     //virtual void InitPotentials(system_parameters *params) {}
-    void AddPotential(SID sid1, SID sid2, PotentialBase * potential) {
-      sid_pair sids = std::make_pair(sid1, sid2);
-      potential_pair pot_pair = std::make_pair(sids,potential);
-      potentials_.push_back(pot_pair);
-    }
+    //void AddPotential(SID sid1, SID sid2, PotentialBase * potential) {
+      //sid_pair sids = std::make_pair(sid1, sid2);
+      //potential_pair pot_pair = std::make_pair(sids,potential);
+      ////potentials_.push_back(pot_pair);
+    //}
   public:
     SpeciesBase(int n_members, system_parameters *params, space_struct *space, long seed) {
       sid_ = SID::none;
@@ -37,15 +37,16 @@ class SpeciesBase {
     }
     virtual ~SpeciesBase() {
       rng_.clear();
-      for (auto it=potentials_.begin(); it!=potentials_.end(); ++it)
-        delete it->second;
-      potentials_.clear();
+      //for (auto it=potentials_.begin(); it!=potentials_.end(); ++it)
+        //delete it->second;
+      //potentials_.clear();
     }
     SpeciesBase(const SpeciesBase& that) {
       sid_=that.sid_;
+      n_members_ = that.n_members_;
       params_=that.params_;
       space_=that.space_;
-      potentials_=that.potentials_;
+      //potentials_=that.potentials_;
       is_kmc_ = that.is_kmc_;
       kmc_update_ = that.kmc_update_;
       rng_.init(gsl_rng_get(that.rng_.r));
@@ -53,9 +54,10 @@ class SpeciesBase {
     }
     SpeciesBase& operator=(SpeciesBase const& that) {
       sid_=that.sid_;
+      n_members_ = that.n_members_;
       params_=that.params_;
       space_=that.space_;
-      potentials_=that.potentials_;
+      //potentials_=that.potentials_;
       is_kmc_=that.is_kmc_;
       kmc_update_ = that.kmc_update_;
       rng_.init(gsl_rng_get(that.rng_.r));
@@ -86,7 +88,9 @@ class SpeciesBase {
     virtual void Dump() {}
     double const GetDelta() {return delta_;}
     int const GetNMembers() {return n_members_;}
-    std::vector<potential_pair> GetPotentials() {return potentials_;}
+    //std::vector<potential_pair> GetPotentials() {return potentials_;}
+    virtual int GetCount() {return 0;}
+    //std::vector<potential_pair> GetPotentials() {return potentials_;}
 };
 
 template <typename T>
@@ -110,7 +114,7 @@ class Species : public SpeciesBase {
       members_=that.members_;
       return *this;
     }
-    // Virtual functions
+    //Virtual functions
     virtual void Init() {
       for (int i=0; i<n_members_; ++i) {
         T * member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
@@ -201,9 +205,16 @@ class Species : public SpeciesBase {
       }
     }
     virtual void Dump() {
-      for (auto it = members_.begin(); it != members_.end(); ++it) {
+      for (auto it=members_.begin(); it!=members_.end(); ++it) {
         (*it)->Dump();
       }
+    }
+    virtual int GetCount() {
+      int count = 0;
+      for (auto it =members_.begin(); it!=members_.end(); ++it) {
+        count += (*it)->GetCount();
+      }
+      return count;
     }
 };
 
