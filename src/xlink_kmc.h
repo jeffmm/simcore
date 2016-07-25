@@ -8,10 +8,13 @@ class Xlink;
 
 class XlinkKMC : public KMCBase {
   protected:
-    double eps_eff_;
-    double on_rate_;
+    double eps_eff_0_1_[2];
+    double eps_eff_1_2_[2];
+    double on_rate_0_1_[2];
+    double on_rate_1_2_[2];
     double alpha_;
     double mrcut_;
+    double mrcut2_;
     double velocity_;
 
     int nsimples_;
@@ -25,6 +28,7 @@ class XlinkKMC : public KMCBase {
     void KMC_0_1();
     void KMC_1_0();
     void Update_0_1(Xlink *xit);
+    void Update_1_2(Xlink *xit);
     void UpdateStage1(Xlink *xit, int *nbound1);
 
   public:
