@@ -76,8 +76,8 @@ void BrRod::UpdateSiteBondPositions() {
   // Set site of first bond COM and update remaining COMs
   for (int i=0; i<n_dim_; ++i)
     pos[i] = position_[i] + 0.5*(child_length_-length_)*orientation_[i];
-  int k=0; // XXX JMM temporary solution for debugging, visualization
-  double u[3];
+  //int k=0; // XXX JMM temporary solution for debugging, visualization
+  //double u[3];
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
     bond->SetRigidPosition(position_);
     bond->SetRigidLength(length_);
@@ -85,17 +85,17 @@ void BrRod::UpdateSiteBondPositions() {
     bond->SetRigidScaledPosition(scaled_position_);
     bond->SetRigidOrientation(orientation_);
     bond->SetPosition(pos);
-    if (k%2 == 0)
-      bond->SetOrientation(orientation_);
-    else {
-      for (int i=0; i<n_dim_; ++i)
-        u[i] = -orientation_[i];
-      bond->SetOrientation(u);
-    }
+    //if (k%2 == 0)
+    bond->SetOrientation(orientation_);
+    //else {
+      //for (int i=0; i<n_dim_; ++i)
+        //u[i] = -orientation_[i];
+      //bond->SetOrientation(u);
+    //}
     // Set next bond COM
     for (int i=0; i<n_dim_; ++i)
       pos[i] += orientation_[i] * child_length_;
-    k++;
+    //k++;
   }
 }
 
