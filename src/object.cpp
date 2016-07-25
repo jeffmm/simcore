@@ -60,6 +60,7 @@ Object::Object(const Object& that) {
   rng_.init(gsl_rng_get(that.rng_.r));
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
+  neighbors_ = that.neighbors_;
 }
 
 Object &Object::operator=(Object const& that) {
@@ -89,8 +90,22 @@ Object &Object::operator=(Object const& that) {
   rng_.init(gsl_rng_get(that.rng_.r));
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
+  neighbors_ = that.neighbors_;
   return *this;
 }
+
+//void Object::Dump() {
+  //printf("  oid %d:\n",oid_);
+  //printf("    sid %d\n    cid %d\n    rid %d\n",sid_,cid_,rid_);
+  //printf("    r : {%f, %f, %f}\n", position_[0], position_[1], position_[2]);
+  //printf("    s : {%f, %f, %f}\n", scaled_position_[0], scaled_position_[1], scaled_position_[2]);
+  //printf("    u : {%f, %f, %f}\n", orientation_[0], orientation_[1], orientation_[2]);
+  //printf("    vel : {%f, %f, %f}\n", velocity_[0], velocity_[1], velocity_[2]);
+  //printf("    prev r : {%f, %f, %f}\n", prev_position_[0], prev_position_[1], prev_position_[2]);
+  //printf("    f : {%f, %f, %f}\n", force_[0], force_[1], force_[2]);
+  //printf("    t : {%f, %f, %f}\n", torque_[0], torque_[1], torque_[2]);
+  //printf("    d: %f\n    l: %f\n    ke: %f\n    pe: %f\n",diameter_,length_,k_energy_,p_energy_);
+//}
 
 void Object::InsertRandom(double buffer) {
   double mag;

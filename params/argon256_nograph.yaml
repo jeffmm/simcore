@@ -21,7 +21,7 @@ n_update_cells: 10
 time_flag: 1
 energy_analysis_flag: 1
 lj_epsilon: 0.2379
-ftype: 1
+ftype: 4
 masterskin: 1.0
 potfile: params/argon_pot.yaml
 kmcfile: params/argon_kmc.yaml

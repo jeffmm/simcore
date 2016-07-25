@@ -2,6 +2,7 @@
 #define _SIMCORE_SIMULATION_MANAGER_H_
 
 #include "simulation.h"
+//#include <yaml.h>
 #include <yaml-cpp/yaml.h>
 #include "auxiliary.h"
 

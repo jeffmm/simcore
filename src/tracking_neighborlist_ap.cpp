@@ -62,6 +62,7 @@ void TrackingNeighborListAP::AllPairsUpdate() {
         if (idx == jdx) continue;
         auto p1 = (*simples_)[idx];
         auto p2 = (*simples_)[jdx];
+        if (p1->GetOID() == 0) dummy_function();
         int rid1 = p1->GetRID();
         int rid2 = p2->GetRID();
         // Only insert object if rigid ID is unique
