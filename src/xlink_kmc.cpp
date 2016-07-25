@@ -19,8 +19,50 @@ void XlinkKMC::Init(space_struct *pSpace,
   KMCBase::Init(pSpace, pTracking, spec1, spec2, ikmc, node, seed);
 
   // Grab our specific claims
-  eps_eff_  = node["kmc"][ikmc]["eps_eff"].as<double>();
-  on_rate_  = node["kmc"][ikmc]["on_rate"].as<double>();
+  // eps effective
+  switch (node["kmc"][ikmc]["concentration_0_1"].Type()) {
+    case YAML::NodeType::Scalar:
+      eps_eff_0_1_[0] = eps_eff_0_1_[1] =
+        0.5 * node["kmc"][ikmc]["concentration_0_1"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      eps_eff_0_1_[0] = node["kmc"][ikmc]["concentration_0_1"][0].as<double>();
+      eps_eff_0_1_[1] = node["kmc"][ikmc]["concentration_0_1"][1].as<double>();
+      break;
+  }
+  switch (node["kmc"][ikmc]["concentration_1_2"].Type()) {
+    case YAML::NodeType::Scalar:
+      eps_eff_1_2_[0] = eps_eff_1_2_[1] =
+        0.5 * node["kmc"][ikmc]["concentration_1_2"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      eps_eff_1_2_[0] = node["kmc"][ikmc]["concentration_1_2"][0].as<double>();
+      eps_eff_1_2_[1] = node["kmc"][ikmc]["concentration_1_2"][1].as<double>();
+      break;
+  }
+
+  // on rates
+  switch (node["kmc"][ikmc]["on_rate_0_1"].Type()) {
+    case YAML::NodeType::Scalar:
+      on_rate_0_1_[0] = on_rate_0_1_[1] =
+        node["kmc"][ikmc]["on_rate_0_1"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      on_rate_0_1_[0] = node["kmc"][ikmc]["on_rate_0_1"][0].as<double>();
+      on_rate_0_1_[1] = node["kmc"][ikmc]["on_rate_0_1"][1].as<double>();
+      break;
+  }
+  switch (node["kmc"][ikmc]["on_rate_1_2"].Type()) {
+    case YAML::NodeType::Scalar:
+      on_rate_1_2_[0] = on_rate_1_2_[1] =
+        node["kmc"][ikmc]["on_rate_1_2"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      on_rate_1_2_[0] = node["kmc"][ikmc]["on_rate_1_2"][0].as<double>();
+      on_rate_1_2_[1] = node["kmc"][ikmc]["on_rate_1_2"][1].as<double>();
+      break;
+  }
+
   alpha_    = node["kmc"][ikmc]["alpha"].as<double>();
   mrcut_    = node["kmc"][ikmc]["rcut"].as<double>();
   velocity_ = node["kmc"][ikmc]["velocity"].as<double>();
@@ -29,8 +71,11 @@ void XlinkKMC::Init(space_struct *pSpace,
 void XlinkKMC::Print() {
   printf("Xlink - BR Rod KMC Module\n");
   KMCBase::Print();
-  printf("\t{eps_eff: %2.8f}, {on_rate: %2.8f}, {alpha: %2.4f}, {rcut: %2.2f}\n", eps_eff_, on_rate_,
-      alpha_, mrcut_);
+  printf("\t {eps_eff 0 -> 1}: [%2.2f, %2.2f]\n", eps_eff_0_1_[0], eps_eff_0_1_[1]);
+  printf("\t {eps_eff 1 -> 2}: [%2.2f, %2.2f]\n", eps_eff_1_2_[0], eps_eff_1_2_[1]);
+  printf("\t {on_rate 0 -> 1}: [%2.8f, %2.8f]\n", on_rate_0_1_[0], on_rate_0_1_[1]);
+  printf("\t {on_rate 1 -> 2}: [%2.8f, %2.8f]\n", on_rate_1_2_[0], on_rate_1_2_[1]);
+  printf("\t {alpha: %2.4f}, {mrcut: %2.2f}\n", alpha_, mrcut_);
 }
 
 void XlinkKMC::PrepKMC() {
@@ -53,22 +98,23 @@ void XlinkKMC::PrepKMC() {
         Update_0_1(*xit);
         ntot_unbound += (*xit)->GetNExp();
         break;
+      case singly:
+        Update_1_2(*xit);
+        break;
     }
   }
 
   pxspec->SetNExp(ntot_unbound);
-
-  return;
 }
 
 void XlinkKMC::Update_0_1(Xlink* xit) {
   double nexp_xlink = 0.0;
   auto heads = xit->GetHeads();
-  // XXX FIXME
-  double binding_affinity = eps_eff_ * on_rate_ * alpha_ * xit->GetDelta();
-  for (auto head = heads->begin(); head != heads->end(); ++head) {
-    // Look @ neighbors
+
+  for (int i = 0; i < heads->size(); ++i) {
+    auto head = &(*heads)[i];
     double nexp = 0.0;
+    double binding_affinity = eps_eff_0_1_[i] * on_rate_0_1_[i] * alpha_ * xit->GetDelta();
     auto idx = (*oid_position_map_)[head->GetOID()];
     for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
       nexp += binding_affinity * nldx->kmc_; 
@@ -78,6 +124,43 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
   }
 
   xit->SetNExp(nexp_xlink);
+}
+
+void XlinkKMC::Update_1_2(Xlink *xit) {
+  //printf("XlinkKMC::Update_1_2 begin\n");
+  auto heads = xit->GetHeads();
+  auto head0 = heads->begin();
+  auto head1 = heads->begin()+1;
+  int free_i;
+  XlinkHead *attachedhead;
+  XlinkHead *freehead;
+  if (head0->GetBound()) {
+    free_i = 1;
+    attachedhead = &(*head0);
+    freehead = &(*head1);
+  } else {
+    free_i = 0;
+    attachedhead = &(*head1);
+    freehead = &(*head0);
+  }
+  double binding_affinity = eps_eff_1_2_[free_i] * on_rate_1_2_[free_i];
+  auto free_idx = (*oid_position_map_)[freehead->GetOID()];
+  if (binding_affinity > 0.0) {
+    //xit->Dump();
+    //xit->DumpKMC();
+    //printf("free head {idx:%d,head:%d}[%d]\n", free_idx, free_i, freehead->GetOID());
+
+    // We have to look at all of our neighbors withint the mrcut
+    for (auto nldx = neighbors_[free_idx].begin(); nldx != neighbors_[free_idx].end(); ++nldx) {
+      auto mrod = (*simples_)[nldx->idx_];
+      //printf("Adding contribution from neighbor [%d,%d] (kmc:%2.4f)\n", nldx->idx_, mrod->GetOID(), nldx->kmc_);
+      // Calculate center to center displacement
+    }
+
+
+    //printf("HERE!\n");
+    //exit(1);
+  }
 }
 
 void XlinkKMC::StepKMC() {
@@ -125,11 +208,11 @@ void XlinkKMC::KMC_0_1() {
       auto mrng = (*xit)->GetRNG();
       double roll = gsl_rng_uniform(mrng->r);
       if (roll < nexp) {
-        int head_type = gsl_rng_uniform(mrng->r) < 0.5;
+        int head_type = gsl_rng_uniform(mrng->r) < ((eps_eff_0_1_[1])/(eps_eff_0_1_[0]+eps_eff_0_1_[1]));
         auto heads = (*xit)->GetHeads();
         auto head = heads->begin() + head_type;
-        // XXX FIXME
-        double binding_affinity = 2.0 * eps_eff_ * on_rate_ * alpha_ * head->GetDelta();
+        double binding_affinity = (eps_eff_0_1_[0] * on_rate_0_1_[0] + eps_eff_0_1_[1] * on_rate_0_1_[1]) *
+          alpha_ * head->GetDelta();
         if (debug_trace)
           printf("[%d] Successful KMC move {0 -> 1}, {nexp: %2.4f}, {roll: %2.4f}, {head: %d}\n", (*xit)->GetOID(),
               nexp, roll, head_type);
@@ -171,8 +254,8 @@ void XlinkKMC::KMC_0_1() {
               r_min[i] = -mu * u_rod[i] - dr[i];
               r_min_mag2 += SQR(r_min[i]);
             }
-            double mrcut2 = mrcut_*mrcut_;
-            double a = sqrt(mrcut2 - r_min_mag2);
+            mrcut2_ = mrcut_*mrcut_;
+            double a = sqrt(mrcut2_ - r_min_mag2);
             //double a = sqrt(1.0 - r_min_mag2); //FIXME is this right for 1.0? or mrcut2?
             if (isnan(a))
               a = 0.0;
@@ -210,9 +293,8 @@ void XlinkKMC::KMC_1_0() {
   auto xlinks = pxspec->GetXlinks();
   int nbound1[2];
   std::copy(pxspec->GetNBound1(), pxspec->GetNBound1()+2, nbound1);
-  // XXX FIXME fix the on rates
-  double poff_single_a = 100 * on_rate_ * alpha_ * pxspec->GetDelta();
-  double poff_single_b = 100 * on_rate_ * alpha_ * pxspec->GetDelta();
+  double poff_single_a = on_rate_0_1_[0] * alpha_ * pxspec->GetDelta();
+  double poff_single_b = on_rate_0_1_[1] * alpha_ * pxspec->GetDelta();
 
   int noff[2] = {(int)gsl_ran_binomial(rng_.r, poff_single_a, nbound1[0]),
                  (int)gsl_ran_binomial(rng_.r, poff_single_b, nbound1[1])};
@@ -256,7 +338,7 @@ void XlinkKMC::KMC_1_0() {
         // Place withint some random distance of the attach point
         double randr[3];
         double mag2 = 0.0;
-        double mrcut2 = mrcut_ * mrcut_;
+        mrcut2_ = mrcut_ * mrcut_;
         auto mrng = attachedhead->GetRNG();
         double prevpos[3];
         std::copy(attachedhead->GetRigidPosition(), attachedhead->GetRigidPosition()+ndim_, prevpos);
@@ -267,7 +349,7 @@ void XlinkKMC::KMC_1_0() {
             randr[i] = 2*mrcut_*(mrand - 0.5);
             mag2 += SQR(randr[i]);
           }
-        } while(mag2 > mrcut2);
+        } while(mag2 > mrcut2_);
         // Randomly set position based on randr
         for (int i = 0; i < ndim_; ++i) {
           randr[i] = randr[i] + prevpos[i];
