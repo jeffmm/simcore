@@ -89,6 +89,14 @@ void ParticleTracking::InitTracking() {
   tracking_->UpdateTracking(true);
 }
 
+// If we update rcut, all hell breaks loose
+void ParticleTracking::UpdateRcut(double pRcut) {
+  double new_rcut = std::max(rcut_, pRcut);
+  rcut_ = new_rcut;
+  tracking_->UpdateRcut(rcut_);
+  tracking_->UpdateTracking(true);
+}
+
 // Check if we need an update
 // and do it if needed
 void ParticleTracking::UpdateTracking(bool pForceUpdate) {
@@ -182,7 +190,7 @@ void ParticleTracking::CheckOverlaps(int pMaxOverlaps) {
 void ParticleTracking::Print() {
   printf("********\n");
   printf("%s ->\n", tracking_->Name().c_str());
-  printf("\t{rcut: %2.2f}, {skin: %2.2f}\n", rcut_, skin_);
+  printf("\t{rcut: %2.4f}, {skin: %2.2f}\n", rcut_, skin_);
   int ntotlist = 0, maxlist = 0, minlist = INT_MAX;
   for (int i = 0; i < nsimples_ -1; ++i) {
     ntotlist += neighbors_[i].size();

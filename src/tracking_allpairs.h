@@ -15,6 +15,7 @@ class TrackingAllPairs : public TrackingBase {
     virtual void UpdateTracking(bool pForceUpdate = false);
     virtual void print();
     virtual void dump();
+    virtual void UpdateRcut(double pRcut);
 
   protected:
     bool first_ = true;

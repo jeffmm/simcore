@@ -9,4 +9,7 @@ kmc:
     alpha: 1.299
     rcut: 1.5
     velocity: -0.142
+    spring_constant: 45.29
+    barrier_weight: 0.258222586044
+    equilibrium_length: 3.12
 

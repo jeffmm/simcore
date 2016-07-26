@@ -35,6 +35,8 @@ class kmcEngine {
     void RegisterKMC();
     void ParseKMC();
 
+    double GetMaxRcut();
+
   private:
     int ndim_;
     int nperiodic_;

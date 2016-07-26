@@ -8,6 +8,10 @@ void TrackingAllPairs::CreateSubstructure(double pRcut, nl_list** pNeighbors) {
   neighbors_ = (*pNeighbors);
 }
 
+void TrackingAllPairs::UpdateRcut(double pRcut) {
+  rcut_ = pRcut;
+}
+
 void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
   if (first_ || pForceUpdate) {
     for (int i = 0; i < nsimples_; ++i) {

@@ -68,17 +68,22 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   ptrack_.InitPotentials(&potentials_);
   ptrack_.InitTracking();
   ptrack_.CheckOverlaps(max_overlap_);
-  ptrack_.Print();
 
   // Initialize the interaction engine
   fengine_.Init(space_, species_, &ptrack_, skin_);
   fengine_.InitPotentials(&potentials_);
   fengine_.InitMP();
-  fengine_.Print();
 
   // Initialize the kmc engine
   kengine_.Init(space_, species_, &ptrack_, gsl_rng_get(rng_.r), params_->kmcfile);
   kengine_.InitMP();
+
+  // Check for an rcut update from the KMC engine
+  ptrack_.UpdateRcut(kengine_.GetMaxRcut());
+
+  // Print info
+  ptrack_.Print();
+  fengine_.Print();
   kengine_.Print();
 
   // Run one step to make sure that we're all good
