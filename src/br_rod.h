@@ -141,17 +141,20 @@ class BrRod : public Composite<Site,Bond> {
     virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePositionMP();
+    virtual void Dump();
 };
 
 class BrRodSpecies : public Species<BrRod> {
   protected:
     //void InitPotentials(system_parameters *params);
+    double max_length_;
   public:
     BrRodSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
       SetSID(SID::br_rod);
       //InitPotentials(params);
+      max_length_ = params_->max_rod_length;
     }
     ~BrRodSpecies() {}
     BrRodSpecies(const BrRodSpecies& that) : Species(that) {}
@@ -162,6 +165,7 @@ class BrRodSpecies : public Species<BrRod> {
     void Init() {
       Species::Init();
     }
+    double const GetMaxLength() {return max_length_;}
 
 };
 

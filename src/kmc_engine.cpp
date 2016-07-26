@@ -81,6 +81,14 @@ void kmcEngine::AddKMC(SID sid1, SID sid2, KMCBase *kmc) {
   kmc_map_[key1] = kmc;
 }
 
+double kmcEngine::GetMaxRcut() {
+  double max_rcut = 0.0;
+  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
+    max_rcut = std::max(max_rcut, kmc->second->GetMaxRcut());
+  }
+  return max_rcut;
+}
+
 // Run the overall kmc routine one step
 void kmcEngine::RunKMC() {
   // Check to see if an update was triggered

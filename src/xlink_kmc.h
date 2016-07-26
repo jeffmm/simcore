@@ -13,9 +13,14 @@ class XlinkKMC : public KMCBase {
     double on_rate_0_1_[2];
     double on_rate_1_2_[2];
     double alpha_;
+    double barrier_weight_;
+    double k_stretch_;
     double mrcut_;
     double mrcut2_;
     double velocity_;
+    double max_length_;
+    double rcutoff_1_2_;
+    double r_equil_;
 
     int nsimples_;
 
@@ -31,12 +36,17 @@ class XlinkKMC : public KMCBase {
     void Update_1_2(Xlink *xit);
     void UpdateStage1(Xlink *xit, int *nbound1);
 
+    void CalcCutoff();
+
   public:
     virtual void Init(space_struct *pSpace, ParticleTracking *pTracking,
         SpeciesBase *spec1, SpeciesBase *spec2, int ikmc, YAML::Node &node,
         long seed);
     virtual void Print();
     virtual void Dump();
+    virtual double GetMaxRcut() {
+      return rcutoff_1_2_;
+    }
 
     virtual void PrepKMC();
     virtual void StepKMC();

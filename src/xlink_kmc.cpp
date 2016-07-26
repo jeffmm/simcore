@@ -66,6 +66,22 @@ void XlinkKMC::Init(space_struct *pSpace,
   alpha_    = node["kmc"][ikmc]["alpha"].as<double>();
   mrcut_    = node["kmc"][ikmc]["rcut"].as<double>();
   velocity_ = node["kmc"][ikmc]["velocity"].as<double>();
+  barrier_weight_ = node["kmc"][ikmc]["barrier_weight"].as<double>();
+  k_stretch_ = node["kmc"][ikmc]["spring_constant"].as<double>();
+  r_equil_ = node["kmc"][ikmc]["equilibrium_length"].as<double>();
+
+  CalcCutoff();
+}
+
+void XlinkKMC::CalcCutoff() {
+  BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec2_);
+  max_length_ = prspec->GetMaxLength();
+  rcutoff_1_2_ = 0.0;
+  const double temp = 1.0;
+  const double smalleps = 1E-3;
+  double eps_eff = eps_eff_1_2_[0] + eps_eff_1_2_[1];
+  double rc_0 = sqrt(2.0 / ( (1-barrier_weight_) * k_stretch_) * temp * log(eps_eff * max_length_ / smalleps * sqrt(2.0 * temp / k_stretch_)));
+  rcutoff_1_2_ = r_equil_ + rc_0;
 }
 
 void XlinkKMC::Print() {
@@ -75,6 +91,9 @@ void XlinkKMC::Print() {
   printf("\t {eps_eff 1 -> 2}: [%2.2f, %2.2f]\n", eps_eff_1_2_[0], eps_eff_1_2_[1]);
   printf("\t {on_rate 0 -> 1}: [%2.8f, %2.8f]\n", on_rate_0_1_[0], on_rate_0_1_[1]);
   printf("\t {on_rate 1 -> 2}: [%2.8f, %2.8f]\n", on_rate_1_2_[0], on_rate_1_2_[1]);
+  printf("\t {barrier_weight: %2.10f}\n", barrier_weight_);
+  printf("\t {equilibrium_length: %2.4f}, {k_spring: %2.4f}\n", r_equil_, k_stretch_);
+  printf("\t {rcutoff_1_2: %2.8f}\n", rcutoff_1_2_);
   printf("\t {alpha: %2.4f}, {mrcut: %2.2f}\n", alpha_, mrcut_);
 }
 
@@ -127,39 +146,89 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
 }
 
 void XlinkKMC::Update_1_2(Xlink *xit) {
-  //printf("XlinkKMC::Update_1_2 begin\n");
+  printf("XlinkKMC::Update_1_2 begin\n");
   auto heads = xit->GetHeads();
   auto head0 = heads->begin();
   auto head1 = heads->begin()+1;
-  int free_i;
+  int free_i, attc_i;
   XlinkHead *attachedhead;
   XlinkHead *freehead;
   if (head0->GetBound()) {
+    attc_i = 0;
     free_i = 1;
     attachedhead = &(*head0);
     freehead = &(*head1);
   } else {
+    attc_i = 1;
     free_i = 0;
     attachedhead = &(*head1);
     freehead = &(*head0);
   }
   double binding_affinity = eps_eff_1_2_[free_i] * on_rate_1_2_[free_i];
   auto free_idx = (*oid_position_map_)[freehead->GetOID()];
+  auto attc_idx = (*oid_position_map_)[attachedhead->GetOID()];
+  // Get the attached rod
+  auto attach_info = attachedhead->GetAttach();
+  auto mrod_attached = (*simples_)[attach_info.first];
   if (binding_affinity > 0.0) {
-    //xit->Dump();
-    //xit->DumpKMC();
-    //printf("free head {idx:%d,head:%d}[%d]\n", free_idx, free_i, freehead->GetOID());
+    xit->Dump();
+    xit->DumpKMC();
+    mrod_attached->Dump();
+    printf("attc head {idx:%d,head:%d}[%d] -> [rid:%d]\n", attc_idx, attc_i, attachedhead->GetOID(),
+        mrod_attached->GetRID());
+    printf("free head {idx:%d,head:%d}[%d]\n", free_idx, free_i, freehead->GetOID());
 
     // We have to look at all of our neighbors withint the mrcut
     for (auto nldx = neighbors_[free_idx].begin(); nldx != neighbors_[free_idx].end(); ++nldx) {
       auto mrod = (*simples_)[nldx->idx_];
-      //printf("Adding contribution from neighbor [%d,%d] (kmc:%2.4f)\n", nldx->idx_, mrod->GetOID(), nldx->kmc_);
+      printf("Checking against [rid:%d]\n", mrod->GetRID());
+      // Check to see if it's really a rod, and if it's the same one we're already attached to
+      if (mrod->GetSID() != sid2_) continue;
+      if (mrod->GetRID() == mrod_attached->GetRID()) {
+        printf("\tExcluding self attachment\n");
+        continue;
+      }
+      printf("Adding contribution from neighbor [%d,rid:%d]\n", nldx->idx_, mrod->GetRID());
       // Calculate center to center displacement
+      // XXX FIXME CJE possibly don't do this, and store the minimum distance calculation from
+      // earlier point point calculation
+
+      double r_x[3];
+      double r_rod[3];
+      double s_rod[3];
+      double u_rod[3];
+      std::copy(freehead->GetRigidPosition(), freehead->GetRigidPosition()+ndim_, r_x);
+      std::copy(mrod->GetRigidPosition(), mrod->GetRigidPosition()+ndim_, r_rod);
+      std::copy(mrod->GetRigidScaledPosition(), mrod->GetRigidScaledPosition()+ndim_, s_rod);
+      std::copy(mrod->GetRigidOrientation(), mrod->GetRigidOrientation()+ndim_, u_rod);
+      double l_rod = mrod->GetRigidLength();
+      double *s_1 = NULL; // FIXME from robert
+      double rcontact[3];
+      double dr[3];
+      double mu0 = 0.0;
+      min_distance_point_carrier_line(ndim_, nperiodic_,
+                                      space_->unit_cell, r_x, s_1,
+                                      r_rod, s_rod, u_rod, l_rod,
+                                      dr, rcontact, &mu0);
+      printf("{dr: (%2.4f, %2.4f)}, {rcontact: (%2.4f, %2.4f)}, {mu: %2.4f}\n",
+          dr[0], dr[1], rcontact[0], rcontact[1], mu0);
+
+      // Now do the integration over the limits on the MT
+      // Check the cutoff distance
+      double lim0 = -mu0 - 0.5 * l_rod;
+      double lim1 = -mu0 + 0.5 * l_rod;
+      double r_min_mag2 = 0.0;
+      for (int i = 0; i < ndim_; ++i) {
+        r_min_mag2 += SQR(dr[i]);
+      }
+      double r_min_mag = sqrt(r_min_mag2);
+      double x[2] = {fabs(lim0), r_min_mag};
+
     }
 
 
-    //printf("HERE!\n");
-    //exit(1);
+    printf("HERE!\n");
+    exit(1);
   }
 }
 
@@ -469,6 +538,8 @@ void XlinkKMC::UpdateStage1(Xlink *xit, int *nbound1) {
   attachedhead->SetPosition(rxnew);
   nonattachead->SetPrevPosition(r_x);
   nonattachead->SetPosition(rxnew);
+  xit->SetPrevPosition(r_x);
+  xit->SetPosition(rxnew);
 }
 
 void XlinkKMC::Dump() {
