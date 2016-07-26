@@ -5,12 +5,12 @@ n_runs: 1
 n_dim: 2
 n_periodic: 0
 #system_radius: 25
-system_radius: 6
+system_radius: 7
 daughter_radius: 5
 mother_daughter_dist: 12
 boundary_type: 1
 #n_rod: 60
-n_rod: 1
+n_rod: 2
 rod_diameter: 1
 rod_length: 10
 n_dimer: 0
@@ -33,7 +33,8 @@ graph_background: 1
 #delta: 0.00001
 delta: 0.00025
 #n_steps: 1000000
-n_steps: 100000
+#n_steps: 100000
+n_steps: 500
 #n_steps: 10000
 #n_steps: 1000
 #n_steps: 100

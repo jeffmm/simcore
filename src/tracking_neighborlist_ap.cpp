@@ -18,6 +18,12 @@ void TrackingNeighborListAP::CreateSubstructure(double pRcut, nl_list** pNeighbo
   half_skin2_ = 0.25*skin2_;
 }
 
+void TrackingNeighborListAP::UpdateRcut(double pRcut) {
+  rcut_ = pRcut;
+  rcut2_ = rcut_*rcut_;
+  rcs2_ = skin2_ + rcut2_ + 2*rcut_*skin_;
+}
+
 void TrackingNeighborListAP::UpdateTracking(bool pForceUpdate) {
   nl_update_ = pForceUpdate;
   // Check for an update

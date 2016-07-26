@@ -311,6 +311,24 @@ void BrRod::Draw(std::vector<graph_struct*> * graph_array) {
     bond->Draw(graph_array);
 }
 
+void BrRod::Dump() {
+  printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
+  printf("x(%2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1]);
+  printf("u(%2.2f, %2.2f), ", orientation_[0], orientation_[1]);
+  printf("f(%2.2f, %2.2f), ", GetForce()[0], GetForce()[1]);
+  printf("l (%2.2f), ke(%2.2f), pe(%2.2f)\n", length_, GetKineticEnergy(), GetPotentialEnergy());
+  printf("\tsites ->\n");
+  for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
+    printf("\t");
+    it->Dump();
+  }
+  printf("\tbonds ->\n");
+  for (auto it=v_elements_.begin(); it!=v_elements_.end();++it) {
+    printf("\t");
+    it->Dump();
+  }
+}
+
 //void BrRodSpecies::InitPotentials (system_parameters *params) {
   //AddPotential(SID::br_simple_rod, SID::br_simple_rod, 
       //// Set br_rod-br_rod interaction

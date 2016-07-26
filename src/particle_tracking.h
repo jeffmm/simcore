@@ -29,6 +29,7 @@ class ParticleTracking {
     void InitTracking();
     void CheckOverlaps(int pMaxOverlaps);
 
+    void UpdateRcut(double pRcut);
     void UpdateTracking(bool pForceUpdate = false);
 
     // Getters and setters

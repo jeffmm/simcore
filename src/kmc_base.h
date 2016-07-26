@@ -40,6 +40,7 @@ class KMCBase {
       spec1_ = spec1;
       spec2_ = spec2;
     }
+    virtual double GetMaxRcut() {return 0.0;}
     virtual void PrepKMC() {}
     virtual void StepKMC() {}
     virtual void UpdateKMC() {}

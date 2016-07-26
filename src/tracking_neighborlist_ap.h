@@ -15,6 +15,7 @@ class TrackingNeighborListAP : public TrackingBase {
     virtual void UpdateTracking(bool pForceUpdate = false);
     virtual void print();
     virtual void dump();
+    virtual void UpdateRcut(double pRcut);
 
     void UpdateNeighborList();
     void AllPairsUpdate();
