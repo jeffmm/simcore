@@ -189,14 +189,14 @@ class Species : public SpeciesBase {
     }
     virtual double GetDrMax() {
       double dr_mag2_max = 0.0;
+      double dr_mag2 = 0.0;
       for (auto it=members_.begin(); it!=members_.end(); ++it) {
-        double dr_mag2 = 0.0;
-        double const * const dr = (*it)->GetDrTot();
-        for (int i=0; i<space_->n_dim; ++i)
-          dr_mag2 += dr[i]*dr[i];
+        dr_mag2 = (*it)->GetDrMax();
         if (dr_mag2 > dr_mag2_max)
           dr_mag2_max = dr_mag2;
       }
+      //printf("dr2_max: %2.6f\n",dr_mag2_max);
+      //if (dr_mag2_max > 6000) error_exit("!\n");
       return dr_mag2_max;
     }
     virtual void ZeroDr() {
