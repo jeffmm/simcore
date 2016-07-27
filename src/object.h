@@ -94,9 +94,12 @@ class Object {
     void AddKMCEnergy(double const k) {kmc_energy_ += k;}
     void AddForceTorqueEnergyKMC(double const * const F, double const * const T, double const p, double const k);
     double const * const GetPosition() {return position_;}
+    double const * const GetPrevPosition() {return prev_position_;}
     double const * const GetScaledPosition() {return scaled_position_;}
     double const * const GetVelocity() {return velocity_;}
     virtual double const * const GetDrTot() { return dr_tot_; }
+    virtual double GetDrMax() {return 0;}
+    virtual double GetDr() {return 0;}
     double const * const GetOrientation() {return orientation_;}
     double const * const GetForce() {return force_;}
     double const * const GetTorque() {return torque_;}
@@ -152,6 +155,12 @@ class Simple : public Object {
     virtual void AddDr() {
       for (int i=0; i<n_dim_; ++i)
         dr_tot_[i] += position_[i] - prev_position_[i];
+    }
+    virtual double GetDr() {
+      double dr =0;
+      for (int i=0; i<n_dim_; ++i)
+        dr += dr_tot_[i]*dr_tot_[i];
+      return dr;
     }
     virtual double const GetRigidLength() {return length_;}
     virtual double const GetRigidDiameter() {return diameter_;}
@@ -260,20 +269,16 @@ class Composite<T> : public Object {
         sim_vec.push_back(&(*it));
       return sim_vec;
     }
-    virtual double const * const GetDrTot() { 
-      double dr_max=0;
+    virtual double GetDrMax() {
+      double dr_max = 0;
       for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
-        double dr_mag = 0;
-        double const * const dr = it->GetDrTot();
-        for (int i=0; i<n_dim_; ++i)
-          dr_mag += dr[i]*dr[i];
-        if (dr_mag > dr_max) {
+        double dr_mag = it->GetDr();
+        if (dr_mag > dr_max) 
           dr_max = dr_mag;
-          std::copy(dr, dr+3, dr_tot_);
-        }
       }
-      return dr_tot_;
+      return dr_max;
     }
+
     virtual void ZeroDrTot() {
       std::fill(dr_tot_,dr_tot_+3,0.0);
       for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
@@ -328,20 +333,6 @@ class Composite<T,V> : public Object {
         sim_vec.push_back(&(*it));
       return sim_vec;
     }
-    virtual double const * const GetDrTot() { 
-      double dr_max=0;
-      for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
-        double dr_mag = 0;
-        double const * const dr = it->GetDrTot();
-        for (int i=0; i<n_dim_; ++i)
-          dr_mag += dr[i]*dr[i];
-        if (dr_mag > dr_max) {
-          dr_max = dr_mag;
-          std::copy(dr, dr+3, dr_tot_);
-        }
-      }
-      return dr_tot_;
-    }
     virtual void ZeroDrTot() {
       std::fill(dr_tot_,dr_tot_+3,0.0);
       for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
@@ -359,6 +350,15 @@ class Composite<T,V> : public Object {
     }
     virtual int GetCount() {
       return v_elements_.size();
+    }
+    virtual double GetDrMax() {
+      double dr_max = 0;
+      for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
+        double dr_mag = it->GetDr();
+        if (dr_mag > dr_max) 
+          dr_max = dr_mag;
+      }
+      return dr_max;
     }
 
 };

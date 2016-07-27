@@ -64,6 +64,7 @@ class ParticleTracking {
     // It's just how we build it that's different
     nl_list* neighbors_;
     TrackingBase* tracking_;
+    void ForceRebuild();
 };
 
 #endif
