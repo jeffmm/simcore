@@ -9,7 +9,8 @@ class XlinkHead : public Simple {
     double diffusion_;
 
     // kmc stuff
-    double n_exp_;
+    double n_exp_0_1_;
+    double n_exp_1_2_;
     bool bound_;
     int attachidx_ = -1;
     double attachpos_ = 0.0;
@@ -31,23 +32,26 @@ class XlinkHead : public Simple {
     // kmc specifics
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors);
     virtual void StepKMC();
-    double const GetNExp() {return n_exp_;}
-    void SetNExp(double const n) {n_exp_=n;}
+    double const GetNExp_0_1() {return n_exp_0_1_;}
+    double const GetNExp_1_2() {return n_exp_1_2_;}
+    void SetNExp_0_1(double const n) {n_exp_0_1_=n;}
+    void SetNExp_1_2(double const n) {n_exp_1_2_=n;}
     bool const GetBound() {return bound_;}
     void SetBound(bool bound) {bound_=bound;}
     void Attach(int idx, double pos);
     std::pair<int, double> GetAttach() {return std::make_pair(attachidx_, attachpos_);}
 
     virtual void DumpKMC() {
-      printf("\t\thead[%d] -> {n_exp: %2.4f}, {bound: %s}, {pidx: %d, %2.4f}\n", GetOID(), GetNExp(),
-          GetBound() ? "true" : "false", GetAttach().first, GetAttach().second);
+      printf("\t\thead[%d] -> {n_exp: (%2.4f, %2.4f)}, {bound: %s}, {pidx: %d, %2.4f}\n", GetOID(), GetNExp_0_1(),
+          GetNExp_1_2(), GetBound() ? "true" : "false", GetAttach().first, GetAttach().second);
     }
 };
 
 #include "species.h"
 class XlinkHeadSpecies : public Species<XlinkHead> {
   protected:
-    double n_exp_ = 0.0;
+    double n_exp_0_1_ = 0.0;
+    double n_exp_1_2_ = 0.0;
     int nbound_ = 0.0;
     int nfree_ = 0.0;
 
@@ -64,14 +68,17 @@ class XlinkHeadSpecies : public Species<XlinkHead> {
     }
     virtual void DumpKMC() {
       for (auto it = members_.begin(); it != members_.end(); ++it) {
-        printf("\t\t[%d] -> {n_exp: %2.4f}, {bound: %s}, {parent index: %d, %2.4f}\n", (*it)->GetOID(), (*it)->GetNExp(), (*it)->GetBound() ? "true " : "false",
+        printf("\t\t[%d] -> {n_exp: (%2.4f, %2.4f)}, {bound: %s}, {parent index: %d, %2.4f}\n", (*it)->GetOID(), (*it)->GetNExp_0_1(),
+            (*it)->GetNExp_1_2(), (*it)->GetBound() ? "true " : "false",
             (*it)->GetAttach().first, (*it)->GetAttach().second);
       }
     }
 
 
-    double const GetNExp() {return n_exp_;}
-    void SetNExp(double n) {n_exp_=n;}
+    double const GetNExp_0_1() {return n_exp_0_1_;}
+    double const GetNExp_1_2() {return n_exp_1_2_;}
+    void SetNExp_0_1(double n) {n_exp_0_1_=n;}
+    void SetNExp_1_2(double n) {n_exp_1_2_=n;}
     int const GetNFree() {return nfree_;}
     void SetNFree(int n) {nfree_=n;}
     int const GetNBound() {return nbound_;}

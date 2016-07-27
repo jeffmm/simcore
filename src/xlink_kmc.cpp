@@ -4,10 +4,8 @@
 
 #include "xlink.h"
 #include "xlink_head.h"
+#include "xlink_helpers.h"
 #include "br_rod.h"
-
-// elgacy
-#include "br_walker.h"
 
 void XlinkKMC::Init(space_struct *pSpace,
                         ParticleTracking *pTracking,
@@ -64,24 +62,67 @@ void XlinkKMC::Init(space_struct *pSpace,
   }
 
   alpha_    = node["kmc"][ikmc]["alpha"].as<double>();
-  mrcut_    = node["kmc"][ikmc]["rcut"].as<double>();
+  rcutoff_0_1_    = node["kmc"][ikmc]["rcut"].as<double>();
   velocity_ = node["kmc"][ikmc]["velocity"].as<double>();
   barrier_weight_ = node["kmc"][ikmc]["barrier_weight"].as<double>();
   k_stretch_ = node["kmc"][ikmc]["spring_constant"].as<double>();
   r_equil_ = node["kmc"][ikmc]["equilibrium_length"].as<double>();
 
   CalcCutoff();
+
+  BuildTables();
 }
 
 void XlinkKMC::CalcCutoff() {
   BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec2_);
-  max_length_ = prspec->GetMaxLength();
+  // XXX FIXME set back to the correct value
+  max_length_ = 110;
+  //max_length_ = prspec->GetMaxLength();
   rcutoff_1_2_ = 0.0;
   const double temp = 1.0;
   const double smalleps = 1E-3;
   double eps_eff = eps_eff_1_2_[0] + eps_eff_1_2_[1];
   double rc_0 = sqrt(2.0 / ( (1-barrier_weight_) * k_stretch_) * temp * log(eps_eff * max_length_ / smalleps * sqrt(2.0 * temp / k_stretch_)));
   rcutoff_1_2_ = r_equil_ + rc_0;
+}
+
+double XlinkKMC::XKMCErfinv(double x) {
+  // See: A handy approximation for the error function and its inverse
+  // (Winitzki 2008) (google it).  This isn't a great approximation, but
+  // it will do the trick.  It's not programmed for efficiency since it should
+  // only be called during program startup once. If you need better prevision
+  // or performance, boost apparently has a version (but then we need boot)
+  const double a = 0.147;
+  double t1 = -2/M_PI/a;
+  double t2 = -log(1-x*x)/2;
+  double t3 = 2/M_PI/a + log(1-x*x)/2;
+  double t4 = -log(1-x*x)/a;
+
+  printf("t1: %2.4f, t2: %2.4f, t3: %2.4f, t4: %2.4f\n", t1, t2, t3, t4);
+
+  return sqrt(t1 + t2 + sqrt(t3*t3 + t4));
+}
+
+void XlinkKMC::BuildTables() {
+  std::vector<double> x[2];
+  double bin_size = 0.05;
+  double alpha = k_stretch_ * (1 - barrier_weight_) / 2;
+  double const smalleps = 1E-5;
+  double a_cutoff = 1/sqrt(alpha) * XKMCErfinv(1 - 4.0*sqrt(alpha/M_PI)*smalleps) +
+    r_equil_;
+  double y_cutoff = rcutoff_1_2_;
+  printf("acut: %2.8f, ycut: %2.8f\n", a_cutoff, y_cutoff);
+
+  xlh::xlink_params params;
+  params.alpha = alpha;
+  params.r0 = r_equil_;
+
+  for (double a = 0.0; a <= a_cutoff; a += bin_size)
+    x[0].push_back(a);
+  for (double y0 = 0.0; y0 <= y_cutoff; y0 += bin_size)
+    x[1].push_back(y0);
+
+  n_exp_lookup_.Init(2, x, &xlh::prob_1_2, &params);
 }
 
 void XlinkKMC::Print() {
@@ -93,8 +134,9 @@ void XlinkKMC::Print() {
   printf("\t {on_rate 1 -> 2}: [%2.8f, %2.8f]\n", on_rate_1_2_[0], on_rate_1_2_[1]);
   printf("\t {barrier_weight: %2.10f}\n", barrier_weight_);
   printf("\t {equilibrium_length: %2.4f}, {k_spring: %2.4f}\n", r_equil_, k_stretch_);
+  printf("\t {rcutoff_0_1: %2.8f}\n", rcutoff_0_1_);
   printf("\t {rcutoff_1_2: %2.8f}\n", rcutoff_1_2_);
-  printf("\t {alpha: %2.4f}, {mrcut: %2.2f}\n", alpha_, mrcut_);
+  printf("\t {alpha: %2.4f}\n", alpha_);
 }
 
 void XlinkKMC::PrepKMC() {
@@ -106,7 +148,8 @@ void XlinkKMC::PrepKMC() {
   // Prepare each composite particle for the upcoming kmc step
   if (!spec1_->IsKMC()) return;
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
-  double ntot_unbound = 0.0;
+  double ntot_0_1 = 0.0;
+  double ntot_1_2 = 0.0;
   auto xlinks = pxspec->GetXlinks(); 
 
   for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
@@ -115,15 +158,17 @@ void XlinkKMC::PrepKMC() {
     switch((*xit)->GetBoundState()) {
       case unbound:
         Update_0_1(*xit);
-        ntot_unbound += (*xit)->GetNExp();
+        ntot_0_1 += (*xit)->GetNExp_0_1();
         break;
       case singly:
         Update_1_2(*xit);
+        ntot_1_2 += (*xit)->GetNExp_1_2();
         break;
     }
   }
 
-  pxspec->SetNExp(ntot_unbound);
+  pxspec->SetNExp_0_1(ntot_0_1);
+  pxspec->SetNExp_1_2(ntot_1_2);
 }
 
 void XlinkKMC::Update_0_1(Xlink* xit) {
@@ -138,11 +183,11 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
     for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
       nexp += binding_affinity * nldx->kmc_; 
     }
-    head->SetNExp(nexp);
+    head->SetNExp_0_1(nexp);
     nexp_xlink += nexp;
   }
 
-  xit->SetNExp(nexp_xlink);
+  xit->SetNExp_0_1(nexp_xlink);
 }
 
 void XlinkKMC::Update_1_2(Xlink *xit) {
@@ -171,6 +216,7 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
   auto attach_info = attachedhead->GetAttach();
   auto mrod_attached = (*simples_)[attach_info.first];
   if (binding_affinity > 0.0) {
+    double n_exp = 0.0;
     xit->Dump();
     xit->DumpKMC();
     mrod_attached->Dump();
@@ -193,6 +239,8 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
       // XXX FIXME CJE possibly don't do this, and store the minimum distance calculation from
       // earlier point point calculation
 
+      // XXX FIXME Polar Affinity
+      double polar_affinity = 1.0;
       double r_x[3];
       double r_rod[3];
       double s_rod[3];
@@ -223,12 +271,16 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
       }
       double r_min_mag = sqrt(r_min_mag2);
       double x[2] = {fabs(lim0), r_min_mag};
+      double term0 = n_exp_lookup_.Lookup(x) * ((lim0 < 0) ? -1.0 : 1.0);
+      x[0] = fabs(lim1);
+      double term1 = n_exp_lookup_.Lookup(x) * ((lim1 < 0) ? -1.0 : 1.0);
+      printf("{nexp cont: %2.8f}\n", (term1 - term0) * polar_affinity);
+      n_exp += (term1 - term0) * polar_affinity;
+    } // loop over local neighbors of xlink
 
-    }
-
-
-    printf("HERE!\n");
-    exit(1);
+    freehead->SetNExp_1_2(n_exp);
+    xit->SetNExp_1_2(n_exp);
+    xit->DumpKMC();
   }
 }
 
@@ -269,7 +321,7 @@ void XlinkKMC::KMC_0_1() {
   for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
     // Only take free ones
     if ((*xit)->GetBoundState() != unbound) continue;
-    auto nexp = (*xit)->GetNExp();
+    auto nexp = (*xit)->GetNExp_0_1();
     if (nexp <  std::numeric_limits<double>::epsilon() &&
         nexp > -std::numeric_limits<double>::epsilon()) nexp = 0.0;
     // IF we have some probability to fall onto a neighbor, check it
@@ -323,7 +375,7 @@ void XlinkKMC::KMC_0_1() {
               r_min[i] = -mu * u_rod[i] - dr[i];
               r_min_mag2 += SQR(r_min[i]);
             }
-            mrcut2_ = mrcut_*mrcut_;
+            mrcut2_ = rcutoff_0_1_*rcutoff_0_1_;
             double a = sqrt(mrcut2_ - r_min_mag2);
             //double a = sqrt(1.0 - r_min_mag2); //FIXME is this right for 1.0? or mrcut2?
             if (isnan(a))
@@ -407,7 +459,7 @@ void XlinkKMC::KMC_1_0() {
         // Place withint some random distance of the attach point
         double randr[3];
         double mag2 = 0.0;
-        mrcut2_ = mrcut_ * mrcut_;
+        mrcut2_ = rcutoff_0_1_*rcutoff_0_1_;
         auto mrng = attachedhead->GetRNG();
         double prevpos[3];
         std::copy(attachedhead->GetRigidPosition(), attachedhead->GetRigidPosition()+ndim_, prevpos);
@@ -415,7 +467,7 @@ void XlinkKMC::KMC_1_0() {
           mag2 = 0.0;
           for (int i = 0; i < ndim_; ++i) {
             double mrand = gsl_rng_uniform(mrng->r);
-            randr[i] = 2*mrcut_*(mrand - 0.5);
+            randr[i] = 2*rcutoff_0_1_*(mrand - 0.5);
             mag2 += SQR(randr[i]);
           }
         } while(mag2 > mrcut2_);
@@ -484,12 +536,12 @@ void XlinkKMC::UpdateKMC() {
 void XlinkKMC::UpdateStage1(Xlink *xit, int *nbound1) {
 
   // Set nexp to zero for all involved
-  xit->SetNExp(0.0);
+  xit->SetNExp_0_1(0.0);
   auto heads = xit->GetHeads();
   auto head0 = heads->begin();
   auto head1 = heads->begin()+1;
-  head0->SetNExp(0.0);
-  head1->SetNExp(0.0);
+  head0->SetNExp_0_1(0.0);
+  head1->SetNExp_0_1(0.0);
   
   // Figure out which head attached
   // Do some fancy aliasing to make this easier
@@ -547,7 +599,7 @@ void XlinkKMC::Dump() {
   if (debug_trace) {
     XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
     printf("XlinkKMC -> dump\n");
-    printf("\t{n_exp(this delta): %2.4f}\n", pxspec->GetNExp());
+    printf("\t{n_exp_0_1: %2.4f, n_exp_1_2: %2.4f}\n", pxspec->GetNExp_0_1(), pxspec->GetNExp_1_2());
     printf("\t{nfree:  %d}\n", pxspec->GetNFree());
     printf("\t{nbound1: %d,%d}\n", pxspec->GetNBound1()[0], pxspec->GetNBound1()[1]);
     printf("\t{nbound2: %d}\n", pxspec->GetNBound2());

@@ -3,6 +3,7 @@
 
 #include "auxiliary.h"
 #include "kmc_base.h"
+#include "lookup_table.h"
 
 class Xlink;
 
@@ -19,6 +20,7 @@ class XlinkKMC : public KMCBase {
     double mrcut2_;
     double velocity_;
     double max_length_;
+    double rcutoff_0_1_;
     double rcutoff_1_2_;
     double r_equil_;
 
@@ -29,12 +31,17 @@ class XlinkKMC : public KMCBase {
     std::vector<Simple*>* simples_;
     std::unordered_map<int, int>* oid_position_map_;
     nl_list *neighbors_;
+    LookupTable n_exp_lookup_;
 
     void KMC_0_1();
     void KMC_1_0();
     void Update_0_1(Xlink *xit);
     void Update_1_2(Xlink *xit);
     void UpdateStage1(Xlink *xit, int *nbound1);
+
+    // Specifics to 2 stage crosslinks (building tables, numbers, etc)
+    double XKMCErfinv(double x);
+    void BuildTables();
 
     void CalcCutoff();
 
