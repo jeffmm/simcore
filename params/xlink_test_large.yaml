@@ -51,6 +51,7 @@ ftype: 4
 masterskin: 1.0
 potfile: params/xlink_test.pot.yaml
 kmcfile: params/xlink_test.kmc.yaml
+dynamic_instability_flag: 0
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5
