@@ -5,6 +5,12 @@
 #include "object.h"
 #include "auxiliary.h"
 
+typedef enum {
+  SHRINK = 0,
+  GROW = 1,
+  PAUSE
+} poly_state_t;
+
 class Bond : public Rigid {
   public:
     Bond(system_parameters *params, space_struct *space, 

@@ -81,43 +81,38 @@ void ParticleTracking::InitTracking() {
   tracking_->UpdateTracking(true);
 }
 
-// Check if we need an update
+// Check if we need an update 
 // and do it if needed
 void ParticleTracking::UpdateTracking(bool pForceUpdate) {
   trigger_update_ = false;
+
   int simples_count = 0;
   for (auto ispec = species_->begin(); ispec != species_->end(); ++ispec)
     simples_count += (*ispec)->GetCount();
   if (simples_count != nsimples_) {
-    pForceUpdate = true;
+    //printf("nsimples_: %d, ncount: %d\n",nsimples_,simples_count);
     nsimples_ = simples_count;
-    LoadSimples();
-    if (neighbors_ != nullptr) {
-      delete[] neighbors_;
-    }
-    neighbors_ = new nl_list[nsimples_];
-    tracking_->Rebuild(&neighbors_);
-    pForceUpdate = true;
     trigger_update_ = true;
+    pForceUpdate = true;
   }
   for (int ispec = 0; ispec < nsys_; ++ispec) {
     if ((*species_)[ispec]->GetUpdate()) {
       (*species_)[ispec]->SetUpdate(false);
-      // Force a complete rebuild
-
-      // Load the simples again, then pass onto tracking
-      LoadSimples();
-      if (neighbors_ != nullptr) {
-        delete[] neighbors_;
-      }
-      neighbors_ = new nl_list[nsimples_];
-      tracking_->Rebuild(&neighbors_);
-      pForceUpdate = true;
       trigger_update_ = true;
     }
   }
-
+  if (trigger_update_)
+    ForceRebuild();
   tracking_->UpdateTracking(pForceUpdate);
+}
+
+void ParticleTracking::ForceRebuild() {
+  LoadSimples();
+  if (neighbors_ != nullptr) {
+    delete[] neighbors_;
+  }
+  neighbors_ = new nl_list[nsimples_];
+  tracking_->Rebuild(&neighbors_);
 }
 
 // Check the overlaps

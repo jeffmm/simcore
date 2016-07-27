@@ -17,7 +17,7 @@ void BrRod::Init() {
   }
   // Set positions for sites and bonds
   UpdatePeriodic();
-  UpdateSiteBondPositions();
+  UpdateBondPositions();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
     bond->UpdatePeriodic();
 }
@@ -49,21 +49,22 @@ void BrRod::ApplyForcesTorques() {
 void BrRod::UpdatePositionMP() {
   ApplyForcesTorques();
   Integrate();
-  UpdatePeriodic();
+  //UpdatePeriodic();
+  UpdateSitePositions();
   // Update end site positions for tracking trajectory for neighbors
   if (dynamic_instability_flag_)
     DynamicInstability();
-  UpdateSiteBondPositions();
+  UpdateBondPositions();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
     bond->UpdatePeriodic();
 }
 
-void BrRod::UpdateSiteBondPositions() {
+void BrRod::UpdateSitePositions() {
   // First set prev positions for sites
   elements_[0].SetPrevPosition(elements_[0].GetPosition());
   elements_[1].SetPrevPosition(elements_[1].GetPosition());
+  // Then update site positions
   double pos[3];
-   //then update site positions based on new COM and orientation
   for (int i=0; i<n_dim_; ++i)
     pos[i] = position_[i] - 0.5 * length_ * orientation_[i];
   elements_[0].SetPosition(pos);
@@ -73,11 +74,22 @@ void BrRod::UpdateSiteBondPositions() {
   // update trajectories of end sites for neighbor lists
   elements_[0].AddDr();
   elements_[1].AddDr();
+  // Update positions based on PBCs for rod
+  UpdatePeriodic();
+  // Record new site positions to avoid issues with pbcs for trajectories
+  for (int i=0; i<n_dim_; ++i)
+    pos[i] = position_[i] - 0.5 * length_ * orientation_[i];
+  elements_[0].SetPosition(pos);
+  for (int i=0; i<n_dim_; ++i)
+    pos[i] = position_[i] + 0.5 * length_ * orientation_[i];
+  elements_[1].SetPosition(pos);
+}
+
+void BrRod::UpdateBondPositions() {
   // Set site of first bond COM and update remaining COMs
+  double pos[3];
   for (int i=0; i<n_dim_; ++i)
     pos[i] = position_[i] + 0.5*(child_length_-length_)*orientation_[i];
-  //int k=0; // XXX JMM temporary solution for debugging, visualization
-  //double u[3];
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
     bond->SetRigidPosition(position_);
     bond->SetRigidLength(length_);
@@ -85,17 +97,10 @@ void BrRod::UpdateSiteBondPositions() {
     bond->SetRigidScaledPosition(scaled_position_);
     bond->SetRigidOrientation(orientation_);
     bond->SetPosition(pos);
-    //if (k%2 == 0)
     bond->SetOrientation(orientation_);
-    //else {
-      //for (int i=0; i<n_dim_; ++i)
-        //u[i] = -orientation_[i];
-      //bond->SetOrientation(u);
-    //}
     // Set next bond COM
     for (int i=0; i<n_dim_; ++i)
       pos[i] += orientation_[i] * child_length_;
-    //k++;
   }
 }
 
@@ -127,21 +132,6 @@ void BrRod::Integrate() {
   AddRandomDisplacement();
   //Update the orientation due to torques and random rotation
   UpdateOrientation();
-}
-
-double const * const BrRod::GetDrTot() {
-  double dr_max=0;
-  for (auto site=elements_.begin(); site!= elements_.end(); ++site) {
-    double dr_mag = 0;
-    double const * const dr = site->GetDrTot();
-    for (int i=0; i<n_dim_; ++i)
-      dr_mag += dr[i]*dr[i];
-    if (dr_mag > dr_max) {
-      dr_max = dr_mag;
-      std::copy(dr, dr+3, dr_tot_);
-    }
-  }
-  return dr_tot_;
 }
 
 /* Calculates body frame, which returns the vector(s) orthogonal
@@ -219,6 +209,14 @@ void BrRod::SetDiffusion() {
 
 void BrRod::DynamicInstability() {
   // First update polymerization state
+  UpdatePolyState();
+  // Now update rod length
+  UpdateRodLength();
+  // Update diffusion coefficients
+  SetDiffusion();
+}
+
+void BrRod::UpdatePolyState() {
   double roll = gsl_rng_uniform_pos(rng_.r);
   // temporary variables used for modification from
   // force induced catastrophe flag
@@ -235,45 +233,40 @@ void BrRod::DynamicInstability() {
     p_norm = p_s2g_ + p_s2p_;
     if (p_norm > 1.0) 
       poly_state_ = (roll < p_s2g_/p_norm ? GROW : PAUSE);
-    else {
-      if (roll < p_s2g_) 
-        poly_state_ = GROW;
-      else if (roll < (p_s2g_ + p_s2p_)) 
-        poly_state_ = PAUSE;
-    }
+    else if (roll < p_s2g_) 
+      poly_state_ = GROW;
+    else if (roll < (p_s2g_ + p_s2p_)) 
+      poly_state_ = PAUSE;
   }
   // Filament growing
   else if (poly_state_ == GROW) {
     p_norm = p_g2s + p_g2p_;
     if (p_norm > 1.0)
       poly_state_ = (roll < p_g2s/p_norm ? SHRINK : PAUSE);
-    else {
-      if (roll < p_g2s) 
-        poly_state_ = SHRINK;
-      else if (roll < (p_g2s + p_g2p_)) 
-        poly_state_ = PAUSE;
-    }
+    else if (roll < p_g2s) 
+      poly_state_ = SHRINK;
+    else if (roll < (p_g2s + p_g2p_)) 
+      poly_state_ = PAUSE;
   }
   // Filament paused
   else if (poly_state_ == PAUSE) {
     p_norm = p_p2g_ + p_p2s;
     if (p_norm > 1) 
       poly_state_ = (roll < p_p2g_/p_norm ? GROW : SHRINK);
-    else {
-      if (roll < p_p2g_) 
-        poly_state_ = GROW;
-      else if (roll < (p_p2g_ + p_p2s)) 
-        poly_state_ = SHRINK;
-    }
+    else if (roll < p_p2g_) 
+      poly_state_ = GROW;
+    else if (roll < (p_p2g_ + p_p2s)) 
+      poly_state_ = SHRINK;
   }
 
   // Check to make sure the filament lengths stay in the correct ranges
-  if (length_ < min_length_) {
-    poly_state_ = GROW;}
-  else if (length_ > max_length_) {
-    poly_state_ = SHRINK;}
+  if (length_ < min_length_) 
+    poly_state_ = GROW;
+  else if (length_ > max_length_) 
+    poly_state_ = SHRINK;
+}
 
-  // Now update rod length
+void BrRod::UpdateRodLength() {
   if (poly_state_ == PAUSE) return;
   double delta_length;
   if (poly_state_ == GROW) {
@@ -302,20 +295,11 @@ void BrRod::DynamicInstability() {
   }
   for (auto bond = v_elements_.begin(); bond!=v_elements_.end(); ++bond)
     bond->SetLength(child_length_);
-  // Update diffusion coefficients
-  SetDiffusion();
 }
 
 void BrRod::Draw(std::vector<graph_struct*> * graph_array) {
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
     bond->Draw(graph_array);
 }
-
-//void BrRodSpecies::InitPotentials (system_parameters *params) {
-  //AddPotential(SID::br_simple_rod, SID::br_simple_rod, 
-      //// Set br_rod-br_rod interaction
-      //new WCA(params->lj_epsilon,params->rod_diameter,
-        //space_, pow(2, 1.0/6.0)*params->rod_diameter));
-//}
 
 
