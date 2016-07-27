@@ -26,6 +26,7 @@ void TrackingNeighborListAP::UpdateTracking(bool pForceUpdate) {
       break;
     double dr2 = (*spec)->GetDrMax();
     nl_update_ = dr2 > half_skin2_;
+    pForceUpdate = true;
   }
   if (nl_update_) {
     UpdateNeighborList();
