@@ -34,8 +34,8 @@ graph_background: 1
 #delta: 0.00001
 delta: 0.00025
 #n_steps: 1000000
-#n_steps: 100000
-n_steps: 301
+n_steps: 100000
+#n_steps: 301
 #n_steps: 10000
 #n_steps: 1000
 #n_steps: 100
@@ -54,6 +54,7 @@ draw_interactions: 0
 ftype: 4
 potfile: params/xlink_test.pot.yaml
 kmcfile: params/xlink_test.kmc.yaml
+dynamic_instability_flag: 0
 #[brownian_dimer]:
     #num: [2,4]
     #length: 5

@@ -24,6 +24,10 @@ class XlinkKMC : public KMCBase {
     double rcutoff_1_2_;
     double r_equil_;
 
+    int nfree_;
+    int nbound1_[2];
+    int nbound2_;
+
     int nsimples_;
 
     std::ofstream kmc_file;
@@ -35,9 +39,12 @@ class XlinkKMC : public KMCBase {
 
     void KMC_0_1();
     void KMC_1_0();
+    void KMC_1_2();
+    void KMC_2_1();
     void Update_0_1(Xlink *xit);
     void Update_1_2(Xlink *xit);
-    void UpdateStage1(Xlink *xit, int *nbound1);
+    void UpdateStage1(Xlink *xit);
+    void UpdateStage2(Xlink *xit);
 
     // Specifics to 2 stage crosslinks (building tables, numbers, etc)
     double XKMCErfinv(double x);
