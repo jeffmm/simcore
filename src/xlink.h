@@ -15,7 +15,8 @@ class Xlink : public Composite<XlinkHead> {
     /* Unique to Xlink */
     double eq_length_;
     double k_spring_;
-    double n_exp_;
+    double n_exp_0_1_ = 0.0;
+    double n_exp_1_2_ = 0.0;
 
     attach_type bound_;
 
@@ -80,16 +81,20 @@ class Xlink : public Composite<XlinkHead> {
 
     double const GetKSpring() {return k_spring_;}
     double const GetEqLength() {return eq_length_;}
-    double const GetNExp() {return n_exp_;}
+    double const GetNExp_0_1() {return n_exp_0_1_;}
+    double const GetNExp_1_2() {return n_exp_1_2_;}
     attach_type const GetBoundState() {return bound_;}
     void SetEqLength(double const eq_length) {eq_length_ = eq_length;}
     void SetKSpring(double const k_spring) {k_spring_ = k_spring;}
-    void SetNExp(double const n) {n_exp_=n;}
+    void SetNExp_0_1(double const n) {n_exp_0_1_=n;}
+    void SetNExp_1_2(double const n) {n_exp_1_2_=n;}
 
     void DumpKMC() {
       auto head0 = elements_.begin();
       auto head1 = elements_.begin()+1;
-      printf("\t\t[%d] -> {n_exp: %2.4f (%2.4f, %2.4f)}\n", GetOID(), n_exp_, head0->GetNExp(), head1->GetNExp());
+      printf("\t\t[%d] -> {n_exp_0_1: %2.4f (%2.4f, %2.4f)}, {n_exp_1_2: %2.4f (%2.4f, %2.4f)}\n", GetOID(),
+          n_exp_0_1_, head0->GetNExp_0_1(), head1->GetNExp_0_1(),
+          n_exp_1_2_, head0->GetNExp_1_2(), head1->GetNExp_1_2());
       head0->DumpKMC();
       head1->DumpKMC();
     }
@@ -98,7 +103,8 @@ class Xlink : public Composite<XlinkHead> {
 #include "species.h"
 class XlinkSpecies : public Species<Xlink> {
   protected:
-    double n_exp_ = 0.0;
+    double n_exp_0_1_ = 0.0;
+    double n_exp_1_2_ = 0.0;
     int nbound1_[2] = {0, 0};
     int nbound2_ = 0.0;
     int nfree_ = 0.0;
@@ -116,8 +122,10 @@ class XlinkSpecies : public Species<Xlink> {
     }
 
     // KMC specifics
-    double const GetNExp() {return n_exp_;}
-    void SetNExp(double n) {n_exp_=n;}
+    double const GetNExp_0_1() {return n_exp_0_1_;}
+    double const GetNExp_1_2() {return n_exp_1_2_;}
+    void SetNExp_0_1(double n) {n_exp_0_1_=n;}
+    void SetNExp_1_2(double n) {n_exp_1_2_=n;}
     int const GetNFree() {return nfree_;}
     void SetNFree(int n) {nfree_=n;}
     const int* const GetNBound1() {return nbound1_;}
