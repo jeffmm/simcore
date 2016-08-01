@@ -9,8 +9,8 @@ class XlinkHead : public Simple {
     double diffusion_;
 
     // kmc stuff
-    double n_exp_0_1_;
-    double n_exp_1_2_;
+    double n_exp_0_1_ = 0.0;
+    double n_exp_1_2_ = 0.0;
     bool bound_;
     int attachidx_ = -1;
     double attachpos_ = 0.0;
@@ -42,6 +42,14 @@ class XlinkHead : public Simple {
     std::pair<int, double> GetAttach() {return std::make_pair(attachidx_, attachpos_);}
 
     virtual void DumpKMC() {
+      if (n_exp_0_1_ < 0.0) {
+        printf("ERROR - nexp_0_1 < 0.0\n");
+        exit(1);
+      }
+      if (n_exp_1_2_ < 0.0) {
+        printf("ERROR - nexp_1_2 < 0.0\n");
+        exit(1);
+      }
       printf("\t\thead[%d] -> {n_exp: (%2.4f, %2.4f)}, {bound: %s}, {pidx: %d, %2.4f}\n", GetOID(), GetNExp_0_1(),
           GetNExp_1_2(), GetBound() ? "true" : "false", GetAttach().first, GetAttach().second);
     }

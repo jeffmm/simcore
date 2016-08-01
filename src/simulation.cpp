@@ -20,6 +20,7 @@ void Simulation::RunSimulation() {
     time_ = (i_step_+1) * params_.delta; 
     if (debug_trace)
       DPRINTF("********\nStep %d\n********\n", i_step_);
+    ZeroForces();
     KineticMonteCarloMP();
     InteractMP();
     IntegrateMP();
@@ -54,6 +55,12 @@ void Simulation::InteractMP() {
 
 void Simulation::KineticMonteCarloMP() {
   uengine_.StepKMC();
+}
+
+void Simulation::ZeroForces() {
+  for (auto it=species_.begin(); it != species_.end(); ++it) {
+    (*it)->ZeroForces();
+  }
 }
 
 void Simulation::InitSimulation() {

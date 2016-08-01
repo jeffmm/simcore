@@ -17,7 +17,7 @@ void Xlink::Init() {
 }
 
 void Xlink::UpdateOrientation() {
-  /*double const * const r1=elements_[0].GetPosition();
+  double const * const r1=elements_[0].GetPosition();
   double const * const r2=elements_[1].GetPosition();
   double const * const s1=elements_[0].GetScaledPosition();
   double const * const s2=elements_[1].GetScaledPosition();
@@ -33,8 +33,6 @@ void Xlink::UpdateOrientation() {
     position_[i] = r1[i] + 0.5*length_*orientation_[i];
   }
   UpdatePeriodic();
-  for (auto i_bead=elements_.begin(); i_bead!= elements_.end(); ++i_bead)
-    i_bead->SetOrientation(orientation_);*/
   double orientation_loc[3];
   orientation_loc[0] = 0;
   orientation_loc[1] = 1;
@@ -85,15 +83,15 @@ void Xlink::Integrate() {
   switch(bound_) {
     case unbound:
       DiffuseXlink();
-      UpdateOrientation();
+      //UpdateOrientation();
       break;
   }
   /*double pos[3] = {0, 0, 0};
   // the beads know how to update position and periodicity
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
     i_bead->UpdatePositionMP();
-  }
-  UpdateOrientation();*/
+  }*/
+  UpdateOrientation();
 }
 
 void Xlink::DiffuseXlink() {
