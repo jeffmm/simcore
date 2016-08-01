@@ -82,7 +82,7 @@ struct system_parameters {
   double md_bead_mass = 1;
   int n_md_kmc_bead = 0;
   double md_kmc_bead_diameter = 1;
-  char *kmcfile;
+  char *potfile;
   double md_kmc_bead_mass = 1;
   double cell_length = 10;
   int n_update_cells = 10;
@@ -99,10 +99,11 @@ struct system_parameters {
   int n_rod = 0;
   double rod_length = 3;
   double rod_diameter = 1;
+  int rod_diffusion = 1;
   int draw_interactions = 0;
   int ftype = 2;
   double masterskin = 1.0;
-  char *potfile;
+  char *kmcfile;
   int max_overlap = 10000;
 
 };

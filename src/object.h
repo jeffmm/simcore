@@ -83,11 +83,11 @@ class Object {
       std::fill(dr_tot_,dr_tot_+3,0.0);
     }
     void AddForce(double const * const f) {
-      for (int i=0; i<n_dim_; ++i)
+      for (int i=0; i<3; ++i)
         force_[i]+=f[i];
     }
     void AddTorque(double const * const t) {
-      for (int i=0; i<n_dim_; ++i)
+      for (int i=0; i<3; ++i)
         torque_[i]+=t[i];
     }
     void AddPotential(double const p) {p_energy_ += p;}
@@ -172,9 +172,10 @@ class Simple : public Object {
     }
     virtual void Dump() {
       printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
-      printf("x(%2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1]);
-      printf("r(%2.2f, %2.2f), ", GetRigidPosition()[0], GetRigidPosition()[1]);
-      printf("f(%2.2f, %2.2f), ", GetForce()[0], GetForce()[1]);
+      printf("x(%2.2f, %2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1], GetPosition()[2]);
+      printf("r(%2.2f, %2.2f, %2.2f), ", GetRigidPosition()[0], GetRigidPosition()[1], GetRigidPosition()[2]);
+      printf("f(%2.2f, %2.2f, %2.2f), ", GetForce()[0], GetForce()[1], GetForce()[2]);
+      printf("t(%2.2f, %2.2f, %2.2f), ", GetTorque()[0], GetTorque()[1], GetTorque()[2]);
       printf("u(%2.2f), p(%2.2f)\n", GetKineticEnergy(), GetPotentialEnergy());
     }
     virtual int GetCount() {return 1;}
@@ -351,7 +352,8 @@ class Composite<T,V> : public Object {
     virtual void Dump() {
       printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
       printf("x(%2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1]);
-      printf("f(%2.2f, %2.2f), ", GetForce()[0], GetForce()[1]);
+      printf("f(%2.4f, %2.4f), ", GetForce()[0], GetForce()[1]);
+      printf("t(%2.4f, %2.4f), ", GetTorque()[0], GetTorque()[1]);
       printf("ke(%2.2f), pe(%2.2f)\n", GetKineticEnergy(), GetPotentialEnergy());
       for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
         it->Dump();

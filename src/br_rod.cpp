@@ -140,6 +140,8 @@ void BrRod::Integrate() {
    with std dev sqrt(2*kT*dt/gamma) where gamma is the friction
    coefficient along that direction */
 void BrRod::AddRandomDisplacement() {
+  // Only do this if we are supposed to diffuse
+  if (!rod_diffusion_) return;
   // Get vector(s) orthogonal to orientation
   GetBodyFrame();
   // First handle the parallel component
@@ -170,10 +172,13 @@ void BrRod::UpdateOrientation() {
   for (int i=0; i<n_dim_; ++i)
     orientation_[i] += du[i]*delta_/gamma_rot_;
   // Now handle the random orientation update
-  for (int j=0; j<n_dim_-1; ++j) {
-    double mag = gsl_ran_gaussian_ziggurat(rng_.r, rand_sigma_rot_);
-    for (int i=0; i<n_dim_; ++i)
-      orientation_[i] += mag * body_frame_[n_dim_*j+i];
+  // If we aren't supposed to diffuse, just return
+  if (rod_diffusion_) {
+    for (int j=0; j<n_dim_-1; ++j) {
+      double mag = gsl_ran_gaussian_ziggurat(rng_.r, rand_sigma_rot_);
+      for (int i=0; i<n_dim_; ++i)
+        orientation_[i] += mag * body_frame_[n_dim_*j+i];
+    }
   }
   normalize_vector(orientation_, n_dim_);
 }
@@ -304,9 +309,10 @@ void BrRod::Draw(std::vector<graph_struct*> * graph_array) {
 
 void BrRod::Dump() {
   printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
-  printf("x(%2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1]);
-  printf("u(%2.2f, %2.2f), ", orientation_[0], orientation_[1]);
-  printf("f(%2.2f, %2.2f), ", GetForce()[0], GetForce()[1]);
+  printf("x(%2.2f, %2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1], GetPosition()[2]);
+  printf("u(%2.2f, %2.2f, %2.2f), ", orientation_[0], orientation_[1], orientation_[2]);
+  printf("f(%2.2f, %2.2f, %2.2f), ", GetForce()[0], GetForce()[1], GetForce()[2]);
+  printf("t(%2.2f, %2.2f, %2.2f), ", GetTorque()[0], GetTorque()[1], GetTorque()[2]);
   printf("l(%2.2f), ke(%2.2f), pe(%2.2f)\n", length_, GetKineticEnergy(), GetPotentialEnergy());
   printf("\tsites ->\n");
   for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
