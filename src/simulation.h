@@ -36,6 +36,7 @@ class Simulation {
     void IntegrateMP();
     void InteractMP();
     void KineticMonteCarloMP();
+    void ZeroForces();
     void DumpAll(int i_step);
     std::vector<graph_struct*> graph_array;
 

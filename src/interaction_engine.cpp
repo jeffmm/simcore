@@ -140,15 +140,16 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
   // Obtain the mapping between particle oid and position in the force superarray
   auto oid1x = (*oid_position_map_)[part1->GetOID()];
   auto oid2x = (*oid_position_map_)[part2->GetOID()];
-  #ifdef DEBUG
-  if (debug_trace)
-    printf("\tPOT Interacting[%d,%d:%d,%d] (dr2:%2.8f)\n",
-        oid1x, part1->GetOID(), oid2x, part2->GetOID(), idm.dr_mag2);
-  #endif
 
   // Fire off the potential calculation
   double fepot[4];
   pot->CalcPotential(&idm, part1, part2, fepot);
+
+  #ifdef DEBUG
+  if (debug_trace)
+    printf("\tPOT Interacting[%d,%d:%d,%d] (u:%2.8f)\n",
+        oid1x, part1->GetOID(), oid2x, part2->GetOID(), fepot[ndim_]);
+  #endif
 
   // Do the potential energies
   pr_energy[oid1x] += fepot[ndim_];
@@ -190,18 +191,18 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
   MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
   if (idm.dr_mag2 > pot->GetRCut2()) return;
 
+  // Fire off the potential calculation
+  double fepot[4];
+  pot->CalcPotential(&idm, part1, part2, fepot);
+
   #ifdef DEBUG
   // Obtain the mapping between particle oid and position in the force superarray
   auto oid1x = (*oid_position_map_)[part1->GetOID()];
   auto oid2x = (*oid_position_map_)[part2->GetOID()];
   if (debug_trace)
-    printf("\tKMC Interacting[%d,%d:%d,%d] (dr2:%2.8f)\n",
-        oid1x, part1->GetOID(), oid2x, part2->GetOID(), idm.dr_mag2);
+    printf("\tKMC Interacting[%d,%d:%d,%d] (kmc:%2.8f)\n",
+        oid1x, part1->GetOID(), oid2x, part2->GetOID(), fepot[ndim_]);
   #endif
-
-  // Fire off the potential calculation
-  double fepot[4];
-  pot->CalcPotential(&idm, part1, part2, fepot);
 
   neighbor->kmc_ = fepot[ndim_];
 }

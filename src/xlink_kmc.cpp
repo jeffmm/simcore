@@ -63,12 +63,12 @@ void XlinkKMC::Init(space_struct *pSpace,
       break;
   }
 
-  alpha_    = node["kmc"][ikmc]["alpha"].as<double>();
+  alpha_          = node["kmc"][ikmc]["alpha"].as<double>();
   rcutoff_0_1_    = node["kmc"][ikmc]["rcut"].as<double>();
-  velocity_ = node["kmc"][ikmc]["velocity"].as<double>();
+  velocity_       = node["kmc"][ikmc]["velocity"].as<double>();
   barrier_weight_ = node["kmc"][ikmc]["barrier_weight"].as<double>();
-  k_stretch_ = node["kmc"][ikmc]["spring_constant"].as<double>();
-  r_equil_ = node["kmc"][ikmc]["equilibrium_length"].as<double>();
+  k_stretch_      = node["kmc"][ikmc]["spring_constant"].as<double>();
+  r_equil_        = node["kmc"][ikmc]["equilibrium_length"].as<double>();
 
   CalcCutoff();
 
@@ -104,24 +104,26 @@ double XlinkKMC::XKMCErfinv(double x) {
 }
 
 void XlinkKMC::BuildTables() {
-  std::vector<double> x[2];
-  double bin_size = 0.05;
-  double alpha = k_stretch_ * (1 - barrier_weight_) / 2;
-  double const smalleps = 1E-5;
-  double a_cutoff = 1/sqrt(alpha) * XKMCErfinv(1 - 4.0*sqrt(alpha/M_PI)*smalleps) +
-    r_equil_;
-  double y_cutoff = rcutoff_1_2_;
-  
-  xlh::xlink_params params;
-  params.alpha = alpha;
-  params.r0 = r_equil_;
+  if (r_equil_ != 0.0) {
+    std::vector<double> x[2];
+    double bin_size = 0.05;
+    double alpha = k_stretch_ * (1 - barrier_weight_) / 2;
+    double const smalleps = 1E-5;
+    double a_cutoff = 1/sqrt(alpha) * XKMCErfinv(1 - 4.0*sqrt(alpha/M_PI)*smalleps) +
+      r_equil_;
+    double y_cutoff = rcutoff_1_2_;
+    
+    xlh::xlink_params params;
+    params.alpha = alpha;
+    params.r0 = r_equil_;
 
-  for (double a = 0.0; a <= a_cutoff; a += bin_size)
-    x[0].push_back(a);
-  for (double y0 = 0.0; y0 <= y_cutoff; y0 += bin_size)
-    x[1].push_back(y0);
+    for (double a = 0.0; a <= a_cutoff; a += bin_size)
+      x[0].push_back(a);
+    for (double y0 = 0.0; y0 <= y_cutoff; y0 += bin_size)
+      x[1].push_back(y0);
 
-  n_exp_lookup_.Init(2, x, &xlh::prob_1_2, &params);
+    n_exp_lookup_.Init(2, x, &xlh::prob_1_2, &params);
+  }
 }
 
 void XlinkKMC::Print() {
@@ -175,6 +177,7 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
   double nexp_xlink = 0.0;
   auto heads = xit->GetHeads();
 
+  // Final binding affinity is 2x if the eps_eff and on_rate are the same
   for (int i = 0; i < heads->size(); ++i) {
     auto head = &(*heads)[i];
     double nexp = 0.0;
@@ -213,27 +216,19 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
   auto attc_idx = (*oid_position_map_)[attachedhead->GetOID()];
   // Get the attached rod
   auto attach_info = attachedhead->GetAttach();
-  auto mrod_attached = (*simples_)[attach_info.first];
+  auto attach_info_idx = (*oid_position_map_)[attach_info.first];
+  auto mrod_attached = (*simples_)[attach_info_idx];
   if (binding_affinity > 0.0) {
     double n_exp = 0.0;
-    //xit->Dump();
-    //xit->DumpKMC();
-    //mrod_attached->Dump();
-    //printf("attc head {idx:%d,head:%d}[%d] -> [rid:%d]\n", attc_idx, attc_i, attachedhead->GetOID(),
-    //    mrod_attached->GetRID());
-    //printf("free head {idx:%d,head:%d}[%d]\n", free_idx, free_i, freehead->GetOID());
 
     // We have to look at all of our neighbors withint the mrcut
     for (auto nldx = neighbors_[free_idx].begin(); nldx != neighbors_[free_idx].end(); ++nldx) {
       auto mrod = (*simples_)[nldx->idx_];
-      //printf("Checking against [rid:%d]\n", mrod->GetRID());
       // Check to see if it's really a rod, and if it's the same one we're already attached to
       if (mrod->GetSID() != sid2_) continue;
       if (mrod->GetRID() == mrod_attached->GetRID()) {
-        //printf("\tExcluding self attachment\n");
         continue;
       }
-      //printf("Adding contribution from neighbor [%d,rid:%d]\n", nldx->idx_, mrod->GetRID());
       // Calculate center to center displacement
       // XXX FIXME CJE possibly don't do this, and store the minimum distance calculation from
       // earlier point point calculation
@@ -257,31 +252,41 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
                                       space_->unit_cell, r_x, s_1,
                                       r_rod, s_rod, u_rod, l_rod,
                                       dr, rcontact, &mu0);
-      //printf("{dr: (%2.4f, %2.4f)}, {rcontact: (%2.4f, %2.4f)}, {mu: %2.4f}\n",
-      //    dr[0], dr[1], rcontact[0], rcontact[1], mu0);
 
       // Now do the integration over the limits on the MT
       // Check the cutoff distance
-      double lim0 = -mu0 - 0.5 * l_rod;
-      double lim1 = -mu0 + 0.5 * l_rod;
       double r_min_mag2 = 0.0;
       for (int i = 0; i < ndim_; ++i) {
         r_min_mag2 += SQR(dr[i]);
       }
-      double r_min_mag = sqrt(r_min_mag2);
-      double x[2] = {fabs(lim0), r_min_mag};
-      double term0 = n_exp_lookup_.Lookup(x) * ((lim0 < 0) ? -1.0 : 1.0);
-      x[0] = fabs(lim1);
-      double term1 = n_exp_lookup_.Lookup(x) * ((lim1 < 0) ? -1.0 : 1.0);
-      // OVERRIDE the kmc_ value of this neighbor list
-      nldx->kmc_ = (term1 - term0) * polar_affinity;
-      //printf("{nexp cont: %2.8f}\n", nldx->kmc_);
-      n_exp += nldx->kmc_;
+      if (r_equil_ == 0.0) {
+        double kb = k_stretch_ * (1.0 - barrier_weight_);
+        double scale_factor = sqrt(0.5 * kb);
+        double lim0 = scale_factor * (-mu0 - 0.5*l_rod);
+        double term0 = erf(lim0);
+        double lim1 = scale_factor * (-mu0 + 0.5*l_rod);
+        double term1 = erf(lim1);
+
+        nldx->kmc_ = sqrt(M_PI_2 / kb) * exp(-0.5*kb*r_min_mag2) * (term1 - term0) * polar_affinity;
+        n_exp += nldx->kmc_;
+      } else {
+        double lim0 = -mu0 - 0.5 * l_rod;
+        double lim1 = -mu0 + 0.5 * l_rod;
+        double r_min_mag = sqrt(r_min_mag2);
+        double x[2] = {fabs(lim0), r_min_mag};
+        double term0 = n_exp_lookup_.Lookup(x) * ((lim0 < 0) ? -1.0 : 1.0);
+        x[0] = fabs(lim1);
+        double term1 = n_exp_lookup_.Lookup(x) * ((lim1 < 0) ? -1.0 : 1.0);
+        // OVERRIDE the kmc_ value of this neighbor list
+        nldx->kmc_ = (term1 - term0) * polar_affinity;
+        n_exp += nldx->kmc_;
+      }
+      if (debug_trace)
+        printf("[%d] -> neighbor[%d] {kmc: %2.4f}\n", freehead->GetOID(), mrod->GetOID(), nldx->kmc_);
     } // loop over local neighbors of xlink
 
     freehead->SetNExp_1_2(n_exp);
     xit->SetNExp_1_2(n_exp);
-    //xit->DumpKMC();
   }
 }
 
@@ -328,7 +333,7 @@ void XlinkKMC::KMC_0_1() {
   for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
     // Only take free ones
     if ((*xit)->GetBoundState() != unbound) continue;
-    auto nexp = (*xit)->GetNExp_0_1();
+    auto nexp = (*xit)->GetNExp_0_1(); // Number expected to bind in this timestep, calculated from Update_0_1
     if (nexp <  std::numeric_limits<double>::epsilon() &&
         nexp > -std::numeric_limits<double>::epsilon()) nexp = 0.0;
     // IF we have some probability to fall onto a neighbor, check it
@@ -346,13 +351,14 @@ void XlinkKMC::KMC_0_1() {
               nexp, roll, head_type);
         double pos = 0.0;
         int idx = (*oid_position_map_)[head->GetOID()];
+        // Search through the neighbors of this head to figure out who we want to bind to
         for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
           auto part2 = (*simples_)[nldx->idx_];
-          if (part2->GetSID() != sid2_) continue;
+          if (part2->GetSID() != sid2_) continue; // Make sure it's what we want to bind to
           pos += binding_affinity * nldx->kmc_;
           if (pos > roll) {
             if (debug_trace)
-              printf("[%d,%d] Attaching to [%d,%d]\n", idx, head->GetOID(), nldx->idx_, part2->GetOID());
+              printf("[%d] Attaching to [%d]\n", head->GetOID(), part2->GetOID());
 
             // Here, we do more complicated stuff.  Calculate the coordinate along
             // the rod s.t. the line vector is perpendicular to the separation vec
@@ -403,7 +409,8 @@ void XlinkKMC::KMC_0_1() {
                   crosspos = l_rod;
               }
             }
-            head->Attach(nldx->idx_, crosspos);
+            // Attach to the OID of the particle, this is done for dynamic instability to work
+            head->Attach(part2->GetOID(), crosspos);
             if (debug_trace)
               printf("\t{mu: %2.4f}, {crosspos: %2.4f}\n", mu, crosspos);
             head->SetBound(true);
@@ -434,7 +441,6 @@ void XlinkKMC::KMC_1_0() {
     int head_type = i < noff[1];
     int idxloc = -1;
     int idxoff = gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
-    bool foundidx = false;
 
     // Find the one to remove
     for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
@@ -491,17 +497,17 @@ void XlinkKMC::KMC_1_0() {
 
         if (debug_trace) {
           auto attachid = attachedhead->GetAttach();
+          auto attachidx = (*oid_position_map_)[attachid.first];
           auto idx = (*oid_position_map_)[attachedhead->GetOID()];
-          auto part2 = (*simples_)[attachid.first];
-          printf("[%d,%d] Detached from [%d,%d] (%2.8f, %2.8f) -> (%2.8f, %2.8f)\n",
-             idx, attachedhead->GetOID(), attachid.first, part2->GetOID(),
+          auto part2 = (*simples_)[attachidx];
+          printf("[%d] Detached from [%d] (%2.8f, %2.8f) -> (%2.8f, %2.8f)\n",
+             attachedhead->GetOID(), part2->GetOID(),
              prevpos[0], prevpos[1],
              attachedhead->GetRigidPosition()[0], attachedhead->GetRigidPosition()[1]);
         }
 
 
         attachedhead->Attach(-1, 0.0);
-        foundidx = true;
         break;
 
       } // found it!
@@ -511,7 +517,6 @@ void XlinkKMC::KMC_1_0() {
 }
 
 void XlinkKMC::KMC_1_2() {
-  //printf("XlinkKMC::KMC_1_2 begin\n");
   XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
   double nexp_1_2 = pxspec->GetNExp_1_2();
@@ -560,10 +565,10 @@ void XlinkKMC::KMC_1_2() {
           auto free_idx = idx;
           auto attc_idx = (*oid_position_map_)[attachedhead->GetOID()];
           // Get the attached rod
-          auto attach_info = attachedhead->GetAttach();
-          auto mrod_attached = (*simples_)[attach_info.first];
+          auto attachinfo = attachedhead->GetAttach();
+          auto attachinfoidx = (*oid_position_map_)[attachinfo.first];
+          auto mrod_attached = (*simples_)[attachinfoidx];
           if (mrod->GetRID() == mrod_attached->GetRID()) {
-            //printf("\tExcluding self attachment\n");
             continue;
           }
 
@@ -571,7 +576,7 @@ void XlinkKMC::KMC_1_2() {
           if (loc > ran_loc) {
             // Found the neighbor to fall onto!!!!
             if (debug_trace) {
-              printf("[%d,%d] Attaching to [%d,%d] {loc: %2.4f}\n", idx, nonattachead->GetOID(), nldx->idx_, mrod->GetOID(), loc);
+              printf("[%d] Attaching to [%d] {loc: %2.4f}\n", nonattachead->GetOID(), mrod->GetOID(), loc);
             }
 
             // What location (crosspos) do we fall onto?
@@ -618,7 +623,7 @@ void XlinkKMC::KMC_1_2() {
               }
             } while (itrial_loc < 100);
 
-            nonattachead->Attach(nldx->idx_, crosspos);
+            nonattachead->Attach(mrod->GetOID(), crosspos);
             nonattachead->SetBound(true);
             (*xit)->CheckBoundState();
 
@@ -659,6 +664,7 @@ void XlinkKMC::UpdateKMC() {
         break;
       case doubly:
         UpdateStage2(*xit);
+        ApplyStage2Force(*xit);
         break;
     }
   }
@@ -694,7 +700,8 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
     printf("Something has gone horribly wrong\n");
     exit(1);
   }
-  auto aidx = attachedhead->GetAttach().first;
+  auto aid = attachedhead->GetAttach().first;
+  auto aidx = (*oid_position_map_)[aid];
   auto cross_pos = attachedhead->GetAttach().second; // relative to the -end of the rod!!
   auto r_x = attachedhead->GetRigidPosition();
   
@@ -711,16 +718,15 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   } else if (cross_pos < 0.0) {
     cross_pos = 0.0;
   }
-  attachedhead->Attach(aidx, cross_pos);
+  attachedhead->Attach(aid, cross_pos);
 
   double rxnew[3];
   for (int i = 0; i < ndim_; ++i) {
     rxnew[i] = r_rod[i] - 0.5 * u_rod[i] * l_rod + cross_pos * u_rod[i];
   }
-  auto idx = (*oid_position_map_)[attachedhead->GetOID()];
   if (debug_trace)
-    printf("[%d,%d] attached [%d,%d], (%2.4f, %2.4f) -> setting -> (%2.4f, %2.4f)\n",
-           idx, attachedhead->GetOID(), aidx, part2->GetOID(), r_x[0], r_x[1],
+    printf("[%d] attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
+           attachedhead->GetOID(), part2->GetOID(), r_x[0], r_x[1], cross_pos,
            rxnew[0], rxnew[1]);
   attachedhead->SetPrevPosition(r_x);
   attachedhead->SetPosition(rxnew);
@@ -740,7 +746,8 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   for (auto head = heads->begin(); head != heads->end(); ++head) {
     head->SetNExp_1_2(0.0);
 
-    auto aidx = head->GetAttach().first;
+    auto aid = head->GetAttach().first;
+    auto aidx = (*oid_position_map_)[aid];
     auto crosspos = head->GetAttach().second;
     auto rx = head->GetRigidPosition();
 
@@ -757,17 +764,17 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
     } else if (crosspos < 0.0) {
       crosspos = 0.0;
     }
-    head->Attach(aidx, crosspos);
+    head->Attach(aid, crosspos);
 
     double rxnew[3];
     for (int i = 0; i < ndim_; ++i) {
       rxnew[i] = rrod[i] - 0.5 * urod[i] * lrod + crosspos * urod[i];
       avgpos[i] += rxnew[i];
     }
-    auto idx = (*oid_position_map_)[head->GetOID()];
     if (debug_trace) {
-      printf("[%d,%d] attached [%d,%d], (%2.4f, %2.4f) -> setting -> (%2.4f, %2.4f)\n",
-          idx, head->GetOID(), aidx, mrod->GetOID(), rx[0], rx[1],
+      printf("[%d] attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
+          head->GetOID(), mrod->GetOID(), rx[0], rx[1],
+          crosspos,
           rxnew[0], rxnew[1]);
     }
     head->SetPrevPosition(rx);
@@ -782,6 +789,108 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   xit->SetPrevPosition(oldxitpos);
 
   nbound2_++;
+}
+
+void XlinkKMC::ApplyStage2Force(Xlink *xit) {
+  auto heads = xit->GetHeads();
+  auto head0 = heads->begin();
+  auto head1 = heads->begin()+1;
+
+  auto aid0 = head0->GetAttach().first;
+  auto aid1 = head1->GetAttach().first;
+  auto aidx0 = (*oid_position_map_)[aid0];
+  auto aidx1 = (*oid_position_map_)[aid1];
+  auto mrod0 = (*simples_)[aidx0];
+  auto mrod1 = (*simples_)[aidx1];
+  auto rx0 = head0->GetRigidPosition();
+  auto rx1 = head1->GetRigidPosition();
+  auto sx0 = head0->GetScaledPosition();
+  auto sx1 = head1->GetScaledPosition();
+
+  if (debug_trace)
+    printf("[%d:%d] <-> [%d:%d] Applying 2stage force\n", head0->GetOID(), mrod0->GetOID(), head1->GetOID(), mrod1->GetOID());
+
+  double dr[3];
+  separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
+  double rmag2 = 0.0;
+  for (int i = 0; i < ndim_; ++i) {
+    rmag2 += SQR(dr[i]);
+  }
+  double rmag = sqrt(rmag2);
+  double k = k_stretch_;
+  double factor;
+  if (r_equil_ == 0.0) {
+    factor = k;
+  } else {
+    factor = k * (1.0 - r_equil_ / sqrt(dot_product(ndim_, dr, dr)));
+  }
+  printf("{k: %2.4f}, {factor: %2.4f}, {requil: %2.4f}\n", k, factor, r_equil_);
+  double u = 0.0;
+  double flink[3] = {0.0, 0.0, 0.0};
+  for (int i = 0; i < ndim_; ++i) {
+    flink[i] = factor * dr[i];
+    u += 0.5 * SQR(flink[i]);
+  }
+  u *= 0.5 / k;
+  xit->AddPotential(u);
+
+  auto rrod0 = mrod0->GetRigidPosition();
+  auto rrod1 = mrod1->GetRigidPosition();
+  auto crosspos0 = head0->GetAttach().second;
+  auto crosspos1 = head1->GetAttach().second;
+  auto lrod0 = mrod0->GetRigidLength();
+  auto lrod1 = mrod1->GetRigidLength();
+  auto urod0 = mrod0->GetRigidOrientation();
+  auto urod1 = mrod1->GetRigidOrientation();
+
+  printf("{rrod0: (%2.4f, %2.4f)}, {rrod1: (%2.4f, %2.4f)}\n", rrod0[0], rrod0[1], rrod1[0], rrod1[1]);
+  printf("{urod0: (%2.4f, %2.4f)}, {urod1: (%2.4f, %2.4f)}\n", urod0[0], urod0[1], urod1[0], urod1[1]);
+  printf("{rx0: (%2.4f, %2.4f)}, {rx1: (%2.4f, %2.4f)}\n", rx0[0], rx0[1], rx1[0], rx1[1]);
+  printf("{dr: (%2.4f, %2.4f)\n", dr[0], dr[1]);
+  printf("{u: %2.4f}, {flink: (%2.4f, %2.4f)}\n", u, flink[0], flink[1]);
+
+  // Now, simply add the forces/torques onto the two bonds
+  double fbond0[3] = {0.0, 0.0, 0.0};
+  double fbond1[3] = {0.0, 0.0, 0.0};
+  for (int i = 0; i < ndim_; ++i) {
+    fbond0[i] += flink[i];
+    fbond1[i] -= flink[i];
+  }
+
+  double lambda = crosspos0 - 0.5 * lrod0;
+  double mu     = crosspos1 - 0.5 * lrod1;
+  printf("{lambda: %2.4f}, {mu: %2.4f}\n", lambda, mu);
+
+  double rcontact_i[3] = {0.0, 0.0, 0.0};
+  double rcontact_j[3] = {0.0, 0.0, 0.0};
+  for (int i = 0; i < ndim_; ++i) {
+    rcontact_i[i] = urod0[i] * lambda;
+    rcontact_j[i] = urod1[i] * mu;
+  }
+  printf("{rcontact_i: (%2.4f, %2.4f)}\n", rcontact_i[0], rcontact_i[1]);
+  printf("{rcontact_j: (%2.4f, %2.4f)}\n", rcontact_j[0], rcontact_j[1]);
+
+  double tau[3];
+  double taubond0[3] = {0.0, 0.0, 0.0};
+  double taubond1[3] = {0.0, 0.0, 0.0};
+  cross_product(rcontact_i, flink, tau, ndim_);
+  for (int i = 0; i < ndim_; ++i) {
+    taubond0[i] += tau[i];
+  }
+  cross_product(rcontact_j, flink, tau, ndim_);
+  for (int i = 0; i < ndim_; ++i) {
+    taubond1[i] -= tau[i];
+  }
+
+  // Apply the force
+  head0->AddForce(fbond0);
+  head0->AddTorque(taubond0);
+  mrod0->AddForce(fbond0);
+  mrod0->AddTorque(taubond0);
+  head1->AddForce(fbond1);
+  head1->AddTorque(taubond1);
+  mrod1->AddForce(fbond1);
+  mrod1->AddTorque(taubond1);
 }
 
 void XlinkKMC::Dump() {

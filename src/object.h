@@ -262,6 +262,9 @@ class Composite<T> : public Object {
       std::fill(torque_,torque_+3,0.0);
       p_energy_ = 0;
       kmc_energy_ = 0;
+      for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
+        it->ZeroForce();
+      }
     }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim_vec;
@@ -326,6 +329,12 @@ class Composite<T,V> : public Object {
       std::fill(torque_,torque_+3,0.0);
       p_energy_ = 0;
       kmc_energy_ = 0;
+      for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
+        it->ZeroForce();
+      }
+      for (auto it=v_elements_.begin(); it!=v_elements_.end(); ++it) {
+        it->ZeroForce();
+      }
     }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim_vec;

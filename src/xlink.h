@@ -1,6 +1,8 @@
 #ifndef _SIMCORE_XLINK_H_
 #define _SIMCORE_XLINK_H_
 
+#include <cassert>
+
 #include "auxiliary.h"
 #include "xlink_head.h"
 
@@ -92,6 +94,8 @@ class Xlink : public Composite<XlinkHead> {
     void DumpKMC() {
       auto head0 = elements_.begin();
       auto head1 = elements_.begin()+1;
+      assert(n_exp_0_1_ < 10000);
+      assert(n_exp_1_2_ < 10000);
       printf("\t\t[%d] -> {n_exp_0_1: %2.4f (%2.4f, %2.4f)}, {n_exp_1_2: %2.4f (%2.4f, %2.4f)}\n", GetOID(),
           n_exp_0_1_, head0->GetNExp_0_1(), head1->GetNExp_0_1(),
           n_exp_1_2_, head0->GetNExp_1_2(), head1->GetNExp_1_2());
