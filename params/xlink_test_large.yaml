@@ -19,7 +19,7 @@ md_bead_diameter: 1
 md_bead_mass: 1
 #n_xlink: 1
 n_xlink: 100
-xlink_diameter: 2
+xlink_diameter: 1
 dimer_diameter: 1
 dimer_length: 2
 dimer_eq_length: 2

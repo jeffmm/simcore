@@ -45,6 +45,7 @@ class XlinkKMC : public KMCBase {
     void Update_1_2(Xlink *xit);
     void UpdateStage1(Xlink *xit);
     void UpdateStage2(Xlink *xit);
+    void ApplyStage2Force(Xlink *xit);
 
     // Specifics to 2 stage crosslinks (building tables, numbers, etc)
     double XKMCErfinv(double x);

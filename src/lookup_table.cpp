@@ -25,12 +25,12 @@ void LookupTable::Init(int pndim, std::vector<double> *x,
     }
   }
 
-  if (debug_trace) {
+  /*if (debug_trace) {
     printf("NExp lookup table ->\n");
     for (int i = 0; i < table_.size(); ++i) {
       printf("[%d] -> %2.8f\n", i, table_[i]);
     }
-  }
+  }*/
 }
 
 void LookupTable::OutputBinary(std::string outfile) {
