@@ -164,11 +164,13 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
   // Calculate the torques
   double tau[3];
   cross_product(idm.contact1, fepot, tau, ndim_);
-  for (int i = 0; i < ndim_; ++i) {
+  //for (int i = 0; i < ndim_; ++i) {
+  for (int i = 0; i < 3; ++i) {
       tr[i][oid1x] += tau[i];
   }
   cross_product(idm.contact2, fepot, tau, ndim_);
-  for (int i = 0; i < ndim_; ++i) {
+  //for (int i = 0; i < ndim_; ++i) {
+  for (int i = 0; i < 3; ++i) {
       tr[i][oid2x] -= tau[i];
   }
 }
@@ -214,10 +216,15 @@ void InteractionEngine::ReduceParticlesMP() {
     int oidx = (*oid_position_map_)[part->GetOID()];
     double subforce[3] = {0.0, 0.0, 0.0};
     double subtorque[3] = {0.0, 0.0, 0.0};
-    for (int idim = 0; idim < ndim_; ++idim) {
+    //for (int idim = 0; idim < ndim_; ++idim) {
+    for (int idim = 0; idim < 3; ++idim) {
       subforce[idim] = frc_[idim*nsimples_+oidx];
       subtorque[idim] = trqc_[idim*nsimples_+oidx]; 
     }
+    /*if (debug_trace) {
+      printf("INTERACT[%d] -> f(%2.8f, %2.8f, %2.8f)\n", part->GetOID(), subforce[0], subforce[1], subforce[2]);
+      printf("               t(%2.8f, %2.8f, %2.8f)\n", subtorque[0], subtorque[1], subtorque[2]);
+    }*/
     part->AddForceTorqueEnergyKMC(subforce, subtorque, prc_energy_[oidx], kmc_energy_[oidx]);
   }
 }

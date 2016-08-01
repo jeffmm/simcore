@@ -10,6 +10,7 @@
 class BrRod : public Composite<Site,Bond> {
 
   private:
+    bool rod_diffusion_;
     int n_bonds_,
         dynamic_instability_flag_,
         force_induced_catastrophe_flag_;
@@ -63,6 +64,7 @@ class BrRod : public Composite<Site,Bond> {
         p_p2g_ = params->f_pause_to_grow*delta_;
         v_depoly_ = params->v_depoly;
         v_poly_ = params->v_poly;
+        rod_diffusion_ = params->rod_diffusion == 1 ? true : false;
         // Initialize end sites
         for (int i=0; i<2; ++i) {
           Site s(params, space, gsl_rng_get(rng_.r), GetSID());
@@ -103,6 +105,7 @@ class BrRod : public Composite<Site,Bond> {
       tip_force_ = that.tip_force_;
       std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
       poly_state_ = that.poly_state_;
+      rod_diffusion_=that.rod_diffusion_;
     }
     BrRod& operator=(BrRod const& that) {
       Composite::operator=(that); 
@@ -128,6 +131,7 @@ class BrRod : public Composite<Site,Bond> {
       tip_force_ = that.tip_force_;
       std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
       poly_state_ = that.poly_state_;
+      rod_diffusion_ = that.rod_diffusion_;
       return *this;
     } 
     virtual void Init();

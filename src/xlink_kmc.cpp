@@ -267,7 +267,7 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
         double lim1 = scale_factor * (-mu0 + 0.5*l_rod);
         double term1 = erf(lim1);
 
-        nldx->kmc_ = sqrt(M_PI_2 / kb) * exp(-0.5*kb*r_min_mag2) * (term1 - term0) * polar_affinity;
+        nldx->kmc_ = binding_affinity * sqrt(M_PI_2 / kb) * exp(-0.5*kb*r_min_mag2) * (term1 - term0) * polar_affinity;
         n_exp += nldx->kmc_;
       } else {
         double lim0 = -mu0 - 0.5 * l_rod;
@@ -278,7 +278,7 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
         x[0] = fabs(lim1);
         double term1 = n_exp_lookup_.Lookup(x) * ((lim1 < 0) ? -1.0 : 1.0);
         // OVERRIDE the kmc_ value of this neighbor list
-        nldx->kmc_ = (term1 - term0) * polar_affinity;
+        nldx->kmc_ = binding_affinity * (term1 - term0) * polar_affinity;
         n_exp += nldx->kmc_;
       }
       if (debug_trace)
@@ -843,10 +843,11 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   auto urod0 = mrod0->GetRigidOrientation();
   auto urod1 = mrod1->GetRigidOrientation();
 
+  double drmag = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
   printf("{rrod0: (%2.4f, %2.4f)}, {rrod1: (%2.4f, %2.4f)}\n", rrod0[0], rrod0[1], rrod1[0], rrod1[1]);
   printf("{urod0: (%2.4f, %2.4f)}, {urod1: (%2.4f, %2.4f)}\n", urod0[0], urod0[1], urod1[0], urod1[1]);
   printf("{rx0: (%2.4f, %2.4f)}, {rx1: (%2.4f, %2.4f)}\n", rx0[0], rx0[1], rx1[0], rx1[1]);
-  printf("{dr: (%2.4f, %2.4f)\n", dr[0], dr[1]);
+  printf("{dr: (%2.4f, %2.4f)}, {drmag: %2.8f}\n", dr[0], dr[1], drmag);
   printf("{u: %2.4f}, {flink: (%2.4f, %2.4f)}\n", u, flink[0], flink[1]);
 
   // Now, simply add the forces/torques onto the two bonds
@@ -874,11 +875,11 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   double taubond0[3] = {0.0, 0.0, 0.0};
   double taubond1[3] = {0.0, 0.0, 0.0};
   cross_product(rcontact_i, flink, tau, ndim_);
-  for (int i = 0; i < ndim_; ++i) {
+  for (int i = 0; i < 3; ++i) {
     taubond0[i] += tau[i];
   }
   cross_product(rcontact_j, flink, tau, ndim_);
-  for (int i = 0; i < ndim_; ++i) {
+  for (int i = 0; i < 3; ++i) {
     taubond1[i] -= tau[i];
   }
 
