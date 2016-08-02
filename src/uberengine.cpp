@@ -129,6 +129,6 @@ void UberEngine::PrepOutputs() {
   kengine_.PrepOutputs();
 }
 
-void UberEngine::WriteOutputs() {
-  kengine_.WriteOutputs();
+void UberEngine::WriteOutputs(int istep) {
+  kengine_.WriteOutputs(istep);
 }
