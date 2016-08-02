@@ -78,8 +78,8 @@ void XlinkKMC::Init(space_struct *pSpace,
 void XlinkKMC::CalcCutoff() {
   BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec2_);
   // XXX FIXME set back to the correct value
-  max_length_ = 110;
-  //max_length_ = prspec->GetMaxLength();
+  //max_length_ = 110;
+  max_length_ = prspec->GetMaxLength();
   rcutoff_1_2_ = 0.0;
   const double temp = 1.0;
   const double smalleps = 1E-3;
@@ -184,7 +184,7 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
     double binding_affinity = eps_eff_0_1_[i] * on_rate_0_1_[i] * alpha_ * xit->GetDelta();
     auto idx = (*oid_position_map_)[head->GetOID()];
     for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
-      nexp += binding_affinity * nldx->kmc_; 
+      nexp += binding_affinity * nldx->kmc_;
     }
     head->SetNExp_0_1(nexp);
     nexp_xlink += nexp;
@@ -346,9 +346,12 @@ void XlinkKMC::KMC_0_1() {
         auto head = heads->begin() + head_type;
         double binding_affinity = (eps_eff_0_1_[0] * on_rate_0_1_[0] + eps_eff_0_1_[1] * on_rate_0_1_[1]) *
           alpha_ * head->GetDelta();
+        std::ostringstream kmc_event;
+        kmc_event << "[" << (*xit)->GetOID() << "] Successful KMC move {0 -> 1}, {nexp: " << nexp;
+        kmc_event << "}, {roll: " << roll << "}, {head: " << head_type << "}";
+        WriteEvent(kmc_event.str());
         if (debug_trace)
-          printf("[%d] Successful KMC move {0 -> 1}, {nexp: %2.4f}, {roll: %2.4f}, {head: %d}\n", (*xit)->GetOID(),
-              nexp, roll, head_type);
+          printf("%s\n", kmc_event.str().c_str());
         double pos = 0.0;
         int idx = (*oid_position_map_)[head->GetOID()];
         // Search through the neighbors of this head to figure out who we want to bind to
@@ -438,7 +441,8 @@ void XlinkKMC::KMC_1_0() {
         poff_single_a, poff_single_b, noff[0], noff[1]);
 
   for (int i = 0; i < (noff[0] + noff[1]); ++i) {
-    printf("[KMC_0_1] detaching trial %d/%d\n", i, (noff[0] + noff[1]));
+    if (debug_trace)
+      printf("[KMC_0_1] detaching trial %d/%d\n", i, (noff[0] + noff[1]));
     int head_type = i < noff[1];
     int idxloc = -1;
     int idxoff = gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
@@ -467,9 +471,12 @@ void XlinkKMC::KMC_1_0() {
           nonattachead = &(*head0);
         }
 
+        std::ostringstream kmc_event;
+        kmc_event << "[x:" << (*xit)->GetOID() << ",head:" << attachedhead->GetOID() << "] Successful KMC move {1 -> 0}, {idxoff=idxloc=";
+        kmc_event << idxloc << "}, {head: " << head_type << "}";
+        WriteEvent(kmc_event.str());
         if (debug_trace)
-          printf("[x:%d,head:%d] Successful KMC move {1 -> 0}, {idxoff=idxloc=%d}, {head: %d}\n",
-              (*xit)->GetOID(), attachedhead->GetOID(), idxloc, head_type);
+          printf("%s\n", kmc_event.str().c_str());
         // Place withint some random distance of the attach point
         double randr[3];
         double mag2 = 0.0;
@@ -521,6 +528,8 @@ void XlinkKMC::KMC_1_2() {
   XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
   double nexp_1_2 = pxspec->GetNExp_1_2();
+  if (debug_trace)
+    printf("[KMC_1_2] ntot: %2.8f\n", nexp_1_2 * pxspec->GetDelta());
   int nattach = gsl_ran_poisson(rng_.r, nexp_1_2 * pxspec->GetDelta());
   for (int itrial = 0; itrial < nattach; ++itrial) {
     if (debug_trace)
@@ -533,9 +542,12 @@ void XlinkKMC::KMC_1_2() {
       if ((*xit)->GetBoundState() != singly) continue;
       loc += (*xit)->GetNExp_1_2();
       if (loc > ran_loc) {
+        std::ostringstream kmc_event;
+        kmc_event << "[" << (*xit)->GetOID() << "] Successful KMC move {1 -> 2}, {nexp_1_2: " << nexp_1_2 << "}, {ran_loc: ";
+        kmc_event << ran_loc << "}, {loc: " << loc << "}";
+        WriteEvent(kmc_event.str());
         if (debug_trace)
-          printf("[%d] Successful KMC move {1 -> 2}, {nexp_1_2: %2.4f}, {ran_loc: %2.4f}, {loc: %2.4f}\n", (*xit)->GetOID(),
-              nexp_1_2, ran_loc, loc);
+          printf("%s\n", kmc_event.str().c_str());
         // reset loc back to beginning of this xlink
         loc -= (*xit)->GetNExp_1_2();
 
@@ -916,18 +928,21 @@ void XlinkKMC::Dump() {
 }
 
 void XlinkKMC::PrepOutputs() {
-  std::ostringstream file_name;
-  file_name << "sc-kmc-XlinkKMC.log";
-  kmc_file.open(file_name.str().c_str(), std::ios_base::out);
+  kmc_file_name_ << "sc-kmc-XlinkKMC.log";
+  kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out);
   kmc_file << "step #ntot #nfree #nbound1[0] #nbound1[1] #nbound2 nexp01 nexp12\n";
+  kmc_file.close();
+}
+
+void XlinkKMC::WriteEvent(const std::string &pString) {
+  kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out | std::ios_base::app);
+  kmc_file << pString << std::endl;
   kmc_file.close();
 }
 
 void XlinkKMC::WriteOutputs(int istep) {
   XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
-  std::ostringstream file_name;
-  file_name << "sc-kmc-XlinkKMC.log";
-  kmc_file.open(file_name.str().c_str(), std::ios_base::out | std::ios_base::app);
+  kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out | std::ios_base::app);
   kmc_file.precision(16);
   kmc_file.setf(std::ios::fixed, std::ios::floatfield);
   kmc_file << istep << " ";

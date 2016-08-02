@@ -30,6 +30,7 @@ class XlinkKMC : public KMCBase {
 
     int nsimples_;
 
+    std::ostringstream kmc_file_name_;
     std::ofstream kmc_file;
 
     std::vector<Simple*>* simples_;
@@ -69,6 +70,7 @@ class XlinkKMC : public KMCBase {
 
     virtual void PrepOutputs();
     virtual void WriteOutputs(int istep);
+    void WriteEvent(const std::string &pString);
 
 };
 

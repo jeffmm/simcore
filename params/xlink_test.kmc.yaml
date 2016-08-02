@@ -3,8 +3,8 @@ kmc:
     sid1: xlink
     sid2: br_rod
     concentration_0_1: 30190
-    concentration_1_2: [30190, 30190]
-    #concentration_1_2: [10.0, 10.0]
+    #concentration_1_2: [30190, 30190]
+    concentration_1_2: [10.0, 10.0]
     on_rate_0_1: 0.003916
     on_rate_1_2: 0.001958
     alpha: 1.299

@@ -147,7 +147,7 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
 
   #ifdef DEBUG
   if (debug_trace)
-    printf("\tPOT Interacting[%d,%d:%d,%d] (u:%2.8f)\n",
+    printf("\tPOT Interacting[%d,%d:%d,%d] (u:%2.16f)\n",
         oid1x, part1->GetOID(), oid2x, part2->GetOID(), fepot[ndim_]);
   #endif
 
@@ -178,6 +178,8 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
 // Do the KMC interactions separately, they depend on the nl_list
 // being 2-way
 void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx) {
+  // We have to manually rezero the neighbor kmc, if it wanders away
+  neighbor->kmc_ = 0.0;
   auto part1 = (*simples_)[idx];
   auto part2 = (*simples_)[jdx];
 
@@ -202,7 +204,7 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
   auto oid1x = (*oid_position_map_)[part1->GetOID()];
   auto oid2x = (*oid_position_map_)[part2->GetOID()];
   if (debug_trace)
-    printf("\tKMC Interacting[%d,%d:%d,%d] (kmc:%2.8f)\n",
+    printf("\tKMC Interacting[%d,%d:%d,%d] (kmc:%2.16f)\n",
         oid1x, part1->GetOID(), oid2x, part2->GetOID(), fepot[ndim_]);
   #endif
 
