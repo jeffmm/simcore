@@ -15,11 +15,16 @@ void Simulation::Run(system_parameters params, std::string name) {
 
 void Simulation::RunSimulation() {
   std::cout << "Running simulation: " << run_name_ << "\n";
-
+  std::cout << "    steps: " << params_.n_steps << std::endl;
   for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
+    //if (i_step_ % (params_.n_steps / 100) == 0) {
+    if ((100*i_step_) % (params_.n_steps) == 0) {
+      printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
+      fflush(stdout);
+    }
     if (debug_trace)
-      DPRINTF("********\nStep %d\n********\n", i_step_);
+      printf("********\nStep %d\n********\n", i_step_);
     ZeroForces();
     KineticMonteCarloMP();
     InteractMP();
@@ -170,7 +175,7 @@ void Simulation::WriteOutputs() {
   }
 
   // XXX CJE FIXME write outputs more clearly
-  if (i_step_%10==0) {
+  if (i_step_%1000==0) {
     uengine_.WriteOutputs(i_step_);
   }
 
