@@ -145,7 +145,7 @@ void BrBindUnbind::Bind() {
             }
             double mrcut2 = mrcut_*mrcut_;
             double a = sqrt(1.0 - r_min_mag2); //FIXME is this right for 1.0? or mrcut2?
-            if (std::isnan(a))
+            if (isnan(a))
               a = 0.0;
 
             double crosspos = 0.0;
