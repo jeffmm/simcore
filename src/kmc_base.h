@@ -46,7 +46,7 @@ class KMCBase {
     virtual void UpdateKMC() {}
 
     virtual void PrepOutputs() {}
-    virtual void WriteOutputs() {}
+    virtual void WriteOutputs(int istep) {}
 
     virtual void Print() {
       printf("\tsids: [%d, %d]\n", sid1_, sid2_);

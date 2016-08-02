@@ -163,8 +163,8 @@ void kmcEngine::PrepOutputs() {
   }
 }
 
-void kmcEngine::WriteOutputs() {
+void kmcEngine::WriteOutputs(int istep) {
   for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    kmc->second->WriteOutputs(); 
+    kmc->second->WriteOutputs(istep); 
   }
 }

@@ -68,7 +68,7 @@ class XlinkKMC : public KMCBase {
     virtual void UpdateKMC();
 
     virtual void PrepOutputs();
-    virtual void WriteOutputs();
+    virtual void WriteOutputs(int istep);
 
 };
 
