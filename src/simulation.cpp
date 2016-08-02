@@ -170,8 +170,8 @@ void Simulation::WriteOutputs() {
   }
 
   // XXX CJE FIXME write outputs more clearly
-  if (i_step_%1000==0) {
-    uengine_.WriteOutputs();
+  if (i_step_%10==0) {
+    uengine_.WriteOutputs(i_step_);
   }
 
 }

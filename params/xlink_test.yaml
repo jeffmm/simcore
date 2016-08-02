@@ -36,11 +36,11 @@ graph_background: 1
 delta: 0.00025
 #n_steps: 1000000
 #n_steps: 100000
-#n_steps: 20005
+n_steps: 20005
 #n_steps: 10000
 #n_steps: 1000
 #n_steps: 100
-n_steps: 10
+#n_steps: 10
 #n_steps: 2
 #n_steps: 15758
 n_update_cells: 20

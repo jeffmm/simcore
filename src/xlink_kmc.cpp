@@ -438,6 +438,7 @@ void XlinkKMC::KMC_1_0() {
         poff_single_a, poff_single_b, noff[0], noff[1]);
 
   for (int i = 0; i < (noff[0] + noff[1]); ++i) {
+    printf("[KMC_0_1] detaching trial %d/%d\n", i, (noff[0] + noff[1]));
     int head_type = i < noff[1];
     int idxloc = -1;
     int idxoff = gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
@@ -522,8 +523,11 @@ void XlinkKMC::KMC_1_2() {
   double nexp_1_2 = pxspec->GetNExp_1_2();
   int nattach = gsl_ran_poisson(rng_.r, nexp_1_2 * pxspec->GetDelta());
   for (int itrial = 0; itrial < nattach; ++itrial) {
+    if (debug_trace)
+      printf("[KMC_1_2] attaching trial %d/%d\n", itrial, nattach);
     double ran_loc = gsl_rng_uniform(rng_.r) * nexp_1_2;
     double loc = 0.0;
+    bool foundidx = false;
     for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
       // Only take singly bound
       if ((*xit)->GetBoundState() != singly) continue;
@@ -627,12 +631,16 @@ void XlinkKMC::KMC_1_2() {
             nonattachead->SetBound(true);
             (*xit)->CheckBoundState();
 
+            foundidx = true;
             break;
           } // got the neighbor to fall onto
-        }
+        } // check neighbors to see if we need to fall onto this one
 
       } // found it!
-    }
+
+      if (foundidx)
+        break;
+    } // loop over all xlinks for itrial
   }
 }
 
@@ -828,7 +836,6 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   } else {
     factor = k * (1.0 - r_equil_ / sqrt(dot_product(ndim_, dr, dr)));
   }
-  printf("{k: %2.4f}, {factor: %2.4f}, {requil: %2.4f}\n", k, factor, r_equil_);
   double u = 0.0;
   double flink[3] = {0.0, 0.0, 0.0};
   for (int i = 0; i < ndim_; ++i) {
@@ -848,11 +855,11 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   auto urod1 = mrod1->GetRigidOrientation();
 
   double drmag = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
-  printf("{rrod0: (%2.4f, %2.4f)}, {rrod1: (%2.4f, %2.4f)}\n", rrod0[0], rrod0[1], rrod1[0], rrod1[1]);
+  /*printf("{rrod0: (%2.4f, %2.4f)}, {rrod1: (%2.4f, %2.4f)}\n", rrod0[0], rrod0[1], rrod1[0], rrod1[1]);
   printf("{urod0: (%2.4f, %2.4f)}, {urod1: (%2.4f, %2.4f)}\n", urod0[0], urod0[1], urod1[0], urod1[1]);
   printf("{rx0: (%2.4f, %2.4f)}, {rx1: (%2.4f, %2.4f)}\n", rx0[0], rx0[1], rx1[0], rx1[1]);
   printf("{dr: (%2.4f, %2.4f)}, {drmag: %2.8f}\n", dr[0], dr[1], drmag);
-  printf("{u: %2.4f}, {flink: (%2.4f, %2.4f)}\n", u, flink[0], flink[1]);
+  printf("{u: %2.4f}, {flink: (%2.4f, %2.4f)}\n", u, flink[0], flink[1]);*/
 
   // Now, simply add the forces/torques onto the two bonds
   double fbond0[3] = {0.0, 0.0, 0.0};
@@ -864,7 +871,6 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
 
   double lambda = crosspos0 - 0.5 * lrod0;
   double mu     = crosspos1 - 0.5 * lrod1;
-  printf("{lambda: %2.4f}, {mu: %2.4f}\n", lambda, mu);
 
   double rcontact_i[3] = {0.0, 0.0, 0.0};
   double rcontact_j[3] = {0.0, 0.0, 0.0};
@@ -872,8 +878,6 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
     rcontact_i[i] = urod0[i] * lambda;
     rcontact_j[i] = urod1[i] * mu;
   }
-  printf("{rcontact_i: (%2.4f, %2.4f)}\n", rcontact_i[0], rcontact_i[1]);
-  printf("{rcontact_j: (%2.4f, %2.4f)}\n", rcontact_j[0], rcontact_j[1]);
 
   double tau[3];
   double taubond0[3] = {0.0, 0.0, 0.0};
@@ -915,19 +919,21 @@ void XlinkKMC::PrepOutputs() {
   std::ostringstream file_name;
   file_name << "sc-kmc-XlinkKMC.log";
   kmc_file.open(file_name.str().c_str(), std::ios_base::out);
-  kmc_file << "#ntot #nfree #nbound1[0] #nbound1[1] #nbound2\n";
+  kmc_file << "step #ntot #nfree #nbound1[0] #nbound1[1] #nbound2 nexp01 nexp12\n";
   kmc_file.close();
 }
 
-void XlinkKMC::WriteOutputs() {
+void XlinkKMC::WriteOutputs(int istep) {
   XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   std::ostringstream file_name;
   file_name << "sc-kmc-XlinkKMC.log";
   kmc_file.open(file_name.str().c_str(), std::ios_base::out | std::ios_base::app);
   kmc_file.precision(16);
   kmc_file.setf(std::ios::fixed, std::ios::floatfield);
+  kmc_file << istep << " ";
   kmc_file << pxspec->GetNMembers() << " " << pxspec->GetNFree() << " " <<
     pxspec->GetNBound1()[0] << " " << pxspec->GetNBound1()[1] << " " << 
-    pxspec->GetNBound2() << "\n";
+    pxspec->GetNBound2() << " ";
+  kmc_file << pxspec->GetNExp_0_1() << " "  << pxspec->GetNExp_1_2() << "\n";
   kmc_file.close();
 }
