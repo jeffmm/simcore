@@ -24,7 +24,6 @@ class Xlink : public Composite<XlinkHead> {
 
     /* Functions unique to Br Dimer */
     void Integrate();
-    void InternalForces();
     void UpdateOrientation();
     graph_struct g2_; // Drawing two spheros, one for each bead;
 
