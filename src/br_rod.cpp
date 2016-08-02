@@ -168,7 +168,7 @@ void BrRod::AddRandomDisplacement() {
 void BrRod::UpdateOrientation() {
   // First handle reorientation due to external torques
   double du[3];
-  cross_product(torque_, orientation_, du, n_dim_);
+  cross_product(torque_, orientation_, du, 3); // ndim=3 since torques
   for (int i=0; i<n_dim_; ++i)
     orientation_[i] += du[i]*delta_/gamma_rot_;
   // Now handle the random orientation update
