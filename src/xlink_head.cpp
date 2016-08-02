@@ -20,14 +20,13 @@ void XlinkHead::UpdatePositionMP() {
   // If bound, the position is set by the kmc engine module
   if (!bound_) {
     KickBead();
+    std::copy(position_, position_+n_dim_, prev_position_);
     for (int i = 0; i < n_dim_; ++i) {
         position_[i] = position_[i] + force_[i] * delta_ / diameter_;
-        dr_tot_[i] += position_[i] + force_[i] * delta_ / diameter_;
     }
-  } else {
-    for (int i = 0; i < n_dim_; ++i) {
-      dr_tot_[i] += position_[i] - prev_position_[i];
-    }
+  }
+  for (int i = 0; i < n_dim_; ++i) {
+    dr_tot_[i] += position_[i] - prev_position_[i];
   }
   UpdatePeriodic();
 }

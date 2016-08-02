@@ -1,15 +1,15 @@
 kmc:
-#  - type: XlinkKMC
-#    sid1: xlink
-#    sid2: br_rod
-#    concentration_0_1: 30190
-#    concentration_1_2: [30190.0, 30190.0]
-#    on_rate_0_1: 0.003916
-#    on_rate_1_2: 0.1
-#    alpha: 1.299
-#    rcut: 1.0
-#    velocity: -1.0
-#    spring_constant: 10.0
-#    barrier_weight: 0.0
-#    equilibrium_length: 0.5
+  - type: XlinkKMC
+    sid1: xlink
+    sid2: br_rod
+    concentration_0_1: 30190
+    concentration_1_2: [30190.0, 30190.0]
+    on_rate_0_1: 0.1
+    on_rate_1_2: 0.1
+    alpha: 1.299
+    rcut: 1.0
+    velocity: -1.0
+    spring_constant: 10.0
+    barrier_weight: 0.0
+    equilibrium_length: 0.5
 
