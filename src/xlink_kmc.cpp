@@ -703,7 +703,8 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   auto aid = attachedhead->GetAttach().first;
   auto aidx = (*oid_position_map_)[aid];
   auto cross_pos = attachedhead->GetAttach().second; // relative to the -end of the rod!!
-  auto r_x = attachedhead->GetRigidPosition();
+  double rx[3];
+  std::copy(attachedhead->GetRigidPosition(), attachedhead->GetRigidPosition()+ndim_, rx);
   
   auto part2 = (*simples_)[aidx];
   auto r_rod = part2->GetRigidPosition();
@@ -726,13 +727,15 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   }
   if (debug_trace)
     printf("[%d] attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
-           attachedhead->GetOID(), part2->GetOID(), r_x[0], r_x[1], cross_pos,
+           attachedhead->GetOID(), part2->GetOID(), rx[0], rx[1], cross_pos,
            rxnew[0], rxnew[1]);
-  attachedhead->SetPrevPosition(r_x);
+  attachedhead->SetPrevPosition(rx);
   attachedhead->SetPosition(rxnew);
-  nonattachead->SetPrevPosition(r_x);
+  attachedhead->AddDr();
+  nonattachead->SetPrevPosition(rx);
   nonattachead->SetPosition(rxnew);
-  xit->SetPrevPosition(r_x);
+  nonattachead->AddDr();
+  xit->SetPrevPosition(rx);
   xit->SetPosition(rxnew);
 }
 
@@ -779,6 +782,7 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
     }
     head->SetPrevPosition(rx);
     head->SetPosition(rxnew);
+    head->AddDr();
   }
 
   for (int i = 0; i < ndim_; ++i) {

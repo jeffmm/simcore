@@ -27,6 +27,8 @@ void Xlink::UpdateOrientation() {
   for (int i=0; i<n_dim_; ++i) {
     length_ += SQR(dr[i]);
   }
+  if (length_ <= 0.0)
+    length_ = 1.0;
   length_=sqrt(length_);
   for (int i=0; i<n_dim_; ++i) {
     orientation_[i] = (dr[i])/length_;
@@ -40,15 +42,6 @@ void Xlink::UpdateOrientation() {
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
     i_bead->SetOrientation(orientation_loc); 
   }
-}
-
-void Xlink::InternalForces() {
-  /*for (int i=0; i<n_dim_; ++i)
-    force_[i] = k_spring_ * (length_-eq_length_) * orientation_[i];
-  elements_[0].AddForce(force_);
-  for (int i=0; i<n_dim_; ++i)
-    force_[i] = -force_[i];
-  elements_[1].AddForce(force_);*/
 }
 
 void Xlink::CheckBoundState() {
@@ -67,7 +60,6 @@ void Xlink::CheckBoundState() {
 
 void Xlink::UpdatePositionMP() {
   CheckBoundState();
-  InternalForces();
   Integrate();
 }
 
@@ -83,7 +75,6 @@ void Xlink::Integrate() {
   switch(bound_) {
     case unbound:
       DiffuseXlink();
-      //UpdateOrientation();
       break;
   }
   /*double pos[3] = {0, 0, 0};
@@ -98,9 +89,14 @@ void Xlink::DiffuseXlink() {
   // Diffuse based on the first head
   auto head0 = elements_.begin();
   auto head1 = elements_.begin()+1;
+  double oldpos[3];
+  std::copy(head0->GetRigidPosition(), head0->GetRigidPosition()+n_dim_, oldpos);
   head0->UpdatePositionMP();
+  head0->SetPrevPosition(oldpos);
   head1->SetPosition(head0->GetRigidPosition());
+  head1->SetPrevPosition(oldpos);
   SetPosition(head0->GetRigidPosition());
+  SetPrevPosition(oldpos);
 }
 
 void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
