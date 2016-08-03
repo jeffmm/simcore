@@ -5,7 +5,7 @@ n_runs: 1
 #n_dim: 2
 n_dim: 2
 n_periodic: 2
-system_radius: 10
+system_radius: 12
 #system_radius: 7
 daughter_radius: 5
 mother_daughter_dist: 12
