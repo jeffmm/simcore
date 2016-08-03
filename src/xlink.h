@@ -61,6 +61,7 @@ class Xlink : public Composite<XlinkHead> {
     };
     /* Define virtual functions */
     void Init();
+    void InitConfigurator(const double* const x, const double diameter);
     void UpdatePositionMP();
     void Draw(std::vector<graph_struct*> * graph_array);
     void ApplyInteractions();
@@ -127,6 +128,9 @@ class XlinkSpecies : public Species<Xlink> {
       SpeciesBase::operator=(that);
       return *this;
     }
+
+    // Specific initialization
+    void ConfiguratorXlink(char *filename);
 
     // KMC specifics
     double const GetNExp_0_1() {return n_exp_0_1_;}

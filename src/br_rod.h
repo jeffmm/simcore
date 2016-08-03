@@ -140,6 +140,9 @@ class BrRod : public Composite<Site,Bond> {
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePositionMP();
     virtual void Dump();
+
+    // Specific functions for configurations
+    void InitConfigurator(const double* const x, const double* const u, const double l);
 };
 
 class BrRodSpecies : public Species<BrRod> {
@@ -164,6 +167,9 @@ class BrRodSpecies : public Species<BrRod> {
       Species::Init();
     }
     double const GetMaxLength() {return max_length_;}
+
+    // Special insertion routine
+    void ConfiguratorRod(char *filename);
 
 };
 

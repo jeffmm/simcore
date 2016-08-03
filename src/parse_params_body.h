@@ -304,6 +304,10 @@ else if ( param_name.compare("kmcfile") == 0 ) {
 else if (param_name.compare("max_overlap") == 0){
   params_[i_var].max_overlap = atoi(param_value.c_str());
 }
+else if ( param_name.compare("config_file") == 0 ) {
+  params_[i_var].config_file = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
+  strcpy(params_[i_var].config_file, param_value.c_str());
+}
 else {
   std::cout << "  WARNING: Parameter " << param_name << " not recognized!\n";
 }

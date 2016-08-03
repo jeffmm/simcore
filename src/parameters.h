@@ -105,6 +105,7 @@ struct system_parameters {
   double masterskin = 1.0;
   char *kmcfile;
   int max_overlap = 10000;
+  char *config_file;
 
 };
 

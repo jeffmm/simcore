@@ -26,6 +26,7 @@ delta: 0.0001
 #delta: 0.00001
 #n_steps: 1000000
 n_steps: 100000
+#n_steps: 10
 n_update_cells: 20
 time_flag: 1
 energy_analysis_flag: 1
