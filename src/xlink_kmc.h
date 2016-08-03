@@ -26,7 +26,7 @@ class XlinkKMC : public KMCBase {
 
     int nfree_;
     int nbound1_[2];
-    int nbound2_;
+    int nbound2_[2];
 
     int nsimples_;
 
@@ -42,6 +42,7 @@ class XlinkKMC : public KMCBase {
     void KMC_1_0();
     void KMC_1_2();
     void KMC_2_1();
+    void KMC_2_1_ForceDep();
     void Update_0_1(Xlink *xit);
     void Update_1_2(Xlink *xit);
     void UpdateStage1(Xlink *xit);

@@ -10,6 +10,6 @@ kmc:
     rcut: 1.0
     velocity: -1.0
     spring_constant: 10.0
-    barrier_weight: 0.0
+    barrier_weight: 0.25
     equilibrium_length: 0.5
 

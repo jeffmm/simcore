@@ -19,6 +19,7 @@ class Xlink : public Composite<XlinkHead> {
     double k_spring_;
     double n_exp_0_1_ = 0.0;
     double n_exp_1_2_ = 0.0;
+    double uinternal_ = 0.0;
 
     attach_type bound_;
 
@@ -84,18 +85,21 @@ class Xlink : public Composite<XlinkHead> {
     double const GetEqLength() {return eq_length_;}
     double const GetNExp_0_1() {return n_exp_0_1_;}
     double const GetNExp_1_2() {return n_exp_1_2_;}
+    double const GetInternalU() {return uinternal_;}
     attach_type const GetBoundState() {return bound_;}
     void SetEqLength(double const eq_length) {eq_length_ = eq_length;}
     void SetKSpring(double const k_spring) {k_spring_ = k_spring;}
     void SetNExp_0_1(double const n) {n_exp_0_1_=n;}
     void SetNExp_1_2(double const n) {n_exp_1_2_=n;}
+    void SetInternalU(double u) {uinternal_=u;}
 
     void DumpKMC() {
       auto head0 = elements_.begin();
       auto head1 = elements_.begin()+1;
       assert(n_exp_0_1_ < 10000);
       assert(n_exp_1_2_ < 10000);
-      printf("\t\t[%d] -> {n_exp_0_1: %2.4f (%2.4f, %2.4f)}, {n_exp_1_2: %2.4f (%2.4f, %2.4f)}\n", GetOID(),
+      printf("\t\t[%d] -> {u: %2.4f}, {n_exp_0_1: %2.4f (%2.4f, %2.4f)}, {n_exp_1_2: %2.4f (%2.4f, %2.4f)}\n", GetOID(),
+          uinternal_,
           n_exp_0_1_, head0->GetNExp_0_1(), head1->GetNExp_0_1(),
           n_exp_1_2_, head0->GetNExp_1_2(), head1->GetNExp_1_2());
       head0->DumpKMC();
@@ -109,7 +113,7 @@ class XlinkSpecies : public Species<Xlink> {
     double n_exp_0_1_ = 0.0;
     double n_exp_1_2_ = 0.0;
     int nbound1_[2] = {0, 0};
-    int nbound2_ = 0.0;
+    int nbound2_[2] = {0, 0};
     int nfree_ = 0.0;
 
   public:
@@ -133,8 +137,8 @@ class XlinkSpecies : public Species<Xlink> {
     void SetNFree(int n) {nfree_=n;}
     const int* const GetNBound1() {return nbound1_;}
     void SetNBound1(int n0, int n1) {nbound1_[0]=n0; nbound1_[1]=n1;}
-    int const GetNBound2() {return nbound2_;}
-    void SetNBound2(int n) {nbound2_=n;}
+    const int* const GetNBound2() {return nbound2_;}
+    void SetNBound2(int n0, int n1) {nbound2_[0]=n0; nbound2_[1]=n1;}
 
     virtual void DumpKMC() {
       for (auto it = members_.begin(); it != members_.end(); ++it) {
