@@ -102,3 +102,4 @@ param_file << "ftype : " << params.ftype << "\n";
 param_file << "masterskin : " << params.masterskin << "\n";
 param_file << "kmcfile : " << params.kmcfile << "\n";
 param_file << "max_overlap : " << params.max_overlap << "\n";
+param_file << "config_file : " << params.config_file << "\n";

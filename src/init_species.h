@@ -37,7 +37,14 @@ if (params_.n_md_bead > 0) {
 #ifdef _SIMCORE_BR_ROD_H_
 if (params_.n_rod > 0) {
   SpeciesBase * spcs = new BrRodSpecies(params_.n_rod, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-  spcs->Init();
+  //spcs->Init();
+  // Special stuff for a rod
+  BrRodSpecies* prspec = dynamic_cast<BrRodSpecies*>(spcs);
+  if (strcmp(params_.config_file, "random") == 0) {
+    prspec->Init();
+  } else {
+    prspec->ConfiguratorRod(params_.config_file);
+  }
   species_.push_back(spcs);
 }
 #endif
@@ -65,7 +72,12 @@ if (params_.n_br_walker > 0) {
 #ifdef _SIMCORE_XLINK_H_
 if (params_.n_xlink > 0) {
   SpeciesBase * spcs = new XlinkSpecies(params_.n_xlink, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-  spcs->Init();
+  XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spcs);
+  if (strcmp(params_.config_file, "random") == 0) {
+    pxspec->Init();
+  } else {
+    pxspec->ConfiguratorXlink(params_.config_file);
+  }
   species_.push_back(spcs);
 }
 #endif
