@@ -5,8 +5,8 @@ n_runs: 1
 #n_dim: 2
 n_dim: 2
 n_periodic: 2
-#system_radius: 25
-system_radius: 7
+system_radius: 10
+#system_radius: 7
 daughter_radius: 5
 mother_daughter_dist: 12
 boundary_type: 1
@@ -23,7 +23,7 @@ md_bead_mass: 1
 #n_br_walker: 1
 #br_walker_diameter: 2
 #n_xlink: 184
-n_xlink: 10
+n_xlink: 1
 xlink_diameter: 1
 dimer_diameter: 1
 dimer_length: 2
@@ -38,10 +38,10 @@ delta: 0.00025
 #n_steps: 1000000
 #n_steps: 100000
 #n_steps: 20005
-#n_steps: 10000
+n_steps: 10000
 #n_steps: 1000
 #n_steps: 100
-n_steps: 10
+#n_steps: 10
 #n_steps: 2
 #n_steps: 15758
 n_update_cells: 20
