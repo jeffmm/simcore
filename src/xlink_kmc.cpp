@@ -263,7 +263,6 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
       if (r_equil_ == 0.0) {
         double kb = k_stretch_ * (1.0 - barrier_weight_);
         double scale_factor = sqrt(0.5 * kb);
-        exit(1);
         double lim0 = scale_factor * (-mu0 - 0.5*l_rod);
         double term0 = erf(lim0);
         double lim1 = scale_factor * (-mu0 + 0.5*l_rod);
@@ -421,7 +420,6 @@ void XlinkKMC::KMC_0_1() {
               printf("\t{mu: %2.4f}, {crosspos: %2.4f}\n", mu, crosspos);
             head->SetBound(true);
             (*xit)->CheckBoundState();
-            exit(1);
             break;
           } // the actual neighbor to fall on
         } // loop over neighbors to figure out which to attach to
