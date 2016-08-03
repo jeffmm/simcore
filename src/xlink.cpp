@@ -50,8 +50,16 @@ void Xlink::CheckBoundState() {
   auto head1 = elements_.begin()+1;
   bool bound0 = head0->GetBound();
   bool bound1 = head1->GetBound();
-  if (bound0 || bound1) {
+  if (!bound0 && !bound1) {
+    uinternal_ = 0.0;
+  }
+  if (bound0 && !bound1) {
     bound_ = singly;
+    uinternal_ = 0.0;
+  }
+  if (!bound0 && bound1) {
+    bound_ = singly;
+    uinternal_ = 0.0;
   }
   if (bound0 && bound1) {
     bound_ = doubly;
@@ -97,6 +105,9 @@ void Xlink::DiffuseXlink() {
   head1->SetPrevPosition(oldpos);
   SetPosition(head0->GetRigidPosition());
   SetPrevPosition(oldpos);
+  head0->UpdatePeriodic();
+  head1->UpdatePeriodic();
+  UpdatePeriodic();
 }
 
 void Xlink::Draw(std::vector<graph_struct*> * graph_array) {

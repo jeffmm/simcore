@@ -236,20 +236,21 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
       // XXX FIXME Polar Affinity
       double polar_affinity = 1.0;
       double r_x[3];
+      double s_x[3];
       double r_rod[3];
       double s_rod[3];
       double u_rod[3];
       std::copy(freehead->GetRigidPosition(), freehead->GetRigidPosition()+ndim_, r_x);
+      std::copy(freehead->GetRigidScaledPosition(), freehead->GetRigidScaledPosition()+ndim_, s_x);
       std::copy(mrod->GetRigidPosition(), mrod->GetRigidPosition()+ndim_, r_rod);
       std::copy(mrod->GetRigidScaledPosition(), mrod->GetRigidScaledPosition()+ndim_, s_rod);
       std::copy(mrod->GetRigidOrientation(), mrod->GetRigidOrientation()+ndim_, u_rod);
       double l_rod = mrod->GetRigidLength();
-      double *s_1 = NULL; // FIXME from robert
       double rcontact[3];
       double dr[3];
       double mu0 = 0.0;
       min_distance_point_carrier_line(ndim_, nperiodic_,
-                                      space_->unit_cell, r_x, s_1,
+                                      space_->unit_cell, r_x, s_x,
                                       r_rod, s_rod, u_rod, l_rod,
                                       dr, rcontact, &mu0);
 
@@ -262,6 +263,7 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
       if (r_equil_ == 0.0) {
         double kb = k_stretch_ * (1.0 - barrier_weight_);
         double scale_factor = sqrt(0.5 * kb);
+        exit(1);
         double lim0 = scale_factor * (-mu0 - 0.5*l_rod);
         double term0 = erf(lim0);
         double lim1 = scale_factor * (-mu0 + 0.5*l_rod);
@@ -368,20 +370,21 @@ void XlinkKMC::KMC_0_1() {
             // (closest point along carrier line).  In this frame, the position
             // of the xlink should be gaussian distributed
             double r_x[3];
+            double s_x[3];
             double r_rod[3];
             double s_rod[3];
             double u_rod[3];
             std::copy(head->GetRigidPosition(), head->GetRigidPosition()+ndim_, r_x);
+            std::copy(head->GetRigidScaledPosition(), head->GetRigidScaledPosition()+ndim_, s_x);
             std::copy(part2->GetRigidPosition(), part2->GetRigidPosition()+ndim_, r_rod);
             std::copy(part2->GetRigidScaledPosition(), part2->GetRigidScaledPosition()+ndim_, s_rod);
             std::copy(part2->GetRigidOrientation(), part2->GetRigidOrientation()+ndim_, u_rod);
             double l_rod = part2->GetRigidLength();
-            double *s_1 = NULL; // FIXME from robert
             double rcontact[3];
             double dr[3];
             double mu = 0.0;
             min_distance_point_carrier_line(ndim_, nperiodic_,
-                                            space_->unit_cell, r_x, s_1,
+                                            space_->unit_cell, r_x, s_x,
                                             r_rod, s_rod, u_rod, l_rod,
                                             dr, rcontact, &mu);
 
@@ -418,6 +421,7 @@ void XlinkKMC::KMC_0_1() {
               printf("\t{mu: %2.4f}, {crosspos: %2.4f}\n", mu, crosspos);
             head->SetBound(true);
             (*xit)->CheckBoundState();
+            exit(1);
             break;
           } // the actual neighbor to fall on
         } // loop over neighbors to figure out which to attach to
@@ -498,8 +502,10 @@ void XlinkKMC::KMC_1_0() {
         }
         attachedhead->SetPosition(randr);
         attachedhead->SetPrevPosition(prevpos);
+        //attachedhead->UpdatePeriodic();
         nonattachead->SetPosition(randr);
         nonattachead->SetPrevPosition(prevpos);
+        //nonattachead->UpdatePeriodic();
         attachedhead->SetBound(false);
         (*xit)->CheckBoundState();
 
@@ -603,20 +609,21 @@ void XlinkKMC::KMC_1_2() {
             // (closest point along carrier line).  In this frame, the position
             // of the xlink should be gaussian distributed
             double r_x[3];
+            double s_x[3];
             double r_rod[3];
             double s_rod[3];
             double u_rod[3];
             std::copy(nonattachead->GetRigidPosition(), nonattachead->GetRigidPosition()+ndim_, r_x);
+            std::copy(nonattachead->GetRigidScaledPosition(), nonattachead->GetRigidScaledPosition()+ndim_, s_x);
             std::copy(mrod->GetRigidPosition(), mrod->GetRigidPosition()+ndim_, r_rod);
             std::copy(mrod->GetRigidScaledPosition(), mrod->GetRigidScaledPosition()+ndim_, s_rod);
             std::copy(mrod->GetRigidOrientation(), mrod->GetRigidOrientation()+ndim_, u_rod);
             double l_rod = mrod->GetRigidLength();
-            double *s_1 = NULL; // FIXME from robert
             double rcontact[3];
             double dr[3];
             double mu = 0.0;
             min_distance_point_carrier_line(ndim_, nperiodic_,
-                                            space_->unit_cell, r_x, s_1,
+                                            space_->unit_cell, r_x, s_x,
                                             r_rod, s_rod, u_rod, l_rod,
                                             dr, rcontact, &mu);
 
@@ -657,7 +664,42 @@ void XlinkKMC::KMC_1_2() {
 }
 
 void XlinkKMC::KMC_2_1() {
+  //printf("XlinkKMC::KMC_2_1 begin\n");
+  if (barrier_weight_ == 0.0) {
+    // All detachments equally probable, do via a poisson distribution
+    printf("NOT IMPLEMENTED, EXITING!\n");
+    exit(1);
+  } else {
+    KMC_2_1_ForceDep();
+  }
+}
 
+void XlinkKMC::KMC_2_1_ForceDep() {
+  // Force dependent detachment!
+  XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
+  auto xlinks = pxspec->GetXlinks();
+  int nbound2[2];
+  std::copy(pxspec->GetNBound2(), pxspec->GetNBound2()+2, nbound2);
+  double poff_base[2] = {
+    on_rate_1_2_[0] * pxspec->GetDelta(),
+    on_rate_1_2_[1] * pxspec->GetDelta()};
+  for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
+    if ((*xit)->GetBoundState() != doubly) continue; // only doubly bound
+    double kboltzoff = exp(barrier_weight_ * (*xit)->GetInternalU());
+    //printf("kboltzoff: %2.8f\n", kboltzoff);
+    uint8_t off[2] = {
+      gsl_rng_uniform(rng_.r) < poff_base[0] * kboltzoff,
+      gsl_rng_uniform(rng_.r) < poff_base[1] * kboltzoff};
+    if (off[0] && off[1]) {
+      //printf("KMC_1_2 double head removal\n");
+      // Easy, set the head to the midpoint of the xlink and fall off both
+      //exit(1);
+    } else if (off[0] || off[1]) {
+      //printf("KMC_1_2 single head removal\n");
+      // Randomly insert this head aroudn the detachment area
+      //exit(1);
+    }
+  }
 }
 
 void XlinkKMC::UpdateKMC() {
@@ -668,7 +710,7 @@ void XlinkKMC::UpdateKMC() {
 
   nfree_ = 0.0;
   nbound1_[0] = nbound1_[1] = 0.0;
-  nbound2_ = 0.0;
+  nbound2_[0] = nbound2_[1] = 0.0;
 
   // Do a switch on the type that we're examining
   // Loop over the xlinks to see who  does what
@@ -691,7 +733,7 @@ void XlinkKMC::UpdateKMC() {
 
   pxspec->SetNFree(nfree_);
   pxspec->SetNBound1(nbound1_[0], nbound1_[1]);
-  pxspec->SetNBound2(nbound2_);
+  pxspec->SetNBound2(nbound2_[0], nbound2_[0]);
 }
 
 void XlinkKMC::UpdateStage1(Xlink *xit) {
@@ -751,12 +793,15 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
            rxnew[0], rxnew[1]);
   attachedhead->SetPrevPosition(rx);
   attachedhead->SetPosition(rxnew);
+  //attachedhead->UpdatePeriodic();
   attachedhead->AddDr();
   nonattachead->SetPrevPosition(rx);
   nonattachead->SetPosition(rxnew);
+  //attachedhead->UpdatePeriodic();
   nonattachead->AddDr();
   xit->SetPrevPosition(rx);
   xit->SetPosition(rxnew);
+  //xit->UpdatePeriodic();
 }
 
 void XlinkKMC::UpdateStage2(Xlink *xit) {
@@ -766,7 +811,10 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   std::copy(xit->GetPosition(), xit->GetPosition()+ndim_, oldxitpos);
   double avgpos[3] = {0.0, 0.0, 0.0};
   auto heads = xit->GetHeads();
+  int ihead = -1;
   for (auto head = heads->begin(); head != heads->end(); ++head) {
+    ihead++;
+    nbound2_[ihead]++;
     head->SetNExp_1_2(0.0);
 
     auto aid = head->GetAttach().first;
@@ -802,6 +850,7 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
     }
     head->SetPrevPosition(rx);
     head->SetPosition(rxnew);
+    //head->UpdatePeriodic();
     head->AddDr();
   }
 
@@ -811,8 +860,7 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
 
   xit->SetPosition(avgpos);
   xit->SetPrevPosition(oldxitpos);
-
-  nbound2_++;
+  //xit->UpdatePeriodic();
 }
 
 void XlinkKMC::ApplyStage2Force(Xlink *xit) {
@@ -855,7 +903,10 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
     u += 0.5 * SQR(flink[i]);
   }
   u *= 0.5 / k;
+  if (debug_trace)
+    printf("\t{uin: %2.4f}\n", u);
   xit->AddPotential(u);
+  xit->SetInternalU(u);
 
   auto rrod0 = mrod0->GetRigidPosition();
   auto rrod1 = mrod1->GetRigidPosition();
@@ -922,7 +973,7 @@ void XlinkKMC::Dump() {
     printf("\t{n_exp_0_1: %2.4f, n_exp_1_2: %2.4f}\n", pxspec->GetNExp_0_1(), pxspec->GetNExp_1_2());
     printf("\t{nfree:  %d}\n", pxspec->GetNFree());
     printf("\t{nbound1: %d,%d}\n", pxspec->GetNBound1()[0], pxspec->GetNBound1()[1]);
-    printf("\t{nbound2: %d}\n", pxspec->GetNBound2());
+    printf("\t{nbound2: %d,%d}\n", pxspec->GetNBound2()[0], pxspec->GetNBound2()[1]);
     pxspec->DumpKMC();
   }
 }
@@ -930,7 +981,7 @@ void XlinkKMC::Dump() {
 void XlinkKMC::PrepOutputs() {
   kmc_file_name_ << "sc-kmc-XlinkKMC.log";
   kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out);
-  kmc_file << "step #ntot #nfree #nbound1[0] #nbound1[1] #nbound2 nexp01 nexp12\n";
+  kmc_file << "step #ntot #nfree #nbound1[0] #nbound1[1] #nbound2[0] #nbound2[1] nexp01 nexp12\n";
   kmc_file.close();
 }
 
@@ -948,7 +999,7 @@ void XlinkKMC::WriteOutputs(int istep) {
   kmc_file << istep << " ";
   kmc_file << pxspec->GetNMembers() << " " << pxspec->GetNFree() << " " <<
     pxspec->GetNBound1()[0] << " " << pxspec->GetNBound1()[1] << " " << 
-    pxspec->GetNBound2() << " ";
+    pxspec->GetNBound2()[0] << " " << pxspec->GetNBound2()[1] << " ";
   kmc_file << pxspec->GetNExp_0_1() << " "  << pxspec->GetNExp_1_2() << "\n";
   kmc_file.close();
 }
