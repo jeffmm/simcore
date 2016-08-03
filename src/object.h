@@ -162,6 +162,9 @@ class Simple : public Object {
         dr += dr_tot_[i]*dr_tot_[i];
       return dr;
     }
+    virtual double GetDrMax() {
+      return GetDr();
+    }
     virtual double const GetRigidLength() {return length_;}
     virtual double const GetRigidDiameter() {return diameter_;}
     virtual double const * const GetRigidPosition() {return position_;}

@@ -16,6 +16,22 @@ void Xlink::Init() {
   UpdateOrientation();
 }
 
+void Xlink::InitConfigurator(const double* const x, const double diameter) {
+  SetPosition(x);
+  diameter_ = diameter;
+  for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
+    i_bead->SetPosition(position_);
+    i_bead->SetPrevPosition(position_);
+    i_bead->SetDiameter(diameter_);
+    i_bead->SetDiffusion();
+    i_bead->SetSpace(space_);
+    i_bead->UpdatePeriodic();
+    i_bead->SetBound(false);
+  }
+
+  UpdateOrientation();
+}
+
 void Xlink::UpdateOrientation() {
   double const * const r1=elements_[0].GetPosition();
   double const * const r2=elements_[1].GetPosition();
@@ -133,3 +149,41 @@ void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
     i_bead->Draw(graph_array);
 }
 
+
+// Species specifics
+void XlinkSpecies::ConfiguratorXlink(char *filename) {
+  std::cout << "Xlink Configurator started with " << filename << std::endl;
+
+  YAML::Node node = YAML::LoadFile(filename);
+
+  std::cout << node << std::endl;
+
+  int nxlinks = node["xlink"]["xit"].size();
+  std::cout << "Generic Properties:\n";
+  std::cout << "   nxlinks: " << nxlinks << std::endl;
+
+  std::string insertion_type;
+  insertion_type = node["xlink"]["properties"]["insertion_type"].as<std::string>();
+  std::cout << "   insertion type: " << insertion_type << std::endl;
+
+  if (insertion_type.compare("xyz") == 0) {
+    for (int ix = 0; ix < nxlinks; ++ix) {
+      double x[3] = {0.0, 0.0, 0.0};
+      double diameter = 0.0;
+      x[0] = node["xlink"]["xit"][ix]["x"][0].as<double>();
+      x[1] = node["xlink"]["xit"][ix]["x"][1].as<double>();
+      x[2] = node["xlink"]["xit"][ix]["x"][2].as<double>();
+      std::cout << "   x(" << x[0] << ", " << x[1] << ", " << x[2] << ")\n";
+      diameter = node["xlink"]["xit"][ix]["diameter"].as<double>();
+      std::cout << "   diameter[" << diameter << "]\n";
+
+      Xlink *member = new Xlink(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->InitConfigurator(x, diameter);
+      member->Dump();
+      members_.push_back(member);
+    }
+  } else {
+    printf("nope, not yet\n");
+    exit(1);
+  }
+}

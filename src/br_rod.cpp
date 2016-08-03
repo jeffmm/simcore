@@ -1,7 +1,33 @@
 #include "br_rod.h"
 
+#include <yaml-cpp/yaml.h>
+
 void BrRod::Init() {
   InsertRandom(0.5*length_+diameter_);
+  poly_state_ = GROW;
+  SetDiffusion();
+  std::fill(body_frame_, body_frame_+6, 0.0);
+  // Init bond lengths and diameter
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
+    bond->SetRigidPosition(position_);
+    bond->SetRigidScaledPosition(scaled_position_);
+    bond->SetRigidOrientation(orientation_);
+    bond->SetRigidLength(length_);
+    bond->SetRigidDiameter(diameter_);
+    bond->SetLength(child_length_);
+    bond->SetDiameter(diameter_);
+  }
+  // Set positions for sites and bonds
+  UpdatePeriodic();
+  UpdateBondPositions();
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
+    bond->UpdatePeriodic();
+}
+
+void BrRod::InitConfigurator(const double* const x, const double* const u, const double l) {
+  SetPosition(x);
+  SetOrientation(u);
+  UpdatePeriodic();
   poly_state_ = GROW;
   SetDiffusion();
   std::fill(body_frame_, body_frame_+6, 0.0);
@@ -326,11 +352,47 @@ void BrRod::Dump() {
   }
 }
 
-//void BrRodSpecies::InitPotentials (system_parameters *params) {
-  //AddPotential(SID::br_simple_rod, SID::br_simple_rod, 
-      //// Set br_rod-br_rod interaction
-      //new WCA(params->lj_epsilon,params->rod_diameter,
-        //space_, pow(2, 1.0/6.0)*params->rod_diameter));
-//}
 
+// Species specifics
+void BrRodSpecies::ConfiguratorRod(char *filename) {
+  std::cout << "BrRod Configurator started with " << filename << std::endl;
 
+  YAML::Node node = YAML::LoadFile(filename);
+
+  std::cout << node << std::endl;
+
+  int nrods = node["br_rod"]["rod"].size();
+  std::cout << "Generic Properties:\n";
+  std::cout << "   nrods: " << nrods << std::endl;
+
+  std::string insertion_type;
+  insertion_type = node["br_rod"]["properties"]["insertion_type"].as<std::string>();
+  std::cout << "   insertion type: " << insertion_type << std::endl;
+
+  if (insertion_type.compare("xyz") == 0) {
+    for (int irod = 0; irod < nrods; ++irod) {
+      double x[3] = {0.0, 0.0, 0.0};
+      double u[3] = {0.0, 0.0, 0.0};
+      double rlength = 0.0;
+      x[0] = node["br_rod"]["rod"][irod]["x"][0].as<double>();
+      x[1] = node["br_rod"]["rod"][irod]["x"][1].as<double>();
+      x[2] = node["br_rod"]["rod"][irod]["x"][2].as<double>();
+      std::cout << "   x(" << x[0] << ", " << x[1] << ", " << x[2] << ")\n";
+      u[0] = node["br_rod"]["rod"][irod]["u"][0].as<double>();
+      u[1] = node["br_rod"]["rod"][irod]["u"][1].as<double>();
+      u[2] = node["br_rod"]["rod"][irod]["u"][2].as<double>();
+      normalize_vector(u, space_->n_dim);
+      std::cout << "   u(" << u[0] << ", " << u[1] << ", " << u[2] << ")\n";
+      rlength = node["br_rod"]["rod"][irod]["length"].as<double>();
+      std::cout << "   length[" << rlength << "]\n";
+
+      BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->InitConfigurator(x, u, rlength);
+      member->Dump();
+      members_.push_back(member);
+    }
+  } else {
+    printf("nope, not yet\n");
+    exit(1);
+  }
+}
