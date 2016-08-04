@@ -6,7 +6,7 @@ potentials:
     fcut: 10000
     eps: 1
     sigma: 1
-    overlap: true
+    #overlap: true
 
   - type : SphereLineWell
     sid1 : xlink_head

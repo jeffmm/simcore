@@ -29,6 +29,7 @@ class XlinkKMC : public KMCBase {
     int nbound2_[2];
 
     int nsimples_;
+    bool write_event_ = false;
 
     std::ostringstream kmc_file_name_;
     std::ofstream kmc_file;

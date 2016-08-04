@@ -67,6 +67,10 @@ class Xlink : public Composite<XlinkHead> {
     void ApplyInteractions();
     void Dump() {
       Object::Dump();
+      if (isnan(position_[0])) {
+        printf("Something has gone horribly wrong!\n");
+        exit(1);
+      }
       printf("\t   {d: %2.2f}, {length: %2.2f}, {eq_length: %2.2f}, {k_spring: %2.2f}, {bound: %d}\n", diameter_, length_,
           eq_length_, k_spring_, (int)bound_);
       auto head0 = elements_.begin();
