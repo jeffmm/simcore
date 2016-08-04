@@ -70,6 +70,8 @@ void XlinkKMC::Init(space_struct *pSpace,
   k_stretch_      = node["kmc"][ikmc]["spring_constant"].as<double>();
   r_equil_        = node["kmc"][ikmc]["equilibrium_length"].as<double>();
 
+  write_event_    = node["kmc"][ikmc]["write_event"].as<bool>();
+
   CalcCutoff();
 
   BuildTables();
@@ -77,8 +79,6 @@ void XlinkKMC::Init(space_struct *pSpace,
 
 void XlinkKMC::CalcCutoff() {
   BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec2_);
-  // XXX FIXME set back to the correct value
-  //max_length_ = 110;
   max_length_ = prspec->GetMaxLength();
   rcutoff_1_2_ = 0.0;
   const double temp = 1.0;
@@ -500,10 +500,10 @@ void XlinkKMC::KMC_1_0() {
         }
         attachedhead->SetPosition(randr);
         attachedhead->SetPrevPosition(prevpos);
-        //attachedhead->UpdatePeriodic();
+        attachedhead->UpdatePeriodic();
         nonattachead->SetPosition(randr);
         nonattachead->SetPrevPosition(prevpos);
-        //nonattachead->UpdatePeriodic();
+        nonattachead->UpdatePeriodic();
         attachedhead->SetBound(false);
         (*xit)->CheckBoundState();
 
@@ -689,13 +689,45 @@ void XlinkKMC::KMC_2_1_ForceDep() {
       gsl_rng_uniform(rng_.r) < poff_base[0] * kboltzoff,
       gsl_rng_uniform(rng_.r) < poff_base[1] * kboltzoff};
     if (off[0] && off[1]) {
-      //printf("KMC_1_2 double head removal\n");
+      printf("KMC_2_1 double head removal\n");
       // Easy, set the head to the midpoint of the xlink and fall off both
-      //exit(1);
+      exit(1);
     } else if (off[0] || off[1]) {
-      //printf("KMC_1_2 single head removal\n");
-      // Randomly insert this head aroudn the detachment area
-      //exit(1);
+      printf("KMC_2_1 single head removal\n");
+      auto heads = (*xit)->GetHeads();
+      auto head0 = heads->begin();
+      auto head1 = heads->begin()+1;
+
+      // Figure out which head attached
+      // Do some fancy aliasing to make this easier
+      XlinkHead *attachedhead;
+      XlinkHead *detachedhead;
+      if (off[0]) {
+        attachedhead = &(*head1);
+        detachedhead = &(*head0);
+      } else if (off[1]) {
+        attachedhead = &(*head0);
+        detachedhead = &(*head1);
+      } else {
+        printf("Something has gone horribly wrong!\n");
+        exit(1);
+      }
+      std::ostringstream kmc_event;
+      kmc_event << "[x:" << (*xit)->GetOID() << ",head:" << detachedhead->GetOID() << "] Successful KMC move {2 -> 1 single}, {off: (";
+      kmc_event << (int)off[0] << ", " << (int)off[1] << ")}";
+      WriteEvent(kmc_event.str());
+      if (debug_trace)
+        printf("%s\n", kmc_event.str().c_str());
+
+      // Just set the location to what the other head was, and unset the attachment
+      double oldpos[3];
+      std::copy(detachedhead->GetRigidPosition(), detachedhead->GetRigidPosition()+ndim_, oldpos);
+      detachedhead->SetPosition(attachedhead->GetRigidPosition());
+      detachedhead->SetPrevPosition(oldpos);
+      detachedhead->UpdatePeriodic();
+      detachedhead->SetBound(false);
+      detachedhead->Attach(-1, 0.0);
+      (*xit)->CheckBoundState();
     }
   }
 }
@@ -791,15 +823,15 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
            rxnew[0], rxnew[1]);
   attachedhead->SetPrevPosition(rx);
   attachedhead->SetPosition(rxnew);
-  //attachedhead->UpdatePeriodic();
+  attachedhead->UpdatePeriodic();
   attachedhead->AddDr();
   nonattachead->SetPrevPosition(rx);
   nonattachead->SetPosition(rxnew);
-  //attachedhead->UpdatePeriodic();
+  attachedhead->UpdatePeriodic();
   nonattachead->AddDr();
   xit->SetPrevPosition(rx);
   xit->SetPosition(rxnew);
-  //xit->UpdatePeriodic();
+  xit->UpdatePeriodic();
 }
 
 void XlinkKMC::UpdateStage2(Xlink *xit) {
@@ -841,14 +873,14 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
       avgpos[i] += rxnew[i];
     }
     if (debug_trace) {
-      printf("[%d] attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
+      printf("[%d] double attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
           head->GetOID(), mrod->GetOID(), rx[0], rx[1],
           crosspos,
           rxnew[0], rxnew[1]);
     }
     head->SetPrevPosition(rx);
     head->SetPosition(rxnew);
-    //head->UpdatePeriodic();
+    head->UpdatePeriodic();
     head->AddDr();
   }
 
@@ -858,7 +890,7 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
 
   xit->SetPosition(avgpos);
   xit->SetPrevPosition(oldxitpos);
-  //xit->UpdatePeriodic();
+  xit->UpdatePeriodic();
 }
 
 void XlinkKMC::ApplyStage2Force(Xlink *xit) {
