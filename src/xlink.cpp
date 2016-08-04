@@ -82,6 +82,33 @@ void Xlink::CheckBoundState() {
   }
 }
 
+std::pair<bool,bool> Xlink::GetBoundHeads(XlinkHead **freehead, XlinkHead **boundhead) {
+  std::pair<bool,bool> nbound;
+  auto head0 = elements_.begin();
+  auto head1 = elements_.begin()+1;
+  if (!head0->GetBound() && !head1->GetBound()) {
+    // Neither is bound, just return
+    nbound.first = false;
+    nbound.second = false;
+  } else if (head0->GetBound() && !head1->GetBound()) {
+    // Head 0 is bound and not head1
+    nbound.first = true;
+    nbound.second = false;
+    (*freehead) = &(*head1);
+    (*boundhead) = &(*head0);
+  } else if (!head0->GetBound() && head1->GetBound()) {
+    nbound.first = false;
+    nbound.second = true;
+    (*freehead) = &(*head0);
+    (*boundhead) = &(*head1);
+  } else {
+    // Both heads are bound
+    nbound.first = true;
+    nbound.second = true;
+  }
+  return nbound;
+}
+
 void Xlink::UpdatePositionMP() {
   CheckBoundState();
   Integrate();

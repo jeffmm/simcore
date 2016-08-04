@@ -84,6 +84,7 @@ class Xlink : public Composite<XlinkHead> {
     /* Functions unique to Xlink */
     void DiffuseXlink();
     std::vector<XlinkHead>* GetHeads() {return &elements_;}
+    std::pair<bool,bool> GetBoundHeads(XlinkHead **freehead, XlinkHead **boundhead);
     void CheckBoundState();
 
     double const GetKSpring() {return k_spring_;}

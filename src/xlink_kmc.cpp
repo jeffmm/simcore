@@ -194,28 +194,18 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
 }
 
 void XlinkKMC::Update_1_2(Xlink *xit) {
+  XlinkHead *freehead, *boundhead;
+  auto isbound = xit->GetBoundHeads(&freehead, &boundhead);
   auto heads = xit->GetHeads();
-  auto head0 = heads->begin();
-  auto head1 = heads->begin()+1;
-  int free_i, attc_i;
-  XlinkHead *attachedhead;
-  XlinkHead *freehead;
-  if (head0->GetBound()) {
-    attc_i = 0;
-    free_i = 1;
-    attachedhead = &(*head0);
-    freehead = &(*head1);
-  } else {
-    attc_i = 1;
-    free_i = 0;
-    attachedhead = &(*head1);
-    freehead = &(*head0);
-  }
+  // If the first head is bound, then the second one is free, and vice
+  // versa
+  int free_i = isbound.first ? 1 : 0;
+
   double binding_affinity = eps_eff_1_2_[free_i] * on_rate_1_2_[free_i];
   auto free_idx = (*oid_position_map_)[freehead->GetOID()];
-  auto attc_idx = (*oid_position_map_)[attachedhead->GetOID()];
+  auto attc_idx = (*oid_position_map_)[boundhead->GetOID()];
   // Get the attached rod
-  auto attach_info = attachedhead->GetAttach();
+  auto attach_info = boundhead->GetAttach();
   auto attach_info_idx = (*oid_position_map_)[attach_info.first];
   auto mrod_attached = (*simples_)[attach_info_idx];
   if (binding_affinity > 0.0) {
@@ -458,23 +448,11 @@ void XlinkKMC::KMC_1_0() {
       if (!(*heads)[head_type].GetBound()) continue;
       idxloc++;
       if (idxloc == idxoff) {
-        auto head0 = heads->begin();
-        auto head1 = heads->begin()+1;
-
-        // Figure out which head attached
-        // Do some fancy aliasing to make this easier
-        XlinkHead *attachedhead;
-        XlinkHead *nonattachead;
-        if (head_type == 0) {
-          attachedhead = &(*head0);
-          nonattachead = &(*head1);
-        } else {
-          attachedhead = &(*head1);
-          nonattachead = &(*head0);
-        }
+        XlinkHead *boundhead, *freehead;
+        auto isbound = (*xit)->GetBoundHeads(&freehead, &boundhead);
 
         std::ostringstream kmc_event;
-        kmc_event << "[x:" << (*xit)->GetOID() << ",head:" << attachedhead->GetOID() << "] Successful KMC move {1 -> 0}, {idxoff=idxloc=";
+        kmc_event << "[x:" << (*xit)->GetOID() << ",head:" << boundhead->GetOID() << "] Successful KMC move {1 -> 0}, {idxoff=idxloc=";
         kmc_event << idxloc << "}, {head: " << head_type << "}";
         WriteEvent(kmc_event.str());
         if (debug_trace)
@@ -483,9 +461,9 @@ void XlinkKMC::KMC_1_0() {
         double randr[3];
         double mag2 = 0.0;
         mrcut2_ = rcutoff_0_1_*rcutoff_0_1_;
-        auto mrng = attachedhead->GetRNG();
+        auto mrng = boundhead->GetRNG();
         double prevpos[3];
-        std::copy(attachedhead->GetRigidPosition(), attachedhead->GetRigidPosition()+ndim_, prevpos);
+        std::copy(boundhead->GetRigidPosition(), boundhead->GetRigidPosition()+ndim_, prevpos);
         do {
           mag2 = 0.0;
           for (int i = 0; i < ndim_; ++i) {
@@ -498,28 +476,28 @@ void XlinkKMC::KMC_1_0() {
         for (int i = 0; i < ndim_; ++i) {
           randr[i] = randr[i] + prevpos[i];
         }
-        attachedhead->SetPosition(randr);
-        attachedhead->SetPrevPosition(prevpos);
-        attachedhead->UpdatePeriodic();
-        nonattachead->SetPosition(randr);
-        nonattachead->SetPrevPosition(prevpos);
-        nonattachead->UpdatePeriodic();
-        attachedhead->SetBound(false);
+        boundhead->SetPosition(randr);
+        boundhead->SetPrevPosition(prevpos);
+        boundhead->UpdatePeriodic();
+        freehead->SetPosition(randr);
+        freehead->SetPrevPosition(prevpos);
+        freehead->UpdatePeriodic();
+        boundhead->SetBound(false);
         (*xit)->CheckBoundState();
 
         if (debug_trace) {
-          auto attachid = attachedhead->GetAttach();
+          auto attachid = boundhead->GetAttach();
           auto attachidx = (*oid_position_map_)[attachid.first];
-          auto idx = (*oid_position_map_)[attachedhead->GetOID()];
+          auto idx = (*oid_position_map_)[boundhead->GetOID()];
           auto part2 = (*simples_)[attachidx];
           printf("[%d] Detached from [%d] (%2.8f, %2.8f) -> (%2.8f, %2.8f)\n",
-             attachedhead->GetOID(), part2->GetOID(),
+             boundhead->GetOID(), part2->GetOID(),
              prevpos[0], prevpos[1],
-             attachedhead->GetRigidPosition()[0], attachedhead->GetRigidPosition()[1]);
+             boundhead->GetRigidPosition()[0], boundhead->GetRigidPosition()[1]);
         }
 
 
-        attachedhead->Attach(-1, 0.0);
+        boundhead->Attach(-1, 0.0);
         break;
 
       } // found it!
@@ -662,7 +640,6 @@ void XlinkKMC::KMC_1_2() {
 }
 
 void XlinkKMC::KMC_2_1() {
-  //printf("XlinkKMC::KMC_2_1 begin\n");
   if (barrier_weight_ == 0.0) {
     // All detachments equally probable, do via a poisson distribution
     printf("NOT IMPLEMENTED, EXITING!\n");
@@ -688,12 +665,56 @@ void XlinkKMC::KMC_2_1_ForceDep() {
     uint8_t off[2] = {
       gsl_rng_uniform(rng_.r) < poff_base[0] * kboltzoff,
       gsl_rng_uniform(rng_.r) < poff_base[1] * kboltzoff};
+    if (debug_trace)
+      printf("[Xlink] {poff_base: (%2.8f, %2.8f)}, {weighted: (%2.8f, %2.8f)}\n",
+          poff_base[0], poff_base[1], poff_base[0]*kboltzoff, poff_base[1]*kboltzoff);
     if (off[0] && off[1]) {
-      printf("KMC_2_1 double head removal\n");
       // Easy, set the head to the midpoint of the xlink and fall off both
-      exit(1);
+      auto heads = (*xit)->GetHeads();
+      XlinkHead *head0 = &(*(heads->begin()));
+      XlinkHead *head1 = &(*(heads->begin()+1));
+
+      std::ostringstream kmc_event;
+      kmc_event << "[xlink:" << (*xit)->GetOID() << ",head0:" << head0->GetOID() << ",head1:" << head1->GetOID() << "]";
+      kmc_event << " Successful KMC move {2 -> 1 double}";
+      WriteEvent(kmc_event.str());
+      if (debug_trace)
+        printf("%s\n", kmc_event.str().c_str());
+
+      double oldpos0[3];
+      double oldpos1[3];
+      double xpos[3];
+      std::copy((*xit)->GetPosition(), (*xit)->GetPosition()+ndim_, xpos);
+      std::copy(head0->GetRigidPosition(), head0->GetRigidPosition()+ndim_, oldpos0);
+      std::copy(head1->GetRigidPosition(), head1->GetRigidPosition()+ndim_, oldpos1);
+
+      if (debug_trace) {
+        auto head0attach = head0->GetAttach();
+        auto mrod0idx = (*oid_position_map_)[head0attach.first];
+        auto mrod0 = (*simples_)[mrod0idx];
+        auto head1attach = head1->GetAttach();
+        auto mrod1idx = (*oid_position_map_)[head1attach.first];
+        auto mrod1 = (*simples_)[mrod1idx];
+
+        printf("[%d]{%d,%d} Detached from [%d,%d] -> {(%2.2f,%2.2f),(%2.2f,%2.2f)} -> (%2.2f,%2.2f)\n",
+            (*xit)->GetOID(), head0->GetOID(), head1->GetOID(), mrod0->GetOID(), mrod1->GetOID(),
+            oldpos0[0], oldpos0[1], oldpos1[0], oldpos1[1], xpos[0], xpos[1]);
+      }
+
+      head0->SetPosition(xpos);
+      head0->SetPrevPosition(oldpos0);
+      head0->UpdatePeriodic();
+      head0->SetBound(false);
+      head0->Attach(-1, 0.0);
+      head0->AddDr();
+      head1->SetPosition(xpos);
+      head1->SetPrevPosition(oldpos1);
+      head1->UpdatePeriodic();
+      head1->SetBound(false);
+      head1->Attach(-1, 0.0);
+      head1->AddDr();
+      (*xit)->CheckBoundState();
     } else if (off[0] || off[1]) {
-      printf("KMC_2_1 single head removal\n");
       auto heads = (*xit)->GetHeads();
       auto head0 = heads->begin();
       auto head1 = heads->begin()+1;
@@ -713,7 +734,7 @@ void XlinkKMC::KMC_2_1_ForceDep() {
         exit(1);
       }
       std::ostringstream kmc_event;
-      kmc_event << "[x:" << (*xit)->GetOID() << ",head:" << detachedhead->GetOID() << "] Successful KMC move {2 -> 1 single}, {off: (";
+      kmc_event << "[xlink:" << (*xit)->GetOID() << ",head:" << detachedhead->GetOID() << "] Successful KMC move {2 -> 1 single}, {off: (";
       kmc_event << (int)off[0] << ", " << (int)off[1] << ")}";
       WriteEvent(kmc_event.str());
       if (debug_trace)
@@ -722,6 +743,17 @@ void XlinkKMC::KMC_2_1_ForceDep() {
       // Just set the location to what the other head was, and unset the attachment
       double oldpos[3];
       std::copy(detachedhead->GetRigidPosition(), detachedhead->GetRigidPosition()+ndim_, oldpos);
+
+      if (debug_trace) {
+        auto attachid = detachedhead->GetAttach();
+        auto ridx = (*oid_position_map_)[attachid.first];
+        auto mrod = (*simples_)[ridx];
+        
+        printf("[%d]{%d} Detached from [%d] -> (%2.2f,%2.2f) -> (%2.2f, %2.2f)\n",
+            (*xit)->GetOID(), detachedhead->GetOID(), mrod->GetOID(), oldpos[0],
+            oldpos[1], attachedhead->GetRigidPosition()[0], attachedhead->GetRigidPosition()[1]);
+      }
+
       detachedhead->SetPosition(attachedhead->GetRigidPosition());
       detachedhead->SetPrevPosition(oldpos);
       detachedhead->UpdatePeriodic();
@@ -770,33 +802,26 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
 
   // Set nexp to zero for all involved
   xit->SetNExp_0_1(0.0);
-  auto heads = xit->GetHeads();
-  auto head0 = heads->begin();
-  auto head1 = heads->begin()+1;
-  head0->SetNExp_0_1(0.0);
-  head1->SetNExp_0_1(0.0);
-  
-  // Figure out which head attached
-  // Do some fancy aliasing to make this easier
-  XlinkHead *attachedhead;
-  XlinkHead *nonattachead;
-  if (head0->GetBound()) {
-    attachedhead = &(*head0);
-    nonattachead = &(*head1);
+  XlinkHead *freehead, *boundhead;
+  auto isbound = xit->GetBoundHeads(&freehead, &boundhead);
+  freehead->SetNExp_0_1(0.0);
+  boundhead->SetNExp_0_1(0.0);
+
+  // FIXME need to properly do end pausing
+  if (isbound.first) {
     nbound1_[0]++;
-  } else if (head1->GetBound()) {
-    attachedhead = &(*head1);
-    nonattachead = &(*head0);
+  } else if (isbound.second) {
     nbound1_[1]++;
   } else {
-    printf("Something has gone horribly wrong\n");
+    printf("Something has gone horribly wrong!\n");
     exit(1);
   }
-  auto aid = attachedhead->GetAttach().first;
+
+  auto aid = boundhead->GetAttach().first;
   auto aidx = (*oid_position_map_)[aid];
-  auto cross_pos = attachedhead->GetAttach().second; // relative to the -end of the rod!!
+  auto cross_pos = boundhead->GetAttach().second; // relative to the -end of the rod!!
   double rx[3];
-  std::copy(attachedhead->GetRigidPosition(), attachedhead->GetRigidPosition()+ndim_, rx);
+  std::copy(boundhead->GetRigidPosition(), boundhead->GetRigidPosition()+ndim_, rx);
   
   auto part2 = (*simples_)[aidx];
   auto r_rod = part2->GetRigidPosition();
@@ -805,13 +830,13 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
 
   // If we are moving with some velocity, do that
   // XXX FIXME check for end pausing
-  cross_pos += velocity_ * attachedhead->GetDelta();
+  cross_pos += velocity_ * boundhead->GetDelta();
   if (cross_pos > l_rod) {
     cross_pos = l_rod;
   } else if (cross_pos < 0.0) {
     cross_pos = 0.0;
   }
-  attachedhead->Attach(aid, cross_pos);
+  boundhead->Attach(aid, cross_pos);
 
   double rxnew[3];
   for (int i = 0; i < ndim_; ++i) {
@@ -819,16 +844,16 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   }
   if (debug_trace)
     printf("[%d] attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
-           attachedhead->GetOID(), part2->GetOID(), rx[0], rx[1], cross_pos,
+           boundhead->GetOID(), part2->GetOID(), rx[0], rx[1], cross_pos,
            rxnew[0], rxnew[1]);
-  attachedhead->SetPrevPosition(rx);
-  attachedhead->SetPosition(rxnew);
-  attachedhead->UpdatePeriodic();
-  attachedhead->AddDr();
-  nonattachead->SetPrevPosition(rx);
-  nonattachead->SetPosition(rxnew);
-  attachedhead->UpdatePeriodic();
-  nonattachead->AddDr();
+  boundhead->SetPrevPosition(rx);
+  boundhead->SetPosition(rxnew);
+  boundhead->UpdatePeriodic();
+  boundhead->AddDr();
+  freehead->SetPrevPosition(rx);
+  freehead->SetPosition(rxnew);
+  freehead->UpdatePeriodic();
+  freehead->AddDr();
   xit->SetPrevPosition(rx);
   xit->SetPosition(rxnew);
   xit->UpdatePeriodic();
@@ -1016,9 +1041,11 @@ void XlinkKMC::PrepOutputs() {
 }
 
 void XlinkKMC::WriteEvent(const std::string &pString) {
-  kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out | std::ios_base::app);
-  kmc_file << pString << std::endl;
-  kmc_file.close();
+  if (write_event_) {
+    kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out | std::ios_base::app);
+    kmc_file << pString << std::endl;
+    kmc_file.close();
+  }
 }
 
 void XlinkKMC::WriteOutputs(int istep) {

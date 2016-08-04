@@ -4,7 +4,7 @@ seed : 32679122673370
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-system_radius: 35
+system_radius: 45
 #system_radius: 10
 daughter_radius: 5
 mother_daughter_dist: 12
@@ -12,7 +12,7 @@ boundary_type: 1
 n_rod: 100
 rod_diameter: 1
 rod_length: 20
-rod_diffusion: 0
+rod_diffusion: 1
 #config_file: params/2d_spherocylinders.config.yaml
 config_file: random
 n_dimer: 0
@@ -22,8 +22,8 @@ md_bead_mass: 1
 #n_br_walker: 100
 #n_br_walker: 1
 #br_walker_diameter: 2
-#n_xlink: 184
-n_xlink: 1
+n_xlink: 200
+#n_xlink: 1
 xlink_diameter: 1
 dimer_diameter: 1
 dimer_length: 2
@@ -37,9 +37,9 @@ delta: 0.00001
 #delta: 0.00025
 #n_steps: 1000000
 #n_steps: 100000
-n_steps: 9213
+#n_steps: 9213
 #n_steps: 10000
-#n_steps: 1000
+n_steps: 1000
 #n_steps: 100
 #n_steps: 10
 #n_steps: 2
