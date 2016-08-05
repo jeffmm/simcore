@@ -169,7 +169,7 @@ class BrRodSpecies : public Species<BrRod> {
     double const GetMaxLength() {return max_length_;}
 
     // Special insertion routine
-    void ConfiguratorRod(char *filename);
+    void ConfiguratorRod();
 
 };
 

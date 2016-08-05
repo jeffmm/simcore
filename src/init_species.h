@@ -43,7 +43,7 @@ if (params_.n_rod > 0) {
   if (strcmp(params_.config_file, "random") == 0) {
     prspec->Init();
   } else {
-    prspec->ConfiguratorRod(params_.config_file);
+    prspec->ConfiguratorRod();
   }
   species_.push_back(spcs);
 }
@@ -76,7 +76,7 @@ if (params_.n_xlink > 0) {
   if (strcmp(params_.config_file, "random") == 0) {
     pxspec->Init();
   } else {
-    pxspec->ConfiguratorXlink(params_.config_file);
+    pxspec->ConfiguratorXlink();
   }
   species_.push_back(spcs);
 }

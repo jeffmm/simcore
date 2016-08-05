@@ -135,7 +135,7 @@ class XlinkSpecies : public Species<Xlink> {
     }
 
     // Specific initialization
-    void ConfiguratorXlink(char *filename);
+    void ConfiguratorXlink();
 
     // KMC specifics
     double const GetNExp_0_1() {return n_exp_0_1_;}
