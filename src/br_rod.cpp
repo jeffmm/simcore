@@ -25,6 +25,7 @@ void BrRod::Init() {
 }
 
 void BrRod::InitConfigurator(const double* const x, const double* const u, const double l) {
+  length_ = l;
   SetPosition(x);
   SetOrientation(u);
   UpdatePeriodic();
@@ -49,7 +50,8 @@ void BrRod::InitConfigurator(const double* const x, const double* const u, const
 }
 
 void BrRod::ApplyForcesTorques() {
-  //ZeroForce();
+  //ZeroForce()     BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+  //member->Init();;
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
     AddForce(bond->GetForce());
     AddTorque(bond->GetTorque());
@@ -354,22 +356,29 @@ void BrRod::Dump() {
 
 
 // Species specifics
-void BrRodSpecies::ConfiguratorRod(char *filename) {
+void BrRodSpecies::ConfiguratorRod() {
+  char *filename = params_->config_file;
   std::cout << "BrRod Configurator started with " << filename << std::endl;
 
   YAML::Node node = YAML::LoadFile(filename);
 
-  std::cout << node << std::endl;
-
-  int nrods = node["br_rod"]["rod"].size();
   std::cout << "Generic Properties:\n";
-  std::cout << "   nrods: " << nrods << std::endl;
 
+  // See what kind of insertion type, as that changes how we read info
   std::string insertion_type;
   insertion_type = node["br_rod"]["properties"]["insertion_type"].as<std::string>();
   std::cout << "   insertion type: " << insertion_type << std::endl;
+  bool can_overlap = node["br_rod"]["properties"]["overlap"].as<bool>();
+  std::cout << "   overlap: " << (can_overlap ? "true" : "false") << std::endl;
 
   if (insertion_type.compare("xyz") == 0) {
+    if (!can_overlap) {
+      std::cout << "Warning, location insertion overrides overlap\n";
+      can_overlap = true;
+    }
+    int nrods = node["br_rod"]["rod"].size();
+    std::cout << "   nrods: " << nrods << std::endl;
+    params_->n_rod = nrods;
     for (int irod = 0; irod < nrods; ++irod) {
       double x[3] = {0.0, 0.0, 0.0};
       double u[3] = {0.0, 0.0, 0.0};
@@ -390,6 +399,57 @@ void BrRodSpecies::ConfiguratorRod(char *filename) {
       member->InitConfigurator(x, u, rlength);
       member->Dump();
       members_.push_back(member);
+    }
+  } else if (insertion_type.compare("random") == 0) {
+    int nrods         = node["br_rod"]["rod"]["num"].as<int>();
+    double rlength    = node["br_rod"]["rod"]["length"].as<double>();
+    double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
+    std::cout << "   nrods:    " << nrods << std::endl;
+    std::cout << "   length:   " << rlength << std::endl;
+    std::cout << "   diameter: " << diameter << std::endl;
+    params_->n_rod = nrods;
+    params_->rod_length = rlength;
+    params_->rod_diameter = diameter;
+
+    for (int i = 0; i < nrods; ++i) {
+      BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->Init();
+
+      // Check against all other rods in the sytem
+      if (can_overlap) {
+        // Done, add to members
+        members_.push_back(member);
+      } else {
+        // Check against all other rods in system
+        bool isoverlap = true;
+        int numoverlaps = 0;
+        do {
+          numoverlaps++;
+          isoverlap = false;
+          for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
+            interactionmindist idm;
+            // Just check the 0th element of each
+            auto part1 = member->GetSimples()[0]; 
+            auto part2 = (*rodit)->GetSimples()[0];
+            MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+            double diameter2 = diameter*diameter;
+
+            if (idm.dr_mag2 < diameter2) {
+              isoverlap = true;
+              /*if (debug_trace) {
+                printf("Overlap detected [oid: %d,%d], [cid: %d, %d] -> (%2.2f < %2.2f)\n",
+                        part1->GetOID(), part2->GetOID(), part1->GetCID(), part2->GetCID(), idm.dr_mag2, diameter2);
+              }*/
+              // We can just call init again to get new random numbers
+              member->Init();
+            }
+          } // check against current members
+          if (numoverlaps > params_->max_overlap) {
+            error_exit("ERROR: Too many overlaps detected. Check packing ratio for objects.\n");
+          }
+        } while (isoverlap);
+        members_.push_back(member);
+      }
     }
   } else {
     printf("nope, not yet\n");
