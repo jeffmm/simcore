@@ -44,7 +44,8 @@ class Object {
     Object(const Object& that);
     Object& operator=(Object const& that);
 
-    virtual ~Object() {rng_.clear();}
+    virtual ~Object() {
+      rng_.clear();}
     bool IsRigid() {return is_rigid_;}
     bool IsKMC() { return is_kmc_; }
     void InitOID() { oid_ = ++next_oid_;}

@@ -178,22 +178,27 @@ void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
 
 
 // Species specifics
-void XlinkSpecies::ConfiguratorXlink(char *filename) {
+void XlinkSpecies::ConfiguratorXlink() {
+  char *filename = params_->config_file;
   std::cout << "Xlink Configurator started with " << filename << std::endl;
 
   YAML::Node node = YAML::LoadFile(filename);
 
-  std::cout << node << std::endl;
-
-  int nxlinks = node["xlink"]["xit"].size();
   std::cout << "Generic Properties:\n";
-  std::cout << "   nxlinks: " << nxlinks << std::endl;
-
   std::string insertion_type;
   insertion_type = node["xlink"]["properties"]["insertion_type"].as<std::string>();
   std::cout << "   insertion type: " << insertion_type << std::endl;
+  bool can_overlap = node["xlink"]["properties"]["overlap"].as<bool>();
+  std::cout << "   can overlap: " << (can_overlap ? "true" : "false") << std::endl;
 
   if (insertion_type.compare("xyz") == 0) {
+    if (!can_overlap) {
+      std::cout << "Warning, location insertion overrides overlap\n";
+      can_overlap = true;
+    }
+    int nxlinks = node["xlink"]["xit"].size();
+    std::cout << "   nxlinks: " << nxlinks << std::endl;
+    params_->n_xlink = nxlinks;
     for (int ix = 0; ix < nxlinks; ++ix) {
       double x[3] = {0.0, 0.0, 0.0};
       double diameter = 0.0;
@@ -207,6 +212,22 @@ void XlinkSpecies::ConfiguratorXlink(char *filename) {
       Xlink *member = new Xlink(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->InitConfigurator(x, diameter);
       member->Dump();
+      members_.push_back(member);
+    }
+  } else if (insertion_type.compare("random") == 0) {
+    int nxlinks     = node["xlink"]["xit"]["num"].as<int>();
+    double diameter = node["xlink"]["xit"]["diameter"].as<double>();
+    std::cout << "   nxlinks:  " << nxlinks << std::endl;
+    std::cout << "   diameter: " << diameter << std::endl;
+    params_->n_xlink = nxlinks;
+    params_->xlink_diameter = diameter;
+
+    if (!can_overlap) {
+      error_exit("ERROR, xlinks always allowed to overlap\n");
+    }
+    for (int i = 0; i < nxlinks; ++i) {
+      Xlink* member = new Xlink(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->Init();
       members_.push_back(member);
     }
   } else {
