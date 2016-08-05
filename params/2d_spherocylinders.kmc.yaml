@@ -11,6 +11,7 @@ kmc:
   velocity: 47.52
   spring_constant: 1.98171
   barrier_weight: 0.25
+  #barrier_weight: 0.0
   equilibrium_length: 0.707
   end_pause: [0, 0]
   write_event: true

@@ -434,7 +434,7 @@ void XlinkKMC::KMC_1_0() {
 
   for (int i = 0; i < (noff[0] + noff[1]); ++i) {
     if (debug_trace)
-      printf("[KMC_0_1] detaching trial %d/%d\n", i, (noff[0] + noff[1]));
+      printf("[KMC_1_0] detaching trial %d/%d\n", i, (noff[0] + noff[1]));
     int head_type = i < noff[1];
     int idxloc = -1;
     int idxoff = gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
@@ -535,6 +535,7 @@ void XlinkKMC::KMC_1_2() {
 
         // Look at my neighbors and figure out which to fall on
         // Also, get the heads
+        // XXX FIXME use the correct version of this
         auto heads = (*xit)->GetHeads();
         auto head0 = heads->begin();
         auto head1 = heads->begin()+1;
@@ -642,11 +643,88 @@ void XlinkKMC::KMC_1_2() {
 void XlinkKMC::KMC_2_1() {
   if (barrier_weight_ == 0.0) {
     // All detachments equally probable, do via a poisson distribution
-    printf("NOT IMPLEMENTED, EXITING!\n");
-    exit(1);
+    KMC_2_1_ForceIndep();
   } else {
     KMC_2_1_ForceDep();
   }
+}
+
+void XlinkKMC::KMC_2_1_ForceIndep() {
+  XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
+  auto xlinks = pxspec->GetXlinks();
+  int nheads[2] = {0, 0};
+  nheads[0] = pxspec->GetNBound2()[0];
+  nheads[1] = pxspec->GetNBound2()[1];
+
+  int noff[2] = {
+    (int)gsl_ran_binomial(rng_.r, on_rate_1_2_[0] * pxspec->GetDelta(), nheads[0]),
+    (int)gsl_ran_binomial(rng_.r, on_rate_1_2_[1] * pxspec->GetDelta(), nheads[1])};
+  if (debug_trace)
+    printf("[Xlink] {poff_head: (%2.8f, %2.8f)}, {noff: (%d, %d)}\n",
+        on_rate_1_2_[0] * pxspec->GetDelta(), on_rate_1_2_[1] * pxspec->GetDelta(),
+        noff[0], noff[1]);
+
+  for (int itrial = 0; itrial < (noff[0] + noff[1]); ++itrial) {
+    if (debug_trace)
+      printf("[KMC_2_1] detaching trial %d/%d\n", itrial, (noff[0] + noff[1]));
+    int head_type = itrial < noff[1];
+    int idxloc = -1;
+    int idxoff = gsl_rng_uniform_int(rng_.r, nheads[head_type]);
+    for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
+      if ((*xit)->GetBoundState() != doubly) continue;
+      idxloc++;
+      if (idxloc == idxoff) {
+        auto heads = (*xit)->GetHeads();
+        auto head0 = heads->begin();
+        auto head1 = heads->begin()+1;
+
+        // Figure out which head detaches
+        // Do some fancy aliasing to make this easier
+        XlinkHead *attachedhead;
+        XlinkHead *detachedhead;
+        if (head_type == 0) {
+          attachedhead = &(*head1);
+          detachedhead = &(*head0);
+        } else if (head_type == 1) {
+          attachedhead = &(*head0);
+          detachedhead = &(*head1);
+        } else {
+          printf("Something has gone horribly wrong!\n");
+          exit(1);
+        }
+        std::ostringstream kmc_event;
+        kmc_event << "[xlink:" << (*xit)->GetOID() << ",head:" << detachedhead->GetOID() << "] Successful KMC move {2 -> 1}, {head_type: ";
+        kmc_event << head_type << "}";
+        WriteEvent(kmc_event.str());
+        if (debug_trace)
+          printf("%s\n", kmc_event.str().c_str());
+
+        // Just set the location to what the other head was, and unset the attachment
+        double oldpos[3];
+        std::copy(detachedhead->GetRigidPosition(), detachedhead->GetRigidPosition()+ndim_, oldpos);
+
+        if (debug_trace) {
+          auto attachid = detachedhead->GetAttach();
+          auto ridx = (*oid_position_map_)[attachid.first];
+          auto mrod = (*simples_)[ridx];
+          
+          printf("[%d]{%d} Detached from [%d] -> (%2.2f,%2.2f) -> (%2.2f, %2.2f)\n",
+              (*xit)->GetOID(), detachedhead->GetOID(), mrod->GetOID(), oldpos[0],
+              oldpos[1], attachedhead->GetRigidPosition()[0], attachedhead->GetRigidPosition()[1]);
+        }
+
+        detachedhead->SetPosition(attachedhead->GetRigidPosition());
+        detachedhead->SetPrevPosition(oldpos);
+        detachedhead->UpdatePeriodic();
+        detachedhead->SetBound(false);
+        detachedhead->Attach(-1, 0.0);
+        (*xit)->CheckBoundState();
+
+        break;
+      }
+    } // loop over xlinks
+
+  } // remove ntrials
 }
 
 void XlinkKMC::KMC_2_1_ForceDep() {
@@ -662,6 +740,7 @@ void XlinkKMC::KMC_2_1_ForceDep() {
     if ((*xit)->GetBoundState() != doubly) continue; // only doubly bound
     double kboltzoff = exp(barrier_weight_ * (*xit)->GetInternalU());
     //printf("kboltzoff: %2.8f\n", kboltzoff);
+    // XXX Possibly do this via the xlink rng, multithreaded
     uint8_t off[2] = {
       gsl_rng_uniform(rng_.r) < poff_base[0] * kboltzoff,
       gsl_rng_uniform(rng_.r) < poff_base[1] * kboltzoff};
@@ -676,7 +755,7 @@ void XlinkKMC::KMC_2_1_ForceDep() {
 
       std::ostringstream kmc_event;
       kmc_event << "[xlink:" << (*xit)->GetOID() << ",head0:" << head0->GetOID() << ",head1:" << head1->GetOID() << "]";
-      kmc_event << " Successful KMC move {2 -> 1 double}";
+      kmc_event << " Successful KMC move {2 -> 0}";
       WriteEvent(kmc_event.str());
       if (debug_trace)
         printf("%s\n", kmc_event.str().c_str());
@@ -719,7 +798,7 @@ void XlinkKMC::KMC_2_1_ForceDep() {
       auto head0 = heads->begin();
       auto head1 = heads->begin()+1;
 
-      // Figure out which head attached
+      // Figure out which head detaches
       // Do some fancy aliasing to make this easier
       XlinkHead *attachedhead;
       XlinkHead *detachedhead;
@@ -734,7 +813,7 @@ void XlinkKMC::KMC_2_1_ForceDep() {
         exit(1);
       }
       std::ostringstream kmc_event;
-      kmc_event << "[xlink:" << (*xit)->GetOID() << ",head:" << detachedhead->GetOID() << "] Successful KMC move {2 -> 1 single}, {off: (";
+      kmc_event << "[xlink:" << (*xit)->GetOID() << ",head:" << detachedhead->GetOID() << "] Successful KMC move {2 -> 1}, {off: (";
       kmc_event << (int)off[0] << ", " << (int)off[1] << ")}";
       WriteEvent(kmc_event.str());
       if (debug_trace)
