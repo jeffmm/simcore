@@ -81,6 +81,7 @@ class Object {
       kmc_energy_ = 0.0;
     }
     void ZeroDrTot() {
+      //printf("[%d] zero dr tot\n", GetOID());
       std::fill(dr_tot_,dr_tot_+3,0.0);
     }
     void AddForce(double const * const f) {
@@ -161,6 +162,7 @@ class Simple : public Object {
       double dr =0;
       for (int i=0; i<n_dim_; ++i)
         dr += dr_tot_[i]*dr_tot_[i];
+      //printf("[%d] dr2: %2.8f\n", GetOID(), dr);
       return dr;
     }
     virtual double GetDrMax() {

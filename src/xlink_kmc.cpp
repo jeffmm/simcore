@@ -899,8 +899,8 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   auto aid = boundhead->GetAttach().first;
   auto aidx = (*oid_position_map_)[aid];
   auto cross_pos = boundhead->GetAttach().second; // relative to the -end of the rod!!
-  double rx[3];
-  std::copy(boundhead->GetRigidPosition(), boundhead->GetRigidPosition()+ndim_, rx);
+  double rx[3] = {0.0, 0.0, 0.0};
+  std::copy(boundhead->GetPosition(), boundhead->GetPosition()+ndim_, rx);
   
   auto part2 = (*simples_)[aidx];
   auto r_rod = part2->GetRigidPosition();
@@ -917,17 +917,29 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   }
   boundhead->Attach(aid, cross_pos);
 
-  double rxnew[3];
+  double rxnew[3] = {0.0, 0.0, 0.0};
+  double rsnew[3] = {0.0, 0.0, 0.0};
   for (int i = 0; i < ndim_; ++i) {
     rxnew[i] = r_rod[i] - 0.5 * u_rod[i] * l_rod + cross_pos * u_rod[i];
   }
-  if (debug_trace)
-    printf("[%d] attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
+  // Bound rxnew inside the PBCs (if they exist)
+  periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rxnew, rsnew);
+  /*if (debug_trace)
+    printf("[%d] single attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
            boundhead->GetOID(), part2->GetOID(), rx[0], rx[1], cross_pos,
-           rxnew[0], rxnew[1]);
+           rxnew[0], rxnew[1]);*/
   boundhead->SetPrevPosition(rx);
   boundhead->SetPosition(rxnew);
   boundhead->UpdatePeriodic();
+
+  // print out stuff here to make sure periodic update etc worked
+  if (debug_trace)
+    printf("[%d] single attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
+           boundhead->GetOID(), part2->GetOID(),
+           boundhead->GetPrevPosition()[0], boundhead->GetPrevPosition()[1],
+           cross_pos,
+           boundhead->GetRigidPosition()[0], boundhead->GetRigidPosition()[1]);
+
   boundhead->AddDr();
   freehead->SetPrevPosition(rx);
   freehead->SetPosition(rxnew);
@@ -954,7 +966,8 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
     auto aid = head->GetAttach().first;
     auto aidx = (*oid_position_map_)[aid];
     auto crosspos = head->GetAttach().second;
-    auto rx = head->GetRigidPosition();
+    double rx[3] = {0.0, 0.0 , 0.0};
+    std::copy(head->GetRigidPosition(), head->GetRigidPosition()+ndim_, rx);
 
     auto mrod = (*simples_)[aidx];
     auto rrod = mrod->GetRigidPosition();
@@ -971,9 +984,14 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
     }
     head->Attach(aid, crosspos);
 
-    double rxnew[3];
+    double rxnew[3] = {0.0, 0.0, 0.0};
+    double rsnew[3] = {0.0, 0.0, 0.0};
     for (int i = 0; i < ndim_; ++i) {
       rxnew[i] = rrod[i] - 0.5 * urod[i] * lrod + crosspos * urod[i];
+    }
+    // Bound rxnew inside the PBCs (if they exist)
+    periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rxnew, rsnew);
+    for (int i = 0; i < ndim_; ++i) {
       avgpos[i] += rxnew[i];
     }
     if (debug_trace) {
