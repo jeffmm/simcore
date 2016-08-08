@@ -196,14 +196,14 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
 void XlinkKMC::Update_1_2(Xlink *xit) {
   XlinkHead *freehead, *boundhead;
   auto isbound = xit->GetBoundHeads(&freehead, &boundhead);
-  auto heads = xit->GetHeads();
+  //auto heads = xit->GetHeads();
   // If the first head is bound, then the second one is free, and vice
   // versa
   int free_i = isbound.first ? 1 : 0;
 
   double binding_affinity = eps_eff_1_2_[free_i] * on_rate_1_2_[free_i];
   auto free_idx = (*oid_position_map_)[freehead->GetOID()];
-  auto attc_idx = (*oid_position_map_)[boundhead->GetOID()];
+  //auto attc_idx = (*oid_position_map_)[boundhead->GetOID()];
   // Get the attached rod
   auto attach_info = boundhead->GetAttach();
   auto attach_info_idx = (*oid_position_map_)[attach_info.first];
@@ -488,7 +488,7 @@ void XlinkKMC::KMC_1_0() {
         if (debug_trace) {
           auto attachid = boundhead->GetAttach();
           auto attachidx = (*oid_position_map_)[attachid.first];
-          auto idx = (*oid_position_map_)[boundhead->GetOID()];
+          //auto idx = (*oid_position_map_)[boundhead->GetOID()];
           auto part2 = (*simples_)[attachidx];
           printf("[%d] Detached from [%d] (%2.8f, %2.8f) -> (%2.8f, %2.8f)\n",
              boundhead->GetOID(), part2->GetOID(),
@@ -561,8 +561,8 @@ void XlinkKMC::KMC_1_2() {
 
           // Ignore our own rod
           //auto free_idx = (*oid_position_map_)[nonattachead->GetOID()];
-          auto free_idx = idx;
-          auto attc_idx = (*oid_position_map_)[attachedhead->GetOID()];
+          //auto free_idx = idx;
+          //auto attc_idx = (*oid_position_map_)[attachedhead->GetOID()];
           // Get the attached rod
           auto attachinfo = attachedhead->GetAttach();
           auto attachinfoidx = (*oid_position_map_)[attachinfo.first];
@@ -1040,7 +1040,7 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   for (int i = 0; i < ndim_; ++i) {
     rmag2 += SQR(dr[i]);
   }
-  double rmag = sqrt(rmag2);
+  //double rmag = sqrt(rmag2);
   double k = k_stretch_;
   double factor;
   if (r_equil_ == 0.0) {
@@ -1060,8 +1060,8 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   xit->AddPotential(u);
   xit->SetInternalU(u);
 
-  auto rrod0 = mrod0->GetRigidPosition();
-  auto rrod1 = mrod1->GetRigidPosition();
+  //auto rrod0 = mrod0->GetRigidPosition();
+  //auto rrod1 = mrod1->GetRigidPosition();
   auto crosspos0 = head0->GetAttach().second;
   auto crosspos1 = head1->GetAttach().second;
   auto lrod0 = mrod0->GetRigidLength();
@@ -1069,7 +1069,7 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   auto urod0 = mrod0->GetRigidOrientation();
   auto urod1 = mrod1->GetRigidOrientation();
 
-  double drmag = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
+  //double drmag = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
   /*printf("{rrod0: (%2.4f, %2.4f)}, {rrod1: (%2.4f, %2.4f)}\n", rrod0[0], rrod0[1], rrod1[0], rrod1[1]);
   printf("{urod0: (%2.4f, %2.4f)}, {urod1: (%2.4f, %2.4f)}\n", urod0[0], urod0[1], urod1[0], urod1[1]);
   printf("{rx0: (%2.4f, %2.4f)}, {rx1: (%2.4f, %2.4f)}\n", rx0[0], rx0[1], rx1[0], rx1[1]);

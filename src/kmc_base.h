@@ -49,7 +49,7 @@ class KMCBase {
     virtual void WriteOutputs(int istep) {}
 
     virtual void Print() {
-      printf("\tsids: [%d, %d]\n", sid1_, sid2_);
+      printf("\tsids: [%hhu, %hhu]\n", sid1_, sid2_);
     }
     virtual void Dump() {
       printf("ERROR, need to override this function!\n");

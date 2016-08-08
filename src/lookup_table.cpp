@@ -38,7 +38,7 @@ void LookupTable::OutputBinary(std::string outfile) {
   
   std::fwrite(&ndim_, sizeof(int), 1, f_out);
   for (int i = 0; i < ndim_; ++i) {
-    int size = x_[i].size();
+    int size = (int)x_[i].size();
     std::fwrite(&size, sizeof(int), 1, f_out);
   }
   for (int i = 0; i < ndim_; ++i)
@@ -60,7 +60,7 @@ double LookupTable::Lookup(double *x) {
   double t[2];
   for (int i = 0; i < ndim_; ++i) {
     double L = x_[i].back() - x_[i].front();
-    int n_bin = x_[i].size()-1;
+    int n_bin = (int)x_[i].size()-1;
     lowindex[i] = (int) (x[i]/L * n_bin);
     double pos = x[i];
     if (lowindex[i] >= n_bin) {
@@ -101,7 +101,7 @@ double LookupTable::Invert(int dim, double u, double val[]) {
       //     low--;
       // }
       double L = x_[i].back() - x_[i].front();
-      int n_bin = x_[i].size()-1;
+      int n_bin = (int)x_[i].size()-1;
       int i_bin = static_cast<int> (val[i]/L * n_bin);
       if (i_bin >= n_bin)
           i_bin = n_bin - 1;
@@ -116,7 +116,7 @@ double LookupTable::Invert(int dim, double u, double val[]) {
   double max = Lookup(val);
 
   int lowi = 0;
-  int highi = x_[dim].size() - 1;
+  int highi = (int)x_[dim].size() - 1;
 
   double f_low, f_high;
   while (lowi <= highi) {
@@ -160,9 +160,9 @@ void LookupTable::OutputInterpolatedGrid(std::vector<double> *x, std::string out
   FILE *f_out = std::fopen(outfile.c_str(), "w");
   
   std::fwrite(&ndim_, sizeof(int), 1, f_out);
-  int size = x[0].size();
+  int size = (int)x[0].size();
   std::fwrite(&size, sizeof(int), 1, f_out);
-  size = x[1].size();
+  size = (int)x[1].size();
   std::fwrite(&size, sizeof(int), 1, f_out);
   
   std::fwrite(x[0].data(), sizeof(double), x[0].size(), f_out);

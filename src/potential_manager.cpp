@@ -40,7 +40,7 @@ void
 PotentialManager::ParsePotentials() {
   YAML::Node node = YAML::LoadFile(fname_);
   
-  npots_ = node["potentials"].size();
+  npots_ = (int)node["potentials"].size();
 
   for (int ipot = 0; ipot < npots_; ++ipot) {
     std::string potname = node["potentials"][ipot]["type"].as<std::string>();

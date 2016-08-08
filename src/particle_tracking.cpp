@@ -55,7 +55,7 @@ void ParticleTracking::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSp
 
 // Load our simples array
 void ParticleTracking::LoadSimples() {
-  nsys_ = species_->size();
+  nsys_ = (int)species_->size();
   simples_.clear();
   for (int ispec = 0; ispec < nsys_; ++ispec) {
     std::vector<Simple*> sim_vec = (*species_)[ispec]->GetSimples();
