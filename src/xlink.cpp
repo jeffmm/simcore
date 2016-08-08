@@ -146,6 +146,7 @@ void Xlink::DiffuseXlink() {
   head0->SetPrevPosition(oldpos);
   head1->SetPosition(head0->GetRigidPosition());
   head1->SetPrevPosition(oldpos);
+  head1->AddDr();
   SetPosition(head0->GetRigidPosition());
   SetPrevPosition(oldpos);
   head0->UpdatePeriodic();
