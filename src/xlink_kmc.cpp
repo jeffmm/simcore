@@ -276,6 +276,7 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
         printf("[%d] -> neighbor[%d] {kmc: %2.4f}\n", freehead->GetOID(), mrod->GetOID(), nldx->kmc_);
     } // loop over local neighbors of xlink
 
+    boundhead->SetNExp_1_2(0.0);
     freehead->SetNExp_1_2(n_exp);
     xit->SetNExp_1_2(n_exp);
   }
@@ -606,22 +607,33 @@ void XlinkKMC::KMC_1_2() {
 
             // Find it
             auto mrng = (*xit)->GetRNG();
-            double y02 = 0.0;
-            for (int i = 0; i < ndim_; ++i) {
-              y02 += SQR(dr[i]);
-            }
-            int itrial_loc = 0;
-            do {
-              itrial_loc++;
-              double uroll = gsl_rng_uniform(mrng->r);
-              double xvec[2] = {0.0, sqrt(y02)};
-              double mpos = ((gsl_rng_uniform(mrng->r) < 0.5) ? -1.0 : 1.0) *
-                  n_exp_lookup_.Invert(0, uroll, xvec) + mu + 0.5 * l_rod;
-              if (mpos >= 0 && mpos <= l_rod) {
-                crosspos = mpos;
-                break;
+            if (r_equil_ == 0.0) {
+              double kb = (1.0 - barrier_weight_) * k_stretch_;
+              do {
+                double mpos = gsl_ran_gaussian_ziggurat(mrng->r, sqrt(1.0/kb)) + mu + 0.5 * l_rod;
+                if (mpos >= 0 && mpos <= l_rod) {
+                  crosspos = mpos;
+                  break;
+                }
+              } while(1);
+            } else {
+              double y02 = 0.0;
+              for (int i = 0; i < ndim_; ++i) {
+                y02 += SQR(dr[i]);
               }
-            } while (itrial_loc < 100);
+              int itrial_loc = 0;
+              do {
+                itrial_loc++;
+                double uroll = gsl_rng_uniform(mrng->r);
+                double xvec[2] = {0.0, sqrt(y02)};
+                double mpos = ((gsl_rng_uniform(mrng->r) < 0.5) ? -1.0 : 1.0) *
+                    n_exp_lookup_.Invert(0, uroll, xvec) + mu + 0.5 * l_rod;
+                if (mpos >= 0 && mpos <= l_rod) {
+                  crosspos = mpos;
+                  break;
+                }
+              } while (itrial_loc < 100);
+            }
 
             nonattachead->Attach(mrod->GetOID(), crosspos);
             nonattachead->SetBound(true);
