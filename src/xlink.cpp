@@ -197,7 +197,7 @@ void XlinkSpecies::ConfiguratorXlink() {
       std::cout << "Warning, location insertion overrides overlap\n";
       can_overlap = true;
     }
-    int nxlinks = node["xlink"]["xit"].size();
+    int nxlinks = (int)node["xlink"]["xit"].size();
     std::cout << "   nxlinks: " << nxlinks << std::endl;
     params_->n_xlink = nxlinks;
     for (int ix = 0; ix < nxlinks; ++ix) {

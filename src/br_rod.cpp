@@ -376,7 +376,7 @@ void BrRodSpecies::ConfiguratorRod() {
       std::cout << "Warning, location insertion overrides overlap\n";
       can_overlap = true;
     }
-    int nrods = node["br_rod"]["rod"].size();
+    int nrods = (int)node["br_rod"]["rod"].size();
     std::cout << "   nrods: " << nrods << std::endl;
     params_->n_rod = nrods;
     for (int irod = 0; irod < nrods; ++irod) {

@@ -95,8 +95,8 @@ void InteractionEngine::Interact() {
       // Iterate over our neighbors
       for (auto nldx = neighbors[idx].begin(); nldx != neighbors[idx].end(); ++nldx) {
         int jdx = nldx->idx_;
-        auto part1 = (*simples_)[idx];
-        auto part2 = (*simples_)[jdx];
+        //auto part1 = (*simples_)[idx];
+        //auto part2 = (*simples_)[jdx];
 
         // Do the interactions
         //InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy);
@@ -247,7 +247,7 @@ void InteractionEngine::Dump() {
     printf("--------\n");
     printf("InteractionEngine -> dump\n");
     for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-      printf("Species[%d] ->\n", (*spec)->GetSID());
+      printf("Species[%hhu] ->\n", (*spec)->GetSID());
       (*spec)->Dump();
     }
   }
