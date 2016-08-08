@@ -53,7 +53,7 @@ void kmcEngine::ParseKMC() {
   std::cout << "  file: " << fname_ << std::endl;
   YAML::Node node = YAML::LoadFile(fname_);
 
-  nkmcs_ = node["kmc"].size();
+  nkmcs_ = (int)node["kmc"].size();
 
   for (int ikmc = 0; ikmc < nkmcs_; ++ikmc) {
     std::string kmcname = node["kmc"][ikmc]["type"].as<std::string>();
@@ -62,7 +62,7 @@ void kmcEngine::ParseKMC() {
     SID sid1 = StringToSID(sid1s);
     SID sid2 = StringToSID(sid2s);
     // Find the 2 species
-    SpeciesBase *spec1, *spec2;
+    SpeciesBase *spec1 = nullptr, *spec2 = nullptr;
     for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
       if ((*spec)->GetSID() == sid1)
         spec1 = (*spec);
@@ -111,7 +111,7 @@ void kmcEngine::PrepKMC() {
   // Move through the map and ask it to do the kmc prep
   for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
     if (debug_trace)
-      printf("PrepKMC [%d,%d]\n", kmc->first.first, kmc->first.second);
+      printf("PrepKMC [%hhu,%hhu]\n", kmc->first.first, kmc->first.second);
     kmc->second->PrepKMC();
   }
 }
@@ -124,7 +124,7 @@ void kmcEngine::StepKMC() {
   // and who is #2
   for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
     if (debug_trace)
-      printf("StepKMC [%d,%d]\n", kmc->first.first, kmc->first.second);
+      printf("StepKMC [%hhu,%hhu]\n", kmc->first.first, kmc->first.second);
     kmc->second->StepKMC();
   }
 }
@@ -133,7 +133,7 @@ void kmcEngine::StepKMC() {
 void kmcEngine::UpdateKMC() {
   for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
     if (debug_trace)
-      printf("UpdateKMC [%d,%d]\n", kmc->first.first, kmc->first.second);
+      printf("UpdateKMC [%hhu,%hhu]\n", kmc->first.first, kmc->first.second);
     kmc->second->UpdateKMC();
   }
 }
