@@ -445,7 +445,9 @@ void BrRodSpecies::ConfiguratorRod() {
             }
           } // check against current members
           if (numoverlaps > params_->max_overlap) {
-            error_exit("ERROR: Too many overlaps detected. Check packing ratio for objects.\n");
+            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i << " of " << nrods;
+            std::cout << ".  Check packing ratio for objects.\n";
+            exit(1);
           }
         } while (isoverlap);
         members_.push_back(member);
