@@ -81,3 +81,10 @@ if (params_.n_xlink > 0) {
   species_.push_back(spcs);
 }
 #endif
+#ifdef _SIMCORE_FILAMENT_H_
+if (params_.n_filament > 0) {
+  SpeciesBase * spcs = new FilamentSpecies(params_.n_filament, &params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  spcs->Init();
+  species_.push_back(spcs);
+}
+#endif

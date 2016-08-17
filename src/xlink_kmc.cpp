@@ -401,7 +401,7 @@ void XlinkKMC::KMC_0_1() {
             mrcut2_ = rcutoff_0_1_*rcutoff_0_1_;
             double a = sqrt(mrcut2_ - r_min_mag2);
             //double a = sqrt(1.0 - r_min_mag2); //FIXME is this right for 1.0? or mrcut2?
-            if (isnan(a))
+            if (std::isnan(a))
               a = 0.0;
 
             double crosspos = 0.0;

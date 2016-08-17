@@ -1,7 +1,7 @@
 #include <math.h>
 #include "auxiliary.h"
 
-double dot_product(int n_dim, double *a, double *b)
+double dot_product(int n_dim, double const * const a, double const * const b)
 {
     int i;
     double mag = 0.0;

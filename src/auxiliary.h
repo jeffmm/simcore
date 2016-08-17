@@ -43,6 +43,7 @@ enum class SID : unsigned char {
   argon,
   neon,
   br_rod,
+  filament,
   br_simple_rod,
   md_kmc_bead,
   br_walker,
@@ -67,6 +68,8 @@ inline SID StringToSID(std::string &s) {
         return SID::neon;
     else if (s == "br_rod")
         return SID::br_rod;
+    else if (s == "filament")
+        return SID::filament;
     else if (s == "br_simple_rod")
         return SID::br_simple_rod;
     else if (s == "md_kmc_bead")
@@ -127,7 +130,7 @@ double cpu();
 void generate_random_unit_vector(int n_dim, double *vect, gsl_rng *r);
 void dummy_function();
 void rotate_orientation_vector(int n_dim, double *vect1, double *vect2);
-double dot_product(int n_dim, double *a, double *b);
+double dot_product(int n_dim, double const * const a, double const * const b);
 double determinant(int n, double **mat);
 //double *separation_vector(int n_dim, int n_periodic, double *r1, double *s1, double *r2, double *s2, double **unit_cell);
 void separation_vector(int n_dim, int n_periodic, double const * const r1, double const * const s1, double const * const r2, double const * const s2, double **unit_cell, double *dr);
@@ -135,7 +138,7 @@ void cross_product(double *a, double *b, double *c, int n_dim);
 void normalize_vector(double *a, int n_dim);
 void error_exit(const char *error_msg, ...);
 void warning(const char *warning_msg);
-void tridiagonal_solver(double *a, double *b, double *c, double *d, int n);
+void tridiagonal_solver(std::vector<double> *a, std::vector<double> *b, std::vector<double> *c, std::vector<double> *d, int n);
 void rotate_3d_vector(double theta, double *a, double *b);
 void invert_sym_2d_matrix(double **a, double **b); 
 void invert_sym_3d_matrix(double **a, double **b); 
