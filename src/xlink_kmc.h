@@ -6,6 +6,7 @@
 #include "lookup_table.h"
 
 class Xlink;
+class XlinkHead;
 
 class XlinkKMC : public KMCBase {
   protected:
@@ -23,6 +24,8 @@ class XlinkKMC : public KMCBase {
     double rcutoff_0_1_;
     double rcutoff_1_2_;
     double r_equil_;
+
+    bool end_pause_[2];
 
     int nfree_;
     int nbound1_[2];
@@ -50,6 +53,11 @@ class XlinkKMC : public KMCBase {
     void UpdateStage1(Xlink *xit);
     void UpdateStage2(Xlink *xit);
     void ApplyStage2Force(Xlink *xit);
+
+    // Helper functions to detach crosslinks
+    void Detach_1_0(Xlink *xit, XlinkHead *freehead, XlinkHead *boundhead);
+    void Detach_2_1(Xlink *xit, int headtype);
+    void Detach_2_0(Xlink *xit);
 
     // Specifics to 2 stage crosslinks (building tables, numbers, etc)
     double XKMCErfinv(double x);
