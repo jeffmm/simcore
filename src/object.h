@@ -112,7 +112,9 @@ class Object {
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePeriodic();
     virtual void UpdatePosition() {}
-    virtual void UpdatePositionMP() {}
+    virtual void UpdatePositionMP() {
+      error_exit("ERROR: UpdatePositionMP() needs to be overwritten. Exiting!\n");
+    }
     virtual void ApplyInteractions() {}
     virtual double const GetKineticEnergy() {return k_energy_;}
     virtual double const GetPotentialEnergy() {return p_energy_;}

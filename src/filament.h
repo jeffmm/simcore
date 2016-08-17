@@ -13,11 +13,16 @@ class Filament : public Composite<Site,Bond> {
     int n_bonds_,
         n_sites_,
         dynamic_instability_flag_,
-        force_induced_catastrophe_flag_;
+        force_induced_catastrophe_flag_,
+        theta_validation_flag_,
+        metric_forces_;
+    bool midstep_;
     double max_length_,
            min_length_,
            max_child_length_,
            child_length_,
+           persistence_length_,
+           gamma_ratio_, // gamma_par/gamma_perp
            gamma_par_,
            gamma_perp_,
            rand_sigma_par_,
@@ -30,33 +35,48 @@ class Filament : public Composite<Site,Bond> {
            p_p2g_,
            p_g2s_,
            p_g2p_,
-           tip_force_,
-           **gamma_inverse_,
-           *p_vec_, //n_sites-1
-           *g_mat_lower_, //n_sites-2
-           *g_mat_upper_, //n_sites-2
-           *g_mat_diag_, //n_sites-1
-           *det_t_mat_, //n_sites+1
-           *det_b_mat_, //n_sites+1
-           *g_mat_inverse_, //n_sites-2
-           *k_eff_, //n_sites-2
-           *h_mat_diag_, //n_sites-1
-           *h_mat_upper_, //n_sites-2
-           *h_mat_lower; //n_sites-2
+           tip_force_;
+    std::vector<double> gamma_inverse_,
+                        tensions_, //n_sites-1
+                        g_mat_lower_, //n_sites-2
+                        g_mat_upper_, //n_sites-2
+                        g_mat_diag_, //n_sites-1
+                        det_t_mat_, //n_sites+1
+                        det_b_mat_, //n_sites+1
+                        g_mat_inverse_, //n_sites-2
+                        k_eff_, //n_sites-2
+                        h_mat_diag_, //n_sites-1
+                        h_mat_upper_, //n_sites-2
+                        h_mat_lower_, //n_sites-2
+                        cos_thetas_;
     poly_state_t poly_state_;
     void UpdateSiteBondPositions();
     void SetDiffusion();
-    void UpdateOrientation();
-    void GetBodyFrame();
-    void AddRandomDisplacement();
+    void GenerateProbableOrientation();
+    void CalculateAngles();
+    void CalculateTangents();
+    void UpdatePrevPositions();
+    void AddRandomForces();
+    void GenerateRandomForces();
+    void ProjectRandomForces();
+    void CalculateBendingForces();
+    void CalculateTensions();
+    void UpdateSitePositions();
+    void UpdateBondPositions();
     void ApplyForcesTorques();
-    void DynamicInstability();
+    void TempInit();
+    void DumpAll();
+    //void UpdateOrientation();
+    //void AddRandomDisplacement();
+    //void ApplyForcesTorques();
+    //void DynamicInstability();
 
   public:
     Filament(system_parameters *params, space_struct * space, long seed, SID sid) 
       : Composite(params, space, seed, sid) {
         //bond_ptr_ = new Bond(params, space, gsl_rng_get(rng_.r), GetSID()) ;
         length_ = params->rod_length;
+        persistence_length_ = params->persistence_length;
         diameter_ = params->rod_diameter;
         max_length_ = params->max_rod_length;
         min_length_ = params->min_rod_length;
@@ -71,8 +91,9 @@ class Filament : public Composite<Site,Bond> {
         p_p2g_ = params->f_pause_to_grow*delta_;
         v_depoly_ = params->v_depoly;
         v_poly_ = params->v_poly;
-
-        n_bonds_ = (int) ceil(length_/max_child_length_);
+        gamma_ratio_ = params->gamma_ratio;
+        metric_forces_ = params->metric_forces;
+        n_bonds_ = 8;
         n_sites_ = n_bonds_+1;
         child_length_ = length_/n_bonds_;
         // Initialize sites
@@ -92,54 +113,37 @@ class Filament : public Composite<Site,Bond> {
         //Allocate control structures
         //TODO: JMM Consider another method of storing these arrays,
         //as it is a lot of memory for each filament to store. This
-        //may be the only way to do this if we want to use parallel
-        int max_sites = (int) ceil(max_length_/min_child_length_) + 1; 
-        p_vec_ = new double[max_sites-1];
-        g_mat_lower_ = new double[max_sites-2];
-        g_mat_upper_ = new double[max_sites-2];
-        g_mat_diag_ = new double[max_sites-1];
-        det_t_mat_ = new double[max_sites+1];
-        det_b_mat_ = new double[max_sites+1];
-        g_mat_inverse_ = new double[max_sites-2];
-        k_eff_ = new double[max_sites-2];
-        h_mat_diag_ = new double [max_sites-1];
-        h_mat_upper_ = new double [max_sites-2];
-        h_mat_lower_ = new double [max_sites-2];
-        gamma_inverse_ = new double*[max_sites];
-        for(int i=0; i<max_sites; ++i)
-          gamma_inverse_[i] = new double[n_dim_*n_dim_];
+        //may be the only way to do this if we want to use parallel :(
+        tensions_.resize(n_sites_-1); //max_sites -1
+        g_mat_lower_.resize(n_sites_-2); //max_sites-2
+        g_mat_upper_.resize(n_sites_-2); //max_sites-2
+        g_mat_diag_.resize(n_sites_-1); //max_sites-1
+        det_t_mat_.resize(n_sites_+1); //max_sites+1
+        det_b_mat_.resize(n_sites_+1); //max_sites+1
+        g_mat_inverse_.resize(n_sites_-2); //max_sites-2
+        k_eff_.resize(n_sites_-2); //max_sites-2
+        h_mat_diag_.resize(n_sites_-1); //max_sites-1
+        h_mat_upper_.resize(n_sites_-2); //max_sites-2
+        h_mat_lower_.resize(n_sites_-2); //max_sites-2
+        gamma_inverse_.resize(n_sites_*n_dim_*n_dim_); //max_sites*ndim*ndim
+        cos_thetas_.resize(n_sites_-2); //max_sites-2
+        midstep_ = true;
       }
-    ~Filament() {
-      //Clean up control structures
-      delete[] p_vec_;
-      delete[] g_mat_lower_;
-      delete[] g_mat_upper_;
-      delete[] g_mat_diag_;
-      delete[] det_t_mat_;
-      delete[] det_b_mat_;
-      delete[] g_mat_inverse_;
-      delete[] k_eff_;
-      delete[] h_mat_diag_;
-      delete[] h_mat_upper_;
-      delete[] h_mat_lower_;
-      int max_sites = (int) ceil(max_length_/min_child_length_)+1;
-      for (int i=0; i<max_sites; ++i)
-        delete[] gamma_inverse_[i];
-      delete[] gamma_inverse_;
-    }
+    ~Filament() {}
     Filament(const Filament& that) : Composite(that) {
       n_bonds_=that.n_bonds_;
       n_sites_ = that.n_sites_;
       dynamic_instability_flag_ = that.dynamic_instability_flag_;
+      force_induced_catastrophe_flag_ = that.force_induced_catastrophe_flag_;
+      metric_forces_ = that.metric_forces_;
       max_length_ = that.max_length_;
       min_length_ = that.min_length_;
       max_child_length_ = that.max_child_length_;
       gamma_par_ = that.gamma_par_;
       gamma_perp_ = that.gamma_perp_;
-      gamma_rot_ = that.gamma_rot_;
+      gamma_ratio_ = that.gamma_ratio_;
       rand_sigma_par_ = that.rand_sigma_par_;
       rand_sigma_perp_ = that.rand_sigma_perp_;
-      rand_sigma_rot_ = that.rand_sigma_rot_;
       v_poly_ = that.v_poly_;
       v_depoly_ = that.v_depoly_;
       p_s2g_ = that.p_s2g_;
@@ -149,15 +153,15 @@ class Filament : public Composite<Site,Bond> {
       p_g2s_ = that.p_g2s_;
       p_g2p_ = that.p_g2p_;
       tip_force_ = that.tip_force_;
-      std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
       gamma_inverse_ = that.gamma_inverse_;
-      p_vec_ = that.p_vec_;
+      tensions_ = that.tensions_;
       g_mat_lower_ = that.g_mat_lower_;
       g_mat_upper_ = that.g_mat_upper_;
       g_mat_diag_ = that.g_mat_diag_;
       h_mat_diag_ = that.h_mat_diag_;
       h_mat_lower_ = that.h_mat_lower_;
       h_mat_upper_ = that.h_mat_upper_;
+      cos_thetas_ = that.cos_thetas_;
       k_eff_ = that.k_eff_;
       g_mat_inverse_ = that.g_mat_inverse_;
       det_t_mat_ = that.det_t_mat_;
@@ -167,16 +171,18 @@ class Filament : public Composite<Site,Bond> {
     Filament& operator=(Filament const& that) {
       Composite::operator=(that); 
       n_bonds_=that.n_bonds_;
+      n_sites_ = that.n_sites_;
       dynamic_instability_flag_ = that.dynamic_instability_flag_;
+      force_induced_catastrophe_flag_ = that.force_induced_catastrophe_flag_;
+      metric_forces_ = that.metric_forces_;
       max_length_ = that.max_length_;
       min_length_ = that.min_length_;
       max_child_length_ = that.max_child_length_;
       gamma_par_ = that.gamma_par_;
       gamma_perp_ = that.gamma_perp_;
-      gamma_rot_ = that.gamma_rot_;
+      gamma_ratio_ = that.gamma_ratio_;
       rand_sigma_par_ = that.rand_sigma_par_;
       rand_sigma_perp_ = that.rand_sigma_perp_;
-      rand_sigma_rot_ = that.rand_sigma_rot_;
       v_poly_ = that.v_poly_;
       v_depoly_ = that.v_depoly_;
       p_s2g_ = that.p_s2g_;
@@ -186,7 +192,19 @@ class Filament : public Composite<Site,Bond> {
       p_g2s_ = that.p_g2s_;
       p_g2p_ = that.p_g2p_;
       tip_force_ = that.tip_force_;
-      std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
+      gamma_inverse_ = that.gamma_inverse_;
+      tensions_ = that.tensions_;
+      g_mat_lower_ = that.g_mat_lower_;
+      g_mat_upper_ = that.g_mat_upper_;
+      g_mat_diag_ = that.g_mat_diag_;
+      h_mat_diag_ = that.h_mat_diag_;
+      h_mat_lower_ = that.h_mat_lower_;
+      h_mat_upper_ = that.h_mat_upper_;
+      cos_thetas_ = that.cos_thetas_;
+      k_eff_ = that.k_eff_;
+      g_mat_inverse_ = that.g_mat_inverse_;
+      det_t_mat_ = that.det_t_mat_;
+      det_b_mat_ = that.det_b_mat_;
       poly_state_ = that.poly_state_;
       return *this;
     } 
@@ -194,6 +212,7 @@ class Filament : public Composite<Site,Bond> {
     virtual void Integrate();
     virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
+    virtual void UpdatePosition();
     virtual void UpdatePositionMP();
 };
 
@@ -204,7 +223,7 @@ class FilamentSpecies : public Species<Filament> {
     FilamentSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
-      SetSID(SID::br_rod);
+      SetSID(SID::filament);
       //InitPotentials(params);
     }
     ~FilamentSpecies() {}
