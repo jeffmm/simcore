@@ -4,9 +4,9 @@ seed : 32679122673370
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-#system_radius: 45
-system_radius: 20
-#system_radius: 125
+system_radius: 45
+#system_radius: 25
+#system_radius: 135
 daughter_radius: 5
 mother_daughter_dist: 12
 boundary_type: 1
@@ -42,8 +42,8 @@ delta: 0.00001
 #n_steps: 1000000
 #n_steps: 100000
 #n_steps: 9213
-#n_steps: 10000
-n_steps: 1000
+n_steps: 10000
+#n_steps: 1000
 #n_steps: 100
 #n_steps: 10
 #n_steps: 2
@@ -57,7 +57,7 @@ n_argon: 0
 grab_flag: 1
 grab_file: frames/frame
 draw_interactions: 0
-ftype: 1
+ftype: 4
 potfile: params/2d_spherocylinders.pot.yaml
 kmcfile: params/2d_spherocylinders.kmc.yaml
 dynamic_instability_flag: 0
