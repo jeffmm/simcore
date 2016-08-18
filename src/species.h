@@ -107,6 +107,7 @@ class SpeciesBase {
     virtual int GetCount() {return 0;}
     //std::vector<potential_pair> GetPotentials() {return potentials_;}
     virtual void Configurator() {}
+    virtual void WriteOutputs(std::string run_name) {}
 };
 
 template <typename T>
