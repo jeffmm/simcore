@@ -25,8 +25,8 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   #endif
 
   // Switch for interaction substructure type
-  printf("********\n");
-  printf("Creating UberEngine\n");
+  std::cout << "********\n";
+  std::cout << "Creating UberEngine (" << species_->size() << " species)\n";
   switch (params_->ftype) {
     case 0:
         printf("Must specify a tracking substructure, exiting!\n");

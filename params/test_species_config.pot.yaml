@@ -1,0 +1,25 @@
+potentials:
+  - type : WCA
+    sid1 : br_rod
+    sid2 : br_rod
+    rcut: 2.5
+    fcut: 10000
+    eps: 1
+    sigma: 1
+
+  - type : WCA
+    sid1: md_bead
+    sid2: md_bead
+    rcut: 2.5
+    fcut: 10000
+    eps: 1
+    sigma: 1
+
+# - type : SphereLineWell
+#   sid1 : xlink_head
+#   sid2 : br_rod
+#   overlap : true
+#   rcut: 1.0
+#   fcut: 10000
+#   kmc: true
+#   kmc_target: xlink_head
