@@ -252,6 +252,7 @@ template <typename T>
 class Composite<T> : public Object {
   protected:
     std::vector<T> elements_;
+    virtual void InitElements(system_parameters *params) {}
   public:
     Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {} 
     //Destructor

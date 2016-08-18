@@ -2,6 +2,77 @@
 #include <iomanip>
 #include "filament.h"
 
+void Filament::SetParameters(system_parameters *params) {
+  length_ = params->rod_length;
+  persistence_length_ = params->persistence_length;
+  diameter_ = params->rod_diameter;
+  max_length_ = params->max_rod_length;
+  min_length_ = params->min_rod_length;
+  max_child_length_ = 0.5*params->cell_length;
+  dynamic_instability_flag_ = params->dynamic_instability_flag;
+  force_induced_catastrophe_flag_ = params->force_induced_catastrophe_flag;
+  p_g2s_ = params->f_grow_to_shrink*delta_;
+  p_g2p_ = params->f_grow_to_pause*delta_;
+  p_s2p_ = params->f_shrink_to_pause*delta_;
+  p_s2g_ = params->f_shrink_to_grow*delta_;
+  p_p2s_ = params->f_pause_to_shrink*delta_;
+  p_p2g_ = params->f_pause_to_grow*delta_;
+  v_depoly_ = params->v_depoly;
+  v_poly_ = params->v_poly;
+  gamma_ratio_ = params->gamma_ratio;
+  metric_forces_ = params->metric_forces;
+  theta_validation_flag_ = params->theta_validation_flag;
+}
+
+void Filament::InitElements(system_parameters *params, space_struct *space) {
+  n_bonds_ = (int) ceil(length_/max_child_length_);
+  if (n_bonds_ < 2) 
+    n_bonds_++;
+  n_sites_ = n_bonds_+1;
+  child_length_ = length_/n_bonds_;
+  // If validating conformation of filament, create
+  // the usual test filament
+  if (theta_validation_flag_) {
+    length_ = 8.0;
+    max_child_length_ = 1.0;
+    child_length_  = 1.0;
+    min_length_ = 1.0;
+    n_bonds_ = 8;
+    dynamic_instability_flag_ = 0;
+    force_induced_catastrophe_flag_ = 0;
+  }
+  if (length_/n_bonds_ < min_length_) {
+    error_exit("ERROR: min_length_ of flexible filament segments too large for filament length.\n");
+  }
+  // Initialize sites
+  for (int i=0; i<n_sites_; ++i) {
+    Site s(params, space, gsl_rng_get(rng_.r), GetSID());
+    s.SetCID(GetCID());
+    elements_.push_back(s);
+  }
+  // Initialize bonds
+  for (int i=0; i<n_bonds_; ++i) {
+    Bond b(params, space, gsl_rng_get(rng_.r), GetSID());
+    b.SetCID(GetCID());
+    b.SetRID(GetRID());
+    v_elements_.push_back(b);
+  }
+  //Allocate control structures
+  tensions_.resize(n_sites_-1); //max_sites -1
+  g_mat_lower_.resize(n_sites_-2); //max_sites-2
+  g_mat_upper_.resize(n_sites_-2); //max_sites-2
+  g_mat_diag_.resize(n_sites_-1); //max_sites-1
+  det_t_mat_.resize(n_sites_+1); //max_sites+1
+  det_b_mat_.resize(n_sites_+1); //max_sites+1
+  g_mat_inverse_.resize(n_sites_-2); //max_sites-2
+  k_eff_.resize(n_sites_-2); //max_sites-2
+  h_mat_diag_.resize(n_sites_-1); //max_sites-1
+  h_mat_upper_.resize(n_sites_-2); //max_sites-2
+  h_mat_lower_.resize(n_sites_-2); //max_sites-2
+  gamma_inverse_.resize(n_sites_*n_dim_*n_dim_); //max_sites*ndim*ndim
+  cos_thetas_.resize(n_sites_-2); //max_sites-2
+}
+
 void Filament::Init() {
   InsertRandom(length_+diameter_);
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
@@ -20,31 +91,6 @@ void Filament::Init() {
   SetDiffusion();
   poly_state_ = GROW;
 }
-
-void Filament::TempInit() {
-  double pos[3] = {-16,0,0};
-  double u[3] = {1,0,0};
-  SetOrientation(u);
-  SetPosition(pos);
-  rng_.clear();
-  rng_.init(1944944);
-  for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
-    site->SetDiameter(diameter_);
-    site->SetLength(child_length_);
-    site->SetPosition(position_);
-    site->SetOrientation(orientation_);
-    for (int i=0; i<n_dim_; ++i)
-      position_[i] = position_[i] + orientation_[i] * child_length_;
-    //GenerateProbableOrientation();
-  }
-  UpdatePrevPositions();
-  CalculateAngles();
-  UpdateBondPositions();
-  SetDiffusion();
-  poly_state_ = GROW;
-
-}
-
 
 void Filament::SetDiffusion() {
   double eps = log(2.0*length_);
@@ -97,21 +143,21 @@ void Filament::GenerateProbableOrientation() {
   std::copy(new_orientation,new_orientation+3,orientation_);
 }
 
-void Filament::UpdatePosition() {
-  UpdatePositionMP();
+void Filament::UpdatePosition(bool midstep) {
+  UpdatePositionMP(midstep);
 }
 
-void Filament::UpdatePositionMP() {
+void Filament::UpdatePositionMP(bool midstep) {
   ZeroForce();
   ApplyForcesTorques();
-  Integrate();
+  Integrate(midstep);
 }
 
-void Filament::Integrate() {
+void Filament::Integrate(bool midstep) {
   CalculateAngles();
   CalculateTangents();
-  if (midstep_) {
-    //if (theta_validation_flag) {
+  if (midstep) {
+    //if (theta_validation_flag_) {
       //ValidateThetaDistribution();
     //}
     //if (position_correlation_flag) {
@@ -124,9 +170,8 @@ void Filament::Integrate() {
   AddRandomForces();
   CalculateBendingForces();
   CalculateTensions();
-  UpdateSitePositions();
+  UpdateSitePositions(midstep);
   UpdateBondPositions();
-  midstep_ = !midstep_;
 }
 
 void Filament::CalculateAngles() {
@@ -146,7 +191,7 @@ void Filament::CalculateAngles() {
   // If dynamic instability is on, make sure the angle between two adjoining segments is
   // less than 0.5*pi, or else the site rescaling will fail horribly.
   // This is only an issue for floppy filaments.
-  //if (rescale && sharp_angle && midstep_ && length_/(n_segments_+1) > min_length_) {
+  //if (rescale && sharp_angle && midstep && length_/(n_segments_+1) > min_length_) {
     //AddSite();
     //CalculateAngles(true);
   //}
@@ -446,9 +491,9 @@ void Filament::Draw(std::vector<graph_struct*> * graph_array) {
     bond->Draw(graph_array);
 }
 
-void Filament::UpdateSitePositions() {
+void Filament::UpdateSitePositions(bool midstep) {
 
-  double delta = (midstep_ ? 0.5*delta_ : delta_);
+  double delta = (midstep ? 0.5*delta_ : delta_);
   double f_site[3];
 
   // First get total forces
@@ -520,48 +565,6 @@ void Filament::UpdateSitePositions() {
   }
 }
 
-void Filament::DumpAll() {
-  printf("tensions:\n  {");
-  for (int i=0; i<n_sites_-1; ++i)
-    printf(" %5.5f ",tensions_[i]);
-  printf("}\n");
-  printf("g_mat_lower:\n  {");
-  for (int i=0; i<n_sites_-2; ++i)
-    printf(" %5.5f ",g_mat_lower_[i]);
-  printf("}\n");
-  printf("g_mat_upper:\n  {");
-  for (int i=0; i<n_sites_-2; ++i)
-    printf(" %5.5f ",g_mat_upper_[i]);
-  printf("}\n");
-  printf("g_mat_diag:\n  {");
-  for (int i=0; i<n_sites_-1; ++i)
-    printf(" %5.5f ",g_mat_diag_[i]);
-  printf("}\n");
-  printf("det_t_mat:\n  {");
-  for (int i=0; i<n_sites_+1; ++i)
-    printf(" %5.5f ",det_t_mat_[i]);
-  printf("}\n");
-  printf("det_b_mat:\n  {");
-  for (int i=0; i<n_sites_+1; ++i)
-    printf(" %5.5f ",det_b_mat_[i]);
-  printf("}\n");
-  printf("h_mat_diag:\n  {");
-  for (int i=0; i<n_sites_-1; ++i)
-    printf(" %5.5f ",h_mat_diag_[i]);
-  printf("}\n");
-  printf("h_mat_upper:\n  {");
-  for (int i=0; i<n_sites_-2; ++i)
-    printf(" %5.5f ",h_mat_upper_[i]);
-  printf("}\n");
-  printf("h_mat_lower:\n  {");
-  for (int i=0; i<n_sites_-2; ++i)
-    printf(" %5.5f ",h_mat_lower_[i]);
-  printf("}\n");
-  printf("k_eff:\n  {");
-  for (int i=0; i<n_sites_-2; ++i)
-    printf(" %5.5f ",k_eff_[i]);
-  printf("}\n\n\n");
-}
 
 void Filament::UpdateBondPositions() {
   double pos[3];
@@ -891,12 +894,14 @@ void FilamentSpecies::Configurator() {
     //params_->max_child_length = max_child_length; XXX right now uses the cell size...
     params_->rod_diameter = diameter;
 
+    n_members_ = 0;
     for (int i = 0; i < nfilaments; ++i) {
       Filament *member = new Filament(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->Init();
 
       if (can_overlap) {
         members_.push_back(member);
+        n_members_++;
       } else {
         // XXX Check for overlaps
         std::cout << "Overlap not yet implemented for filaments, exiting\n";
@@ -909,8 +914,93 @@ void FilamentSpecies::Configurator() {
     std::cout << "Nope, not yet for filaments!\n";
     exit(1);
   }
+  theta_validation_ = params_->theta_validation_flag ? true : false;
+  if (theta_validation_) {
+    nbins_ = params_->n_bins;
+    theta_distribution_ = new int**[n_members_];
+    for (int i=0; i<n_members_; ++i) {
+      theta_distribution_[i] = new int*[7]; // 7 angles to record for 8 bonds
+      for (int j=0; j<7; ++j) {
+        theta_distribution_[i][j] = new int[nbins_];
+        std::fill(theta_distribution_[i][j],theta_distribution_[i][j]+nbins_,0.0);
+      }
+    }
+  }
+  midstep_ = true;
 
   std::cout << "****************\n";
   std::cout << "Filament insertion not done yet, BE CAREFUL!!!!!!\n";
   std::cout << "****************\n";
 }
+
+void FilamentSpecies::WriteOutputs(std::string run_name) {
+  std::ostringstream file_name;
+  file_name << run_name << "-thetas.log";
+  std::ofstream thetas_file(file_name.str().c_str(), std::ios_base::out);
+  thetas_file << "cos_theta" << " ";
+  int n_theta = 1;
+  for (int j_member=0; j_member<n_members_; ++j_member) {
+    for (int k_angle=0; k_angle<7; ++k_angle) {
+      thetas_file << "fil_" << j_member+1 << "_theta_" << n_theta++ << n_theta << " ";
+    }
+    n_theta = 1;
+  }
+  thetas_file << "\n";
+  for (int i_bin=0; i_bin<nbins_; ++i_bin) {
+    double angle = 2.0*i_bin/ (double) nbins_ - 1.0;
+    thetas_file << angle << " ";
+    for (int j_member=0; j_member<n_members_; ++j_member) {
+      for (int k_angle=0; k_angle<7; ++k_angle) {
+        thetas_file << theta_distribution_[j_member][k_angle][i_bin] << " ";
+      }
+    }
+    thetas_file << "\n";
+  }
+}
+
+
+
+
+void Filament::DumpAll() {
+  printf("tensions:\n  {");
+  for (int i=0; i<n_sites_-1; ++i)
+    printf(" %5.5f ",tensions_[i]);
+  printf("}\n");
+  printf("g_mat_lower:\n  {");
+  for (int i=0; i<n_sites_-2; ++i)
+    printf(" %5.5f ",g_mat_lower_[i]);
+  printf("}\n");
+  printf("g_mat_upper:\n  {");
+  for (int i=0; i<n_sites_-2; ++i)
+    printf(" %5.5f ",g_mat_upper_[i]);
+  printf("}\n");
+  printf("g_mat_diag:\n  {");
+  for (int i=0; i<n_sites_-1; ++i)
+    printf(" %5.5f ",g_mat_diag_[i]);
+  printf("}\n");
+  printf("det_t_mat:\n  {");
+  for (int i=0; i<n_sites_+1; ++i)
+    printf(" %5.5f ",det_t_mat_[i]);
+  printf("}\n");
+  printf("det_b_mat:\n  {");
+  for (int i=0; i<n_sites_+1; ++i)
+    printf(" %5.5f ",det_b_mat_[i]);
+  printf("}\n");
+  printf("h_mat_diag:\n  {");
+  for (int i=0; i<n_sites_-1; ++i)
+    printf(" %5.5f ",h_mat_diag_[i]);
+  printf("}\n");
+  printf("h_mat_upper:\n  {");
+  for (int i=0; i<n_sites_-2; ++i)
+    printf(" %5.5f ",h_mat_upper_[i]);
+  printf("}\n");
+  printf("h_mat_lower:\n  {");
+  for (int i=0; i<n_sites_-2; ++i)
+    printf(" %5.5f ",h_mat_lower_[i]);
+  printf("}\n");
+  printf("k_eff:\n  {");
+  for (int i=0; i<n_sites_-2; ++i)
+    printf(" %5.5f ",k_eff_[i]);
+  printf("}\n\n\n");
+}
+
