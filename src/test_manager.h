@@ -3,6 +3,7 @@
 
 #include "auxiliary.h"
 #include "helpers.h"
+#include "test_base.h"
 
 class TestManager {
   public:
@@ -16,6 +17,7 @@ class TestManager {
     long seed_;
 
     rfh::factory test_factory_;
+    std::vector<TestBase*> tests_;
 };
 
 #endif /* SIMCORE_TEST_MANAGER_H_ */

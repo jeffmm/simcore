@@ -4,11 +4,13 @@
 #include "auxiliary.h"
 #include "kmc_base.h"
 #include "lookup_table.h"
+#include "test_base.h"
 
 class Xlink;
 class XlinkHead;
 
 class XlinkKMC : public KMCBase {
+  friend class TestBase;
   protected:
     double eps_eff_0_1_[2];
     double eps_eff_1_2_[2];
