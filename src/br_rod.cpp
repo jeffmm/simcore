@@ -356,13 +356,13 @@ void BrRod::Dump() {
 
 
 // Species specifics
-void BrRodSpecies::ConfiguratorRod() {
+void BrRodSpecies::Configurator() {
   char *filename = params_->config_file;
-  std::cout << "BrRod Configurator started with " << filename << std::endl;
+  std::cout << "BrRod species\n";
 
   YAML::Node node = YAML::LoadFile(filename);
 
-  std::cout << "Generic Properties:\n";
+  std::cout << " Generic Properties:\n";
 
   // See what kind of insertion type, as that changes how we read info
   std::string insertion_type;
@@ -458,3 +458,4 @@ void BrRodSpecies::ConfiguratorRod() {
     exit(1);
   }
 }
+

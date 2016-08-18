@@ -8,6 +8,7 @@
 #include "species.h"
 #include "objects.h"
 #include "uberengine.h"
+#include "helpers.h"
 
 class Simulation {
 
@@ -23,6 +24,7 @@ class Simulation {
     SpaceProperties space_;
     UberEngine uengine_;
     std::vector<SpeciesBase*> species_;
+    rfh::factory species_factory_;
     void InitSimulation();
     void InitSpecies();
     void ClearSpecies();

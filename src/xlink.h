@@ -123,6 +123,7 @@ class XlinkSpecies : public Species<Xlink> {
     int nfree_ = 0.0;
 
   public:
+    XlinkSpecies() : Species() {}
     XlinkSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::xlink);
       is_kmc_ = true;
@@ -135,7 +136,7 @@ class XlinkSpecies : public Species<Xlink> {
     }
 
     // Specific initialization
-    void ConfiguratorXlink();
+    void Configurator();
 
     // KMC specifics
     double const GetNExp_0_1() {return n_exp_0_1_;}
