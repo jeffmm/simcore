@@ -179,13 +179,13 @@ void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
 
 
 // Species specifics
-void XlinkSpecies::ConfiguratorXlink() {
+void XlinkSpecies::Configurator() {
   char *filename = params_->config_file;
-  std::cout << "Xlink Configurator started with " << filename << std::endl;
+  std::cout << "Xlink species\n";
 
   YAML::Node node = YAML::LoadFile(filename);
 
-  std::cout << "Generic Properties:\n";
+  std::cout << " Generic Properties:\n";
   std::string insertion_type;
   insertion_type = node["xlink"]["properties"]["insertion_type"].as<std::string>();
   std::cout << "   insertion type: " << insertion_type << std::endl;

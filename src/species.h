@@ -35,6 +35,11 @@ class SpeciesBase {
       rng_.init(seed);
       delta_ = params->delta;
     }
+    SpeciesBase() {
+      sid_ = SID::none;
+      is_kmc_ = false;
+      kmc_update_ = false;
+    }
     virtual ~SpeciesBase() {
       rng_.clear();
       //for (auto it=potentials_.begin(); it!=potentials_.end(); ++it)
@@ -67,6 +72,15 @@ class SpeciesBase {
     virtual void UpdatePositions() {}
     virtual void UpdatePositionsMP() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
+    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
+      n_members_ = 0;
+      params_ = params;
+      space_ = space;
+      is_kmc_ = false;
+      kmc_update_ = false;
+      rng_.init(seed);
+      delta_ = params->delta;
+    }
     virtual void Init() {}
     virtual void ReInit(unsigned int const cid) {}
     virtual double GetDrMax() {return 0.0;}
@@ -92,6 +106,7 @@ class SpeciesBase {
     //std::vector<potential_pair> GetPotentials() {return potentials_;}
     virtual int GetCount() {return 0;}
     //std::vector<potential_pair> GetPotentials() {return potentials_;}
+    virtual void Configurator() {}
 };
 
 template <typename T>
@@ -99,6 +114,20 @@ class Species : public SpeciesBase {
   protected:
     std::vector<T*> members_;
   public:
+    // Default constructor, needed for species factories
+    Species() {}
+
+    // Initialize function for setting it up on the first pass
+    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
+      SpeciesBase::InitConfig(params, space, seed);
+    }
+
+    // Configurator function must be overridden
+    virtual void Configurator() {
+      printf("ERROR, needs to override!\n");
+      exit(1);
+    }
+
     Species(int n_members, system_parameters *params, space_struct *space, long seed) : SpeciesBase(n_members, params, space, seed) {}
     //Destructor
     virtual ~Species() {

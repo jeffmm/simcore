@@ -150,6 +150,9 @@ class BrRodSpecies : public Species<BrRod> {
     //void InitPotentials(system_parameters *params);
     double max_length_;
   public:
+    BrRodSpecies() : Species() {
+      SetSID(SID::br_rod);
+    }
     BrRodSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
@@ -163,13 +166,16 @@ class BrRodSpecies : public Species<BrRod> {
       SpeciesBase::operator=(that);
       return *this;
     }
+    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
+      Species::InitConfig(params, space, seed);
+    }
     void Init() {
       Species::Init();
     }
     double const GetMaxLength() {return max_length_;}
 
     // Special insertion routine
-    void ConfiguratorRod();
+    void Configurator();
 
 };
 
