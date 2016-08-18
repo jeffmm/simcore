@@ -1,6 +1,8 @@
 
 #include "simulation.h"
 
+#define REGISTER_SPECIES(n,m) species_factory_.register_class<n>(#m);
+
 Simulation::Simulation() {}
 Simulation::~Simulation() {}
 
@@ -83,7 +85,28 @@ void Simulation::InitSimulation() {
 }
 
 void Simulation::InitSpecies() {
-#include "init_species.h"
+//#include "init_species.h"
+  // Check out the configuration file
+  std::cout << "Configuration started with " << params_.config_file << std::endl;
+
+  YAML::Node node = YAML::LoadFile(params_.config_file);
+
+  // We have to search for the various types of species that we have
+  // Maybe hijack init_species.h for this
+  REGISTER_SPECIES(MDBeadSpecies,md_bead);
+  REGISTER_SPECIES(BrRodSpecies,br_rod);
+  REGISTER_SPECIES(XlinkSpecies,xlink);
+
+  // Search the species_factory_ for any registered species, and find them in the
+  // yaml file
+  for (auto possibles = species_factory_.m_classes.begin(); possibles != species_factory_.m_classes.end(); ++possibles) {
+    if (node[possibles->first]) {
+      SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
+      spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+      spec->Configurator();
+      species_.push_back(spec);
+    }
+  }
 }
 void Simulation::ClearSpecies() {
   for (auto it=species_.begin(); it!=species_.end(); ++it)

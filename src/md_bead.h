@@ -14,7 +14,6 @@ class MDBead : public Simple {
     MDBead(system_parameters *params, space_struct *space, 
         long seed, SID sid) : Simple(params, space, seed, sid) {
       // Set parameters unique to MD bead
-      //SetCID(999);
       diameter_ = params->md_bead_diameter;
       mass_ = params->md_bead_mass;
     }
@@ -29,17 +28,20 @@ class MDBead : public Simple {
     virtual void Integrate();
     virtual void UpdateKineticEnergy();
     virtual double const GetKineticEnergy();
+
 };
 
 class MDBeadSpecies : public Species<MDBead> {
   protected:
-    //void InitPotentials (system_parameters *params);
+
   public:
+    MDBeadSpecies() : Species() {
+      SetSID(SID::md_bead);
+    }
     MDBeadSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
       SetSID(SID::md_bead);
-      //InitPotentials(params);
     }
     ~MDBeadSpecies() {}
     MDBeadSpecies(const MDBeadSpecies& that) : Species(that) {}
@@ -50,6 +52,9 @@ class MDBeadSpecies : public Species<MDBead> {
     void Init() {
       Species::Init();
     }
+
+    // Configurations
+    void Configurator();
 };
 
 #endif // _SIMCORE_MD_BEAD_H_
