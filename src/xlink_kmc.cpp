@@ -97,7 +97,9 @@ void XlinkKMC::CalcCutoff() {
   const double temp = 1.0;
   const double smalleps = 1E-3;
   double eps_eff = eps_eff_1_2_[0] + eps_eff_1_2_[1];
-  double rc_0 = sqrt(2.0 / ( (1-barrier_weight_) * k_stretch_) * temp * log(eps_eff * max_length_ / smalleps * sqrt(2.0 * temp / k_stretch_)));
+  double rc_0 = sqrt(2.0 / ( (1-barrier_weight_) * k_stretch_) *
+                     temp *
+                     log(eps_eff * max_length_ / smalleps * sqrt(2.0 * temp / k_stretch_)));
   rcutoff_1_2_ = r_equil_ + rc_0;
 }
 
@@ -150,6 +152,7 @@ void XlinkKMC::Print() {
   printf("\t {barrier_weight: %2.10f}\n", barrier_weight_);
   printf("\t {equilibrium_length: %2.4f}\n", r_equil_);
   printf("\t {k_spring: %2.4f}\n", k_stretch_);
+  printf("\t {max_length: %2.4f}\n", max_length_);
   printf("\t {rcutoff_0_1: %2.8f}\n", rcutoff_0_1_);
   printf("\t {rcutoff_1_2: %2.8f}\n", rcutoff_1_2_);
   printf("\t {alpha: %2.4f}\n", alpha_);
