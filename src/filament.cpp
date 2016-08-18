@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include "filament.h"
 
 void Filament::Init() {
@@ -841,3 +842,75 @@ void Filament::UpdateBondPositions() {
     //poly_state_ = SHRINK;
 //}
 
+// Species specifics, including insertion routines
+void FilamentSpecies::Configurator() {
+  char *filename = params_->config_file;
+
+  std::cout << "Filament species\n";
+
+  YAML::Node node = YAML::LoadFile(filename);
+
+  std::cout << " Generic Properties:\n";
+
+  // Check insertion type
+  std::string insertion_type;
+  insertion_type = node["filament"]["properties"]["insertion_type"].as<std::string>();
+  std::cout << "   insertion type: " << insertion_type << std::endl;
+  bool can_overlap = node["filament"]["properties"]["overlap"].as<bool>();
+  std::cout << "   overlap:        " << (can_overlap ? "true" : "false") << std::endl;
+
+  if (insertion_type.compare("random") == 0) {
+    int nfilaments          = node["filament"]["fil"]["num"].as<int>();
+    double flength          = node["filament"]["fil"]["length"].as<double>();
+    double plength          = node["filament"]["fil"]["persistence_length"].as<double>();
+    double max_length       = node["filament"]["fil"]["max_length"].as<double>();
+    double min_length       = node["filament"]["fil"]["min_length"].as<double>();
+    double max_child_length = node["filament"]["fil"]["max_child_length"].as<double>();
+    double diameter         = node["filament"]["fil"]["diameter"].as<double>();
+
+    std::cout << std::setw(25) << std::left << "   n filaments:" << std::setw(10)
+      << std::left << nfilaments << std::endl;
+    std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
+      << std::left << flength << std::endl;
+    std::cout << std::setw(25) << std::left << "   persistence length:" << std::setw(10)
+      << std::left << plength << std::endl;
+    std::cout << std::setw(25) << std::left << "   max length:" << std::setw(10)
+      << std::left << max_length << std::endl;
+    std::cout << std::setw(25) << std::left << "   min length:" << std::setw(10)
+      << std::left << min_length << std::endl;
+    std::cout << std::setw(25) << std::left << "   max child length:" << std::setw(10)
+      << std::left << max_child_length << std::endl;
+    std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
+      << std::left << diameter << std::endl;
+
+    params_->n_filament = nfilaments;
+    params_->rod_length = flength;
+    params_->persistence_length = plength;
+    params_->max_rod_length = max_length;
+    params_->min_rod_length = min_length;
+    //params_->max_child_length = max_child_length; XXX right now uses the cell size...
+    params_->rod_diameter = diameter;
+
+    for (int i = 0; i < nfilaments; ++i) {
+      Filament *member = new Filament(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->Init();
+
+      if (can_overlap) {
+        members_.push_back(member);
+      } else {
+        // XXX Check for overlaps
+        std::cout << "Overlap not yet implemented for filaments, exiting\n";
+        exit(1);
+      }
+    }
+
+  } else {
+    // XXX Check for exact insertion of filaments
+    std::cout << "Nope, not yet for filaments!\n";
+    exit(1);
+  }
+
+  std::cout << "****************\n";
+  std::cout << "Filament insertion not done yet, BE CAREFUL!!!!!!\n";
+  std::cout << "****************\n";
+}

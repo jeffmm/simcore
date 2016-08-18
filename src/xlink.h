@@ -123,7 +123,10 @@ class XlinkSpecies : public Species<Xlink> {
     int nfree_ = 0.0;
 
   public:
-    XlinkSpecies() : Species() {}
+    XlinkSpecies() : Species() {
+      SetSID(SID::xlink);
+      is_kmc_ = true;
+    }
     XlinkSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::xlink);
       is_kmc_ = true;

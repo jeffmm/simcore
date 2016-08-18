@@ -220,6 +220,9 @@ class FilamentSpecies : public Species<Filament> {
   protected:
     //void InitPotentials(system_parameters *params);
   public:
+    FilamentSpecies() : Species() {
+      SetSID(SID::filament);
+    }
     FilamentSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
@@ -235,6 +238,8 @@ class FilamentSpecies : public Species<Filament> {
     void Init() {
       Species::Init();
     }
+
+    void Configurator();
 
 };
 

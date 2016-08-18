@@ -2,6 +2,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <iomanip>
+
 void BrRod::Init() {
   InsertRandom(0.5*length_+diameter_);
   poly_state_ = GROW;
@@ -369,7 +371,7 @@ void BrRodSpecies::Configurator() {
   insertion_type = node["br_rod"]["properties"]["insertion_type"].as<std::string>();
   std::cout << "   insertion type: " << insertion_type << std::endl;
   bool can_overlap = node["br_rod"]["properties"]["overlap"].as<bool>();
-  std::cout << "   overlap: " << (can_overlap ? "true" : "false") << std::endl;
+  std::cout << "   overlap:        " << (can_overlap ? "true" : "false") << std::endl;
 
   if (insertion_type.compare("xyz") == 0) {
     if (!can_overlap) {
@@ -403,12 +405,22 @@ void BrRodSpecies::Configurator() {
   } else if (insertion_type.compare("random") == 0) {
     int nrods         = node["br_rod"]["rod"]["num"].as<int>();
     double rlength    = node["br_rod"]["rod"]["length"].as<double>();
+    double max_length = node["br_rod"]["rod"]["max_length"].as<double>();
     double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
-    std::cout << "   nrods:    " << nrods << std::endl;
-    std::cout << "   length:   " << rlength << std::endl;
-    std::cout << "   diameter: " << diameter << std::endl;
+
+    std::cout << std::setw(25) << std::left << "   n rods:" << std::setw(10)
+      << std::left << nrods << std::endl;
+    std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
+      << std::left << rlength << std::endl;
+    std::cout << std::setw(25) << std::left << "   max length:" << std::setw(10)
+      << std::left << max_length << std::endl;
+    std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
+      << std::left << diameter << std::endl;
+
     params_->n_rod = nrods;
     params_->rod_length = rlength;
+    params_->max_rod_length = max_length;
+    max_length_ = max_length;
     params_->rod_diameter = diameter;
 
     for (int i = 0; i < nrods; ++i) {

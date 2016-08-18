@@ -87,7 +87,9 @@ void Simulation::InitSimulation() {
 void Simulation::InitSpecies() {
 //#include "init_species.h"
   // Check out the configuration file
-  std::cout << "Configuration started with " << params_.config_file << std::endl;
+  std::cout << "********\n";
+  std::cout << "Species Load ->\n";
+  std::cout << "  file: " << params_.config_file << std::endl;
 
   YAML::Node node = YAML::LoadFile(params_.config_file);
 
@@ -96,6 +98,7 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(MDBeadSpecies,md_bead);
   REGISTER_SPECIES(BrRodSpecies,br_rod);
   REGISTER_SPECIES(XlinkSpecies,xlink);
+  REGISTER_SPECIES(FilamentSpecies,filament);
 
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file
