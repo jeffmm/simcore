@@ -1,0 +1,61 @@
+# params.yaml
+---
+seed : 48916713496714
+n_runs: 1
+n_dim: 2
+n_periodic: 2
+system_radius: 20
+daughter_radius: 5
+mother_daughter_dist: 0
+boundary_type: 1
+n_rod: 0
+n_filament: 1
+rod_diameter: 1
+rod_length: 8
+dynamic_instability_flag: 0
+force_induced_catastrophe_flag: 1
+n_dimer: 0
+n_md_bead: 0
+md_bead_diameter: 0.3
+md_bead_mass: 0.1
+n_br_bead: 0
+br_bead_diameter: 1
+dimer_diameter: 1
+dimer_length: 2
+dimer_eq_length: 2
+dimer_k_spring: 5
+max_rod_length: 100
+min_rod_length: 1.5
+max_overlap: 100000
+cell_length: 2
+graph_flag: 1
+n_graph: 500
+graph_background: 1
+delta: 0.01
+n_steps: 2000000
+n_update_cells: 20
+time_flag: 1
+energy_analysis_flag: 1
+lj_epsilon: 1
+n_neon: 0
+n_argon: 0
+grab_flag: 0
+grab_file: frames/frame
+draw_interactions: 0
+ftype: 4
+v_poly: 0.44
+v_depoly: 0.793
+potfile: params/filament_test.pot.yaml
+kmcfile: params/filament_test.kmc.yaml
+config_file: params/filament_test.config.yaml
+persistence_length: 0
+#[brownian_dimer]:
+    #num: [2,4]
+    #length: 5
+    #k_dimer: 10
+    #bead_mass: [1,4,8]
+#[microtubule]:
+    #num: 10
+    #persistence_length: 10000
+    #dynamic_instability: true
+...
