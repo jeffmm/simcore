@@ -1,5 +1,7 @@
 #include "xlink.h"
 
+#include <iomanip>
+
 void Xlink::Init() {
   Composite::InsertRandom(length_+diameter_);
   // Give each bead the location of the main position!
@@ -190,7 +192,7 @@ void XlinkSpecies::Configurator() {
   insertion_type = node["xlink"]["properties"]["insertion_type"].as<std::string>();
   std::cout << "   insertion type: " << insertion_type << std::endl;
   bool can_overlap = node["xlink"]["properties"]["overlap"].as<bool>();
-  std::cout << "   can overlap: " << (can_overlap ? "true" : "false") << std::endl;
+  std::cout << "   can overlap:    " << (can_overlap ? "true" : "false") << std::endl;
 
   if (insertion_type.compare("xyz") == 0) {
     if (!can_overlap) {
@@ -218,8 +220,12 @@ void XlinkSpecies::Configurator() {
   } else if (insertion_type.compare("random") == 0) {
     int nxlinks     = node["xlink"]["xit"]["num"].as<int>();
     double diameter = node["xlink"]["xit"]["diameter"].as<double>();
-    std::cout << "   nxlinks:  " << nxlinks << std::endl;
-    std::cout << "   diameter: " << diameter << std::endl;
+
+    std::cout << std::setw(25) << std::left << "   n xlinks:" << std::setw(10)
+      << std::left << nxlinks << std::endl;
+    std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
+      << std::left << diameter << std::endl;
+
     params_->n_xlink = nxlinks;
     params_->xlink_diameter = diameter;
 

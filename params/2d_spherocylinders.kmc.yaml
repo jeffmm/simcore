@@ -15,7 +15,7 @@ kmc:
   #equilibrium_length: 0.707
   equilibrium_length: 0.0
   #equilibrium_length: 0.0001
-  #end_pause: [true, true]
-  end_pause: [false, false]
+  end_pause: [true, true]
+  #end_pause: [false, false]
   write_event: true
 
