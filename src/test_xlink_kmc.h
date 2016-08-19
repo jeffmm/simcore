@@ -8,11 +8,14 @@ class TestXlinkKMC : public TestBase, public XlinkKMC {
   public:
     TestXlinkKMC() : TestBase(), XlinkKMC() {}
 
-    virtual void InitTests();
+    virtual void InitTests(const std::string& filename);
     virtual void UnitTests();
     virtual void IntegrationTests();
 
   protected:
+
+    // Unit Tests
+    bool UnitTestCalcCutoff();
 
 };
 

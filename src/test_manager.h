@@ -15,6 +15,7 @@ class TestManager {
 
   private:
     long seed_;
+    std::string filename_;
 
     rfh::factory test_factory_;
     std::vector<TestBase*> tests_;

@@ -1,1 +1,6 @@
 seed: 100
+TestXlinkKMC:
+  CalcCutoff:
+    max_length: 110
+    eps_eff: 10.0
+    spring_constant: 45.29

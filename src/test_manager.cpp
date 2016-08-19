@@ -8,6 +8,7 @@
 
 void TestManager::InitManager(const std::string& filename) {
   YAML::Node node = YAML::LoadFile(filename);
+  filename_ = filename;
 
   RegisterTests();
 
@@ -16,20 +17,26 @@ void TestManager::InitManager(const std::string& filename) {
   std::cout << " " << filename << std::endl;
 
   seed_ = node["seed"].as<long>();
+
+  for (auto alltests = test_factory_.m_classes.begin(); alltests != test_factory_.m_classes.end(); ++alltests) {
+    if (node[alltests->first]) {
+      std::cout << "Adding test " << alltests->first << std::endl;
+      TestBase *newtest = (TestBase*)test_factory_.construct(alltests->first);
+      tests_.push_back(newtest);
+    }
+  }
 }
 
 void TestManager::RegisterTests() {
   // Register all tests we have access to
-  std::cout << "Registering tests\n";
   REGISTER_TEST(TestXlinkKMC);
 }
 
 void TestManager::RunTests() {
   std::cout << "Running tests\n";
-  TestBase *xlinktest = (TestBase*)test_factory_.construct("TestXlinkKMC");
-  tests_.push_back(xlinktest);
-
   for (auto testit = tests_.begin(); testit != tests_.end(); ++testit) {
-    (*testit)->InitTests();
+    (*testit)->InitTests(filename_);
+    // Run the unit tests, and report the results
+    (*testit)->UnitTests();
   }
 }
