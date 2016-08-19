@@ -10,7 +10,6 @@ class Xlink;
 class XlinkHead;
 
 class XlinkKMC : public KMCBase {
-  friend class TestBase;
   protected:
     double eps_eff_0_1_[2];
     double eps_eff_1_2_[2];
