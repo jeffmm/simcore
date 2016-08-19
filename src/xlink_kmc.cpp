@@ -82,8 +82,11 @@ void XlinkKMC::Init(space_struct *pSpace,
   barrier_weight_ = node["kmc"][ikmc]["barrier_weight"].as<double>();
   k_stretch_      = node["kmc"][ikmc]["spring_constant"].as<double>();
   r_equil_        = node["kmc"][ikmc]["equilibrium_length"].as<double>();
-
   write_event_    = node["kmc"][ikmc]["write_event"].as<bool>();
+
+  // Things that we need for the tables and CalcCutoff
+  BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec2_);
+  max_length_ = prspec->GetMaxLength();
 
   CalcCutoff();
 
@@ -91,8 +94,6 @@ void XlinkKMC::Init(space_struct *pSpace,
 }
 
 void XlinkKMC::CalcCutoff() {
-  BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec2_);
-  max_length_ = prspec->GetMaxLength();
   rcutoff_1_2_ = 0.0;
   const double temp = 1.0;
   const double smalleps = 1E-3;
