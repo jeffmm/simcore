@@ -8,12 +8,14 @@ system_radius: 20
 daughter_radius: 5
 mother_daughter_dist: 0
 boundary_type: 1
+metric_forces: 1
 n_rod: 0
 n_filament: 1
 rod_diameter: 1
 rod_length: 8
+theta_validation_flag: 1
 dynamic_instability_flag: 0
-force_induced_catastrophe_flag: 1
+force_induced_catastrophe_flag: 0
 n_dimer: 0
 n_md_bead: 0
 md_bead_diameter: 0.3
@@ -28,7 +30,7 @@ max_rod_length: 100
 min_rod_length: 1.5
 max_overlap: 100000
 cell_length: 2
-graph_flag: 1
+graph_flag: 0
 n_graph: 500
 graph_background: 1
 delta: 0.01
@@ -45,9 +47,9 @@ draw_interactions: 0
 ftype: 4
 v_poly: 0.44
 v_depoly: 0.793
-potfile: params/hardrods_pot.yaml
-kmcfile: params/hardrods_pot.yaml
-config_file: random
+potfile: params/filament_test.pot.yaml
+kmcfile: params/filament_test.kmc.yaml
+config_file: params/filament_test.config.yaml
 persistence_length: 0
 #[brownian_dimer]:
     #num: [2,4]

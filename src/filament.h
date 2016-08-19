@@ -16,7 +16,6 @@ class Filament : public Composite<Site,Bond> {
         force_induced_catastrophe_flag_,
         theta_validation_flag_,
         metric_forces_;
-    bool midstep_;
     double max_length_,
            min_length_,
            max_child_length_,
@@ -61,74 +60,23 @@ class Filament : public Composite<Site,Bond> {
     void ProjectRandomForces();
     void CalculateBendingForces();
     void CalculateTensions();
-    void UpdateSitePositions();
+    void UpdateSitePositions(bool midstep);
     void UpdateBondPositions();
     void ApplyForcesTorques();
-    void TempInit();
-    void DumpAll();
+    void SetParameters(system_parameters *params);
+    void InitElements(system_parameters *params, space_struct *space);
     //void UpdateOrientation();
     //void AddRandomDisplacement();
     //void ApplyForcesTorques();
     //void DynamicInstability();
+    void DumpAll();
 
   public:
-    Filament(system_parameters *params, space_struct * space, long seed, SID sid) 
-      : Composite(params, space, seed, sid) {
-        //bond_ptr_ = new Bond(params, space, gsl_rng_get(rng_.r), GetSID()) ;
-        length_ = params->rod_length;
-        persistence_length_ = params->persistence_length;
-        diameter_ = params->rod_diameter;
-        max_length_ = params->max_rod_length;
-        min_length_ = params->min_rod_length;
-        max_child_length_ = 0.5*params->cell_length;
-        dynamic_instability_flag_ = params->dynamic_instability_flag;
-        force_induced_catastrophe_flag_ = params->force_induced_catastrophe_flag;
-        p_g2s_ = params->f_grow_to_shrink*delta_;
-        p_g2p_ = params->f_grow_to_pause*delta_;
-        p_s2p_ = params->f_shrink_to_pause*delta_;
-        p_s2g_ = params->f_shrink_to_grow*delta_;
-        p_p2s_ = params->f_pause_to_shrink*delta_;
-        p_p2g_ = params->f_pause_to_grow*delta_;
-        v_depoly_ = params->v_depoly;
-        v_poly_ = params->v_poly;
-        gamma_ratio_ = params->gamma_ratio;
-        metric_forces_ = params->metric_forces;
-        n_bonds_ = 8;
-        n_sites_ = n_bonds_+1;
-        child_length_ = length_/n_bonds_;
-        // Initialize sites
-        for (int i=0; i<n_sites_; ++i) {
-          Site s(params, space, gsl_rng_get(rng_.r), GetSID());
-          s.SetCID(GetCID());
-          elements_.push_back(s);
-        }
-        // Initialize bonds
-        for (int i=0; i<n_bonds_; ++i) {
-          Bond b(params, space, gsl_rng_get(rng_.r), GetSID());
-          b.SetCID(GetCID());
-          b.SetRID(GetRID());
-          //b.InitOID();
-          v_elements_.push_back(b);
-        }
-        //Allocate control structures
-        //TODO: JMM Consider another method of storing these arrays,
-        //as it is a lot of memory for each filament to store. This
-        //may be the only way to do this if we want to use parallel :(
-        tensions_.resize(n_sites_-1); //max_sites -1
-        g_mat_lower_.resize(n_sites_-2); //max_sites-2
-        g_mat_upper_.resize(n_sites_-2); //max_sites-2
-        g_mat_diag_.resize(n_sites_-1); //max_sites-1
-        det_t_mat_.resize(n_sites_+1); //max_sites+1
-        det_b_mat_.resize(n_sites_+1); //max_sites+1
-        g_mat_inverse_.resize(n_sites_-2); //max_sites-2
-        k_eff_.resize(n_sites_-2); //max_sites-2
-        h_mat_diag_.resize(n_sites_-1); //max_sites-1
-        h_mat_upper_.resize(n_sites_-2); //max_sites-2
-        h_mat_lower_.resize(n_sites_-2); //max_sites-2
-        gamma_inverse_.resize(n_sites_*n_dim_*n_dim_); //max_sites*ndim*ndim
-        cos_thetas_.resize(n_sites_-2); //max_sites-2
-        midstep_ = true;
-      }
+    Filament(system_parameters *params, space_struct * space, 
+        long seed, SID sid) : Composite(params, space, seed, sid) {
+      SetParameters(params);
+      InitElements(params, space);
+    }
     ~Filament() {}
     Filament(const Filament& that) : Composite(that) {
       n_bonds_=that.n_bonds_;
@@ -136,6 +84,7 @@ class Filament : public Composite<Site,Bond> {
       dynamic_instability_flag_ = that.dynamic_instability_flag_;
       force_induced_catastrophe_flag_ = that.force_induced_catastrophe_flag_;
       metric_forces_ = that.metric_forces_;
+      theta_validation_flag_ = that.theta_validation_flag_;
       max_length_ = that.max_length_;
       min_length_ = that.min_length_;
       max_child_length_ = that.max_child_length_;
@@ -174,6 +123,7 @@ class Filament : public Composite<Site,Bond> {
       n_sites_ = that.n_sites_;
       dynamic_instability_flag_ = that.dynamic_instability_flag_;
       force_induced_catastrophe_flag_ = that.force_induced_catastrophe_flag_;
+      theta_validation_flag_ = that.theta_validation_flag_;
       metric_forces_ = that.metric_forces_;
       max_length_ = that.max_length_;
       min_length_ = that.min_length_;
@@ -209,25 +159,47 @@ class Filament : public Composite<Site,Bond> {
       return *this;
     } 
     virtual void Init();
-    virtual void Integrate();
+    virtual void Integrate(bool midstep);
     virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
-    virtual void UpdatePosition();
-    virtual void UpdatePositionMP();
+    virtual void UpdatePosition() {}
+    virtual void UpdatePositionMP() {}
+    virtual void UpdatePosition(bool midstep);
+    virtual void UpdatePositionMP(bool midstep);
+    std::vector<double> const * const GetThetas() {
+      return &cos_thetas_;
+    }
 };
 
 class FilamentSpecies : public Species<Filament> {
   protected:
     //void InitPotentials(system_parameters *params);
+    bool theta_validation_,
+         midstep_;
+    int ***theta_distribution_;
+    int nbins_;
+    void ValidateThetaDistributions() {
+      int i = 0;
+      for (auto it=members_.begin(); it!=members_.end(); ++it) {
+        std::vector<double> const * const thetas = (*it)->GetThetas();
+        for (int j=0; j<7; ++j) {
+          int bin_number = (int) floor( (1 + (*thetas)[j]) * (nbins_/2) );
+          // Check boundaries
+          if (bin_number == nbins_)
+            bin_number = nbins_-1;
+          else if (bin_number == -1)
+            bin_number = 0;
+          // Check for nonsensical values
+          else if (bin_number > nbins_ || bin_number < 0) error_exit("Something went wrong in ValidateThetaDistributions!\n");
+          theta_distribution_[i][j][bin_number]++;
+        }
+        i++;
+      }
+
+    }
   public:
     FilamentSpecies() : Species() {
       SetSID(SID::filament);
-    }
-    FilamentSpecies(int n_members, system_parameters *params, 
-        space_struct *space, long seed) 
-      : Species(n_members, params, space, seed) {
-      SetSID(SID::filament);
-      //InitPotentials(params);
     }
     ~FilamentSpecies() {}
     FilamentSpecies(const FilamentSpecies& that) : Species(that) {}
@@ -238,7 +210,19 @@ class FilamentSpecies : public Species<Filament> {
     void Init() {
       Species::Init();
     }
-
+    void UpdatePositions() {
+      for (auto it=members_.begin(); it!=members_.end(); ++it) {
+        (*it)->UpdatePosition(midstep_);
+      }
+    }
+    void UpdatePositionsMP() {
+      for (auto it=members_.begin(); it!=members_.end(); ++it) {
+        (*it)->UpdatePositionMP(midstep_);
+      }
+      if (theta_validation_ && midstep_)
+        ValidateThetaDistributions();
+    }
+    void WriteOutputs(std::string run_name);
     void Configurator();
 
 };
