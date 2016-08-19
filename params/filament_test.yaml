@@ -12,8 +12,9 @@ n_rod: 0
 n_filament: 1
 rod_diameter: 1
 rod_length: 8
+theta_validation_flag: 1
 dynamic_instability_flag: 0
-force_induced_catastrophe_flag: 1
+force_induced_catastrophe_flag: 0
 n_dimer: 0
 n_md_bead: 0
 md_bead_diameter: 0.3

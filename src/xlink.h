@@ -67,7 +67,7 @@ class Xlink : public Composite<XlinkHead> {
     void ApplyInteractions();
     void Dump() {
       Object::Dump();
-      if (isnan(position_[0])) {
+      if (position_[0]!=position_[0]) {
         printf("Something has gone horribly wrong!\n");
         exit(1);
       }
