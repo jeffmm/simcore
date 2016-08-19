@@ -200,6 +200,11 @@ void Simulation::WriteOutputs() {
     en_file.close();
   }
 
+  if (i_step_ == params_.n_steps-1) {
+    for (auto it=species_.begin(); it!=species_.end(); ++it)
+      (*it)->WriteOutputs(run_name_);
+  }
+
   // XXX CJE FIXME write outputs more clearly
   if (i_step_%1000==0) {
     uengine_.WriteOutputs(i_step_);

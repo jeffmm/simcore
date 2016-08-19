@@ -13,7 +13,8 @@
 class Simulation {
 
   private:
-    int i_step_;
+    int i_step_,
+        n_steps_;
     double time_,
            cpu_init_time_;
     std::string run_name_;
