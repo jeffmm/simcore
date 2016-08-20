@@ -4,7 +4,6 @@
 #include "auxiliary.h"
 #include "kmc_base.h"
 #include "lookup_table.h"
-#include "test_base.h"
 
 class Xlink;
 class XlinkHead;

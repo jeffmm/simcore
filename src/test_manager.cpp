@@ -4,13 +4,13 @@
 
 #include "test_xlink_kmc.h"
 
-#define REGISTER_TEST(n) test_factory_.register_class<n>(#n);
+#define REGISTER_TEST_MODULE(n) test_module_factory_.register_class<n>(#n);
 
 void TestManager::InitManager(const std::string& filename) {
   YAML::Node node = YAML::LoadFile(filename);
   filename_ = filename;
 
-  RegisterTests();
+  RegisterTestModules();
 
   std::cout << "Welcome to SimCORE Test Manager\n";
   std::cout << "Running tests from ->\n";
@@ -18,25 +18,26 @@ void TestManager::InitManager(const std::string& filename) {
 
   seed_ = node["seed"].as<long>();
 
-  for (auto alltests = test_factory_.m_classes.begin(); alltests != test_factory_.m_classes.end(); ++alltests) {
+  for (auto alltests = test_module_factory_.m_classes.begin(); alltests != test_module_factory_.m_classes.end(); ++alltests) {
     if (node[alltests->first]) {
-      std::cout << "Adding test " << alltests->first << std::endl;
-      TestBase *newtest = (TestBase*)test_factory_.construct(alltests->first);
-      tests_.push_back(newtest);
+      std::cout << "TEST MODULE: " << alltests->first << std::endl;
+      TestModuleBase *newtest = (TestModuleBase*)test_module_factory_.construct(alltests->first);
+      test_modules_.push_back(newtest);
     }
   }
 }
 
-void TestManager::RegisterTests() {
+void TestManager::RegisterTestModules() {
   // Register all tests we have access to
-  REGISTER_TEST(TestXlinkKMC);
+  REGISTER_TEST_MODULE(TestXlinkKMC);
 }
 
-void TestManager::RunTests() {
-  std::cout << "Running tests\n";
-  for (auto testit = tests_.begin(); testit != tests_.end(); ++testit) {
-    (*testit)->InitTests(filename_);
+void TestManager::RunTestModules() {
+  std::cout << "********\n";
+  std::cout << "Running test modules\n";
+  for (auto testit = test_modules_.begin(); testit != test_modules_.end(); ++testit) {
+    (*testit)->InitTestModule(filename_);
     // Run the unit tests, and report the results
-    (*testit)->UnitTests();
+    (*testit)->RunTests();
   }
 }

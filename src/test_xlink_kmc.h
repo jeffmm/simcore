@@ -2,21 +2,25 @@
 #define _SIMCORE_TEST_XLINK_KMC_H_
 
 #include "xlink_kmc.h"
-#include "test_base.h"
+#include "test_module_base.h"
 
-class TestXlinkKMC : public TestBase, public XlinkKMC {
+#include <functional>
+
+class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
   public:
-    TestXlinkKMC() : TestBase(), XlinkKMC() {}
+    TestXlinkKMC() : TestModuleBase(), XlinkKMC() {}
+    virtual ~TestXlinkKMC() {}
 
-    virtual void InitTests(const std::string& filename);
+    virtual void InitTestModule(const std::string& filename);
+    virtual void RunTests();
     virtual void UnitTests();
     virtual void IntegrationTests();
 
   protected:
 
-    // Unit Tests
     bool UnitTestCalcCutoff();
 
+    std::vector<std::function<bool(void)>> unit_tests_;
 };
 
 #endif /* _SIMCORE_TEST_XLINK_KMC_H_ */

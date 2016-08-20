@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     debug_trace = true;
     TestManager testm;
     testm.InitManager(run_opts.param_file);
-    testm.RunTests();
+    testm.RunTestModules();
   } else {
     // Initialize param_file, rng, run_name, n_runs (if in param_file)
     sim.InitManager(run_opts.param_file);
