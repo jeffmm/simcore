@@ -1,61 +1,77 @@
 #include "test_xlink_kmc.h"
 
-#include "br_rod.h"
+#include "test_helpers.h"
 
 #include <iomanip>
 #include <yaml-cpp/yaml.h>
 
-void TestXlinkKMC::InitTests(const std::string& filename) {
-  std::cout << "TestXlinkKMC Init Tests\n";
-  // Spoof the params file to what we want
+void TestXlinkKMC::InitTestModule(const std::string& filename) {
+  name_ = "TestXlinkKMC";
+  std::cout << name_ << " Init Tests\n";
+
+  // Add the tests outlined in the yaml file?
+  node_ = YAML::LoadFile(filename);
+
+  // Test out functional
+  if (node_[name_]["CalcCutoff"]) {
+    std::function<bool(void)> f_calc_cutoff = std::bind(&TestXlinkKMC::UnitTestCalcCutoff, this);
+    unit_tests_.push_back(f_calc_cutoff);
+  }
+}
+
+void TestXlinkKMC::RunTests() {
+  std::cout << name_ << " Run Tests\n";
+  UnitTests();
+  IntegrationTests();
 }
 
 void TestXlinkKMC::UnitTests() {
-  std::cout << "TestXlinkKMC Unit Tests ->\n";
+  std::cout << name_ << " Unit Tests ->\n";
   bool test_success = true;
-  test_success = UnitTestCalcCutoff();
-  std::cout << "TestXlinkKMC Unit Tests: " << (test_success ? "passed" : "failed") << std::endl;
+  for (auto fit = unit_tests_.begin(); fit != unit_tests_.end(); ++fit) {
+    test_success |= (*fit)();
+  }
+  std::cout << name_;
+  std::cout << " Unit Tests: " << (test_success ? "passed" : "failed") << std::endl;
 }
 
 void TestXlinkKMC::IntegrationTests() {
-  std::cout << "TestXlinkKMC Integration Tests\n";
+  std::cout << name_;
+  std::cout << " Integration Tests\n";
 }
 
 bool TestXlinkKMC::UnitTestCalcCutoff() {
   std::cout << "  Unit Testing XlinkKMC CalcCutoff\n";
   bool success = true;
 
-  // Prep everything we need for calc cutoff
-  eps_eff_1_2_[0] = eps_eff_1_2_[1] = 10.0;
-  k_stretch_ = 45.29;
-  max_length_ = 110;
+  // Grab the YAML file information
+  eps_eff_1_2_[0] = eps_eff_1_2_[1] = node_[name_]["CalcCutoff"]["concentration_1_2"].as<double>();
+  k_stretch_  = node_[name_]["CalcCutoff"]["spring_constant"].as<double>();
+  max_length_ = node_[name_]["CalcCutoff"]["max_length"].as<double>();
 
-  // barrier weight, requil
-  std::map<double, std::map<double, double>> results_map;
-  results_map[0.0][0.0] = 0.758961;
-  results_map[0.0][3.12] = 3.87896;
-  results_map[0.0001][0.0] = 0.758999;
-  results_map[0.0001][3.12] = 3.879;
-  results_map[0.25][0.0] = 0.876372;
-  results_map[0.25][3.12] = 3.99637;
+  std::vector<double> equilibrium_lengths;
+  std::vector<double> barrier_weights;
+  std::vector<double> results;
 
-  int itest = 0;
-  for (auto bit = results_map.begin(); bit != results_map.end(); ++bit) {
-    for (auto rit = bit->second.begin(); rit != bit->second.end(); ++rit) {
-      barrier_weight_ = bit->first;
-      r_equil_ = rit->first;
+  for (int i = 0; i < node_[name_]["CalcCutoff"]["results"].size(); ++i) {
+    barrier_weights.push_back(node_[name_]["CalcCutoff"]["results"][i][0].as<double>());
+    equilibrium_lengths.push_back(node_[name_]["CalcCutoff"]["results"][i][1].as<double>());
+    results.push_back(node_[name_]["CalcCutoff"]["results"][i][2].as<double>());
+  }
 
-      CalcCutoff();
+  for (int i = 0; i < results.size(); ++i) {
+    barrier_weight_ = barrier_weights[i];
+    r_equil_ = equilibrium_lengths[i];
 
-      double result = rcutoff_1_2_;
+    CalcCutoff();
 
-      if (uth::almost_equal<double>(result, rit->second, 1E-3)) {
-        std::cout << "    Test[" << itest << "] passed\n";
-      } else {
-        std::cout << "    Test[" << itest << "] failed\n";
-        success = false;
-      }
-      itest++;
+    double res = rcutoff_1_2_;
+
+    if (uth::almost_equal<double>(res, results[i], 1e-8)) {
+      std::cout << "    Test[" << i << "] passed\n";
+    } else {
+      std::cout << "    Test[" << i << "] failed\n";
+      success = false;
     }
   }
 
