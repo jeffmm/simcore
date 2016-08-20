@@ -2,5 +2,12 @@ seed: 100
 TestXlinkKMC:
   CalcCutoff:
     max_length: 110
-    eps_eff: 10.0
+    concentration_1_2: 10.0
     spring_constant: 45.29
+    #barrier weight, equilibrium length, result
+    results:
+      - [0.0, 0.0 , 0.75896056]
+      - [0.0, 3.12, 3.87896056] 
+      - [0.0001, 0.0, 0.75899851] 
+    equilibrium_length: [0.0, 3.12]
+    barrier_weight: [0.0, 0.0001, 0.25]
