@@ -11,7 +11,7 @@ class SpeciesBase {
   protected:
     int n_members_;
     bool kmc_update_;
-    bool is_kmc_;
+    bool is_kmc_ = false;
     double delta_;
     system_parameters *params_;
     space_struct *space_;
@@ -76,7 +76,7 @@ class SpeciesBase {
       n_members_ = 0;
       params_ = params;
       space_ = space;
-      is_kmc_ = false;
+      //is_kmc_ = false;
       kmc_update_ = false;
       rng_.init(seed);
       delta_ = params->delta;
