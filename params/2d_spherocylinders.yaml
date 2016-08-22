@@ -15,7 +15,7 @@ boundary_type: 1
 n_rod: 2
 rod_diameter: 1
 rod_length: 20
-rod_diffusion: 1
+rod_diffusion: 0
 config_file: params/2d_spherocylinders.config.yaml
 #config_file: random
 n_dimer: 0
@@ -40,12 +40,12 @@ graph_background: 0
 delta: 0.00001
 #delta: 0.00025
 #n_steps: 1000000
-n_steps: 100000
+#n_steps: 100000
 #n_steps: 9213
 #n_steps: 10000
 #n_steps: 1000
 #n_steps: 100
-#n_steps: 10
+n_steps: 10
 #n_steps: 2
 #n_steps: 15758
 n_update_cells: 20
