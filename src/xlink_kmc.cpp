@@ -307,8 +307,10 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
         nldx->kmc_ = binding_affinity * (term1 - term0) * polar_affinity;
         n_exp += nldx->kmc_;
       }
-      if (debug_trace)
-        printf("[%d] -> neighbor[%d] {kmc: %2.8f}\n", freehead->GetOID(), mrod->GetOID(), nldx->kmc_);
+      if (debug_trace) {
+        std::cout << "[" << freehead->GetOID() << "] -> neighbor[" << mrod->GetOID() << "]";
+        std::cout << " {kmc: " << std::setprecision(16) << nldx->kmc_ << "}\n";
+      }
     } // loop over local neighbors of xlink
 
     boundhead->SetNExp_1_2(0.0);
@@ -765,14 +767,14 @@ void XlinkKMC::Detach_1_0(Xlink *xit, XlinkHead *freehead, XlinkHead *boundhead)
   kmc_event << "    [" << xit->GetOID() << "] Singly Bound Single Head Detach {" << boundhead->GetOID() << "}";
   WriteEvent(kmc_event.str());
   if (debug_trace) {
-    printf("%s\n", kmc_event.str().c_str());
+    std::cout << kmc_event.str() << std::endl;
   }
   // Place within some random distance of the attach point
   double randr[3];
   double mag2 = 0.0;
   mrcut2_ = rcutoff_0_1_*rcutoff_0_1_;
   auto mrng = boundhead->GetRNG();
-  double prevpos[3];
+  double prevpos[3] = {0.0, 0.0, 0.0};
   std::copy(boundhead->GetRigidPosition(), boundhead->GetRigidPosition()+ndim_, prevpos);
   do {
     mag2 = 0.0;
@@ -800,11 +802,16 @@ void XlinkKMC::Detach_1_0(Xlink *xit, XlinkHead *freehead, XlinkHead *boundhead)
     auto attachid = boundhead->GetAttach();
     auto attachidx = (*oid_position_map_)[attachid.first];
     auto part2 = (*simples_)[attachidx];
-    printf("[%d]{%d} Detached from [%d] (%2.8f, %2.8f) -> (%2.8f, %2.8f)\n",
-      xit->GetOID(),
-      boundhead->GetOID(), part2->GetOID(),
-      prevpos[0], prevpos[1],
-      boundhead->GetRigidPosition()[0], boundhead->GetRigidPosition()[1]);
+    std::cout << "[" << xit->GetOID() << "]{" << boundhead->GetOID() << "}";
+    std::cout << " Detached from [" << part2->GetOID() << "]";
+    std::cout << " (";
+    std::cout << std::setprecision(16) << prevpos[0] << ", ";
+    std::cout << std::setprecision(16) << prevpos[1] << ", ";
+    std::cout << std::setprecision(16) << prevpos[2] << ") ->";
+    std::cout << " (";
+    std::cout << std::setprecision(16) << boundhead->GetRigidPosition()[0] << ", ";
+    std::cout << std::setprecision(16) << boundhead->GetRigidPosition()[1] << ", ";
+    std::cout << std::setprecision(16) << boundhead->GetRigidPosition()[2] << ")\n";
   }
 
   boundhead->SetBound(false);
