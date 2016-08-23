@@ -482,7 +482,7 @@ void Filament::CalculateTensions() {
   tridiagonal_solver(&h_mat_lower_, &h_mat_diag_, &h_mat_upper_, &tensions_, n_sites_-1);
 }
 
-double const * const Filament::GetDrTot() {}
+double const * const Filament::GetDrTot() {return nullptr;}
 
 void Filament::ApplyForcesTorques() {}
 

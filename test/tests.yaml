@@ -1,6 +1,6 @@
 seed: 100
 TestXlinkKMC:
-  CalcCutoff:
+  CalcCutoff: #from bob
     max_length: 110
     concentration_1_2: 10.0
     spring_constant: 45.29
@@ -12,3 +12,89 @@ TestXlinkKMC:
       - [0.0001, 3.12, 3.87899851]
       - [0.25,   0.0,  0.87637216]
       - [0.25,   3.12, 3.99637216]
+    test:
+      - barrier_weight: 0
+        r_equil: 0
+        result: 0.75896056
+      - barrier_weight: 0.0
+        r_equil: 3.12
+        result: 3.87896056
+      - barrier_weight: 0.0001
+        r_equil: 0.0
+        result: 0.75899851
+      - barrier_weight: 0.0001
+        r_equil: 3.12
+        result: 3.87899851
+      - barrier_weight: 0.25
+        r_equil: 0.0
+        result: 0.87637216
+      - barrier_weight: 0.25
+        r_equil: 3.12
+        result: 3.99637216
+  Update_0_1: #from bob
+    concentration_0_1: 30190
+    on_rate_0_1: 0.003916
+    alpha: 1.299
+    # n neighbors, values, result]
+    results:
+      - [0, 0.0]
+      - [1, 0.08213011, 0.00315324]
+      - [1, 0.15302895, 0.00587528]
+      - [2, 0.08213011, 0.15302895, 0.00902852]
+  Update_1_2:
+    concentration_1_2: 10.0
+    on_rate_1_2: 0.001958
+    max_length: 110
+    test:
+      - x_rod_base: [1.5189372725375712, -3.8808394131463597, 52.8448926482673826]
+        u_rod_base: [0.3131922942474289, -0.6309261624743963, -0.7098188250035099]
+        length_base: 3
+        x_rod_free: [1.6562922922235719, -2.0016662509290359, 51.5173097112858756]
+        u_rod_free: [0.2986353617739144, 0.3086464848181130, -0.9030804328007476]
+        length_free: 3
+        head: 1
+        cross_position: 0.6742975725341877
+        r_equil: 0.0
+        barrier_weight: 0.0
+        k_stretch: 45.29
+        result: 5.678658237274367e-15
+        tolerance: 1.0e-21
+      - x_rod_base: [1.5602161520909148, -3.8637598867605094, 52.9213695901007739]
+        u_rod_base: [0.3344916552378370, -0.6145475778472770, -0.7144554619696718]
+        length_base: 3
+        x_rod_free: [1.5940886939376802, -2.1164584638540016, 51.5940688351065617]
+        u_rod_free: [0.3667077500170504, 0.2857064711860906, -0.8853797142468445]
+        length_free: 3
+        head: 0
+        cross_position: 0.6763210725341857
+        r_equil: 0.0
+        barrier_weight: 0.25
+        k_stretch: 45.29
+        result: 1.170360385741002e-11
+        tolerance: 1.0e-17
+      - x_rod_base: [1.5602161520909148, -3.8637598867605094, 52.9213695901007739]
+        u_rod_base: [0.3344916552378370, -0.6145475778472770, -0.7144554619696718]
+        length_base: 3
+        x_rod_free: [2.4913249392062253, 0.1545603710597063, 52.2508089669542599]
+        u_rod_free: [-0.3376529739576380, 0.6743688901824264, -0.6566712032148853]
+        length_free: 3
+        head: 0
+        cross_position: 0.6763210725341857
+        r_equil: 3.12
+        barrier_weight: 0
+        k_stretch: 45.29
+        result: 0.0102118273581638
+        tolerance: 1.0e-8
+      - x_rod_base: [1.5602161520909148, -3.8637598867605094, 52.9213695901007739]
+        u_rod_base: [0.3344916552378370, -0.6145475778472770, -0.7144554619696718]
+        length_base: 3.0
+        x_rod_free: [2.4913249392062253, 0.1545603710597063, 52.2508089669542599]
+        u_rod_free: [-0.3376529739576380, 0.6743688901824264, -0.6566712032148853]
+        length_free: 3.0
+        head: 1
+        cross_position: 0.6763210725341857
+        r_equil: 3.12
+        barrier_weight: 0.25
+        k_stretch: 45.29
+        result: 0.01123967477814938
+        tolerance: 1.0e-8
