@@ -307,8 +307,8 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
         nldx->kmc_ = binding_affinity * (term1 - term0) * polar_affinity;
         n_exp += nldx->kmc_;
       }
-      //if (debug_trace)
-      //  printf("[%d] -> neighbor[%d] {kmc: %2.8f}\n", freehead->GetOID(), mrod->GetOID(), nldx->kmc_);
+      if (debug_trace)
+        printf("[%d] -> neighbor[%d] {kmc: %2.8f}\n", freehead->GetOID(), mrod->GetOID(), nldx->kmc_);
     } // loop over local neighbors of xlink
 
     boundhead->SetNExp_1_2(0.0);

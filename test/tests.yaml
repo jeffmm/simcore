@@ -98,3 +98,27 @@ TestXlinkKMC:
         k_stretch: 45.29
         result: 0.01123967477814938
         tolerance: 1.0e-8
+  Detach_1_0:
+    test:
+      - ndim: 3
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        length_rod: 10.0
+        xlink_crosspos: 5.0
+        head: 0
+        x_rng: 10
+        rcutoff_0_1: 1.0
+        results: [-0.2262815954163671, 0.484525803476572, 0.686631353572011]
+        results_original_pos: [0.0, 0.0, 0.0]
+        tolerance: 1.0e-8
+      - ndim: 2
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        length_rod: 10.0
+        xlink_crosspos: 3.0
+        head: 1
+        x_rng: 10
+        rcutoff_0_1: 0.5
+        results: [-2.262370618060231, -0.3833735445514321, 0.0]
+        results_original_pos: [-2.0, 0.0, 0.0]
+        tolerance: 1.0e-8

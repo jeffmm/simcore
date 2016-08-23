@@ -22,6 +22,7 @@ class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
     bool UnitTestCalcCutoff();
     bool UnitTestUpdate_0_1();
     bool UnitTestUpdate_1_2();
+    bool UnitTestDetach_1_0();
 
     std::vector<std::function<bool(void)>> unit_tests_;
 
