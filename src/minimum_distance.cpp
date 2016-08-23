@@ -71,6 +71,36 @@ void min_distance_point_carrier_line(int n_dim, int n_periodic, double **h,
     *mu_ret = mu;
 }
 
+/* Routine to calculate minimum distance between a point and a line of infinite length
+
+output: vector that points from point to line along minimum distance between
+        point and line (dr)
+        distance from r_line along u_line that indicates point of minimum
+         distance (mu) */
+void min_distance_point_carrier_line_inf(int n_dim, int n_periodic, double **h,
+                                         double *r_point, double *s_point,
+                                         double *r_line, double *s_line, double *u_line,
+                                         double length, double *dr, double *mu) {
+
+    int i, j;
+    double ds[3];
+
+    /* Compute pair separation vector. */
+    for (i = 0; i < n_periodic; ++i) {  /* First handle periodic subspace. */
+        ds[i] = s_line[i] - s_point[i];
+        ds[i] -= NINT(ds[i]);
+    }
+    for (i = 0; i < n_periodic; ++i) {
+        dr[i] = 0.0;
+        for (j = 0; j < n_periodic; ++j)
+            dr[i] += h[i][j] * ds[j];
+    }
+    for (i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
+        dr[i] = r_line[i] - r_point[i];
+
+    *mu = -dot_product(n_dim, dr, u_line);
+}
+  
 /* Routine to calculate minimum distance between two spherocylinders, for any number of
    spatial dimensions and any type of boundary conditions (free, periodic, or mixed).
 

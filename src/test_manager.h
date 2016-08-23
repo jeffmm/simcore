@@ -8,13 +8,7 @@
 class TestManager {
   public:
     TestManager() {}
-    ~TestManager() {
-      std::cout << "TestManager destructor\n";
-      for (auto i = 0; i < test_modules_.size(); ++i) {
-        delete(test_modules_[i]);
-      }
-      test_modules_.clear();
-    }
+    ~TestManager() {}
    
     void InitManager(const std::string &filename);
     void RegisterTestModules();
