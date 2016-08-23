@@ -7,6 +7,9 @@
 
 #include <functional>
 
+class BrRod;
+class Xlink;
+
 class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
   public:
     TestXlinkKMC() : TestModuleBase(), XlinkKMC() {}
@@ -24,6 +27,18 @@ class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
     bool UnitTestUpdate_0_1(int test_num);
     bool UnitTestUpdate_1_2(int test_num);
     bool UnitTestDetach_1_0(int test_num);
+    bool UnitTestDetach_2_1(int test_num);
+
+    void CreateTestRod(BrRod **rod,
+                       const std::string &unitname,
+                       const std::string &rodname,
+                       int itest);
+
+    void CreateTestXlink(Xlink **mxit,
+                         const std::string &unitname,
+                         const std::string &xname,
+                         int itest,
+                         int attachoid);
 
     std::vector<std::function<bool(int)>> unit_tests_;
     std::vector<std::string> unit_tests_names_;
