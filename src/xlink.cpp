@@ -62,6 +62,19 @@ void Xlink::UpdateOrientation() {
   }
 }
 
+void Xlink::BindHeadSingle(int ihead, double crosspos, int rodoid) {
+  if (bound_ != unbound) {
+    std::cout << "For some reason this xlink isn't unbound...\n";
+  }
+  auto bindhead = elements_.begin() + ihead;
+  if (bindhead->GetBound()) {
+    std::cout << "Something funny happened with the binding of an xlink\n";
+  }
+  bindhead->Attach(rodoid, crosspos);
+  bindhead->SetBound(true);
+  CheckBoundState();
+}
+
 void Xlink::CheckBoundState() {
   bound_ = unbound;
   auto head0 = elements_.begin();

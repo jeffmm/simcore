@@ -6,6 +6,8 @@
 #include "auxiliary.h"
 #include "xlink_head.h"
 
+#include <iomanip>
+
 enum attach_type {
   unbound = 0,
   singly,
@@ -79,6 +81,8 @@ class Xlink : public Composite<XlinkHead> {
     std::pair<bool,bool> GetBoundHeads(XlinkHead **freehead, XlinkHead **boundhead);
     void CheckBoundState();
 
+    void BindHeadSingle(int ihead, double crosspos, int rodoid);
+
     double const GetNExp_0_1() {return n_exp_0_1_;}
     double const GetNExp_1_2() {return n_exp_1_2_;}
     double const GetInternalU() {return uinternal_;}
@@ -92,10 +96,23 @@ class Xlink : public Composite<XlinkHead> {
       auto head1 = elements_.begin()+1;
       assert(n_exp_0_1_ < 10000);
       assert(n_exp_1_2_ < 10000);
-      printf("\t\t[%d] -> {u: %2.4f}, {n_exp_0_1: %2.4f (%2.4f, %2.4f)}, {n_exp_1_2: %2.4f (%2.4f, %2.4f)}\n", GetOID(),
-          uinternal_,
-          n_exp_0_1_, head0->GetNExp_0_1(), head1->GetNExp_0_1(),
-          n_exp_1_2_, head0->GetNExp_1_2(), head1->GetNExp_1_2());
+
+      std::string boundstring;
+      switch(bound_) {
+        case unbound:
+          boundstring = "unbound";
+          break;
+        case singly:
+          boundstring = "singly";
+          break;
+        case doubly:
+          boundstring = "doubly";
+          break;
+      }
+      std::cout << std::setprecision(16) << "        [" << GetOID() << "] -> {u: " << uinternal_ << "}, {" << boundstring << "}";
+      std::cout << std::setprecision(16) << ", {n_exp_0_1: " << n_exp_0_1_ << " (" << head0->GetNExp_0_1() << ", ";
+      std::cout << std::setprecision(16) << head1->GetNExp_0_1() << ")}, {n_exp_1_2: " << n_exp_1_2_ << " (";
+      std::cout << std::setprecision(16) << head0->GetNExp_1_2() << ", " << head1->GetNExp_1_2() << ")}\n";
       head0->DumpKMC();
       head1->DumpKMC();
     }

@@ -45,6 +45,12 @@ void TestXlinkKMC::InitTestModule(const std::string& filename) {
     unit_tests_names_.push_back("Detach_1_0");
     unit_tests_results_.push_back(std::vector<bool>());
   }
+  if (node_[name_]["Detach_2_1"]) {
+    std::function<bool(int)> f_detach_2_1 = std::bind(&TestXlinkKMC::UnitTestDetach_2_1, this, std::placeholders::_1);
+    unit_tests_.push_back(f_detach_2_1);
+    unit_tests_names_.push_back("Detach_2_1");
+    unit_tests_results_.push_back(std::vector<bool>());
+  }
 
   // Create a params, space, etc, and xlink species to test with
   space_sub_.Init(&params_sub_, 10);
@@ -211,6 +217,86 @@ bool TestXlinkKMC::UnitTestUpdate_0_1(int test_num) {
   return success;
 }
 
+void TestXlinkKMC::CreateTestRod(BrRod **rod,
+                                 const std::string &unitname,
+                                 const std::string &rodname,
+                                 int itest) {
+  BrRod *mrod = *rod;
+  // Load the rod
+  double xr[3] = {0.0, 0.0, 0.0};
+  double ur[3] = {0.0, 0.0, 0.0};
+  std::ostringstream xrodname;
+  xrodname << "x_" << rodname;
+  std::ostringstream urodname;
+  urodname << "u_" << rodname;
+  std::ostringstream lrodname;
+  lrodname << "l_" << rodname;
+  //std::cout << "Checking location\n";
+  for (int idim = 0; idim < ndim_; ++idim) {
+    xr[idim] = node_[name_][unitname.c_str()]["test"][itest][xrodname.str().c_str()][idim].as<double>();
+    ur[idim] = node_[name_][unitname.c_str()]["test"][itest][urodname.str().c_str()][idim].as<double>();
+  }
+  //std::cout << "Checking length\n";
+  double lrod = node_[name_][unitname.c_str()]["test"][itest][lrodname.str().c_str()].as<double>();
+  //std::cout << "TEST ROD CREATE: \n";
+  //std::cout << std::setprecision(16) << "x: (" << xr[0] << ", " << xr[1] << ", " << xr[2] << "), ";
+  //std::cout << std::setprecision(16) << "u: (" << ur[0] << ", " << ur[1] << ", " << ur[2] << "), ";
+  //std::cout << std::setprecision(16) << "l: " << lrod << std::endl;
+  mrod->InitConfigurator(xr, ur, lrod);
+  //mrod->Dump();
+
+  // Add the simples to the correct location and the oid position map
+  std::vector<Simple*> sim_vec = mrod->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples_->push_back(sim_vec[i]);
+    (*oid_position_map_)[sim_vec[i]->GetOID()] = simples_->size() -1;
+  }
+
+  // Print to make sure working
+  /*std::cout << "simples: \n";
+  for (int i = 0; i < simples_->size(); ++i) {
+    std::cout << "[" << i << "] -> OID " << (*simples_)[i]->GetOID();
+    std::cout << " <--> " << (*oid_position_map_)[(*simples_)[i]->GetOID()] << std::endl;
+  }*/
+}
+
+void TestXlinkKMC::CreateTestXlink(Xlink **mxit,
+                                   const std::string &unitname,
+                                   const std::string &xname,
+                                   int itest,
+                                   int attachoid) {
+  Xlink *xit = *mxit;
+  double xx[3] = {0.0, 0.0, 0.0};
+  xit->InitConfigurator(xx, 1.0);
+  //std::cout << "Xlink base name: " << xname << std::endl;
+  std::ostringstream headname;
+  headname << "head_" << xname;
+  //std::cout << "head name: " << headname.str() << std::endl;
+  int head = node_[name_][unitname.c_str()]["test"][itest][headname.str().c_str()].as<int>();
+  std::ostringstream crossposname;
+  crossposname << "crosspos_" << xname;
+  //std::cout << "crosspos name: " << crossposname.str() << std::endl;
+  double crosspos = node_[name_][unitname.c_str()]["test"][itest][crossposname.str().c_str()].as<double>();
+
+  xit->BindHeadSingle(head, crosspos, attachoid);
+  //xit->Dump();
+  //xit->DumpKMC();
+
+  // simples and oid stuff
+  std::vector<Simple*> sim_vec = xit->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples_->push_back(sim_vec[i]);
+    (*oid_position_map_)[sim_vec[i]->GetOID()] = simples_->size() -1;
+  }
+
+  // Print to make sure working
+  /*std::cout << "simples: \n";
+  for (int i = 0; i < simples_->size(); ++i) {
+    std::cout << "[" << i << "] -> OID " << (*simples_)[i]->GetOID();
+    std::cout << " <--> " << (*oid_position_map_)[(*simples_)[i]->GetOID()] << std::endl;
+  }*/
+}
+
 bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
   bool success = true;
 
@@ -229,7 +315,7 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
   BrRod *testRodFree = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
   Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
   oid_position_map_ = new std::unordered_map<int, int>();
-  neighbors_ = new nl_list[3];
+  neighbors_ = new nl_list[4];
   simples_ = new std::vector<Simple*>();
 
   eps_eff_1_2_[0] = eps_eff_1_2_[1] = node_[name_]["Update_1_2"]["concentration_1_2"].as<double>();
@@ -246,51 +332,27 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
     // Add the base rod
     oid_position_map_->clear();
     simples_->clear();
-    double rx_base[3], ux_base[3];
-    for (int idim = 0; idim < ndim_; ++idim) {
-      rx_base[idim] = node_[name_]["Update_1_2"]["test"][i]["x_rod_base"][idim].as<double>();
-      ux_base[idim] = node_[name_]["Update_1_2"]["test"][i]["u_rod_base"][idim].as<double>();
-    }
-    double l_base = node_[name_]["Update_1_2"]["test"][i]["length_base"].as<double>();
-    testRodBase ->InitConfigurator(rx_base, ux_base, l_base);
-    //testRodBase->Dump();
-    simples_->push_back(testRodBase->GetSimples()[0]);
-    (*oid_position_map_)[testRodBase->GetSimples()[0]->GetOID()] = (int)simples_->size() - 1;
-
-    // Add the 'free' rod
-    double rx_free[3], ux_free[3];
-    for (int idim = 0; idim < ndim_; ++idim) {
-      rx_free[idim] = node_[name_]["Update_1_2"]["test"][i]["x_rod_free"][idim].as<double>();
-      ux_free[idim] = node_[name_]["Update_1_2"]["test"][i]["u_rod_free"][idim].as<double>();
-    }
-    double l_free = node_[name_]["Update_1_2"]["test"][i]["length_free"].as<double>();
-    testRodFree->InitConfigurator(rx_free, ux_free, l_free);
-    //testRodFree->Dump();
-    simples_->push_back(testRodFree->GetSimples()[0]);
-    (*oid_position_map_)[testRodFree->GetSimples()[0]->GetOID()] = (int)simples_->size() - 1;
+    CreateTestRod(&testRodBase, "Update_1_2", "rod_base", i);
+    CreateTestRod(&testRodFree, "Update_1_2", "rod_free", i);
 
     // Add the xlink
+    CreateTestXlink(&testXlink, "Update_1_2", "xlink", i, testRodBase->GetSimples()[0]->GetOID());
     double xx[3] = {0.0, 0.0, 0.0}; // we will set based upon the attached rod
-    testXlink->InitConfigurator(xx, 1.0);
-    int head = node_[name_]["Update_1_2"]["test"][i]["head"].as<int>();
-    double crosspos = node_[name_]["Update_1_2"]["test"][i]["cross_position"].as<double>();
-    auto bindhead = testXlink->GetHeads()->begin() + head;
-    bindhead->Attach(testRodBase->GetSimples()[0]->GetOID(), crosspos);
-    bindhead->SetBound(true);
-    testXlink->CheckBoundState();
 
     // Set the location
-    for (int i = 0; i < ndim_; ++i) {
-      xx[i] = rx_base[i] - 0.5 * ux_base[i] * l_base + crosspos * ux_base[i];
-    }
+    auto rx_base = testRodBase->GetSimples()[0]->GetRigidPosition();
+    auto ux_base = testRodBase->GetSimples()[0]->GetRigidOrientation();
+    auto l_base = testRodBase->GetSimples()[0]->GetRigidLength();
 
     XlinkHead *freehead, *boundhead;
     auto isbound = testXlink->GetBoundHeads(&freehead, &boundhead);
+    auto crosspos = boundhead->GetAttach().second;
+    for (int i = 0; i < ndim_; ++i) {
+      xx[i] = rx_base[i] - 0.5 * ux_base[i] * l_base + crosspos * ux_base[i];
+    }
     freehead->SetPosition(xx);
     boundhead->SetPosition(xx);
     testXlink->SetPosition(xx);
-    simples_->push_back(freehead);
-    (*oid_position_map_)[freehead->GetOID()] = (int)simples_->size() - 1;
     //testXlink->Dump();
     //testXlink->DumpKMC();
 
@@ -302,27 +364,6 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
       nldx->idx_ = (*oid_position_map_)[testRodFree->GetSimples()[0]->GetOID()];
     }
 
-    //print the neighbor list
-    /*std::cout << "neighbor list: \n";
-    for (int i = 0; i < 2; ++i) {
-      int iset = -1;
-      for (auto nldx = neighbors_[i].begin(); nldx != neighbors_[i].end(); ++nldx) {
-        iset++;
-        printf("[%d] -> [%d] = %d\n", i, iset, nldx->idx_);
-      }
-    }*/
-
-    // print a bunch of info to make sure it's right
-    // oid map
-    /*std::cout << "oid position map: \n";
-    for (auto it = (*oid_position_map_).begin(); it != (*oid_position_map_).end(); it++) {
-      printf("%d <--> %d\n", it->first, it->second);
-    }
-    std::cout << "simples:\n";
-    for (int i = 0; i < simples_->size(); ++i) {
-      printf("[%d] -> oid(%d)\n", i, (*simples_)[i]->GetOID());
-    }*/
-
     r_equil_ = node_[name_]["Update_1_2"]["test"][i]["r_equil"].as<double>();
     k_stretch_ = node_[name_]["Update_1_2"]["test"][i]["k_stretch"].as<double>();
     barrier_weight_ = node_[name_]["Update_1_2"]["test"][i]["barrier_weight"].as<double>();
@@ -331,7 +372,6 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
     CalcCutoff();
     BuildTables();
     Update_1_2(testXlink);
-
 
     auto res = testXlink->GetNExp_1_2();
 
@@ -405,37 +445,23 @@ bool TestXlinkKMC::UnitTestDetach_1_0(int test_num) {
     BrRod *testRod = new BrRod(&params_sub_, space_sub_.GetStruct(), x_rng, SID::br_rod);
     Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), x_rng, SID::xlink);
 
-    // Load the rod
-    double xr[3] = {0.0, 0.0, 0.0};
-    double ur[3] = {0.0, 0.0, 0.0};
-    for (int idim = 0; idim < ndim_; ++idim) {
-      xr[idim] = node_[name_]["Detach_1_0"]["test"][itest]["x_rod"][idim].as<double>();
-      ur[idim] = node_[name_]["Detach_1_0"]["test"][itest]["u_rod"][idim].as<double>();
-    }
-    double lrod = node_[name_]["Detach_1_0"]["test"][itest]["length_rod"].as<double>();
-
-    testRod->InitConfigurator(xr, ur, lrod);
-    //testRod->Dump();
-    simples_->push_back(testRod->GetSimples()[0]);
-    (*oid_position_map_)[testRod->GetSimples()[0]->GetOID()] = (int)simples_->size() -1;
+    CreateTestRod(&testRod, "Detach_1_0", "rod", itest);
 
     // Load the xlink
+    CreateTestXlink(&testXlink, "Detach_1_0", "xlink", itest, testRod->GetSimples()[0]->GetOID());
     double xx[3] = {0.0, 0.0, 0.0};
-    testXlink->InitConfigurator(xx, 1.0);
-    int head = node_[name_]["Detach_1_0"]["test"][itest]["head"].as<int>();
-    double crosspos = node_[name_]["Detach_1_0"]["test"][itest]["xlink_crosspos"].as<double>();
-    auto detachinghead = testXlink->GetHeads()->begin() + head;
-    detachinghead->SetBound(true);
-    detachinghead->Attach(testRod->GetSimples()[0]->GetOID(), crosspos);
-    testXlink->CheckBoundState();
+
+    XlinkHead *freehead, *boundhead;
+    auto isbound = testXlink->GetBoundHeads(&freehead, &boundhead);
+    auto xr = testRod->GetSimples()[0]->GetRigidPosition();
+    auto ur = testRod->GetSimples()[0]->GetRigidOrientation();
+    auto lrod = testRod->GetSimples()[0]->GetRigidLength();
+    auto crosspos = boundhead->GetAttach().second;
 
     // Set the location
     for (int i = 0; i < ndim_; ++i) {
       xx[i] = xr[i] - 0.5 * ur[i] * lrod + crosspos * ur[i];
     }
-
-    XlinkHead *freehead, *boundhead;
-    auto isbound = testXlink->GetBoundHeads(&freehead, &boundhead);
     freehead->SetPosition(xx);
     boundhead->SetPosition(xx);
     testXlink->SetPosition(xx);
@@ -501,5 +527,39 @@ bool TestXlinkKMC::UnitTestDetach_1_0(int test_num) {
   for (auto suc = unit_tests_results_[test_num].begin(); suc != unit_tests_results_[test_num].end(); ++suc) {
     success = success && (*suc);
   }
+  return success;
+}
+
+bool TestXlinkKMC::UnitTestDetach_2_1(int test_num) {
+  bool success = true;
+
+  // Use the configurators to initialize the xlink and rod
+  int ntests = (int)node_[name_]["Detach_1_0"]["test"].size();
+
+  // Fake out the position map and simples
+  oid_position_map_ = new std::unordered_map<int, int>();
+  simples_ = new std::vector<Simple*>();
+
+  unit_tests_results_[test_num].resize(ntests);
+
+  for (int itest = 0; itest < ntests; ++itest) {
+    // Clean up everything from previous tests
+    oid_position_map_->clear();
+    simples_->clear();
+    // Set up the space type structs
+    ndim_ = node_[name_]["Detach_1_0"]["test"][itest]["ndim"].as<int>();
+    params_sub_.n_dim = ndim_;
+    space_sub_.Init(&params_sub_, 10);
+    space_ = space_sub_.GetStruct();
+  }
+
+  // Cleanup at end
+  if (simples_) {
+    delete simples_;
+  }
+  if (oid_position_map_) {
+    delete oid_position_map_;
+  }
+
   return success;
 }

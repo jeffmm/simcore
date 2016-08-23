@@ -4,6 +4,8 @@
 #include "object.h"
 #include "auxiliary.h"
 
+#include <iomanip>
+
 class XlinkHead : public Simple {
   private:
     double diffusion_;
@@ -50,8 +52,11 @@ class XlinkHead : public Simple {
         printf("ERROR - nexp_1_2 < 0.0\n");
         exit(1);
       }
-      printf("\t\thead[%d] -> {n_exp: (%2.4f, %2.4f)}, {bound: %s}, {pidx: %d, %2.4f}\n", GetOID(), GetNExp_0_1(),
-          GetNExp_1_2(), GetBound() ? "true" : "false", GetAttach().first, GetAttach().second);
+      std::cout << std::setprecision(16) << "          head[" << GetOID() << "] -> {n_exp: ";
+      std::cout << std::setprecision(16) << "(" << GetNExp_0_1() << ", " << GetNExp_1_2();
+      std::cout << std::setprecision(16) << ")}, {bound: " << (GetBound() ? "true " : "false") << "}, ";
+      std::cout << std::setprecision(16) << "{pidx: " << GetAttach().first << ", " << GetAttach().second;
+      std::cout << std::setprecision(16) << "}\n";
     }
 };
 
