@@ -326,7 +326,7 @@ void XlinkKMC::StepKMC() {
   // Run the bind unbind
   int g[4] = {0, 1, 2, 3};
   for (int i = 0; i < 4; ++i) {
-    int j = gsl_rng_uniform_int(rng_.r, 4);
+    int j = (int)gsl_rng_uniform_int(rng_.r, 4);
     int swapme = g[i];
     g[i] = g[j];
     g[j] = swapme;
@@ -473,7 +473,7 @@ void XlinkKMC::KMC_1_0() {
       printf("[KMC_1_0] detaching trial %d/%d\n", i+1, (noff[0] + noff[1]));
     int head_type = i < noff[1];
     int idxloc = -1;
-    int idxoff = gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
+    int idxoff = (int)gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
 
     // Find the one to remove
     for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
@@ -672,7 +672,7 @@ void XlinkKMC::KMC_2_1_ForceIndep() {
       printf("[KMC_2_1] detaching trial %d/%d\n", itrial+1, (noff[0] + noff[1]));
     int head_type = itrial < noff[1];
     int idxloc = -1;
-    int idxoff = gsl_rng_uniform_int(rng_.r, nheads[head_type]);
+    int idxoff = (int)gsl_rng_uniform_int(rng_.r, nheads[head_type]);
     for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
       if ((*xit)->GetBoundState() != doubly) continue;
       idxloc++;

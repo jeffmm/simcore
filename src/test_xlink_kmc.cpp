@@ -210,7 +210,7 @@ bool TestXlinkKMC::UnitTestUpdate_1_2() {
   max_length_ = node_[name_]["Update_1_2"]["max_length"].as<double>();
 
   // Use the configurators to initialize the xlink and rod
-  int ntests = node_[name_]["Update_1_2"]["test"].size();
+  int ntests = (int)node_[name_]["Update_1_2"]["test"].size();
   std::cout << "   Found " << ntests << " tests\n";
 
   std::vector<bool> sub_success;
@@ -230,7 +230,7 @@ bool TestXlinkKMC::UnitTestUpdate_1_2() {
     testRodBase ->InitConfigurator(rx_base, ux_base, l_base);
     //testRodBase->Dump();
     simples_->push_back(testRodBase->GetSimples()[0]);
-    (*oid_position_map_)[testRodBase->GetSimples()[0]->GetOID()] = simples_->size() - 1;
+    (*oid_position_map_)[testRodBase->GetSimples()[0]->GetOID()] = (int)simples_->size() - 1;
 
     // Add the 'free' rod
     double rx_free[3], ux_free[3];
@@ -242,7 +242,7 @@ bool TestXlinkKMC::UnitTestUpdate_1_2() {
     testRodFree->InitConfigurator(rx_free, ux_free, l_free);
     //testRodFree->Dump();
     simples_->push_back(testRodFree->GetSimples()[0]);
-    (*oid_position_map_)[testRodFree->GetSimples()[0]->GetOID()] = simples_->size() - 1;
+    (*oid_position_map_)[testRodFree->GetSimples()[0]->GetOID()] = (int)simples_->size() - 1;
 
     // Add the xlink
     double xx[3] = {0.0, 0.0, 0.0}; // we will set based upon the attached rod
@@ -265,7 +265,7 @@ bool TestXlinkKMC::UnitTestUpdate_1_2() {
     boundhead->SetPosition(xx);
     testXlink->SetPosition(xx);
     simples_->push_back(freehead);
-    (*oid_position_map_)[freehead->GetOID()] = simples_->size() - 1;
+    (*oid_position_map_)[freehead->GetOID()] = (int)simples_->size() - 1;
     //testXlink->Dump();
     //testXlink->DumpKMC();
 
