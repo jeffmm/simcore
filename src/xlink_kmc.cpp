@@ -9,6 +9,8 @@
 #include "xlink_helpers.h"
 #include "br_rod.h"
 
+#include <iomanip>
+
 void XlinkKMC::Init(space_struct *pSpace,
                         ParticleTracking *pTracking,
                         SpeciesBase *spec1,
@@ -254,19 +256,34 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
       std::copy(mrod->GetRigidScaledPosition(), mrod->GetRigidScaledPosition()+ndim_, s_rod);
       std::copy(mrod->GetRigidOrientation(), mrod->GetRigidOrientation()+ndim_, u_rod);
       double l_rod = mrod->GetRigidLength();
-      double rcontact[3];
       double dr[3];
       double mu0 = 0.0;
-      min_distance_point_carrier_line(ndim_, nperiodic_,
+
+      /*min_distance_point_carrier_line(ndim_, nperiodic_,
                                       space_->unit_cell, r_x, s_x,
                                       r_rod, s_rod, u_rod, l_rod,
-                                      dr, rcontact, &mu0);
+                                      dr, rcontact, &mu0);*/
+      min_distance_point_carrier_line_inf(ndim_, nperiodic_,
+                                          space_->unit_cell,
+                                          r_x, s_x,
+                                          r_rod, s_rod, u_rod, l_rod,
+                                          dr, &mu0);
 
       // Now do the integration over the limits on the MT
       // Check the cutoff distance
+      // XXX FIXME shoudl actually check cutoff distance
       double r_min_mag2 = 0.0;
+      // Calculated across the space between the min distance and the opposing
+      // carrier line, XXX make sure this is correct, compares well to bob
       for (int i = 0; i < ndim_; ++i) {
-        r_min_mag2 += SQR(dr[i]);
+        double dri = u_rod[i] * mu0 + dr[i];
+        r_min_mag2 += SQR(dri);
+      }
+      // Check cutoff distance
+      if (r_min_mag2 > SQR(rcutoff_1_2_)) {
+        nldx->kmc_ = 0.0;
+        n_exp += nldx->kmc_;
+        continue;
       }
       if (r_equil_ == 0.0) {
         double kb = k_stretch_ * (1.0 - barrier_weight_);
@@ -290,8 +307,8 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
         nldx->kmc_ = binding_affinity * (term1 - term0) * polar_affinity;
         n_exp += nldx->kmc_;
       }
-      if (debug_trace)
-        printf("[%d] -> neighbor[%d] {kmc: %2.4f}\n", freehead->GetOID(), mrod->GetOID(), nldx->kmc_);
+      //if (debug_trace)
+      //  printf("[%d] -> neighbor[%d] {kmc: %2.8f}\n", freehead->GetOID(), mrod->GetOID(), nldx->kmc_);
     } // loop over local neighbors of xlink
 
     boundhead->SetNExp_1_2(0.0);

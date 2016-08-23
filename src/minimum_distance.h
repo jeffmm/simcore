@@ -6,6 +6,11 @@ void min_distance_point_point(int n_dim, int n_periodic, double **unit_cell,
                               double const * const r2, double const * const s2, 
                               double *dr, double *dr_mag2);
 
+void min_distance_point_carrier_line_inf(int n_dim, int n_periodic, double **h,
+                                         double *r_point, double *s_point,
+                                         double *r_line, double *s_line, double *u_line,
+                                         double length, double *dr, double *mu);
+
 void min_distance_point_carrier_line(int n_dim, int n_periodic, double **h,
                                      double *r_point, double *s_point,
                                      double *r_line, double *s_line, double *u_line,

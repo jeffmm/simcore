@@ -15,8 +15,6 @@ enum attach_type {
 class Xlink : public Composite<XlinkHead> {
   private:
     /* Unique to Xlink */
-    double eq_length_;
-    double k_spring_;
     double n_exp_0_1_ = 0.0;
     double n_exp_1_2_ = 0.0;
     double uinternal_ = 0.0;
@@ -40,22 +38,16 @@ class Xlink : public Composite<XlinkHead> {
       }
       diameter_ = params->xlink_diameter;
       length_ = 0.0;
-      eq_length_ = params->dimer_eq_length;
-      k_spring_ = params->dimer_k_spring;
     }
     //Destructor
     ~Xlink() {}
     //Copy constructor
     Xlink(const Xlink& that) : Composite(that) {
-      eq_length_=that.eq_length_;
-      k_spring_=that.k_spring_;
       g2_=that.g2_;
     }
     //Assignment constructor
     Xlink& operator=(Xlink const& that) {
       Composite::operator=(that);
-      eq_length_=that.eq_length_;
-      k_spring_=that.k_spring_;
       g2_=that.g2_;
       return *this;
     };
@@ -71,8 +63,8 @@ class Xlink : public Composite<XlinkHead> {
         printf("Something has gone horribly wrong!\n");
         exit(1);
       }
-      printf("\t   {d: %2.2f}, {length: %2.2f}, {eq_length: %2.2f}, {k_spring: %2.2f}, {bound: %d}\n", diameter_, length_,
-          eq_length_, k_spring_, (int)bound_);
+      printf("\t   {d: %2.2f}, {length: %2.2f}, {bound: %d}\n", diameter_, length_,
+          (int)bound_);
       auto head0 = elements_.begin();
       auto head1 = elements_.begin()+1;
       printf("\t   ");
@@ -87,14 +79,10 @@ class Xlink : public Composite<XlinkHead> {
     std::pair<bool,bool> GetBoundHeads(XlinkHead **freehead, XlinkHead **boundhead);
     void CheckBoundState();
 
-    double const GetKSpring() {return k_spring_;}
-    double const GetEqLength() {return eq_length_;}
     double const GetNExp_0_1() {return n_exp_0_1_;}
     double const GetNExp_1_2() {return n_exp_1_2_;}
     double const GetInternalU() {return uinternal_;}
     attach_type const GetBoundState() {return bound_;}
-    void SetEqLength(double const eq_length) {eq_length_ = eq_length;}
-    void SetKSpring(double const k_spring) {k_spring_ = k_spring;}
     void SetNExp_0_1(double const n) {n_exp_0_1_=n;}
     void SetNExp_1_2(double const n) {n_exp_1_2_=n;}
     void SetInternalU(double u) {uinternal_=u;}
