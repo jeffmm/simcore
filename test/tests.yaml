@@ -1,46 +1,57 @@
 seed: 100
 TestXlinkKMC:
+  FailTest:
+    result: 10.0
   CalcCutoff: #from bob
     max_length: 110
     concentration_1_2: 10.0
     spring_constant: 45.29
-    #barrier weight, equilibrium length, result
-    results:
-      - [0.0,    0.0 , 0.75896056]
-      - [0.0,    3.12, 3.87896056] 
-      - [0.0001, 0.0 , 0.75899851] 
-      - [0.0001, 3.12, 3.87899851]
-      - [0.25,   0.0,  0.87637216]
-      - [0.25,   3.12, 3.99637216]
     test:
       - barrier_weight: 0
         r_equil: 0
         result: 0.75896056
+        tolerance: 1.0e-6
       - barrier_weight: 0.0
         r_equil: 3.12
         result: 3.87896056
+        tolerance: 1.0e-6
       - barrier_weight: 0.0001
         r_equil: 0.0
         result: 0.75899851
+        tolerance: 1.0e-6
       - barrier_weight: 0.0001
         r_equil: 3.12
         result: 3.87899851
+        tolerance: 1.0e-6
       - barrier_weight: 0.25
         r_equil: 0.0
         result: 0.87637216
+        tolerance: 1.0e-6
       - barrier_weight: 0.25
         r_equil: 3.12
         result: 3.99637216
+        tolerance: 1.0e-6
   Update_0_1: #from bob
     concentration_0_1: 30190
     on_rate_0_1: 0.003916
     alpha: 1.299
-    # n neighbors, values, result]
-    results:
-      - [0, 0.0]
-      - [1, 0.08213011, 0.00315324]
-      - [1, 0.15302895, 0.00587528]
-      - [2, 0.08213011, 0.15302895, 0.00902852]
+    test:
+      - n_neighbors: 0
+        values: []
+        result: 0.0
+        tolerance: 1.0e-8
+      - n_neighbors: 1
+        values: [0.08213011]
+        result: 0.00315324
+        tolerance: 1.0e-8
+      - n_neighbors: 1
+        values: [0.15302895]
+        result: 0.00587528
+        tolerance: 1.0e-8
+      - n_neighbors: 2
+        values: [0.08213011, 0.15302895]
+        result: 0.00902852
+        tolerance: 1.0e-8
   Update_1_2:
     concentration_1_2: 10.0
     on_rate_1_2: 0.001958
