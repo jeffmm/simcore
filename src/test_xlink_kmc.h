@@ -19,12 +19,15 @@ class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
 
   protected:
 
-    bool UnitTestCalcCutoff();
-    bool UnitTestUpdate_0_1();
-    bool UnitTestUpdate_1_2();
-    bool UnitTestDetach_1_0();
+    bool FailTest(int test_num);
+    bool UnitTestCalcCutoff(int test_num);
+    bool UnitTestUpdate_0_1(int test_num);
+    bool UnitTestUpdate_1_2(int test_num);
+    bool UnitTestDetach_1_0(int test_num);
 
-    std::vector<std::function<bool(void)>> unit_tests_;
+    std::vector<std::function<bool(int)>> unit_tests_;
+    std::vector<std::string> unit_tests_names_;
+    std::vector<std::vector<bool>> unit_tests_results_;
 
     system_parameters params_sub_;
     SpaceProperties space_sub_;

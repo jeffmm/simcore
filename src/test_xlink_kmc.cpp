@@ -15,25 +15,40 @@ void TestXlinkKMC::InitTestModule(const std::string& filename) {
   node_ = YAML::LoadFile(filename);
 
   // Test out functional
+  if (node_[name_]["FailTest"]) {
+    std::function<bool(int)> f_failtest = std::bind(&TestXlinkKMC::FailTest, this, std::placeholders::_1);
+    unit_tests_.push_back(f_failtest);
+    unit_tests_names_.push_back("FailTest");
+    unit_tests_results_.push_back(std::vector<bool>());
+  }
   if (node_[name_]["CalcCutoff"]) {
-    std::function<bool(void)> f_calc_cutoff = std::bind(&TestXlinkKMC::UnitTestCalcCutoff, this);
+    std::function<bool(int)> f_calc_cutoff = std::bind(&TestXlinkKMC::UnitTestCalcCutoff, this, std::placeholders::_1);
     unit_tests_.push_back(f_calc_cutoff);
+    unit_tests_names_.push_back("CalcCutoff");
+    unit_tests_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["Update_0_1"]) {
-    std::function<bool(void)> f_update_0_1 = std::bind(&TestXlinkKMC::UnitTestUpdate_0_1, this);
+    std::function<bool(int)> f_update_0_1 = std::bind(&TestXlinkKMC::UnitTestUpdate_0_1, this, std::placeholders::_1);
     unit_tests_.push_back(f_update_0_1);
+    unit_tests_names_.push_back("Update_0_1");
+    unit_tests_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["Update_1_2"]) {
-    std::function<bool(void)> f_update_1_2 = std::bind(&TestXlinkKMC::UnitTestUpdate_1_2, this);
+    std::function<bool(int)> f_update_1_2 = std::bind(&TestXlinkKMC::UnitTestUpdate_1_2, this, std::placeholders::_1);
     unit_tests_.push_back(f_update_1_2);
+    unit_tests_names_.push_back("Update_1_2");
+    unit_tests_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["Detach_1_0"]) {
-    std::function<bool(void)> f_detach_1_0 = std::bind(&TestXlinkKMC::UnitTestDetach_1_0, this);
+    std::function<bool(int)> f_detach_1_0 = std::bind(&TestXlinkKMC::UnitTestDetach_1_0, this, std::placeholders::_1);
     unit_tests_.push_back(f_detach_1_0);
+    unit_tests_names_.push_back("Detach_1_0");
+    unit_tests_results_.push_back(std::vector<bool>());
   }
 
   // Create a params, space, etc, and xlink species to test with
   space_sub_.Init(&params_sub_, 10);
+  sid1_ = SID::xlink;
   sid2_ = SID::br_rod;
 }
 
@@ -43,11 +58,41 @@ void TestXlinkKMC::RunTests() {
   IntegrationTests();
 }
 
+bool TestXlinkKMC::FailTest(int test_num) {
+  // Basic test to make sure that failing works properly
+  int ntests = 2;
+  bool success = true;
+
+  unit_tests_results_[test_num].resize(ntests);
+  
+  for (int i = 0; i < ntests; ++i) {
+    if (i == 0) {
+      unit_tests_results_[test_num][i] = true;
+    } else {
+      unit_tests_results_[test_num][i] = false;
+      success = false;
+    }
+  }
+
+  return success;
+}
+
 void TestXlinkKMC::UnitTests() {
   std::cout << name_ << " Unit Tests ->\n";
   bool test_success = true;
-  for (auto fit = unit_tests_.begin(); fit != unit_tests_.end(); ++fit) {
-    test_success &= (*fit)();
+
+  for (int i = 0; i < unit_tests_.size(); ++i) {
+    bool this_success = unit_tests_[i](i);
+    test_success &= this_success;
+
+    std::cout << "----------------\n";
+    std::cout << "--Unit Test " << unit_tests_names_[i] << ": ";
+    std::cout << (this_success ? "PASSED" : "FAILED") << std::endl;
+    for (int didpass = 0; didpass < unit_tests_results_[i].size(); ++didpass) {
+      std::cout << "    Test[" << didpass << "] " << (unit_tests_results_[i][didpass] ? "passed" : "failed");
+      std::cout << std::endl;
+    }
+    std::cout << "----------------\n";
   }
   std::cout << name_;
   std::cout << " Unit Tests: " << (test_success ? "passed" : "failed") << std::endl;
@@ -58,8 +103,7 @@ void TestXlinkKMC::IntegrationTests() {
   std::cout << " Integration Tests\n";
 }
 
-bool TestXlinkKMC::UnitTestCalcCutoff() {
-  std::cout << "--Unit Testing XlinkKMC CalcCutoff\n";
+bool TestXlinkKMC::UnitTestCalcCutoff(int test_num) {
   bool success = true;
 
   // Grab the YAML file information
@@ -67,33 +111,25 @@ bool TestXlinkKMC::UnitTestCalcCutoff() {
   k_stretch_  = node_[name_]["CalcCutoff"]["spring_constant"].as<double>();
   max_length_ = node_[name_]["CalcCutoff"]["max_length"].as<double>();
 
-  std::vector<double> equilibrium_lengths;
-  std::vector<double> barrier_weights;
-  std::vector<double> results;
+  int ntests = node_[name_]["CalcCutoff"]["test"].size();
 
-  for (int i = 0; i < node_[name_]["CalcCutoff"]["results"].size(); ++i) {
-    barrier_weights.push_back(node_[name_]["CalcCutoff"]["results"][i][0].as<double>());
-    equilibrium_lengths.push_back(node_[name_]["CalcCutoff"]["results"][i][1].as<double>());
-    results.push_back(node_[name_]["CalcCutoff"]["results"][i][2].as<double>());
-  }
+  unit_tests_results_[test_num].resize(ntests);
 
-  std::vector<bool> sub_success;
-  sub_success.reserve(results.size());
-
-  for (int i = 0; i < results.size(); ++i) {
-    barrier_weight_ = barrier_weights[i];
-    r_equil_ = equilibrium_lengths[i];
+  for (int itest = 0; itest < ntests; ++itest) {
+    barrier_weight_ = node_[name_]["CalcCutoff"]["test"][itest]["barrier_weight"].as<double>();
+    r_equil_ = node_[name_]["CalcCutoff"]["test"][itest]["r_equil"].as<double>();
 
     CalcCutoff();
 
     double res = rcutoff_1_2_;
 
-    if (uth::almost_equal<double>(res, results[i], 1e-8)) {
-      std::cout << "    Test[" << i << "] passed\n";
-      sub_success[i] = true;
+    double result = node_[name_]["CalcCutoff"]["test"][itest]["result"].as<double>();
+    double tolerance = node_[name_]["CalcCutoff"]["test"][itest]["tolerance"].as<double>();
+
+    if (uth::almost_equal<double>(res, result, tolerance)) {
+      unit_tests_results_[test_num][itest] = true;
     } else {
-      std::cout << "    Test[" << i << "] failed\n";
-      sub_success[i] = false;
+      unit_tests_results_[test_num][itest] = false;
       success = false;
     }
   }
@@ -101,8 +137,7 @@ bool TestXlinkKMC::UnitTestCalcCutoff() {
   return success;
 }
 
-bool TestXlinkKMC::UnitTestUpdate_0_1() {
-  std::cout << "--Unit Testing XlinkKMC Update_0_1\n";
+bool TestXlinkKMC::UnitTestUpdate_0_1(int test_num) {
   bool success = true;
 
   // Lots of things to set up for the update test
@@ -126,49 +161,38 @@ bool TestXlinkKMC::UnitTestUpdate_0_1() {
   on_rate_0_1_[0] = on_rate_0_1_[1] = node_[name_]["Update_0_1"]["on_rate_0_1"].as<double>();
   alpha_ = node_[name_]["Update_0_1"]["alpha"].as<double>();
 
-  std::vector<int> n_neighbs;
-  std::vector<std::vector<double>> neighbs_vals;
-  std::vector<double> results;
-
-  for (int i = 0; i < node_[name_]["Update_0_1"]["results"].size(); ++i) {
-    int icount = 0;
-    n_neighbs.push_back(node_[name_]["Update_0_1"]["results"][i][icount++].as<double>());
-    std::vector<double> values;
-    for (int j = 0; j < n_neighbs[i]; ++j) {
-      values.push_back(node_[name_]["Update_0_1"]["results"][i][icount++].as<double>());
-    }
-    neighbs_vals.push_back(values);
-    results.push_back(node_[name_]["Update_0_1"]["results"][i][icount++].as<double>());
-  }
-
-  std::vector<bool> sub_success;
-  sub_success.reserve(results.size());
+  int ntests = node_[name_]["Update_0_1"]["test"].size();
+  unit_tests_results_[test_num].resize(ntests);
 
   // Run the different tests
-  for (int i = 0; i < results.size(); ++i) {
+  for (int i = 0; i < ntests; ++i) {
+    int n_neighbors = node_[name_]["Update_0_1"]["test"][i]["n_neighbors"].as<int>();
     neighbors_[0].clear();
-    neighbors_[0].resize(n_neighbs[i]);
-    int icount1 = 0;
+    neighbors_[0].resize(n_neighbors);
+    int ineighb = 0;
     for (auto nldx = neighbors_[0].begin(); nldx != neighbors_[0].end(); ++nldx) {
-      nldx->kmc_ = neighbs_vals[i][icount1++];
+      nldx->kmc_ = node_[name_]["Update_0_1"]["test"][i]["values"][ineighb].as<double>();
+      ineighb++;
     }
     neighbors_[1].clear();
-    neighbors_[1].resize(n_neighbs[i]);
-    int icount2 = 0;
+    neighbors_[1].resize(n_neighbors);
+    ineighb = 0;
     for (auto nldx = neighbors_[1].begin(); nldx != neighbors_[1].end(); ++nldx) {
-      nldx->kmc_ = neighbs_vals[i][icount2++];
+      nldx->kmc_ = node_[name_]["Update_0_1"]["test"][i]["values"][ineighb].as<double>();
+      ineighb++;
     }
 
     // Call Update_0_1
     Update_0_1(testXlink);
 
     double res = testXlink->GetNExp_0_1();
-    if (uth::almost_equal<double>(res, results[i], 1e-8)) {
-      std::cout << "    Test[" << i << "] passed\n";
-      sub_success[i] = true;
+
+    double result = node_[name_]["Update_0_1"]["test"][i]["result"].as<double>();
+    double tolerance = node_[name_]["Update_0_1"]["test"][i]["tolerance"].as<double>();
+    if (uth::almost_equal<double>(res, result, tolerance)) {
+      unit_tests_results_[test_num][i] = true;
     } else {
-      std::cout << "    Test[" << i << "] failed\n";
-      sub_success[i] = false;
+      unit_tests_results_[test_num][i] = false;
       success = false;
     }
   }
@@ -187,8 +211,7 @@ bool TestXlinkKMC::UnitTestUpdate_0_1() {
   return success;
 }
 
-bool TestXlinkKMC::UnitTestUpdate_1_2() {
-  std::cout << "--Unit Testing XlinkKMC Update_1_2\n";
+bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
   bool success = true;
 
   // Lots of things to set up for the update test
@@ -215,10 +238,8 @@ bool TestXlinkKMC::UnitTestUpdate_1_2() {
 
   // Use the configurators to initialize the xlink and rod
   int ntests = (int)node_[name_]["Update_1_2"]["test"].size();
-  std::cout << "   Found " << ntests << " tests\n";
 
-  std::vector<bool> sub_success;
-  sub_success.reserve(ntests);
+  unit_tests_results_[test_num].resize(ntests);
 
   for (int i = 0; i < ntests; ++i) {
     // Clear the oid map, and the simples
@@ -317,14 +338,9 @@ bool TestXlinkKMC::UnitTestUpdate_1_2() {
     double this_result = node_[name_]["Update_1_2"]["test"][i]["result"].as<double>();
     double tolerance = node_[name_]["Update_1_2"]["test"][i]["tolerance"].as<double>();
     if (uth::almost_equal<double>(res, this_result, tolerance)) {
-      std::cout << "    Test[" << i << "] passed -> ";
-      std::cout << "expected: " << this_result << ", got: " << res << " (tol: ";
-      std::cout << tolerance << ")\n";
-      sub_success[i] = true;
+      unit_tests_results_[test_num][i] = true;
     } else {
-      std::cout << "    Test[" << i << "] failed -> ";
-      std::cout << "expected: " << this_result << ", got: " << res << std::endl;
-      sub_success[i] = false;
+      unit_tests_results_[test_num][i] = false;
       success = false;
     }
 
@@ -360,20 +376,17 @@ bool TestXlinkKMC::UnitTestUpdate_1_2() {
   return success;
 }
 
-bool TestXlinkKMC::UnitTestDetach_1_0() {
-  std::cout << "--Unit Testing XlinkKMC Detach_1_0\n";
+bool TestXlinkKMC::UnitTestDetach_1_0(int test_num) {
   bool success = true;
 
   // Use the configurators to initialize the xlink and rod
   int ntests = (int)node_[name_]["Detach_1_0"]["test"].size();
-  std::cout << "   Found " << ntests << " tests\n";
 
   // Fake out the position map and simples
   oid_position_map_ = new std::unordered_map<int, int>();
   simples_ = new std::vector<Simple*>();
 
-  std::vector<bool> sub_success;
-  sub_success.reserve(ntests);
+  unit_tests_results_[test_num].resize(ntests);
   
   for (int itest = 0; itest < ntests; ++itest) {
     // Clean up everything from previous tests
@@ -443,15 +456,15 @@ bool TestXlinkKMC::UnitTestDetach_1_0() {
     Detach_1_0(testXlink, freehead, boundhead);
 
     // Check various things
-    sub_success[itest] = true;
+    unit_tests_results_[test_num][itest] = true;
     if (freehead->GetBound()) {
-      sub_success[itest] = false && sub_success[itest]; 
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
     }
     if (boundhead->GetBound()) {
-      sub_success[itest] = false && sub_success[itest];
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
     }
     if (testXlink->GetBoundState() != unbound) {
-      sub_success[itest] = false && sub_success[itest];
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
     }
 
     double res[3] = {0.0, 0.0, 0.0};
@@ -463,16 +476,10 @@ bool TestXlinkKMC::UnitTestDetach_1_0() {
 
     double tolerance = node_[name_]["Detach_1_0"]["test"][itest]["tolerance"].as<double>();
     if (!uth::almost_equal(dr2_orig, 0.0, tolerance)) {
-      sub_success[itest] = false && sub_success[itest];
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
     }
     if (!uth::almost_equal(dr_loc, 0.0, tolerance)) {
-      sub_success[itest] = false && sub_success[itest];
-    }
-
-    if (sub_success[itest]) {
-      std::cout << "    Test[" << itest << "] passed\n";
-    } else {
-      std::cout << "    Test[" << itest << "] failed\n";
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
     }
 
     // Cleanup
@@ -491,10 +498,8 @@ bool TestXlinkKMC::UnitTestDetach_1_0() {
     delete oid_position_map_;
   }
 
-  for (auto suc = sub_success.begin(); suc != sub_success.end(); ++suc) {
-    bool my_suc = (*suc);
-    success &= my_suc;
+  for (auto suc = unit_tests_results_[test_num].begin(); suc != unit_tests_results_[test_num].end(); ++suc) {
+    success = success && (*suc);
   }
-
   return success;
 }
