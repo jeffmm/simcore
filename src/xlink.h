@@ -82,6 +82,7 @@ class Xlink : public Composite<XlinkHead> {
     void CheckBoundState();
 
     void BindHeadSingle(int ihead, double crosspos, int rodoid);
+    void BindHeadDouble(double crosspos0, int rodoid0, double crosspos1, int rodoid1);
 
     double const GetNExp_0_1() {return n_exp_0_1_;}
     double const GetNExp_1_2() {return n_exp_1_2_;}
