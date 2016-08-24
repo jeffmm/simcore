@@ -376,8 +376,8 @@ void XlinkKMC::KMC_0_1() {
         double binding_affinity = (eps_eff_0_1_[0] * on_rate_0_1_[0] + eps_eff_0_1_[1] * on_rate_0_1_[1]) *
           alpha_ * head->GetDelta();
         std::ostringstream kmc_event;
-        kmc_event << "[" << (*xit)->GetOID() << "] Successful KMC move {0 -> 1}, {nexp: " << nexp;
-        kmc_event << "}, {roll: " << roll << "}, {head: " << head_type << "}";
+        kmc_event << std::setprecision(16) << "[" << (*xit)->GetOID() << "] Successful KMC move {0 -> 1}, {nexp: " << nexp;
+        kmc_event << std::setprecision(16) << "}, {roll: " << roll << "}, {head: " << head_type << "}";
         WriteEvent(kmc_event.str());
         if (debug_trace)
           printf("%s\n", kmc_event.str().c_str());
