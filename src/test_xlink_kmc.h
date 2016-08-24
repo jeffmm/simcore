@@ -28,6 +28,7 @@ class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
     bool UnitTestUpdate_1_2(int test_num);
     bool UnitTestDetach_1_0(int test_num);
     bool UnitTestDetach_2_1(int test_num);
+    bool UnitTestDetach_2_0(int test_num);
 
     void CreateTestRod(BrRod **rod,
                        const std::string &unitname,

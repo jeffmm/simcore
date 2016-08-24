@@ -51,8 +51,14 @@ void TestXlinkKMC::InitTestModule(const std::string& filename) {
     unit_tests_names_.push_back("Detach_2_1");
     unit_tests_results_.push_back(std::vector<bool>());
   }
+  if (node_[name_]["Detach_2_0"]) {
+    std::function<bool(int)> f_detach_2_0 = std::bind(&TestXlinkKMC::UnitTestDetach_2_0, this, std::placeholders::_1);
+    unit_tests_.push_back(f_detach_2_0);
+    unit_tests_names_.push_back("Detach_2_0");
+    unit_tests_results_.push_back(std::vector<bool>());
+  }
 
-  // Create a params, space, etc, and xlink species to test with
+  // Create a params, space, etc
   space_sub_.Init(&params_sub_, 10);
   sid1_ = SID::xlink;
   sid2_ = SID::br_rod;
@@ -651,6 +657,115 @@ bool TestXlinkKMC::UnitTestDetach_2_1(int test_num) {
     }
     for (int i = 0; i < ndim_; ++i) {
       double separation = freehead->GetRigidPosition()[i] - boundhead->GetRigidPosition()[i];
+      if (separation > 0) {
+        unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      }
+    }
+
+    if (testRod0) {
+      delete testRod0;
+    }
+    if (testRod1) {
+      delete testRod1;
+    }
+    if (testXlink) {
+      delete testXlink;
+    }
+  }
+
+  // Cleanup at end
+  if (simples_) {
+    delete simples_;
+  }
+  if (oid_position_map_) {
+    delete oid_position_map_;
+  }
+
+  return success;
+}
+
+bool TestXlinkKMC::UnitTestDetach_2_0(int test_num) {
+  bool success = true;
+
+  // Use the configurators to initialize the xlink and rod
+  int ntests = (int)node_[name_]["Detach_2_0"]["test"].size();
+
+  // Fake out the position map and simples
+  oid_position_map_ = new std::unordered_map<int, int>();
+  simples_ = new std::vector<Simple*>();
+
+  unit_tests_results_[test_num].resize(ntests);
+
+  for (int itest = 0; itest < ntests; ++itest) {
+    // Clean up everything from previous tests
+    oid_position_map_->clear();
+    simples_->clear();
+    // Set up the space type structs
+    ndim_ = node_[name_]["Detach_2_0"]["test"][itest]["ndim"].as<int>();
+    params_sub_.n_dim = ndim_;
+    space_sub_.Init(&params_sub_, 10);
+    space_ = space_sub_.GetStruct();
+
+    BrRod *testRod0 = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
+    BrRod *testRod1 = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
+    Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
+
+    CreateTestRod(&testRod0, "Detach_2_0", "rod0", itest);
+    CreateTestRod(&testRod1, "Detach_2_0", "rod1", itest);
+
+    // Xlink
+    CreateTestXlink(&testXlink, "Detach_2_0", "xlink", itest, testRod0->GetSimples()[0]->GetOID(), testRod1->GetSimples()[0]->GetOID());
+
+    // Generate the xlink positions (eww) XXX find a better way to do these types of things
+    auto heads = testXlink->GetHeads();
+    XlinkHead *head0 = &(*(heads->begin()));
+    XlinkHead *head1 = &(*(heads->begin()+1));
+
+    double avg_pos[3] = {0.0, 0.0, 0.0};
+
+    auto xr = testRod0->GetSimples()[0]->GetRigidPosition();
+    auto ur = testRod0->GetSimples()[0]->GetRigidOrientation();
+    auto lrod = testRod0->GetSimples()[0]->GetRigidLength();
+    auto crosspos = head0->GetAttach().second;
+
+    // Set the location
+    double xx[3] = {0.0, 0.0, 0.0};
+    for (int i = 0; i < ndim_; ++i) {
+      xx[i] = xr[i] - 0.5 * ur[i] * lrod + crosspos * ur[i];
+      avg_pos[i] += xx[i];
+    }
+    head0->SetPosition(xx);
+
+    xr = testRod1->GetSimples()[0]->GetRigidPosition();
+    ur = testRod1->GetSimples()[0]->GetRigidOrientation();
+    lrod = testRod1->GetSimples()[0]->GetRigidLength();
+    crosspos = head1->GetAttach().second;
+    for (int i = 0; i < ndim_; ++i) {
+      xx[i] = xr[i] - 0.5 * ur[i] * lrod + crosspos * ur[i];
+      avg_pos[i] += xx[i];
+    }
+    head1->SetPosition(xx);
+
+    for (int i = 0; i < ndim_; ++i) {
+      avg_pos[i] *= 0.5;
+    }
+    testXlink->SetPosition(avg_pos);
+
+    // Run the detach
+    Detach_2_0(testXlink);
+
+    // head which_detach should be detached now
+    unit_tests_results_[test_num][itest] = true;
+    if (testXlink->GetBoundState() != unbound) {
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+    }
+    XlinkHead *freehead, *boundhead;
+    auto testbound = testXlink->GetBoundHeads(&freehead, &boundhead);
+    if ((testbound.first) || (testbound.second)) {
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+    }
+    for (int i = 0; i < ndim_; ++i) {
+      double separation = avg_pos[i] - testXlink->GetPosition()[i];
       if (separation > 0) {
         unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
       }
