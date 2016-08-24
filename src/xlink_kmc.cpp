@@ -845,10 +845,10 @@ void XlinkKMC::Detach_2_1(Xlink *xit, int headtype) {
   kmc_event << " ([" << attachedhead->GetOID() << "] still bound)";
   WriteEvent(kmc_event.str());
   if (debug_trace)
-    printf("%s\n", kmc_event.str().c_str());
+    std::cout << kmc_event.str() << std::endl;
 
   // Just set the location to what the other head was, and unset the attachment
-  double oldpos[3];
+  double oldpos[3] = {0.0, 0.0, 0.0};
   std::copy(detachedhead->GetRigidPosition(), detachedhead->GetRigidPosition()+ndim_, oldpos);
 
   detachedhead->SetPosition(attachedhead->GetRigidPosition());
@@ -860,10 +860,13 @@ void XlinkKMC::Detach_2_1(Xlink *xit, int headtype) {
     auto attachid = detachedhead->GetAttach();
     auto ridx = (*oid_position_map_)[attachid.first];
     auto mrod = (*simples_)[ridx];
-    
-    printf("[%d]{%d} Detached from [%d] -> (%2.2f,%2.2f) -> (%2.2f, %2.2f)\n",
-        xit->GetOID(), detachedhead->GetOID(), mrod->GetOID(), oldpos[0],
-        oldpos[1], detachedhead->GetRigidPosition()[0], detachedhead->GetRigidPosition()[1]);
+   
+    std::cout << "[" << xit->GetOID() << "]{" << detachedhead->GetOID() << "}";
+    std::cout << " Detached from [" << mrod->GetOID() << "] -> (";
+    std::cout << std::setprecision(16) << oldpos[0] << ", " << oldpos[1] << ", " << oldpos[2] << ")"
+      << " -> (" << detachedhead->GetRigidPosition()[0] << ", "
+      << detachedhead->GetRigidPosition()[1] << ", "
+      << detachedhead->GetRigidPosition()[2] << ")\n";
   }
 
   detachedhead->SetBound(false);
@@ -883,11 +886,11 @@ void XlinkKMC::Detach_2_0(Xlink *xit) {
   kmc_event << head1->GetOID() << "]";
   WriteEvent(kmc_event.str());
   if (debug_trace)
-    printf("%s\n", kmc_event.str().c_str());
+    std::cout << kmc_event.str() << std::endl;
 
-  double oldpos0[3];
-  double oldpos1[3];
-  double xpos[3];
+  double oldpos0[3] = {0.0, 0.0, 0.0};
+  double oldpos1[3] = {0.0, 0.0, 0.0};
+  double xpos[3] = {0.0, 0.0, 0.0};
   std::copy(xit->GetPosition(), xit->GetPosition()+ndim_, xpos);
   std::copy(head0->GetRigidPosition(), head0->GetRigidPosition()+ndim_, oldpos0);
   std::copy(head1->GetRigidPosition(), head1->GetRigidPosition()+ndim_, oldpos1);
@@ -900,9 +903,11 @@ void XlinkKMC::Detach_2_0(Xlink *xit) {
     auto mrod1idx = (*oid_position_map_)[head1attach.first];
     auto mrod1 = (*simples_)[mrod1idx];
 
-    printf("[%d]{%d,%d} Detached from [%d,%d] -> {(%2.2f,%2.2f),(%2.2f,%2.2f)} -> (%2.2f,%2.2f)\n",
-        xit->GetOID(), head0->GetOID(), head1->GetOID(), mrod0->GetOID(), mrod1->GetOID(),
-        oldpos0[0], oldpos0[1], oldpos1[0], oldpos1[1], xpos[0], xpos[1]);
+    std::cout << "[" << xit->GetOID() << "]{" << head0->GetOID() << "," << head1->GetOID() << "}";
+    std::cout << " Detached from [" << mrod0->GetOID() << "," << mrod1->GetOID() << "] -> {";
+    std::cout << std::setprecision(16) << "(" << oldpos0[0] << ", " << oldpos0[1] << ", " << oldpos0[2] << "),("
+      << oldpos1[0] << ", " << oldpos1[1] << ", " << oldpos1[2] << ")} -> (" << xpos[0] << ", " << xpos[1]
+      << ", " << xpos[2] << ")\n";
   }
 
   head0->SetPosition(xpos);
