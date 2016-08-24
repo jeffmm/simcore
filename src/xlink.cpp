@@ -75,6 +75,19 @@ void Xlink::BindHeadSingle(int ihead, double crosspos, int rodoid) {
   CheckBoundState();
 }
 
+void Xlink::BindHeadDouble(double crosspos0, int rodoid0, double crosspos1, int rodoid1) {
+  if (bound_ != unbound) {
+    std::cout << "Something has gone wrong in the xlink 2->0 stage bind\n";
+  }
+  auto head0 = elements_.begin();
+  auto head1 = elements_.begin()+1;
+  head0->Attach(rodoid0, crosspos0);
+  head0->SetBound(true);
+  head1->Attach(rodoid1, crosspos1);
+  head1->SetBound(true);
+  CheckBoundState();
+}
+
 void Xlink::CheckBoundState() {
   bound_ = unbound;
   auto head0 = elements_.begin();

@@ -40,6 +40,13 @@ class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
                          int itest,
                          int attachoid);
 
+    void CreateTestXlink(Xlink **mxit,
+                         const std::string &unitname,
+                         const std::string &xname,
+                         int itest,
+                         int attachoid0,
+                         int attachoid1);
+
     std::vector<std::function<bool(int)>> unit_tests_;
     std::vector<std::string> unit_tests_names_;
     std::vector<std::vector<bool>> unit_tests_results_;
