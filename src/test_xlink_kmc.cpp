@@ -57,6 +57,12 @@ void TestXlinkKMC::InitTestModule(const std::string& filename) {
     unit_tests_names_.push_back("Detach_2_0");
     unit_tests_results_.push_back(std::vector<bool>());
   }
+  if (node_[name_]["UpdateStage1"]) {
+    std::function<bool(int)> f_updatestage1 = std::bind(&TestXlinkKMC::UnitTestUpdateStage1, this, std::placeholders::_1);
+    unit_tests_.push_back(f_updatestage1);
+    unit_tests_names_.push_back("UpdateStage1");
+    unit_tests_results_.push_back(std::vector<bool>());
+  }
 
   // Create a params, space, etc
   space_sub_.Init(&params_sub_, 10);
@@ -776,6 +782,104 @@ bool TestXlinkKMC::UnitTestDetach_2_0(int test_num) {
     }
     if (testRod1) {
       delete testRod1;
+    }
+    if (testXlink) {
+      delete testXlink;
+    }
+  }
+
+  // Cleanup at end
+  if (simples_) {
+    delete simples_;
+  }
+  if (oid_position_map_) {
+    delete oid_position_map_;
+  }
+
+  return success;
+}
+
+bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
+  bool success = true;
+
+  // Use the configurators to initialize the xlink and rod
+  int ntests = (int)node_[name_]["UpdateStage1"]["test"].size();
+
+  // Fake out the position map and simples
+  oid_position_map_ = new std::unordered_map<int, int>();
+  simples_ = new std::vector<Simple*>();
+
+  unit_tests_results_[test_num].resize(ntests);
+
+  for (int itest = 0; itest < ntests; ++itest) {
+    // Clean up everything from previous tests
+    oid_position_map_->clear();
+    simples_->clear();
+    // Set up the space type structs
+    ndim_ = node_[name_]["UpdateStage1"]["test"][itest]["ndim"].as<int>();
+    params_sub_.n_dim = ndim_;
+    space_sub_.Init(&params_sub_, 10);
+    space_ = space_sub_.GetStruct();
+
+    std::cout << "ndim: " << ndim_ << std::endl;
+
+    BrRod *testRod = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
+    Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
+
+    CreateTestRod(&testRod, "UpdateStage1", "rod", itest);
+    CreateTestXlink(&testXlink, "UpdateStage1", "xlink", itest, testRod->GetSimples()[0]->GetOID());
+
+    // Try out our new update stage thing
+    testXlink->UpdateStagePosition(testRod->GetSimples()[0]->GetRigidPosition(),
+                                   testRod->GetSimples()[0]->GetRigidOrientation(),
+                                   testRod->GetSimples()[0]->GetRigidLength(),
+                                   testRod->GetSimples()[0]->GetOID(),
+                                   nullptr,
+                                   nullptr,
+                                   0.0,
+                                   0);
+
+    // Get other test parameters
+    end_pause_[0] = end_pause_[1] = node_[name_]["UpdateStage1"]["test"][itest]["end_pause"].as<bool>();
+    velocity_ = node_[name_]["UpdateStage1"]["test"][itest]["velocity"].as<double>();
+
+    // Run the update function
+    UpdateStage1(testXlink);
+
+    //testXlink->Dump();
+    //testXlink->DumpKMC();
+
+    // Finalize the tests
+    unit_tests_results_[test_num][itest] = true;
+    std::string temp_bound = node_[name_]["UpdateStage1"]["test"][itest]["result_bound"].as<std::string>();
+    attach_type boundtype = unbound;
+    if (temp_bound.compare("unbound") == 0) {
+      boundtype = unbound;
+    } else if (temp_bound.compare("singly") == 0) {
+      boundtype = singly;
+    } else if (temp_bound.compare("doubly") == 0) {
+      boundtype = doubly;
+    } else {
+      std::cout << "Choose a correct bound state!\n";
+      exit(1);
+    }
+    if (testXlink->GetBoundState() != boundtype) {
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      success = false;
+    }
+
+    double result_crosspos = node_[name_]["UpdateStage1"]["test"][itest]["result_crosspos"].as<double>();
+    double tolerance = node_[name_]["UpdateStage1"]["test"][itest]["tolerance"].as<double>();
+
+    XlinkHead *freehead, *boundhead;
+    auto getbound = testXlink->GetBoundHeads(&freehead, &boundhead);
+
+    if (!uth::almost_equal<double>(boundhead->GetAttach().second, result_crosspos, tolerance)) {
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+    }
+
+    if (testRod) {
+      delete testRod;
     }
     if (testXlink) {
       delete testXlink;

@@ -194,4 +194,60 @@ TestXlinkKMC:
         l_rod1: 3.0
         crosspos_xlink0: 3.0
         crosspos_xlink1: 0.0
-        
+  UpdateStage1:
+    test:
+      - ndim: 2 # null test case
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 5.0
+        head_xlink: 0
+        end_pause: true
+        velocity: 0.0
+        result_bound: singly
+        result_crosspos: 5.0
+        tolerance: 1.0e-9
+      - ndim: 3 # basic velocity test case
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 6.0
+        head_xlink: 0
+        end_pause: true
+        velocity: 4.0
+        result_bound: singly
+        result_crosspos: 6.001
+        tolerance: 1.0e-9
+      - ndim: 3 # basic velocity test case at end pausing
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 10.0
+        head_xlink: 0
+        end_pause: true
+        velocity: 10.0
+        result_bound: singly
+        result_crosspos: 10.0
+        tolerance: 1.0e-9
+      - ndim: 3 # basic velocity test case at end pausing difference head
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 0.0
+        head_xlink: 1
+        end_pause: true
+        velocity: -10.0
+        result_bound: singly
+        result_crosspos: 0.0
+        tolerance: 1.0e-9
+      - ndim: 3
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 10.0
+        head_xlink: 0
+        end_pause: false
+        velocity: 10.0
+        result_bound: unbound
+        result_crosspos: 0.0
+        tolerance: 1.0e-9
