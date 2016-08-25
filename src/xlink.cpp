@@ -205,6 +205,76 @@ void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
     i_bead->Draw(graph_array);
 }
 
+// Update staged position stuff
+void Xlink::UpdateStagePosition(const double* const xr0, const double* const ur0, const double lr0, const int atidx0,
+                                const double* const xr1, const double* const ur1, const double lr1, const int atidx1) {
+  // Figure out what stage we're in, if unbound, don't do anything
+  // Head 0 is the xr0 row, head 1 is the other
+  // need to figure out before calling this
+  switch(bound_) {
+    case(unbound):
+      // Do nothing
+      break;
+    case(singly):
+      std::cout << "Attempting UpdateStagePosition singly\n";
+      // Figure out which head (and make sure it makes sense)
+      // Also, everything is in the 0th row
+      UpdateStage1Position(xr0, ur0, lr0, atidx0);
+      break;
+    case(doubly):
+      std::cout << "Attempting UpdateStagePosition doubly\n";
+      break;
+  }
+}
+
+void Xlink::UpdateStage1Position(const double* const xr, const double* const ur, const double lr, const int atidx) {
+  //std::cout << "UpdateStage1Position\n";
+  if (xr == nullptr || ur == nullptr) {
+    std::cout << "Passed in null pointers to Xlink::UpdateStage1Position, exiting\n";
+    exit(1);
+  }
+  double rxold[3] = {0.0, 0.0, 0.0};
+  double rxnew[3] = {0.0, 0.0, 0.0};
+  double rsnew[3] = {0.0, 0.0, 0.0};
+  XlinkHead *freehead, *boundhead;
+  auto isbound = GetBoundHeads(&freehead, &boundhead);
+  std::copy(boundhead->GetPosition(), boundhead->GetPosition()+space_->n_dim, rxold);
+  //std::cout << std::setprecision(16) << "rxold: (" << rxold[0] << ", " << rxold[1] << ", " << rxold[2] << ")\n";
+  auto crosspos = boundhead->GetAttach().second;
+  // Check to make sure we have the same OID as the atidx
+  if (atidx != boundhead->GetAttach().first) {
+    std::cout << "Xlink attached wrong, given: " << atidx << ", but think attached to: " << boundhead->GetAttach().first << std::endl;
+    exit(1);
+  }
+  //std::cout << std::setprecision(16) << "cross position: " << crosspos << std::endl;
+  for (int i = 0; i < space_->n_dim; ++i) {
+    rxnew[i] = xr[i] - 0.5 * ur[i] * lr + crosspos * ur[i];
+  }
+  // Bound rxnew inside the PBCs (if they exist)
+  periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rxnew, rsnew);
+  //std::cout << std::setprecision(16) << "rxnew: (" << rxnew[0] << ", " << rxnew[1] << ", " << rxnew[2] << ")\n";
+  // Set the bound head
+  boundhead->SetPrevPosition(rxold);
+  boundhead->SetPosition(rxnew);
+  boundhead->UpdatePeriodic();
+  boundhead->AddDr();
+  // Set the free head
+  freehead->SetPrevPosition(rxold);
+  freehead->SetPosition(rxnew);
+  freehead->UpdatePeriodic();
+  freehead->AddDr();
+  // Set the xlink
+  SetPrevPosition(rxold);
+  SetPosition(rxnew);
+  UpdatePeriodic();
+
+  if (debug_trace) {
+    std::cout << std::setprecision(16) << "[" << boundhead->GetOID() << "] single attached [" << boundhead->GetAttach().first << "], ("
+      << boundhead->GetPrevPosition()[0] << ", " << boundhead->GetPrevPosition()[1] << ", " << boundhead->GetPrevPosition()[2] << ") -> setting {"
+      << crosspos << "}("
+      << boundhead->GetPosition()[0] << ", " << boundhead->GetPosition()[1] << ", " << boundhead->GetPosition()[2] << ")\n";
+  }
+}
 
 // Species specifics
 void XlinkSpecies::Configurator() {

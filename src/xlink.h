@@ -84,6 +84,10 @@ class Xlink : public Composite<XlinkHead> {
     void BindHeadSingle(int ihead, double crosspos, int rodoid);
     void BindHeadDouble(double crosspos0, int rodoid0, double crosspos1, int rodoid1);
 
+    void UpdateStagePosition(const double* const xr0, const double* const ur0, const double lr0, const int atidx0,
+                             const double* const xr1, const double* const ur1, const double lr1, const int atidx1);
+    void UpdateStage1Position(const double* const xr0, const double* const ur0, const double lr0, const int atidx);
+
     double const GetNExp_0_1() {return n_exp_0_1_;}
     double const GetNExp_1_2() {return n_exp_1_2_;}
     double const GetInternalU() {return uinternal_;}
