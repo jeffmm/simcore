@@ -145,20 +145,20 @@ void XlinkKMC::BuildTables() {
 }
 
 void XlinkKMC::Print() {
-  printf("Xlink - BR Rod KMC Module\n");
+  std::cout << "Xlink - BrRod KMC Module\n";
   KMCBase::Print();
-  printf("\t {eps_eff 0 -> 1}: [%2.2f, %2.2f]\n", eps_eff_0_1_[0], eps_eff_0_1_[1]);
-  printf("\t {eps_eff 1 -> 2}: [%2.2f, %2.2f]\n", eps_eff_1_2_[0], eps_eff_1_2_[1]);
-  printf("\t {on_rate 0 -> 1}: [%2.8f, %2.8f]\n", on_rate_0_1_[0], on_rate_0_1_[1]);
-  printf("\t {on_rate 1 -> 2}: [%2.8f, %2.8f]\n", on_rate_1_2_[0], on_rate_1_2_[1]);
-  printf("\t {end_pause}: [%s, %s]\n", end_pause_[0] ? "true" : "false", end_pause_[1] ? "true" : "false");
-  printf("\t {barrier_weight: %2.10f}\n", barrier_weight_);
-  printf("\t {equilibrium_length: %2.4f}\n", r_equil_);
-  printf("\t {k_spring: %2.4f}\n", k_stretch_);
-  printf("\t {max_length: %2.4f}\n", max_length_);
-  printf("\t {rcutoff_0_1: %2.8f}\n", rcutoff_0_1_);
-  printf("\t {rcutoff_1_2: %2.8f}\n", rcutoff_1_2_);
-  printf("\t {alpha: %2.4f}\n", alpha_);
+  std::cout << std::setprecision(16) << "\teps_eff 0 -> 1: [" << eps_eff_0_1_[0] << ", " << eps_eff_0_1_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\teps_eff 1 -> 2: [" << eps_eff_1_2_[0] << ", " << eps_eff_1_2_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\ton_rate 0 -> 1: [" << on_rate_0_1_[0] << ", " << on_rate_0_1_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\ton_rate 1 -> 2: [" << on_rate_1_2_[0] << ", " << on_rate_1_2_[1] << "]\n";
+  std::cout << "\tend_pause: [" << (end_pause_[0] ? "true" : "false") << ", " << (end_pause_[1] ? "true" : "false") << "]\n";
+  std::cout << "\tbarrier_weight: " << std::setprecision(16) << barrier_weight_ << std::endl;
+  std::cout << "\tequilibrium_length: " << std::setprecision(16) << r_equil_ << std::endl;
+  std::cout << "\tk_spring: " << std::setprecision(16) << k_stretch_ << std::endl;
+  std::cout << "\tmax_length: " << std::setprecision(16) << max_length_ << std::endl;
+  std::cout << "\trcutoff_0_1: " << std::setprecision(16) << rcutoff_0_1_ << std::endl;
+  std::cout << "\trcutoff_1_2: " << std::setprecision(16) << rcutoff_1_2_ << std::endl;
+  std::cout << "\talpha: " << std::setprecision(16) << alpha_ << std::endl;
 }
 
 void XlinkKMC::PrepKMC() {
@@ -270,8 +270,6 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
                                           dr, &mu0);
 
       // Now do the integration over the limits on the MT
-      // Check the cutoff distance
-      // XXX FIXME shoudl actually check cutoff distance
       double r_min_mag2 = 0.0;
       // Calculated across the space between the min distance and the opposing
       // carrier line, XXX make sure this is correct, compares well to bob
@@ -335,7 +333,7 @@ void XlinkKMC::StepKMC() {
   }
 
   if (debug_trace)
-    printf("XlinkKMC module %d -> %d -> %d -> %d\n", g[0], g[1], g[2], g[3]);
+    std::cout << "XlinkKMC module " << g[0] << " -> " << g[1] << " -> " << g[2] << " -> " << g[3] << std::endl;
 
   for (int i = 0; i < 4; ++i) {
     switch (g[i]) {
@@ -871,6 +869,10 @@ void XlinkKMC::Detach_2_1(Xlink *xit, int headtype) {
 
   detachedhead->SetBound(false);
   detachedhead->Attach(-1, 0.0);
+  // Update main xlink location
+  xit->SetPosition(attachedhead->GetRigidPosition());
+  xit->SetPrevPosition(oldpos);
+  xit->UpdatePeriodic();
   xit->CheckBoundState();
 }
 
@@ -983,12 +985,8 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   auto aid = boundhead->GetAttach().first;
   auto aidx = (*oid_position_map_)[aid];
   auto cross_pos = boundhead->GetAttach().second; // relative to the -end of the rod!!
-  double rx[3] = {0.0, 0.0, 0.0};
-  std::copy(boundhead->GetPosition(), boundhead->GetPosition()+ndim_, rx);
   
   auto part2 = (*simples_)[aidx];
-  auto r_rod = part2->GetRigidPosition();
-  auto u_rod = part2->GetRigidOrientation();
   auto l_rod = part2->GetRigidLength();
 
   // If we are moving with some velocity, do that
@@ -1008,113 +1006,94 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
 
   // Still need the information on where we were (end of the rod to detach, if possible)
   boundhead->Attach(aid, cross_pos);
-  double rxnew[3] = {0.0, 0.0, 0.0};
-  double rsnew[3] = {0.0, 0.0, 0.0};
-  for (int i = 0; i < ndim_; ++i) {
-    rxnew[i] = r_rod[i] - 0.5 * u_rod[i] * l_rod + cross_pos * u_rod[i];
-  }
-  // Bound rxnew inside the PBCs (if they exist)
-  periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rxnew, rsnew);
-  /*if (debug_trace)
-    printf("[%d] single attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
-           boundhead->GetOID(), part2->GetOID(), rx[0], rx[1], cross_pos,
-           rxnew[0], rxnew[1]);*/
-  boundhead->SetPrevPosition(rx);
-  boundhead->SetPosition(rxnew);
-  boundhead->UpdatePeriodic();
-  boundhead->AddDr();
-
+  xit->UpdateStagePosition(part2->GetRigidPosition(),
+                           part2->GetRigidOrientation(),
+                           part2->GetRigidLength(),
+                           part2->GetOID(),
+                           nullptr,
+                           nullptr,
+                           0.0,
+                           0);
   if (unbind) {
     // Detach this head and put the xlink back out into the nucleoplasm
     Detach_1_0(xit, freehead, boundhead);
   } else {
     // Head is still attached, so we're all good
     nbound1_[bound_idx]++;
-
-    // print out stuff here to make sure periodic update etc worked
-    if (debug_trace)
-      printf("[%d] single attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
-             boundhead->GetOID(), part2->GetOID(),
-             boundhead->GetPrevPosition()[0], boundhead->GetPrevPosition()[1],
-             cross_pos,
-             boundhead->GetRigidPosition()[0], boundhead->GetRigidPosition()[1]);
-
-    freehead->SetPrevPosition(rx);
-    freehead->SetPosition(rxnew);
-    freehead->UpdatePeriodic();
-    freehead->AddDr();
-    xit->SetPrevPosition(rx);
-    xit->SetPosition(rxnew);
-    xit->UpdatePeriodic();
   }
 }
 
 void XlinkKMC::UpdateStage2(Xlink *xit) {
   // Set nexp to zero for all involved
+  // New hotness
   xit->SetNExp_1_2(0.0);
-  double oldxitpos[3];
-  std::copy(xit->GetPosition(), xit->GetPosition()+ndim_, oldxitpos);
-  double avgpos[3] = {0.0, 0.0, 0.0};
   auto heads = xit->GetHeads();
+  XlinkHead *head0, *head1;
   int ihead = -1;
   bool unbind[2] = {false, false};
-  for (auto head = heads->begin(); head != heads->end(); ++head) {
-    ihead++;
-    nbound2_[ihead]++;
-    head->SetNExp_1_2(0.0);
+  // Do explicitly for now
+  head0 = &(*(heads->begin()));
+  head1 = &(*(heads->begin()+1));
 
-    auto aid = head->GetAttach().first;
-    auto aidx = (*oid_position_map_)[aid];
-    auto crosspos = head->GetAttach().second;
-    double rx[3] = {0.0, 0.0 , 0.0};
-    std::copy(head->GetRigidPosition(), head->GetRigidPosition()+ndim_, rx);
+  // Head 0
+  head0->SetNExp_1_2(0.0);
+  auto aid0 = head0->GetAttach().first;
+  auto aidx0 = (*oid_position_map_)[aid0];
+  auto rod0 = (*simples_)[aidx0];
 
-    auto mrod = (*simples_)[aidx];
-    auto rrod = mrod->GetRigidPosition();
-    auto urod = mrod->GetRigidOrientation();
-    auto lrod = mrod->GetRigidLength();
+  auto crosspos0 = head0->GetAttach().second;
+  auto lrod0 = rod0->GetRigidLength();
 
-    // If we are moving at some velocity, do it
-    crosspos += velocity_ * head->GetDelta();
-    if (crosspos > lrod) {
-      crosspos = lrod;
-      if (!end_pause_[ihead]) {
-        unbind[ihead] = true;
-      }
-    } else if (crosspos < 0.0) {
-      crosspos = 0.0;
-      if (!end_pause_[ihead]) {
-        unbind[ihead] = true;
-      }
+  // Update velocity
+  crosspos0 += velocity_ * head0->GetDelta();
+  if (crosspos0 > lrod0) {
+    crosspos0 = lrod0;
+    if (!end_pause_[0]) {
+      unbind[0] = true;
     }
-    head->Attach(aid, crosspos);
-
-    double rxnew[3] = {0.0, 0.0, 0.0};
-    double rsnew[3] = {0.0, 0.0, 0.0};
-    for (int i = 0; i < ndim_; ++i) {
-      rxnew[i] = rrod[i] - 0.5 * urod[i] * lrod + crosspos * urod[i];
+  } else if (crosspos0 < 0.0) {
+    crosspos0 = 0.0;
+    if (!end_pause_[0]) {
+      unbind[0] = true;
     }
-    // Bound rxnew inside the PBCs (if they exist)
-    periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rxnew, rsnew);
-
-    for (int i = 0; i < ndim_; ++i) {
-      avgpos[i] += rxnew[i];
-    }
-    if (debug_trace) {
-      printf("[%d] double attached [%d], (%2.4f, %2.4f) -> setting -> {%2.4f}(%2.4f, %2.4f)\n",
-          head->GetOID(), mrod->GetOID(), rx[0], rx[1],
-          crosspos,
-          rxnew[0], rxnew[1]);
-    }
-    head->SetPrevPosition(rx);
-    head->SetPosition(rxnew);
-    head->UpdatePeriodic();
-    head->AddDr();
   }
+  head0->Attach(aid0, crosspos0);
 
-  for (int i = 0; i < ndim_; ++i) {
-    avgpos[i] *= 0.5;
+  // Head 1
+  head1->SetNExp_1_2(0.0);
+  auto aid1 = head1->GetAttach().first;
+  auto aidx1 = (*oid_position_map_)[aid1];
+  auto rod1 = (*simples_)[aidx1];
+
+  auto crosspos1 = head1->GetAttach().second;
+  auto lrod1 = rod1->GetRigidLength();
+
+  // Update velocity
+  crosspos1 += velocity_ * head1->GetDelta();
+  if (crosspos1 > lrod1) {
+    crosspos1 = lrod1;
+    if (!end_pause_[1]) {
+      unbind[1] = true;
+    }
+  } else if (crosspos1 < 0.0) {
+    crosspos1 = 0.0;
+    if (!end_pause_[1]) {
+      unbind[1] = true;
+    }
   }
+  head1->Attach(aid1, crosspos1);
+
+  // Run the position update
+  xit->UpdateStagePosition(rod0->GetRigidPosition(),
+                           rod0->GetRigidOrientation(),
+                           rod0->GetRigidLength(),
+                           rod0->GetOID(),
+                           rod1->GetRigidPosition(),
+                           rod1->GetRigidOrientation(),
+                           rod1->GetRigidLength(),
+                           rod1->GetOID());
+
+
 
   // Check for detachment based on unbind
   if (unbind[0] && unbind[1]) {
@@ -1125,9 +1104,12 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
     int whichhead = unbind[0] ? 0 : 1;
     Detach_2_1(xit, whichhead);
   } else {
-    xit->SetPosition(avgpos);
-    xit->SetPrevPosition(oldxitpos);
-    xit->UpdatePeriodic();
+    //xit->SetPosition(avgpos);
+    //xit->SetPrevPosition(oldxitpos);
+    //xit->UpdatePeriodic();
+    // Figure out which ehads are attached
+    nbound2_[0]++;
+    nbound2_[1]++;
   }
 }
 

@@ -7,7 +7,7 @@
 #include "auxiliary.h"
 
 class LookupTable {
-  private:
+  protected:
     int ndim_;
 
     std::vector<int> ngrid_;

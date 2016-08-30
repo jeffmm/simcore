@@ -2,6 +2,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "test_lookup_table.h"
 #include "test_xlink_kmc.h"
 
 #define REGISTER_TEST_MODULE(n) test_module_factory_.register_class<n>(#n);
@@ -22,6 +23,7 @@ void TestManager::InitManager(const std::string& filename) {
     if (node[alltests->first]) {
       std::cout << "TEST MODULE: " << alltests->first << std::endl;
       TestModuleBase *newtest = (TestModuleBase*)test_module_factory_.construct(alltests->first);
+      newtest->InitTestModule(node[alltests->first].as<std::string>());
       test_modules_.push_back(newtest);
     }
   }
@@ -29,6 +31,7 @@ void TestManager::InitManager(const std::string& filename) {
 
 void TestManager::RegisterTestModules() {
   // Register all tests we have access to
+  REGISTER_TEST_MODULE(TestLookupTable);
   REGISTER_TEST_MODULE(TestXlinkKMC);
 }
 
@@ -36,7 +39,7 @@ void TestManager::RunTestModules() {
   std::cout << "********\n";
   std::cout << "Running test modules\n";
   for (auto testit = test_modules_.begin(); testit != test_modules_.end(); ++testit) {
-    (*testit)->InitTestModule(filename_);
+    //(*testit)->InitTestModule(filename_);
     // Run the unit tests, and report the results
     (*testit)->RunTests();
   }
