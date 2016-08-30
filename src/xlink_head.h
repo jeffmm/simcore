@@ -43,6 +43,13 @@ class XlinkHead : public Simple {
     void Attach(int idx, double pos);
     std::pair<int, double> GetAttach() {return std::make_pair(attachidx_, attachpos_);}
 
+    virtual void Dump() {
+      std::cout << std::setprecision(16) << "{" << GetOID() << "," << GetRID() << "," << GetCID() << "}"
+        << " -> x(" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << "), "
+        << "f(" << GetForce()[0] << ", " << GetForce()[1] << ", " << GetForce()[2] << "), "
+        << "u(" << GetKineticEnergy() << "), p(" << GetPotentialEnergy() << ")\n";
+    }
+
     virtual void DumpKMC() {
       if (n_exp_0_1_ < 0.0) {
         printf("ERROR - nexp_0_1 < 0.0\n");
@@ -55,7 +62,7 @@ class XlinkHead : public Simple {
       std::cout << std::setprecision(16) << "          head[" << GetOID() << "] -> {n_exp: ";
       std::cout << std::setprecision(16) << "(" << GetNExp_0_1() << ", " << GetNExp_1_2();
       std::cout << std::setprecision(16) << ")}, {bound: " << (GetBound() ? "true " : "false") << "}, ";
-      std::cout << std::setprecision(16) << "{pidx: " << GetAttach().first << ", " << GetAttach().second;
+      std::cout << std::setprecision(16) << "{pid: " << GetAttach().first << ", " << GetAttach().second;
       std::cout << std::setprecision(16) << "}\n";
     }
 };

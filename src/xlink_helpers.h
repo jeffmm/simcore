@@ -13,7 +13,7 @@ namespace xlh {
   };
   typedef struct _xlink_params xlink_params;
 
-  double integrand_1_2(double x, void *params) {
+  inline double integrand_1_2(double x, void *params) {
     xlink_params *myparams = (xlink_params*)params;
     double alpha = myparams->alpha;
     double r0 = myparams->r0;
@@ -24,7 +24,7 @@ namespace xlh {
     return exp(exponent);
   }
 
-  double prob_1_2(std::vector<double> &x, void *params) {
+  inline double prob_1_2(std::vector<double> &x, void *params) {
     gsl_integration_workspace *w = gsl_integration_workspace_alloc(1000);
 
     xlink_params *inparams = (xlink_params*)params;

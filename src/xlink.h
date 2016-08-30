@@ -60,18 +60,17 @@ class Xlink : public Composite<XlinkHead> {
     void Draw(std::vector<graph_struct*> * graph_array);
     void ApplyInteractions();
     void Dump() {
-      Object::Dump();
-      if (position_[0]!=position_[0]) {
-        printf("Something has gone horribly wrong!\n");
-        exit(1);
-      }
-      printf("\t   {d: %2.2f}, {length: %2.2f}, {bound: %d}\n", diameter_, length_,
-          (int)bound_);
+      std::cout << std::setprecision(16) << "{" << GetOID() << "," << GetRID() << "," << GetCID() << "}"
+        << " -> x(" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << "), "
+        << "f(" << GetForce()[0] << ", " << GetForce()[1] << ", " << GetForce()[2] << "), "
+        << "u(" << GetKineticEnergy() << "), p(" << GetPotentialEnergy() << "), "
+        << "d(" << diameter_ << "), l(" << length_ << ")\n";
       auto head0 = elements_.begin();
       auto head1 = elements_.begin()+1;
-      printf("\t   ");
+      std::cout << "\theads ->\n";
+      std::cout << "\t  ";
       head0->Dump();
-      printf("\t   ");
+      std::cout << "\t  ";
       head1->Dump();
     }
 
@@ -87,6 +86,8 @@ class Xlink : public Composite<XlinkHead> {
     void UpdateStagePosition(const double* const xr0, const double* const ur0, const double lr0, const int atidx0,
                              const double* const xr1, const double* const ur1, const double lr1, const int atidx1);
     void UpdateStage1Position(const double* const xr0, const double* const ur0, const double lr0, const int atidx);
+    void UpdateStage2Position(const double* const xr0, const double* const ur0, const double lr0, const int atidx0,
+                             const double* const xr1, const double* const ur1, const double lr1, const int atidx1);
 
     double const GetNExp_0_1() {return n_exp_0_1_;}
     double const GetNExp_1_2() {return n_exp_1_2_;}

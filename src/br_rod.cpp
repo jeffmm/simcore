@@ -378,6 +378,9 @@ void BrRodSpecies::Configurator() {
       std::cout << "Warning, location insertion overrides overlap\n";
       can_overlap = true;
     }
+    double max_length = node["br_rod"]["properties"]["max_length"].as<double>();
+    std::cout << "   max length:     " << max_length << std::endl;
+    max_length_ = max_length;
     int nrods = (int)node["br_rod"]["rod"].size();
     std::cout << "   nrods: " << nrods << std::endl;
     params_->n_rod = nrods;
@@ -465,6 +468,67 @@ void BrRodSpecies::Configurator() {
         members_.push_back(member);
       }
     }
+  } else if (insertion_type.compare("fill") == 0) {
+    double rlength    = node["br_rod"]["rod"]["length"].as<double>();
+    double max_length = node["br_rod"]["rod"]["max_length"].as<double>();
+    double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
+
+    std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
+      << std::left << rlength << std::endl;
+    std::cout << std::setw(25) << std::left << "   max length:" << std::setw(10)
+      << std::left << max_length << std::endl;
+    std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
+      << std::left << diameter << std::endl;
+
+    params_->rod_length = rlength;
+    params_->max_rod_length = max_length;
+    max_length_ = max_length;
+    params_->rod_diameter = diameter;
+
+    // Try just inserting as many rods as we can
+    int nrods = 0;
+    bool inserting = true;
+    while(inserting) {
+      BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->Init();
+      // Check against all other rods in system
+      bool isoverlap = true;
+      int numoverlaps = 0;
+      do {
+        numoverlaps++;
+        isoverlap = false;
+        for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
+          interactionmindist idm;
+          // Just check the 0th element of each
+          auto part1 = member->GetSimples()[0]; 
+          auto part2 = (*rodit)->GetSimples()[0];
+          MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+          double diameter2 = diameter*diameter;
+
+          if (idm.dr_mag2 < diameter2) {
+            isoverlap = true;
+            /*if (debug_trace) {
+              printf("Overlap detected [oid: %d,%d], [cid: %d, %d] -> (%2.2f < %2.2f)\n",
+                      part1->GetOID(), part2->GetOID(), part1->GetCID(), part2->GetCID(), idm.dr_mag2, diameter2);
+            }*/
+            // We can just call init again to get new random numbers
+            member->Init();
+          }
+        } // check against current members
+        if (numoverlaps > params_->max_overlap) {
+          std::cout << "Done inserting!\n";
+          inserting = false;
+          delete member;
+          break;
+        }
+      } while(isoverlap);
+      if (!isoverlap) {
+        members_.push_back(member);
+        nrods++;
+      }
+    }
+    params_->n_rod = nrods;
+    std::cout << "Inserted: " << nrods << " members (" << members_.size() << ")\n";
   } else {
     printf("nope, not yet\n");
     exit(1);

@@ -1,0 +1,16 @@
+br_rod:
+  properties:
+    insertion_type: fill
+    overlap: false
+  rod:
+    length: 20
+    max_length: 110
+    diameter: 1
+
+xlink:
+  properties:
+    insertion_type: random
+    overlap: true
+  xit:
+    num: 1182
+    diameter: 1
