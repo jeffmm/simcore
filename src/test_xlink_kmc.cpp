@@ -63,6 +63,12 @@ void TestXlinkKMC::InitTestModule(const std::string& filename) {
     unit_tests_names_.push_back("UpdateStage1");
     unit_tests_results_.push_back(std::vector<bool>());
   }
+  if (node_[name_]["UpdateStage2"]) {
+    std::function<bool(int)> f_updatestage2 = std::bind(&TestXlinkKMC::UnitTestUpdateStage2, this, std::placeholders::_1);
+    unit_tests_.push_back(f_updatestage2);
+    unit_tests_names_.push_back("UpdateStage2");
+    unit_tests_results_.push_back(std::vector<bool>());
+  }
 
   // Create a params, space, etc
   space_sub_.Init(&params_sub_, 10);
@@ -609,6 +615,17 @@ bool TestXlinkKMC::UnitTestDetach_2_1(int test_num) {
     // Xlink
     CreateTestXlink(&testXlink, "Detach_2_1", "xlink", itest, testRod0->GetSimples()[0]->GetOID(), testRod1->GetSimples()[0]->GetOID());
 
+    // Generate the xlink positions
+    // XXX FIXME
+    /*testXlink->UpdateStagePosition(testRod0->GetSimples()[0]->GetRigidPosition(),
+                                   testRod0->GetSimples()[0]->GetRigidOrientation(),
+                                   testRod0->GetSimples()[0]->GetRigidLength(),
+                                   testRod0->GetSimples()[0]->GetOID(),
+                                   testRod1->GetSimples()[0]->GetRigidPosition(),
+                                   testRod1->GetSimples()[0]->GetRigidOrientation(),
+                                   testRod1->GetSimples()[0]->GetRigidLength(),
+                                   testRod1->GetSimples()[0]->GetOID());*/
+
     // Generate the xlink positions (eww) XXX find a better way to do these types of things
     auto heads = testXlink->GetHeads();
     XlinkHead *head0 = &(*(heads->begin()));
@@ -817,11 +834,13 @@ bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
     simples_->clear();
     // Set up the space type structs
     ndim_ = node_[name_]["UpdateStage1"]["test"][itest]["ndim"].as<int>();
+    double m_delta = node_[name_]["UpdateStage1"]["delta"].as<double>();
     params_sub_.n_dim = ndim_;
+    params_sub_.delta = m_delta;
     space_sub_.Init(&params_sub_, 10);
     space_ = space_sub_.GetStruct();
 
-    std::cout << "ndim: " << ndim_ << std::endl;
+    //std::cout << "ndim: " << ndim_ << std::endl;
 
     BrRod *testRod = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
     Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
@@ -880,6 +899,143 @@ bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
 
     if (testRod) {
       delete testRod;
+    }
+    if (testXlink) {
+      delete testXlink;
+    }
+  }
+
+  // Cleanup at end
+  if (simples_) {
+    delete simples_;
+  }
+  if (oid_position_map_) {
+    delete oid_position_map_;
+  }
+
+  return success;
+}
+
+bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
+  bool success = true;
+
+  // Use the configurators to initialize the xlink and rod
+  int ntests = (int)node_[name_]["UpdateStage2"]["test"].size();
+
+  // Fake out the position map and simples
+  oid_position_map_ = new std::unordered_map<int, int>();
+  simples_ = new std::vector<Simple*>();
+
+  unit_tests_results_[test_num].resize(ntests);
+
+  for (int itest = 0; itest < ntests; ++itest) {
+    // Clean up everything from previous tests
+    oid_position_map_->clear();
+    simples_->clear();
+    // Set up the space type structs
+    ndim_ = node_[name_]["UpdateStage2"]["test"][itest]["ndim"].as<int>();
+    params_sub_.n_dim = ndim_;
+    params_sub_.delta = node_[name_]["UpdateStage2"]["delta"].as<double>();
+    space_sub_.Init(&params_sub_, 10);
+    space_ = space_sub_.GetStruct();
+
+    BrRod *testRod0 = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
+    BrRod *testRod1 = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
+    Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
+
+    CreateTestRod(&testRod0, "UpdateStage2", "rod0", itest);
+    CreateTestRod(&testRod1, "UpdateStage2", "rod1", itest);
+
+    // Xlink
+    CreateTestXlink(&testXlink, "UpdateStage2", "xlink", itest, testRod0->GetSimples()[0]->GetOID(), testRod1->GetSimples()[0]->GetOID());
+    //testRod0->Dump();
+    //testRod1->Dump();
+    //testXlink->Dump();
+    //testXlink->DumpKMC();
+    testXlink->UpdateStagePosition(testRod0->GetSimples()[0]->GetRigidPosition(),
+                                   testRod0->GetSimples()[0]->GetRigidOrientation(),
+                                   testRod0->GetSimples()[0]->GetRigidLength(),
+                                   testRod0->GetSimples()[0]->GetOID(),
+                                   testRod1->GetSimples()[0]->GetRigidPosition(),
+                                   testRod1->GetSimples()[0]->GetRigidOrientation(),
+                                   testRod1->GetSimples()[0]->GetRigidLength(),
+                                   testRod1->GetSimples()[0]->GetOID());
+
+    // Set up anything else
+    velocity_ = node_[name_]["UpdateStage2"]["test"][itest]["velocity"].as<double>();
+    end_pause_[0] = node_[name_]["UpdateStage2"]["test"][itest]["end_pause"][0].as<bool>();
+    end_pause_[1] = node_[name_]["UpdateStage2"]["test"][itest]["end_pause"][1].as<bool>();
+
+    //testXlink->Dump();
+    //testXlink->DumpKMC();
+
+    UpdateStage2(testXlink);
+
+    //testXlink->Dump();
+    //testXlink->DumpKMC();
+
+    double tolerance = node_[name_]["UpdateStage2"]["test"][itest]["tolerance"].as<double>();
+    bool result_bound[2];
+    result_bound[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_bound"][0].as<bool>();
+    result_bound[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_bound"][1].as<bool>();
+    double result_crosspos[2];
+    result_crosspos[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_crosspos"][0].as<double>();
+    result_crosspos[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_crosspos"][1].as<double>();
+
+    unit_tests_results_[test_num][itest] = true;
+    // check the bound results
+    XlinkHead *freehead, *boundhead;
+    auto is_bound = testXlink->GetBoundHeads(&freehead, &boundhead);
+    if (is_bound.first != result_bound[0]) {
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+    }
+    if (is_bound.second != result_bound[1]) {
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+    }
+    // crossposition
+    if (!uth::almost_equal<double>(result_crosspos[0], freehead->GetAttach().second, tolerance)) {
+      std::cout << "Failed on result_crosspos[0] = " << result_crosspos[0] << " got " << freehead->GetAttach().second << std::endl;
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+    }
+    if (!uth::almost_equal<double>(result_crosspos[1], boundhead->GetAttach().second, tolerance)) {
+      std::cout << "Failed on result_crosspos[1] = " << result_crosspos[1] << " got " << boundhead->GetAttach().second << std::endl;
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+    }
+
+    // absolute positions
+    double result_pos0[3] = {0.0, 0.0, 0.0};
+    result_pos0[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos0"][0].as<double>();
+    result_pos0[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos0"][1].as<double>();
+    result_pos0[2] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos0"][2].as<double>();
+    for (int idim = 0; idim < ndim_; ++idim) {
+      if (!uth::almost_equal<double>(result_pos0[idim], freehead->GetPosition()[idim], tolerance)) {
+        unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      }
+    }
+    double result_pos1[3] = {0.0, 0.0, 0.0};
+    result_pos1[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos1"][0].as<double>();
+    result_pos1[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos1"][1].as<double>();
+    result_pos1[2] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos1"][2].as<double>();
+    for (int idim = 0; idim < ndim_; ++idim) {
+      if (!uth::almost_equal<double>(result_pos1[idim], boundhead->GetPosition()[idim], tolerance)) {
+        unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      }
+    }
+    double result_pos[3] = {0.0, 0.0, 0.0};
+    result_pos[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos"][0].as<double>();
+    result_pos[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos"][1].as<double>();
+    result_pos[2] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos"][2].as<double>();
+    for (int idim = 0; idim < ndim_; ++idim) {
+      if (!uth::almost_equal<double>(result_pos[idim], testXlink->GetPosition()[idim], tolerance)) {
+        unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      }
+    }
+
+    if (testRod0) {
+      delete testRod0;
+    }
+    if (testRod1) {
+      delete testRod1;
     }
     if (testXlink) {
       delete testXlink;

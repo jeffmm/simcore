@@ -1,0 +1,308 @@
+seed: 100
+TestXlinkKMC:
+  #FailTest:
+  #  result: 10.0
+  CalcCutoff: #from bob
+    max_length: 110
+    concentration_1_2: 10.0
+    spring_constant: 45.29
+    test:
+      - barrier_weight: 0
+        r_equil: 0
+        result: 0.75896056
+        tolerance: 1.0e-6
+      - barrier_weight: 0.0
+        r_equil: 3.12
+        result: 3.87896056
+        tolerance: 1.0e-6
+      - barrier_weight: 0.0001
+        r_equil: 0.0
+        result: 0.75899851
+        tolerance: 1.0e-6
+      - barrier_weight: 0.0001
+        r_equil: 3.12
+        result: 3.87899851
+        tolerance: 1.0e-6
+      - barrier_weight: 0.25
+        r_equil: 0.0
+        result: 0.87637216
+        tolerance: 1.0e-6
+      - barrier_weight: 0.25
+        r_equil: 3.12
+        result: 3.99637216
+        tolerance: 1.0e-6
+  Update_0_1: #from bob
+    concentration_0_1: 30190
+    on_rate_0_1: 0.003916
+    alpha: 1.299
+    test:
+      - n_neighbors: 0
+        values: []
+        result: 0.0
+        tolerance: 1.0e-8
+      - n_neighbors: 1
+        values: [0.08213011]
+        result: 0.00315324
+        tolerance: 1.0e-8
+      - n_neighbors: 1
+        values: [0.15302895]
+        result: 0.00587528
+        tolerance: 1.0e-8
+      - n_neighbors: 2
+        values: [0.08213011, 0.15302895]
+        result: 0.00902852
+        tolerance: 1.0e-8
+  Update_1_2:
+    concentration_1_2: 10.0
+    on_rate_1_2: 0.001958
+    max_length: 110
+    test:
+      - x_rod_base: [1.5189372725375712, -3.8808394131463597, 52.8448926482673826]
+        u_rod_base: [0.3131922942474289, -0.6309261624743963, -0.7098188250035099]
+        l_rod_base: 3
+        x_rod_free: [1.6562922922235719, -2.0016662509290359, 51.5173097112858756]
+        u_rod_free: [0.2986353617739144, 0.3086464848181130, -0.9030804328007476]
+        l_rod_free: 3
+        head_xlink: 1
+        crosspos_xlink: 0.6742975725341877
+        r_equil: 0.0
+        barrier_weight: 0.0
+        k_stretch: 45.29
+        result: 5.678658237274367e-15
+        tolerance: 1.0e-21
+      - x_rod_base: [1.5602161520909148, -3.8637598867605094, 52.9213695901007739]
+        u_rod_base: [0.3344916552378370, -0.6145475778472770, -0.7144554619696718]
+        l_rod_base: 3
+        x_rod_free: [1.5940886939376802, -2.1164584638540016, 51.5940688351065617]
+        u_rod_free: [0.3667077500170504, 0.2857064711860906, -0.8853797142468445]
+        l_rod_free: 3
+        head_xlink: 0
+        crosspos_xlink: 0.6763210725341857
+        r_equil: 0.0
+        barrier_weight: 0.25
+        k_stretch: 45.29
+        result: 1.170360385741002e-11
+        tolerance: 1.0e-17
+      - x_rod_base: [1.5602161520909148, -3.8637598867605094, 52.9213695901007739]
+        u_rod_base: [0.3344916552378370, -0.6145475778472770, -0.7144554619696718]
+        l_rod_base: 3
+        x_rod_free: [2.4913249392062253, 0.1545603710597063, 52.2508089669542599]
+        u_rod_free: [-0.3376529739576380, 0.6743688901824264, -0.6566712032148853]
+        l_rod_free: 3
+        head_xlink: 0
+        crosspos_xlink: 0.6763210725341857
+        r_equil: 3.12
+        barrier_weight: 0
+        k_stretch: 45.29
+        result: 0.0102118273581638
+        tolerance: 1.0e-8
+      - x_rod_base: [1.5602161520909148, -3.8637598867605094, 52.9213695901007739]
+        u_rod_base: [0.3344916552378370, -0.6145475778472770, -0.7144554619696718]
+        l_rod_base: 3.0
+        x_rod_free: [2.4913249392062253, 0.1545603710597063, 52.2508089669542599]
+        u_rod_free: [-0.3376529739576380, 0.6743688901824264, -0.6566712032148853]
+        l_rod_free: 3.0
+        head_xlink: 1
+        crosspos_xlink: 0.6763210725341857
+        r_equil: 3.12
+        barrier_weight: 0.25
+        k_stretch: 45.29
+        result: 0.01123967477814938
+        tolerance: 1.0e-8
+  Detach_1_0:
+    test:
+      - ndim: 3
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 5.0
+        head_xlink: 0
+        x_rng: 10
+        rcutoff_0_1: 1.0
+        results: [-0.2262815954163671, 0.484525803476572, 0.686631353572011]
+        results_original_pos: [0.0, 0.0, 0.0]
+        tolerance: 1.0e-8
+      - ndim: 2
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 3.0
+        head_xlink: 1
+        x_rng: 10
+        rcutoff_0_1: 0.5
+        results: [-2.262370618060231, -0.3833735445514321, 0.0]
+        results_original_pos: [-2.0, 0.0, 0.0]
+        tolerance: 1.0e-8
+  Detach_2_1:
+    test:
+      - ndim: 3
+        x_rod0: [0.0, 0.0, 0.0]
+        u_rod0: [1.0, 0.0, 0.0]
+        l_rod0: 10.0
+        x_rod1: [0.0, 1.0, 0.0]
+        u_rod1: [-1.0, 0.0, 0.0]
+        l_rod1: 10.0
+        crosspos_xlink0: 5.0
+        crosspos_xlink1: 5.0
+        detach: 0
+      - ndim: 3
+        x_rod0: [1.5602161520909148, -3.8637598867605094, 52.9213695901007739]
+        u_rod0: [0.3344916552378370, -0.6145475778472770, -0.7144554619696718]
+        l_rod0: 3.0
+        x_rod1: [2.4913249392062253, 0.1545603710597063, 52.2508089669542599]
+        u_rod1: [-0.3376529739576380, 0.6743688901824264, -0.6566712032148853]
+        l_rod1: 3.0
+        crosspos_xlink0: 0.0
+        crosspos_xlink1: 0.0
+        detach: 1
+      - ndim: 2
+        x_rod0: [1.5602161520909148, -3.8637598867605094, 0.0]
+        u_rod0: [0.3344916552378370, -0.6145475778472770, 0.0]
+        l_rod0: 3.0
+        x_rod1: [2.4913249392062253, 0.1545603710597063,  0.0]
+        u_rod1: [-0.3376529739576380, 0.6743688901824264, 0.0]
+        l_rod1: 3.0
+        crosspos_xlink0: 3.0
+        crosspos_xlink1: 0.0
+        detach: 0
+  Detach_2_0:
+    test:
+      - ndim: 3
+        x_rod0: [0.0, 0.0, 0.0]
+        u_rod0: [1.0, 0.0, 0.0]
+        l_rod0: 10.0
+        x_rod1: [0.0, 1.0, 0.0]
+        u_rod1: [-1.0, 0.0, 0.0]
+        l_rod1: 10.0
+        crosspos_xlink0: 5.0
+        crosspos_xlink1: 5.0
+      - ndim: 3
+        x_rod0: [1.5602161520909148, -3.8637598867605094, 52.9213695901007739]
+        u_rod0: [0.3344916552378370, -0.6145475778472770, -0.7144554619696718]
+        l_rod0: 3.0
+        x_rod1: [2.4913249392062253, 0.1545603710597063, 52.2508089669542599]
+        u_rod1: [-0.3376529739576380, 0.6743688901824264, -0.6566712032148853]
+        l_rod1: 3.0
+        crosspos_xlink0: 0.0
+        crosspos_xlink1: 0.0
+      - ndim: 2
+        x_rod0: [1.5602161520909148, -3.8637598867605094, 0.0]
+        u_rod0: [0.3344916552378370, -0.6145475778472770, 0.0]
+        l_rod0: 3.0
+        x_rod1: [2.4913249392062253, 0.1545603710597063,  0.0]
+        u_rod1: [-0.3376529739576380, 0.6743688901824264, 0.0]
+        l_rod1: 3.0
+        crosspos_xlink0: 3.0
+        crosspos_xlink1: 0.0
+  UpdateStage1:
+    delta: 0.00025
+    test:
+      - ndim: 2 # null test case
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 5.0
+        head_xlink: 0
+        end_pause: true
+        velocity: 0.0
+        result_bound: singly
+        result_crosspos: 5.0
+        tolerance: 1.0e-9
+      - ndim: 3 # basic velocity test case
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 6.0
+        head_xlink: 0
+        end_pause: true
+        velocity: 4.0
+        result_bound: singly
+        result_crosspos: 6.001
+        tolerance: 1.0e-9
+      - ndim: 3 # basic velocity test case at end pausing
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 10.0
+        head_xlink: 0
+        end_pause: true
+        velocity: 10.0
+        result_bound: singly
+        result_crosspos: 10.0
+        tolerance: 1.0e-9
+      - ndim: 3 # basic velocity test case at end pausing difference head
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 0.0
+        head_xlink: 1
+        end_pause: true
+        velocity: -10.0
+        result_bound: singly
+        result_crosspos: 0.0
+        tolerance: 1.0e-9
+      - ndim: 3
+        x_rod: [0.0, 0.0, 0.0]
+        u_rod: [1.0, 0.0, 0.0]
+        l_rod: 10.0
+        crosspos_xlink: 10.0
+        head_xlink: 0
+        end_pause: false
+        velocity: 10.0
+        result_bound: unbound
+        result_crosspos: 0.0
+        tolerance: 1.0e-9
+  UpdateStage2:
+    delta: 0.00025
+    test:
+      - ndim: 2
+        x_rod0: [0.0, 0.0, 0.0]
+        u_rod0: [1.0, 0.0, 0.0]
+        l_rod0: 10.0
+        x_rod1: [0.0, 1.0, 0.0]
+        u_rod1: [1.0, 0.0, 0.0]
+        l_rod1: 10.0
+        crosspos_xlink0: 5.0
+        crosspos_xlink1: 5.0
+        velocity: 10.0
+        end_pause: [false, false]
+        result_bound: [true, true]
+        result_crosspos: [5.0025, 5.0025]
+        result_pos0: [0.0025, 0.0, 0.0]
+        result_pos1: [0.0025, 1.0, 0.0]
+        result_pos: [0.0025, 0.5, 0.0]
+        tolerance: 1.0e-9
+      - ndim: 3 #single detach
+        x_rod0: [0.0, 0.0, 0.0]
+        u_rod0: [1.0, 0.0, 0.0]
+        l_rod0: 10.0
+        x_rod1: [0.0, 1.0, 0.0]
+        u_rod1: [1.0, 0.0, 0.0]
+        l_rod1: 10.0
+        crosspos_xlink0: 9.0
+        crosspos_xlink1: 10.0
+        velocity: 10.0
+        end_pause: [false, false]
+        result_bound: [true, false] 
+        result_crosspos: [0.0, 9.0025] # order reversed, because of how check bound works! Freehead, then boundhead
+        result_pos0: [4.0025, 0.0, 0.0]
+        result_pos1: [4.0025, 0.0, 0.0]
+        result_pos: [4.0025, 0.0, 0.0]
+        tolerance: 1.0e-9
+      - ndim: 3 #double detach
+        x_rod0: [0.0, 0.0, 0.0]
+        u_rod0: [1.0, 0.0, 0.0]
+        l_rod0: 10.0
+        x_rod1: [0.0, 1.0, 0.0]
+        u_rod1: [1.0, 0.0, 0.0]
+        l_rod1: 10.0
+        crosspos_xlink0: 10.0
+        crosspos_xlink1: 10.0
+        velocity: 10.0
+        end_pause: [false, false]
+        result_bound: [false, false] 
+        result_crosspos: [0.0, 0.0] # order reversed, because of how check bound works! Freehead, then boundhead
+        result_pos0: [5.0, 0.5, 0.0]
+        result_pos1: [5.0, 0.5, 0.0]
+        result_pos: [5.0, 0.5, 0.0]
+        tolerance: 1.0e-9

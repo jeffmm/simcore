@@ -116,8 +116,11 @@ std::pair<bool,bool> Xlink::GetBoundHeads(XlinkHead **freehead, XlinkHead **boun
   auto head1 = elements_.begin()+1;
   if (!head0->GetBound() && !head1->GetBound()) {
     // Neither is bound, just return
+    // but do set the freehead, boundhead appropriately
     nbound.first = false;
     nbound.second = false;
+    (*freehead) = &(*head0);
+    (*boundhead) = &(*head1);
   } else if (head0->GetBound() && !head1->GetBound()) {
     // Head 0 is bound and not head1
     nbound.first = true;
@@ -131,8 +134,11 @@ std::pair<bool,bool> Xlink::GetBoundHeads(XlinkHead **freehead, XlinkHead **boun
     (*boundhead) = &(*head1);
   } else {
     // Both heads are bound
+    // head 0 will be freehead (the first one)
     nbound.first = true;
     nbound.second = true;
+    (*freehead) = &(*head0);
+    (*boundhead) = &(*head1);
   }
   return nbound;
 }
@@ -216,13 +222,15 @@ void Xlink::UpdateStagePosition(const double* const xr0, const double* const ur0
       // Do nothing
       break;
     case(singly):
-      std::cout << "Attempting UpdateStagePosition singly\n";
+      //std::cout << "Attempting UpdateStagePosition singly\n";
       // Figure out which head (and make sure it makes sense)
       // Also, everything is in the 0th row
       UpdateStage1Position(xr0, ur0, lr0, atidx0);
       break;
     case(doubly):
-      std::cout << "Attempting UpdateStagePosition doubly\n";
+      //std::cout << "Attempting UpdateStagePosition doubly\n";
+      UpdateStage2Position(xr0, ur0, lr0, atidx0,
+                           xr1, ur1, lr1, atidx1);
       break;
   }
 }
@@ -273,6 +281,75 @@ void Xlink::UpdateStage1Position(const double* const xr, const double* const ur,
       << boundhead->GetPrevPosition()[0] << ", " << boundhead->GetPrevPosition()[1] << ", " << boundhead->GetPrevPosition()[2] << ") -> setting {"
       << crosspos << "}("
       << boundhead->GetPosition()[0] << ", " << boundhead->GetPosition()[1] << ", " << boundhead->GetPosition()[2] << ")\n";
+  }
+}
+
+void Xlink::UpdateStage2Position(const double* const xr0, const double* const ur0, const double lr0, const int atidx0,
+                                 const double* const xr1, const double* const ur1, const double lr1, const int atidx1) {
+  //std::cout << "UpdateStage2Position\n";
+
+  XlinkHead *head0 = &(*(elements_.begin()));
+  XlinkHead *head1 = &(*(elements_.begin()+1));
+
+  double rxold[3] = {0.0, 0.0, 0.0};
+  double rxnew[3] = {0.0, 0.0, 0.0};
+  double rsnew[3] = {0.0, 0.0, 0.0};
+
+  // Do head 0 first, do each explicitly
+  std::copy(head0->GetPosition(), head0->GetPosition()+space_->n_dim, rxold);
+  double crosspos = head0->GetAttach().second;
+  if (head0->GetAttach().first != atidx0) {
+    std::cout << "Xlink head0 attached wrong, given: " << atidx0 << ", but think attached to: " << head0->GetAttach().first << std::endl;
+    exit(1);
+  }
+  for (int i = 0; i < space_->n_dim; ++i) {
+    rxnew[i] = xr0[i] - 0.5 * ur0[i] * lr0 + crosspos * ur0[i];
+  }
+  // Bound rxnew inside the PBCs (if they exist)
+  periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rxnew, rsnew);
+  // Set head0
+  head0->SetPrevPosition(rxold);
+  head0->SetPosition(rxnew);
+  head0->UpdatePeriodic();
+  head0->AddDr();
+
+  // Do head 1 last
+  std::copy(head1->GetPosition(), head1->GetPosition()+space_->n_dim, rxold);
+  crosspos = head1->GetAttach().second;
+  if (head1->GetAttach().first != atidx1) {
+    std::cout << "Xlink head0 attached wrong, given: " << atidx1 << ", but think attached to: " << head1->GetAttach().first << std::endl;
+    exit(1);
+  }
+  for (int i = 0; i < space_->n_dim; ++i) {
+    rxnew[i] = xr1[i] - 0.5 * ur1[i] * lr1 + crosspos * ur1[i];
+  }
+  // Bound rxnew inside the PBCs (if they exist)
+  periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rxnew, rsnew);
+  // Set head0
+  head1->SetPrevPosition(rxold);
+  head1->SetPosition(rxnew);
+  head1->UpdatePeriodic();
+  head1->AddDr();
+
+  // Update the xlink position to lie between the two
+  double xposold[3] = {0.0, 0.0, 0.0};
+  std::copy(GetPosition(), GetPosition()+space_->n_dim, xposold);
+  double xpos[3] = {0.0, 0.0, 0.0};
+  for (int i = 0; i < space_->n_dim; ++i) {
+    xpos[i] = 0.5 * (head0->GetPosition()[i] + head1->GetPosition()[i]);
+  }
+  SetPrevPosition(xposold);
+  SetPosition(xpos);
+  UpdatePeriodic();
+
+  if (debug_trace) {
+    std::cout << std::setprecision(16) << "[" << head0->GetOID() << ", " << head1->GetOID() << "] double attached [" << head0->GetAttach().first
+      << ", " << head1->GetAttach().first << "] ("
+      << head0->GetPrevPosition()[0] << ", " << head0->GetPrevPosition()[1] << ", " << head0->GetPrevPosition()[2] << "),("
+      << head1->GetPrevPosition()[0] << ", " << head1->GetPrevPosition()[1] << ", " << head1->GetPrevPosition()[2] << ") -> setting {"
+      << head0->GetAttach().second << ", " << head1->GetAttach().second << "}("
+      << head0->GetPosition()[0] << ", " << head0->GetPosition()[1] << ", " << head0->GetPosition()[2] << "),("
+      << head1->GetPosition()[0] << ", " << head1->GetPosition()[1] << ", " << head1->GetPosition()[2] << ")\n";
   }
 }
 
