@@ -48,6 +48,14 @@ namespace xlh {
 
     return result;
   }
+
+  inline double polar_affinity(const int ndim, const double affinity, const double *u0, const double *u1) {
+    if (affinity != 1.0) {
+      double ui_dot_uj = u0[0]*u1[0] + u0[1]*u1[1] + ((ndim == 3) ? u0[2]*u1[2] : 0.0);
+      return (ui_dot_uj < 0) ? 1.0 : affinity;
+    }
+    return 1.0;
+  }
 }
 
 #endif

@@ -31,6 +31,7 @@ class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
     bool UnitTestDetach_2_0(int test_num);
     bool UnitTestUpdateStage1(int test_num);
     bool UnitTestUpdateStage2(int test_num);
+    bool UnitTestPolarAffinity(int test_num);
 
     void CreateTestRod(BrRod **rod,
                        const std::string &unitname,
