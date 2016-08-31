@@ -70,6 +70,10 @@ void Xlink::BindHeadSingle(int ihead, double crosspos, int rodoid) {
   if (bindhead->GetBound()) {
     std::cout << "Something funny happened with the binding of an xlink\n";
   }
+  if (debug_trace) {
+    std::cout << std::setprecision(16) << "[" << GetOID() << "]{" << bindhead->GetOID()
+      << "} binding to {" << crosspos << "}[" << rodoid << "]\n";
+  }
   bindhead->Attach(rodoid, crosspos);
   bindhead->SetBound(true);
   CheckBoundState();

@@ -16,6 +16,7 @@ class XlinkHead : public Simple {
     bool bound_;
     int attachidx_ = -1;
     double attachpos_ = 0.0;
+    int headid_ = 0;
   public:
     XlinkHead(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {
       diameter_=params->br_walker_diameter;
@@ -42,6 +43,8 @@ class XlinkHead : public Simple {
     void SetBound(bool bound) {bound_=bound;}
     void Attach(int idx, double pos);
     std::pair<int, double> GetAttach() {return std::make_pair(attachidx_, attachpos_);}
+    void SetHeadID(const int headid) {headid_ = headid;}
+    const int GetHeadID() {return headid_;}
 
     virtual void Dump() {
       std::cout << std::setprecision(16) << "{" << GetOID() << "," << GetRID() << "," << GetCID() << "}"
