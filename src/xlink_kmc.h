@@ -24,6 +24,7 @@ class XlinkKMC : public KMCBase {
     double rcutoff_0_1_;
     double rcutoff_1_2_;
     double r_equil_;
+    double polar_affinity_;
 
     bool end_pause_[2];
 

@@ -3,6 +3,7 @@
 #include "br_rod.h"
 #include "test_helpers.h"
 #include "xlink.h"
+#include "xlink_helpers.h"
 
 #include <iomanip>
 #include <yaml-cpp/yaml.h>
@@ -67,6 +68,12 @@ void TestXlinkKMC::InitTestModule(const std::string& filename) {
     std::function<bool(int)> f_updatestage2 = std::bind(&TestXlinkKMC::UnitTestUpdateStage2, this, std::placeholders::_1);
     unit_tests_.push_back(f_updatestage2);
     unit_tests_names_.push_back("UpdateStage2");
+    unit_tests_results_.push_back(std::vector<bool>());
+  }
+  if (node_[name_]["PolarAffinity"]) {
+    std::function<bool(int)> f_polaraffinity = std::bind(&TestXlinkKMC::UnitTestPolarAffinity, this, std::placeholders::_1);
+    unit_tests_.push_back(f_polaraffinity);
+    unit_tests_names_.push_back("PolarAffinity");
     unit_tests_results_.push_back(std::vector<bool>());
   }
 
@@ -352,6 +359,7 @@ void TestXlinkKMC::CreateTestXlink(Xlink **mxit,
 
 bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
   bool success = true;
+  std::string subtest = "Update_1_2";
 
   // Lots of things to set up for the update test
   params_sub_.xlink_diameter = 1.0;
@@ -371,12 +379,12 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
   neighbors_ = new nl_list[4];
   simples_ = new std::vector<Simple*>();
 
-  eps_eff_1_2_[0] = eps_eff_1_2_[1] = node_[name_]["Update_1_2"]["concentration_1_2"].as<double>();
-  on_rate_1_2_[0] = on_rate_1_2_[1] = node_[name_]["Update_1_2"]["on_rate_1_2"].as<double>();
-  max_length_ = node_[name_]["Update_1_2"]["max_length"].as<double>();
+  eps_eff_1_2_[0] = eps_eff_1_2_[1] = node_[name_][subtest]["concentration_1_2"].as<double>();
+  on_rate_1_2_[0] = on_rate_1_2_[1] = node_[name_][subtest]["on_rate_1_2"].as<double>();
+  max_length_ = node_[name_][subtest]["max_length"].as<double>();
 
   // Use the configurators to initialize the xlink and rod
-  int ntests = (int)node_[name_]["Update_1_2"]["test"].size();
+  int ntests = (int)node_[name_][subtest]["test"].size();
 
   unit_tests_results_[test_num].resize(ntests);
 
@@ -385,11 +393,11 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
     // Add the base rod
     oid_position_map_->clear();
     simples_->clear();
-    CreateTestRod(&testRodBase, "Update_1_2", "rod_base", i);
-    CreateTestRod(&testRodFree, "Update_1_2", "rod_free", i);
+    CreateTestRod(&testRodBase, subtest, "rod_base", i);
+    CreateTestRod(&testRodFree, subtest, "rod_free", i);
 
     // Add the xlink
-    CreateTestXlink(&testXlink, "Update_1_2", "xlink", i, testRodBase->GetSimples()[0]->GetOID());
+    CreateTestXlink(&testXlink, subtest, "xlink", i, testRodBase->GetSimples()[0]->GetOID());
     double xx[3] = {0.0, 0.0, 0.0}; // we will set based upon the attached rod
 
     // Set the location
@@ -417,9 +425,10 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
       nldx->idx_ = (*oid_position_map_)[testRodFree->GetSimples()[0]->GetOID()];
     }
 
-    r_equil_ = node_[name_]["Update_1_2"]["test"][i]["r_equil"].as<double>();
-    k_stretch_ = node_[name_]["Update_1_2"]["test"][i]["k_stretch"].as<double>();
-    barrier_weight_ = node_[name_]["Update_1_2"]["test"][i]["barrier_weight"].as<double>();
+    r_equil_        = node_[name_][subtest]["test"][i]["r_equil"].as<double>();
+    k_stretch_      = node_[name_][subtest]["test"][i]["k_stretch"].as<double>();
+    barrier_weight_ = node_[name_][subtest]["test"][i]["barrier_weight"].as<double>();
+    polar_affinity_ = node_[name_][subtest]["test"][i]["polar_affinity"].as<double>();
 
     // Run the update
     CalcCutoff();
@@ -428,8 +437,8 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
 
     auto res = testXlink->GetNExp_1_2();
 
-    double this_result = node_[name_]["Update_1_2"]["test"][i]["result"].as<double>();
-    double tolerance = node_[name_]["Update_1_2"]["test"][i]["tolerance"].as<double>();
+    double this_result  = node_[name_][subtest]["test"][i]["result"].as<double>();
+    double tolerance    = node_[name_][subtest]["test"][i]["tolerance"].as<double>();
     if (uth::almost_equal<double>(res, this_result, tolerance)) {
       unit_tests_results_[test_num][i] = true;
     } else {
@@ -1050,5 +1059,37 @@ bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
     delete oid_position_map_;
   }
 
+  return success;
+}
+
+bool TestXlinkKMC::UnitTestPolarAffinity(int test_num) {
+  bool success = true;
+  std::string subtest = "PolarAffinity";
+
+  // Use the configurators to initialize the xlink and rod
+  int ntests = (int)node_[name_][subtest]["test"].size();
+  unit_tests_results_[test_num].resize(ntests);
+
+  for (int itest = 0; itest < ntests; ++itest) {
+    double u0[3] = {0.0, 0.0, 0.0};
+    double u1[3] = {0.0, 0.0, 0.0};
+
+    int test_ndim = node_[name_][subtest]["test"][itest]["ndim"].as<int>();
+    for (int i = 0; i < test_ndim; ++i) {
+      u0[i] = node_[name_][subtest]["test"][itest]["u0"][i].as<double>();
+      u1[i] = node_[name_][subtest]["test"][itest]["u1"][i].as<double>();
+    }
+    double affinity = node_[name_][subtest]["test"][itest]["affinity"].as<double>();
+
+    double my_result = xlh::polar_affinity(test_ndim, affinity, u0, u1);
+
+    unit_tests_results_[test_num][itest] = true;
+    double result = node_[name_][subtest]["test"][itest]["result"].as<double>();
+    double tolerance = node_[name_][subtest]["test"][itest]["tolerance"].as<double>();
+    if (!uth::almost_equal<double>(result, my_result, tolerance)) {
+      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+    }
+  }
+ 
   return success;
 }

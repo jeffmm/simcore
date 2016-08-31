@@ -77,13 +77,13 @@ void XlinkKMC::Init(space_struct *pSpace,
       break;
   }
 
-
   alpha_          = node["kmc"][ikmc]["alpha"].as<double>();
   rcutoff_0_1_    = node["kmc"][ikmc]["rcut"].as<double>();
   velocity_       = node["kmc"][ikmc]["velocity"].as<double>();
   barrier_weight_ = node["kmc"][ikmc]["barrier_weight"].as<double>();
   k_stretch_      = node["kmc"][ikmc]["spring_constant"].as<double>();
   r_equil_        = node["kmc"][ikmc]["equilibrium_length"].as<double>();
+  polar_affinity_ = node["kmc"][ikmc]["polar_affinity"].as<double>();
   write_event_    = node["kmc"][ikmc]["write_event"].as<bool>();
 
   // Things that we need for the tables and CalcCutoff
@@ -155,6 +155,7 @@ void XlinkKMC::Print() {
   std::cout << "\tbarrier_weight: " << std::setprecision(16) << barrier_weight_ << std::endl;
   std::cout << "\tequilibrium_length: " << std::setprecision(16) << r_equil_ << std::endl;
   std::cout << "\tk_spring: " << std::setprecision(16) << k_stretch_ << std::endl;
+  std::cout << "\tpolar_affinity: " << std::setprecision(16) << polar_affinity_ << std::endl;
   std::cout << "\tmax_length: " << std::setprecision(16) << max_length_ << std::endl;
   std::cout << "\trcutoff_0_1: " << std::setprecision(16) << rcutoff_0_1_ << std::endl;
   std::cout << "\trcutoff_1_2: " << std::setprecision(16) << rcutoff_1_2_ << std::endl;
@@ -239,12 +240,9 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
       if (mrod->GetRID() == mrod_attached->GetRID()) {
         continue;
       }
-      // Calculate center to center displacement
-      // XXX FIXME CJE possibly don't do this, and store the minimum distance calculation from
-      // earlier point point calculation
 
-      // XXX FIXME Polar Affinity
-      double polar_affinity = 1.0;
+      // Calculate center to center displacement
+      double polar_affinity = xlh::polar_affinity(ndim_, polar_affinity_, mrod_attached->GetRigidOrientation(), mrod->GetRigidOrientation());
       double r_x[3];
       double s_x[3];
       double r_rod[3];
@@ -272,7 +270,6 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
       // Now do the integration over the limits on the MT
       double r_min_mag2 = 0.0;
       // Calculated across the space between the min distance and the opposing
-      // carrier line, XXX make sure this is correct, compares well to bob
       for (int i = 0; i < ndim_; ++i) {
         double dri = u_rod[i] * mu0 + dr[i];
         r_min_mag2 += SQR(dri);
