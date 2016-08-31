@@ -14,12 +14,15 @@ class XlinkKMC : public KMCBase {
     double eps_eff_1_2_[2];
     double on_rate_0_1_[2];
     double on_rate_1_2_[2];
+    double f_stall_[2];
+    double velocity_[2];
+    double velocity_p_scale_[2];
+    double velocity_ap_scale_[2];
     double alpha_;
     double barrier_weight_;
     double k_stretch_;
     double mrcut_;
     double mrcut2_;
-    double velocity_;
     double max_length_;
     double rcutoff_0_1_;
     double rcutoff_1_2_;
@@ -29,6 +32,7 @@ class XlinkKMC : public KMCBase {
     bool end_pause_[2];
 
     int nfree_;
+    int stall_type_;
     int nbound1_[2];
     int nbound2_[2];
 
