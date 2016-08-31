@@ -869,7 +869,8 @@ bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
 
     // Get other test parameters
     end_pause_[0] = end_pause_[1] = node_[name_]["UpdateStage1"]["test"][itest]["end_pause"].as<bool>();
-    velocity_ = node_[name_]["UpdateStage1"]["test"][itest]["velocity"].as<double>();
+    velocity_[0] = node_[name_]["UpdateStage1"]["test"][itest]["velocity"].as<double>();
+    velocity_[1] = velocity_[0];
 
     // Run the update function
     UpdateStage1(testXlink);
@@ -971,7 +972,8 @@ bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
                                    testRod1->GetSimples()[0]->GetOID());
 
     // Set up anything else
-    velocity_ = node_[name_]["UpdateStage2"]["test"][itest]["velocity"].as<double>();
+    velocity_[0] = node_[name_]["UpdateStage2"]["test"][itest]["velocity"].as<double>();
+    velocity_[1] = velocity_[0];
     end_pause_[0] = node_[name_]["UpdateStage2"]["test"][itest]["end_pause"][0].as<bool>();
     end_pause_[1] = node_[name_]["UpdateStage2"]["test"][itest]["end_pause"][1].as<bool>();
 

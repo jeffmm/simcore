@@ -2,6 +2,10 @@ kmc:
 - type: XlinkKMC
   sid1: xlink
   sid2: br_rod
+  #concentration_0_1: 30190
+  #concentration_1_2: [10.0, 10.0]
+  #on_rate_0_1: 0.003916
+  #on_rate_1_2: 0.001958
   concentration_0_1: 100
   concentration_1_2: 100
   on_rate_0_1: 3.7092
@@ -9,6 +13,10 @@ kmc:
   alpha: 1.299
   rcut: 1.0
   velocity: 47.52
+  velocity_polar_scale: 0.5
+  velocity_antipolar_scale: -0.08
+  stall_force: 30.2
+  stall_type: parallel
   spring_constant: 1.98171
   barrier_weight: 0.25
   #barrier_weight: 0.0

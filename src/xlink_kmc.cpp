@@ -77,14 +77,74 @@ void XlinkKMC::Init(space_struct *pSpace,
       break;
   }
 
+  // stall force
+  switch (node["kmc"][ikmc]["stall_force"].Type()) {
+    case YAML::NodeType::Scalar:
+      f_stall_[0] = f_stall_[1] =
+        node["kmc"][ikmc]["stall_force"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      f_stall_[0] = node["kmc"][ikmc]["stall_force"][0].as<double>();
+      f_stall_[1] = node["kmc"][ikmc]["stall_force"][1].as<double>();
+      break;
+  }
+
+  // velocity
+  switch (node["kmc"][ikmc]["velocity"].Type()) {
+    case YAML::NodeType::Scalar:
+      velocity_[0] = velocity_[1] =
+        node["kmc"][ikmc]["velocity"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      velocity_[0] = node["kmc"][ikmc]["velocity"][0].as<double>();
+      velocity_[1] = node["kmc"][ikmc]["velocity"][1].as<double>();
+      break;
+  }
+
+  // velocity polar scale
+  switch (node["kmc"][ikmc]["velocity_polar_scale"].Type()) {
+    case YAML::NodeType::Scalar:
+      velocity_p_scale_[0] = velocity_p_scale_[1] =
+        node["kmc"][ikmc]["velocity_polar_scale"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      velocity_p_scale_[0] = node["kmc"][ikmc]["velocity_polar_scale"][0].as<double>();
+      velocity_p_scale_[1] = node["kmc"][ikmc]["velocity_polar_scale"][1].as<double>();
+      break;
+  }
+
+  // velocity antipolar scale
+  switch (node["kmc"][ikmc]["velocity_antipolar_scale"].Type()) {
+    case YAML::NodeType::Scalar:
+      velocity_ap_scale_[0] = velocity_ap_scale_[1] =
+        node["kmc"][ikmc]["velocity_antipolar_scale"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      velocity_ap_scale_[0] = node["kmc"][ikmc]["velocity_antipolar_scale"][0].as<double>();
+      velocity_ap_scale_[1] = node["kmc"][ikmc]["velocity_antipolar_scale"][1].as<double>();
+      break;
+  }
+
   alpha_          = node["kmc"][ikmc]["alpha"].as<double>();
   rcutoff_0_1_    = node["kmc"][ikmc]["rcut"].as<double>();
-  velocity_       = node["kmc"][ikmc]["velocity"].as<double>();
   barrier_weight_ = node["kmc"][ikmc]["barrier_weight"].as<double>();
   k_stretch_      = node["kmc"][ikmc]["spring_constant"].as<double>();
   r_equil_        = node["kmc"][ikmc]["equilibrium_length"].as<double>();
   polar_affinity_ = node["kmc"][ikmc]["polar_affinity"].as<double>();
   write_event_    = node["kmc"][ikmc]["write_event"].as<bool>();
+
+  // Stall type
+  std::string stall_str = node["kmc"][ikmc]["stall_type"].as<std::string>();
+  if (!stall_str.compare("none")) {
+    stall_type_ = 0;
+  } else if (!stall_str.compare("parallel")) {
+    stall_type_ = 1;
+  } else if (!stall_str.compare("absolute")) {
+    stall_type_ = 2;
+  } else {
+    std::cout << "Incorrect stall type: " << stall_str << ", exiting\n";
+    exit(1);
+  }
 
   // Things that we need for the tables and CalcCutoff
   BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec2_);
@@ -147,11 +207,27 @@ void XlinkKMC::BuildTables() {
 void XlinkKMC::Print() {
   std::cout << "Xlink - BrRod KMC Module\n";
   KMCBase::Print();
-  std::cout << std::setprecision(16) << "\teps_eff 0 -> 1: [" << eps_eff_0_1_[0] << ", " << eps_eff_0_1_[1] << "]\n";
-  std::cout << std::setprecision(16) << "\teps_eff 1 -> 2: [" << eps_eff_1_2_[0] << ", " << eps_eff_1_2_[1] << "]\n";
-  std::cout << std::setprecision(16) << "\ton_rate 0 -> 1: [" << on_rate_0_1_[0] << ", " << on_rate_0_1_[1] << "]\n";
-  std::cout << std::setprecision(16) << "\ton_rate 1 -> 2: [" << on_rate_1_2_[0] << ", " << on_rate_1_2_[1] << "]\n";
-  std::cout << "\tend_pause: [" << (end_pause_[0] ? "true" : "false") << ", " << (end_pause_[1] ? "true" : "false") << "]\n";
+  std::cout << std::setprecision(16) << "\teps_eff 0 -> 1:           [" << eps_eff_0_1_[0] << ", " << eps_eff_0_1_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\teps_eff 1 -> 2:           [" << eps_eff_1_2_[0] << ", " << eps_eff_1_2_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\ton_rate 0 -> 1:           [" << on_rate_0_1_[0] << ", " << on_rate_0_1_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\ton_rate 1 -> 2:           [" << on_rate_1_2_[0] << ", " << on_rate_1_2_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\tstall_force:              [" << f_stall_[0] << ", " << f_stall_[1] << "]\n";
+  std::string stall_str;
+  if (stall_type_ == 0) {
+    stall_str = "none";
+  } else if (stall_type_ == 1) {
+    stall_str = "parallel";
+  } else if (stall_type_ == 2) {
+    stall_str = "absolute";
+  } else {
+    stall_str = "wtfmate";
+  }
+  std::cout <<                          "\tstall_type:                " << stall_str << std::endl;
+  std::cout <<                          "\tend_pause:                [" << (end_pause_[0] ? "true" : "false") << ", "
+                                        << (end_pause_[1] ? "true" : "false") << "]\n";
+  std::cout << std::setprecision(16) << "\tvelocity:                 [" << velocity_[0] << ", " << velocity_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\tvelocity_polar_scale:     [" << velocity_p_scale_[0] << ", " << velocity_p_scale_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\tvelocity_antipolar_scale: [" << velocity_ap_scale_[0] << ", " << velocity_ap_scale_[1] << "]\n";
   std::cout << "\tbarrier_weight: " << std::setprecision(16) << barrier_weight_ << std::endl;
   std::cout << "\tequilibrium_length: " << std::setprecision(16) << r_equil_ << std::endl;
   std::cout << "\tk_spring: " << std::setprecision(16) << k_stretch_ << std::endl;
@@ -254,13 +330,9 @@ void XlinkKMC::Update_1_2(Xlink *xit) {
       std::copy(mrod->GetRigidScaledPosition(), mrod->GetRigidScaledPosition()+ndim_, s_rod);
       std::copy(mrod->GetRigidOrientation(), mrod->GetRigidOrientation()+ndim_, u_rod);
       double l_rod = mrod->GetRigidLength();
-      double dr[3];
+      double dr[3] = {0.0, 0.0, 0.0};
       double mu0 = 0.0;
 
-      /*min_distance_point_carrier_line(ndim_, nperiodic_,
-                                      space_->unit_cell, r_x, s_x,
-                                      r_rod, s_rod, u_rod, l_rod,
-                                      dr, rcontact, &mu0);*/
       min_distance_point_carrier_line_inf(ndim_, nperiodic_,
                                           space_->unit_cell,
                                           r_x, s_x,
@@ -988,7 +1060,7 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
 
   // If we are moving with some velocity, do that
   // also check for end pausing
-  cross_pos += velocity_ * boundhead->GetDelta();
+  cross_pos += velocity_[bound_idx] * boundhead->GetDelta();
   if (cross_pos > l_rod) {
     cross_pos = l_rod;
     if (!end_pause_[bound_idx]) {
@@ -1042,7 +1114,7 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   auto lrod0 = rod0->GetRigidLength();
 
   // Update velocity
-  crosspos0 += velocity_ * head0->GetDelta();
+  crosspos0 += velocity_[0] * head0->GetDelta();
   if (crosspos0 > lrod0) {
     crosspos0 = lrod0;
     if (!end_pause_[0]) {
@@ -1066,7 +1138,7 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   auto lrod1 = rod1->GetRigidLength();
 
   // Update velocity
-  crosspos1 += velocity_ * head1->GetDelta();
+  crosspos1 += velocity_[1] * head1->GetDelta();
   if (crosspos1 > lrod1) {
     crosspos1 = lrod1;
     if (!end_pause_[1]) {
@@ -1111,6 +1183,10 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
 }
 
 void XlinkKMC::ApplyStage2Force(Xlink *xit) {
+  // Check the bound state in case we fell off
+  if (xit->GetBoundState() != doubly) {
+    return;
+  }
   auto heads = xit->GetHeads();
   auto head0 = heads->begin();
   auto head1 = heads->begin()+1;
@@ -1131,6 +1207,7 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
 
   double dr[3];
   separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
+  
   double rmag2 = 0.0;
   for (int i = 0; i < ndim_; ++i) {
     rmag2 += SQR(dr[i]);

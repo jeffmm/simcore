@@ -34,6 +34,7 @@ class Xlink : public Composite<XlinkHead> {
       for (int i=0; i<2; ++i) {
         XlinkHead b(params, space, gsl_rng_get(rng_.r), SID::xlink_head);
         b.SetCID(GetCID());
+        b.SetHeadID(i);
         elements_.push_back(b);
         bound_ = unbound;
         is_kmc_ = true;
