@@ -101,6 +101,7 @@ void InteractionEngine::Interact() {
         // Do the interactions
         //InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy);
         InteractParticlesMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
+        TetherParticlesMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
         KMCParticlesMP(&(*nldx), idx, jdx);
       }
     } // pragma omp for schedule(runtime) nowait
@@ -149,6 +150,62 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
   if (debug_trace)
     printf("\tPOT Interacting[%d,%d:%d,%d] (u:%2.16f)\n",
         oid1x, part1->GetOID(), oid2x, part2->GetOID(), fepot[ndim_]);
+  #endif
+
+  // Do the potential energies
+  pr_energy[oid1x] += fepot[ndim_];
+  pr_energy[oid2x] += fepot[ndim_];
+
+  // Do the forces
+  for (int i = 0; i < ndim_; ++i) {
+      fr[i][oid1x] += fepot[i];
+      fr[i][oid2x] -= fepot[i];
+  }
+
+  // Calculate the torques
+  double tau[3];
+  cross_product(idm.contact1, fepot, tau, ndim_);
+  //for (int i = 0; i < ndim_; ++i) {
+  for (int i = 0; i < 3; ++i) {
+      tr[i][oid1x] += tau[i];
+  }
+  cross_product(idm.contact2, fepot, tau, ndim_);
+  //for (int i = 0; i < ndim_; ++i) {
+  for (int i = 0; i < 3; ++i) {
+      tr[i][oid2x] -= tau[i];
+  }
+}
+
+// Tethered particle pairs
+void InteractionEngine::TetherParticlesMP(int &idx, int &jdx, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
+  // We are assuming the force/torque/energy superarrays are already set
+  // Exclude composite object interactions
+  auto part1 = (*simples_)[idx];
+  auto part2 = (*simples_)[jdx];
+
+  // Get the tethering potential
+  PotentialBase *pot = potentials_->GetPotentialTether(part1->GetOID(), part2->GetOID());
+  if (pot == nullptr) return;
+
+  // Calculate the minimum distance, regardless of any cutoff
+  interactionmindist idm;
+  MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
+
+
+  // Obtain the mapping between particle oid and position in the force superarray
+  auto oid1x = (*oid_position_map_)[part1->GetOID()];
+  auto oid2x = (*oid_position_map_)[part2->GetOID()];
+
+  // Fire off the potential calculation
+  double fepot[4];
+  pot->CalcPotential(&idm, part1, part2, fepot);
+
+  #ifdef DEBUG
+  if (debug_trace) {
+    std::cout << "\tTETHER Interacting[" << oid1x << "," << part1->GetOID()
+      << ":" << oid2x << "," << part2->GetOID() << "] u: " << std::setprecision(16)
+      << fepot[ndim_] << std::endl;
+  }
   #endif
 
   // Do the potential energies

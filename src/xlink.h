@@ -74,6 +74,14 @@ class Xlink : public Composite<XlinkHead> {
       std::cout << "\t  ";
       head1->Dump();
     }
+    std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
+      auto head0 = elements_.begin();
+      auto head1 = elements_.begin() + 1;
+      std::pair<unsigned int, unsigned int> mpair= std::make_pair(head0->GetOID(), head1->GetOID());
+      std::vector<std::pair<unsigned int, unsigned int>> retval;
+      retval.push_back(mpair);
+      return retval;
+    }
 
     /* Functions unique to Xlink */
     void DiffuseXlink();
