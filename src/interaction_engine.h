@@ -36,14 +36,13 @@ class InteractionEngine {
                              double **tr,
                              double *pr_energy,
                              double *kmc_energy);
+    void TetherParticlesMP(int &idx,
+                           int &jdx,
+                           double **fr,
+                           double **tr,
+                           double *pr_energy,
+                           double *kmc_energy);
     void KMCParticlesMP(neighbor_t *neighbor, int &idx, int &jdx);
-    /*void InteractParticlesMP(neighbor_t *neighbor,
-                             Simple *part1,
-                             Simple *part2,
-                             double **fr,
-                             double **tr,
-                             double *pr_energy,
-                             double *kmc_energy);*/
     void ReduceParticlesMP();
     void Print();
     void Dump();

@@ -28,8 +28,10 @@ void Simulation::RunSimulation() {
     if (debug_trace)
       printf("********\nStep %d\n********\n", i_step_);
     ZeroForces();
-    KineticMonteCarloMP();
+    //KineticMonteCarloMP();
     InteractMP();
+    KineticMonteCarloMP();
+    SyncForces();
     IntegrateMP();
     // Only will run if DEBUG is enabled
     #ifdef DEBUG
@@ -62,6 +64,10 @@ void Simulation::InteractMP() {
 
 void Simulation::KineticMonteCarloMP() {
   uengine_.StepKMC();
+}
+
+void Simulation::SyncForces() {
+  std::cout << "Syncing (transfer) forces\n";
 }
 
 void Simulation::ZeroForces() {

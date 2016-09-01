@@ -76,7 +76,10 @@ void TrackingNeighborListAP::AllPairsUpdate() {
         // Check if insertion fails because RID is not unique
         if (!rid_interactions.insert(std::make_pair(rid1, rid2)).second)
           continue;
-        if (p1->GetCID() == p2->GetCID()) continue;
+        // XXX Don't exclude self interactions of composite objects
+        // needed for filaments and xlinks internal properties, things like
+        // that
+        if (p1->GetRID() == p2->GetRID()) continue;
 
         // Minimum distance
         interactionmindist idm;
