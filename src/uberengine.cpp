@@ -89,12 +89,11 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   // Run one step to make sure that we're all good
   ptrack_.UpdateTracking(true);
   fengine_.Interact();
-
 }
 
 void UberEngine::InitPotentials() {
   // Ask the potential manager to parse the potentials file
-  potentials_.Init(space_, params_->potfile);
+  potentials_.Init(species_, space_, params_->potfile);
 }
 
 void UberEngine::DumpAll() {

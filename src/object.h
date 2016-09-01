@@ -133,6 +133,12 @@ class Object {
     }
     virtual int GetCount() {return 0;}
 
+    // Get the internal pairs of particles for things like internal forces
+    virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
+      std::vector<std::pair<unsigned int, unsigned int>> retval;
+      return retval;
+    }
+
     // KMC specific stuff
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors) {}
     virtual void StepKMC() {}

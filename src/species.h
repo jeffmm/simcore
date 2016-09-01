@@ -108,6 +108,10 @@ class SpeciesBase {
     //std::vector<potential_pair> GetPotentials() {return potentials_;}
     virtual void Configurator() {}
     virtual void WriteOutputs(std::string run_name) {}
+    virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
+      std::vector<std::pair<unsigned int, unsigned int>> retval;
+      return retval;
+    }
 };
 
 template <typename T>
@@ -252,6 +256,17 @@ class Species : public SpeciesBase {
       }
       return count;
     }
+    virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
+      std::vector<std::pair<unsigned int, unsigned int>> retval;
+
+      for (auto it = members_.begin(); it != members_.end(); ++it) {
+        auto mem_internal_pairs = (*it)->GetInternalPairs();
+        retval.insert(retval.end(), mem_internal_pairs.begin(), mem_internal_pairs.end());
+      }
+
+      return retval;
+    }
+
 };
 
 #endif // _SIMCORE_SPECIES_H_
