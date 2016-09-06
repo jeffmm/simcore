@@ -27,8 +27,8 @@ cell_length: 8
 graph_flag: 1
 n_graph: 100
 graph_background: 0
-#delta: 0.00001
-delta: 0.00025
+delta: 0.00001
+#delta: 0.00025
 #n_steps: 1000000
 #n_steps: 100000
 n_steps: 5000
