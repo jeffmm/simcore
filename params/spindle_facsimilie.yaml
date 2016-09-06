@@ -4,7 +4,8 @@ seed : 32679122673370
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-system_radius: 100
+#system_radius: 100
+system_radius: 25
 daughter_radius: 5
 mother_daughter_dist: 12
 boundary_type: 1

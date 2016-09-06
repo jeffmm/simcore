@@ -115,11 +115,24 @@ PotentialBase* PotentialManager::GetPotential(SID sid1, SID sid2) {
 }
 
 PotentialBase* PotentialManager::GetPotentialTether(unsigned int oid1, unsigned int oid2) {
-  std::cout << "GetPotentialTether[" << oid1 << ", " << oid2 << "]\n";
   // Get the potential for tethering by OID
   auto key1 = std::make_pair(oid1, oid2);
   if (tethers_.count(key1)) return internal_potentials_[tethers_[key1]];
+  auto key2 = std::make_pair(oid2, oid1);
+  if (tethers_.count(key2)) return internal_potentials_[tethers_[key2]];
   return NULL;
+}
+
+std::vector<PotentialBase*> PotentialManager::GetAllPotentials() {
+  // Needed to get all the potentials for making sure that the kmc
+  // potentials (k and requil) are properly synced between configurations
+  std::vector<PotentialBase*> allpots;
+  for (auto pot = potentials_.begin(); pot != potentials_.end(); ++pot) {
+    allpots.push_back(pot->second);
+  }
+  for (auto pot = internal_potentials_.begin(); pot != internal_potentials_.end(); ++pot) {
+    allpots.push_back(*pot);
+  }
 }
 
 void PotentialManager::Print() {

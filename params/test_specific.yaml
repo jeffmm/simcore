@@ -16,7 +16,7 @@ n_rod: 2
 rod_diameter: 1
 rod_length: 20
 rod_diffusion: 0
-config_file: params/tethering.config.yaml
+config_file: params/test_specific.config.yaml
 #config_file: random
 n_dimer: 0
 n_md_bead: 0
@@ -29,14 +29,14 @@ n_graph: 100
 graph_background: 0
 #delta: 0.00001
 delta: 0.00025
-n_steps: 1000000
+#n_steps: 1000000
 #n_steps: 100000
 #n_steps: 5000
 #n_steps: 10000
 #n_steps: 1000
 #n_steps: 100
 #n_steps: 10
-#n_steps: 2
+n_steps: 2
 #n_steps: 15758
 n_update_cells: 20
 time_flag: 1
@@ -48,8 +48,8 @@ grab_flag: 1
 grab_file: frames/frame
 draw_interactions: 0
 ftype: 4
-potfile: params/tethering.pot.yaml
-kmcfile: params/tethering.kmc.yaml
+potfile: params/test_specific.pot.yaml
+kmcfile: params/test_specific.kmc.yaml
 dynamic_instability_flag: 0
 masterskin: 1.0
 #masterskin: 5.0

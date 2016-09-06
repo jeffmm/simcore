@@ -88,9 +88,17 @@ class Object {
       for (int i=0; i<3; ++i)
         force_[i]+=f[i];
     }
+    void SetForce(double const * const f) {
+      for (int i=0; i<3; ++i)
+        force_[i]=f[i];
+    }
     void AddTorque(double const * const t) {
       for (int i=0; i<3; ++i)
         torque_[i]+=t[i];
+    }
+    void SetTorque(double const * const t) {
+      for (int i=0; i<3; ++i)
+        torque_[i]=t[i];
     }
     void AddPotential(double const p) {p_energy_ += p;}
     void AddKMCEnergy(double const k) {kmc_energy_ += k;}

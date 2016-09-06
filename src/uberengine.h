@@ -48,6 +48,7 @@ class UberEngine {
     void Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, long seed);
     void InteractMP();
     void StepKMC();
+    void SyncForces();
     void DumpAll();
     void InitPotentials();
     void Draw(std::vector<graph_struct*> * graph_array);

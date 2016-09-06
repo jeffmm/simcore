@@ -19,7 +19,6 @@ void XlinkHarmonic::CalcPotential(interactionmindist *idm,
   XlinkHead *head1 = dynamic_cast<XlinkHead*>(part2);
   auto boundstate = head0->GetBound();
   if (!head0->GetBound() || !head1->GetBound()) {
-    std::cout << "DEBUG Not doubly bound, returning for now\n";
     return;
   }
   double rmag = idm->dr_mag;
@@ -42,7 +41,6 @@ void XlinkHarmonic::CalcPotential(interactionmindist *idm,
   }
   u *= 0.5 / k;
   fpote[n_dim_] = u;
-  std::cout << "XlinkHarmonic::CalcPotential end\n";
 }
 
 void XlinkHarmonic::Init(space_struct *pSpace, int ipot, YAML::Node &node) {
@@ -52,6 +50,7 @@ void XlinkHarmonic::Init(space_struct *pSpace, int ipot, YAML::Node &node) {
   rcut_     = node["potentials"][ipot]["rcut"].as<double>();
   k_        = node["potentials"][ipot]["k"].as<double>();
   r_equil_  = node["potentials"][ipot]["equilibrium_length"].as<double>();
+  fcut_     = node["potentials"][ipot]["fcut"].as<double>();
 
   rcut2_ = rcut_*rcut_;
 }

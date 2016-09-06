@@ -5,7 +5,9 @@
 void Xlink::Init() {
   Composite::InsertRandom(length_+diameter_);
   // Give each bead the location of the main position!
+  int ihead = -1;
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
+    ihead++;
     i_bead->SetPosition(position_);
     i_bead->SetPrevPosition(position_);
     i_bead->SetDiameter(diameter_);
@@ -13,6 +15,7 @@ void Xlink::Init() {
     i_bead->SetSpace(space_);
     i_bead->UpdatePeriodic();
     i_bead->SetBound(false);
+    i_bead->SetHeadID(ihead);
   }
 
   UpdateOrientation();
@@ -21,7 +24,9 @@ void Xlink::Init() {
 void Xlink::InitConfigurator(const double* const x, const double diameter) {
   SetPosition(x);
   diameter_ = diameter;
+  int ihead = -1;
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
+    ihead++;
     i_bead->SetPosition(position_);
     i_bead->SetPrevPosition(position_);
     i_bead->SetDiameter(diameter_);
@@ -29,6 +34,7 @@ void Xlink::InitConfigurator(const double* const x, const double diameter) {
     i_bead->SetSpace(space_);
     i_bead->UpdatePeriodic();
     i_bead->SetBound(false);
+    i_bead->SetHeadID(ihead);
   }
 
   UpdateOrientation();
@@ -99,19 +105,27 @@ void Xlink::CheckBoundState() {
   bool bound0 = head0->GetBound();
   bool bound1 = head1->GetBound();
   if (!bound0 && !bound1) {
-    uinternal_ = 0.0;
   }
   if (bound0 && !bound1) {
     bound_ = singly;
-    uinternal_ = 0.0;
   }
   if (!bound0 && bound1) {
     bound_ = singly;
-    uinternal_ = 0.0;
   }
   if (bound0 && bound1) {
     bound_ = doubly;
   }
+}
+
+const double Xlink::GetInternalEnergy() {
+  // Override this so that we can calculate it on the fly from the two heads.  We know
+  // that the internal energy depends on the xlink heads, so we should be able to just
+  // take their two potential energies and add them
+  // Each already has 1/2 the total energy, so just sum them
+  auto head0 = elements_.begin();
+  auto head1 = elements_.begin()+1;
+  p_energy_ = head0->GetPotentialEnergy();
+  p_energy_ += head1->GetPotentialEnergy();
 }
 
 std::pair<bool,bool> Xlink::GetBoundHeads(XlinkHead **freehead, XlinkHead **boundhead) {
