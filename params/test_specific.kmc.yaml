@@ -17,7 +17,7 @@ kmc:
   velocity_antipolar_scale: -0.08
   stall_force: 30.2
   stall_type: parallel
-  spring_constant: 19.8171
+  spring_constant: 1.98171
   barrier_weight: 0.25
   #barrier_weight: 0.0
   equilibrium_length: 0.707

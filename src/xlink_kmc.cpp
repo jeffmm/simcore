@@ -13,12 +13,13 @@
 
 void XlinkKMC::Init(space_struct *pSpace,
                         ParticleTracking *pTracking,
+                        PotentialManager *pPotentials,
                         SpeciesBase *spec1,
                         SpeciesBase *spec2,
                         int ikmc,
                         YAML::Node &node,
                         long seed) {
-  KMCBase::Init(pSpace, pTracking, spec1, spec2, ikmc, node, seed);
+  KMCBase::Init(pSpace, pTracking, pPotentials, spec1, spec2, ikmc, node, seed);
 
   // Grab our specific claims
   // eps effective
@@ -132,6 +133,8 @@ void XlinkKMC::Init(space_struct *pSpace,
   r_equil_        = node["kmc"][ikmc]["equilibrium_length"].as<double>();
   polar_affinity_ = node["kmc"][ikmc]["polar_affinity"].as<double>();
   write_event_    = node["kmc"][ikmc]["write_event"].as<bool>();
+
+  // XXX Check k_stretch and r_equil
 
   // Stall type
   std::string stall_str = node["kmc"][ikmc]["stall_type"].as<std::string>();
@@ -699,6 +702,75 @@ void XlinkKMC::KMC_1_2() {
             freehead->SetBound(true);
             (*xit)->CheckBoundState();
 
+            // Update the position of the xlink for the force calculation
+            auto headid_free = freehead->GetHeadID();
+            auto headid_bound = boundhead->GetHeadID();
+
+            if (headid_free == 0 && headid_bound == 1) {
+              (*xit)->UpdateStagePosition(mrod->GetRigidPosition(),
+                                          mrod->GetRigidOrientation(),
+                                          mrod->GetRigidLength(),
+                                          mrod->GetOID(),
+                                          mrod_attached->GetRigidPosition(),
+                                          mrod_attached->GetRigidOrientation(),
+                                          mrod_attached->GetRigidLength(),
+                                          mrod_attached->GetOID());
+            } else if (headid_free == 1 && headid_bound == 0) {
+              (*xit)->UpdateStagePosition(mrod_attached->GetRigidPosition(),
+                                          mrod_attached->GetRigidOrientation(),
+                                          mrod_attached->GetRigidLength(),
+                                          mrod_attached->GetOID(),
+                                          mrod->GetRigidPosition(),
+                                          mrod->GetRigidOrientation(),
+                                          mrod->GetRigidLength(),
+                                          mrod->GetOID());
+            } else {
+              std::cout << "Some attachment has gone horribly wrong!\n";
+              exit(1);
+            }
+
+            // Calculate the potentials and forces of this xlink
+            PotentialBase *xlink_pot = potentials_->GetPotentialTether(freehead->GetOID(), boundhead->GetOID());
+            if (xlink_pot == nullptr) {
+              std::cout << "Uhhhh......\n";
+              exit(1);
+            }
+
+            if (!first_potential_use) {
+              first_potential_use = true;
+              XlinkHarmonic *xharm = dynamic_cast<XlinkHarmonic*>(xlink_pot);
+              auto myk = xharm->GetK();
+              auto myrequil = xharm->GetRequil();
+              if (myk != k_stretch_) {
+                std::cout << "Uh oh, k: " << k_stretch_ << " != potential k: " << myk << std::endl;
+                exit(1);
+              }
+              if (myrequil != r_equil_) {
+                std::cout << "Uh oh, requil: " << r_equil_ << " != potential requil: " << myrequil << std::endl;
+                exit(1);
+              }
+            }
+
+            // Calculate the minimum distance, regardless of any cutoff
+            interactionmindist idm;
+            MinimumDistance(freehead, boundhead, idm, ndim_, nperiodic_, space_);
+
+            // Fire off the potential calculation
+            double fepot[4];
+            xlink_pot->CalcPotential(&idm, freehead, boundhead, fepot);
+           
+            double flink_free[3] = {0.0, 0.0, 0.0};
+            double flink_bound[3] = {0.0, 0.0, 0.0};
+            for (int idim = 0; idim < ndim_; ++idim) {
+              flink_free[idim] = fepot[idim];
+              flink_bound[idim] = -fepot[idim];
+            }
+
+            freehead->AddPotential(fepot[ndim_]);
+            freehead->AddForce(flink_free);
+            boundhead->AddPotential(fepot[ndim_]);
+            boundhead->AddForce(flink_bound);
+
             foundidx = true;
             break;
           } // got the neighbor to fall onto
@@ -785,7 +857,7 @@ void XlinkKMC::KMC_2_1_ForceDep() {
     on_rate_1_2_[1] * pxspec->GetDelta()};
   for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
     if ((*xit)->GetBoundState() != doubly) continue; // only doubly bound
-    double kboltzoff = exp(barrier_weight_ * (*xit)->GetInternalU());
+    double kboltzoff = exp(barrier_weight_ * (*xit)->GetInternalEnergy());
     //printf("kboltzoff: %2.8f\n", kboltzoff);
     // XXX Possibly do this via the xlink rng, multithreaded
     auto xrng = (*xit)->GetRNG();
@@ -1020,7 +1092,7 @@ void XlinkKMC::UpdateKMC() {
         break;
       case doubly:
         UpdateStage2(*xit);
-        ApplyStage2Force(*xit);
+        //ApplyStage2Force(*xit);
         break;
     }
   }
@@ -1182,11 +1254,25 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   }
 }
 
-void XlinkKMC::ApplyStage2Force(Xlink *xit) {
-  // Check the bound state in case we fell off
-  if (xit->GetBoundState() != doubly) {
-    return;
+void XlinkKMC::TransferForces() {
+  // Transfer the forces from doubly bound xlinks to their
+  // bound rods
+  simples_ = tracking_->GetSimples();
+  nsimples_ = tracking_->GetNSimples();
+  oid_position_map_ = tracking_->GetOIDPositionMap();
+  neighbors_ = tracking_->GetNeighbors();
+
+  // Grab the species and start doing the transfer
+  XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
+  auto xlinks = pxspec->GetXlinks();
+  for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
+    if ((*xit)->GetBoundState() == doubly) {
+      ApplyStage2Force(*xit);
+    }
   }
+}
+
+void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   auto heads = xit->GetHeads();
   auto head0 = heads->begin();
   auto head1 = heads->begin()+1;
@@ -1202,9 +1288,63 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   auto sx0 = head0->GetScaledPosition();
   auto sx1 = head1->GetScaledPosition();
 
-  if (debug_trace)
-    printf("[%d:%d] <-> [%d:%d] Applying 2stage force\n", head0->GetOID(), mrod0->GetOID(), head1->GetOID(), mrod1->GetOID());
+  if (debug_trace) {
+    std::cout << "[" << head0->GetOID() << ":" << mrod0->GetOID() << "] <-> [" << head1->GetOID() << ":" << mrod1->GetOID()
+      << "] Transferring 2stage force\n";
+  }
 
+  auto crosspos0 = head0->GetAttach().second;
+  auto crosspos1 = head1->GetAttach().second;
+  auto lrod0 = mrod0->GetRigidLength();
+  auto lrod1 = mrod1->GetRigidLength();
+  auto urod0 = mrod0->GetRigidOrientation();
+  auto urod1 = mrod1->GetRigidOrientation();
+
+  // Make sure that forces are equal and opposite
+  // flink0 is the main one, standing in the place of flink
+  double zerovec[3] = {0.0, 0.0, 0.0};
+  double flink0[3] = {0.0, 0.0, 0.0};
+  double flink1[3] = {0.0, 0.0, 0.0};
+  std::copy(head0->GetForce(), head0->GetForce()+ndim_, flink0);
+  std::copy(head1->GetForce(), head1->GetForce()+ndim_, flink1);
+
+  double lambda = crosspos0 - 0.5 * lrod0;
+  double mu     = crosspos1 - 0.5 * lrod1;
+
+  double rcontact_i[3] = {0.0, 0.0, 0.0};
+  double rcontact_j[3] = {0.0, 0.0, 0.0};
+
+  for (int i = 0; i < ndim_; ++i) {
+    rcontact_i[i] = urod0[i] * lambda;
+    rcontact_j[i] = urod1[i] * mu;
+  }
+
+  double tau[3];
+  double taubond0[3] = {0.0, 0.0, 0.0};
+  double taubond1[3] = {0.0, 0.0, 0.0};
+  cross_product(rcontact_i, flink0, tau, ndim_);
+  for (int i = 0; i < 3; ++i) {
+    taubond0[i] += tau[i];
+  }
+  cross_product(rcontact_j, flink0, tau, ndim_);
+  for (int i = 0; i < 3; ++i) {
+    taubond1[i] -= tau[i];
+  }
+
+  // Apply the force
+  mrod0->AddForce(flink0);
+  mrod0->AddTorque(taubond0);
+  mrod1->AddForce(flink1);
+  mrod1->AddTorque(taubond1);
+
+  // Zero the force on the xlink
+  head0->SetForce(zerovec);
+  head1->SetForce(zerovec);
+
+
+
+
+  /*
   double dr[3];
   separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
   
@@ -1230,7 +1370,6 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   if (debug_trace)
     printf("\t{uin: %2.4f}\n", u);
   xit->AddPotential(u);
-  xit->SetInternalU(u);
 
   //auto rrod0 = mrod0->GetRigidPosition();
   //auto rrod1 = mrod1->GetRigidPosition();
@@ -1239,7 +1378,7 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   auto lrod0 = mrod0->GetRigidLength();
   auto lrod1 = mrod1->GetRigidLength();
   auto urod0 = mrod0->GetRigidOrientation();
-  auto urod1 = mrod1->GetRigidOrientation();
+  auto urod1 = mrod1->GetRigidOrientation();*/
 
   //double drmag = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
   /*printf("{rrod0: (%2.4f, %2.4f)}, {rrod1: (%2.4f, %2.4f)}\n", rrod0[0], rrod0[1], rrod1[0], rrod1[1]);
@@ -1249,7 +1388,7 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   printf("{u: %2.4f}, {flink: (%2.4f, %2.4f)}\n", u, flink[0], flink[1]);*/
 
   // Now, simply add the forces/torques onto the two bonds
-  double fbond0[3] = {0.0, 0.0, 0.0};
+  /*double fbond0[3] = {0.0, 0.0, 0.0};
   double fbond1[3] = {0.0, 0.0, 0.0};
   for (int i = 0; i < ndim_; ++i) {
     fbond0[i] += flink[i];
@@ -1286,7 +1425,7 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   head1->AddForce(fbond1);
   head1->AddTorque(taubond1);
   mrod1->AddForce(fbond1);
-  mrod1->AddTorque(taubond1);
+  mrod1->AddTorque(taubond1);*/
 }
 
 void XlinkKMC::Dump() {

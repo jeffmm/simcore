@@ -40,6 +40,7 @@ class PotentialBase {
     const bool CanOverlap() { return can_overlap_; }
     const bool IsKMC() { return is_kmc_; }
     const SID GetKMCTarget() { return kmc_target_; }
+    std::string GetName() {return pot_name_;}
     virtual void Print() {
       std::cout << pot_name_ << "\n";
       std::cout << "\trcut: " << std::setprecision(16) << rcut_ << std::endl;

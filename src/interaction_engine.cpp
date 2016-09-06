@@ -147,9 +147,15 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
   pot->CalcPotential(&idm, part1, part2, fepot);
 
   #ifdef DEBUG
-  if (debug_trace)
-    printf("\tPOT Interacting[%d,%d:%d,%d] (u:%2.16f)\n",
-        oid1x, part1->GetOID(), oid2x, part2->GetOID(), fepot[ndim_]);
+  if (debug_trace) {
+    std::cout << "\tPOT Interacting[" << oid1x << "," << part1->GetOID()
+      << ":" << oid2x << "," << part2->GetOID() << "] u: " << std::setprecision(16)
+      << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
+    if (ndim_ == 3) {
+      std::cout << ", " << fepot[2];
+    }
+    std::cout << ")\n";
+  }
   #endif
 
   // Do the potential energies
@@ -180,6 +186,7 @@ void InteractionEngine::InteractParticlesMP(int &idx, int &jdx, double **fr, dou
 void InteractionEngine::TetherParticlesMP(int &idx, int &jdx, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
   // We are assuming the force/torque/energy superarrays are already set
   // Exclude composite object interactions
+  if (idx < jdx) return; // Exclude double counting in force routines
   auto part1 = (*simples_)[idx];
   auto part2 = (*simples_)[jdx];
 
@@ -190,7 +197,6 @@ void InteractionEngine::TetherParticlesMP(int &idx, int &jdx, double **fr, doubl
   // Calculate the minimum distance, regardless of any cutoff
   interactionmindist idm;
   MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
-
 
   // Obtain the mapping between particle oid and position in the force superarray
   auto oid1x = (*oid_position_map_)[part1->GetOID()];
@@ -204,7 +210,11 @@ void InteractionEngine::TetherParticlesMP(int &idx, int &jdx, double **fr, doubl
   if (debug_trace) {
     std::cout << "\tTETHER Interacting[" << oid1x << "," << part1->GetOID()
       << ":" << oid2x << "," << part2->GetOID() << "] u: " << std::setprecision(16)
-      << fepot[ndim_] << std::endl;
+      << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
+    if (ndim_ == 3) {
+      std::cout << ", " << fepot[2];
+    }
+    std::cout << ")\n";
   }
   #endif
 
@@ -260,9 +270,11 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
   // Obtain the mapping between particle oid and position in the force superarray
   auto oid1x = (*oid_position_map_)[part1->GetOID()];
   auto oid2x = (*oid_position_map_)[part2->GetOID()];
-  if (debug_trace)
-    printf("\tKMC Interacting[%d,%d:%d,%d] (kmc:%2.16f)\n",
-        oid1x, part1->GetOID(), oid2x, part2->GetOID(), fepot[ndim_]);
+  if (debug_trace) {
+    std::cout << "\tKMC Interacting[" << oid1x << "," << part1->GetOID()
+      << ":" << oid2x << "," << part2->GetOID() << "] kmc: " << std::setprecision(16)
+      << fepot[ndim_] << std::endl;
+  }
   #endif
 
   neighbor->kmc_ = fepot[ndim_];

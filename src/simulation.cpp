@@ -67,7 +67,7 @@ void Simulation::KineticMonteCarloMP() {
 }
 
 void Simulation::SyncForces() {
-  std::cout << "Syncing (transfer) forces\n";
+  uengine_.SyncForces();
 }
 
 void Simulation::ZeroForces() {

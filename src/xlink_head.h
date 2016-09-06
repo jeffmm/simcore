@@ -16,7 +16,7 @@ class XlinkHead : public Simple {
     bool bound_;
     int attachidx_ = -1;
     double attachpos_ = 0.0;
-    int headid_ = 0;
+    int headid_ = -2;
   public:
     XlinkHead(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {
       diameter_=params->br_walker_diameter;
