@@ -2,8 +2,6 @@
 
 #include <cassert>
 
-#include "kmc_br_bindunbind.h"
-#include "kmc_md_mdkmc_bindunbind.h"
 #include "xlink_kmc.h"
 #include "kmc_engine.h"
 
@@ -31,11 +29,13 @@ void kmcEngine::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, 
   RegisterKMC();
 }
 
+void kmcEngine::InitPotentials(PotentialManager *pPotentials) {
+  potentials_ = pPotentials;
+}
+
 // Register the available KMC modules
 void kmcEngine::RegisterKMC() {
   REGISTER_KMC(XlinkKMC);
-  REGISTER_KMC(BrBindUnbind);
-  REGISTER_KMC(MdMdkmcBindUnbind);
 }
 
 // Initialize the simples, nsimples, etc
@@ -70,7 +70,7 @@ void kmcEngine::ParseKMC() {
         spec2 = (*spec);
     }
     KMCBase *new_kmc = (KMCBase*) kmc_factory_.construct(kmcname);
-    new_kmc->Init(space_, tracking_, spec1, spec2, ikmc, node, gsl_rng_get(rng_.r));
+    new_kmc->Init(space_, tracking_, potentials_, spec1, spec2, ikmc, node, gsl_rng_get(rng_.r));
     AddKMC(sid1, sid2, new_kmc);
   }
 }
@@ -135,6 +135,13 @@ void kmcEngine::UpdateKMC() {
     if (debug_trace)
       printf("UpdateKMC [%hhu,%hhu]\n", kmc->first.first, kmc->first.second);
     kmc->second->UpdateKMC();
+  }
+}
+
+// Transfer the forces (if need by) by the KMC
+void kmcEngine::TransferForces() {
+  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
+    kmc->second->TransferForces();
   }
 }
 

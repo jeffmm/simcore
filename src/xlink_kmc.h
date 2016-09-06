@@ -4,6 +4,7 @@
 #include "auxiliary.h"
 #include "kmc_base.h"
 #include "lookup_table.h"
+#include "xlink_harmonic.h"
 
 class Xlink;
 class XlinkHead;
@@ -30,6 +31,7 @@ class XlinkKMC : public KMCBase {
     double polar_affinity_;
 
     bool end_pause_[2];
+    bool first_potential_use = false;
 
     int nfree_;
     int stall_type_;
@@ -72,6 +74,7 @@ class XlinkKMC : public KMCBase {
 
   public:
     virtual void Init(space_struct *pSpace, ParticleTracking *pTracking,
+        PotentialManager *pPotentials,
         SpeciesBase *spec1, SpeciesBase *spec2, int ikmc, YAML::Node &node,
         long seed);
     virtual void Print();
@@ -83,6 +86,7 @@ class XlinkKMC : public KMCBase {
     virtual void PrepKMC();
     virtual void StepKMC();
     virtual void UpdateKMC();
+    virtual void TransferForces();
 
     virtual void PrepOutputs();
     virtual void WriteOutputs(int istep);

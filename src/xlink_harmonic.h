@@ -21,6 +21,12 @@ class XlinkHarmonic : public PotentialBase {
                                Simple *part2,
                                double *fpote);
     virtual void Init(space_struct *pSpace, int ipot, YAML::Node &node);
+
+    // Specific functions
+    const double GetK() {return k_;}
+    const double GetRequil() {return r_equil_;}
+    void SetK(const double k) {k_=k;}
+    void SetRequil(const double requil) {r_equil_=requil;}
 };
 
 #endif

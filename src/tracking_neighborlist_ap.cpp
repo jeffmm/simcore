@@ -39,6 +39,9 @@ void TrackingNeighborListAP::UpdateTracking(bool pForceUpdate) {
 }
 
 void TrackingNeighborListAP::UpdateNeighborList() {
+  if (debug_trace) {
+    std::cout << "Updating NeighborListAP\n";
+  }
   nupdates_++;
   for (int i = 0; i < nsimples_; ++i) {
     neighbors_[i].clear();

@@ -39,6 +39,7 @@ class PotentialManager {
     void AddPotential(SID sid1, SID sid2, PotentialBase *pot);
     PotentialBase * GetPotential(SID sid1, SID sid2);
     PotentialBase * GetPotentialTether(unsigned int oid1, unsigned int oid2);
+    std::vector<PotentialBase*> GetAllPotentials();
     void Print();
 };
 
