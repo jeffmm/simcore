@@ -62,7 +62,7 @@ class PotentialBase {
         SID kmc_sid = StringToSID(kmc_sid_str);
         kmc_target_ = kmc_sid;
       }
-  }
+    }
 };
 
 typedef std::pair<sid_pair, PotentialBase*> potential_pair;

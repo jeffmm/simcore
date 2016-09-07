@@ -1,5 +1,6 @@
 potentials:
-  - type : WCA
+  - name : WCA
+    type: external
     sid1 : br_rod
     sid2 : br_rod
     rcut: 2.5
@@ -8,7 +9,8 @@ potentials:
     sigma: 1
     #overlap: true
 
-  - type : SphereLineWell
+  - name : SphereLineWell
+    type: external
     sid1 : xlink_head
     sid2 : br_rod
     overlap : true
@@ -17,9 +19,8 @@ potentials:
     kmc: true
     kmc_target: xlink_head
 
-  - type: XlinkHarmonic
-    tether: true
-    tether_type: xlink
+  - name: XlinkHarmonic
+    type: internal
     sid: xlink
     k: 45.29
     equilibrium_length: 3.12
