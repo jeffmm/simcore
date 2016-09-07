@@ -283,6 +283,10 @@ TestXlinkKMC:
         crosspos_xlink0: 5.0
         crosspos_xlink1: 5.0
         velocity: 10.0
+        velocity_polar_scale: [1.0, 1.0]
+        velocity_antipolar_scale: [1.0, 1.0]
+        stall_force: 30.2
+        stall_type: 0
         end_pause: [false, false]
         result_bound: [true, true]
         result_crosspos: [5.0025, 5.0025]
@@ -300,6 +304,10 @@ TestXlinkKMC:
         crosspos_xlink0: 9.0
         crosspos_xlink1: 10.0
         velocity: 10.0
+        velocity_polar_scale: [1.0, 1.0]
+        velocity_antipolar_scale: [1.0, 1.0]
+        stall_force: 30.2
+        stall_type: 0
         end_pause: [false, false]
         result_bound: [true, false] 
         result_crosspos: [0.0, 9.0025] # order reversed, because of how check bound works! Freehead, then boundhead
@@ -317,6 +325,10 @@ TestXlinkKMC:
         crosspos_xlink0: 10.0
         crosspos_xlink1: 10.0
         velocity: 10.0
+        velocity_polar_scale: [1.0, 1.0]
+        velocity_antipolar_scale: [1.0, 1.0]
+        stall_force: 30.2
+        stall_type: 0
         end_pause: [false, false]
         result_bound: [false, false] 
         result_crosspos: [0.0, 0.0] # order reversed, because of how check bound works! Freehead, then boundhead
