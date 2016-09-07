@@ -19,6 +19,7 @@ class Xlink : public Composite<XlinkHead> {
     /* Unique to Xlink */
     double n_exp_0_1_ = 0.0;
     double n_exp_1_2_ = 0.0;
+    double r_cross_[3] = {0.0, 0.0, 0.0};
 
     attach_type bound_;
 
@@ -102,6 +103,8 @@ class Xlink : public Composite<XlinkHead> {
     void SetNExp_0_1(double const n) {n_exp_0_1_=n;}
     void SetNExp_1_2(double const n) {n_exp_1_2_=n;}
     const double GetInternalEnergy();
+
+    const double* const GetRcross() {return r_cross_;}
 
     void DumpKMC() {
       auto head0 = elements_.begin();

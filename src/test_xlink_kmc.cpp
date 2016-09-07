@@ -928,6 +928,7 @@ bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
 
 bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
   bool success = true;
+  std::string subtest = "UpdateStage2";
 
   // Use the configurators to initialize the xlink and rod
   int ntests = (int)node_[name_]["UpdateStage2"]["test"].size();
@@ -972,10 +973,18 @@ bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
                                    testRod1->GetSimples()[0]->GetOID());
 
     // Set up anything else
-    velocity_[0] = node_[name_]["UpdateStage2"]["test"][itest]["velocity"].as<double>();
+    velocity_[0] = node_[name_][subtest]["test"][itest]["velocity"].as<double>();
     velocity_[1] = velocity_[0];
-    end_pause_[0] = node_[name_]["UpdateStage2"]["test"][itest]["end_pause"][0].as<bool>();
-    end_pause_[1] = node_[name_]["UpdateStage2"]["test"][itest]["end_pause"][1].as<bool>();
+    end_pause_[0] = node_[name_][subtest]["test"][itest]["end_pause"][0].as<bool>();
+    end_pause_[1] = node_[name_][subtest]["test"][itest]["end_pause"][1].as<bool>();
+    velocity_p_scale_[0] = node_[name_][subtest]["test"][itest]["velocity_polar_scale"][0].as<double>();
+    velocity_p_scale_[1] = node_[name_][subtest]["test"][itest]["velocity_polar_scale"][1].as<double>();
+    velocity_ap_scale_[0] = node_[name_][subtest]["test"][itest]["velocity_antipolar_scale"][0].as<double>();
+    velocity_ap_scale_[1] = node_[name_][subtest]["test"][itest]["velocity_antipolar_scale"][1].as<double>();
+    stall_type_ = node_[name_][subtest]["test"][itest]["stall_type"].as<int>();
+    f_stall_[0] = node_[name_][subtest]["test"][itest]["stall_force"].as<double>();
+    f_stall_[1] = f_stall_[0];
+
 
     //testXlink->Dump();
     //testXlink->DumpKMC();

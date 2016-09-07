@@ -126,6 +126,42 @@ void XlinkKMC::Init(space_struct *pSpace,
       break;
   }
 
+  // velocity switch costheta
+  switch (node["kmc"][ikmc]["velocity_switch_costheta"].Type()) {
+    case YAML::NodeType::Scalar:
+      velocity_switch_costheta_[0] = velocity_switch_costheta_[1] =
+        node["kmc"][ikmc]["velocity_switch_costheta"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      velocity_switch_costheta_[0] = node["kmc"][ikmc]["velocity_switch_costheta"][0].as<double>();
+      velocity_switch_costheta_[1] = node["kmc"][ikmc]["velocity_switch_costheta"][1].as<double>();
+      break;
+  }
+
+  // Diffusion singly bound
+  switch (node["kmc"][ikmc]["diffusion_singly_bound"].Type()) {
+    case YAML::NodeType::Scalar:
+      diffusion_bound_1_[0] = diffusion_bound_1_[1] =
+        node["kmc"][ikmc]["diffusion_singly_bound"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      diffusion_bound_1_[0] = node["kmc"][ikmc]["diffusion_singly_bound"][0].as<double>();
+      diffusion_bound_1_[1] = node["kmc"][ikmc]["diffusion_singly_bound"][1].as<double>();
+      break;
+  }
+
+  // Diffusion doubly bound
+  switch (node["kmc"][ikmc]["diffusion_doubly_bound"].Type()) {
+    case YAML::NodeType::Scalar:
+      diffusion_bound_2_[0] = diffusion_bound_2_[1] =
+        node["kmc"][ikmc]["diffusion_doubly_bound"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      diffusion_bound_2_[0] = node["kmc"][ikmc]["diffusion_doubly_bound"][0].as<double>();
+      diffusion_bound_2_[1] = node["kmc"][ikmc]["diffusion_doubly_bound"][1].as<double>();
+      break;
+  }
+
   alpha_          = node["kmc"][ikmc]["alpha"].as<double>();
   rcutoff_0_1_    = node["kmc"][ikmc]["rcut"].as<double>();
   barrier_weight_ = node["kmc"][ikmc]["barrier_weight"].as<double>();
@@ -135,6 +171,7 @@ void XlinkKMC::Init(space_struct *pSpace,
   write_event_    = node["kmc"][ikmc]["write_event"].as<bool>();
 
   // XXX Check k_stretch and r_equil
+  // done the first time we call the potential
 
   // Stall type
   std::string stall_str = node["kmc"][ikmc]["stall_type"].as<std::string>();
@@ -231,6 +268,9 @@ void XlinkKMC::Print() {
   std::cout << std::setprecision(16) << "\tvelocity:                 [" << velocity_[0] << ", " << velocity_[1] << "]\n";
   std::cout << std::setprecision(16) << "\tvelocity_polar_scale:     [" << velocity_p_scale_[0] << ", " << velocity_p_scale_[1] << "]\n";
   std::cout << std::setprecision(16) << "\tvelocity_antipolar_scale: [" << velocity_ap_scale_[0] << ", " << velocity_ap_scale_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\tvelocity_switch_costheta: [" << velocity_switch_costheta_[0] << ", " << velocity_switch_costheta_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\tdiffusion_singly_bound:   [" << diffusion_bound_1_[0] << ", " << diffusion_bound_1_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\tdiffusion_doubly_bound:   [" << diffusion_bound_2_[0] << ", " << diffusion_bound_2_[1] << "]\n";
   std::cout << "\tbarrier_weight: " << std::setprecision(16) << barrier_weight_ << std::endl;
   std::cout << "\tequilibrium_length: " << std::setprecision(16) << r_equil_ << std::endl;
   std::cout << "\tk_spring: " << std::setprecision(16) << k_stretch_ << std::endl;
@@ -248,7 +288,7 @@ void XlinkKMC::PrepKMC() {
   neighbors_ = tracking_->GetNeighbors();
 
   // Prepare each composite particle for the upcoming kmc step
-  if (!spec1_->IsKMC()) return;
+  //if (spec1_->GetSID() != sid1_) return;
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   double ntot_0_1 = 0.0;
   double ntot_1_2 = 0.0;
@@ -296,14 +336,12 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
 void XlinkKMC::Update_1_2(Xlink *xit) {
   XlinkHead *freehead, *boundhead;
   auto isbound = xit->GetBoundHeads(&freehead, &boundhead);
-  //auto heads = xit->GetHeads();
   // If the first head is bound, then the second one is free, and vice
   // versa
   int free_i = isbound.first ? 1 : 0;
 
   double binding_affinity = eps_eff_1_2_[free_i] * on_rate_1_2_[free_i];
   auto free_idx = (*oid_position_map_)[freehead->GetOID()];
-  //auto attc_idx = (*oid_position_map_)[boundhead->GetOID()];
   // Get the attached rod
   auto attach_info = boundhead->GetAttach();
   auto attach_info_idx = (*oid_position_map_)[attach_info.first];
@@ -1092,7 +1130,6 @@ void XlinkKMC::UpdateKMC() {
         break;
       case doubly:
         UpdateStage2(*xit);
-        //ApplyStage2Force(*xit);
         break;
     }
   }
@@ -1129,6 +1166,12 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   
   auto part2 = (*simples_)[aidx];
   auto l_rod = part2->GetRigidLength();
+
+  // Check the diffusion
+  if (diffusion_bound_1_[bound_idx] > 0.0) {
+    cross_pos += sqrt(2.0 * diffusion_bound_1_[bound_idx] * boundhead->GetDelta()) *
+      gsl_ran_gaussian_ziggurat(boundhead->GetRNG()->r, 1.0);
+  }
 
   // If we are moving with some velocity, do that
   // also check for end pausing
@@ -1176,17 +1219,101 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   head0 = &(*(heads->begin()));
   head1 = &(*(heads->begin()+1));
 
-  // Head 0
-  head0->SetNExp_1_2(0.0);
+  // Get all relevant information, need for force dep
+  // velocity, etc
   auto aid0 = head0->GetAttach().first;
   auto aidx0 = (*oid_position_map_)[aid0];
   auto rod0 = (*simples_)[aidx0];
-
   auto crosspos0 = head0->GetAttach().second;
   auto lrod0 = rod0->GetRigidLength();
+  auto flink = head0->GetForce();
+
+  auto aid1 = head1->GetAttach().first;
+  auto aidx1 = (*oid_position_map_)[aid1];
+  auto rod1 = (*simples_)[aidx1];
+  auto crosspos1 = head1->GetAttach().second;
+  auto lrod1 = rod1->GetRigidLength();
+
+  // Only need one of the forces, should be equal and opposite
+  double ui_dot_f = dot_product(ndim_, rod0->GetRigidOrientation(), flink);
+  double uj_dot_f = dot_product(ndim_, rod1->GetRigidOrientation(), flink);
+  double ui_dot_uj = dot_product(ndim_, rod0->GetRigidOrientation(), rod1->GetRigidOrientation());
+
+  double f_mag_i = 0.0, f_mag_j = 0.0;
+
+  if (stall_type_) {
+    f_mag_i = ui_dot_f;
+    f_mag_j = -uj_dot_f;
+  }
+
+  // Calculate the velocity scale based on directionality
+  double velocity_i = velocity_[0] *
+    ((ui_dot_uj > velocity_switch_costheta_[0]) ?
+     velocity_p_scale_[0] :
+     velocity_ap_scale_[0]);
+  double elong = sqrt(dot_product(ndim_, xit->GetRcross(), xit->GetRcross()));
+  if (f_mag_i*velocity_i > 0.0) {
+    f_mag_i = 0.0;
+  } else {
+    if (stall_type_ == 1) {
+      f_mag_i = ABS(f_mag_i);
+    } else if (stall_type_ == 2) {
+      f_mag_i = k_stretch_ * elong;
+    } else if (stall_type_ == 3) {
+      f_mag_i = -ABS(f_mag_i);
+    }
+  }
+
+  double velocity_j = velocity_[1] *
+    ((ui_dot_uj > velocity_switch_costheta_[1]) ?
+     velocity_p_scale_[1] :
+     velocity_ap_scale_[1]);
+  if (f_mag_j*velocity_j > 0.0) {
+    f_mag_j = 0.0;
+  } else {
+    if (stall_type_ == 1)
+      f_mag_j = ABS(f_mag_j);
+    else if (stall_type_ == 2)
+      f_mag_j = k_stretch_ * elong;
+    else if (stall_type_ == 3) 
+      f_mag_j = -ABS(f_mag_j);
+  }
+
+  // Stall force
+  if (f_mag_i < f_stall_[0]) {
+    if (debug_trace) {
+      std::cout << std::setprecision(16) << "Stalling velocity_i: " << velocity_i << " -> ";
+    }
+    velocity_i *= 1.0 - f_mag_i/f_stall_[0];
+    if (debug_trace) {
+      std::cout << std::setprecision(16) << velocity_i << std::endl;
+    }
+  } else {
+    velocity_i = 0.0;
+  }
+
+  if (f_mag_j < f_stall_[1]) {
+    if (debug_trace) {
+      std::cout << std::setprecision(16) << "Stalling velocity_j: " << velocity_j << " -> ";
+    }
+    velocity_j *= 1.0 - f_mag_j/f_stall_[1];
+    if (debug_trace) {
+      std::cout << std::setprecision(16) << velocity_j << std::endl;
+    }
+  } else {
+    velocity_j = 0.0;
+  }
+
+  // Head 0
+  head0->SetNExp_1_2(0.0);
 
   // Update velocity
-  crosspos0 += velocity_[0] * head0->GetDelta();
+  crosspos0 += velocity_i * head0->GetDelta();
+  if (diffusion_bound_2_[0] > 0.0) {
+    crosspos0 += sqrt(2.0 * head0->GetDelta() * diffusion_bound_2_[0]) *
+        gsl_ran_gaussian_ziggurat(head0->GetRNG()->r, 1.0);
+    crosspos0 += ui_dot_f * diffusion_bound_2_[0] * head0->GetDelta();
+  }
   if (crosspos0 > lrod0) {
     crosspos0 = lrod0;
     if (!end_pause_[0]) {
@@ -1202,15 +1329,14 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
 
   // Head 1
   head1->SetNExp_1_2(0.0);
-  auto aid1 = head1->GetAttach().first;
-  auto aidx1 = (*oid_position_map_)[aid1];
-  auto rod1 = (*simples_)[aidx1];
-
-  auto crosspos1 = head1->GetAttach().second;
-  auto lrod1 = rod1->GetRigidLength();
 
   // Update velocity
-  crosspos1 += velocity_[1] * head1->GetDelta();
+  crosspos1 += velocity_j * head1->GetDelta();
+  if (diffusion_bound_2_[1] > 0.0) {
+    crosspos1 += sqrt(2.0 * head1->GetDelta() * diffusion_bound_2_[1]) *
+        gsl_ran_gaussian_ziggurat(head1->GetRNG()->r, 1.0);
+    crosspos1 += -uj_dot_f * diffusion_bound_2_[1] * head1->GetDelta();
+  }
   if (crosspos1 > lrod1) {
     crosspos1 = lrod1;
     if (!end_pause_[1]) {
