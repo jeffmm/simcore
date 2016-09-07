@@ -984,7 +984,19 @@ bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
     stall_type_ = node_[name_][subtest]["test"][itest]["stall_type"].as<int>();
     f_stall_[0] = node_[name_][subtest]["test"][itest]["stall_force"].as<double>();
     f_stall_[1] = f_stall_[0];
+    k_stretch_ = node_[name_][subtest]["test"][itest]["k_stretch"].as<double>();
+    double flink0[3] = {0.0, 0.0, 0.0};
+    double flink1[3] = {0.0, 0.0, 0.0};
+    for (int idim = 0; idim < ndim_; ++idim) {
+      flink0[idim] = node_[name_][subtest]["test"][itest]["flink"][idim].as<double>();
+      flink1[idim] = -flink0[idim];
+    }
 
+    // Get the heads
+    XlinkHead *head0, *head1;
+    auto isbound = testXlink->GetBoundHeads(&head0, &head1);
+    head0->SetForce(flink0);
+    head1->SetForce(flink1);
 
     //testXlink->Dump();
     //testXlink->DumpKMC();
@@ -1068,6 +1080,13 @@ bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
   }
   if (oid_position_map_) {
     delete oid_position_map_;
+  }
+
+  for (auto it = unit_tests_results_[test_num].begin(); it != unit_tests_results_[test_num].end(); ++it) {
+    if (!(*it)) {
+      success = false;
+      break;
+    }
   }
 
   return success;

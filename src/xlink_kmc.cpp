@@ -1239,12 +1239,18 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   double uj_dot_f = dot_product(ndim_, rod1->GetRigidOrientation(), flink);
   double ui_dot_uj = dot_product(ndim_, rod0->GetRigidOrientation(), rod1->GetRigidOrientation());
 
+  //std::cout << "ui_dot_f: " << std::setprecision(16) << ui_dot_f << std::endl;
+  //std::cout << "uj_dot_f: " << std::setprecision(16) << uj_dot_f << std::endl;
+  //std::cout << "ui_dot_uj: " << std::setprecision(16) << ui_dot_uj << std::endl;
+
   double f_mag_i = 0.0, f_mag_j = 0.0;
 
   if (stall_type_) {
     f_mag_i = ui_dot_f;
     f_mag_j = -uj_dot_f;
   }
+
+  //std::cout << "initial fmagi: " << std::setprecision(16) << f_mag_i << ", fmagj: " << f_mag_j << std::endl;
 
   // Calculate the velocity scale based on directionality
   double velocity_i = velocity_[0] *
