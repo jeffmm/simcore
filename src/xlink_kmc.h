@@ -19,6 +19,9 @@ class XlinkKMC : public KMCBase {
     double velocity_[2];
     double velocity_p_scale_[2];
     double velocity_ap_scale_[2];
+    double velocity_switch_costheta_[2];
+    double diffusion_bound_1_[2];
+    double diffusion_bound_2_[2];
     double alpha_;
     double barrier_weight_;
     double k_stretch_;

@@ -49,6 +49,7 @@ void Xlink::UpdateOrientation() {
   double dr[3];
   separation_vector(n_dim_, space_->n_periodic, r1, s1, r2, s2, space_->unit_cell, dr);
   for (int i=0; i<n_dim_; ++i) {
+    r_cross_[i] = dr[i];
     length_ += SQR(dr[i]);
   }
   if (length_ <= 0.0)
@@ -251,6 +252,7 @@ void Xlink::UpdateStagePosition(const double* const xr0, const double* const ur0
                            xr1, ur1, lr1, atidx1);
       break;
   }
+  UpdateOrientation();
 }
 
 void Xlink::UpdateStage1Position(const double* const xr, const double* const ur, const double lr, const int atidx) {
@@ -408,6 +410,7 @@ void XlinkSpecies::Configurator() {
       member->Dump();
       members_.push_back(member);
     }
+    n_members_ = nxlinks;
   } else if (insertion_type.compare("random") == 0) {
     int nxlinks     = node["xlink"]["xit"]["num"].as<int>();
     double diameter = node["xlink"]["xit"]["diameter"].as<double>();
@@ -428,8 +431,9 @@ void XlinkSpecies::Configurator() {
       member->Init();
       members_.push_back(member);
     }
+    n_members_ = nxlinks;
   } else {
-    printf("nope, not yet\n");
+    std::cout << "Insertion type " << insertion_type << " not implemented yet\n";
     exit(1);
   }
 }

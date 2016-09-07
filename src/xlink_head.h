@@ -28,6 +28,7 @@ class XlinkHead : public Simple {
     XlinkHead(const XlinkHead& that) : Simple(that) {}
     XlinkHead& operator=(XlinkHead const& that) {Simple::operator=(that); return *this;} 
     void SetDiffusion() {diffusion_ = sqrt(24.0*diameter_/delta_);}
+    void OverrideDiffusion(double diff) {diffusion_=diff;}
     void KickBead();
     void UpdatePositionMP();
     void Init();
