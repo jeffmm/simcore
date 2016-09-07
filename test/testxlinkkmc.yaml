@@ -285,6 +285,8 @@ TestXlinkKMC:
         velocity: 10.0
         velocity_polar_scale: [1.0, 1.0]
         velocity_antipolar_scale: [1.0, 1.0]
+        k_stretch: 10.0
+        flink: [10.0, 10.0, 0.0]
         stall_force: 30.2
         stall_type: 0
         end_pause: [false, false]
@@ -306,6 +308,8 @@ TestXlinkKMC:
         velocity: 10.0
         velocity_polar_scale: [1.0, 1.0]
         velocity_antipolar_scale: [1.0, 1.0]
+        k_stretch: 10.0
+        flink: [10.0, 10.0, 0.0]
         stall_force: 30.2
         stall_type: 0
         end_pause: [false, false]
@@ -327,6 +331,8 @@ TestXlinkKMC:
         velocity: 10.0
         velocity_polar_scale: [1.0, 1.0]
         velocity_antipolar_scale: [1.0, 1.0]
+        k_stretch: 10.0
+        flink: [10.0, 10.0, 0.0]
         stall_force: 30.2
         stall_type: 0
         end_pause: [false, false]
@@ -335,6 +341,98 @@ TestXlinkKMC:
         result_pos0: [5.0, 0.5, 0.0]
         result_pos1: [5.0, 0.5, 0.0]
         result_pos: [5.0, 0.5, 0.0]
+        tolerance: 1.0e-9
+      - ndim: 3 # polar scaling
+        x_rod0: [0.0, 0.0, 0.0]
+        u_rod0: [1.0, 0.0, 0.0]
+        l_rod0: 10.0
+        x_rod1: [0.0, 1.0, 0.0]
+        u_rod1: [1.0, 0.0, 0.0]
+        l_rod1: 10.0
+        crosspos_xlink0: 5.0
+        crosspos_xlink1: 5.0
+        velocity: 10.0
+        velocity_polar_scale: [0.5, 0.5]
+        velocity_antipolar_scale: [1.0, 1.0]
+        k_stretch: 10.0
+        flink: [10.0, 10.0, 0.0]
+        stall_force: 30.2
+        stall_type: 0
+        end_pause: [true, true]
+        result_bound: [true, true] 
+        result_crosspos: [5.00125, 5.00125] # order reversed, because of how check bound works! Freehead, then boundhead
+        result_pos0: [0.001249999999999751, 0, 0]
+        result_pos1: [0.001249999999999751, 1, 0]
+        result_pos: [0.001249999999999751, 0.5, 0]
+        tolerance: 1.0e-9
+      - ndim: 3 # antipolar scaling
+        x_rod0: [0.0, 0.0, 0.0]
+        u_rod0: [1.0, 0.0, 0.0]
+        l_rod0: 10.0
+        x_rod1: [0.0, 1.0, 0.0]
+        u_rod1: [-1.0, 0.0, 0.0]
+        l_rod1: 10.0
+        crosspos_xlink0: 5.0
+        crosspos_xlink1: 5.0
+        velocity: 10.0
+        velocity_polar_scale: [1.0, 1.0]
+        velocity_antipolar_scale: [0.3, 0.3]
+        k_stretch: 10.0
+        flink: [10.0, 10.0, 0.0]
+        stall_force: 30.2
+        stall_type: 0
+        end_pause: [true, true]
+        result_bound: [true, true] 
+        result_crosspos: [5.00075, 5.00075] # order reversed, because of how check bound works! Freehead, then boundhead
+        result_pos0: [0.0007500000000000284, 0, 0]
+        result_pos1: [-0.0007500000000000284, 1, 0]
+        result_pos: [0.0, 0.5, 0]
+        tolerance: 1.0e-9
+      - ndim: 3 # stall force parallel, full stall
+        x_rod0: [0.0, 0.0, 0.0]
+        u_rod0: [1.0, 0.0, 0.0]
+        l_rod0: 10.0
+        x_rod1: [0.0, 1.0, 0.0]
+        u_rod1: [-1.0, 0.0, 0.0]
+        l_rod1: 10.0
+        crosspos_xlink0: 6.0
+        crosspos_xlink1: 6.0
+        velocity: 10.0
+        velocity_polar_scale: [1.0, 1.0]
+        velocity_antipolar_scale: [1.0, 1.0]
+        k_stretch: 10.0
+        flink: [-10.0, 10.0, 0.0]
+        stall_force: 10.0
+        stall_type: 1
+        end_pause: [true, true]
+        result_bound: [true, true] 
+        result_crosspos: [6.0, 6.0] # order reversed, because of how check bound works! Freehead, then boundhead
+        result_pos0: [1.0, 0.0, 0.0]
+        result_pos1: [-1.0, 1.0, 0.0]
+        result_pos: [0.0, 0.5, 0]
+        tolerance: 1.0e-9
+      - ndim: 3 # stall force parallel, partial stall
+        x_rod0: [0.0, 0.0, 0.0]
+        u_rod0: [1.0, 0.0, 0.0]
+        l_rod0: 10.0
+        x_rod1: [0.0, 1.0, 0.0]
+        u_rod1: [-1.0, 0.0, 0.0]
+        l_rod1: 10.0
+        crosspos_xlink0: 6.0
+        crosspos_xlink1: 6.0
+        velocity: 10.0
+        velocity_polar_scale: [1.0, 1.0]
+        velocity_antipolar_scale: [1.0, 1.0]
+        k_stretch: 10.0
+        flink: [-10.0, 10.0, 0.0]
+        stall_force: 15.0
+        stall_type: 1
+        end_pause: [true, true]
+        result_bound: [true, true] 
+        result_crosspos: [6.000833333333333, 6.000833333333333] # order reversed, because of how check bound works! Freehead, then boundhead
+        result_pos0: [1.000833333333333, 0, 0]
+        result_pos1: [-1.000833333333333, 1, 0]
+        result_pos: [0.0, 0.5, 0]
         tolerance: 1.0e-9
   PolarAffinity:
     test:
