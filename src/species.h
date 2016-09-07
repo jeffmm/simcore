@@ -256,6 +256,11 @@ class Species : public SpeciesBase {
       }
       return count;
     }
+    virtual std::vector<std::pair<SID, SID>> GetInternalInteractionSIDs() {
+      std::vector<std::pair<SID, SID>> sid_pairs;
+
+      return sid_pairs;
+    }
     virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
       std::vector<std::pair<unsigned int, unsigned int>> retval;
 

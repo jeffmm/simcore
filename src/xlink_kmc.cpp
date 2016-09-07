@@ -768,7 +768,7 @@ void XlinkKMC::KMC_1_2() {
             }
 
             // Calculate the potentials and forces of this xlink
-            PotentialBase *xlink_pot = potentials_->GetPotentialTether(freehead->GetOID(), boundhead->GetOID());
+            PotentialBase *xlink_pot = potentials_->GetPotentialInternal(freehead->GetOID(), boundhead->GetOID());
             if (xlink_pot == nullptr) {
               std::cout << "Uhhhh......\n";
               exit(1);
@@ -1467,91 +1467,6 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   head0->SetForce(zerovec);
   head1->SetForce(zerovec);
 
-
-
-
-  /*
-  double dr[3];
-  separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
-  
-  double rmag2 = 0.0;
-  for (int i = 0; i < ndim_; ++i) {
-    rmag2 += SQR(dr[i]);
-  }
-  //double rmag = sqrt(rmag2);
-  double k = k_stretch_;
-  double factor;
-  if (r_equil_ == 0.0) {
-    factor = k;
-  } else {
-    factor = k * (1.0 - r_equil_ / sqrt(dot_product(ndim_, dr, dr)));
-  }
-  double u = 0.0;
-  double flink[3] = {0.0, 0.0, 0.0};
-  for (int i = 0; i < ndim_; ++i) {
-    flink[i] = factor * dr[i];
-    u += 0.5 * SQR(flink[i]);
-  }
-  u *= 0.5 / k;
-  if (debug_trace)
-    printf("\t{uin: %2.4f}\n", u);
-  xit->AddPotential(u);
-
-  //auto rrod0 = mrod0->GetRigidPosition();
-  //auto rrod1 = mrod1->GetRigidPosition();
-  auto crosspos0 = head0->GetAttach().second;
-  auto crosspos1 = head1->GetAttach().second;
-  auto lrod0 = mrod0->GetRigidLength();
-  auto lrod1 = mrod1->GetRigidLength();
-  auto urod0 = mrod0->GetRigidOrientation();
-  auto urod1 = mrod1->GetRigidOrientation();*/
-
-  //double drmag = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
-  /*printf("{rrod0: (%2.4f, %2.4f)}, {rrod1: (%2.4f, %2.4f)}\n", rrod0[0], rrod0[1], rrod1[0], rrod1[1]);
-  printf("{urod0: (%2.4f, %2.4f)}, {urod1: (%2.4f, %2.4f)}\n", urod0[0], urod0[1], urod1[0], urod1[1]);
-  printf("{rx0: (%2.4f, %2.4f)}, {rx1: (%2.4f, %2.4f)}\n", rx0[0], rx0[1], rx1[0], rx1[1]);
-  printf("{dr: (%2.4f, %2.4f)}, {drmag: %2.8f}\n", dr[0], dr[1], drmag);
-  printf("{u: %2.4f}, {flink: (%2.4f, %2.4f)}\n", u, flink[0], flink[1]);*/
-
-  // Now, simply add the forces/torques onto the two bonds
-  /*double fbond0[3] = {0.0, 0.0, 0.0};
-  double fbond1[3] = {0.0, 0.0, 0.0};
-  for (int i = 0; i < ndim_; ++i) {
-    fbond0[i] += flink[i];
-    fbond1[i] -= flink[i];
-  }
-
-  double lambda = crosspos0 - 0.5 * lrod0;
-  double mu     = crosspos1 - 0.5 * lrod1;
-
-  double rcontact_i[3] = {0.0, 0.0, 0.0};
-  double rcontact_j[3] = {0.0, 0.0, 0.0};
-  for (int i = 0; i < ndim_; ++i) {
-    rcontact_i[i] = urod0[i] * lambda;
-    rcontact_j[i] = urod1[i] * mu;
-  }
-
-  double tau[3];
-  double taubond0[3] = {0.0, 0.0, 0.0};
-  double taubond1[3] = {0.0, 0.0, 0.0};
-  cross_product(rcontact_i, flink, tau, ndim_);
-  for (int i = 0; i < 3; ++i) {
-    taubond0[i] += tau[i];
-  }
-  cross_product(rcontact_j, flink, tau, ndim_);
-  for (int i = 0; i < 3; ++i) {
-    taubond1[i] -= tau[i];
-  }
-
-  // Apply the force
-  head0->AddForce(fbond0);
-  head0->AddTorque(taubond0);
-  mrod0->AddForce(fbond0);
-  mrod0->AddTorque(taubond0);
-  head1->AddForce(fbond1);
-  head1->AddTorque(taubond1);
-  mrod1->AddForce(fbond1);
-  mrod1->AddTorque(taubond1);*/
 }
 
 void XlinkKMC::Dump() {
