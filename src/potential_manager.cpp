@@ -48,44 +48,14 @@ PotentialManager::ParsePotentials() {
   npots_ = (int)node["potentials"].size();
 
   for (int ipot = 0; ipot < npots_; ++ipot) {
-    bool is_tether = false;
-    if (node["potentials"][ipot]["tether"]) {
-      is_tether = node["potentials"][ipot]["tether"].as<bool>();
+    std::string potential_type = "external";
+    if (node["potentials"][ipot]["type"]) {
+      potential_type = node["potentials"][ipot]["type"].as<std::string>();
     }
 
-    if (is_tether) {
-      std::string potname = node["potentials"][ipot]["type"].as<std::string>();
-      std::string tether_type = node["potentials"][ipot]["tether_type"].as<std::string>();
-
-      // Only do xlink for now
-      if (tether_type.compare("xlink") == 0) {
-        // Create the tethering.  Need the object of the members of species to give us
-        // back the OIDs of the pairs that we're connecting
-        std::string sids = node["potentials"][ipot]["sid"].as<std::string>();
-        SID sid = StringToSID(sids); 
-        SpeciesBase *sit;
-        // Find the species
-        for (auto msit = species_->begin(); msit != species_->end(); ++msit) {
-          if ((*msit)->GetSID() == sid) {
-            sit = (*msit);
-            break;
-          }
-        }
-        auto internal_pairs = sit->GetInternalPairs();
-        PotentialBase* new_pot = (PotentialBase*) pot_factory_.construct(potname);
-        new_pot->Init(space_, ipot, node);
-        // Add to the internal potential list
-        internal_potentials_.push_back(new_pot);
-        int pot_idx = internal_potentials_.size() - 1;
-        for (auto ipair = internal_pairs.begin(); ipair != internal_pairs.end(); ++ipair) {
-          tethers_[*ipair] = pot_idx;
-        }
-      } else {
-        std::cout << "Tethering type: " << tether_type << " not yet supported, exiting\n";
-        exit(1);
-      }
-    } else {
-      std::string potname = node["potentials"][ipot]["type"].as<std::string>();
+    if (potential_type.compare("external") == 0) {
+      std::string potname = node["potentials"][ipot]["name"].as<std::string>();
+      std::cout << potname << std::endl;
       std::string sid1s   = node["potentials"][ipot]["sid1"].as<std::string>();
       std::string sid2s   = node["potentials"][ipot]["sid2"].as<std::string>();
       SID sid1 = StringToSID(sid1s);
@@ -93,12 +63,39 @@ PotentialManager::ParsePotentials() {
       // Get the enum type
       PotentialBase* new_pot = (PotentialBase*) pot_factory_.construct(potname);
       new_pot->Init(space_, ipot, node);
-      AddPotential(sid1, sid2, new_pot);
+      AddPotentialExternal(sid1, sid2, new_pot);
+    } else if (potential_type.compare("internal") == 0) {
+      std::string potname = node["potentials"][ipot]["name"].as<std::string>();
+      std::string sids    = node["potentials"][ipot]["sid"].as<std::string>();
+      SID sid = StringToSID(sids); 
+      SpeciesBase *sit;
+      for (auto msit = species_->begin(); msit != species_->end(); ++msit) {
+        if ((*msit)->GetSID() == sid) {
+          sit = (*msit);
+          break;
+        }
+      }
+      auto internal_pairs = sit->GetInternalPairs();
+      PotentialBase *new_pot = (PotentialBase*) pot_factory_.construct(potname);
+      new_pot->Init(space_, ipot, node);
+      // Add to the internal potential list, which actually owns it
+      potential_vec_.push_back(new_pot);
+      for (auto ipair = internal_pairs.begin(); ipair != internal_pairs.end(); ++ipair) {
+        AddPotentialInternal(ipair->first, ipair->second, new_pot);
+      }
+    } else if (potential_type.compare("tether") == 0) {
+      // Tethers must be between specific particles
+      // Not quite sure how to do this yet, because it might heavily depend on what we're tethering....
+      std::cout << "Tethering not quite supported yet, have to figure out use cases, exiting\n";
+      exit(1);
+    } else {
+      std::cout << "Potential type " << potential_type << " not yet supported, exiting\n";
+      exit(1);
     }
   }
 }
 
-void PotentialManager::AddPotential(SID sid1, SID sid2, PotentialBase *pot) {
+void PotentialManager::AddPotentialExternal(SID sid1, SID sid2, PotentialBase *pot) {
   sid_pair key1 = std::make_pair(sid1, sid2);
   if (potentials_.count(key1)) return;
   sid_pair key2 = std::make_pair(sid2, sid1);
@@ -106,7 +103,15 @@ void PotentialManager::AddPotential(SID sid1, SID sid2, PotentialBase *pot) {
   potentials_[key1] = pot;
 }
 
-PotentialBase* PotentialManager::GetPotential(SID sid1, SID sid2) {
+void PotentialManager::AddPotentialInternal(unsigned int oid1, unsigned int oid2, PotentialBase *pot) {
+  auto key1 = std::make_pair(oid1, oid2);
+  if (internal_potentials_.count(key1)) return;
+  auto key2 = std::make_pair(oid2, oid1);
+  if (internal_potentials_.count(key2)) return;
+  internal_potentials_[key1] = pot;
+}
+
+PotentialBase* PotentialManager::GetPotentialExternal(SID sid1, SID sid2) {
   sid_pair key1 = std::make_pair(sid1, sid2);
   if (potentials_.count(key1)) return potentials_[key1];
   sid_pair key2 = std::make_pair(sid2,sid1);
@@ -114,12 +119,20 @@ PotentialBase* PotentialManager::GetPotential(SID sid1, SID sid2) {
   return NULL;
 }
 
+PotentialBase *PotentialManager::GetPotentialInternal(unsigned int oid1, unsigned int oid2) {
+  auto key1 = std::make_pair(oid1, oid2);
+  if (internal_potentials_.count(key1)) return internal_potentials_[key1];
+  auto key2 = std::make_pair(oid2, oid1);
+  if (internal_potentials_.count(key2)) return internal_potentials_[key2];
+  return NULL;
+}
+
 PotentialBase* PotentialManager::GetPotentialTether(unsigned int oid1, unsigned int oid2) {
   // Get the potential for tethering by OID
   auto key1 = std::make_pair(oid1, oid2);
-  if (tethers_.count(key1)) return internal_potentials_[tethers_[key1]];
+  if (tethers_.count(key1)) return tethers_[key1];
   auto key2 = std::make_pair(oid2, oid1);
-  if (tethers_.count(key2)) return internal_potentials_[tethers_[key2]];
+  if (tethers_.count(key2)) return tethers_[key2];
   return NULL;
 }
 
@@ -131,7 +144,10 @@ std::vector<PotentialBase*> PotentialManager::GetAllPotentials() {
     allpots.push_back(pot->second);
   }
   for (auto pot = internal_potentials_.begin(); pot != internal_potentials_.end(); ++pot) {
-    allpots.push_back(*pot);
+    allpots.push_back(pot->second);
+  }
+  for (auto pot = tethers_.begin(); pot != tethers_.end(); ++pot) {
+    allpots.push_back(pot->second);
   }
 }
 
@@ -148,10 +164,17 @@ void PotentialManager::Print() {
   // Internal potentials
   std::cout << "----------------\n";
   std::cout << "Internal potentials: \n";
-  for (auto ipair = tethers_.begin(); ipair != tethers_.end(); ++ipair) {
-    std::cout << "(" << ipair->first.first << ", " << ipair->first.second << ") : ";
-    auto mypot = internal_potentials_[ipair->second];
-    mypot->Print();
+  for (auto pot=internal_potentials_.begin(); pot != internal_potentials_.end(); ++pot) {
+    std::cout << "(" << pot->first.first << ", " << pot->first.second << ") : ";
+    pot->second->Print();
+  }
+
+  // Tethering potentials
+  std::cout << "----------------\n";
+  std::cout << "Tethering potentials: \n";
+  for (auto pot=tethers_.begin(); pot!=tethers_.end(); ++pot) {
+    std::cout << "(" << pot->first.first << ", " << pot->first.second << ") : ";
+    pot->second->Print();
   }
 }
 

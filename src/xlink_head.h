@@ -33,6 +33,11 @@ class XlinkHead : public Simple {
     void UpdatePositionMP();
     void Init();
 
+    // Internal force calculation specifics
+    virtual bool ApplyInternalForce() {
+      return bound_;
+    }
+
     // kmc specifics
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors);
     virtual void StepKMC();

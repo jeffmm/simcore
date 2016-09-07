@@ -141,10 +141,15 @@ class Object {
     }
     virtual int GetCount() {return 0;}
 
+    // Internal force calculations
     // Get the internal pairs of particles for things like internal forces
     virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
       std::vector<std::pair<unsigned int, unsigned int>> retval;
       return retval;
+    }
+
+    virtual bool ApplyInternalForce() {
+      return false;
     }
 
     // KMC specific stuff
