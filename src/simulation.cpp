@@ -73,6 +73,7 @@ void Simulation::ZeroForces() {
 void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
+  output_mgr_.Init(&params_, &i_step_);
   InitSpecies();
   uengine_.Init(&params_, space_.GetStruct(), &species_, gsl_rng_get(rng_.r));
   if (params_.graph_flag) {
@@ -99,15 +100,17 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(BrRodSpecies,br_rod);
   REGISTER_SPECIES(XlinkSpecies,xlink);
   REGISTER_SPECIES(FilamentSpecies,filament);
+  REGISTER_SPECIES(MDBeadOptSpecies,md_bead_opt);
 
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file
   for (auto possibles = species_factory_.m_classes.begin(); possibles != species_factory_.m_classes.end(); ++possibles) {
     if (node[possibles->first]) {
       SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
-      spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+      spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r), &output_mgr_);
       spec->Configurator();
       species_.push_back(spec);
+      output_mgr_.AddSpecie(spec);
     }
   }
 }
@@ -199,6 +202,8 @@ void Simulation::WriteOutputs() {
     en_file << k_en << " " << p_en << " " << tot_en << "\n";
     en_file.close();
   }
+
+  output_mgr_.WriteOutputs();
 
   if (i_step_ == params_.n_steps-1) {
     for (auto it=species_.begin(); it!=species_.end(); ++it)

@@ -5,6 +5,8 @@
 #include "object.h"
 #include "potential_base.h"
 
+class OutputManager;
+
 class SpeciesBase {
   private:
     SID sid_;
@@ -14,6 +16,7 @@ class SpeciesBase {
     bool is_kmc_ = false;
     double delta_;
     system_parameters *params_;
+    OutputManager *output_mgr_;
     space_struct *space_;
     rng_properties rng_;
     void SetSID(SID sid) {sid_=sid;}
@@ -72,7 +75,7 @@ class SpeciesBase {
     virtual void UpdatePositions() {}
     virtual void UpdatePositionsMP() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
+    virtual void InitConfig(system_parameters *params, space_struct *space, long seed, OutputManager *output_mgr) {
       n_members_ = 0;
       params_ = params;
       space_ = space;
@@ -80,6 +83,7 @@ class SpeciesBase {
       kmc_update_ = false;
       rng_.init(seed);
       delta_ = params->delta;
+      output_mgr_ = output_mgr;
     }
     virtual void Init() {}
     virtual void ReInit(unsigned int const cid) {}
@@ -108,6 +112,7 @@ class SpeciesBase {
     //std::vector<potential_pair> GetPotentials() {return potentials_;}
     virtual void Configurator() {}
     virtual void WriteOutputs(std::string run_name) {}
+    virtual void WritePosits(std::ofstream &op) {}
 };
 
 template <typename T>
@@ -119,8 +124,8 @@ class Species : public SpeciesBase {
     Species() {}
 
     // Initialize function for setting it up on the first pass
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
-      SpeciesBase::InitConfig(params, space, seed);
+    virtual void InitConfig(system_parameters *params, space_struct *space, long seed, OutputManager *output_mgr) {
+      SpeciesBase::InitConfig(params, space, seed, output_mgr);
     }
 
     // Configurator function must be overridden
@@ -251,6 +256,11 @@ class Species : public SpeciesBase {
         count += (*it)->GetCount();
       }
       return count;
+    }
+    
+    virtual void WritePosits(std::ofstream &op) {
+      for( auto& mem_it : members_)
+        mem_it->WritePosit(op);
     }
 };
 
