@@ -9,6 +9,7 @@
 #include "objects.h"
 #include "uberengine.h"
 #include "helpers.h"
+#include "output_manager.h"
 
 class Simulation {
 
@@ -18,6 +19,8 @@ class Simulation {
     double time_,
            cpu_init_time_;
     std::string run_name_;
+
+    OutputManager output_mgr_;
     system_parameters params_;
     rng_properties rng_;
     
