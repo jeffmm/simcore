@@ -1,6 +1,0 @@
-kmc:
-  - type: MdMdkmcBindUnbind
-    sid1: md_kmc_bead
-    sid2: md_bead
-    eps_eff: 30910
-    on_rate: 0.003916
