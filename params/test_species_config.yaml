@@ -16,6 +16,8 @@ grab_file: frames/frame
 graph_background: 0
 delta: 0.0001
 n_steps: 10000
+posit_flag: 1
+n_posit: 100
 time_flag: 1
 energy_analysis_flag: 1
 ftype: 4

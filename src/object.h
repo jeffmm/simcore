@@ -138,6 +138,21 @@ class Object {
     virtual void StepKMC() {}
     virtual void DumpKMC() {}
     rng_properties* GetRNG() {return &rng_;}
+
+    virtual void WritePosit(std::ofstream &op){
+      //op.write(&oid_, sizeof(oid_), op);
+      for(auto& pos : position_)
+        op.write((char*)&pos, sizeof(pos));
+      for(auto& spos : scaled_position_)
+        op.write((char*)&spos, sizeof(spos));
+      for(auto& u : orientation_)
+        op.write((char*)&u, sizeof(u));
+      op.write((char*)&diameter_, sizeof(diameter_));
+      op.write((char*)&length_, sizeof(length_));
+    }
+
+
+    virtual void ReadPosit(std::ifstream &ip){}
 };
 
 class Simple : public Object {

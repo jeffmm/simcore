@@ -9,12 +9,12 @@
 class SimulationManager {
 
   private:
-    unsigned int n_runs_,
-                 n_var_;
+    unsigned int n_runs_, //Number of runs per parameters set
+                 n_var_; //Number of parameter variations
     std::string run_name_;
-    std::string param_file_;
-    Simulation *sim_;
-    system_parameters *params_;
+    std::string param_file_; //Name of param yaml file
+    Simulation *sim_; //New sim created and destroyed for every set of parameters
+    system_parameters *params_; //array of system parameter structures for each sim that will be run
     rng_properties rng_;
     void ParseParams();
     void InitVariations();

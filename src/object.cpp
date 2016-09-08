@@ -1,4 +1,5 @@
 #include "object.h"
+#include "output_manager.h"
 
 #include "minimum_distance.h"
 
