@@ -37,8 +37,12 @@ int main(int argc, char *argv[]) {
       sim.SetNRuns(run_opts.n_runs);
     if (run_opts.r_flag)
       sim.SetRunName(run_opts.run_name);
+    // Recreate Movie of past simulations using posit file
+    if (run_opts.m_flag)
+      sim.RunMovieManager(run_opts.posit_file);
     // Main control function
-    sim.RunManager();
+    else
+      sim.RunManager();
   }
 
   return 0;

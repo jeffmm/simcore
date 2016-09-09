@@ -31,6 +31,7 @@ class SimulationManager {
     void RunManager();
     void SetNRuns(int n_runs);
     void SetRunName(std::string run_name);
+    void RunMovieManager(std::string posit_file);
 };
 
 

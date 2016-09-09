@@ -19,6 +19,8 @@ class Simulation {
     double time_,
            cpu_init_time_;
     std::string run_name_;
+    std::string posit_file_;
+    std::ifstream ip;
 
     OutputManager output_mgr_;
     system_parameters params_;
@@ -31,9 +33,11 @@ class Simulation {
     rfh::factory species_factory_;
     void InitSimulation();
     void InitSpecies();
+    void InitPositInput();
     void ClearSpecies();
     void InitOutputs();
     void RunSimulation();
+    void RunMovie();
     void ClearSimulation();
     void Draw();
     void WriteOutputs();
@@ -50,6 +54,7 @@ class Simulation {
     Simulation();
     ~Simulation();
     void Run(system_parameters params, std::string name);
+    void CreateMovie(system_parameters params, std::string name, std::string posit_file);
 };
 
 #endif // _SIMCORE_SIMULATION_H_  

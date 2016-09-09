@@ -1,9 +1,11 @@
-#ifndef _OUTPUT_MANAGER_H_
-#define _OUTPUT_MANAGER_H_
+#ifndef _SIMCORE_OUTPUT_MANAGER_H_
+#define _SIMCORE_OUTPUT_MANAGER_H_
 
 #include "object.h"
 #include "species.h"
 #include "auxiliary.h"
+
+void grabber(int width, int height, char *fname, int framenum);
 
 class OutputManager{
   private:
@@ -16,6 +18,7 @@ class OutputManager{
   public:
     OutputManager();
     void Init(system_parameters *params, int *i_step);
+    //void SetInputPositFile();
     void WriteOutputs();
     void WriteSpeciesPosits();
     void AddSpecie(SpeciesBase *spec);
@@ -23,5 +26,6 @@ class OutputManager{
 
 };
 
-#endif //_SIMCORE_BR_BEAD_H_
+
+#endif //_SIMCORE_OUTPUT_MANAGER_H_
 
