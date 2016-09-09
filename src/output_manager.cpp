@@ -34,8 +34,3 @@ std::ofstream& OutputManager::GetPositFile(SID sid){
   return posit_files_[sid];
 }
 
-
-  
-
-
-

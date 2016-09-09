@@ -41,6 +41,32 @@ void Simulation::RunSimulation() {
   }
 }
 
+void Simulation::RunMovie(){
+  std::cout << "Running movie: " << run_name_ << "\n";
+  std::cout << "    steps: " << params_.n_steps << std::endl;
+  for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
+    time_ = (i_step_+1) * params_.delta; 
+    //if (i_step_ % (params_.n_steps / 100) == 0) {
+    if ((100*i_step_) % (params_.n_steps) == 0) {
+      printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
+      fflush(stdout);
+    }
+    if (debug_trace)
+      printf("********\nStep %d\n********\n", i_step_);
+    //ZeroForces();
+    //KineticMonteCarloMP();
+    //InteractMP();
+    //IntegrateMP();
+    // Only will run if DEBUG is enabled
+    //#ifdef DEBUG
+    //if (debug_trace)
+      //DumpAll(i_step_);
+    //#endif
+    Draw();
+    WriteOutputs();
+  }
+}
+
 void Simulation::DumpAll(int i_step) {
     // Very yucky dump of all the particles and their positions and forces
     uengine_.DumpAll();
@@ -85,6 +111,7 @@ void Simulation::InitSimulation() {
   InitOutputs();
 }
 
+
 void Simulation::InitSpecies() {
 //#include "init_species.h"
   // Check out the configuration file
@@ -114,6 +141,13 @@ void Simulation::InitSpecies() {
     }
   }
 }
+
+void Simulation::InitPositInput(){
+  ip.open(posit_file_, std::ios::in | std::ios::binary);
+  if (!ip.is_open())
+    std::cout<<"Input "<< posit_file_ <<" file did not open\n";
+}
+
 void Simulation::ClearSpecies() {
   for (auto it=species_.begin(); it!=species_.end(); ++it)
     delete (*it);
@@ -216,4 +250,16 @@ void Simulation::WriteOutputs() {
   }
 
 }
+
+void Simulation::CreateMovie(system_parameters params, std::string name, std::string posit_file){
+  params_ = params;
+  run_name_ = name;
+  posit_file_ = posit_file;
+  rng_.init(params_.seed);
+  InitSimulation();
+  InitPositInput();
+  RunMovie();
+  ClearSimulation();
+}
+
 

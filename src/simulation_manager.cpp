@@ -194,3 +194,30 @@ void SimulationManager::SetRunName(std::string run_name) {
   run_name_ = run_name;
 }
 
+void SimulationManager::RunMovieManager(std::string posit_file) {
+  Simulation *sim;
+  std::ostringstream title;
+
+  //FIXME will eventually have posit file read in this value
+  int i_var = 0; 
+  int i_run = 0;
+
+  InitVariations();
+  ParseParams(); //FIXME cannot take variations yet
+
+  title << run_name_;
+
+  if (n_var_ > 1)
+    title << "-v" << i_var+1;
+  if (n_runs_ > 1) 
+    title << "-r" << i_run+1;
+  params_[i_var].seed = gsl_rng_get(rng_.r);
+  PrintParams(params_[i_var], title.str());
+  sim = new Simulation;
+  sim->CreateMovie(params_[i_var], title.str(), posit_file);
+  delete sim;
+  title.str("");
+  title.clear();
+}
+  
+
