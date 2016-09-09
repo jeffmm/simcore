@@ -17,8 +17,6 @@ class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
 
     virtual void InitTestModule(const std::string& filename);
     virtual void RunTests();
-    virtual void UnitTests();
-    virtual void IntegrationTests();
 
   protected:
 
@@ -32,28 +30,6 @@ class TestXlinkKMC : public TestModuleBase, public XlinkKMC {
     bool UnitTestUpdateStage1(int test_num);
     bool UnitTestUpdateStage2(int test_num);
     bool UnitTestPolarAffinity(int test_num);
-
-    void CreateTestRod(BrRod **rod,
-                       const std::string &unitname,
-                       const std::string &rodname,
-                       int itest);
-
-    void CreateTestXlink(Xlink **mxit,
-                         const std::string &unitname,
-                         const std::string &xname,
-                         int itest,
-                         int attachoid);
-
-    void CreateTestXlink(Xlink **mxit,
-                         const std::string &unitname,
-                         const std::string &xname,
-                         int itest,
-                         int attachoid0,
-                         int attachoid1);
-
-    std::vector<std::function<bool(int)>> unit_tests_;
-    std::vector<std::string> unit_tests_names_;
-    std::vector<std::vector<bool>> unit_tests_results_;
 
     system_parameters params_sub_;
     SpaceProperties space_sub_;
