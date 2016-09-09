@@ -151,7 +151,6 @@ class Object {
       op.write((char*)&length_, sizeof(length_));
     }
 
-
     virtual void ReadPosit(std::ifstream &ip){}
 };
 

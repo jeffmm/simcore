@@ -8,7 +8,7 @@
 //       as well as any flag descriptions in the static string array below
 //       when adding new flags.
 
-static const int n_flags = 6; 
+static const int n_flags = 7; 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
@@ -16,6 +16,7 @@ static struct option long_options[] = {
   {"run-name", required_argument, 0, 'r'},
   {"n-runs", required_argument, 0, 'n'},
   {"test", no_argument, 0, 't'},
+  {"movie", required_argument, 0, 'm'},
   {0, 0, 0, 0}
 };
 
@@ -26,20 +27,23 @@ static const std::string desc[n_flags][2] = {
   {"where fname is the input parameter file (REQUIRED)\n", "fname"},
   {"where rname is the name of a run session (for organizing batch jobs)\n", "rname"},
   {"where num is the number of independent runs to perform with the given parameters\n", "num"},
+  {"where movie is the posit file name to recreate previous simulation\n", "movie"},
   {"run program in test mode\n", "none"}
 };
 
 // Run parameters that needs to be carried forward should be stored here.
 struct run_options {
-  run_options() {n_runs = 1; debug = 0; test = 0; f_flag = 0; r_flag = 0; n_flag = 0; run_name = "sc";}
+  run_options() {n_runs = 1; debug = 0; test = 0; f_flag = 0; r_flag = 0; n_flag = 0; m_flag = 0; run_name = "sc";}
   int n_runs;
   int debug;
   int test;
   int f_flag;
   int r_flag;
   int n_flag;
+  int m_flag;
   std::string param_file;
   std::string run_name;
+  std::string posit_file;
 };
 
 /*************************
@@ -108,6 +112,10 @@ run_options parse_opts(int argc, char *argv[]) {
       case 'n':
         run_opts.n_flag = 1;
         run_opts.n_runs = atoi(optarg);
+        break;
+      case 'm':
+        run_opts.m_flag = 1;
+        run_opts.posit_file = optarg;
         break;
       case '?':
         break;
