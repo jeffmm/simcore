@@ -63,7 +63,7 @@ void Simulation::RunMovie(){
       //DumpAll(i_step_);
     //#endif
     Draw();
-    WriteOutputs();
+    //WriteOutputs();
   }
 }
 
@@ -253,6 +253,7 @@ void Simulation::WriteOutputs() {
 
 void Simulation::CreateMovie(system_parameters params, std::string name, std::string posit_file){
   params_ = params;
+  params_.graph_flag = 1;
   run_name_ = name;
   posit_file_ = posit_file;
   rng_.init(params_.seed);
