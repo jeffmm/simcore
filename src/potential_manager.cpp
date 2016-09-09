@@ -149,11 +149,13 @@ std::vector<PotentialBase*> PotentialManager::GetAllPotentials() {
   for (auto pot = tethers_.begin(); pot != tethers_.end(); ++pot) {
     allpots.push_back(pot->second);
   }
+  return allpots;
 }
 
 void PotentialManager::Print() {
   std::cout << "****************\n";
   std::cout << "Potentials ->\n";
+  // External potentials
   std::cout << "----------------\n";
   std::cout << "External potentials: \n";
   for (auto pot=potentials_.begin(); pot!=potentials_.end(); ++pot) {

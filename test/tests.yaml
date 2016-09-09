@@ -1,3 +1,4 @@
 seed: 100
 TestXlinkKMC: test/testxlinkkmc.yaml
+#TestXlinkKMC: test/test_one_xlink.yaml
 TestLookupTable: test/testlookuptable.yaml

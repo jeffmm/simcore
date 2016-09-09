@@ -127,6 +127,7 @@ const double Xlink::GetInternalEnergy() {
   auto head1 = elements_.begin()+1;
   p_energy_ = head0->GetPotentialEnergy();
   p_energy_ += head1->GetPotentialEnergy();
+  return p_energy_;
 }
 
 std::pair<bool,bool> Xlink::GetBoundHeads(XlinkHead **freehead, XlinkHead **boundhead) {
@@ -435,5 +436,82 @@ void XlinkSpecies::Configurator() {
   } else {
     std::cout << "Insertion type " << insertion_type << " not implemented yet\n";
     exit(1);
+  }
+}
+
+void XlinkSpecies::CreateTestXlink(Xlink **mxit,
+                                   int ndim,
+                                   std::vector<Simple*>* simples,
+                                   std::unordered_map<int, int>* oid_position_map,
+                                   const std::string &filename,
+                                   const std::string &modulename,
+                                   const std::string &unitname,
+                                   const std::string &xname,
+                                   int itest,
+                                   int attachoid) {
+  YAML::Node node = YAML::LoadFile(filename);
+  Xlink *xit = *mxit;
+  double xx[3] = {0.0, 0.0, 0.0};
+  xit->InitConfigurator(xx, 1.0);
+  //std::cout << "Xlink base name: " << xname << std::endl;
+  std::ostringstream headname;
+  headname << "head_" << xname;
+  //std::cout << "head name: " << headname.str() << std::endl;
+  int head = node[modulename][unitname.c_str()]["test"][itest][headname.str().c_str()].as<int>();
+  std::ostringstream crossposname;
+  crossposname << "crosspos_" << xname;
+  //std::cout << "crosspos name: " << crossposname.str() << std::endl;
+  double crosspos = node[modulename][unitname.c_str()]["test"][itest][crossposname.str().c_str()].as<double>();
+
+  xit->BindHeadSingle(head, crosspos, attachoid);
+  //xit->Dump();
+  //xit->DumpKMC();
+
+  // simples and oid stuff
+  std::vector<Simple*> sim_vec = xit->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples->push_back(sim_vec[i]);
+    (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
+  }
+
+  // Print to make sure working
+  /*std::cout << "simples: \n";
+  for (int i = 0; i < simples->size(); ++i) {
+    std::cout << "[" << i << "] -> OID " << (*simples)[i]->GetOID();
+    std::cout << " <--> " << (*oid_position_map)[(*simples)[i]->GetOID()] << std::endl;
+  }*/
+}
+
+void XlinkSpecies::CreateTestXlink(Xlink **mxit,
+                                   int ndim,
+                                   std::vector<Simple*>* simples,
+                                   std::unordered_map<int, int>* oid_position_map,
+                                   const std::string &filename,
+                                   const std::string &modulename,
+                                   const std::string &unitname,
+                                   const std::string &xname,
+                                   int itest,
+                                   int attachoid0,
+                                   int attachoid1) {
+  YAML::Node node = YAML::LoadFile(filename);
+  Xlink *xit = *mxit;
+  double xx[3] = {0.0, 0.0, 0.0};
+  xit->InitConfigurator(xx, 1.0);
+  std::ostringstream crossposname0;
+  crossposname0 << "crosspos_" << xname << "0";
+  std::ostringstream crossposname1;
+  crossposname1 << "crosspos_" << xname << "1";
+  double cpos0 = node[modulename][unitname.c_str()]["test"][itest][crossposname0.str().c_str()].as<double>();
+  double cpos1 = node[modulename][unitname.c_str()]["test"][itest][crossposname1.str().c_str()].as<double>();
+
+  xit->BindHeadDouble(cpos0, attachoid0, cpos1, attachoid1);
+  //xit->Dump();
+  //xit->DumpKMC();
+
+  // simples and oid stuff
+  std::vector<Simple*> sim_vec = xit->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples->push_back(sim_vec[i]);
+    (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
   }
 }
