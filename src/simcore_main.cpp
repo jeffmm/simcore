@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
     if (run_opts.m_flag)
       sim.RunMovieManager(run_opts.posit_file);
     // Main control function
-    else
-      sim.RunManager();
+    //else
+      //sim.RunManager();
   }
 
   return 0;

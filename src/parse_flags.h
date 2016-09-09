@@ -83,7 +83,7 @@ run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdtr:f:n:", long_options, &option_index);
+    tmp = getopt_long(argc, argv, "hdtr:f:n:m:", long_options, &option_index);
     if (tmp == -1)
       break;
     
