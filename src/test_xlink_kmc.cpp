@@ -10,71 +10,72 @@
 
 void TestXlinkKMC::InitTestModule(const std::string& filename) {
   name_ = "TestXlinkKMC";
+  filename_ = filename;
   std::cout << name_ << " Init Tests\n";
 
   // Add the tests outlined in the yaml file?
-  node_ = YAML::LoadFile(filename);
+  node_ = YAML::LoadFile(filename_);
 
   // Test out functional
   if (node_[name_]["FailTest"]) {
     std::function<bool(int)> f_failtest = std::bind(&TestXlinkKMC::FailTest, this, std::placeholders::_1);
-    unit_tests_.push_back(f_failtest);
-    unit_tests_names_.push_back("FailTest");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_failtest);
+    test_names_.push_back("FailTest");
+    test_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["CalcCutoff"]) {
     std::function<bool(int)> f_calc_cutoff = std::bind(&TestXlinkKMC::UnitTestCalcCutoff, this, std::placeholders::_1);
-    unit_tests_.push_back(f_calc_cutoff);
-    unit_tests_names_.push_back("CalcCutoff");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_calc_cutoff);
+    test_names_.push_back("CalcCutoff");
+    test_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["Update_0_1"]) {
     std::function<bool(int)> f_update_0_1 = std::bind(&TestXlinkKMC::UnitTestUpdate_0_1, this, std::placeholders::_1);
-    unit_tests_.push_back(f_update_0_1);
-    unit_tests_names_.push_back("Update_0_1");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_update_0_1);
+    test_names_.push_back("Update_0_1");
+    test_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["Update_1_2"]) {
     std::function<bool(int)> f_update_1_2 = std::bind(&TestXlinkKMC::UnitTestUpdate_1_2, this, std::placeholders::_1);
-    unit_tests_.push_back(f_update_1_2);
-    unit_tests_names_.push_back("Update_1_2");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_update_1_2);
+    test_names_.push_back("Update_1_2");
+    test_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["Detach_1_0"]) {
     std::function<bool(int)> f_detach_1_0 = std::bind(&TestXlinkKMC::UnitTestDetach_1_0, this, std::placeholders::_1);
-    unit_tests_.push_back(f_detach_1_0);
-    unit_tests_names_.push_back("Detach_1_0");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_detach_1_0);
+    test_names_.push_back("Detach_1_0");
+    test_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["Detach_2_1"]) {
     std::function<bool(int)> f_detach_2_1 = std::bind(&TestXlinkKMC::UnitTestDetach_2_1, this, std::placeholders::_1);
-    unit_tests_.push_back(f_detach_2_1);
-    unit_tests_names_.push_back("Detach_2_1");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_detach_2_1);
+    test_names_.push_back("Detach_2_1");
+    test_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["Detach_2_0"]) {
     std::function<bool(int)> f_detach_2_0 = std::bind(&TestXlinkKMC::UnitTestDetach_2_0, this, std::placeholders::_1);
-    unit_tests_.push_back(f_detach_2_0);
-    unit_tests_names_.push_back("Detach_2_0");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_detach_2_0);
+    test_names_.push_back("Detach_2_0");
+    test_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["UpdateStage1"]) {
     std::function<bool(int)> f_updatestage1 = std::bind(&TestXlinkKMC::UnitTestUpdateStage1, this, std::placeholders::_1);
-    unit_tests_.push_back(f_updatestage1);
-    unit_tests_names_.push_back("UpdateStage1");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_updatestage1);
+    test_names_.push_back("UpdateStage1");
+    test_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["UpdateStage2"]) {
     std::function<bool(int)> f_updatestage2 = std::bind(&TestXlinkKMC::UnitTestUpdateStage2, this, std::placeholders::_1);
-    unit_tests_.push_back(f_updatestage2);
-    unit_tests_names_.push_back("UpdateStage2");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_updatestage2);
+    test_names_.push_back("UpdateStage2");
+    test_results_.push_back(std::vector<bool>());
   }
   if (node_[name_]["PolarAffinity"]) {
     std::function<bool(int)> f_polaraffinity = std::bind(&TestXlinkKMC::UnitTestPolarAffinity, this, std::placeholders::_1);
-    unit_tests_.push_back(f_polaraffinity);
-    unit_tests_names_.push_back("PolarAffinity");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_polaraffinity);
+    test_names_.push_back("PolarAffinity");
+    test_results_.push_back(std::vector<bool>());
   }
 
   // Create a params, space, etc
@@ -83,24 +84,18 @@ void TestXlinkKMC::InitTestModule(const std::string& filename) {
   sid2_ = SID::br_rod;
 }
 
-void TestXlinkKMC::RunTests() {
-  std::cout << name_ << " Run Tests\n";
-  UnitTests();
-  IntegrationTests();
-}
-
 bool TestXlinkKMC::FailTest(int test_num) {
   // Basic test to make sure that failing works properly
   int ntests = 2;
   bool success = true;
 
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
   
   for (int i = 0; i < ntests; ++i) {
     if (i == 0) {
-      unit_tests_results_[test_num][i] = true;
+      test_results_[test_num][i] = true;
     } else {
-      unit_tests_results_[test_num][i] = false;
+      test_results_[test_num][i] = false;
       success = false;
     }
   }
@@ -108,30 +103,25 @@ bool TestXlinkKMC::FailTest(int test_num) {
   return success;
 }
 
-void TestXlinkKMC::UnitTests() {
-  std::cout << name_ << " Unit Tests ->\n";
+void TestXlinkKMC::RunTests() {
+  std::cout << name_ << " Tests ->\n";
   bool test_success = true;
 
-  for (int i = 0; i < unit_tests_.size(); ++i) {
-    bool this_success = unit_tests_[i](i);
+  for (int i = 0; i < tests_.size(); ++i) {
+    bool this_success = tests_[i](i);
     test_success &= this_success;
 
     std::cout << "----------------\n";
-    std::cout << "--Unit Test " << unit_tests_names_[i] << ": ";
+    std::cout << "--Test " << test_names_[i] << ": ";
     std::cout << (this_success ? "PASSED" : "FAILED") << std::endl;
-    for (int didpass = 0; didpass < unit_tests_results_[i].size(); ++didpass) {
-      std::cout << "    Test[" << didpass << "] " << (unit_tests_results_[i][didpass] ? "passed" : "failed");
+    for (int didpass = 0; didpass < test_results_[i].size(); ++didpass) {
+      std::cout << "    Test[" << didpass << "] " << (test_results_[i][didpass] ? "passed" : "failed");
       std::cout << std::endl;
     }
     std::cout << "----------------\n";
   }
   std::cout << name_;
-  std::cout << " Unit Tests: " << (test_success ? "passed" : "failed") << std::endl;
-}
-
-void TestXlinkKMC::IntegrationTests() {
-  std::cout << name_;
-  std::cout << " Integration Tests\n";
+  std::cout << " Tests: " << (test_success ? "passed" : "failed") << std::endl;
 }
 
 bool TestXlinkKMC::UnitTestCalcCutoff(int test_num) {
@@ -144,7 +134,7 @@ bool TestXlinkKMC::UnitTestCalcCutoff(int test_num) {
 
   int ntests = node_[name_]["CalcCutoff"]["test"].size();
 
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
 
   for (int itest = 0; itest < ntests; ++itest) {
     barrier_weight_ = node_[name_]["CalcCutoff"]["test"][itest]["barrier_weight"].as<double>();
@@ -158,9 +148,9 @@ bool TestXlinkKMC::UnitTestCalcCutoff(int test_num) {
     double tolerance = node_[name_]["CalcCutoff"]["test"][itest]["tolerance"].as<double>();
 
     if (uth::almost_equal<double>(res, result, tolerance)) {
-      unit_tests_results_[test_num][itest] = true;
+      test_results_[test_num][itest] = true;
     } else {
-      unit_tests_results_[test_num][itest] = false;
+      test_results_[test_num][itest] = false;
       success = false;
     }
   }
@@ -193,7 +183,7 @@ bool TestXlinkKMC::UnitTestUpdate_0_1(int test_num) {
   alpha_ = node_[name_]["Update_0_1"]["alpha"].as<double>();
 
   int ntests = node_[name_]["Update_0_1"]["test"].size();
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
 
   // Run the different tests
   for (int i = 0; i < ntests; ++i) {
@@ -221,9 +211,9 @@ bool TestXlinkKMC::UnitTestUpdate_0_1(int test_num) {
     double result = node_[name_]["Update_0_1"]["test"][i]["result"].as<double>();
     double tolerance = node_[name_]["Update_0_1"]["test"][i]["tolerance"].as<double>();
     if (uth::almost_equal<double>(res, result, tolerance)) {
-      unit_tests_results_[test_num][i] = true;
+      test_results_[test_num][i] = true;
     } else {
-      unit_tests_results_[test_num][i] = false;
+      test_results_[test_num][i] = false;
       success = false;
     }
   }
@@ -240,121 +230,6 @@ bool TestXlinkKMC::UnitTestUpdate_0_1(int test_num) {
   }
 
   return success;
-}
-
-void TestXlinkKMC::CreateTestRod(BrRod **rod,
-                                 const std::string &unitname,
-                                 const std::string &rodname,
-                                 int itest) {
-  BrRod *mrod = *rod;
-  // Load the rod
-  double xr[3] = {0.0, 0.0, 0.0};
-  double ur[3] = {0.0, 0.0, 0.0};
-  std::ostringstream xrodname;
-  xrodname << "x_" << rodname;
-  std::ostringstream urodname;
-  urodname << "u_" << rodname;
-  std::ostringstream lrodname;
-  lrodname << "l_" << rodname;
-  //std::cout << "Checking location\n";
-  for (int idim = 0; idim < ndim_; ++idim) {
-    xr[idim] = node_[name_][unitname.c_str()]["test"][itest][xrodname.str().c_str()][idim].as<double>();
-    ur[idim] = node_[name_][unitname.c_str()]["test"][itest][urodname.str().c_str()][idim].as<double>();
-  }
-  //std::cout << "Checking length\n";
-  double lrod = node_[name_][unitname.c_str()]["test"][itest][lrodname.str().c_str()].as<double>();
-  //std::cout << "TEST ROD CREATE: \n";
-  //std::cout << std::setprecision(16) << "x: (" << xr[0] << ", " << xr[1] << ", " << xr[2] << "), ";
-  //std::cout << std::setprecision(16) << "u: (" << ur[0] << ", " << ur[1] << ", " << ur[2] << "), ";
-  //std::cout << std::setprecision(16) << "l: " << lrod << std::endl;
-  mrod->InitConfigurator(xr, ur, lrod);
-  //mrod->Dump();
-
-  // Add the simples to the correct location and the oid position map
-  std::vector<Simple*> sim_vec = mrod->GetSimples();
-  for (int i = 0; i < sim_vec.size(); ++i) {
-    simples_->push_back(sim_vec[i]);
-    (*oid_position_map_)[sim_vec[i]->GetOID()] = simples_->size() -1;
-  }
-
-  // Print to make sure working
-  /*std::cout << "simples: \n";
-  for (int i = 0; i < simples_->size(); ++i) {
-    std::cout << "[" << i << "] -> OID " << (*simples_)[i]->GetOID();
-    std::cout << " <--> " << (*oid_position_map_)[(*simples_)[i]->GetOID()] << std::endl;
-  }*/
-}
-
-void TestXlinkKMC::CreateTestXlink(Xlink **mxit,
-                                   const std::string &unitname,
-                                   const std::string &xname,
-                                   int itest,
-                                   int attachoid) {
-  Xlink *xit = *mxit;
-  double xx[3] = {0.0, 0.0, 0.0};
-  xit->InitConfigurator(xx, 1.0);
-  //std::cout << "Xlink base name: " << xname << std::endl;
-  std::ostringstream headname;
-  headname << "head_" << xname;
-  //std::cout << "head name: " << headname.str() << std::endl;
-  int head = node_[name_][unitname.c_str()]["test"][itest][headname.str().c_str()].as<int>();
-  std::ostringstream crossposname;
-  crossposname << "crosspos_" << xname;
-  //std::cout << "crosspos name: " << crossposname.str() << std::endl;
-  double crosspos = node_[name_][unitname.c_str()]["test"][itest][crossposname.str().c_str()].as<double>();
-
-  xit->BindHeadSingle(head, crosspos, attachoid);
-  //xit->Dump();
-  //xit->DumpKMC();
-
-  // simples and oid stuff
-  std::vector<Simple*> sim_vec = xit->GetSimples();
-  for (int i = 0; i < sim_vec.size(); ++i) {
-    simples_->push_back(sim_vec[i]);
-    (*oid_position_map_)[sim_vec[i]->GetOID()] = simples_->size() -1;
-  }
-
-  // Print to make sure working
-  /*std::cout << "simples: \n";
-  for (int i = 0; i < simples_->size(); ++i) {
-    std::cout << "[" << i << "] -> OID " << (*simples_)[i]->GetOID();
-    std::cout << " <--> " << (*oid_position_map_)[(*simples_)[i]->GetOID()] << std::endl;
-  }*/
-}
-
-void TestXlinkKMC::CreateTestXlink(Xlink **mxit,
-                   const std::string &unitname,
-                   const std::string &xname,
-                   int itest,
-                   int attachoid0,
-                   int attachoid1) {
-  Xlink *xit = *mxit;
-  double xx[3] = {0.0, 0.0, 0.0};
-  xit->InitConfigurator(xx, 1.0);
-  std::ostringstream crossposname0;
-  crossposname0 << "crosspos_" << xname << "0";
-  std::ostringstream crossposname1;
-  crossposname1 << "crosspos_" << xname << "1";
-  double cpos0 = node_[name_][unitname.c_str()]["test"][itest][crossposname0.str().c_str()].as<double>();
-  double cpos1 = node_[name_][unitname.c_str()]["test"][itest][crossposname1.str().c_str()].as<double>();
-
-  xit->BindHeadDouble(cpos0, attachoid0, cpos1, attachoid1);
-  //xit->Dump();
-  //xit->DumpKMC();
-
-  // simples and oid stuff
-  std::vector<Simple*> sim_vec = xit->GetSimples();
-  for (int i = 0; i < sim_vec.size(); ++i) {
-    simples_->push_back(sim_vec[i]);
-    (*oid_position_map_)[sim_vec[i]->GetOID()] = simples_->size() -1;
-  }
-
-  // Print to make sure working
-  /*std::cout << "simples: \n";
-  for (int i = 0; i < simples_->size(); ++i) {
-    std::cout << "[" << i << "] -> OID " << (*simples_)[i]->GetOID();
-    std::cout << " <--> " << (*oid_position_map_)[(*simples_)[i]->GetOID()] << std::endl;
-  }*/
 }
 
 bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
@@ -386,18 +261,18 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
   // Use the configurators to initialize the xlink and rod
   int ntests = (int)node_[name_][subtest]["test"].size();
 
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
 
   for (int i = 0; i < ntests; ++i) {
     // Clear the oid map, and the simples
     // Add the base rod
     oid_position_map_->clear();
     simples_->clear();
-    CreateTestRod(&testRodBase, subtest, "rod_base", i);
-    CreateTestRod(&testRodFree, subtest, "rod_free", i);
+    BrRodSpecies::CreateTestRod(&testRodBase, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod_base", i);
+    BrRodSpecies::CreateTestRod(&testRodFree, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod_free", i);
 
     // Add the xlink
-    CreateTestXlink(&testXlink, subtest, "xlink", i, testRodBase->GetSimples()[0]->GetOID());
+    XlinkSpecies::CreateTestXlink(&testXlink, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "xlink", i, testRodBase->GetSimples()[0]->GetOID());
     double xx[3] = {0.0, 0.0, 0.0}; // we will set based upon the attached rod
 
     // Set the location
@@ -440,9 +315,9 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
     double this_result  = node_[name_][subtest]["test"][i]["result"].as<double>();
     double tolerance    = node_[name_][subtest]["test"][i]["tolerance"].as<double>();
     if (uth::almost_equal<double>(res, this_result, tolerance)) {
-      unit_tests_results_[test_num][i] = true;
+      test_results_[test_num][i] = true;
     } else {
-      unit_tests_results_[test_num][i] = false;
+      test_results_[test_num][i] = false;
       success = false;
     }
 
@@ -480,37 +355,38 @@ bool TestXlinkKMC::UnitTestUpdate_1_2(int test_num) {
 
 bool TestXlinkKMC::UnitTestDetach_1_0(int test_num) {
   bool success = true;
+  std::string subtest = "Detach_1_0";
 
   // Use the configurators to initialize the xlink and rod
-  int ntests = (int)node_[name_]["Detach_1_0"]["test"].size();
+  int ntests = (int)node_[name_][subtest]["test"].size();
 
   // Fake out the position map and simples
   oid_position_map_ = new std::unordered_map<int, int>();
   simples_ = new std::vector<Simple*>();
 
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
   
   for (int itest = 0; itest < ntests; ++itest) {
     // Clean up everything from previous tests
     oid_position_map_->clear();
     simples_->clear();
     // Set up the space type structs
-    ndim_ = node_[name_]["Detach_1_0"]["test"][itest]["ndim"].as<int>();
+    ndim_ = node_[name_][subtest]["test"][itest]["ndim"].as<int>();
     params_sub_.n_dim = ndim_;
     space_sub_.Init(&params_sub_, 10);
     space_ = space_sub_.GetStruct();
 
-    rcutoff_0_1_ = node_[name_]["Detach_1_0"]["test"][itest]["rcutoff_0_1"].as<double>();
+    rcutoff_0_1_ = node_[name_][subtest]["test"][itest]["rcutoff_0_1"].as<double>();
 
-    long x_rng = node_[name_]["Detach_1_0"]["test"][itest]["x_rng"].as<long>();
+    long x_rng = node_[name_][subtest]["test"][itest]["x_rng"].as<long>();
 
     BrRod *testRod = new BrRod(&params_sub_, space_sub_.GetStruct(), x_rng, SID::br_rod);
     Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), x_rng, SID::xlink);
 
-    CreateTestRod(&testRod, "Detach_1_0", "rod", itest);
+    BrRodSpecies::CreateTestRod(&testRod, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod", itest);
 
     // Load the xlink
-    CreateTestXlink(&testXlink, "Detach_1_0", "xlink", itest, testRod->GetSimples()[0]->GetOID());
+    XlinkSpecies::CreateTestXlink(&testXlink, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "xlink", itest, testRod->GetSimples()[0]->GetOID());
     double xx[3] = {0.0, 0.0, 0.0};
 
     XlinkHead *freehead, *boundhead;
@@ -537,37 +413,37 @@ bool TestXlinkKMC::UnitTestDetach_1_0(int test_num) {
     double dr2_orig = 0.0;
     std::copy(boundhead->GetRigidPosition(), boundhead->GetRigidPosition()+ndim_, original_position);
     for (int idim = 0; idim < ndim_; ++idim) {
-      orig_results[idim] = node_[name_]["Detach_1_0"]["test"][itest]["results_original_pos"][idim].as<double>();
+      orig_results[idim] = node_[name_][subtest]["test"][itest]["results_original_pos"][idim].as<double>();
       dr2_orig += SQR(original_position[idim] - orig_results[idim]);
     }
     // Detach!
     Detach_1_0(testXlink, freehead, boundhead);
 
     // Check various things
-    unit_tests_results_[test_num][itest] = true;
+    test_results_[test_num][itest] = true;
     if (freehead->GetBound()) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     if (boundhead->GetBound()) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     if (testXlink->GetBoundState() != unbound) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
 
     double res[3] = {0.0, 0.0, 0.0};
     double dr_loc = 0.0;
     for (int idim = 0; idim < ndim_; ++idim) {
-      res[idim] = node_[name_]["Detach_1_0"]["test"][itest]["results"][idim].as<double>();
+      res[idim] = node_[name_][subtest]["test"][itest]["results"][idim].as<double>();
       dr_loc += SQR(res[idim] - boundhead->GetRigidPosition()[idim]);
     }
 
-    double tolerance = node_[name_]["Detach_1_0"]["test"][itest]["tolerance"].as<double>();
+    double tolerance = node_[name_][subtest]["test"][itest]["tolerance"].as<double>();
     if (!uth::almost_equal(dr2_orig, 0.0, tolerance)) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     if (!uth::almost_equal(dr_loc, 0.0, tolerance)) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
 
     // Cleanup
@@ -586,7 +462,7 @@ bool TestXlinkKMC::UnitTestDetach_1_0(int test_num) {
     delete oid_position_map_;
   }
 
-  for (auto suc = unit_tests_results_[test_num].begin(); suc != unit_tests_results_[test_num].end(); ++suc) {
+  for (auto suc = test_results_[test_num].begin(); suc != test_results_[test_num].end(); ++suc) {
     success = success && (*suc);
   }
   return success;
@@ -594,22 +470,23 @@ bool TestXlinkKMC::UnitTestDetach_1_0(int test_num) {
 
 bool TestXlinkKMC::UnitTestDetach_2_1(int test_num) {
   bool success = true;
+  std::string subtest = "Detach_2_1";
 
   // Use the configurators to initialize the xlink and rod
-  int ntests = (int)node_[name_]["Detach_2_1"]["test"].size();
+  int ntests = (int)node_[name_][subtest]["test"].size();
 
   // Fake out the position map and simples
   oid_position_map_ = new std::unordered_map<int, int>();
   simples_ = new std::vector<Simple*>();
 
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
 
   for (int itest = 0; itest < ntests; ++itest) {
     // Clean up everything from previous tests
     oid_position_map_->clear();
     simples_->clear();
     // Set up the space type structs
-    ndim_ = node_[name_]["Detach_2_1"]["test"][itest]["ndim"].as<int>();
+    ndim_ = node_[name_][subtest]["test"][itest]["ndim"].as<int>();
     params_sub_.n_dim = ndim_;
     space_sub_.Init(&params_sub_, 10);
     space_ = space_sub_.GetStruct();
@@ -618,11 +495,12 @@ bool TestXlinkKMC::UnitTestDetach_2_1(int test_num) {
     BrRod *testRod1 = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
     Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
 
-    CreateTestRod(&testRod0, "Detach_2_1", "rod0", itest);
-    CreateTestRod(&testRod1, "Detach_2_1", "rod1", itest);
+    BrRodSpecies::CreateTestRod(&testRod0, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod0", itest);
+    BrRodSpecies::CreateTestRod(&testRod1, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod1", itest);
 
     // Xlink
-    CreateTestXlink(&testXlink, "Detach_2_1", "xlink", itest, testRod0->GetSimples()[0]->GetOID(), testRod1->GetSimples()[0]->GetOID());
+    XlinkSpecies::CreateTestXlink(&testXlink, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "xlink", itest,
+        testRod0->GetSimples()[0]->GetOID(), testRod1->GetSimples()[0]->GetOID());
 
     // Generate the xlink positions
     // XXX FIXME
@@ -670,27 +548,27 @@ bool TestXlinkKMC::UnitTestDetach_2_1(int test_num) {
     }
     testXlink->SetPosition(avg_pos);
 
-    int which_detach = node_[name_]["Detach_2_1"]["test"][itest]["detach"].as<int>();
+    int which_detach = node_[name_][subtest]["test"][itest]["detach"].as<int>();
     // Run the detach
     Detach_2_1(testXlink, which_detach);
 
     // head which_detach should be detached now
-    unit_tests_results_[test_num][itest] = true;
+    test_results_[test_num][itest] = true;
     if (testXlink->GetBoundState() != singly) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     XlinkHead *freehead, *boundhead;
     auto testbound = testXlink->GetBoundHeads(&freehead, &boundhead);
     if ((which_detach == 0) && (testbound.first)) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     if ((which_detach == 1) && (testbound.second)) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     for (int i = 0; i < ndim_; ++i) {
       double separation = freehead->GetRigidPosition()[i] - boundhead->GetRigidPosition()[i];
       if (separation > 0) {
-        unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+        test_results_[test_num][itest] = false && test_results_[test_num][itest];
       }
     }
 
@@ -718,22 +596,23 @@ bool TestXlinkKMC::UnitTestDetach_2_1(int test_num) {
 
 bool TestXlinkKMC::UnitTestDetach_2_0(int test_num) {
   bool success = true;
+  std::string subtest = "Detach_2_0";
 
   // Use the configurators to initialize the xlink and rod
-  int ntests = (int)node_[name_]["Detach_2_0"]["test"].size();
+  int ntests = (int)node_[name_][subtest]["test"].size();
 
   // Fake out the position map and simples
   oid_position_map_ = new std::unordered_map<int, int>();
   simples_ = new std::vector<Simple*>();
 
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
 
   for (int itest = 0; itest < ntests; ++itest) {
     // Clean up everything from previous tests
     oid_position_map_->clear();
     simples_->clear();
     // Set up the space type structs
-    ndim_ = node_[name_]["Detach_2_0"]["test"][itest]["ndim"].as<int>();
+    ndim_ = node_[name_][subtest]["test"][itest]["ndim"].as<int>();
     params_sub_.n_dim = ndim_;
     space_sub_.Init(&params_sub_, 10);
     space_ = space_sub_.GetStruct();
@@ -742,11 +621,12 @@ bool TestXlinkKMC::UnitTestDetach_2_0(int test_num) {
     BrRod *testRod1 = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
     Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
 
-    CreateTestRod(&testRod0, "Detach_2_0", "rod0", itest);
-    CreateTestRod(&testRod1, "Detach_2_0", "rod1", itest);
+    BrRodSpecies::CreateTestRod(&testRod0, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod0", itest);
+    BrRodSpecies::CreateTestRod(&testRod1, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod1", itest);
 
     // Xlink
-    CreateTestXlink(&testXlink, "Detach_2_0", "xlink", itest, testRod0->GetSimples()[0]->GetOID(), testRod1->GetSimples()[0]->GetOID());
+    XlinkSpecies::CreateTestXlink(&testXlink, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "xlink", itest,
+        testRod0->GetSimples()[0]->GetOID(), testRod1->GetSimples()[0]->GetOID());
 
     // Generate the xlink positions (eww) XXX find a better way to do these types of things
     auto heads = testXlink->GetHeads();
@@ -787,19 +667,19 @@ bool TestXlinkKMC::UnitTestDetach_2_0(int test_num) {
     Detach_2_0(testXlink);
 
     // head which_detach should be detached now
-    unit_tests_results_[test_num][itest] = true;
+    test_results_[test_num][itest] = true;
     if (testXlink->GetBoundState() != unbound) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     XlinkHead *freehead, *boundhead;
     auto testbound = testXlink->GetBoundHeads(&freehead, &boundhead);
     if ((testbound.first) || (testbound.second)) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     for (int i = 0; i < ndim_; ++i) {
       double separation = avg_pos[i] - testXlink->GetPosition()[i];
       if (separation > 0) {
-        unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+        test_results_[test_num][itest] = false && test_results_[test_num][itest];
       }
     }
 
@@ -827,23 +707,24 @@ bool TestXlinkKMC::UnitTestDetach_2_0(int test_num) {
 
 bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
   bool success = true;
+  std::string subtest = "UpdateStage1";
 
   // Use the configurators to initialize the xlink and rod
-  int ntests = (int)node_[name_]["UpdateStage1"]["test"].size();
+  int ntests = (int)node_[name_][subtest]["test"].size();
 
   // Fake out the position map and simples
   oid_position_map_ = new std::unordered_map<int, int>();
   simples_ = new std::vector<Simple*>();
 
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
 
   for (int itest = 0; itest < ntests; ++itest) {
     // Clean up everything from previous tests
     oid_position_map_->clear();
     simples_->clear();
     // Set up the space type structs
-    ndim_ = node_[name_]["UpdateStage1"]["test"][itest]["ndim"].as<int>();
-    double m_delta = node_[name_]["UpdateStage1"]["delta"].as<double>();
+    ndim_ = node_[name_][subtest]["test"][itest]["ndim"].as<int>();
+    double m_delta = node_[name_][subtest]["delta"].as<double>();
     params_sub_.n_dim = ndim_;
     params_sub_.delta = m_delta;
     space_sub_.Init(&params_sub_, 10);
@@ -854,8 +735,9 @@ bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
     BrRod *testRod = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
     Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
 
-    CreateTestRod(&testRod, "UpdateStage1", "rod", itest);
-    CreateTestXlink(&testXlink, "UpdateStage1", "xlink", itest, testRod->GetSimples()[0]->GetOID());
+    BrRodSpecies::CreateTestRod(&testRod, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod", itest);
+    XlinkSpecies::CreateTestXlink(&testXlink, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "xlink", itest,
+        testRod->GetSimples()[0]->GetOID());
 
     // Try out our new update stage thing
     testXlink->UpdateStagePosition(testRod->GetSimples()[0]->GetRigidPosition(),
@@ -868,8 +750,8 @@ bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
                                    0);
 
     // Get other test parameters
-    end_pause_[0] = end_pause_[1] = node_[name_]["UpdateStage1"]["test"][itest]["end_pause"].as<bool>();
-    velocity_[0] = node_[name_]["UpdateStage1"]["test"][itest]["velocity"].as<double>();
+    end_pause_[0] = end_pause_[1] = node_[name_][subtest]["test"][itest]["end_pause"].as<bool>();
+    velocity_[0] = node_[name_][subtest]["test"][itest]["velocity"].as<double>();
     velocity_[1] = velocity_[0];
 
     // Run the update function
@@ -879,8 +761,8 @@ bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
     //testXlink->DumpKMC();
 
     // Finalize the tests
-    unit_tests_results_[test_num][itest] = true;
-    std::string temp_bound = node_[name_]["UpdateStage1"]["test"][itest]["result_bound"].as<std::string>();
+    test_results_[test_num][itest] = true;
+    std::string temp_bound = node_[name_][subtest]["test"][itest]["result_bound"].as<std::string>();
     attach_type boundtype = unbound;
     if (temp_bound.compare("unbound") == 0) {
       boundtype = unbound;
@@ -893,18 +775,18 @@ bool TestXlinkKMC::UnitTestUpdateStage1(int test_num) {
       exit(1);
     }
     if (testXlink->GetBoundState() != boundtype) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
       success = false;
     }
 
-    double result_crosspos = node_[name_]["UpdateStage1"]["test"][itest]["result_crosspos"].as<double>();
-    double tolerance = node_[name_]["UpdateStage1"]["test"][itest]["tolerance"].as<double>();
+    double result_crosspos = node_[name_][subtest]["test"][itest]["result_crosspos"].as<double>();
+    double tolerance = node_[name_][subtest]["test"][itest]["tolerance"].as<double>();
 
     XlinkHead *freehead, *boundhead;
     auto getbound = testXlink->GetBoundHeads(&freehead, &boundhead);
 
     if (!uth::almost_equal<double>(boundhead->GetAttach().second, result_crosspos, tolerance)) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
 
     if (testRod) {
@@ -931,22 +813,22 @@ bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
   std::string subtest = "UpdateStage2";
 
   // Use the configurators to initialize the xlink and rod
-  int ntests = (int)node_[name_]["UpdateStage2"]["test"].size();
+  int ntests = (int)node_[name_][subtest]["test"].size();
 
   // Fake out the position map and simples
   oid_position_map_ = new std::unordered_map<int, int>();
   simples_ = new std::vector<Simple*>();
 
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
 
   for (int itest = 0; itest < ntests; ++itest) {
     // Clean up everything from previous tests
     oid_position_map_->clear();
     simples_->clear();
     // Set up the space type structs
-    ndim_ = node_[name_]["UpdateStage2"]["test"][itest]["ndim"].as<int>();
+    ndim_ = node_[name_][subtest]["test"][itest]["ndim"].as<int>();
     params_sub_.n_dim = ndim_;
-    params_sub_.delta = node_[name_]["UpdateStage2"]["delta"].as<double>();
+    params_sub_.delta = node_[name_][subtest]["delta"].as<double>();
     space_sub_.Init(&params_sub_, 10);
     space_ = space_sub_.GetStruct();
 
@@ -954,11 +836,12 @@ bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
     BrRod *testRod1 = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
     Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
 
-    CreateTestRod(&testRod0, "UpdateStage2", "rod0", itest);
-    CreateTestRod(&testRod1, "UpdateStage2", "rod1", itest);
+    BrRodSpecies::CreateTestRod(&testRod0, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod0", itest);
+    BrRodSpecies::CreateTestRod(&testRod1, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "rod1", itest);
 
     // Xlink
-    CreateTestXlink(&testXlink, "UpdateStage2", "xlink", itest, testRod0->GetSimples()[0]->GetOID(), testRod1->GetSimples()[0]->GetOID());
+    XlinkSpecies::CreateTestXlink(&testXlink, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "xlink", itest,
+        testRod0->GetSimples()[0]->GetOID(), testRod1->GetSimples()[0]->GetOID());
     //testRod0->Dump();
     //testRod1->Dump();
     //testXlink->Dump();
@@ -1006,60 +889,60 @@ bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
     //testXlink->Dump();
     //testXlink->DumpKMC();
 
-    double tolerance = node_[name_]["UpdateStage2"]["test"][itest]["tolerance"].as<double>();
+    double tolerance = node_[name_][subtest]["test"][itest]["tolerance"].as<double>();
     bool result_bound[2];
-    result_bound[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_bound"][0].as<bool>();
-    result_bound[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_bound"][1].as<bool>();
+    result_bound[0] = node_[name_][subtest]["test"][itest]["result_bound"][0].as<bool>();
+    result_bound[1] = node_[name_][subtest]["test"][itest]["result_bound"][1].as<bool>();
     double result_crosspos[2];
-    result_crosspos[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_crosspos"][0].as<double>();
-    result_crosspos[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_crosspos"][1].as<double>();
+    result_crosspos[0] = node_[name_][subtest]["test"][itest]["result_crosspos"][0].as<double>();
+    result_crosspos[1] = node_[name_][subtest]["test"][itest]["result_crosspos"][1].as<double>();
 
-    unit_tests_results_[test_num][itest] = true;
+    test_results_[test_num][itest] = true;
     // check the bound results
     XlinkHead *freehead, *boundhead;
     auto is_bound = testXlink->GetBoundHeads(&freehead, &boundhead);
     if (is_bound.first != result_bound[0]) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     if (is_bound.second != result_bound[1]) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     // crossposition
     if (!uth::almost_equal<double>(result_crosspos[0], freehead->GetAttach().second, tolerance)) {
       std::cout << "Failed on result_crosspos[0] = " << result_crosspos[0] << " got " << freehead->GetAttach().second << std::endl;
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
     if (!uth::almost_equal<double>(result_crosspos[1], boundhead->GetAttach().second, tolerance)) {
       std::cout << "Failed on result_crosspos[1] = " << result_crosspos[1] << " got " << boundhead->GetAttach().second << std::endl;
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
 
     // absolute positions
     double result_pos0[3] = {0.0, 0.0, 0.0};
-    result_pos0[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos0"][0].as<double>();
-    result_pos0[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos0"][1].as<double>();
-    result_pos0[2] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos0"][2].as<double>();
+    result_pos0[0] = node_[name_][subtest]["test"][itest]["result_pos0"][0].as<double>();
+    result_pos0[1] = node_[name_][subtest]["test"][itest]["result_pos0"][1].as<double>();
+    result_pos0[2] = node_[name_][subtest]["test"][itest]["result_pos0"][2].as<double>();
     for (int idim = 0; idim < ndim_; ++idim) {
       if (!uth::almost_equal<double>(result_pos0[idim], freehead->GetPosition()[idim], tolerance)) {
-        unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+        test_results_[test_num][itest] = false && test_results_[test_num][itest];
       }
     }
     double result_pos1[3] = {0.0, 0.0, 0.0};
-    result_pos1[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos1"][0].as<double>();
-    result_pos1[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos1"][1].as<double>();
-    result_pos1[2] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos1"][2].as<double>();
+    result_pos1[0] = node_[name_][subtest]["test"][itest]["result_pos1"][0].as<double>();
+    result_pos1[1] = node_[name_][subtest]["test"][itest]["result_pos1"][1].as<double>();
+    result_pos1[2] = node_[name_][subtest]["test"][itest]["result_pos1"][2].as<double>();
     for (int idim = 0; idim < ndim_; ++idim) {
       if (!uth::almost_equal<double>(result_pos1[idim], boundhead->GetPosition()[idim], tolerance)) {
-        unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+        test_results_[test_num][itest] = false && test_results_[test_num][itest];
       }
     }
     double result_pos[3] = {0.0, 0.0, 0.0};
-    result_pos[0] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos"][0].as<double>();
-    result_pos[1] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos"][1].as<double>();
-    result_pos[2] = node_[name_]["UpdateStage2"]["test"][itest]["result_pos"][2].as<double>();
+    result_pos[0] = node_[name_][subtest]["test"][itest]["result_pos"][0].as<double>();
+    result_pos[1] = node_[name_][subtest]["test"][itest]["result_pos"][1].as<double>();
+    result_pos[2] = node_[name_][subtest]["test"][itest]["result_pos"][2].as<double>();
     for (int idim = 0; idim < ndim_; ++idim) {
       if (!uth::almost_equal<double>(result_pos[idim], testXlink->GetPosition()[idim], tolerance)) {
-        unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+        test_results_[test_num][itest] = false && test_results_[test_num][itest];
       }
     }
 
@@ -1082,7 +965,7 @@ bool TestXlinkKMC::UnitTestUpdateStage2(int test_num) {
     delete oid_position_map_;
   }
 
-  for (auto it = unit_tests_results_[test_num].begin(); it != unit_tests_results_[test_num].end(); ++it) {
+  for (auto it = test_results_[test_num].begin(); it != test_results_[test_num].end(); ++it) {
     if (!(*it)) {
       success = false;
       break;
@@ -1098,7 +981,7 @@ bool TestXlinkKMC::UnitTestPolarAffinity(int test_num) {
 
   // Use the configurators to initialize the xlink and rod
   int ntests = (int)node_[name_][subtest]["test"].size();
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
 
   for (int itest = 0; itest < ntests; ++itest) {
     double u0[3] = {0.0, 0.0, 0.0};
@@ -1113,11 +996,11 @@ bool TestXlinkKMC::UnitTestPolarAffinity(int test_num) {
 
     double my_result = xlh::polar_affinity(test_ndim, affinity, u0, u1);
 
-    unit_tests_results_[test_num][itest] = true;
+    test_results_[test_num][itest] = true;
     double result = node_[name_][subtest]["test"][itest]["result"].as<double>();
     double tolerance = node_[name_][subtest]["test"][itest]["tolerance"].as<double>();
     if (!uth::almost_equal<double>(result, my_result, tolerance)) {
-      unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+      test_results_[test_num][itest] = false && test_results_[test_num][itest];
     }
   }
  

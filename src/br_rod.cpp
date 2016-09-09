@@ -535,3 +535,51 @@ void BrRodSpecies::Configurator() {
   }
 }
 
+void BrRodSpecies::CreateTestRod(BrRod **rod,
+                                 int ndim,
+                                 std::vector<Simple*>* simples,
+                                 std::unordered_map<int, int>* oid_position_map,
+                                 const std::string &filename,
+                                 const std::string &modulename,
+                                 const std::string &unitname,
+                                 const std::string &rodname,
+                                 int itest) {
+  YAML::Node node = YAML::LoadFile(filename);
+  BrRod *mrod = *rod;
+  // Load the rod
+  double xr[3] = {0.0, 0.0, 0.0};
+  double ur[3] = {0.0, 0.0, 0.0};
+  std::ostringstream xrodname;
+  xrodname << "x_" << rodname;
+  std::ostringstream urodname;
+  urodname << "u_" << rodname;
+  std::ostringstream lrodname;
+  lrodname << "l_" << rodname;
+  //std::cout << "Checking location\n";
+  for (int idim = 0; idim < ndim; ++idim) {
+    xr[idim] = node[modulename][unitname.c_str()]["test"][itest][xrodname.str().c_str()][idim].as<double>();
+    ur[idim] = node[modulename][unitname.c_str()]["test"][itest][urodname.str().c_str()][idim].as<double>();
+  }
+  //std::cout << "Checking length\n";
+  double lrod = node[modulename][unitname.c_str()]["test"][itest][lrodname.str().c_str()].as<double>();
+  //std::cout << "TEST ROD CREATE: \n";
+  //std::cout << std::setprecision(16) << "x: (" << xr[0] << ", " << xr[1] << ", " << xr[2] << "), ";
+  //std::cout << std::setprecision(16) << "u: (" << ur[0] << ", " << ur[1] << ", " << ur[2] << "), ";
+  //std::cout << std::setprecision(16) << "l: " << lrod << std::endl;
+  mrod->InitConfigurator(xr, ur, lrod);
+  //mrod->Dump();
+
+  // Add the simples to the correct location and the oid position map
+  std::vector<Simple*> sim_vec = mrod->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples->push_back(sim_vec[i]);
+    (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
+  }
+
+  // Print to make sure working
+  /*std::cout << "simples: \n";
+  for (int i = 0; i < simples->size(); ++i) {
+    std::cout << "[" << i << "] -> OID " << (*simples)[i]->GetOID();
+    std::cout << " <--> " << (*oid_position_map)[(*simples)[i]->GetOID()] << std::endl;
+  }*/
+}

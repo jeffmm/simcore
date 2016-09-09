@@ -7,6 +7,8 @@
 #include "auxiliary.h"
 #include "wca.h"
 
+#include <unordered_map>
+
 class BrRod : public Composite<Site,Bond> {
 
   private:
@@ -177,6 +179,15 @@ class BrRodSpecies : public Species<BrRod> {
     // Special insertion routine
     void Configurator();
 
+    static void CreateTestRod(BrRod **rod,
+                              int ndim,
+                              std::vector<Simple*>* simples,
+                              std::unordered_map<int, int>* oid_position_map,
+                              const std::string &filename,
+                              const std::string &modulename,
+                              const std::string &unitname,
+                              const std::string &rodname,
+                              int itest);
 };
 
 #endif // _SIMCORE_BR_ROD_H_

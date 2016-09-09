@@ -7,6 +7,7 @@
 #include "xlink_head.h"
 
 #include <iomanip>
+#include <unordered_map>
 
 enum attach_type {
   unbound = 0,
@@ -182,6 +183,29 @@ class XlinkSpecies : public Species<Xlink> {
     std::vector<Xlink*>* GetXlinks() {
       return &members_;
     }
+
+    static void CreateTestXlink(Xlink **mxit,
+                                int ndim,
+                                std::vector<Simple*>* simples,
+                                std::unordered_map<int, int>* oid_position_map,
+                                const std::string &filename,
+                                const std::string &modulename,
+                                const std::string &unitname,
+                                const std::string &xname,
+                                int itest,
+                                int attachoid);
+
+    static void CreateTestXlink(Xlink **mxit,
+                                int ndim,
+                                std::vector<Simple*>* simples,
+                                std::unordered_map<int, int>* oid_position_map,
+                                const std::string &filename,
+                                const std::string &modulename,
+                                const std::string &unitname,
+                                const std::string &xname,
+                                int itest,
+                                int attachoid0,
+                                int attachoid1);
 };
 
 #endif // _SIMCORE_XLINK_H_
