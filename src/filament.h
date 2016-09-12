@@ -70,6 +70,7 @@ class Filament : public Composite<Site,Bond> {
     //void ApplyForcesTorques();
     //void DynamicInstability();
     void DumpAll();
+    void PopulateVector(std::vector<double> *a);
 
   public:
     Filament(system_parameters *params, space_struct * space, 
@@ -159,6 +160,7 @@ class Filament : public Composite<Site,Bond> {
       return *this;
     } 
     virtual void Init();
+    //void TempInit();
     virtual void Integrate(bool midstep);
     virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
@@ -200,11 +202,19 @@ class FilamentSpecies : public Species<Filament> {
   public:
     FilamentSpecies() : Species() {
       SetSID(SID::filament);
+      midstep_ = true;
     }
     ~FilamentSpecies() {}
-    FilamentSpecies(const FilamentSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
+    FilamentSpecies(const FilamentSpecies& that) : Species(that) {
+      theta_distribution_ = that.theta_distribution_;
+      theta_validation_ = that.theta_validation_;
+      midstep_ = that.midstep_;
+    }
+    FilamentSpecies& operator=(FilamentSpecies const& that) {
+      Species::operator=(that);
+      theta_distribution_ = that.theta_distribution_;
+      theta_validation_ = that.theta_validation_;
+      midstep_ = that.midstep_;
       return *this;
     }
     void Init() {
@@ -221,6 +231,7 @@ class FilamentSpecies : public Species<Filament> {
       }
       if (theta_validation_ && midstep_)
         ValidateThetaDistributions();
+      midstep_ = !midstep_;
     }
     void WriteOutputs(std::string run_name);
     void Configurator();
