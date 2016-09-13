@@ -188,6 +188,13 @@ class BrRodSpecies : public Species<BrRod> {
                               const std::string &unitname,
                               const std::string &rodname,
                               int itest);
+
+    static void CreateTestRod(BrRod **rod,
+                              int ndim,
+                              std::vector<Simple*>* simples,
+                              std::unordered_map<int, int>* oid_position_map,
+                              YAML::Node *subnode);
+                              
 };
 
 #endif // _SIMCORE_BR_ROD_H_

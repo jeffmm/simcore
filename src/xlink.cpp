@@ -447,6 +447,52 @@ void XlinkSpecies::CreateTestXlink(Xlink **mxit,
                                    const std::string &modulename,
                                    const std::string &unitname,
                                    const std::string &xname,
+                                   int itest) {
+  YAML::Node node = YAML::LoadFile(filename);
+  Xlink *xit = *mxit;
+  double xx[3] = {0.0, 0.0, 0.0};
+  std::ostringstream posname;
+  posname << "x_" << xname;
+  std::cout << "posname: " << posname.str() << std::endl;
+  for (int idim = 0; idim < ndim; ++idim) {
+    xx[idim] = node[modulename][unitname]["test"][itest][posname.str()][idim].as<double>();
+  }
+  xit->InitConfigurator(xx, 1.0);
+
+  XlinkHead *head0, *head1;
+  auto isbound = xit->GetBoundHeads(&head0, &head1);
+
+  // Read the RNG binary file in
+  std::string rngfile = node[modulename][unitname]["test"][itest]["rngfile"].as<std::string>();
+  xit->SetRNGState(rngfile);
+
+  double nexp_0_1 = 0.0;
+  if (node[modulename][unitname]["test"][itest]["nexp_0_1"]) {
+    nexp_0_1 = node[modulename][unitname]["test"][itest]["nexp_0_1"].as<double>();
+  }
+  xit->SetNExp_0_1(nexp_0_1);
+  head0->SetNExp_0_1(0.5*nexp_0_1);
+  head1->SetNExp_0_1(0.5*nexp_0_1);
+
+  xit->Dump();
+  xit->DumpKMC();
+
+  // simples and oid stuff
+  std::vector<Simple*> sim_vec = xit->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples->push_back(sim_vec[i]);
+    (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
+  }
+}
+
+void XlinkSpecies::CreateTestXlink(Xlink **mxit,
+                                   int ndim,
+                                   std::vector<Simple*>* simples,
+                                   std::unordered_map<int, int>* oid_position_map,
+                                   const std::string &filename,
+                                   const std::string &modulename,
+                                   const std::string &unitname,
+                                   const std::string &xname,
                                    int itest,
                                    int attachoid) {
   YAML::Node node = YAML::LoadFile(filename);
