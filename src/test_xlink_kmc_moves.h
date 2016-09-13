@@ -22,6 +22,7 @@ class TestXlinkKMCMoves : public TestModuleBase, public XlinkKMC {
 
     bool TestKMC_0_1(int test_num);
     bool TestKMC_1_0(int test_num);
+    bool TestKMC_1_2(int test_num);
 
     system_parameters params_sub_;
     SpaceProperties space_sub_;

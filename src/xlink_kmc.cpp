@@ -475,20 +475,20 @@ void XlinkKMC::KMC_0_1() {
         nexp > -std::numeric_limits<double>::epsilon()) nexp = 0.0;
     // IF we have some probability to fall onto a neighbor, check it
     if (nexp > 0.0) {
-      std::cout << "--------\n";
-      std::cout << "Xlink: " << (*xit)->GetOID() << std::endl;
+      //std::cout << "--------\n";
+      //std::cout << "Xlink: " << (*xit)->GetOID() << std::endl;
       auto mrng = (*xit)->GetRNG();
       double roll = gsl_rng_uniform(mrng->r);
-      std::cout << std::setprecision(16) << "roll: " << roll << std::endl;
+      //std::cout << std::setprecision(16) << "roll: " << roll << std::endl;
       if (roll < nexp) {
-        std::cout << "Successful roll\n";
+        //std::cout << "Successful roll\n";
         int head_type = gsl_rng_uniform(mrng->r) < ((eps_eff_0_1_[1])/(eps_eff_0_1_[0]+eps_eff_0_1_[1]));
-        std::cout << "head: " << head_type << std::endl;
+        //std::cout << "head: " << head_type << std::endl;
         auto heads = (*xit)->GetHeads();
         auto head = heads->begin() + head_type;
         double binding_affinity = (eps_eff_0_1_[0] * on_rate_0_1_[0] + eps_eff_0_1_[1] * on_rate_0_1_[1]) *
           alpha_ * head->GetDelta();
-        std::cout << "binding_affinity: " << std::setprecision(16) << binding_affinity << std::endl;
+        //std::cout << "binding_affinity: " << std::setprecision(16) << binding_affinity << std::endl;
         std::ostringstream kmc_event;
         kmc_event << std::setprecision(16) << "[" << (*xit)->GetOID() << "] Successful KMC move {0 -> 1}, {nexp: " << nexp;
         kmc_event << std::setprecision(16) << "}, {roll: " << roll << "}, {head: " << head_type << "}";
@@ -499,18 +499,18 @@ void XlinkKMC::KMC_0_1() {
         double pos = 0.0;
         int idx = (*oid_position_map_)[head->GetOID()];
         // Search through the neighbors of this head to figure out who we want to bind to
-        int ineighb = 0;
+        //int ineighb = 0;
         // DEBUG XXX FIXME totalval
-        double totalval = 0.0;
+        //double totalval = 0.0;
+        //for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
+        //  totalval += binding_affinity * nldx->kmc_;
+        //}
+        //std::cout << "totalval: " << std::setprecision(16) << totalval << std::endl;
         for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
-          totalval += binding_affinity * nldx->kmc_;
-        }
-        std::cout << "totalval: " << std::setprecision(16) << totalval << std::endl;
-        for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx, ++ineighb) {
-          std::cout << "[" << idx << "] -> neighbor[" << ineighb << "]\n";
+          //std::cout << "[" << idx << "] -> neighbor[" << ineighb << "]\n";
           auto part2 = (*simples_)[nldx->idx_];
           if (part2->GetSID() != sid2_) continue; // Make sure it's what we want to bind to
-          std::cout << std::setprecision(16) << "my binding aff: " << binding_affinity * nldx->kmc_ << std::endl;
+          //std::cout << std::setprecision(16) << "my binding aff: " << binding_affinity * nldx->kmc_ << std::endl;
           pos += binding_affinity * nldx->kmc_;
           if (pos > roll) {
             if (debug_trace) {
@@ -552,7 +552,7 @@ void XlinkKMC::KMC_0_1() {
             if (a!=a)
               a = 0.0;
 
-            std::cout << std::setprecision(16) << "rminmag2: " << r_min_mag2 << ", a: " << a << std::endl;
+            //std::cout << std::setprecision(16) << "rminmag2: " << r_min_mag2 << ", a: " << a << std::endl;
 
             double crosspos = 0.0;
             for (int i = 0; i < 100; ++i) {
@@ -592,8 +592,8 @@ void XlinkKMC::KMC_1_0() {
   double poff_single_a = on_rate_0_1_[0] * alpha_ * pxspec->GetDelta();
   double poff_single_b = on_rate_0_1_[1] * alpha_ * pxspec->GetDelta();
 
-  std::cout << std::setprecision(16) << "poff: [" << poff_single_a << ", " << poff_single_b << "]\n";
-  std::cout << "nbound1: [" << nbound1[0] << ", " << nbound1[1] << "]\n";
+  //std::cout << std::setprecision(16) << "poff: [" << poff_single_a << ", " << poff_single_b << "]\n";
+  //std::cout << "nbound1: [" << nbound1[0] << ", " << nbound1[1] << "]\n";
 
   int noff[2] = {(int)gsl_ran_binomial(rng_.r, poff_single_a, nbound1[0]),
                  (int)gsl_ran_binomial(rng_.r, poff_single_b, nbound1[1])};
@@ -610,7 +610,7 @@ void XlinkKMC::KMC_1_0() {
     int idxloc = -1;
     int idxoff = (int)gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
 
-    std::cout << "head_type: " << head_type << ", idxoff " << idxoff << std::endl;
+    //std::cout << "head_type: " << head_type << ", idxoff " << idxoff << std::endl;
 
     // Find the one to remove
     for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
@@ -654,12 +654,16 @@ void XlinkKMC::KMC_1_2() {
   XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
   double nexp_1_2 = pxspec->GetNExp_1_2();
-  if (debug_trace)
-    printf("[KMC_1_2] ntot: %2.8f\n", nexp_1_2 * pxspec->GetDelta());
+  if (debug_trace) {
+    double ntot_loc = nexp_1_2 * pxspec->GetDelta();
+    std::cout << std::setprecision(16) << "[KMC_1_2] ntot: " << ntot_loc << std::endl;
+  }
   int nattach = gsl_ran_poisson(rng_.r, nexp_1_2 * pxspec->GetDelta());
+  //std::cout << "nattach: " << nattach << std::endl;
   for (int itrial = 0; itrial < nattach; ++itrial) {
-    if (debug_trace)
-      printf("[KMC_1_2] attaching trial %d/%d\n", itrial+1, nattach);
+    if (debug_trace) {
+      std::cout << "[KMC_1_2] attaching trial " << itrial+1 << "/" << nattach << std::endl;
+    }
     double ran_loc = gsl_rng_uniform(rng_.r) * nexp_1_2;
     double loc = 0.0;
     bool foundidx = false;
