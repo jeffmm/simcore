@@ -583,3 +583,28 @@ void BrRodSpecies::CreateTestRod(BrRod **rod,
     std::cout << " <--> " << (*oid_position_map)[(*simples)[i]->GetOID()] << std::endl;
   }*/
 }
+
+void BrRodSpecies::CreateTestRod(BrRod **rod,
+                                 int ndim,
+                                 std::vector<Simple*>* simples,
+                                 std::unordered_map<int, int>* oid_position_map,
+                                 YAML::Node *subnode) {
+  YAML::Node node = *subnode;
+  BrRod *mrod = *rod;
+  // Load the rod
+  std::cout << "Node:\n" << node << std::endl;
+  double xr[3] = {0.0, 0.0, 0.0};
+  double ur[3] = {0.0, 0.0, 0.0};
+  for (int idim = 0; idim < ndim; ++idim) {
+    xr[idim] = node["x"][idim].as<double>();
+    ur[idim] = node["u"][idim].as<double>();
+  }
+  double lr = node["l"].as<double>();
+  mrod->InitConfigurator(xr, ur, lr);
+
+  std::vector<Simple*> sim_vec = mrod->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples->push_back(sim_vec[i]);
+    (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
+  }
+}
