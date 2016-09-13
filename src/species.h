@@ -181,6 +181,11 @@ class Species : public SpeciesBase {
       n_members_++;
     }
 
+    virtual void AddMember(T* newmem) {
+      members_.push_back(newmem);
+      n_members_++;
+    }
+
     virtual void Draw(std::vector<graph_struct*> * graph_array) {
       for (auto it=members_.begin(); it!=members_.end(); ++it)
         (*it)->Draw(graph_array);

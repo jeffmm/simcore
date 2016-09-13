@@ -475,30 +475,48 @@ void XlinkKMC::KMC_0_1() {
         nexp > -std::numeric_limits<double>::epsilon()) nexp = 0.0;
     // IF we have some probability to fall onto a neighbor, check it
     if (nexp > 0.0) {
+      std::cout << "--------\n";
+      std::cout << "Xlink: " << (*xit)->GetOID() << std::endl;
       auto mrng = (*xit)->GetRNG();
       double roll = gsl_rng_uniform(mrng->r);
+      std::cout << std::setprecision(16) << "roll: " << roll << std::endl;
       if (roll < nexp) {
+        std::cout << "Successful roll\n";
         int head_type = gsl_rng_uniform(mrng->r) < ((eps_eff_0_1_[1])/(eps_eff_0_1_[0]+eps_eff_0_1_[1]));
+        std::cout << "head: " << head_type << std::endl;
         auto heads = (*xit)->GetHeads();
         auto head = heads->begin() + head_type;
         double binding_affinity = (eps_eff_0_1_[0] * on_rate_0_1_[0] + eps_eff_0_1_[1] * on_rate_0_1_[1]) *
           alpha_ * head->GetDelta();
+        std::cout << "binding_affinity: " << std::setprecision(16) << binding_affinity << std::endl;
         std::ostringstream kmc_event;
         kmc_event << std::setprecision(16) << "[" << (*xit)->GetOID() << "] Successful KMC move {0 -> 1}, {nexp: " << nexp;
         kmc_event << std::setprecision(16) << "}, {roll: " << roll << "}, {head: " << head_type << "}";
         WriteEvent(kmc_event.str());
-        if (debug_trace)
-          printf("%s\n", kmc_event.str().c_str());
+        if (debug_trace) {
+          std::cout << kmc_event.str() << std::endl;
+        }
         double pos = 0.0;
         int idx = (*oid_position_map_)[head->GetOID()];
         // Search through the neighbors of this head to figure out who we want to bind to
+        int ineighb = 0;
+        // DEBUG XXX FIXME totalval
+        double totalval = 0.0;
         for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
+          totalval += binding_affinity * nldx->kmc_;
+        }
+        std::cout << "totalval: " << std::setprecision(16) << totalval << std::endl;
+        for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx, ++ineighb) {
+          std::cout << "[" << idx << "] -> neighbor[" << ineighb << "]\n";
           auto part2 = (*simples_)[nldx->idx_];
           if (part2->GetSID() != sid2_) continue; // Make sure it's what we want to bind to
+          std::cout << std::setprecision(16) << "my binding aff: " << binding_affinity * nldx->kmc_ << std::endl;
           pos += binding_affinity * nldx->kmc_;
           if (pos > roll) {
-            if (debug_trace)
-              printf("[%d] Attaching to [%d]\n", head->GetOID(), part2->GetOID());
+            if (debug_trace) {
+              std::cout << std::setprecision(16) << "[" << head->GetOID() << "] Attaching to ["
+                << part2->GetOID() << "], Z: " << std::setprecision(16) << pos << std::endl;
+            }
 
             // Here, we do more complicated stuff.  Calculate the coordinate along
             // the rod s.t. the line vector is perpendicular to the separation vec
@@ -515,13 +533,12 @@ void XlinkKMC::KMC_0_1() {
             std::copy(part2->GetRigidScaledPosition(), part2->GetRigidScaledPosition()+ndim_, s_rod);
             std::copy(part2->GetRigidOrientation(), part2->GetRigidOrientation()+ndim_, u_rod);
             double l_rod = part2->GetRigidLength();
-            double rcontact[3];
             double dr[3];
             double mu = 0.0;
-            min_distance_point_carrier_line(ndim_, nperiodic_,
-                                            space_->unit_cell, r_x, s_x,
-                                            r_rod, s_rod, u_rod, l_rod,
-                                            dr, rcontact, &mu);
+            min_distance_point_carrier_line_inf(ndim_, nperiodic_,
+                                                space_->unit_cell, r_x, s_x,
+                                                r_rod, s_rod, u_rod, l_rod,
+                                                dr, &mu);
 
             double r_min[3];
             double r_min_mag2 = 0.0;
@@ -534,6 +551,8 @@ void XlinkKMC::KMC_0_1() {
             //double a = sqrt(1.0 - r_min_mag2); //FIXME is this right for 1.0? or mrcut2?
             if (a!=a)
               a = 0.0;
+
+            std::cout << std::setprecision(16) << "rminmag2: " << r_min_mag2 << ", a: " << a << std::endl;
 
             double crosspos = 0.0;
             for (int i = 0; i < 100; ++i) {
@@ -552,8 +571,9 @@ void XlinkKMC::KMC_0_1() {
             }
             // Attach to the OID of the particle, this is done for dynamic instability to work
             head->Attach(part2->GetOID(), crosspos);
-            if (debug_trace)
-              printf("\t{mu: %2.4f}, {crosspos: %2.4f}\n", mu, crosspos);
+            if (debug_trace) {
+              std::cout << std::setprecision(16) << "\t{" << mu << "}, {crosspos: " << crosspos << "}\n";
+            }
             head->SetBound(true);
             (*xit)->CheckBoundState();
             break;
@@ -572,18 +592,25 @@ void XlinkKMC::KMC_1_0() {
   double poff_single_a = on_rate_0_1_[0] * alpha_ * pxspec->GetDelta();
   double poff_single_b = on_rate_0_1_[1] * alpha_ * pxspec->GetDelta();
 
+  std::cout << std::setprecision(16) << "poff: [" << poff_single_a << ", " << poff_single_b << "]\n";
+  std::cout << "nbound1: [" << nbound1[0] << ", " << nbound1[1] << "]\n";
+
   int noff[2] = {(int)gsl_ran_binomial(rng_.r, poff_single_a, nbound1[0]),
                  (int)gsl_ran_binomial(rng_.r, poff_single_b, nbound1[1])};
-  if (debug_trace)
-    printf("[Xlink] {poff_single: (%2.8f, %2.8f)}, {noff: (%d, %d)}\n",
-        poff_single_a, poff_single_b, noff[0], noff[1]);
+  if (debug_trace) {
+    std::cout << std::setprecision(16) << "[KMC_1_0] poff_single: [" << poff_single_a << ", " << poff_single_b
+      << "], Removing [" << noff[0] << ", " << noff[1] << "]\n";
+  }
 
   for (int i = 0; i < (noff[0] + noff[1]); ++i) {
-    if (debug_trace)
-      printf("[KMC_1_0] detaching trial %d/%d\n", i+1, (noff[0] + noff[1]));
+    if (debug_trace) {
+      std::cout << "[KMC_1_0] detaching trial " << i+1 << "/" << (noff[0] + noff[1]) << std::endl;
+    }
     int head_type = i < noff[1];
     int idxloc = -1;
     int idxoff = (int)gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
+
+    std::cout << "head_type: " << head_type << ", idxoff " << idxoff << std::endl;
 
     // Find the one to remove
     for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
@@ -609,8 +636,9 @@ void XlinkKMC::KMC_1_0() {
         kmc_event << "[x:" << (*xit)->GetOID() << ",head:" << boundhead->GetOID() << "] Successful KMC move {1 -> 0}, {idxoff=idxloc=";
         kmc_event << idxloc << "}, {head: " << head_type << "}";
         WriteEvent(kmc_event.str());
-        if (debug_trace)
-          printf("%s\n", kmc_event.str().c_str());
+        if (debug_trace) {
+          std::cout << kmc_event.str() << std::endl;
+        }
 
         // Call the single head detach function
         Detach_1_0((*xit), freehead, boundhead);

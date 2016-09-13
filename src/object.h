@@ -157,6 +157,14 @@ class Object {
     virtual void StepKMC() {}
     virtual void DumpKMC() {}
     rng_properties* GetRNG() {return &rng_;}
+    void SetRNGState(const std::string& filename) {
+      // Load the rng state from binary file
+      FILE* pfile = fopen(filename.c_str(), "r");
+      auto retval = gsl_rng_fread(pfile, rng_.r);
+      if (retval != 0) {
+        std::cout << "Reading rng state failed " << retval << std::endl;
+      }
+    }
 };
 
 class Simple : public Object {

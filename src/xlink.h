@@ -192,6 +192,16 @@ class XlinkSpecies : public Species<Xlink> {
                                 const std::string &modulename,
                                 const std::string &unitname,
                                 const std::string &xname,
+                                int itest);
+
+    static void CreateTestXlink(Xlink **mxit,
+                                int ndim,
+                                std::vector<Simple*>* simples,
+                                std::unordered_map<int, int>* oid_position_map,
+                                const std::string &filename,
+                                const std::string &modulename,
+                                const std::string &unitname,
+                                const std::string &xname,
                                 int itest,
                                 int attachoid);
 
