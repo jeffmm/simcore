@@ -61,3 +61,20 @@ TestXlinkKMCMoves:
         rngfile_head: test/rng_kmc_1_0-head-0.bin
         result: [4.550334104717152, -4.110801017991117, 54.68838425229585]
         tolerance: 1.0e-12
+      - ndim: 3
+        delta: 0.00025
+        rods:
+          - x: [-3.883130429526453, -1.126921982654224, 52.24409591841431]
+            u: [-0.8107580678596013, -0.1660013544687669, -0.5613509648295807]
+            l: 3.0
+        copyfactor_xlink: 10
+        interest_xlink: 0
+        crosspos_xlink: 1.258413235433912
+        head_xlink: 1
+        on_rate_0_1: 0.01
+        nbound1: [3, 7]
+        alpha: 1.299
+        rngfile_kmc: test/rng_kmc_1_0-kmc-1.bin
+        rngfile_head: test/rng_kmc_1_0-head-1.bin
+        result: [-4.395244494386338, -0.8177320997337252, 52.3419419008397]
+        tolerance: 1.0e-12
