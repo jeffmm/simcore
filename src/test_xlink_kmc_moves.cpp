@@ -27,6 +27,12 @@ void TestXlinkKMCMoves::InitTestModule(const std::string& filename) {
     test_names_.push_back("KMC_1_0");
     test_results_.push_back(std::vector<bool>());
   }
+  if (node_[name_]["KMC_1_2"]) {
+    std::function<bool(int)> f = std::bind(&TestXlinkKMCMoves::TestKMC_1_2, this, std::placeholders::_1);
+    tests_.push_back(f);
+    test_names_.push_back("KMC_1_2");
+    test_results_.push_back(std::vector<bool>());
+  }
 
   sid1_ = SID::xlink;
   sid2_ = SID::br_rod;
@@ -271,6 +277,64 @@ bool TestXlinkKMCMoves::TestKMC_1_0(int test_num) {
   oid_position_map_->clear();
   delete oid_position_map_;
 
+  for (auto suc = test_results_[test_num].begin(); suc != test_results_[test_num].end(); ++suc) {
+    success = success && (*suc);
+  }
+  return success;
+}
+
+bool TestXlinkKMCMoves::TestKMC_1_2(int test_num) {
+  bool success = true;
+  std::string subtest = "KMC_1_2";
+
+  std::cout << subtest << " testing is on hold for now, until we can read/write entire systems at will\n";
+  return success;
+
+  // Lots of things to do...
+  int ntests = (int)node_[name_][subtest]["test"].size();
+  test_results_[test_num].resize(ntests);
+
+  // Fake out the simples and position map (will need later)
+  oid_position_map_ = new std::unordered_map<int, int>();
+  simples_ = new std::vector<Simple*>();
+
+  // Run the tests
+  for (int itest = 0; itest < ntests; ++itest) {
+    ndim_ = node_[name_][subtest]["test"][itest]["ndim"].as<int>();
+    params_sub_.n_dim = ndim_;
+    params_sub_.delta = node_[name_][subtest]["test"][itest]["delta"].as<double>();
+    space_sub_.Init(&params_sub_, 10);
+    space_ = space_sub_.GetStruct();
+
+    simples_->clear();
+    oid_position_map_->clear();
+
+    int nrods = (int)node_[name_][subtest]["test"][itest]["rods"].size();
+    BrRodSpecies *testRodSpecies = new BrRodSpecies();
+    testRodSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), 10);
+    for (int irod = 0; irod < nrods; ++irod) {
+      // Add the rod
+      BrRod *testRod = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
+      YAML::Node subnode =  node_[name_][subtest]["test"][itest]["rods"][irod];
+      BrRodSpecies::CreateTestRod(&testRod, ndim_, simples_, oid_position_map_, &subnode);
+      testRodSpecies->AddMember(testRod);
+    }
+
+
+
+
+
+
+    // Run it
+    KMC_1_2();
+
+  }
+
+  // Clean up
+  simples_->clear();
+  delete simples_;
+  oid_position_map_->clear();
+  delete oid_position_map_;
   for (auto suc = test_results_[test_num].begin(); suc != test_results_[test_num].end(); ++suc) {
     success = success && (*suc);
   }
