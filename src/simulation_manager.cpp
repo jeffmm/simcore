@@ -1,4 +1,5 @@
 #include "simulation_manager.h"
+#include <iomanip>
 
 bool debug_trace;
 

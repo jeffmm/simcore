@@ -53,6 +53,9 @@ void Simulation::RunMovie(){
     }
     if (debug_trace)
       printf("********\nStep %d\n********\n", i_step_);
+    if (i_step_%params_.n_posit == 0)
+      ReadSpeciesPositions(); 
+    
     //ZeroForces();
     //KineticMonteCarloMP();
     //InteractMP();
@@ -142,10 +145,39 @@ void Simulation::InitSpecies() {
   }
 }
 
+//FIXME Only works for one species at a time -AL
+  //TODO Initalize multiple files to run simultaneously
+  //TODO Have output_manager run movies
 void Simulation::InitPositInput(){
-  ip.open(posit_file_, std::ios::in | std::ios::binary);
-  if (!ip.is_open())
+  int nchar;
+  std::fstream ip;
+
+  ip.open(posit_file_, std::ios::binary | std::ios::in );
+  if (!ip.is_open()){
     std::cout<<"Input "<< posit_file_ <<" file did not open\n";
+    exit(1);
+  }
+  else{
+    //Get Sim data from posit file
+    ip.read(reinterpret_cast<char*>(&nchar), sizeof(int));
+    std::string sid_str(nchar, ' ');
+    ip.read(&sid_str[0], nchar);
+    std::cout<<"SID of posit file is "<< sid_str << std::endl;
+    SID sid_posit = StringToSID(sid_str);
+    ip.read(reinterpret_cast<char*>(&(params_.n_steps)), sizeof(int));
+    ip.read(reinterpret_cast<char*>(&(params_.n_posit)), sizeof(int));
+
+    //Get the location where species data starts and close input for now
+    std::ios::streampos beg = ip.tellg();
+    ip.close();
+
+    for (auto spec_it : species_ ){
+      if (sid_posit == spec_it->GetSID()){
+        spec_it->InitInputFile(posit_file_, beg);
+        break;
+      }
+    }
+  }
 }
 
 void Simulation::ClearSpecies() {
@@ -155,6 +187,8 @@ void Simulation::ClearSpecies() {
 
 void Simulation::ClearSimulation() {
   space_.Clear();
+  if (params_.posit_flag == 1)
+    output_mgr_.Close();
   ClearSpecies();
   if (params_.graph_flag)
     graphics_.Clear();
@@ -253,7 +287,11 @@ void Simulation::WriteOutputs() {
 
 void Simulation::CreateMovie(system_parameters params, std::string name, std::string posit_file){
   params_ = params;
+
+  //Graph and don't make new posit files
   params_.graph_flag = 1;
+  params_.posit_flag = 0;
+
   run_name_ = name;
   posit_file_ = posit_file;
   rng_.init(params_.seed);
@@ -263,4 +301,7 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::st
   ClearSimulation();
 }
 
-
+void Simulation::ReadSpeciesPositions(){
+  for (auto it=species_.begin(); it!=species_.end(); ++it)
+    (*it)->ReadPosits();
+}

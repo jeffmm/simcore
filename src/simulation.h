@@ -20,7 +20,7 @@ class Simulation {
            cpu_init_time_;
     std::string run_name_;
     std::string posit_file_;
-    std::ifstream ip;
+    //std::fstream ip_;
 
     OutputManager output_mgr_;
     system_parameters params_;
@@ -45,10 +45,13 @@ class Simulation {
     void Integrate();
     void IntegrateMP();
     void InteractMP();
+    void ReadSpeciesPositions();
     void KineticMonteCarloMP();
     void ZeroForces();
     void DumpAll(int i_step);
     std::vector<graph_struct*> graph_array;
+    Simulation(const Simulation&){};
+    void operator= (Simulation&);
 
   public:
     Simulation();
