@@ -25,7 +25,14 @@ void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
     #pragma omp parallel
     #endif
     {
-      std::set<std::pair<int, int>> rid_interactions;
+      int tid = 0;
+      #ifdef ENABLE_OPENMP
+      tid = omp_get_thread_num();
+      #else
+      tid = 0;
+      #endif
+      //std::set<std::pair<int, int>> rid_interactions;
+      rid_interactions_[tid].clear();
       #ifdef ENABLE_OPENMP
       #pragma omp for schedule(runtime) nowait
       #endif
@@ -39,7 +46,9 @@ void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
           // Only insert object if rigid ID is unique
           // std::set only allows insertion of unique elements
           // Check if insertion fails because RID is not unique
-          if (!rid_interactions.insert(std::make_pair(rid1, rid2)).second)
+          //if (!rid_interactions.insert(std::make_pair(rid1, rid2)).second)
+          //  continue;
+          if (!rid_interactions_[tid].insert(std::make_pair(rid1, rid2)).second)
             continue;
           // XXX Don't exclude self interactions of composite objects
           // needed for filaments and xlinks internal properties, things like
@@ -57,10 +66,12 @@ void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
     #ifdef ENABLE_OPENMP
     {
       // Clean up any existing rid-rid interactions
-      std::set< std::pair<int, int> > rid_interactions;
+      //std::set< std::pair<int, int> > rid_interactions;
+      rid_interactions_[nthreads_].clear();
       for (int idx=0; idx<nsimples_; ++idx) {
         for (auto nb = neighbors_[idx].begin(); nb != neighbors_[idx].end();) {
-          if (!rid_interactions.insert(std::make_pair(nb->rid_me_,nb->rid_you_)).second) {
+          //if (!rid_interactions.insert(std::make_pair(nb->rid_me_,nb->rid_you_)).second) {
+          if (!rid_interactions_[nthreads_].insert(std::make_pair(nb->rid_me_, nb->rid_you_)).second) {
               //if (debug_trace)
                 //printf("Removing interaction pair (%d, %d)\n",nb->rid_you_,nb->rid_me_);
             neighbors_[idx].erase(nb);
