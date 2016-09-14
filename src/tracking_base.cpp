@@ -27,6 +27,8 @@ TrackingBase::Init(space_struct* pSpace, std::vector<SpeciesBase*> *pSpecies, st
     #endif
     nsimples_ = (int)simples_->size();
     nupdates_ = 0;
+
+    rid_interactions_ = new std::unordered_set<std::pair<int, int>, hashh::pair_hash>[nthreads_+1];
 }
 
 void TrackingBase::Rebuild(nl_list **pNeighbors) {
