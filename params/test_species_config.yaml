@@ -9,7 +9,7 @@ boundary_type: 1
 config_file: params/test_species_config.config.yaml
 potfile: params/test_species_config.pot.yaml
 kmcfile: params/test_species_config.kmc.yaml
-graph_flag: 1
+graph_flag: 0
 n_graph: 100
 grab_flag: 1
 grab_file: frames/frame
