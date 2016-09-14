@@ -8,6 +8,8 @@
 #include "neighbor_list_generic.h"
 #include "species.h"
 
+#include <unordered_set>
+
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
@@ -16,7 +18,9 @@ class TrackingBase {
   public:
 
     TrackingBase() {}
-    virtual ~TrackingBase() {}
+    virtual ~TrackingBase() {
+      delete rid_interactions_;
+    }
 
     virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin);
 
@@ -44,6 +48,7 @@ class TrackingBase {
     std::vector<Simple*> *simples_;
     std::vector<SpeciesBase*> *species_;
     nl_list* neighbors_;
+    std::unordered_set<std::pair<int, int>, hashh::pair_hash>* rid_interactions_;
 
     // Derived quantities
     int nthreads_;
