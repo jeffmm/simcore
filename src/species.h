@@ -16,6 +16,9 @@ class SpeciesBase {
     bool is_kmc_ = false;
     double delta_;
     system_parameters *params_;
+    std::fstream oposit_file_;
+    std::fstream iposit_file_;
+
     OutputManager *output_mgr_;
     space_struct *space_;
     rng_properties rng_;
@@ -112,7 +115,31 @@ class SpeciesBase {
     //std::vector<potential_pair> GetPotentials() {return potentials_;}
     virtual void Configurator() {}
     virtual void WriteOutputs(std::string run_name) {}
-    virtual void WritePosits(std::ofstream &op) {}
+    virtual void WritePosits() {}
+    virtual void ReadPosits() {}
+    virtual void InitOutputFile() {
+      std::string sid_str = SIDToString(sid_);
+      std::cout<<"sid_str is "<< sid_str <<" \n";
+      std::string file_name = sid_str + ".posit";
+      oposit_file_.open(file_name, std::ios::out | std::ios::binary ); 
+      if (!oposit_file_.is_open())
+        std::cout<<"Output "<< file_name <<" file did not open\n";
+      else{
+        int size = sid_str.size();
+        oposit_file_.write(reinterpret_cast<char*>(&size), sizeof(int));
+        oposit_file_.write(sid_str.c_str(), sid_str.size());
+        oposit_file_.write(reinterpret_cast<char*> (&params_->n_steps), sizeof(int));
+        oposit_file_.write(reinterpret_cast<char*> (&params_->n_posit), sizeof(int));
+      }
+    }
+
+    virtual void InitInputFile(std::string in_file, std::ios::streampos beg){
+      iposit_file_.open(in_file, std::ios::binary | std::ios::in );
+      iposit_file_.seekg(beg);
+    }
+
+    virtual int IsOpen(){ return oposit_file_.is_open(); }
+    virtual void Close(){ oposit_file_.close(); }
 };
 
 template <typename T>
@@ -258,10 +285,17 @@ class Species : public SpeciesBase {
       return count;
     }
     
-    virtual void WritePosits(std::ofstream &op) {
+    virtual void WritePosits() {
       for( auto& mem_it : members_)
-        mem_it->WritePosit(op);
+        mem_it->WritePosit(oposit_file_);
     }
+
+    virtual void ReadPosits() {
+      for( auto& mem_it : members_){
+        mem_it->ReadPosit(iposit_file_);
+      }
+    }
+
 };
 
 #endif // _SIMCORE_SPECIES_H_

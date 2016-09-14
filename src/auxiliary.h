@@ -35,6 +35,7 @@ struct graph_struct {
   double diameter;
 };
 
+//NOTE: Species ids cannot be more than 20 characters for reasons -AL
 enum class SID : unsigned char {
   none,
   md_bead,

@@ -11,7 +11,8 @@ class OutputManager{
   private:
     int *i_step_;
     system_parameters *params_;
-    std::map<SID, std::ofstream> posit_files_;
+    //std::map<SID, std::ofstream> oposit_files_;
+    //std::map<SID, std::ifstream> iposit_files_;
     std::map<SID, SpeciesBase*> species_;
     //Vector of species pointers
 
@@ -22,7 +23,9 @@ class OutputManager{
     void WriteOutputs();
     void WriteSpeciesPosits();
     void AddSpecie(SpeciesBase *spec);
-    std::ofstream& GetPositFile(SID sid);
+    //std::ofstream& GetPositFile(SID sid);
+    void Close();
+    void Clear();
 
 };
 
