@@ -19,7 +19,7 @@ class TrackingBase {
 
     TrackingBase() {}
     virtual ~TrackingBase() {
-      delete rid_interactions_;
+      delete[] rid_interactions_;
     }
 
     virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin);
