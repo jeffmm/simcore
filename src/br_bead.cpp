@@ -1,4 +1,4 @@
-#include "br_bead.hbr_bead"
+#include "br_bead.h"
 
 void BrBead::KickBead() {
   for (int i=0; i<n_dim_; ++i) {
@@ -19,9 +19,10 @@ void BrBead::UpdatePosition() {
 
 void BrBead::UpdatePositionMP() {
     KickBead();
+    std::copy(position_, position_+n_dim_, prev_position_);
     for (int i = 0; i < n_dim_; ++i) {
         position_[i] = position_[i] + force_[i] * delta_ / diameter_;
-        dr_tot_[i] += position_[i] + force_[i] * delta_ / diameter_;
+        dr_tot_[i] += position_[i] - prev_position_[i];
     }
     UpdatePeriodic();
 }

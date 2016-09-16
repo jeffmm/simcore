@@ -11,10 +11,6 @@ void OutputManager::WriteOutputs(){
 
   if ( (*i_step_ % params_->n_posit == 0) && params_->posit_flag)  {
     WriteSpeciesPosits();
-    //std::cout << "Is posit open = ";
-    //for (auto spec : species_)
-      //std::cout << spec.second->IsOpen();
-    //std::cout << std::endl;
   }
 }
 

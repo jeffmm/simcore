@@ -140,27 +140,8 @@ class Object {
     rng_properties* GetRNG() {return &rng_;}
 
     virtual void WritePosit(std::fstream &op);
-      //op.write(&oid_, sizeof(oid_), op);
-      //for(auto& pos : position_)
-        //op.write(reinterpret_cast<char*>&pos, sizeof(pos));
-      //for(auto& spos : scaled_position_)
-        //op.write(reinterpret_cast<char*>&spos, sizeof(spos));
-      //for(auto& u : orientation_)
-        //op.write(reinterpret_cast<char*>&u, sizeof(u));
-      //op.write(reinterpret_cast<char*>&diameter_, sizeof(diameter_));
-      //op.write(reinterpret_cast<char*>&length_, sizeof(length_));
-    //}
 
     virtual void ReadPosit(std::fstream &ip);
-      //for(auto& pos : position_)
-        //op.read(reinterpret_cast<char*>&pos, sizeof(pos));
-      //for(auto& spos : scaled_position_)
-        //op.read(reinterpret_cast<char*>&spos, sizeof(spos));
-      //for(auto& u : orientation_)
-        //op.read(reinterpret_cast<char*>&u, sizeof(u));
-      //op.read(reinterpret_cast<char*>&diameter_, sizeof(diameter_));
-      //op.read(reinterpret_cast<char*>&length_, sizeof(length_));
-    //}
 };
 
 class Simple : public Object {
@@ -334,6 +315,15 @@ class Composite<T> : public Object {
     virtual int GetCount() {
       return elements_.size();
     }
+
+    virtual void WritePosit(std::fstream &op){
+      for (auto& elem : elements_)
+        elem.WritePosit(op);
+    }
+    virtual void ReadPosit(std::fstream &ip){
+      for (auto& elem : elements_)
+        elem.ReadPosit(ip);
+    }
 };
 
 template <typename T, typename V>
@@ -402,6 +392,19 @@ class Composite<T,V> : public Object {
           dr_max = dr_mag;
       }
       return dr_max;
+    }
+
+    virtual void WritePosit(std::fstream &op){
+      for (auto& elem : elements_)
+        elem.WritePosit(op);
+      for (auto& velem : v_elements_)
+        velem.WritePosit(op);
+    }
+    virtual void ReadPosit(std::fstream &ip){
+      for (auto& elem : elements_)
+        elem.ReadPosit(ip);
+      for (auto& velem : v_elements_)
+        velem.ReadPosit(ip);
     }
 
 };
