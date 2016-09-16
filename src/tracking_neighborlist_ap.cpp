@@ -43,6 +43,27 @@ void TrackingNeighborListAP::UpdateNeighborList() {
     std::cout << "Updating NeighborListAP\n";
   }
   nupdates_++;
+  std::unordered_set<int> unique_rids;
+  for (int i = 0; i < nsimples_; ++i) {
+    neighbors_[i].clear();
+    unique_rids.insert((*simples_)[i]->GetRID());
+  }
+  nrigids_ = (int)unique_rids.size();
+
+  // Call the main update routine
+  AllPairsUpdate2();
+
+  // Reset the accumulators
+  for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+    (*spec)->ZeroDr();
+  }
+}
+
+/*void TrackingNeighborListAP::UpdateNeighborList() {
+  if (debug_trace) {
+    std::cout << "Updating NeighborListAP\n";
+  }
+  nupdates_++;
   for (int i = 0; i < nsimples_; ++i) {
     neighbors_[i].clear();
   }
@@ -54,6 +75,61 @@ void TrackingNeighborListAP::UpdateNeighborList() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     (*spec)->ZeroDr();
   }
+}*/
+
+void TrackingNeighborListAP::AllPairsUpdate2() {
+  // Loop over all pairs to build the neighbor list, O(N^2)
+  std::vector<bool> rid_self_check(nrigids_, false);
+  #ifdef ENABLE_OPENMP
+  #pragma omp parallel
+  #endif
+  {
+    #ifdef ENABLE_OPENMP
+    #pragma omp for schedule(runtime) nowait
+    #endif
+    for (int idx = 0; idx < nsimples_; ++idx) {
+      auto p1 = (*simples_)[idx];
+      int rid1 = p1->GetRID();
+
+      bool should_exit = false;
+      #ifdef ENABLE_OPENMP
+      #pragma omp critical
+      #endif
+      {
+        should_exit = rid_self_check[rid1];
+        rid_self_check[rid1] = true;
+      }
+      if (should_exit) continue;
+
+      std::vector<int> rid_interactions_local;
+      for (int jdx = 0; jdx < nsimples_; ++jdx) {
+        if (idx == jdx) continue;
+        auto p2 = (*simples_)[jdx];
+        int rid2 = p2->GetRID();
+        if (rid1 == rid2) continue;
+
+        auto ridit = find(rid_interactions_local.begin(), rid_interactions_local.end(), rid2);
+        if (ridit != rid_interactions_local.end()) continue;
+
+        // Minimum distance
+        interactionmindist idm;
+        MinimumDistance(p1, p2, idm, ndim_, nperiodic_, space_);
+
+        if (idm.dr_mag2 < rcs2_) {
+          neighbor_t new_neighbor;
+          new_neighbor.idx_ = jdx;
+          new_neighbor.rid_me_ = rid1;
+          new_neighbor.rid_you_ = rid2;
+          rid_interactions_local.push_back(rid2);
+          neighbors_[idx].push_back(new_neighbor);
+        }
+      }
+    } // pragma omp for
+
+    #ifdef ENABLE_OPENMP
+    #pragma omp barrier
+    #endif
+  } // omp parallel
 }
 
 void TrackingNeighborListAP::AllPairsUpdate() {
