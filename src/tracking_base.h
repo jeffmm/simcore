@@ -53,6 +53,7 @@ class TrackingBase {
     // Derived quantities
     int nthreads_;
     int nsimples_;
+    int nrigids_;
     std::string name_ = "TrackingBase";
 
 };

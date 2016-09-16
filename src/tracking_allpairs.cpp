@@ -14,6 +14,85 @@ void TrackingAllPairs::UpdateRcut(double pRcut) {
 
 void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
   if (first_ || pForceUpdate) {
+    std::cout << "Creating unique rids\n";
+    std::unordered_set<int> unique_rids;
+    for (int i = 0; i < nsimples_; ++i) {
+      neighbors_[i].clear();
+      // RID checker
+      unique_rids.insert((*simples_)[i]->GetRID());
+    }
+    nrigids_ = (int)unique_rids.size();
+    std::cout << "Found " << nrigids_ << " rigids\n";
+
+    first_ = false;
+    nupdates_++;
+
+    // Loop over particles, 2 way nl, and add unique inter
+    // actions
+    std::vector<bool> rid_self_check(nrigids_, false);
+    #ifdef ENABLE_OPENMP
+    #pragma omp parallel
+    #endif
+    {
+      #ifdef ENABLE_OPENMP
+      #pragma omp for schedule(runtime) nowait
+      #endif
+      for (int idx = 0; idx < nsimples_; ++idx) {
+        std::vector<int> rid_interactions_local;
+        auto p1 = (*simples_)[idx];
+        int rid1 = p1->GetRID();
+
+        std::cout << "Checking simple: " << p1->GetOID() << ", idx: " << idx << ", rid: " << rid1 << std::endl;
+
+        bool should_exit = false;
+        #ifdef ENABLE_OPENMP
+        #pragma omp critical
+        #endif
+        {
+          should_exit = rid_self_check[rid1];
+          rid_self_check[rid1] = true;
+        }
+        if (should_exit) {
+          std::cout << "  Already checked rid " << rid1 << ", continuing\n";
+          continue;
+        }
+
+        for (int jdx = 0; jdx < nsimples_; ++jdx) {
+          if (idx == jdx) continue;
+          auto p2 = (*simples_)[jdx];
+          int rid2 = p2->GetRID();
+          if (rid1 == rid2) continue;
+          std::cout << "    Checking simple: " << p2->GetOID() << ", jdx: " << jdx << ", rid: " << rid2 << std::endl;
+          auto ridit = find(rid_interactions_local.begin(), rid_interactions_local.end(), rid2);
+          if (ridit != rid_interactions_local.end()) {
+            std::cout << "    Found that rid " << *ridit << " already exists, continuing\n";
+            continue;
+          }
+          std::cout << "    Did not find rid " << rid2 << std::endl << std::flush;
+          rid_interactions_local.push_back(rid2);
+
+          std::cout << "blah: " << std::flush;
+          for (auto blah = rid_interactions_local.begin(); blah != rid_interactions_local.end(); ++blah) {
+            std::cout << *blah << ", " << std::flush;
+          }
+          std::cout << "blahend\n" << std::flush;
+
+          // Don't do a distance check, just add
+          neighbor_t new_neighbor;
+          new_neighbor.idx_ = jdx;
+          new_neighbor.rid_me_ = rid1;
+          new_neighbor.rid_you_ = rid2;
+          std::cout << "    Creating new neighbor idx: " << new_neighbor.idx_ << ", rid1: " << new_neighbor.rid_me_
+            << ", rid2: " << new_neighbor.rid_you_ << std::endl << std::flush;
+          neighbors_[idx].push_back(new_neighbor);
+        }
+      } // pragma omp for
+    }
+  }
+}
+
+/*void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
+  if (first_ || pForceUpdate) {
     for (int i = 0; i < nsimples_; ++i) {
       neighbors_[i].clear();
     }
@@ -85,7 +164,7 @@ void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
     }
     #endif
   }
-}
+}*/
 
 void TrackingAllPairs::print() {
   // Is there really anything to print?
