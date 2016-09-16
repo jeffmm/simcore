@@ -131,6 +131,7 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(XlinkSpecies,xlink);
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(MDBeadOptSpecies,md_bead_opt);
+  REGISTER_SPECIES(BrBeadSpecies,br_bead);
 
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file
@@ -146,36 +147,36 @@ void Simulation::InitSpecies() {
 }
 
 //FIXME Only works for one species at a time -AL
-  //TODO Initalize multiple files to run simultaneously
   //TODO Have output_manager run movies
 void Simulation::InitPositInput(){
-  int nchar;
-  std::fstream ip;
+  for (auto pos_it : posit_files_){
+    int nchar;
+    std::fstream ip;
 
-  ip.open(posit_file_, std::ios::binary | std::ios::in );
-  if (!ip.is_open()){
-    std::cout<<"Input "<< posit_file_ <<" file did not open\n";
-    exit(1);
-  }
-  else{
-    //Get Sim data from posit file
-    ip.read(reinterpret_cast<char*>(&nchar), sizeof(int));
-    std::string sid_str(nchar, ' ');
-    ip.read(&sid_str[0], nchar);
-    std::cout<<"SID of posit file is "<< sid_str << std::endl;
-    SID sid_posit = StringToSID(sid_str);
-    ip.read(reinterpret_cast<char*>(&(params_.n_steps)), sizeof(int));
-    ip.read(reinterpret_cast<char*>(&(params_.n_posit)), sizeof(int));
+    ip.open(pos_it, std::ios::binary | std::ios::in );
+    if (!ip.is_open()){
+      std::cout<<"Input "<< pos_it <<" file did not open\n";
+      exit(1);
+    }
+    else{
+      //Get Sim data from posit file
+      ip.read(reinterpret_cast<char*>(&nchar), sizeof(int));
+      std::string sid_str(nchar, ' ');
+      ip.read(&sid_str[0], nchar);
+      SID sid_posit = StringToSID(sid_str);
+      ip.read(reinterpret_cast<char*>(&(params_.n_steps)), sizeof(int));
+      ip.read(reinterpret_cast<char*>(&(params_.n_posit)), sizeof(int));
 
-    //Get the location where species data starts and close input for now
-    std::ios::streampos beg = ip.tellg();
-    ip.close();
+      //Get the location where species data starts and close input for now
+      std::ios::streampos beg = ip.tellg();
+      ip.close();
 
-    for (auto spec_it : species_ ){
-      if (sid_posit == spec_it->GetSID()){
-        spec_it->InitInputFile(posit_file_, beg);
-        break;
-      }
+      for (auto spec_it : species_ )
+        if (sid_posit == spec_it->GetSID()){
+          std::cout<<"SID of posit file is "<< sid_str << std::endl;
+          spec_it->InitInputFile(pos_it, beg);
+          break;
+        }
     }
   }
 }
@@ -285,7 +286,7 @@ void Simulation::WriteOutputs() {
 
 }
 
-void Simulation::CreateMovie(system_parameters params, std::string name, std::string posit_file){
+void Simulation::CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files){
   params_ = params;
 
   //Graph and don't make new posit files
@@ -293,7 +294,7 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::st
   params_.posit_flag = 0;
 
   run_name_ = name;
-  posit_file_ = posit_file;
+  posit_files_ = posit_files;
   rng_.init(params_.seed);
   InitSimulation();
   InitPositInput();
