@@ -91,7 +91,7 @@ class SpeciesBase {
     virtual void Init() {}
     virtual void ReInit(unsigned int const cid) {}
     virtual double GetDrMax() {return 0.0;}
-    virtual void ZeroDr() {};
+    virtual void ZeroDr() {}
     virtual void ZeroForces() {}
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim;

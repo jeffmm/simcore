@@ -53,18 +53,11 @@ void Simulation::RunMovie(){
     }
     if (debug_trace)
       printf("********\nStep %d\n********\n", i_step_);
-    if (i_step_%params_.n_posit == 0)
+    if (i_step_%params_.n_posit == 0){
       ReadSpeciesPositions(); 
+    }
     
-    //ZeroForces();
-    //KineticMonteCarloMP();
-    //InteractMP();
-    //IntegrateMP();
-    // Only will run if DEBUG is enabled
-    //#ifdef DEBUG
-    //if (debug_trace)
-      //DumpAll(i_step_);
-    //#endif
+    //TODO make OutputManager draw these because of available options
     Draw();
     //WriteOutputs();
   }
@@ -146,8 +139,9 @@ void Simulation::InitSpecies() {
   }
 }
 
-//FIXME Only works for one species at a time -AL
-  //TODO Have output_manager run movies
+//TODO Have output_manager run movies
+//TODO Put in safe guard to make sure species that are not in configure file are not run
+//TODO Have better initializers for each of this
 void Simulation::InitPositInput(){
   for (auto pos_it : posit_files_){
     int nchar;
@@ -173,7 +167,6 @@ void Simulation::InitPositInput(){
 
       for (auto spec_it : species_ )
         if (sid_posit == spec_it->GetSID()){
-          std::cout<<"SID of posit file is "<< sid_str << std::endl;
           spec_it->InitInputFile(pos_it, beg);
           break;
         }
@@ -286,6 +279,7 @@ void Simulation::WriteOutputs() {
 
 }
 
+//TODO Make sure only species that are put through with m posit are initialized
 void Simulation::CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files){
   params_ = params;
 
@@ -302,6 +296,7 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::ve
   ClearSimulation();
 }
 
+//TODO Move to Output manager
 void Simulation::ReadSpeciesPositions(){
   for (auto it=species_.begin(); it!=species_.end(); ++it)
     (*it)->ReadPosits();
