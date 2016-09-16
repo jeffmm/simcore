@@ -31,9 +31,8 @@ class SimulationManager {
     void RunManager();
     void SetNRuns(int n_runs);
     void SetRunName(std::string run_name);
-    void RunMovieManager(std::string posit_file);
+    void RunMovieManager(std::vector<std::string> posit_files);
 };
-
 
 
 #endif // _SIMCORE_SIMULATION_MANAGER_H_ 

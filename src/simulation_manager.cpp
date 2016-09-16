@@ -195,7 +195,7 @@ void SimulationManager::SetRunName(std::string run_name) {
   run_name_ = run_name;
 }
 
-void SimulationManager::RunMovieManager(std::string posit_file) {
+void SimulationManager::RunMovieManager(std::vector<std::string> posit_files) {
   Simulation *sim;
   std::ostringstream title;
 
@@ -215,7 +215,7 @@ void SimulationManager::RunMovieManager(std::string posit_file) {
   params_[i_var].seed = gsl_rng_get(rng_.r);
   PrintParams(params_[i_var], title.str());
   sim = new Simulation;
-  sim->CreateMovie(params_[i_var], title.str(), posit_file);
+  sim->CreateMovie(params_[i_var], title.str(), posit_files);
   delete sim;
   title.str("");
   title.clear();

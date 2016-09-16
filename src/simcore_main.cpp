@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
       sim.SetRunName(run_opts.run_name);
     // Recreate Movie of past simulations using posit file
     if (run_opts.m_flag)
-      sim.RunMovieManager(run_opts.posit_file);
+      sim.RunMovieManager(run_opts.posit_files);
     // Main control function
     else
       sim.RunManager();

@@ -2,6 +2,7 @@
 #define _SIMCORE_PARSE_FLAGS_H_
 #include <getopt.h>
 #include <string>
+#include <vector>
 
 // Define flags here
 // NOTE: Need to update n_flags, PARSE_OPTS function case-switches, 
@@ -27,7 +28,7 @@ static const std::string desc[n_flags][2] = {
   {"where fname is the input parameter file (REQUIRED)\n", "fname"},
   {"where rname is the name of a run session (for organizing batch jobs)\n", "rname"},
   {"where num is the number of independent runs to perform with the given parameters\n", "num"},
-  {"where movie is the posit file name to recreate previous simulation\n", "movie"},
+  {"where movie is the posit file name to recreate previous simulation. You can use this option more than once\n", "movie"},
   {"run program in test mode\n", "none"}
 };
 
@@ -43,7 +44,7 @@ struct run_options {
   int m_flag;
   std::string param_file;
   std::string run_name;
-  std::string posit_file;
+  std::vector<std::string> posit_files;
 };
 
 /*************************
@@ -115,7 +116,7 @@ run_options parse_opts(int argc, char *argv[]) {
         break;
       case 'm':
         run_opts.m_flag = 1;
-        run_opts.posit_file = optarg;
+        run_opts.posit_files.push_back(optarg);
         break;
       case '?':
         break;

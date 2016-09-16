@@ -6,16 +6,25 @@ md_bead:
     num: 100
     diameter: 1
     mass: 1
+    
+br_bead:
+  properties:
+    insertion_type: random
+    overlap: false
+  brbead:
+    num: 100
+    diameter: 1
 
 #br_rod:
-#  properties:
-#    insertion_type: random
-#    overlap: false
-#  rod:
-#    num: 100
-#    length: 20
-#    diameter: 1
-#
+  #properties:
+    #insertion_type: random
+    #overlap: false
+  #rod:
+    #num: 10
+    #length: 20
+    #max_length: 21
+    #diameter: 1
+
 #xlink:
 #  properties:
 #    insertion_type: random
