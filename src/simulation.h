@@ -19,7 +19,7 @@ class Simulation {
     double time_,
            cpu_init_time_;
     std::string run_name_;
-    std::string posit_file_;
+    std::vector<std::string> posit_files_;
     //std::fstream ip_;
 
     OutputManager output_mgr_;
@@ -57,7 +57,7 @@ class Simulation {
     Simulation();
     ~Simulation();
     void Run(system_parameters params, std::string name);
-    void CreateMovie(system_parameters params, std::string name, std::string posit_file);
+    void CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files);
 };
 
 #endif // _SIMCORE_SIMULATION_H_  
