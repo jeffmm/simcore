@@ -264,3 +264,5 @@ void Object::ReadPosit(std::fstream &ip){
   ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
 }
 
+
+
