@@ -59,6 +59,8 @@ void BrRod::ApplyForcesTorques() {
     AddTorque(bond->GetTorque());
   }
   // Check if we want to use tip force to induce catastrophe
+  // XXX FIXME is this correct, since we've summed the forces and probably need to get it on the
+  // end directly (might be applied funny depending on how things are set up)
   if (force_induced_catastrophe_flag_) {
     Bond * bond = &v_elements_[n_bonds_-1];
     double const * const f = bond->GetForce();
@@ -69,8 +71,18 @@ void BrRod::ApplyForcesTorques() {
     for (int i=0; i<n_dim_; ++i)
       tip_force_ -= f[i]*orientation_[i];
     if (tip_force_ < 0) {
-      if (n_bonds_ > 1)
-        printf("Warning: Force at rod tip is negative. This should never happen if forces are applied correctly and n_bonds > 1 \n");
+      if (n_bonds_ > 1) {
+        std::cout << "Warning: Force at rod tip is negative. This should never happen if forces are applied correctly and n_bonds > 1 \n";
+        std::cout << "    oid: " << GetOID() << std::endl;
+        std::cout << "    tip_force: " << std::setprecision(16) << tip_force_ << std::endl;
+        std::cout << "    u: (" << std::setprecision(16)
+          << orientation_[0] << ", "
+          << orientation_[1];
+        if (n_dim_ == 3) {
+          std::cout << std::setprecision(16) << ", " << orientation_[2];
+        }
+        std::cout << ")\n";
+      }
       tip_force_ = 0;
     }
   }

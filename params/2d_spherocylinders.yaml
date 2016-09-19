@@ -43,7 +43,7 @@ n_argon: 0
 grab_flag: 1
 grab_file: frames/frame
 draw_interactions: 0
-ftype: 4
+ftype: 1
 potfile: params/2d_spherocylinders.pot.yaml
 kmcfile: params/2d_spherocylinders.kmc.yaml
 dynamic_instability_flag: 0

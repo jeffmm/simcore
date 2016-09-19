@@ -19,7 +19,10 @@ class TrackingBase {
 
     TrackingBase() {}
     virtual ~TrackingBase() {
-      delete[] rid_interactions_;
+      delete unique_rids_;
+      delete rid_self_check_;
+      delete[] rid_check_local_;
+      //delete[] rid_interactions_;
     }
 
     virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin);
@@ -40,21 +43,28 @@ class TrackingBase {
     int ndim_;
     int nperiodic_;
     int nupdates_;
+    int nthreads_;
+    int nsimples_;
+    int nrigids_;
+    int maxrigid_;
     double skin_ = 0.0;
     double rcut_ = 0.0;
     double box_[3];
+
+    std::string name_ = "TrackingBase";
 
     space_struct* space_;
     std::vector<Simple*> *simples_;
     std::vector<SpeciesBase*> *species_;
     nl_list* neighbors_;
+  
+    // Rigid stuff
     std::unordered_set<std::pair<int, int>, hashh::pair_hash>* rid_interactions_;
+    std::vector<bool>* rid_self_check_;
+    //std::unordered_set<int>* unique_rids_;
+    std::set<int>* unique_rids_;
+    std::unordered_set<int>** rid_check_local_;
 
-    // Derived quantities
-    int nthreads_;
-    int nsimples_;
-    int nrigids_;
-    std::string name_ = "TrackingBase";
 
 };
 
