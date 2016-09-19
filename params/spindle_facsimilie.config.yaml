@@ -12,6 +12,5 @@ xlink:
     insertion_type: random
     overlap: true
   xit:
-    num: 1
-#num: 298
+    num: 298
     diameter: 1
