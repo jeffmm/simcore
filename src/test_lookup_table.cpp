@@ -12,42 +12,31 @@ void TestLookupTable::InitTestModule(const std::string& filename) {
 
   if (node_[name_]["BobFacsimile"]) {
     std::function<bool(int)> f_bobfacsimile = std::bind(&TestLookupTable::UnitTestBobFacsimile, this, std::placeholders::_1);
-    unit_tests_.push_back(f_bobfacsimile);
-    unit_tests_names_.push_back("BobFacsimile");
-    unit_tests_results_.push_back(std::vector<bool>());
+    tests_.push_back(f_bobfacsimile);
+    test_names_.push_back("BobFacsimile");
+    test_results_.push_back(std::vector<bool>());
   }
 }
 
 void TestLookupTable::RunTests() {
-  std::cout << name_ << " Run Tests\n";
-  UnitTests();
-  IntegrationTests();
-}
-
-void TestLookupTable::UnitTests() {
-  std::cout << name_ << " Unit Tests ->\n";
+  std::cout << name_ << " Tests ->\n";
   bool test_success = true;
 
-  for (int i = 0; i < unit_tests_.size(); ++i) {
-    bool this_success = unit_tests_[i](i);
+  for (int i = 0; i < tests_.size(); ++i) {
+    bool this_success = tests_[i](i);
     test_success &= this_success;
 
     std::cout << "----------------\n";
-    std::cout << "--Unit Test " << unit_tests_names_[i] << ": ";
+    std::cout << "--Test " << test_names_[i] << ": ";
     std::cout << (this_success ? "PASSED" : "FAILED") << std::endl;
-    for (int didpass = 0; didpass < unit_tests_results_[i].size(); ++didpass) {
-      std::cout << "    Test[" << didpass << "] " << (unit_tests_results_[i][didpass] ? "passed" : "failed");
+    for (int didpass = 0; didpass < test_results_[i].size(); ++didpass) {
+      std::cout << "    Test[" << didpass << "] " << (test_results_[i][didpass] ? "passed" : "failed");
       std::cout << std::endl;
     }
     std::cout << "----------------\n";
   }
   std::cout << name_;
-  std::cout << " Unit Tests: " << (test_success ? "passed" : "failed") << std::endl;
-}
-
-void TestLookupTable::IntegrationTests() {
-  std::cout << name_;
-  std::cout << " Integration Tests\n";
+  std::cout << " Tests: " << (test_success ? "passed" : "failed") << std::endl;
 }
 
 bool TestLookupTable::UnitTestBobFacsimile(int test_num) {
@@ -55,7 +44,7 @@ bool TestLookupTable::UnitTestBobFacsimile(int test_num) {
   std::string subtest = "BobFacsimile";
 
   int ntests = node_[name_][subtest]["test"].size();
-  unit_tests_results_[test_num].resize(ntests);
+  test_results_[test_num].resize(ntests);
 
   for (int itest = 0; itest < ntests; ++itest) {
     int ndim = node_[name_][subtest]["test"][itest]["ndim"].as<int>();
@@ -76,7 +65,7 @@ bool TestLookupTable::UnitTestBobFacsimile(int test_num) {
     }
     double tolerance = node_[name_][subtest]["test"][itest]["tolerance"].as<double>();
 
-    unit_tests_results_[test_num][itest] = true;
+    test_results_[test_num][itest] = true;
     for (int i = 0; i < results.size(); ++i) {
       // Check against the table
       for (int j = 0; j < results[i].size(); ++j) {
@@ -86,7 +75,7 @@ bool TestLookupTable::UnitTestBobFacsimile(int test_num) {
         // Test equality
         if (!uth::almost_equal<double>(mytest, myres, tolerance)) {
           std::cout << "Check failed " << i << ", " << j << " " << mytest << " != " << myres << std::endl;
-          unit_tests_results_[test_num][itest] = false && unit_tests_results_[test_num][itest];
+          test_results_[test_num][itest] = false && test_results_[test_num][itest];
         }
       }
     }

@@ -30,12 +30,18 @@ class InteractionEngine {
     void InitMP();
 
     void Interact();
-    void InteractParticlesMP(int &idx,
-                             int &jdx,
-                             double **fr,
-                             double **tr,
-                             double *pr_energy,
-                             double *kmc_energy);
+    void InteractParticlesExternalMP(int &idx,
+                                     int &jdx,
+                                     double **fr,
+                                     double **tr,
+                                     double *pr_energy,
+                                     double *kmc_energy);
+    void InteractParticlesInternalMP(int &idx,
+                                     int &jdx,
+                                     double **fr,
+                                     double **tr,
+                                     double *pr_energy,
+                                     double *kmc_energy);
     void TetherParticlesMP(int &idx,
                            int &jdx,
                            double **fr,

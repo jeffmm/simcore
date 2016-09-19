@@ -19,6 +19,7 @@ class TrackingNeighborListAP : public TrackingBase {
 
     void UpdateNeighborList();
     void AllPairsUpdate();
+    void AllPairsUpdate2();
 
   protected:
     
