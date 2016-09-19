@@ -60,6 +60,15 @@ class KMCBase {
       printf("ERROR, need to override this function!\n");
       exit(1);
     }
+
+    void SetRNGState(const std::string& filename) {
+      // Load the rng state from binary file
+      FILE* pfile = fopen(filename.c_str(), "r");
+      auto retval = gsl_rng_fread(pfile, rng_.r);
+      if (retval != 0) {
+        std::cout << "Reading rng state failed " << retval << std::endl;
+      }
+    }
 };
 
 typedef std::map<sid_pair, KMCBase*> kmc_map;

@@ -4,6 +4,7 @@
 
 #include "test_lookup_table.h"
 #include "test_xlink_kmc.h"
+#include "test_xlink_kmc_moves.h"
 
 #define REGISTER_TEST_MODULE(n) test_module_factory_.register_class<n>(#n);
 
@@ -33,6 +34,7 @@ void TestManager::RegisterTestModules() {
   // Register all tests we have access to
   REGISTER_TEST_MODULE(TestLookupTable);
   REGISTER_TEST_MODULE(TestXlinkKMC);
+  REGISTER_TEST_MODULE(TestXlinkKMCMoves);
 }
 
 void TestManager::RunTestModules() {

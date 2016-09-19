@@ -7,6 +7,7 @@
 #include "xlink_head.h"
 
 #include <iomanip>
+#include <unordered_map>
 
 enum attach_type {
   unbound = 0,
@@ -19,6 +20,7 @@ class Xlink : public Composite<XlinkHead> {
     /* Unique to Xlink */
     double n_exp_0_1_ = 0.0;
     double n_exp_1_2_ = 0.0;
+    double r_cross_[3] = {0.0, 0.0, 0.0};
 
     attach_type bound_;
 
@@ -103,6 +105,8 @@ class Xlink : public Composite<XlinkHead> {
     void SetNExp_1_2(double const n) {n_exp_1_2_=n;}
     const double GetInternalEnergy();
 
+    const double* const GetRcross() {return r_cross_;}
+
     void DumpKMC() {
       auto head0 = elements_.begin();
       auto head1 = elements_.begin()+1;
@@ -179,6 +183,39 @@ class XlinkSpecies : public Species<Xlink> {
     std::vector<Xlink*>* GetXlinks() {
       return &members_;
     }
+
+    static void CreateTestXlink(Xlink **mxit,
+                                int ndim,
+                                std::vector<Simple*>* simples,
+                                std::unordered_map<int, int>* oid_position_map,
+                                const std::string &filename,
+                                const std::string &modulename,
+                                const std::string &unitname,
+                                const std::string &xname,
+                                int itest);
+
+    static void CreateTestXlink(Xlink **mxit,
+                                int ndim,
+                                std::vector<Simple*>* simples,
+                                std::unordered_map<int, int>* oid_position_map,
+                                const std::string &filename,
+                                const std::string &modulename,
+                                const std::string &unitname,
+                                const std::string &xname,
+                                int itest,
+                                int attachoid);
+
+    static void CreateTestXlink(Xlink **mxit,
+                                int ndim,
+                                std::vector<Simple*>* simples,
+                                std::unordered_map<int, int>* oid_position_map,
+                                const std::string &filename,
+                                const std::string &modulename,
+                                const std::string &unitname,
+                                const std::string &xname,
+                                int itest,
+                                int attachoid0,
+                                int attachoid1);
 };
 
 #endif // _SIMCORE_XLINK_H_

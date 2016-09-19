@@ -150,7 +150,7 @@ void ParticleTracking::CheckOverlaps(int pMaxOverlaps) {
         if (part1->GetCID() == part2->GetCID()) continue;
 
         // Check to see if interacting
-        PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
+        PotentialBase *pot = potentials_->GetPotentialExternal(part1->GetSID(), part2->GetSID());
         if (pot == nullptr) continue;
 
         // Check to see if overlap on this is allowed (KMC stuff)
