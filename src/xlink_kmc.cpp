@@ -126,6 +126,42 @@ void XlinkKMC::Init(space_struct *pSpace,
       break;
   }
 
+  // velocity switch costheta
+  switch (node["kmc"][ikmc]["velocity_switch_costheta"].Type()) {
+    case YAML::NodeType::Scalar:
+      velocity_switch_costheta_[0] = velocity_switch_costheta_[1] =
+        node["kmc"][ikmc]["velocity_switch_costheta"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      velocity_switch_costheta_[0] = node["kmc"][ikmc]["velocity_switch_costheta"][0].as<double>();
+      velocity_switch_costheta_[1] = node["kmc"][ikmc]["velocity_switch_costheta"][1].as<double>();
+      break;
+  }
+
+  // Diffusion singly bound
+  switch (node["kmc"][ikmc]["diffusion_singly_bound"].Type()) {
+    case YAML::NodeType::Scalar:
+      diffusion_bound_1_[0] = diffusion_bound_1_[1] =
+        node["kmc"][ikmc]["diffusion_singly_bound"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      diffusion_bound_1_[0] = node["kmc"][ikmc]["diffusion_singly_bound"][0].as<double>();
+      diffusion_bound_1_[1] = node["kmc"][ikmc]["diffusion_singly_bound"][1].as<double>();
+      break;
+  }
+
+  // Diffusion doubly bound
+  switch (node["kmc"][ikmc]["diffusion_doubly_bound"].Type()) {
+    case YAML::NodeType::Scalar:
+      diffusion_bound_2_[0] = diffusion_bound_2_[1] =
+        node["kmc"][ikmc]["diffusion_doubly_bound"].as<double>();
+      break;
+    case YAML::NodeType::Sequence:
+      diffusion_bound_2_[0] = node["kmc"][ikmc]["diffusion_doubly_bound"][0].as<double>();
+      diffusion_bound_2_[1] = node["kmc"][ikmc]["diffusion_doubly_bound"][1].as<double>();
+      break;
+  }
+
   alpha_          = node["kmc"][ikmc]["alpha"].as<double>();
   rcutoff_0_1_    = node["kmc"][ikmc]["rcut"].as<double>();
   barrier_weight_ = node["kmc"][ikmc]["barrier_weight"].as<double>();
@@ -135,6 +171,7 @@ void XlinkKMC::Init(space_struct *pSpace,
   write_event_    = node["kmc"][ikmc]["write_event"].as<bool>();
 
   // XXX Check k_stretch and r_equil
+  // done the first time we call the potential
 
   // Stall type
   std::string stall_str = node["kmc"][ikmc]["stall_type"].as<std::string>();
@@ -231,6 +268,9 @@ void XlinkKMC::Print() {
   std::cout << std::setprecision(16) << "\tvelocity:                 [" << velocity_[0] << ", " << velocity_[1] << "]\n";
   std::cout << std::setprecision(16) << "\tvelocity_polar_scale:     [" << velocity_p_scale_[0] << ", " << velocity_p_scale_[1] << "]\n";
   std::cout << std::setprecision(16) << "\tvelocity_antipolar_scale: [" << velocity_ap_scale_[0] << ", " << velocity_ap_scale_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\tvelocity_switch_costheta: [" << velocity_switch_costheta_[0] << ", " << velocity_switch_costheta_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\tdiffusion_singly_bound:   [" << diffusion_bound_1_[0] << ", " << diffusion_bound_1_[1] << "]\n";
+  std::cout << std::setprecision(16) << "\tdiffusion_doubly_bound:   [" << diffusion_bound_2_[0] << ", " << diffusion_bound_2_[1] << "]\n";
   std::cout << "\tbarrier_weight: " << std::setprecision(16) << barrier_weight_ << std::endl;
   std::cout << "\tequilibrium_length: " << std::setprecision(16) << r_equil_ << std::endl;
   std::cout << "\tk_spring: " << std::setprecision(16) << k_stretch_ << std::endl;
@@ -248,7 +288,7 @@ void XlinkKMC::PrepKMC() {
   neighbors_ = tracking_->GetNeighbors();
 
   // Prepare each composite particle for the upcoming kmc step
-  if (!spec1_->IsKMC()) return;
+  //if (spec1_->GetSID() != sid1_) return;
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   double ntot_0_1 = 0.0;
   double ntot_1_2 = 0.0;
@@ -296,14 +336,12 @@ void XlinkKMC::Update_0_1(Xlink* xit) {
 void XlinkKMC::Update_1_2(Xlink *xit) {
   XlinkHead *freehead, *boundhead;
   auto isbound = xit->GetBoundHeads(&freehead, &boundhead);
-  //auto heads = xit->GetHeads();
   // If the first head is bound, then the second one is free, and vice
   // versa
   int free_i = isbound.first ? 1 : 0;
 
   double binding_affinity = eps_eff_1_2_[free_i] * on_rate_1_2_[free_i];
   auto free_idx = (*oid_position_map_)[freehead->GetOID()];
-  //auto attc_idx = (*oid_position_map_)[boundhead->GetOID()];
   // Get the attached rod
   auto attach_info = boundhead->GetAttach();
   auto attach_info_idx = (*oid_position_map_)[attach_info.first];
@@ -437,30 +475,48 @@ void XlinkKMC::KMC_0_1() {
         nexp > -std::numeric_limits<double>::epsilon()) nexp = 0.0;
     // IF we have some probability to fall onto a neighbor, check it
     if (nexp > 0.0) {
+      //std::cout << "--------\n";
+      //std::cout << "Xlink: " << (*xit)->GetOID() << std::endl;
       auto mrng = (*xit)->GetRNG();
       double roll = gsl_rng_uniform(mrng->r);
+      //std::cout << std::setprecision(16) << "roll: " << roll << std::endl;
       if (roll < nexp) {
+        //std::cout << "Successful roll\n";
         int head_type = gsl_rng_uniform(mrng->r) < ((eps_eff_0_1_[1])/(eps_eff_0_1_[0]+eps_eff_0_1_[1]));
+        //std::cout << "head: " << head_type << std::endl;
         auto heads = (*xit)->GetHeads();
         auto head = heads->begin() + head_type;
         double binding_affinity = (eps_eff_0_1_[0] * on_rate_0_1_[0] + eps_eff_0_1_[1] * on_rate_0_1_[1]) *
           alpha_ * head->GetDelta();
+        //std::cout << "binding_affinity: " << std::setprecision(16) << binding_affinity << std::endl;
         std::ostringstream kmc_event;
         kmc_event << std::setprecision(16) << "[" << (*xit)->GetOID() << "] Successful KMC move {0 -> 1}, {nexp: " << nexp;
         kmc_event << std::setprecision(16) << "}, {roll: " << roll << "}, {head: " << head_type << "}";
         WriteEvent(kmc_event.str());
-        if (debug_trace)
-          printf("%s\n", kmc_event.str().c_str());
+        if (debug_trace) {
+          std::cout << kmc_event.str() << std::endl;
+        }
         double pos = 0.0;
         int idx = (*oid_position_map_)[head->GetOID()];
         // Search through the neighbors of this head to figure out who we want to bind to
+        //int ineighb = 0;
+        // DEBUG XXX FIXME totalval
+        //double totalval = 0.0;
+        //for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
+        //  totalval += binding_affinity * nldx->kmc_;
+        //}
+        //std::cout << "totalval: " << std::setprecision(16) << totalval << std::endl;
         for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
+          //std::cout << "[" << idx << "] -> neighbor[" << ineighb << "]\n";
           auto part2 = (*simples_)[nldx->idx_];
           if (part2->GetSID() != sid2_) continue; // Make sure it's what we want to bind to
+          //std::cout << std::setprecision(16) << "my binding aff: " << binding_affinity * nldx->kmc_ << std::endl;
           pos += binding_affinity * nldx->kmc_;
           if (pos > roll) {
-            if (debug_trace)
-              printf("[%d] Attaching to [%d]\n", head->GetOID(), part2->GetOID());
+            if (debug_trace) {
+              std::cout << std::setprecision(16) << "[" << head->GetOID() << "] Attaching to ["
+                << part2->GetOID() << "], Z: " << std::setprecision(16) << pos << std::endl;
+            }
 
             // Here, we do more complicated stuff.  Calculate the coordinate along
             // the rod s.t. the line vector is perpendicular to the separation vec
@@ -477,13 +533,12 @@ void XlinkKMC::KMC_0_1() {
             std::copy(part2->GetRigidScaledPosition(), part2->GetRigidScaledPosition()+ndim_, s_rod);
             std::copy(part2->GetRigidOrientation(), part2->GetRigidOrientation()+ndim_, u_rod);
             double l_rod = part2->GetRigidLength();
-            double rcontact[3];
             double dr[3];
             double mu = 0.0;
-            min_distance_point_carrier_line(ndim_, nperiodic_,
-                                            space_->unit_cell, r_x, s_x,
-                                            r_rod, s_rod, u_rod, l_rod,
-                                            dr, rcontact, &mu);
+            min_distance_point_carrier_line_inf(ndim_, nperiodic_,
+                                                space_->unit_cell, r_x, s_x,
+                                                r_rod, s_rod, u_rod, l_rod,
+                                                dr, &mu);
 
             double r_min[3];
             double r_min_mag2 = 0.0;
@@ -496,6 +551,8 @@ void XlinkKMC::KMC_0_1() {
             //double a = sqrt(1.0 - r_min_mag2); //FIXME is this right for 1.0? or mrcut2?
             if (a!=a)
               a = 0.0;
+
+            //std::cout << std::setprecision(16) << "rminmag2: " << r_min_mag2 << ", a: " << a << std::endl;
 
             double crosspos = 0.0;
             for (int i = 0; i < 100; ++i) {
@@ -514,8 +571,9 @@ void XlinkKMC::KMC_0_1() {
             }
             // Attach to the OID of the particle, this is done for dynamic instability to work
             head->Attach(part2->GetOID(), crosspos);
-            if (debug_trace)
-              printf("\t{mu: %2.4f}, {crosspos: %2.4f}\n", mu, crosspos);
+            if (debug_trace) {
+              std::cout << std::setprecision(16) << "\t{" << mu << "}, {crosspos: " << crosspos << "}\n";
+            }
             head->SetBound(true);
             (*xit)->CheckBoundState();
             break;
@@ -534,18 +592,25 @@ void XlinkKMC::KMC_1_0() {
   double poff_single_a = on_rate_0_1_[0] * alpha_ * pxspec->GetDelta();
   double poff_single_b = on_rate_0_1_[1] * alpha_ * pxspec->GetDelta();
 
+  //std::cout << std::setprecision(16) << "poff: [" << poff_single_a << ", " << poff_single_b << "]\n";
+  //std::cout << "nbound1: [" << nbound1[0] << ", " << nbound1[1] << "]\n";
+
   int noff[2] = {(int)gsl_ran_binomial(rng_.r, poff_single_a, nbound1[0]),
                  (int)gsl_ran_binomial(rng_.r, poff_single_b, nbound1[1])};
-  if (debug_trace)
-    printf("[Xlink] {poff_single: (%2.8f, %2.8f)}, {noff: (%d, %d)}\n",
-        poff_single_a, poff_single_b, noff[0], noff[1]);
+  if (debug_trace) {
+    std::cout << std::setprecision(16) << "[KMC_1_0] poff_single: [" << poff_single_a << ", " << poff_single_b
+      << "], Removing [" << noff[0] << ", " << noff[1] << "]\n";
+  }
 
   for (int i = 0; i < (noff[0] + noff[1]); ++i) {
-    if (debug_trace)
-      printf("[KMC_1_0] detaching trial %d/%d\n", i+1, (noff[0] + noff[1]));
+    if (debug_trace) {
+      std::cout << "[KMC_1_0] detaching trial " << i+1 << "/" << (noff[0] + noff[1]) << std::endl;
+    }
     int head_type = i < noff[1];
     int idxloc = -1;
     int idxoff = (int)gsl_rng_uniform_int(rng_.r, nbound1[head_type]);
+
+    //std::cout << "head_type: " << head_type << ", idxoff " << idxoff << std::endl;
 
     // Find the one to remove
     for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
@@ -571,8 +636,9 @@ void XlinkKMC::KMC_1_0() {
         kmc_event << "[x:" << (*xit)->GetOID() << ",head:" << boundhead->GetOID() << "] Successful KMC move {1 -> 0}, {idxoff=idxloc=";
         kmc_event << idxloc << "}, {head: " << head_type << "}";
         WriteEvent(kmc_event.str());
-        if (debug_trace)
-          printf("%s\n", kmc_event.str().c_str());
+        if (debug_trace) {
+          std::cout << kmc_event.str() << std::endl;
+        }
 
         // Call the single head detach function
         Detach_1_0((*xit), freehead, boundhead);
@@ -588,12 +654,16 @@ void XlinkKMC::KMC_1_2() {
   XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
   double nexp_1_2 = pxspec->GetNExp_1_2();
-  if (debug_trace)
-    printf("[KMC_1_2] ntot: %2.8f\n", nexp_1_2 * pxspec->GetDelta());
+  if (debug_trace) {
+    double ntot_loc = nexp_1_2 * pxspec->GetDelta();
+    std::cout << std::setprecision(16) << "[KMC_1_2] ntot: " << ntot_loc << std::endl;
+  }
   int nattach = gsl_ran_poisson(rng_.r, nexp_1_2 * pxspec->GetDelta());
+  //std::cout << "nattach: " << nattach << std::endl;
   for (int itrial = 0; itrial < nattach; ++itrial) {
-    if (debug_trace)
-      printf("[KMC_1_2] attaching trial %d/%d\n", itrial+1, nattach);
+    if (debug_trace) {
+      std::cout << "[KMC_1_2] attaching trial " << itrial+1 << "/" << nattach << std::endl;
+    }
     double ran_loc = gsl_rng_uniform(rng_.r) * nexp_1_2;
     double loc = 0.0;
     bool foundidx = false;
@@ -730,7 +800,7 @@ void XlinkKMC::KMC_1_2() {
             }
 
             // Calculate the potentials and forces of this xlink
-            PotentialBase *xlink_pot = potentials_->GetPotentialTether(freehead->GetOID(), boundhead->GetOID());
+            PotentialBase *xlink_pot = potentials_->GetPotentialInternal(freehead->GetOID(), boundhead->GetOID());
             if (xlink_pot == nullptr) {
               std::cout << "Uhhhh......\n";
               exit(1);
@@ -1092,7 +1162,6 @@ void XlinkKMC::UpdateKMC() {
         break;
       case doubly:
         UpdateStage2(*xit);
-        //ApplyStage2Force(*xit);
         break;
     }
   }
@@ -1129,6 +1198,12 @@ void XlinkKMC::UpdateStage1(Xlink *xit) {
   
   auto part2 = (*simples_)[aidx];
   auto l_rod = part2->GetRigidLength();
+
+  // Check the diffusion
+  if (diffusion_bound_1_[bound_idx] > 0.0) {
+    cross_pos += sqrt(2.0 * diffusion_bound_1_[bound_idx] * boundhead->GetDelta()) *
+      gsl_ran_gaussian_ziggurat(boundhead->GetRNG()->r, 1.0);
+  }
 
   // If we are moving with some velocity, do that
   // also check for end pausing
@@ -1176,17 +1251,107 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   head0 = &(*(heads->begin()));
   head1 = &(*(heads->begin()+1));
 
-  // Head 0
-  head0->SetNExp_1_2(0.0);
+  // Get all relevant information, need for force dep
+  // velocity, etc
   auto aid0 = head0->GetAttach().first;
   auto aidx0 = (*oid_position_map_)[aid0];
   auto rod0 = (*simples_)[aidx0];
-
   auto crosspos0 = head0->GetAttach().second;
   auto lrod0 = rod0->GetRigidLength();
+  auto flink = head0->GetForce();
+
+  auto aid1 = head1->GetAttach().first;
+  auto aidx1 = (*oid_position_map_)[aid1];
+  auto rod1 = (*simples_)[aidx1];
+  auto crosspos1 = head1->GetAttach().second;
+  auto lrod1 = rod1->GetRigidLength();
+
+  // Only need one of the forces, should be equal and opposite
+  double ui_dot_f = dot_product(ndim_, rod0->GetRigidOrientation(), flink);
+  double uj_dot_f = dot_product(ndim_, rod1->GetRigidOrientation(), flink);
+  double ui_dot_uj = dot_product(ndim_, rod0->GetRigidOrientation(), rod1->GetRigidOrientation());
+
+  //std::cout << "ui_dot_f: " << std::setprecision(16) << ui_dot_f << std::endl;
+  //std::cout << "uj_dot_f: " << std::setprecision(16) << uj_dot_f << std::endl;
+  //std::cout << "ui_dot_uj: " << std::setprecision(16) << ui_dot_uj << std::endl;
+
+  double f_mag_i = 0.0, f_mag_j = 0.0;
+
+  if (stall_type_) {
+    f_mag_i = ui_dot_f;
+    f_mag_j = -uj_dot_f;
+  }
+
+  //std::cout << "initial fmagi: " << std::setprecision(16) << f_mag_i << ", fmagj: " << f_mag_j << std::endl;
+
+  // Calculate the velocity scale based on directionality
+  double velocity_i = velocity_[0] *
+    ((ui_dot_uj > velocity_switch_costheta_[0]) ?
+     velocity_p_scale_[0] :
+     velocity_ap_scale_[0]);
+  double elong = sqrt(dot_product(ndim_, xit->GetRcross(), xit->GetRcross()));
+  if (f_mag_i*velocity_i > 0.0) {
+    f_mag_i = 0.0;
+  } else {
+    if (stall_type_ == 1) {
+      f_mag_i = ABS(f_mag_i);
+    } else if (stall_type_ == 2) {
+      f_mag_i = k_stretch_ * elong;
+    } else if (stall_type_ == 3) {
+      f_mag_i = -ABS(f_mag_i);
+    }
+  }
+
+  double velocity_j = velocity_[1] *
+    ((ui_dot_uj > velocity_switch_costheta_[1]) ?
+     velocity_p_scale_[1] :
+     velocity_ap_scale_[1]);
+  if (f_mag_j*velocity_j > 0.0) {
+    f_mag_j = 0.0;
+  } else {
+    if (stall_type_ == 1)
+      f_mag_j = ABS(f_mag_j);
+    else if (stall_type_ == 2)
+      f_mag_j = k_stretch_ * elong;
+    else if (stall_type_ == 3) 
+      f_mag_j = -ABS(f_mag_j);
+  }
+
+  // Stall force
+  if (f_mag_i < f_stall_[0]) {
+    if (debug_trace) {
+      std::cout << std::setprecision(16) << "Stalling velocity_i: " << velocity_i << " -> ";
+    }
+    velocity_i *= 1.0 - f_mag_i/f_stall_[0];
+    if (debug_trace) {
+      std::cout << std::setprecision(16) << velocity_i << std::endl;
+    }
+  } else {
+    velocity_i = 0.0;
+  }
+
+  if (f_mag_j < f_stall_[1]) {
+    if (debug_trace) {
+      std::cout << std::setprecision(16) << "Stalling velocity_j: " << velocity_j << " -> ";
+    }
+    velocity_j *= 1.0 - f_mag_j/f_stall_[1];
+    if (debug_trace) {
+      std::cout << std::setprecision(16) << velocity_j << std::endl;
+    }
+  } else {
+    velocity_j = 0.0;
+  }
+
+  // Head 0
+  head0->SetNExp_1_2(0.0);
 
   // Update velocity
-  crosspos0 += velocity_[0] * head0->GetDelta();
+  crosspos0 += velocity_i * head0->GetDelta();
+  if (diffusion_bound_2_[0] > 0.0) {
+    crosspos0 += sqrt(2.0 * head0->GetDelta() * diffusion_bound_2_[0]) *
+        gsl_ran_gaussian_ziggurat(head0->GetRNG()->r, 1.0);
+    crosspos0 += ui_dot_f * diffusion_bound_2_[0] * head0->GetDelta();
+  }
   if (crosspos0 > lrod0) {
     crosspos0 = lrod0;
     if (!end_pause_[0]) {
@@ -1202,15 +1367,14 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
 
   // Head 1
   head1->SetNExp_1_2(0.0);
-  auto aid1 = head1->GetAttach().first;
-  auto aidx1 = (*oid_position_map_)[aid1];
-  auto rod1 = (*simples_)[aidx1];
-
-  auto crosspos1 = head1->GetAttach().second;
-  auto lrod1 = rod1->GetRigidLength();
 
   // Update velocity
-  crosspos1 += velocity_[1] * head1->GetDelta();
+  crosspos1 += velocity_j * head1->GetDelta();
+  if (diffusion_bound_2_[1] > 0.0) {
+    crosspos1 += sqrt(2.0 * head1->GetDelta() * diffusion_bound_2_[1]) *
+        gsl_ran_gaussian_ziggurat(head1->GetRNG()->r, 1.0);
+    crosspos1 += -uj_dot_f * diffusion_bound_2_[1] * head1->GetDelta();
+  }
   if (crosspos1 > lrod1) {
     crosspos1 = lrod1;
     if (!end_pause_[1]) {
@@ -1341,91 +1505,6 @@ void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   head0->SetForce(zerovec);
   head1->SetForce(zerovec);
 
-
-
-
-  /*
-  double dr[3];
-  separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
-  
-  double rmag2 = 0.0;
-  for (int i = 0; i < ndim_; ++i) {
-    rmag2 += SQR(dr[i]);
-  }
-  //double rmag = sqrt(rmag2);
-  double k = k_stretch_;
-  double factor;
-  if (r_equil_ == 0.0) {
-    factor = k;
-  } else {
-    factor = k * (1.0 - r_equil_ / sqrt(dot_product(ndim_, dr, dr)));
-  }
-  double u = 0.0;
-  double flink[3] = {0.0, 0.0, 0.0};
-  for (int i = 0; i < ndim_; ++i) {
-    flink[i] = factor * dr[i];
-    u += 0.5 * SQR(flink[i]);
-  }
-  u *= 0.5 / k;
-  if (debug_trace)
-    printf("\t{uin: %2.4f}\n", u);
-  xit->AddPotential(u);
-
-  //auto rrod0 = mrod0->GetRigidPosition();
-  //auto rrod1 = mrod1->GetRigidPosition();
-  auto crosspos0 = head0->GetAttach().second;
-  auto crosspos1 = head1->GetAttach().second;
-  auto lrod0 = mrod0->GetRigidLength();
-  auto lrod1 = mrod1->GetRigidLength();
-  auto urod0 = mrod0->GetRigidOrientation();
-  auto urod1 = mrod1->GetRigidOrientation();*/
-
-  //double drmag = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
-  /*printf("{rrod0: (%2.4f, %2.4f)}, {rrod1: (%2.4f, %2.4f)}\n", rrod0[0], rrod0[1], rrod1[0], rrod1[1]);
-  printf("{urod0: (%2.4f, %2.4f)}, {urod1: (%2.4f, %2.4f)}\n", urod0[0], urod0[1], urod1[0], urod1[1]);
-  printf("{rx0: (%2.4f, %2.4f)}, {rx1: (%2.4f, %2.4f)}\n", rx0[0], rx0[1], rx1[0], rx1[1]);
-  printf("{dr: (%2.4f, %2.4f)}, {drmag: %2.8f}\n", dr[0], dr[1], drmag);
-  printf("{u: %2.4f}, {flink: (%2.4f, %2.4f)}\n", u, flink[0], flink[1]);*/
-
-  // Now, simply add the forces/torques onto the two bonds
-  /*double fbond0[3] = {0.0, 0.0, 0.0};
-  double fbond1[3] = {0.0, 0.0, 0.0};
-  for (int i = 0; i < ndim_; ++i) {
-    fbond0[i] += flink[i];
-    fbond1[i] -= flink[i];
-  }
-
-  double lambda = crosspos0 - 0.5 * lrod0;
-  double mu     = crosspos1 - 0.5 * lrod1;
-
-  double rcontact_i[3] = {0.0, 0.0, 0.0};
-  double rcontact_j[3] = {0.0, 0.0, 0.0};
-  for (int i = 0; i < ndim_; ++i) {
-    rcontact_i[i] = urod0[i] * lambda;
-    rcontact_j[i] = urod1[i] * mu;
-  }
-
-  double tau[3];
-  double taubond0[3] = {0.0, 0.0, 0.0};
-  double taubond1[3] = {0.0, 0.0, 0.0};
-  cross_product(rcontact_i, flink, tau, ndim_);
-  for (int i = 0; i < 3; ++i) {
-    taubond0[i] += tau[i];
-  }
-  cross_product(rcontact_j, flink, tau, ndim_);
-  for (int i = 0; i < 3; ++i) {
-    taubond1[i] -= tau[i];
-  }
-
-  // Apply the force
-  head0->AddForce(fbond0);
-  head0->AddTorque(taubond0);
-  mrod0->AddForce(fbond0);
-  mrod0->AddTorque(taubond0);
-  head1->AddForce(fbond1);
-  head1->AddTorque(taubond1);
-  mrod1->AddForce(fbond1);
-  mrod1->AddTorque(taubond1);*/
 }
 
 void XlinkKMC::Dump() {

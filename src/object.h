@@ -141,10 +141,15 @@ class Object {
     }
     virtual int GetCount() {return 0;}
 
+    // Internal force calculations
     // Get the internal pairs of particles for things like internal forces
     virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
       std::vector<std::pair<unsigned int, unsigned int>> retval;
       return retval;
+    }
+
+    virtual bool ApplyInternalForce() {
+      return false;
     }
 
     // KMC specific stuff
@@ -152,6 +157,14 @@ class Object {
     virtual void StepKMC() {}
     virtual void DumpKMC() {}
     rng_properties* GetRNG() {return &rng_;}
+    void SetRNGState(const std::string& filename) {
+      // Load the rng state from binary file
+      FILE* pfile = fopen(filename.c_str(), "r");
+      auto retval = gsl_rng_fread(pfile, rng_.r);
+      if (retval != 0) {
+        std::cout << "Reading rng state failed " << retval << std::endl;
+      }
+    }
 };
 
 class Simple : public Object {
