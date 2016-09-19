@@ -73,6 +73,30 @@ void Filament::InitElements(system_parameters *params, space_struct *space) {
   cos_thetas_.resize(n_sites_-2); //max_sites-2
 }
 
+//void Filament::TempInit() {
+  //position_[0] = -4.0;
+  //position_[1] = 0.0;
+  //position_[2] = 0.0;
+  //orientation_[0] = 1.0;
+  //orientation_[1] = 0.0;
+  //orientation_[2] = 0.0;
+  //for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
+    //site->SetDiameter(diameter_);
+    //site->SetLength(child_length_);
+    //site->SetPosition(position_);
+    //site->SetOrientation(orientation_);
+    //for (int i=0; i<n_dim_; ++i)
+      //position_[i] = position_[i] + orientation_[i] * child_length_;
+  //}
+  //UpdatePrevPositions();
+  //CalculateAngles();
+  //UpdateBondPositions();
+  //SetDiffusion();
+  //poly_state_ = GROW;
+  //rng_.clear();
+  //rng_.init(1944944);
+//}
+
 void Filament::Init() {
   InsertRandom(length_+diameter_);
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
@@ -227,6 +251,12 @@ void Filament::AddRandomForces() {
     site->AddRandomForce();
 }
 
+void Filament::PopulateVector(std::vector<double> *a) {
+  for (int i=0; i<a->size(); ++i) {
+    (*a)[i] = 0.01*i;
+  }
+}
+
 //void Filament::ValidateThetaDistribution() {
   //int n_bins = params_->n_bins;
   //int bin_number;
@@ -339,7 +369,7 @@ void Filament::ProjectRandomForces() {
 }
 
 void Filament::CalculateBendingForces() {
-
+  
   if (metric_forces_) {
     det_t_mat_[0] = 1;
     det_t_mat_[1] = 2;
@@ -361,7 +391,7 @@ void Filament::CalculateBendingForces() {
   }
   // Now calculate the effective rigidities
   for (int i=0; i<n_sites_-2; ++i) {
-    k_eff_[i] = (persistence_length_  + child_length_ * g_mat_inverse_[i])/SQR(child_length_);
+    k_eff_[i] = (persistence_length_ * (theta_validation_flag_ ? child_length_ : 1) + child_length_ * g_mat_inverse_[i])/SQR(child_length_);
   }
   // Using these, we can calculate the forces on each of the sites
 
@@ -897,7 +927,7 @@ void FilamentSpecies::Configurator() {
     n_members_ = 0;
     for (int i = 0; i < nfilaments; ++i) {
       Filament *member = new Filament(params_, space_, gsl_rng_get(rng_.r), GetSID());
-      member->Init();
+      member->Init(); 
 
       if (can_overlap) {
         members_.push_back(member);
@@ -958,13 +988,14 @@ void FilamentSpecies::WriteOutputs(std::string run_name) {
   }
 }
 
-
-
-
 void Filament::DumpAll() {
   printf("tensions:\n  {");
   for (int i=0; i<n_sites_-1; ++i)
     printf(" %5.5f ",tensions_[i]);
+  printf("}\n");
+  printf("cos_thetas:\n  {");
+  for (int i=0; i<n_sites_-2; ++i)
+    printf(" %5.5f ",cos_thetas_[i]);
   printf("}\n");
   printf("g_mat_lower:\n  {");
   for (int i=0; i<n_sites_-2; ++i)
