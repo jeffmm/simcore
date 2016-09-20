@@ -1,0 +1,59 @@
+br_rod:
+#  properties:
+#    insertion_type: xyz
+#    overlap: false
+#    max_length: 110
+#  rod:
+#    - length: 20.0
+#      x: [0.0, 0.0, 0.0]
+#      u: [1.0, 0.0, 0.0]
+#    - length: 20.0
+#      x: [0.0, 1.5, 0.0]
+#      u: [-1.0, 0.0, 0.0]
+#    - length: 20.0
+#      x: [0.0, 3.0, 0.0]
+#      u: [1.0, 0.0, 0.0]
+#    - length: 20.0
+#      x: [0.0, 4.5, 0.0]
+#      u: [-1.0, 0.0, 0.0]
+#    - length: 20.0
+#      x: [0.0, 6.0, 0.0]
+#      u: [1.0, 0.0, 0.0]
+#    - length: 20.0
+#      x: [0.0, 7.5, 0.0]
+#      u: [-1.0, 0.0, 0.0]
+#    - length: 20.0
+#      x: [0.0, 9.0, 0.0]
+#      u: [1.0, 0.0, 0.0]
+#  properties:
+#    insertion_type: random
+#    overlap: false
+#  rod:
+#    num: 100
+#    #num: 1000
+#    length: 20
+#    max_length: 45
+#    diameter: 1
+  properties:
+    insertion_type: fill
+    overlap: false
+  rod:
+    length: 20.0
+    max_length: 50
+    diameter: 1
+
+xlink:
+#  properties:
+#    insertion_type: xyz
+#    overlap: true
+#  xit:
+#    - diameter: 1.0
+#      x: [-9.0, 0.0, 0.0]
+#    - diameter: 1.0
+#      x: [0.0, 0.0, 0.0]
+  properties:
+    insertion_type: random
+    overlap: true
+  xit:
+    num: 80
+    diameter: 1

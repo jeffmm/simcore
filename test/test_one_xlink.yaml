@@ -1,0 +1,23 @@
+seed: 100
+TestXlinkKMC:
+  #FailTest:
+  #  result: 10.0
+  Update_1_2:
+    concentration_1_2: 10.0
+    on_rate_1_2: 0.001958
+    max_length: 110
+    test:
+      - x_rod_base: [1.5189372725375712, -3.8808394131463597, 52.8448926482673826]
+        u_rod_base: [0.3131922942474289, -0.6309261624743963, -0.7098188250035099]
+        l_rod_base: 3
+        x_rod_free: [1.6562922922235719, -2.0016662509290359, 51.5173097112858756]
+        u_rod_free: [0.2986353617739144, 0.3086464848181130, -0.9030804328007476]
+        l_rod_free: 3
+        head_xlink: 1
+        crosspos_xlink: 0.6742975725341877
+        r_equil: 0.0
+        barrier_weight: 0.0
+        k_stretch: 45.29
+        polar_affinity: 1.0
+        result: 5.678658237274367e-15
+        tolerance: 1.0e-21

@@ -76,6 +76,7 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
 
   // Initialize the kmc engine
   kengine_.Init(space_, species_, &ptrack_, gsl_rng_get(rng_.r), params_->kmcfile);
+  kengine_.InitPotentials(&potentials_);
   kengine_.InitMP();
 
   // Check for an rcut update from the KMC engine
@@ -89,12 +90,11 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   // Run one step to make sure that we're all good
   ptrack_.UpdateTracking(true);
   fengine_.Interact();
-
 }
 
 void UberEngine::InitPotentials() {
   // Ask the potential manager to parse the potentials file
-  potentials_.Init(space_, params_->potfile);
+  potentials_.Init(species_, space_, params_->potfile);
 }
 
 void UberEngine::DumpAll() {
@@ -113,6 +113,11 @@ void UberEngine::InteractMP() {
 
 void UberEngine::StepKMC() {
   kengine_.RunKMC();
+}
+
+void UberEngine::SyncForces() {
+  // KMC engine moves the forces from one species to another
+  kengine_.TransferForces();
 }
 
 void UberEngine::Draw(std::vector<graph_struct*> * graph_array) {

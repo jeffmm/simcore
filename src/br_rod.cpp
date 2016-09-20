@@ -59,6 +59,8 @@ void BrRod::ApplyForcesTorques() {
     AddTorque(bond->GetTorque());
   }
   // Check if we want to use tip force to induce catastrophe
+  // XXX FIXME is this correct, since we've summed the forces and probably need to get it on the
+  // end directly (might be applied funny depending on how things are set up)
   if (force_induced_catastrophe_flag_) {
     Bond * bond = &v_elements_[n_bonds_-1];
     double const * const f = bond->GetForce();
@@ -69,8 +71,18 @@ void BrRod::ApplyForcesTorques() {
     for (int i=0; i<n_dim_; ++i)
       tip_force_ -= f[i]*orientation_[i];
     if (tip_force_ < 0) {
-      if (n_bonds_ > 1)
-        printf("Warning: Force at rod tip is negative. This should never happen if forces are applied correctly and n_bonds > 1 \n");
+      if (n_bonds_ > 1) {
+        std::cout << "Warning: Force at rod tip is negative. This should never happen if forces are applied correctly and n_bonds > 1 \n";
+        std::cout << "    oid: " << GetOID() << std::endl;
+        std::cout << "    tip_force: " << std::setprecision(16) << tip_force_ << std::endl;
+        std::cout << "    u: (" << std::setprecision(16)
+          << orientation_[0] << ", "
+          << orientation_[1];
+        if (n_dim_ == 3) {
+          std::cout << std::setprecision(16) << ", " << orientation_[2];
+        }
+        std::cout << ")\n";
+      }
       tip_force_ = 0;
     }
   }
@@ -546,4 +558,76 @@ void BrRod::ReadPosit(std::fstream &ip){
     velem.ReadPosit(ip);
 }
 
+void BrRodSpecies::CreateTestRod(BrRod **rod,
+                                 int ndim,
+                                 std::vector<Simple*>* simples,
+                                 std::unordered_map<int, int>* oid_position_map,
+                                 const std::string &filename,
+                                 const std::string &modulename,
+                                 const std::string &unitname,
+                                 const std::string &rodname,
+                                 int itest) {
+  YAML::Node node = YAML::LoadFile(filename);
+  BrRod *mrod = *rod;
+  // Load the rod
+  double xr[3] = {0.0, 0.0, 0.0};
+  double ur[3] = {0.0, 0.0, 0.0};
+  std::ostringstream xrodname;
+  xrodname << "x_" << rodname;
+  std::ostringstream urodname;
+  urodname << "u_" << rodname;
+  std::ostringstream lrodname;
+  lrodname << "l_" << rodname;
+  //std::cout << "Checking location\n";
+  for (int idim = 0; idim < ndim; ++idim) {
+    xr[idim] = node[modulename][unitname.c_str()]["test"][itest][xrodname.str().c_str()][idim].as<double>();
+    ur[idim] = node[modulename][unitname.c_str()]["test"][itest][urodname.str().c_str()][idim].as<double>();
+  }
+  //std::cout << "Checking length\n";
+  double lrod = node[modulename][unitname.c_str()]["test"][itest][lrodname.str().c_str()].as<double>();
+  //std::cout << "TEST ROD CREATE: \n";
+  //std::cout << std::setprecision(16) << "x: (" << xr[0] << ", " << xr[1] << ", " << xr[2] << "), ";
+  //std::cout << std::setprecision(16) << "u: (" << ur[0] << ", " << ur[1] << ", " << ur[2] << "), ";
+  //std::cout << std::setprecision(16) << "l: " << lrod << std::endl;
+  mrod->InitConfigurator(xr, ur, lrod);
+  //mrod->Dump();
 
+  // Add the simples to the correct location and the oid position map
+  std::vector<Simple*> sim_vec = mrod->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples->push_back(sim_vec[i]);
+    (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
+  }
+
+  // Print to make sure working
+  /*std::cout << "simples: \n";
+  for (int i = 0; i < simples->size(); ++i) {
+    std::cout << "[" << i << "] -> OID " << (*simples)[i]->GetOID();
+    std::cout << " <--> " << (*oid_position_map)[(*simples)[i]->GetOID()] << std::endl;
+  }*/
+}
+
+void BrRodSpecies::CreateTestRod(BrRod **rod,
+                                 int ndim,
+                                 std::vector<Simple*>* simples,
+                                 std::unordered_map<int, int>* oid_position_map,
+                                 YAML::Node *subnode) {
+  YAML::Node node = *subnode;
+  BrRod *mrod = *rod;
+  // Load the rod
+  std::cout << "Node:\n" << node << std::endl;
+  double xr[3] = {0.0, 0.0, 0.0};
+  double ur[3] = {0.0, 0.0, 0.0};
+  for (int idim = 0; idim < ndim; ++idim) {
+    xr[idim] = node["x"][idim].as<double>();
+    ur[idim] = node["u"][idim].as<double>();
+  }
+  double lr = node["l"].as<double>();
+  mrod->InitConfigurator(xr, ur, lr);
+
+  std::vector<Simple*> sim_vec = mrod->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples->push_back(sim_vec[i]);
+    (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
+  }
+}

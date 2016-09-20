@@ -19,7 +19,6 @@ class SpeciesBase {
     std::fstream oposit_file_;
     std::fstream iposit_file_;
 
-    OutputManager *output_mgr_;
     space_struct *space_;
     rng_properties rng_;
     void SetSID(SID sid) {sid_=sid;}
@@ -78,7 +77,7 @@ class SpeciesBase {
     virtual void UpdatePositions() {}
     virtual void UpdatePositionsMP() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed, OutputManager *output_mgr) {
+    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
       n_members_ = 0;
       params_ = params;
       space_ = space;
@@ -86,7 +85,6 @@ class SpeciesBase {
       kmc_update_ = false;
       rng_.init(seed);
       delta_ = params->delta;
-      output_mgr_ = output_mgr;
     }
     virtual void Init() {}
     virtual void ReInit(unsigned int const cid) {}
@@ -140,6 +138,11 @@ class SpeciesBase {
 
     virtual int IsOpen(){ return oposit_file_.is_open(); }
     virtual void Close(){ oposit_file_.close(); iposit_file_.close(); }
+
+    virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
+      std::vector<std::pair<unsigned int, unsigned int>> retval;
+      return retval;
+    }
 };
 
 template <typename T>
@@ -151,8 +154,8 @@ class Species : public SpeciesBase {
     Species() {}
 
     // Initialize function for setting it up on the first pass
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed, OutputManager *output_mgr) {
-      SpeciesBase::InitConfig(params, space, seed, output_mgr);
+    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
+      SpeciesBase::InitConfig(params, space, seed);
     }
 
     // Configurator function must be overridden
@@ -206,6 +209,11 @@ class Species : public SpeciesBase {
       T* newmember = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
       newmember->Init();
       members_.push_back(newmember);
+      n_members_++;
+    }
+
+    virtual void AddMember(T* newmem) {
+      members_.push_back(newmem);
       n_members_++;
     }
 
@@ -294,6 +302,22 @@ class Species : public SpeciesBase {
       for( auto& mem_it : members_){
         mem_it->ReadPosit(iposit_file_);
       }
+    }
+
+    virtual std::vector<std::pair<SID, SID>> GetInternalInteractionSIDs() {
+      std::vector<std::pair<SID, SID>> sid_pairs;
+
+      return sid_pairs;
+    }
+    virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
+      std::vector<std::pair<unsigned int, unsigned int>> retval;
+
+      for (auto it = members_.begin(); it != members_.end(); ++it) {
+        auto mem_internal_pairs = (*it)->GetInternalPairs();
+        retval.insert(retval.end(), mem_internal_pairs.begin(), mem_internal_pairs.end());
+      }
+
+      return retval;
     }
 
 };

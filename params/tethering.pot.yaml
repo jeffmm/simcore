@@ -3,9 +3,10 @@ potentials:
     sid1 : br_rod
     sid2 : br_rod
     rcut: 2.5
-    fcut: 10000
+    fcut: 100
     eps: 1
     sigma: 1
+    #overlap: true
 
   - type : SphereLineWell
     sid1 : xlink_head
@@ -15,3 +16,13 @@ potentials:
     fcut: 10000
     kmc: true
     kmc_target: xlink_head
+
+  - type: XlinkHarmonic
+    tether: true
+    tether_type: xlink
+    sid: xlink
+    k: 19.8171
+    equilibrium_length: 0.707
+    rcut: 1000.0
+    fcut: 10000
+

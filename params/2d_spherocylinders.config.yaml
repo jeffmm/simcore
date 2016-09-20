@@ -17,7 +17,6 @@ br_rod:
 #    overlap: false
 #  rod:
 #    num: 100
-#    #num: 1000
 #    length: 20
 #    max_length: 45
 #    diameter: 1
@@ -34,5 +33,4 @@ xlink:
 #    overlap: true
 #  xit:
 #    num: 200
-#    #num: 2000
 #    diameter: 1
