@@ -54,10 +54,9 @@ void Simulation::RunMovie(){
     if (debug_trace)
       printf("********\nStep %d\n********\n", i_step_);
     if (i_step_%params_.n_posit == 0){
-      ReadSpeciesPositions(); 
+      output_mgr_.ReadSpeciesPositions(); 
     }
     
-    //TODO make OutputManager draw these because of available options
     Draw();
     //WriteOutputs();
   }
@@ -95,11 +94,14 @@ void Simulation::ZeroForces() {
 void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
-  output_mgr_.Init(&params_, &i_step_);
+  output_mgr_.Init(&params_, &graph_array, &i_step_);
   InitSpecies();
   uengine_.Init(&params_, space_.GetStruct(), &species_, gsl_rng_get(rng_.r));
   if (params_.graph_flag) {
-    GetGraphicsStructure();
+    //When making a movie graphics are handled by output_mgr_
+    if ( output_mgr_.IsMovie() ) output_mgr_.GetGraphicsStructure();
+    else GetGraphicsStructure();
+      
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);
     graphics_.Init(&graph_array, space_.GetStruct(), background_color);
     graphics_.DrawLoop();
@@ -128,50 +130,16 @@ void Simulation::InitSpecies() {
 
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file
-  for (auto possibles = species_factory_.m_classes.begin(); possibles != species_factory_.m_classes.end(); ++possibles) {
+  for (auto possibles = species_factory_.m_classes.begin(); 
+      possibles != species_factory_.m_classes.end(); ++possibles) {
     if (node[possibles->first]) {
       SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
       spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r), &output_mgr_);
       spec->Configurator();
       species_.push_back(spec);
-      output_mgr_.AddSpecie(spec);
     }
   }
-}
-
-//TODO Have output_manager run movies
-//TODO Put in safe guard to make sure species that are not in configure file are not run
-//TODO Have better initializers for each of this
-void Simulation::InitPositInput(){
-  for (auto pos_it : posit_files_){
-    int nchar;
-    std::fstream ip;
-
-    ip.open(pos_it, std::ios::binary | std::ios::in );
-    if (!ip.is_open()){
-      std::cout<<"Input "<< pos_it <<" file did not open\n";
-      exit(1);
-    }
-    else{
-      //Get Sim data from posit file
-      ip.read(reinterpret_cast<char*>(&nchar), sizeof(int));
-      std::string sid_str(nchar, ' ');
-      ip.read(&sid_str[0], nchar);
-      SID sid_posit = StringToSID(sid_str);
-      ip.read(reinterpret_cast<char*>(&(params_.n_steps)), sizeof(int));
-      ip.read(reinterpret_cast<char*>(&(params_.n_posit)), sizeof(int));
-
-      //Get the location where species data starts and close input for now
-      std::ios::streampos beg = ip.tellg();
-      ip.close();
-
-      for (auto spec_it : species_ )
-        if (sid_posit == spec_it->GetSID()){
-          spec_it->InitInputFile(pos_it, beg);
-          break;
-        }
-    }
-  }
+  output_mgr_.AddSpecies(&species_);
 }
 
 void Simulation::ClearSpecies() {
@@ -181,7 +149,7 @@ void Simulation::ClearSpecies() {
 
 void Simulation::ClearSimulation() {
   space_.Clear();
-  if (params_.posit_flag == 1)
+  if (params_.posit_flag == 1 || output_mgr_.IsMovie() )
     output_mgr_.Close();
   ClearSpecies();
   if (params_.graph_flag)
@@ -190,7 +158,8 @@ void Simulation::ClearSimulation() {
 
 void Simulation::Draw() {
   if (params_.graph_flag && i_step_%params_.n_graph==0) {
-    GetGraphicsStructure();
+    if ( !output_mgr_.IsMovie() )
+      GetGraphicsStructure();
     graphics_.Draw();
     if (params_.grab_flag) {
       // Record bmp image of frame 
@@ -287,11 +256,11 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::ve
   params_.graph_flag = 1;
   params_.posit_flag = 0;
 
+  output_mgr_.SetMovie(posit_files);
+
   run_name_ = name;
-  posit_files_ = posit_files;
   rng_.init(params_.seed);
   InitSimulation();
-  InitPositInput();
   RunMovie();
   ClearSimulation();
 }
