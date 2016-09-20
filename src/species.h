@@ -139,7 +139,7 @@ class SpeciesBase {
     }
 
     virtual int IsOpen(){ return oposit_file_.is_open(); }
-    virtual void Close(){ oposit_file_.close(); }
+    virtual void Close(){ oposit_file_.close(); iposit_file_.close(); }
 };
 
 template <typename T>
