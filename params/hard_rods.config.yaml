@@ -1,0 +1,10 @@
+br_rod:
+  properties:
+    insertion_type: random
+    overlap: false
+  rod:
+    num: 10
+    length: 10
+    max_length: 10
+    diameter: 1
+

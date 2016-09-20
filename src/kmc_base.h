@@ -3,6 +3,7 @@
 
 #include "auxiliary.h"
 #include "particle_tracking.h"
+#include "potential_manager.h"
 #include "species.h"
 
 // KMC base for all the kmc routines that we can use
@@ -14,6 +15,7 @@ class KMCBase {
     rng_properties rng_;
     space_struct *space_;
     ParticleTracking *tracking_;
+    PotentialManager *potentials_;
     SID sid1_;
     SID sid2_;
     SpeciesBase *spec1_;
@@ -25,6 +27,7 @@ class KMCBase {
 
     virtual void Init(space_struct *pSpace,
                       ParticleTracking *pTracking,
+                      PotentialManager *pPotentials,
                       SpeciesBase *spec1,
                       SpeciesBase *spec2,
                       int ikmc, YAML::Node &node, long seed) {
@@ -39,11 +42,13 @@ class KMCBase {
       sid2_ = StringToSID(sid2s);
       spec1_ = spec1;
       spec2_ = spec2;
+      potentials_ = pPotentials;
     }
     virtual double GetMaxRcut() {return 0.0;}
     virtual void PrepKMC() {}
     virtual void StepKMC() {}
     virtual void UpdateKMC() {}
+    virtual void TransferForces() {}
 
     virtual void PrepOutputs() {}
     virtual void WriteOutputs(int istep) {}
@@ -54,6 +59,15 @@ class KMCBase {
     virtual void Dump() {
       printf("ERROR, need to override this function!\n");
       exit(1);
+    }
+
+    void SetRNGState(const std::string& filename) {
+      // Load the rng state from binary file
+      FILE* pfile = fopen(filename.c_str(), "r");
+      auto retval = gsl_rng_fread(pfile, rng_.r);
+      if (retval != 0) {
+        std::cout << "Reading rng state failed " << retval << std::endl;
+      }
     }
 };
 
