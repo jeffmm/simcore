@@ -28,8 +28,10 @@ void Simulation::RunSimulation() {
     if (debug_trace)
       printf("********\nStep %d\n********\n", i_step_);
     ZeroForces();
-    KineticMonteCarloMP();
+    //KineticMonteCarloMP();
     InteractMP();
+    KineticMonteCarloMP();
+    SyncForces();
     IntegrateMP();
     // Only will run if DEBUG is enabled
     #ifdef DEBUG
@@ -85,6 +87,10 @@ void Simulation::KineticMonteCarloMP() {
   uengine_.StepKMC();
 }
 
+void Simulation::SyncForces() {
+  uengine_.SyncForces();
+}
+
 void Simulation::ZeroForces() {
   for (auto it=species_.begin(); it != species_.end(); ++it) {
     (*it)->ZeroForces();
@@ -134,7 +140,7 @@ void Simulation::InitSpecies() {
       possibles != species_factory_.m_classes.end(); ++possibles) {
     if (node[possibles->first]) {
       SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
-      spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r), &output_mgr_);
+      spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
       spec->Configurator();
       species_.push_back(spec);
     }

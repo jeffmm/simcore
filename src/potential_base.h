@@ -40,10 +40,12 @@ class PotentialBase {
     const bool CanOverlap() { return can_overlap_; }
     const bool IsKMC() { return is_kmc_; }
     const SID GetKMCTarget() { return kmc_target_; }
+    std::string GetName() {return pot_name_;}
     virtual void Print() {
       std::cout << pot_name_ << "\n";
-      printf("\t{rcut:%2.2f}, {kmc: %s}, {kmc_target: %d}\n", rcut_, is_kmc_ ? "true" : "false",
-            (int)kmc_target_);
+      std::cout << "\trcut: " << std::setprecision(16) << rcut_ << std::endl;
+      std::cout << "\tkmc:  " << (is_kmc_ ? "true" : "false") << std::endl;
+      std::cout << "\tkmc target: " << (int)kmc_target_ << std::endl;
     }
 
     virtual void Init(space_struct *pSpace, int ipot, YAML::Node &node) {
@@ -60,7 +62,7 @@ class PotentialBase {
         SID kmc_sid = StringToSID(kmc_sid_str);
         kmc_target_ = kmc_sid;
       }
-  }
+    }
 };
 
 typedef std::pair<sid_pair, PotentialBase*> potential_pair;

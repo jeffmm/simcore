@@ -88,9 +88,17 @@ class Object {
       for (int i=0; i<3; ++i)
         force_[i]+=f[i];
     }
+    void SetForce(double const * const f) {
+      for (int i=0; i<3; ++i)
+        force_[i]=f[i];
+    }
     void AddTorque(double const * const t) {
       for (int i=0; i<3; ++i)
         torque_[i]+=t[i];
+    }
+    void SetTorque(double const * const t) {
+      for (int i=0; i<3; ++i)
+        torque_[i]=t[i];
     }
     void AddPotential(double const p) {p_energy_ += p;}
     void AddKMCEnergy(double const k) {kmc_energy_ += k;}
@@ -133,6 +141,17 @@ class Object {
     }
     virtual int GetCount() {return 0;}
 
+    // Internal force calculations
+    // Get the internal pairs of particles for things like internal forces
+    virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
+      std::vector<std::pair<unsigned int, unsigned int>> retval;
+      return retval;
+    }
+
+    virtual bool ApplyInternalForce() {
+      return false;
+    }
+
     // KMC specific stuff
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors) {}
     virtual void StepKMC() {}
@@ -140,8 +159,16 @@ class Object {
     rng_properties* GetRNG() {return &rng_;}
 
     virtual void WritePosit(std::fstream &op);
-
     virtual void ReadPosit(std::fstream &ip);
+
+    void SetRNGState(const std::string& filename) {
+      // Load the rng state from binary file
+      FILE* pfile = fopen(filename.c_str(), "r");
+      auto retval = gsl_rng_fread(pfile, rng_.r);
+      if (retval != 0) {
+        std::cout << "Reading rng state failed " << retval << std::endl;
+      }
+    }
 };
 
 class Simple : public Object {

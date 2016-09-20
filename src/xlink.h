@@ -7,6 +7,7 @@
 #include "xlink_head.h"
 
 #include <iomanip>
+#include <unordered_map>
 
 enum attach_type {
   unbound = 0,
@@ -19,7 +20,7 @@ class Xlink : public Composite<XlinkHead> {
     /* Unique to Xlink */
     double n_exp_0_1_ = 0.0;
     double n_exp_1_2_ = 0.0;
-    double uinternal_ = 0.0;
+    double r_cross_[3] = {0.0, 0.0, 0.0};
 
     attach_type bound_;
 
@@ -34,7 +35,6 @@ class Xlink : public Composite<XlinkHead> {
       for (int i=0; i<2; ++i) {
         XlinkHead b(params, space, gsl_rng_get(rng_.r), SID::xlink_head);
         b.SetCID(GetCID());
-        b.SetHeadID(i);
         elements_.push_back(b);
         bound_ = unbound;
         is_kmc_ = true;
@@ -74,6 +74,14 @@ class Xlink : public Composite<XlinkHead> {
       std::cout << "\t  ";
       head1->Dump();
     }
+    std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
+      auto head0 = elements_.begin();
+      auto head1 = elements_.begin() + 1;
+      std::pair<unsigned int, unsigned int> mpair= std::make_pair(head0->GetOID(), head1->GetOID());
+      std::vector<std::pair<unsigned int, unsigned int>> retval;
+      retval.push_back(mpair);
+      return retval;
+    }
 
     /* Functions unique to Xlink */
     void DiffuseXlink();
@@ -92,11 +100,12 @@ class Xlink : public Composite<XlinkHead> {
 
     double const GetNExp_0_1() {return n_exp_0_1_;}
     double const GetNExp_1_2() {return n_exp_1_2_;}
-    double const GetInternalU() {return uinternal_;}
     attach_type const GetBoundState() {return bound_;}
     void SetNExp_0_1(double const n) {n_exp_0_1_=n;}
     void SetNExp_1_2(double const n) {n_exp_1_2_=n;}
-    void SetInternalU(double u) {uinternal_=u;}
+    const double GetInternalEnergy();
+
+    const double* const GetRcross() {return r_cross_;}
 
     void DumpKMC() {
       auto head0 = elements_.begin();
@@ -116,7 +125,7 @@ class Xlink : public Composite<XlinkHead> {
           boundstring = "doubly";
           break;
       }
-      std::cout << std::setprecision(16) << "        [" << GetOID() << "] -> {u: " << uinternal_ << "}, {" << boundstring << "}";
+      std::cout << std::setprecision(16) << "        [" << GetOID() << "] -> {" << boundstring << "}";
       std::cout << std::setprecision(16) << ", {n_exp_0_1: " << n_exp_0_1_ << " (" << head0->GetNExp_0_1() << ", ";
       std::cout << std::setprecision(16) << head1->GetNExp_0_1() << ")}, {n_exp_1_2: " << n_exp_1_2_ << " (";
       std::cout << std::setprecision(16) << head0->GetNExp_1_2() << ", " << head1->GetNExp_1_2() << ")}\n";
@@ -174,6 +183,39 @@ class XlinkSpecies : public Species<Xlink> {
     std::vector<Xlink*>* GetXlinks() {
       return &members_;
     }
+
+    static void CreateTestXlink(Xlink **mxit,
+                                int ndim,
+                                std::vector<Simple*>* simples,
+                                std::unordered_map<int, int>* oid_position_map,
+                                const std::string &filename,
+                                const std::string &modulename,
+                                const std::string &unitname,
+                                const std::string &xname,
+                                int itest);
+
+    static void CreateTestXlink(Xlink **mxit,
+                                int ndim,
+                                std::vector<Simple*>* simples,
+                                std::unordered_map<int, int>* oid_position_map,
+                                const std::string &filename,
+                                const std::string &modulename,
+                                const std::string &unitname,
+                                const std::string &xname,
+                                int itest,
+                                int attachoid);
+
+    static void CreateTestXlink(Xlink **mxit,
+                                int ndim,
+                                std::vector<Simple*>* simples,
+                                std::unordered_map<int, int>* oid_position_map,
+                                const std::string &filename,
+                                const std::string &modulename,
+                                const std::string &unitname,
+                                const std::string &xname,
+                                int itest,
+                                int attachoid0,
+                                int attachoid1);
 };
 
 #endif // _SIMCORE_XLINK_H_

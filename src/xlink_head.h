@@ -16,7 +16,7 @@ class XlinkHead : public Simple {
     bool bound_;
     int attachidx_ = -1;
     double attachpos_ = 0.0;
-    int headid_ = 0;
+    int headid_ = -2;
   public:
     XlinkHead(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {
       diameter_=params->br_walker_diameter;
@@ -28,9 +28,15 @@ class XlinkHead : public Simple {
     XlinkHead(const XlinkHead& that) : Simple(that) {}
     XlinkHead& operator=(XlinkHead const& that) {Simple::operator=(that); return *this;} 
     void SetDiffusion() {diffusion_ = sqrt(24.0*diameter_/delta_);}
+    void OverrideDiffusion(double diff) {diffusion_=diff;}
     void KickBead();
     void UpdatePositionMP();
     void Init();
+
+    // Internal force calculation specifics
+    virtual bool ApplyInternalForce() {
+      return bound_;
+    }
 
     // kmc specifics
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors);

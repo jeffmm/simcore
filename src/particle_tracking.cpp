@@ -150,7 +150,7 @@ void ParticleTracking::CheckOverlaps(int pMaxOverlaps) {
         if (part1->GetCID() == part2->GetCID()) continue;
 
         // Check to see if interacting
-        PotentialBase *pot = potentials_->GetPotential(part1->GetSID(), part2->GetSID());
+        PotentialBase *pot = potentials_->GetPotentialExternal(part1->GetSID(), part2->GetSID());
         if (pot == nullptr) continue;
 
         // Check to see if overlap on this is allowed (KMC stuff)
@@ -199,15 +199,16 @@ void ParticleTracking::Print() {
 // Dump the gory details of the neighbor list
 void ParticleTracking::Dump() {
   #ifdef DEBUG
-  printf("--------\n");
-  printf("%s -> dump\n", tracking_->Name().c_str());
+  std::cout << "----------------\n";
+  std::cout << tracking_->Name() << " -> dump\n";
   for (int idx = 0; idx < nsimples_; ++idx) {
-    printf("\t[%d] -> [", idx);
+    auto part = simples_[idx];
+    std::cout << "\t[" << idx << "] -> [";
     for (auto nldx = neighbors_[idx].begin(); nldx != neighbors_[idx].end(); ++nldx) {
       int jdx = nldx->idx_;
-      printf("%d,", jdx);
+      std::cout << jdx << ", ";
     }
-    printf("]\n");
+    std::cout << "]\n";
   }
   tracking_->dump();
   #endif

@@ -8,6 +8,7 @@
 #include <map>
 #include <tuple>
 #include <iostream>
+#include <iomanip>
 #include "allocate.h"
 #include "macros.h"
 #include "timetester.h"
