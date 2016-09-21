@@ -1,0 +1,9 @@
+br_bead:
+  properties:
+    insertion_type: random
+    overlap: false
+    color: [0.0, 1.0, 0.0, 1.0]
+  brbead:
+    num: 10
+    diameter: 1
+

@@ -32,8 +32,10 @@ extern bool debug_trace;
 struct graph_struct {
   double r[3];
   double u[3];
+  double color[4];
   double length;
   double diameter;
+  int draw_type;
 };
 
 //NOTE: Species ids cannot be more than 20 characters for reasons -AL

@@ -460,51 +460,79 @@ void Graphics::DrawDiscorectangles() {
     // Set default bond color  
     GLfloat color[4] = {0.0, 0.0, 1.0, 1.0};
     for (auto it=graph_array_->begin(); it!=graph_array_->end(); ++it) {
-    //for (int i_bond = 0; i_bond < n_spheros; ++i_bond) {
-        double theta = atan2((*it)->u[1], (*it)->u[0]); // rotation angle
-        
-        if (color_switch_ == 1) { // basic theta dependent colorwheel
-            double theta_color = theta + 1.5 * M_PI;
-            if (theta_color > 2.0 * M_PI)
-                theta_color -= 2.0 * M_PI;
-            
-            /* Color based only on orientation */
-            int color_index = (int) (((theta_color) / (2.0 * M_PI)) * n_rgb_);
-            if (color_index < 0)
-                color_index = 0;
-            else if (color_index >= n_rgb_)
-                color_index = n_rgb_ - 1;
-            
-            glColor4fv(&colormap_[color_index * 4]);
-        }
-        else if (color_switch_ == 2) { // FIXME: doesn't work currently. just set the default color
-            /* Custom colors externally defined... */
-            // glColor4f(bond_colors_[i_bond][0],
-            //           bond_colors_[i_bond][1],
-            //           bond_colors_[i_bond][2],
-            //           bond_colors_[i_bond][3]);
-            glColor4fv(color);
-        }
-        else {
-            /* Flat color */
-            glColor4fv(color);
+      double theta = atan2((*it)->u[1], (*it)->u[0]); // rotation angle
+
+      // Check the combinations of draw_type and color_switch_
+      // color_switch_ is overridden by draw_type
+      if ((*it)->draw_type == 0) {
+        // draw_type is set to flat
+        color[0] = (*it)->color[0];
+        color[1] = (*it)->color[1];
+        color[2] = (*it)->color[2];
+        color[3] = (*it)->color[3];
+        glColor4fv(color);
+      } else if ((*it)->draw_type == 1) {
+        // orientation draw
+        double theta_color = theta + 1.5 * M_PI;
+        if (theta_color > 2.0 * M_PI) {
+          theta_color -= 2.0 * M_PI;
         }
 
-        glPushMatrix(); // Duplicate current modelview
-        {
-            glTranslatef((*it)->r[0], (*it)->r[1]-z_correct_, 0.0); // Translate rod
-            glRotatef((GLfloat) ((theta / M_PI) * 180.0 - 90.0), 0.0, 0.0, 1.0); // rotate rod
+        // Color based on orientation
+        int color_index = (int) (((theta_color) / (2.0 * M_PI)) * n_rgb_);
+        if (color_index < 0)
+          color_index = 0;
+        else if (color_index >= n_rgb_)
+          color_index = n_rgb_ - 1;
 
-            // Tell shader about our spherocylinder parameters
-            double half_length = 0.5 * (*it)->length;
-            glUniform1f(discorectangle_.uniforms_.half_l, half_length);
-            glUniform1f(discorectangle_.uniforms_.diameter, (*it)->diameter);
-            glDrawElements(GL_TRIANGLES,
-                           discorectangle_.n_triangles_*3,
-                           GL_UNSIGNED_SHORT,
-                           (void*) 0); // draw.
-        }
-        glPopMatrix(); // restore default modelview
+        glColor4fv(&colormap_[color_index * 4]);
+      } else {
+        // Flat, boring color
+        glColor4fv(color);
+      }
+     
+      //if (color_switch_ == 1) { // basic theta dependent colorwheel
+      //    double theta_color = theta + 1.5 * M_PI;
+      //    if (theta_color > 2.0 * M_PI)
+      //        theta_color -= 2.0 * M_PI;
+      //    
+      //    /* Color based only on orientation */
+      //    int color_index = (int) (((theta_color) / (2.0 * M_PI)) * n_rgb_);
+      //    if (color_index < 0)
+      //        color_index = 0;
+      //    else if (color_index >= n_rgb_)
+      //        color_index = n_rgb_ - 1;
+      //    
+      //    glColor4fv(&colormap_[color_index * 4]);
+      //}
+      //else if (color_switch_ == 2) { 
+      //  /* Custom colors externally defined... */
+      //  glColor4f((*it)->color[0],
+      //            (*it)->color[1],
+      //            (*it)->color[2],
+      //            (*it)->color[3]);
+      //  glColor4fv(color);
+      //}
+      //else {
+      //    /* Flat color */
+      //    glColor4fv(color);
+      //}
+
+      glPushMatrix(); // Duplicate current modelview
+      {
+          glTranslatef((*it)->r[0], (*it)->r[1]-z_correct_, 0.0); // Translate rod
+          glRotatef((GLfloat) ((theta / M_PI) * 180.0 - 90.0), 0.0, 0.0, 1.0); // rotate rod
+
+          // Tell shader about our spherocylinder parameters
+          double half_length = 0.5 * (*it)->length;
+          glUniform1f(discorectangle_.uniforms_.half_l, half_length);
+          glUniform1f(discorectangle_.uniforms_.diameter, (*it)->diameter);
+          glDrawElements(GL_TRIANGLES,
+                         discorectangle_.n_triangles_*3,
+                         GL_UNSIGNED_SHORT,
+                         (void*) 0); // draw.
+      }
+      glPopMatrix(); // restore default modelview
     }
 
     glDisableVertexAttribArray(discorectangle_.attributes_.position); // Tell GL to forget about our vertex array
