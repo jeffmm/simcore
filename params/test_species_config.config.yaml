@@ -1,37 +1,47 @@
 #md_bead:
-#  properties:
-#    insertion_type: random
-#    overlap: false
-#  mdbead:
-#    num: 100
-#    diameter: 1
-#    mass: 1
-#
-#br_rod:
-#  properties:
-#    insertion_type: random
-#    overlap: false
-#  rod:
-#    num: 100
-#    length: 20
-#    diameter: 1
-#
-#xlink:
-#  properties:
-#    insertion_type: random
-#    overlap: true
-#  xit:
-#    num: 100
-#    diameter: 1
-filament:
+  #properties:
+    #insertion_type: random
+    #overlap: false
+  #mdbead:
+    #num: 100
+    #diameter: 1
+    #mass: 1
+    
+br_bead:
   properties:
     insertion_type: random
-    overlap: true
-  fil:
-    num: 1
-    length: 8
-    persistence_length: 0
-    max_length: 110
-    min_length: 1.5
-    max_child_length: 1.0
+    overlap: false
+  brbead:
+    num: 50
     diameter: 1
+
+br_rod:
+  properties:
+    insertion_type: random
+    overlap: false
+  rod:
+    num: 3
+    length: 20
+    max_length: 21
+    diameter: 1
+
+#xlink:
+  #properties:
+    #insertion_type: random
+    #overlap: true
+  #xit:
+    #num: 100
+    #diameter: 1
+
+#filament:
+  #properties:
+    #insertion_type: random
+    #overlap: true
+  #fil:
+    #num: 1
+    #length: 8
+    #persistence_length: 0
+    #max_length: 110
+    #min_length: 1.5
+    #max_child_length: 1.0
+    #diameter: 1

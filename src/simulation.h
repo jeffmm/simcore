@@ -9,6 +9,7 @@
 #include "objects.h"
 #include "uberengine.h"
 #include "helpers.h"
+#include "output_manager.h"
 
 class Simulation {
 
@@ -18,6 +19,10 @@ class Simulation {
     double time_,
            cpu_init_time_;
     std::string run_name_;
+    std::vector<std::string> posit_files_;
+    //std::fstream ip_;
+
+    OutputManager output_mgr_;
     system_parameters params_;
     rng_properties rng_;
     
@@ -28,9 +33,11 @@ class Simulation {
     rfh::factory species_factory_;
     void InitSimulation();
     void InitSpecies();
+    void InitPositInput();
     void ClearSpecies();
     void InitOutputs();
     void RunSimulation();
+    void RunMovie();
     void ClearSimulation();
     void Draw();
     void WriteOutputs();
@@ -38,16 +45,20 @@ class Simulation {
     void Integrate();
     void IntegrateMP();
     void InteractMP();
+    void ReadSpeciesPositions();
     void KineticMonteCarloMP();
     void SyncForces();
     void ZeroForces();
     void DumpAll(int i_step);
     std::vector<graph_struct*> graph_array;
+    Simulation(const Simulation&){};
+    void operator= (Simulation&);
 
   public:
     Simulation();
     ~Simulation();
     void Run(system_parameters params, std::string name);
+    void CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files);
 };
 
 #endif // _SIMCORE_SIMULATION_H_  

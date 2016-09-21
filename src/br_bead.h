@@ -28,9 +28,11 @@ class BrBeadSpecies : public Species<BrBead> {
     //void InitPotentials(system_parameters *params);
 
   public:
+    BrBeadSpecies() : Species() {
+      SetSID(SID::br_bead);
+    }
     BrBeadSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::br_bead);
-      //InitPotentials(params);
     }
     ~BrBeadSpecies() {}
     BrBeadSpecies(const BrBeadSpecies& that) : Species(that) {}
@@ -38,6 +40,12 @@ class BrBeadSpecies : public Species<BrBead> {
       SpeciesBase::operator=(that);
       return *this;
     }
+
+    void Init() {
+      Species::Init();
+    }
+
+    void Configurator();
 };
 
 #endif // _SIMCORE_BR_BEAD_H_
