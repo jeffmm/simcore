@@ -60,13 +60,6 @@ void Xlink::UpdateOrientation() {
     position_[i] = r1[i] + 0.5*length_*orientation_[i];
   }
   UpdatePeriodic();
-  double orientation_loc[3];
-  orientation_loc[0] = 0;
-  orientation_loc[1] = 1;
-  orientation_loc[2] = 1;
-  for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
-    i_bead->SetOrientation(orientation_loc); 
-  }
 }
 
 void Xlink::BindHeadSingle(int ihead, double crosspos, int rodoid) {
@@ -217,6 +210,8 @@ void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
     r[i] = r1[i] + 0.25*length_*orientation_[i];
   std::copy(r, r+3, g_.r);
   std::copy(orientation_, orientation_+3, g_.u);
+  std::copy(color_, color_+4, g_.color);
+  g_.draw_type = draw_type_;
   g_.length = 0.5 * length_;
   g_.diameter = 0.2*diameter_;
   graph_array->push_back(&g_);
@@ -224,11 +219,15 @@ void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
     r[i] = r2[i] - 0.25*length_*orientation_[i];
   std::copy(r, r+3, g2_.r);
   std::copy(orientation_, orientation_+3, g2_.u);
+  std::copy(color_, color_+4, g2_.color);
+  g2_.draw_type = draw_type_;
   g2_.length = 0.5 * length_;
   g2_.diameter = 0.2*diameter_;
   graph_array->push_back(&g2_);
-  for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead)
+  for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
+    i_bead->SetColor(color_, draw_type_);
     i_bead->Draw(graph_array);
+  }
 }
 
 // Update staged position stuff
@@ -388,6 +387,24 @@ void XlinkSpecies::Configurator() {
   bool can_overlap = node["xlink"]["properties"]["overlap"].as<bool>();
   std::cout << "   can overlap:    " << (can_overlap ? "true" : "false") << std::endl;
 
+  // Coloring
+  double color[4] = {1.0, 0.0, 0.0, 1.0};
+  int draw_type = 0; // default to orientation
+  if (node["xlink"]["properties"]["color"]) {
+    for (int i = 0; i < 4; ++i) {
+      color[i] = node["xlink"]["properties"]["color"][i].as<double>();
+    }
+    std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
+      << color[3] << "]\n";
+  }
+  if (node["xlink"]["properties"]["draw_type"]) {
+    std::string draw_type_s = node["xlink"]["properties"]["draw_type"].as<std::string>();
+    std::cout << "   draw_type: " << draw_type_s << std::endl;
+    if (draw_type_s.compare("flat") == 0) {
+      draw_type = 0;
+    }
+  }
+
   if (insertion_type.compare("xyz") == 0) {
     if (!can_overlap) {
       std::cout << "Warning, location insertion overrides overlap\n";
@@ -408,6 +425,7 @@ void XlinkSpecies::Configurator() {
 
       Xlink *member = new Xlink(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->InitConfigurator(x, diameter);
+      member->SetColor(color, draw_type);
       member->Dump();
       members_.push_back(member);
     }
@@ -430,6 +448,7 @@ void XlinkSpecies::Configurator() {
     for (int i = 0; i < nxlinks; ++i) {
       Xlink* member = new Xlink(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->Init();
+      member->SetColor(color, draw_type);
       members_.push_back(member);
     }
     n_members_ = nxlinks;

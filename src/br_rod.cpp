@@ -345,8 +345,10 @@ void BrRod::UpdateRodLength() {
 }
 
 void BrRod::Draw(std::vector<graph_struct*> * graph_array) {
-  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)  {
+    bond->SetColor(color_, draw_type_);
     bond->Draw(graph_array);
+  }
 }
 
 void BrRod::Dump() {
@@ -385,6 +387,26 @@ void BrRodSpecies::Configurator() {
   bool can_overlap = node["br_rod"]["properties"]["overlap"].as<bool>();
   std::cout << "   overlap:        " << (can_overlap ? "true" : "false") << std::endl;
 
+  // Coloring
+  double color[4] = {1.0, 0.0, 0.0, 1.0};
+  int draw_type = 1; // default to orientation
+  if (node["br_rod"]["properties"]["color"]) {
+    for (int i = 0; i < 4; ++i) {
+      color[i] = node["br_rod"]["properties"]["color"][i].as<double>();
+    }
+    std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
+      << color[3] << "]\n";
+  }
+  if (node["br_rod"]["properties"]["draw_type"]) {
+    std::string draw_type_s = node["br_rod"]["properties"]["draw_type"].as<std::string>();
+    std::cout << "   draw_type: " << draw_type_s << std::endl;
+    if (draw_type_s.compare("flat") == 0) {
+      draw_type = 0;
+    } else if (draw_type_s.compare("orientation") == 0) {
+      draw_type = 1;
+    }
+  }
+
   if (insertion_type.compare("xyz") == 0) {
     if (!can_overlap) {
       std::cout << "Warning, location insertion overrides overlap\n";
@@ -414,6 +436,7 @@ void BrRodSpecies::Configurator() {
 
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->InitConfigurator(x, u, rlength);
+      member->SetColor(color, draw_type);
       member->Dump();
       members_.push_back(member);
     }
@@ -441,6 +464,7 @@ void BrRodSpecies::Configurator() {
     for (int i = 0; i < nrods; ++i) {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->Init();
+      member->SetColor(color, draw_type);
 
       // Check against all other rods in the sytem
       if (can_overlap) {
@@ -503,6 +527,7 @@ void BrRodSpecies::Configurator() {
     while(inserting) {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->Init();
+      member->SetColor(color, draw_type);
       // Check against all other rods in system
       bool isoverlap = true;
       int numoverlaps = 0;

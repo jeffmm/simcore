@@ -32,6 +32,11 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   p_energy_ = 0;
   is_rigid_=false;
   is_kmc_=false;
+  draw_type_ = 1;
+  color_[0] = 1.0;
+  color_[1] = 0.0;
+  color_[2] = 0.0;
+  color_[3] = 1.0;
 }
 
 Object::Object(const Object& that) {
@@ -51,6 +56,7 @@ Object::Object(const Object& that) {
   std::copy(that.force_, that.force_+3, force_);
   std::copy(that.torque_, that.torque_+3, torque_);
   std::copy(that.dr_tot_, that.dr_tot_+3, dr_tot_);
+  std::copy(that.color_, that.color_+4, color_);
   diameter_ = that.diameter_;
   length_ = that.length_;
   k_energy_ = that.k_energy_;
@@ -62,6 +68,7 @@ Object::Object(const Object& that) {
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
   neighbors_ = that.neighbors_;
+  draw_type_ = that.draw_type_;
 }
 
 Object &Object::operator=(Object const& that) {
@@ -81,6 +88,7 @@ Object &Object::operator=(Object const& that) {
   std::copy(that.force_, that.force_+3, force_);
   std::copy(that.torque_, that.torque_+3, torque_);
   std::copy(that.dr_tot_, that.dr_tot_+3, dr_tot_);
+  std::copy(that.color_, that.color_+4, color_);
   diameter_ = that.diameter_;
   length_ = that.length_;
   k_energy_ = that.k_energy_;
@@ -92,6 +100,7 @@ Object &Object::operator=(Object const& that) {
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
   neighbors_ = that.neighbors_;
+  draw_type_ = that.draw_type_;
   return *this;
 }
 
@@ -158,9 +167,11 @@ void Object::InsertRandom(double buffer) {
 void Object::Draw(std::vector<graph_struct*> * graph_array) {
   std::copy(position_, position_+3, g_.r);
   std::copy(orientation_, orientation_+3, g_.u);
+  std::copy(color_, color_+4, g_.color);
   //g_.length = (length_-diameter_ > 0 ? length_-diameter_ : 0);
   g_.length = length_;
   g_.diameter = diameter_;
+  g_.draw_type = draw_type_;
   graph_array->push_back(&g_);
 }
 

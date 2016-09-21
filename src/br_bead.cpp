@@ -41,10 +41,18 @@ void BrBeadSpecies::Configurator() {
 
   // See what kind of insertion we are doing
   std::string insertion_type;
+  double color[4] = {1.0, 0.0, 0.0, 1.0};
   insertion_type = node["br_bead"]["properties"]["insertion_type"].as<std::string>();
   std::cout << "   insertion type: " << insertion_type << std::endl;
   bool can_overlap = node["br_bead"]["properties"]["overlap"].as<bool>();
   std::cout << "   overlap: " << (can_overlap ? "true" : "false") << std::endl;
+  if (node["br_bead"]["properties"]["color"]) {
+    for (int i = 0; i < 4; ++i) {
+      color[i] = node["br_bead"]["properties"]["color"][i].as<double>();
+    }
+  }
+  std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
+    << color[3] << "]\n";
 
   if (insertion_type.compare("xyz") == 0) {
     std::cout << "Nope, not yet!\n";
@@ -60,6 +68,7 @@ void BrBeadSpecies::Configurator() {
     for (int i = 0; i < nbrbeads; ++i) {
       BrBead *member = new BrBead(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->Init();
+      member->SetColor(color, 0);
       
       // Check if overlaps allowed
       if (can_overlap) {
