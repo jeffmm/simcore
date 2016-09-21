@@ -16,6 +16,7 @@ class Object {
     unsigned int rid_;
     SID sid_;
     int n_dim_;
+    int draw_type_ = 2; // 0 for single color, 1 for orientation color, 2 for don't care
     double position_[3],
            scaled_position_[3],
            prev_position_[3],
@@ -25,6 +26,7 @@ class Object {
            torque_[3],
            velocity_[3],
            anglevel_[3],
+           color_[4],
            delta_,
            diameter_,
            length_,
@@ -122,6 +124,11 @@ class Object {
     virtual void UpdatePosition() {}
     virtual void UpdatePositionMP() {
       error_exit("ERROR: UpdatePositionMP() needs to be overwritten. Exiting!\n");
+    }
+    virtual void SetColor(double const * const c, int dtype) {
+      for (int i=0; i < 4; ++i)
+        color_[i] = c[i];
+      draw_type_ = dtype;
     }
     virtual void ApplyInteractions() {}
     virtual double const GetKineticEnergy() {return k_energy_;}

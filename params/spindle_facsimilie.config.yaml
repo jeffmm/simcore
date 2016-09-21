@@ -2,6 +2,7 @@ br_rod:
   properties:
     insertion_type: fill
     overlap: false
+    draw_type: orientation
   rod:
     length: 20
     max_length: 110
@@ -11,6 +12,8 @@ xlink:
   properties:
     insertion_type: random
     overlap: true
+    draw_type: fill
+    color: [1.0, 0.0, 0.0, 1.0]
   xit:
     num: 298
     diameter: 1
