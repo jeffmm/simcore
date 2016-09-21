@@ -30,7 +30,7 @@ ifeq ($(UNAME_S),Darwin)
 	GLXLIBS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew 
 	GSLLIBS = -lgsl -lgslcblas
 	FFTLIBS = -L/usr/lib64 -lfftw3
-	YAMLLIBS = -L/Users/cedelmaier/Projects/Biophysics/cytoscore/yaml-cpp/build -lyaml-cpp
+	YAMLLIBS = -L/Users/$(USER)/Projects/Lib/yaml-cpp-gcc5/yaml-cpp/build -lyaml-cpp
 	LIBS = $(GLXLIBS) $(GSLLIBS) $(FFTLIBS) $(YAMLLIBS) -L/usr/local/lib
 else
 	GSLINCS = -I/usr/local/include
