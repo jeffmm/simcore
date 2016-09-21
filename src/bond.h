@@ -21,7 +21,7 @@ class Bond : public Rigid {
       Rigid::operator=(that); return *this;
     }
     void Init();
-    void Draw(std::vector<graph_struct*> * graph_array);
+
 };
 
 #endif // _SIMCORE_BOND_H_

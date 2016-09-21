@@ -157,6 +157,10 @@ class Object {
     virtual void StepKMC() {}
     virtual void DumpKMC() {}
     rng_properties* GetRNG() {return &rng_;}
+
+    virtual void WritePosit(std::fstream &op);
+    virtual void ReadPosit(std::fstream &ip);
+
     void SetRNGState(const std::string& filename) {
       // Load the rng state from binary file
       FILE* pfile = fopen(filename.c_str(), "r");
@@ -338,6 +342,15 @@ class Composite<T> : public Object {
     virtual int GetCount() {
       return elements_.size();
     }
+
+    virtual void WritePosit(std::fstream &op){
+      for (auto& elem : elements_)
+        elem.WritePosit(op);
+    }
+    virtual void ReadPosit(std::fstream &ip){
+      for (auto& elem : elements_)
+        elem.ReadPosit(ip);
+    }
 };
 
 template <typename T, typename V>
@@ -406,6 +419,19 @@ class Composite<T,V> : public Object {
           dr_max = dr_mag;
       }
       return dr_max;
+    }
+
+    virtual void WritePosit(std::fstream &op){
+      for (auto& elem : elements_)
+        elem.WritePosit(op);
+      for (auto& velem : v_elements_)
+        velem.WritePosit(op);
+    }
+    virtual void ReadPosit(std::fstream &ip){
+      for (auto& elem : elements_)
+        elem.ReadPosit(ip);
+      for (auto& velem : v_elements_)
+        velem.ReadPosit(ip);
     }
 
 };
