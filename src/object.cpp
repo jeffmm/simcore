@@ -1,4 +1,5 @@
 #include "object.h"
+#include "output_manager.h"
 
 #include "minimum_distance.h"
 
@@ -239,3 +240,29 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
               imd.dr, &imd.dr_mag2, imd.contact1, imd.contact2);
   imd.dr_mag = sqrt(imd.dr_mag2);
 }
+
+void Object::WritePosit(std::fstream &op){
+  //std::cout<<"Writing outputs\n";
+  for(auto& pos : position_)
+    op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
+  for(auto& spos : scaled_position_)
+    op.write(reinterpret_cast<char*>(&spos), sizeof(spos));
+  for(auto& u : orientation_)
+    op.write(reinterpret_cast<char*>(&u), sizeof(u));
+  op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
+}
+
+void Object::ReadPosit(std::fstream &ip){
+  for(auto& pos : position_)
+    ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
+  for(auto& spos : scaled_position_)
+    ip.read(reinterpret_cast<char*>(&spos), sizeof(spos));
+  for(auto& u : orientation_)
+    ip.read(reinterpret_cast<char*>(&u), sizeof(u));
+  ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
+}
+
+
+

@@ -36,9 +36,11 @@ struct graph_struct {
   double diameter;
 };
 
+//NOTE: Species ids cannot be more than 20 characters for reasons -AL
 enum class SID : unsigned char {
   none,
   md_bead,
+  md_bead_opt,
   br_bead,
   br_dimer,
   argon,
@@ -59,6 +61,8 @@ inline SID StringToSID(std::string &s) {
         return SID::none;
     else if (s == "md_bead")
         return SID::md_bead;
+    else if (s == "md_bead_opt")
+        return SID::md_bead_opt;
     else if (s == "br_bead")
         return SID::br_bead;
     else if (s == "br_dimer")
@@ -84,6 +88,41 @@ inline SID StringToSID(std::string &s) {
     else
         std::cout << "Go fuck yourself!\n";
     return SID::none;
+}
+
+//XXX: And again but backwards and even more annoying
+inline std::string SIDToString(SID &s) {
+    if (s == SID::none)
+        return "none";
+    else if (s == SID::md_bead)
+        return "md_bead";
+    else if (s == SID::md_bead_opt)
+        return "md_bead_opt";
+    else if (s == SID::br_bead)
+        return "br_bead";
+    else if (s == SID::br_dimer)
+        return "br_dimer";
+    else if (s == SID::argon)
+        return "argon";
+    else if (s == SID::neon)
+        return "neon";
+    else if (s == SID::br_rod)
+        return "br_rod";
+    else if (s == SID::filament)
+        return "filament";
+    else if (s == SID::br_simple_rod)
+        return "br_simple_rod";
+    else if (s == SID::md_kmc_bead)
+        return "md_kmc_bead";
+    else if (s == SID::br_walker)
+        return "br_walker";
+    else if (s == SID::xlink_head)
+        return "xlink_head";
+    else if (s == SID::xlink)
+        return "xlink";
+    else
+        std::cout << "Go fuck yourself!\n";
+    return "none";
 }
 
 enum class FTYPE : unsigned char {

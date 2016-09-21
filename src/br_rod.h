@@ -145,6 +145,10 @@ class BrRod : public Composite<Site,Bond> {
 
     // Specific functions for configurations
     void InitConfigurator(const double* const x, const double* const u, const double l);
+
+    void WritePosit(std::fstream &op);
+    void ReadPosit(std::fstream &ip);
+
 };
 
 class BrRodSpecies : public Species<BrRod> {
@@ -168,9 +172,9 @@ class BrRodSpecies : public Species<BrRod> {
       SpeciesBase::operator=(that);
       return *this;
     }
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
-      Species::InitConfig(params, space, seed);
-    }
+    //virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
+      //Species::InitConfig(params, space, seed);
+    //}
     void Init() {
       Species::Init();
     }
