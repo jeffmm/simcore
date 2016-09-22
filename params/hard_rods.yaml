@@ -4,13 +4,14 @@ seed : 32679122673370
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-system_radius: 10
+system_radius: 25
 daughter_radius: 5
 mother_daughter_dist: 12
 boundary_type: 1
 rod_diameter: 1
 rod_length: 20
-rod_diffusion: 1
+rod_diffusion: 0
+rod_fixed: 1
 config_file: params/hard_rods.config.yaml
 md_bead_diameter: 1
 md_bead_mass: 1
@@ -28,8 +29,8 @@ delta: 0.00025
 #n_steps: 100000
 #n_steps: 5000
 #n_steps: 2500
-#n_steps: 10000
-n_steps: 1000
+n_steps: 10000
+#n_steps: 1000
 #n_steps: 100
 #n_steps: 10
 #n_steps: 2
@@ -41,7 +42,7 @@ lj_epsilon: 1
 grab_flag: 0
 grab_file: frames/frame
 draw_interactions: 0
-ftype: 4
+ftype: 1
 potfile: params/hard_rods.pot.yaml
 kmcfile: params/hard_rods.kmc.yaml
 dynamic_instability_flag: 0
