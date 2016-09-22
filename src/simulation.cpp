@@ -31,7 +31,6 @@ void Simulation::RunSimulation() {
     //KineticMonteCarloMP();
     InteractMP();
     KineticMonteCarloMP();
-    SyncForces();
     IntegrateMP();
     // Only will run if DEBUG is enabled
     #ifdef DEBUG
@@ -85,10 +84,6 @@ void Simulation::InteractMP() {
 
 void Simulation::KineticMonteCarloMP() {
   uengine_.StepKMC();
-}
-
-void Simulation::SyncForces() {
-  uengine_.SyncForces();
 }
 
 void Simulation::ZeroForces() {
