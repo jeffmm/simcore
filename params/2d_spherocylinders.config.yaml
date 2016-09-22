@@ -2,7 +2,8 @@ br_rod:
   properties:
     insertion_type: xyz
     overlap: false
-    max_length: 110
+    max_length: 50
+    min_length: 3
     color: [1.0, 0.0, 0.0, 1.0]
     draw_type: flat
   rod:
