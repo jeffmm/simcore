@@ -106,6 +106,9 @@ void ParticleTracking::UpdateTracking(bool pForceUpdate) {
   for (auto ispec = species_->begin(); ispec != species_->end(); ++ispec)
     simples_count += (*ispec)->GetCount();
   if (simples_count != nsimples_) {
+    if (debug_trace) {
+      std::cout << "ParticleTracking nsimples changed, forcing update\n";
+    }
     //printf("nsimples_: %d, ncount: %d\n",nsimples_,simples_count);
     nsimples_ = simples_count;
     trigger_update_ = true;
@@ -113,6 +116,9 @@ void ParticleTracking::UpdateTracking(bool pForceUpdate) {
   }
   for (int ispec = 0; ispec < nsys_; ++ispec) {
     if ((*species_)[ispec]->GetUpdate()) {
+      if (debug_trace) {
+        std::cout << "ParticleTracking species should update, forcing update\n";
+      }
       (*species_)[ispec]->SetUpdate(false);
       trigger_update_ = true;
     }

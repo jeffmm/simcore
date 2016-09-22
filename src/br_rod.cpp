@@ -7,6 +7,11 @@
 void BrRod::Init() {
   InsertRandom(0.5*length_+diameter_);
   poly_state_ = GROW;
+  stabilization_state_ = 0;
+  f_stabilize_fr_ = 1.0;
+  f_stabilize_fc_ = 1.0;
+  f_stabilize_vg_ = 1.0;
+  f_stabilize_vs_ = 1.0;
   SetDiffusion();
   std::fill(body_frame_, body_frame_+6, 0.0);
   // Init bond lengths and diameter
@@ -32,6 +37,11 @@ void BrRod::InitConfigurator(const double* const x, const double* const u, const
   SetOrientation(u);
   UpdatePeriodic();
   poly_state_ = GROW;
+  stabilization_state_ = 0;
+  f_stabilize_fr_ = 1.0;
+  f_stabilize_fc_ = 1.0;
+  f_stabilize_vg_ = 1.0;
+  f_stabilize_vs_ = 1.0;
   SetDiffusion();
   std::fill(body_frame_, body_frame_+6, 0.0);
   // Init bond lengths and diameter
@@ -162,6 +172,7 @@ void BrRod::UpdateBondPositions() {
    sqrt(2*kT*dt/gamma_(par/perp)) along par/perp unit vectors
    relative to rod. */
 void BrRod::Integrate() {
+  if (rod_fixed_ == 1) return;
   //Explicit calculation of Xi.F_s
   for (int i=0; i<n_dim_; ++i) {
     for (int j=0; j<n_dim_; ++j) {
@@ -344,6 +355,34 @@ void BrRod::UpdateRodLength() {
     bond->SetLength(child_length_);
 }
 
+void BrRod::UpdateRodLength(double delta_length) {
+  // Intake this information from KMC
+  // delta_length is already done via depoly or poly, 
+  // so don't have to worry about that here
+  length_ += delta_length;
+  // Update the bond lengths
+  child_length_ = length_/n_bonds_;
+  // If necessary, add or remove a bond
+  if (child_length_ > max_child_length_) {
+    n_bonds_++;
+    child_length_ = length_/n_bonds_;
+    Bond b(v_elements_[0]);
+    // Give the new bond a unique OID
+    b.InitOID();
+    v_elements_.push_back(b);
+  } else if (child_length_ < min_length_ && v_elements_.size() > 1) {
+    n_bonds_--;
+    child_length_ = length_/n_bonds_;
+    v_elements_.pop_back();
+  }
+  for (auto bond = v_elements_.begin(); bond != v_elements_.end(); ++bond) {
+    bond->SetLength(child_length_);
+  }
+
+  // Update our diffusion stuff
+  SetDiffusion();
+}
+
 void BrRod::Draw(std::vector<graph_struct*> * graph_array) {
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)  {
     bond->SetColor(color_, draw_type_);
@@ -412,12 +451,15 @@ void BrRodSpecies::Configurator() {
       std::cout << "Warning, location insertion overrides overlap\n";
       can_overlap = true;
     }
-    double max_length = node["br_rod"]["properties"]["max_length"].as<double>();
-    std::cout << "   max length:     " << max_length << std::endl;
-    max_length_ = max_length;
+    max_length_ = node["br_rod"]["properties"]["max_length"].as<double>();
+    std::cout << "   max length:     " << max_length_ << std::endl;
+    min_length_ = node["br_rod"]["properties"]["min_length"].as<double>();
+    std::cout << "   min length:     " << min_length_ << std::endl;
     int nrods = (int)node["br_rod"]["rod"].size();
     std::cout << "   nrods: " << nrods << std::endl;
     params_->n_rod = nrods;
+    params_->max_rod_length = max_length_;
+    params_->min_rod_length = min_length_;
     for (int irod = 0; irod < nrods; ++irod) {
       double x[3] = {0.0, 0.0, 0.0};
       double u[3] = {0.0, 0.0, 0.0};
@@ -444,6 +486,7 @@ void BrRodSpecies::Configurator() {
     int nrods         = node["br_rod"]["rod"]["num"].as<int>();
     double rlength    = node["br_rod"]["rod"]["length"].as<double>();
     double max_length = node["br_rod"]["rod"]["max_length"].as<double>();
+    double min_length = node["br_rod"]["rod"]["min_length"].as<double>();
     double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
 
     std::cout << std::setw(25) << std::left << "   n rods:" << std::setw(10)
@@ -452,13 +495,17 @@ void BrRodSpecies::Configurator() {
       << std::left << rlength << std::endl;
     std::cout << std::setw(25) << std::left << "   max length:" << std::setw(10)
       << std::left << max_length << std::endl;
+    std::cout << std::setw(25) << std::left << "   min length:" << std::setw(10)
+      << std::left << min_length << std::endl;
     std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
       << std::left << diameter << std::endl;
 
     params_->n_rod = nrods;
     params_->rod_length = rlength;
     params_->max_rod_length = max_length;
+    params_->min_rod_length = min_length;
     max_length_ = max_length;
+    min_length_ = min_length;
     params_->rod_diameter = diameter;
 
     for (int i = 0; i < nrods; ++i) {
@@ -507,18 +554,23 @@ void BrRodSpecies::Configurator() {
   } else if (insertion_type.compare("fill") == 0) {
     double rlength    = node["br_rod"]["rod"]["length"].as<double>();
     double max_length = node["br_rod"]["rod"]["max_length"].as<double>();
+    double min_length = node["br_rod"]["rod"]["min_length"].as<double>();
     double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
 
     std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
       << std::left << rlength << std::endl;
     std::cout << std::setw(25) << std::left << "   max length:" << std::setw(10)
       << std::left << max_length << std::endl;
+    std::cout << std::setw(25) << std::left << "   min length:" << std::setw(10)
+      << std::left << min_length << std::endl;
     std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
       << std::left << diameter << std::endl;
 
     params_->rod_length = rlength;
     params_->max_rod_length = max_length;
+    params_->min_rod_length = min_length;
     max_length_ = max_length;
+    min_length_ = min_length;
     params_->rod_diameter = diameter;
 
     // Try just inserting as many rods as we can

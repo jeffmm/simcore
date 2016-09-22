@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "dynamic_instability.h"
 #include "xlink_kmc.h"
 #include "kmc_engine.h"
 
@@ -36,6 +37,7 @@ void kmcEngine::InitPotentials(PotentialManager *pPotentials) {
 // Register the available KMC modules
 void kmcEngine::RegisterKMC() {
   REGISTER_KMC(XlinkKMC);
+  REGISTER_KMC(DynamicInstabilityKMC);
 }
 
 // Initialize the simples, nsimples, etc

@@ -320,6 +320,8 @@ class Species : public SpeciesBase {
       return retval;
     }
 
+    virtual std::vector<T*>* GetMembers() {return &members_;}
+
 };
 
 #endif // _SIMCORE_SPECIES_H_
