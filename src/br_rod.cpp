@@ -67,6 +67,7 @@ void BrRod::ApplyForcesTorques() {
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
     AddForce(bond->GetForce());
     AddTorque(bond->GetTorque());
+    AddPotential(bond->GetPotentialEnergy());
   }
   // Check if we want to use tip force to induce catastrophe
   // XXX FIXME is this correct, since we've summed the forces and probably need to get it on the
@@ -364,6 +365,10 @@ void BrRod::UpdateRodLength(double delta_length) {
   child_length_ = length_/n_bonds_;
   // If necessary, add or remove a bond
   if (child_length_ > max_child_length_) {
+    if (debug_trace) {
+      std::cout << "UpdateRodLength: Increasing number of bonds from " << n_bonds_
+        << " to " << n_bonds_+1 << std::endl;
+    }
     n_bonds_++;
     child_length_ = length_/n_bonds_;
     Bond b(v_elements_[0]);
@@ -371,8 +376,21 @@ void BrRod::UpdateRodLength(double delta_length) {
     b.InitOID();
     v_elements_.push_back(b);
   } else if (child_length_ < min_length_ && v_elements_.size() > 1) {
+    if (debug_trace) {
+      std::cout << "UpdateRodLength: Decreasing number of bonds from " << n_bonds_
+        << " to " << n_bonds_-1 << std::endl;
+    }
     n_bonds_--;
     child_length_ = length_/n_bonds_;
+    // We have to get the force and torque, and transfer them onto a different
+    // bond
+    Bond *firstbond = &(*v_elements_.begin());
+    Bond *lastbond = &(*v_elements_.rbegin());
+    std::cout << "firstbond: " << firstbond << ", oid: " << firstbond->GetOID() << std::endl;
+    std::cout << "lastbond: " << lastbond << ", oid: " << lastbond->GetOID() << std::endl;
+    firstbond->AddForce(lastbond->GetForce());
+    firstbond->AddTorque(lastbond->GetTorque());
+    firstbond->AddPotential(lastbond->GetPotentialEnergy());
     v_elements_.pop_back();
   }
   for (auto bond = v_elements_.begin(); bond != v_elements_.end(); ++bond) {
