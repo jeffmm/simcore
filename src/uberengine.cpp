@@ -115,11 +115,6 @@ void UberEngine::StepKMC() {
   kengine_.RunKMC();
 }
 
-void UberEngine::SyncForces() {
-  // KMC engine moves the forces from one species to another
-  kengine_.TransferForces();
-}
-
 void UberEngine::Draw(std::vector<graph_struct*> * graph_array) {
   std::cerr << "Drawing forces currently doesn't work, exiting\n";
   exit(1);

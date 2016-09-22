@@ -106,6 +106,9 @@ void kmcEngine::RunKMC() {
 
   // Ask all the species to do their own updating
   UpdateKMC();
+
+  // Transfer the forces
+  TransferForces();
 }
 
 // Prepare and update probabilities of the kmc engine
