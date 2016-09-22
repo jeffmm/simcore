@@ -56,6 +56,7 @@ class KMCBase {
     virtual void Print() {
       std::cout << "\tsids: [" << (int)sid1_ << ", " << (int)sid2_ << "]\n";
     }
+    virtual std::pair<SID, SID> GetSIDs() {return std::make_pair(sid1_, sid2_);}
     virtual void Dump() {
       printf("ERROR, need to override this function!\n");
       exit(1);
