@@ -15,8 +15,6 @@ class BrRod : public Composite<Site,Bond> {
     bool rod_diffusion_;
     bool rod_fixed_;
     int n_bonds_,
-        dynamic_instability_flag_,
-        force_induced_catastrophe_flag_,
         stabilization_state_;
     double max_length_,
            min_length_,
@@ -28,15 +26,6 @@ class BrRod : public Composite<Site,Bond> {
            rand_sigma_par_,
            rand_sigma_perp_,
            rand_sigma_rot_,
-           v_poly_,
-           v_depoly_,
-           p_s2g_,
-           p_s2p_,
-           p_p2s_,
-           p_p2g_,
-           p_g2s_,
-           p_g2p_,
-           tip_force_,
            f_stabilize_fr_,
            f_stabilize_fc_,
            f_stabilize_vg_,
@@ -50,9 +39,6 @@ class BrRod : public Composite<Site,Bond> {
     void GetBodyFrame();
     void AddRandomDisplacement();
     void ApplyForcesTorques();
-    void DynamicInstability();
-    void UpdatePolyState();
-    void UpdateRodLength();
 
   public:
     BrRod(system_parameters *params, space_struct * space, long seed, SID sid) 
@@ -62,16 +48,6 @@ class BrRod : public Composite<Site,Bond> {
         max_length_ = params->max_rod_length;
         min_length_ = params->min_rod_length;
         max_child_length_ = 0.5*params->cell_length;
-        dynamic_instability_flag_ = params->dynamic_instability_flag;
-        force_induced_catastrophe_flag_ = params->force_induced_catastrophe_flag;
-        p_g2s_ = params->f_grow_to_shrink*delta_;
-        p_g2p_ = params->f_grow_to_pause*delta_;
-        p_s2p_ = params->f_shrink_to_pause*delta_;
-        p_s2g_ = params->f_shrink_to_grow*delta_;
-        p_p2s_ = params->f_pause_to_shrink*delta_;
-        p_p2g_ = params->f_pause_to_grow*delta_;
-        v_depoly_ = params->v_depoly;
-        v_poly_ = params->v_poly;
         rod_diffusion_ = params->rod_diffusion == 1 ? true : false;
         rod_fixed_ = params->rod_fixed == 1 ? true : false;
         // Initialize end sites
@@ -93,7 +69,6 @@ class BrRod : public Composite<Site,Bond> {
     ~BrRod() {}
     BrRod(const BrRod& that) : Composite(that) {
       n_bonds_=that.n_bonds_;
-      dynamic_instability_flag_ = that.dynamic_instability_flag_;
       max_length_ = that.max_length_;
       min_length_ = that.min_length_;
       max_child_length_ = that.max_child_length_;
@@ -103,15 +78,6 @@ class BrRod : public Composite<Site,Bond> {
       rand_sigma_par_ = that.rand_sigma_par_;
       rand_sigma_perp_ = that.rand_sigma_perp_;
       rand_sigma_rot_ = that.rand_sigma_rot_;
-      v_poly_ = that.v_poly_;
-      v_depoly_ = that.v_depoly_;
-      p_s2g_ = that.p_s2g_;
-      p_s2p_ = that.p_s2p_;
-      p_p2s_ = that.p_p2s_;
-      p_p2g_ = that.p_p2g_;
-      p_g2s_ = that.p_g2s_;
-      p_g2p_ = that.p_g2p_;
-      tip_force_ = that.tip_force_;
       std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
       poly_state_ = that.poly_state_;
       stabilization_state_ = that.stabilization_state_;
@@ -125,7 +91,6 @@ class BrRod : public Composite<Site,Bond> {
     BrRod& operator=(BrRod const& that) {
       Composite::operator=(that); 
       n_bonds_=that.n_bonds_;
-      dynamic_instability_flag_ = that.dynamic_instability_flag_;
       max_length_ = that.max_length_;
       min_length_ = that.min_length_;
       max_child_length_ = that.max_child_length_;
@@ -135,15 +100,6 @@ class BrRod : public Composite<Site,Bond> {
       rand_sigma_par_ = that.rand_sigma_par_;
       rand_sigma_perp_ = that.rand_sigma_perp_;
       rand_sigma_rot_ = that.rand_sigma_rot_;
-      v_poly_ = that.v_poly_;
-      v_depoly_ = that.v_depoly_;
-      p_s2g_ = that.p_s2g_;
-      p_s2p_ = that.p_s2p_;
-      p_p2s_ = that.p_p2s_;
-      p_p2g_ = that.p_p2g_;
-      p_g2s_ = that.p_g2s_;
-      p_g2p_ = that.p_g2p_;
-      tip_force_ = that.tip_force_;
       std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
       poly_state_ = that.poly_state_;
       stabilization_state_ = that.stabilization_state_;
