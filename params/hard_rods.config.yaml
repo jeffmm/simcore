@@ -3,7 +3,7 @@ br_rod:
     insertion_type: random
     overlap: false
     color: [1.0, 0.0, 0.0, 1.0]
-    draw_type: orientation
+    draw_type: flat
   rod:
     num: 10
     length: 10

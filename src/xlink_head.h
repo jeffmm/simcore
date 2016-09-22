@@ -32,6 +32,7 @@ class XlinkHead : public Simple {
     void KickBead();
     void UpdatePositionMP();
     void Init();
+    void Draw(std::vector<graph_struct*> * graph_array);
 
     // Internal force calculation specifics
     virtual bool ApplyInternalForce() {

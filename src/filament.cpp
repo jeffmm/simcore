@@ -517,8 +517,10 @@ double const * const Filament::GetDrTot() {return nullptr;}
 void Filament::ApplyForcesTorques() {}
 
 void Filament::Draw(std::vector<graph_struct*> * graph_array) {
-  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
+    bond->SetColor(color_, draw_type_);
     bond->Draw(graph_array);
+  }
 }
 
 void Filament::UpdateSitePositions(bool midstep) {
@@ -891,6 +893,26 @@ void FilamentSpecies::Configurator() {
   std::cout << "   insertion type: " << insertion_type << std::endl;
   bool can_overlap = node["filament"]["properties"]["overlap"].as<bool>();
   std::cout << "   overlap:        " << (can_overlap ? "true" : "false") << std::endl;
+
+  // Coloring
+  double color[4] = {1.0, 0.0, 0.0, 1.0};
+  int draw_type = 1; // default to orientation
+  if (node["filament"]["properties"]["color"]) {
+    for (int i = 0; i < 4; ++i) {
+      color[i] = node["filament"]["properties"]["color"][i].as<double>();
+    }
+    std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
+      << color[3] << "]\n";
+  }
+  if (node["filament"]["properties"]["draw_type"]) {
+    std::string draw_type_s = node["filament"]["properties"]["draw_type"].as<std::string>();
+    std::cout << "   draw_type: " << draw_type_s << std::endl;
+    if (draw_type_s.compare("flat") == 0) {
+      draw_type = 0;
+    } else if (draw_type_s.compare("orientation") == 0) {
+      draw_type = 1;
+    }
+  }
 
   if (insertion_type.compare("random") == 0) {
     int nfilaments          = node["filament"]["fil"]["num"].as<int>();
