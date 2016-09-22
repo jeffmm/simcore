@@ -1254,8 +1254,12 @@ void XlinkKMC::UpdateStage2(Xlink *xit) {
   // Get all relevant information, need for force dep
   // velocity, etc
   auto aid0 = head0->GetAttach().first;
+  std::cout << "aid0: " << aid0 << std::endl;
   auto aidx0 = (*oid_position_map_)[aid0];
+  std::cout << "aidx0: " << aidx0 << std::endl;
   auto rod0 = (*simples_)[aidx0];
+  std::cout << "rod0: " << rod0 << std::endl;
+  rod0->Dump();
   auto crosspos0 = head0->GetAttach().second;
   auto lrod0 = rod0->GetRigidLength();
   auto flink = head0->GetForce();

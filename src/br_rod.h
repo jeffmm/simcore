@@ -13,9 +13,11 @@ class BrRod : public Composite<Site,Bond> {
 
   private:
     bool rod_diffusion_;
+    bool rod_fixed_;
     int n_bonds_,
         dynamic_instability_flag_,
-        force_induced_catastrophe_flag_;
+        force_induced_catastrophe_flag_,
+        stabilization_state_;
     double max_length_,
            min_length_,
            max_child_length_,
@@ -35,6 +37,10 @@ class BrRod : public Composite<Site,Bond> {
            p_g2s_,
            p_g2p_,
            tip_force_,
+           f_stabilize_fr_,
+           f_stabilize_fc_,
+           f_stabilize_vg_,
+           f_stabilize_vs_,
            body_frame_[6];
     poly_state_t poly_state_;
     void UpdateSitePositions();
@@ -67,6 +73,7 @@ class BrRod : public Composite<Site,Bond> {
         v_depoly_ = params->v_depoly;
         v_poly_ = params->v_poly;
         rod_diffusion_ = params->rod_diffusion == 1 ? true : false;
+        rod_fixed_ = params->rod_fixed == 1 ? true : false;
         // Initialize end sites
         for (int i=0; i<2; ++i) {
           Site s(params, space, gsl_rng_get(rng_.r), GetSID());
@@ -107,7 +114,13 @@ class BrRod : public Composite<Site,Bond> {
       tip_force_ = that.tip_force_;
       std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
       poly_state_ = that.poly_state_;
+      stabilization_state_ = that.stabilization_state_;
+      f_stabilize_fr_ = that.f_stabilize_fr_;
+      f_stabilize_fc_ = that.f_stabilize_fc_;
+      f_stabilize_vg_ = that.f_stabilize_vg_;
+      f_stabilize_vs_ = that.f_stabilize_vs_;
       rod_diffusion_=that.rod_diffusion_;
+      rod_fixed_=that.rod_fixed_;
     }
     BrRod& operator=(BrRod const& that) {
       Composite::operator=(that); 
@@ -133,7 +146,13 @@ class BrRod : public Composite<Site,Bond> {
       tip_force_ = that.tip_force_;
       std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
       poly_state_ = that.poly_state_;
+      stabilization_state_ = that.stabilization_state_;
+      f_stabilize_fr_ = that.f_stabilize_fr_;
+      f_stabilize_fc_ = that.f_stabilize_fc_;
+      f_stabilize_vg_ = that.f_stabilize_vg_;
+      f_stabilize_vs_ = that.f_stabilize_vs_;
       rod_diffusion_ = that.rod_diffusion_;
+      rod_fixed_=that.rod_fixed_;
       return *this;
     } 
     virtual void Init();
@@ -149,12 +168,39 @@ class BrRod : public Composite<Site,Bond> {
     void WritePosit(std::fstream &op);
     void ReadPosit(std::fstream &ip);
 
+    // KMC information
+    poly_state_t GetPolyState() {return poly_state_;}
+    void SetPolyState(poly_state_t poly_state) {poly_state_=poly_state;}
+    int GetStabilizationState(double *f_stabilize_fr,
+                              double *f_stabilize_fc,
+                              double *f_stabilize_vg,
+                              double *f_stabilize_vs) {
+      (*f_stabilize_fr) = f_stabilize_fr_;
+      (*f_stabilize_fc) = f_stabilize_fc_;
+      (*f_stabilize_vg) = f_stabilize_vg_;
+      (*f_stabilize_vs) = f_stabilize_vs_;
+      return stabilization_state_;
+    }
+    void SetStabilizationState(const int state,
+                               const double f_stab_fr,
+                               const double f_stab_fc,
+                               const double f_stab_vg,
+                               const double f_stab_vs) {
+      f_stabilize_fr_ = f_stab_fr;
+      f_stabilize_fc_ = f_stab_fc;
+      f_stabilize_vg_ = f_stab_vg;
+      f_stabilize_vs_ = f_stab_vs;
+      stabilization_state_=state;
+    }
+    void UpdateRodLength(const double delta_length);
+
 };
 
 class BrRodSpecies : public Species<BrRod> {
   protected:
     //void InitPotentials(system_parameters *params);
     double max_length_;
+    double min_length_;
   public:
     BrRodSpecies() : Species() {
       SetSID(SID::br_rod);
@@ -179,6 +225,7 @@ class BrRodSpecies : public Species<BrRod> {
       Species::Init();
     }
     double const GetMaxLength() {return max_length_;}
+    double const GetMinLength() {return min_length_;}
 
     // Special insertion routine
     void Configurator();
