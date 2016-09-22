@@ -25,16 +25,11 @@ class kmcEngine {
     void InitPotentials(PotentialManager *pPotentials);
     void InitMP();
     void RunKMC();
-    void StepKMC();
-    void PrepKMC();
-    void UpdateKMC();
-    void TransferForces();
     void Print();
     void Dump();
     void PrepOutputs();
     void WriteOutputs(int istep);
 
-    void AddKMC(SID sid1, SID sid2, KMCBase *kmc);
     void RegisterKMC();
     void ParseKMC();
 
@@ -57,7 +52,7 @@ class kmcEngine {
     rng_properties rng_;
 
     rfh::factory kmc_factory_;
-    kmc_map kmc_map_;
+    std::vector<KMCBase*> kmc_modules_;
 };
 
 #endif

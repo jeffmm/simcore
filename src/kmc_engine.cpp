@@ -57,6 +57,9 @@ void kmcEngine::ParseKMC() {
 
   nkmcs_ = (int)node["kmc"].size();
 
+  kmc_modules_.clear();
+  kmc_modules_.resize(nkmcs_);
+
   for (int ikmc = 0; ikmc < nkmcs_; ++ikmc) {
     std::string kmcname = node["kmc"][ikmc]["type"].as<std::string>();
     std::string sid1s   = node["kmc"][ikmc]["sid1"].as<std::string>();
@@ -73,110 +76,56 @@ void kmcEngine::ParseKMC() {
     }
     KMCBase *new_kmc = (KMCBase*) kmc_factory_.construct(kmcname);
     new_kmc->Init(space_, tracking_, potentials_, spec1, spec2, ikmc, node, gsl_rng_get(rng_.r));
-    AddKMC(sid1, sid2, new_kmc);
+    kmc_modules_[ikmc] = new_kmc;
   }
-}
-
-void kmcEngine::AddKMC(SID sid1, SID sid2, KMCBase *kmc) {
-  sid_pair key1 = std::make_pair(sid1, sid2);
-  if (kmc_map_.count(key1)) return;
-  kmc_map_[key1] = kmc;
 }
 
 double kmcEngine::GetMaxRcut() {
   double max_rcut = 0.0;
-  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    max_rcut = std::max(max_rcut, kmc->second->GetMaxRcut());
+  for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
+    max_rcut = std::max(max_rcut, (*kmc)->GetMaxRcut());
   }
   return max_rcut;
 }
 
-// Run the overall kmc routine one step
+// Run the modules IN ORDER!!!!
 void kmcEngine::RunKMC() {
-  // Check to see if an update was triggered
-  if (tracking_->TriggerUpdate()) {
-    nsimples_ = tracking_->GetNSimples();
-    simples_ = tracking_->GetSimples();
-  }
-  // Prepare the kmc probabilities, etc
-  PrepKMC();
-
-  // Run through our modules
-  StepKMC();
-
-  // Ask all the species to do their own updating
-  UpdateKMC();
-
-  // Transfer the forces
-  TransferForces();
-}
-
-// Prepare and update probabilities of the kmc engine
-void kmcEngine::PrepKMC() {
-  // Move through the map and ask it to do the kmc prep
-  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    if (debug_trace)
-      printf("PrepKMC [%hhu,%hhu]\n", kmc->first.first, kmc->first.second);
-    kmc->second->PrepKMC();
-  }
-}
-
-// Step the kmc engine forward one
-void kmcEngine::StepKMC() {
-  // Run the KMC modules that we know aboout
-  // Loop over species pairs - we know that some self interact, but
-  // some interact between species, and it is keyed on who is #1
-  // and who is #2
-  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    if (debug_trace)
-      printf("StepKMC [%hhu,%hhu]\n", kmc->first.first, kmc->first.second);
-    kmc->second->StepKMC();
-  }
-}
-
-// Ask each species to do their own update on the kmc step
-void kmcEngine::UpdateKMC() {
-  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    if (debug_trace)
-      printf("UpdateKMC [%hhu,%hhu]\n", kmc->first.first, kmc->first.second);
-    kmc->second->UpdateKMC();
-  }
-}
-
-// Transfer the forces (if need by) by the KMC
-void kmcEngine::TransferForces() {
-  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    kmc->second->TransferForces();
+  for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
+    (*kmc)->PrepKMC();
+    (*kmc)->StepKMC();
+    (*kmc)->UpdateKMC();
+    (*kmc)->TransferForces();
   }
 }
 
 void kmcEngine::Print() {
-  printf("********\n");
-  printf("kmcEngine -> print\n");
-  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    printf("{%d,%d} : ", (int)kmc->first.first, (int)kmc->first.second);
-    kmc->second->Print();
+  std::cout << "********\n";
+  std::cout << "kmcEngine -> print\n";
+  for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
+    auto msids = (*kmc)->GetSIDs();
+    std::cout << "{" << (int)msids.first << "," << (int)msids.second << "} : ";
+    (*kmc)->Print();
   }
 }
 
 void kmcEngine::Dump() {
   #ifdef DEBUG
-  printf("--------\n");
-  printf("kmcEngine -> dump\n");
-  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    kmc->second->Dump();
+  std::cout << "--------\n";
+  std::cout << "kmcEngine -> dump\n";
+  for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
+    (*kmc)->Dump();
   }
   #endif
 }
 
 void kmcEngine::PrepOutputs() {
-  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    kmc->second->PrepOutputs(); 
+  for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
+    (*kmc)->PrepOutputs(); 
   }
 }
 
 void kmcEngine::WriteOutputs(int istep) {
-  for (auto kmc = kmc_map_.begin(); kmc != kmc_map_.end(); ++kmc) {
-    kmc->second->WriteOutputs(istep); 
+  for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
+    (*kmc)->WriteOutputs(istep); 
   }
 }
