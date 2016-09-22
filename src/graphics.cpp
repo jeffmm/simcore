@@ -598,70 +598,131 @@ void Graphics::DrawSpheros() {
                 theta = (2.0 * M_PI) - theta;
         }
 
-        /* Select cylinder color. */
-        if (color_switch_ == 1) {
-            /* Convert from HSL to RGB coloring scheme, unique orientation coloring scheme */
-            double L = 0.3 * (*it)->u[2] + 0.5;
-            double C = (1 - ABS(2*L - 1));
-            double H_prime = 3.0 * theta / M_PI;
-            double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
+        // Color is now based on draw_type for the object
+        //std::cout << "Draw type: " << (*it)->draw_type << std::endl;
+        if ((*it)->draw_type == 0) {
+          // flat color
+          color[0] = (*it)->color[0];
+          color[1] = (*it)->color[1];
+          color[2] = (*it)->color[2];
+          color[3] = (*it)->color[3];
+          glColor4fv(color);
+        } else if ((*it)->draw_type == 1) {
+          /* Convert from HSL to RGB coloring scheme, unique orientation coloring scheme */
+          double L = 0.3 * (*it)->u[2] + 0.5;
+          double C = (1 - ABS(2*L - 1));
+          double H_prime = 3.0 * theta / M_PI;
+          double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
 
-            if (H_prime < 0.0) {
-                color[0] = 0.0;
-                color[1] = 0.0;
-                color[2] = 0.0;
-            }
-            else if (H_prime < 1.0) {
-                color[0] = C;
-                color[1] = X;
-                color[2] = 0;
-            }
-            else if (H_prime < 2.0) {
-                color[0] = X;
-                color[1] = C;
-                color[2] = 0;
-            }
-            else if (H_prime < 3.0) {
-                color[0] = 0;
-                color[1] = C;
-                color[2] = X;
-            }
-            else if (H_prime < 4.0) {
-                color[0] = 0;
-                color[1] = X;
-                color[2] = C;
-            }
-            else if (H_prime < 5.0) {
-                color[0] = X;
-                color[1] = 0;
-                color[2] = C;
-            }
-            else if (H_prime < 6.0) {
-                color[0] = C;
-                color[1] = 0;
-                color[2] = X;
-            }
-            color[3] = alpha_;
+          if (H_prime < 0.0) {
+            color[0] = 0.0;
+            color[1] = 0.0;
+            color[2] = 0.0;
+          }
+          else if (H_prime < 1.0) {
+            color[0] = C;
+            color[1] = X;
+            color[2] = 0;
+          }
+          else if (H_prime < 2.0) {
+            color[0] = X;
+            color[1] = C;
+            color[2] = 0;
+          }
+          else if (H_prime < 3.0) {
+            color[0] = 0;
+            color[1] = C;
+            color[2] = X;
+          }
+          else if (H_prime < 4.0) {
+            color[0] = 0;
+            color[1] = X;
+            color[2] = C;
+          }
+          else if (H_prime < 5.0) {
+            color[0] = X;
+            color[1] = 0;
+            color[2] = C;
+          }
+          else if (H_prime < 6.0) {
+            color[0] = C;
+            color[1] = 0;
+            color[2] = X;
+          }
+          color[3] = alpha_;
 
-            double m = L - 0.5 * C;
-            color[0] = color[0] + m;
-            color[1] = color[1] + m;
-            color[2] = color[2] + m;
+          double m = L - 0.5 * C;
+          color[0] = color[0] + m;
+          color[1] = color[1] + m;
+          color[2] = color[2] + m;
 
-            glColor4fv(color);
+          glColor4fv(color);
         }
-        else if (color_switch_ == 2) {
-            double cos_phi = cos(phi);
-            int color_index = (int) (ABS(cos_phi) * (n_rgb_ - shift_));
-            if (color_index < 0)
-                glColor4fv(&colormap_[0]);
-            else if (color_index >= n_rgb_ - shift_)
-                glColor4fv(&colormap_[4*(n_rgb_ - shift_ - 1)]);
-            else
-                glColor4fv(&colormap_[4*color_index]);
-        }
-        else
-            glColor4fv(color);
+
+        ///* Select cylinder color. */
+        //if (color_switch_ == 1) {
+        //    /* Convert from HSL to RGB coloring scheme, unique orientation coloring scheme */
+        //    double L = 0.3 * (*it)->u[2] + 0.5;
+        //    double C = (1 - ABS(2*L - 1));
+        //    double H_prime = 3.0 * theta / M_PI;
+        //    double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
+
+        //    if (H_prime < 0.0) {
+        //        color[0] = 0.0;
+        //        color[1] = 0.0;
+        //        color[2] = 0.0;
+        //    }
+        //    else if (H_prime < 1.0) {
+        //        color[0] = C;
+        //        color[1] = X;
+        //        color[2] = 0;
+        //    }
+        //    else if (H_prime < 2.0) {
+        //        color[0] = X;
+        //        color[1] = C;
+        //        color[2] = 0;
+        //    }
+        //    else if (H_prime < 3.0) {
+        //        color[0] = 0;
+        //        color[1] = C;
+        //        color[2] = X;
+        //    }
+        //    else if (H_prime < 4.0) {
+        //        color[0] = 0;
+        //        color[1] = X;
+        //        color[2] = C;
+        //    }
+        //    else if (H_prime < 5.0) {
+        //        color[0] = X;
+        //        color[1] = 0;
+        //        color[2] = C;
+        //    }
+        //    else if (H_prime < 6.0) {
+        //        color[0] = C;
+        //        color[1] = 0;
+        //        color[2] = X;
+        //    }
+        //    color[3] = alpha_;
+
+        //    double m = L - 0.5 * C;
+        //    color[0] = color[0] + m;
+        //    color[1] = color[1] + m;
+        //    color[2] = color[2] + m;
+
+        //    glColor4fv(color);
+        //}
+        //else if (color_switch_ == 2) {
+        //    double cos_phi = cos(phi);
+        //    int color_index = (int) (ABS(cos_phi) * (n_rgb_ - shift_));
+        //    if (color_index < 0)
+        //        glColor4fv(&colormap_[0]);
+        //    else if (color_index >= n_rgb_ - shift_)
+        //        glColor4fv(&colormap_[4*(n_rgb_ - shift_ - 1)]);
+        //    else
+        //        glColor4fv(&colormap_[4*color_index]);
+        //}
+        //else
+        //    glColor4fv(color);
 
         /* Get position of spherocylinder center. */
         GLfloat v0 = (*it)->r[0];

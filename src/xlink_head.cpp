@@ -31,6 +31,16 @@ void XlinkHead::UpdatePositionMP() {
   UpdatePeriodic();
 }
 
+void XlinkHead::Draw(std::vector<graph_struct*> * graph_array) {
+  std::copy(position_, position_+3, g_.r);
+  std::copy(orientation_, orientation_+3, g_.u);
+  std::copy(color_, color_+4, g_.color);
+  g_.length = length_;
+  g_.diameter = diameter_ + 0.5;
+  g_.draw_type = draw_type_;
+  graph_array->push_back(&g_);
+}
+
 // kmc stuff
 void XlinkHead::PrepKMC(std::vector<neighbor_t>* neighbors) {
 
