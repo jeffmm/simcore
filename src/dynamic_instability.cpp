@@ -64,25 +64,25 @@ void DynamicInstabilityKMC::StepKMC() {
 
 void DynamicInstabilityKMC::UpdatePolymerizationState() {
   BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec1_);
-  std::cout << "UpdatePolymerizationState\n";
+  //std::cout << "UpdatePolymerizationState\n";
   auto rod_members = prspec->GetMembers();
 
   for (auto rodit = rod_members->begin(); rodit != rod_members->end(); ++rodit) {
     BrRod *rod = *rodit;
-    std::cout << "Examining rod: " << rod->GetOID() << ", rid: " << rod->GetRID() << ", cid: " << rod->GetCID() << std::endl;
-    rod->Dump();
+    //std::cout << "Examining rod: " << rod->GetOID() << ", rid: " << rod->GetRID() << ", cid: " << rod->GetCID() << std::endl;
+    //rod->Dump();
 
     double f_stabilize_fr = 1.0;
     double f_stabilize_fc = 1.0;
     double f_stabilize_vg = 1.0;
     double f_stabilize_vs = 1.0;
     int stab_state = rod->GetStabilizationState(&f_stabilize_fr, &f_stabilize_fc, &f_stabilize_vg, &f_stabilize_vs);
-    std::cout << "stab state: " << stab_state << std::endl;
-    std::cout << "f_stabilize_fr: " << std::setprecision(16) << f_stabilize_fr << std::endl;
-    std::cout << "f_stabilize_fc: " << std::setprecision(16) << f_stabilize_fc << std::endl;
+    //std::cout << "stab state: " << stab_state << std::endl;
+    //std::cout << "f_stabilize_fr: " << std::setprecision(16) << f_stabilize_fr << std::endl;
+    //std::cout << "f_stabilize_fc: " << std::setprecision(16) << f_stabilize_fc << std::endl;
     poly_state_t poly_state = rod->GetPolyState();
     poly_state_t poly_state_new = poly_state;
-    std::cout << "poly state: " << poly_state << std::endl;
+    //std::cout << "poly state: " << poly_state << std::endl;
     auto mrng = rod->GetRNG();
 
     // Adjust DI rates if MT is stabilized
@@ -101,12 +101,12 @@ void DynamicInstabilityKMC::UpdatePolymerizationState() {
     double p_ptg = p_ptg_ * p_factor_r;
     double p_pts = p_pts_ * p_factor_c;
 
-    std::cout << std::setprecision(16) << "p_stg: " << p_stg << std::endl
-      << "p_stp: " << p_stp << std::endl
-      << "p_gts: " << p_gts << std::endl
-      << "p_gtp: " << p_gtp << std::endl
-      << "p_ptg: " << p_ptg << std::endl
-      << "p_pts: " << p_pts << std::endl;
+    //std::cout << std::setprecision(16) << "p_stg: " << p_stg << std::endl
+    //  << "p_stp: " << p_stp << std::endl
+    //  << "p_gts: " << p_gts << std::endl
+    //  << "p_gtp: " << p_gtp << std::endl
+    //  << "p_ptg: " << p_ptg << std::endl
+    //  << "p_pts: " << p_pts << std::endl;
 
     double p_norm = 0.0;
 
@@ -115,10 +115,10 @@ void DynamicInstabilityKMC::UpdatePolymerizationState() {
     // Can now start checking states
     // Shrinking state
     double roll = gsl_rng_uniform_pos(mrng->r);
-    std::cout << "roll: " << std::setprecision(16) << roll << std::endl;
+    //std::cout << "roll: " << std::setprecision(16) << roll << std::endl;
     if (poly_state == SHRINK) {
       p_norm = p_stg + p_stp;
-      std::cout << "Shrink p_norm: " << std::setprecision(16) << p_norm << std::endl;
+      //std::cout << "Shrink p_norm: " << std::setprecision(16) << p_norm << std::endl;
       if (p_norm > 1.0) {
         if (roll < p_stg/p_norm) {
           poly_state_new = GROW;
@@ -137,7 +137,7 @@ void DynamicInstabilityKMC::UpdatePolymerizationState() {
     // MT growing
     else if (poly_state == GROW) {
       p_norm = p_gts + p_gtp;
-      std::cout << "Grow p_norm: " << std::setprecision(16) << p_norm << std::endl;
+      //std::cout << "Grow p_norm: " << std::setprecision(16) << p_norm << std::endl;
       if (p_norm > 1.0) {
         if (roll < p_gts/p_norm) {
           poly_state_new = SHRINK;
@@ -156,7 +156,7 @@ void DynamicInstabilityKMC::UpdatePolymerizationState() {
     // MT paused
     else if (poly_state == PAUSE) {
       p_norm = p_ptg + p_pts;
-      std::cout << "Pause p_norm: " << std::setprecision(16) << p_norm << std::endl;
+      //std::cout << "Pause p_norm: " << std::setprecision(16) << p_norm << std::endl;
       if (p_norm > 1.0) {
         if (roll < p_ptg/p_norm) {
           poly_state_new = GROW;
@@ -192,7 +192,7 @@ void DynamicInstabilityKMC::UpdatePolymerizationState() {
 
 void DynamicInstabilityKMC::GrowBonds() {
   BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec1_);
-  std::cout << "UpdatePolymerizationState\n";
+  //std::cout << "GrowBonds\n";
   auto rod_members = prspec->GetMembers();
 
   double delta_L_depoly = -v_depoly_ * delta_;
@@ -200,8 +200,8 @@ void DynamicInstabilityKMC::GrowBonds() {
 
   for (auto rodit = rod_members->begin(); rodit != rod_members->end(); ++rodit) {
     BrRod *rod = *rodit;
-    std::cout << "Grow rod: " << rod->GetOID() << ", rid: " << rod->GetRID() << ", cid: " << rod->GetCID() << std::endl;
-    rod->Dump();
+    //std::cout << "Grow rod: " << rod->GetOID() << ", rid: " << rod->GetRID() << ", cid: " << rod->GetCID() << std::endl;
+    //rod->Dump();
 
     poly_state_t poly_state = rod->GetPolyState();
     if (poly_state == PAUSE) continue; // dont' do anything on a pause
@@ -218,16 +218,16 @@ void DynamicInstabilityKMC::GrowBonds() {
     else
       delta_L = 0.0;
 
-    std::cout << "Delta_L: " << std::setprecision(16) << delta_L << std::endl;
+    //std::cout << "Delta_L: " << std::setprecision(16) << delta_L << std::endl;
     // Check stabilizations
     double f_stabilize_fr = 1.0;
     double f_stabilize_fc = 1.0;
     double f_stabilize_vg = 1.0;
     double f_stabilize_vs = 1.0;
     auto stab_state = rod->GetStabilizationState(&f_stabilize_fr, &f_stabilize_fc, &f_stabilize_vg, &f_stabilize_vs);
-    std::cout << "stab state: " << poly_state << std::endl;
-    std::cout << "f_stabilize_vg: " << std::setprecision(16) << f_stabilize_vg << std::endl;
-    std::cout << "f_stabilize_vs: " << std::setprecision(16) << f_stabilize_vs << std::endl;
+    //std::cout << "stab state: " << poly_state << std::endl;
+    //std::cout << "f_stabilize_vg: " << std::setprecision(16) << f_stabilize_vg << std::endl;
+    //std::cout << "f_stabilize_vs: " << std::setprecision(16) << f_stabilize_vs << std::endl;
     if (stab_state == 1) {
       // Modify the growth and shrink velocities
       if (poly_state == GROW) {

@@ -69,34 +69,6 @@ void BrRod::ApplyForcesTorques() {
     AddTorque(bond->GetTorque());
     AddPotential(bond->GetPotentialEnergy());
   }
-  // Check if we want to use tip force to induce catastrophe
-  // XXX FIXME is this correct, since we've summed the forces and probably need to get it on the
-  // end directly (might be applied funny depending on how things are set up)
-  if (force_induced_catastrophe_flag_) {
-    Bond * bond = &v_elements_[n_bonds_-1];
-    double const * const f = bond->GetForce();
-    tip_force_ = 0.0;
-    // Want component of force parallel to orientation
-    // Orientation "points" towards the plus end
-    // This should always be zero or positive
-    for (int i=0; i<n_dim_; ++i)
-      tip_force_ -= f[i]*orientation_[i];
-    if (tip_force_ < 0) {
-      if (n_bonds_ > 1) {
-        std::cout << "Warning: Force at rod tip is negative. This should never happen if forces are applied correctly and n_bonds > 1 \n";
-        std::cout << "    oid: " << GetOID() << std::endl;
-        std::cout << "    tip_force: " << std::setprecision(16) << tip_force_ << std::endl;
-        std::cout << "    u: (" << std::setprecision(16)
-          << orientation_[0] << ", "
-          << orientation_[1];
-        if (n_dim_ == 3) {
-          std::cout << std::setprecision(16) << ", " << orientation_[2];
-        }
-        std::cout << ")\n";
-      }
-      tip_force_ = 0;
-    }
-  }
 }
 
 void BrRod::UpdatePositionMP() {
@@ -105,8 +77,6 @@ void BrRod::UpdatePositionMP() {
   //UpdatePeriodic();
   UpdateSitePositions();
   // Update end site positions for tracking trajectory for neighbors
-  if (dynamic_instability_flag_)
-    DynamicInstability();
   UpdateBondPositions();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
     bond->UpdatePeriodic();
@@ -266,96 +236,6 @@ void BrRod::SetDiffusion() {
   rand_sigma_rot_ = sqrt(2.0*delta_/gamma_rot_);
 }
 
-void BrRod::DynamicInstability() {
-  // First update polymerization state
-  UpdatePolyState();
-  // Now update rod length
-  UpdateRodLength();
-  // Update diffusion coefficients
-  SetDiffusion();
-}
-
-void BrRod::UpdatePolyState() {
-  double roll = gsl_rng_uniform_pos(rng_.r);
-  // temporary variables used for modification from
-  // force induced catastrophe flag
-  double p_g2s = p_g2s_;
-  double p_p2s = p_p2s_;
-  if (force_induced_catastrophe_flag_ && tip_force_ > 0.0) {
-    double p_factor = exp(0.0828*tip_force_);
-    p_g2s = (p_g2s_+p_g2p_)*p_factor;
-    p_p2s = p_p2s_*p_factor;
-  }
-  double p_norm;
-  // Filament shrinking
-  if (poly_state_ == SHRINK) {
-    p_norm = p_s2g_ + p_s2p_;
-    if (p_norm > 1.0) 
-      poly_state_ = (roll < p_s2g_/p_norm ? GROW : PAUSE);
-    else if (roll < p_s2g_) 
-      poly_state_ = GROW;
-    else if (roll < (p_s2g_ + p_s2p_)) 
-      poly_state_ = PAUSE;
-  }
-  // Filament growing
-  else if (poly_state_ == GROW) {
-    p_norm = p_g2s + p_g2p_;
-    if (p_norm > 1.0)
-      poly_state_ = (roll < p_g2s/p_norm ? SHRINK : PAUSE);
-    else if (roll < p_g2s) 
-      poly_state_ = SHRINK;
-    else if (roll < (p_g2s + p_g2p_)) 
-      poly_state_ = PAUSE;
-  }
-  // Filament paused
-  else if (poly_state_ == PAUSE) {
-    p_norm = p_p2g_ + p_p2s;
-    if (p_norm > 1) 
-      poly_state_ = (roll < p_p2g_/p_norm ? GROW : SHRINK);
-    else if (roll < p_p2g_) 
-      poly_state_ = GROW;
-    else if (roll < (p_p2g_ + p_p2s)) 
-      poly_state_ = SHRINK;
-  }
-
-  // Check to make sure the filament lengths stay in the correct ranges
-  if (length_ < min_length_) 
-    poly_state_ = GROW;
-  else if (length_ > max_length_) 
-    poly_state_ = SHRINK;
-}
-
-void BrRod::UpdateRodLength() {
-  if (poly_state_ == PAUSE) return;
-  double delta_length;
-  if (poly_state_ == GROW) {
-    delta_length = v_poly_ * delta_;
-    length_ += delta_length;
-  }
-  else if (poly_state_ == SHRINK) {
-    delta_length = v_depoly_ * delta_;
-    length_ -= delta_length;
-  }
-  // Update the bond lengths
-  child_length_ = length_/n_bonds_;
-  // If necessary, add or a remove a bond
-  if (child_length_ > max_child_length_) {
-    n_bonds_++;
-    child_length_ = length_/n_bonds_;
-    Bond b(v_elements_[0]);
-    // Give the new bond a unique OID
-    b.InitOID();
-    v_elements_.push_back(b);
-  }
-  else if (child_length_ < min_length_ && v_elements_.size() > 1)  {
-    n_bonds_--;
-    child_length_ = length_/n_bonds_;
-    v_elements_.pop_back();
-  }
-  for (auto bond = v_elements_.begin(); bond!=v_elements_.end(); ++bond)
-    bond->SetLength(child_length_);
-}
-
 void BrRod::UpdateRodLength(double delta_length) {
   // Intake this information from KMC
   // delta_length is already done via depoly or poly, 
@@ -386,8 +266,8 @@ void BrRod::UpdateRodLength(double delta_length) {
     // bond
     Bond *firstbond = &(*v_elements_.begin());
     Bond *lastbond = &(*v_elements_.rbegin());
-    std::cout << "firstbond: " << firstbond << ", oid: " << firstbond->GetOID() << std::endl;
-    std::cout << "lastbond: " << lastbond << ", oid: " << lastbond->GetOID() << std::endl;
+    //std::cout << "firstbond: " << firstbond << ", oid: " << firstbond->GetOID() << std::endl;
+    //std::cout << "lastbond: " << lastbond << ", oid: " << lastbond->GetOID() << std::endl;
     firstbond->AddForce(lastbond->GetForce());
     firstbond->AddTorque(lastbond->GetTorque());
     firstbond->AddPotential(lastbond->GetPotentialEnergy());
