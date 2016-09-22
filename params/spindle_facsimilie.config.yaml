@@ -5,7 +5,8 @@ br_rod:
     draw_type: orientation
   rod:
     length: 20
-    max_length: 110
+    max_length: 25
+    min_length: 3
     diameter: 1
 
 xlink:

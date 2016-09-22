@@ -22,7 +22,7 @@ dimer_diameter: 1
 dimer_length: 2
 dimer_eq_length: 2
 dimer_k_spring: 5
-cell_length: 50
+cell_length: 8
 graph_flag: 1
 n_graph: 100
 graph_background: 0
