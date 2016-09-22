@@ -53,6 +53,18 @@ void BrBeadSpecies::Configurator() {
   }
   std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
     << color[3] << "]\n";
+  int draw_type = 0;
+  if (node["br_bead"]["properties"]["draw_type"]) {
+    std::string draw_type_s = node["br_bead"]["properties"]["draw_type"].as<std::string>();
+    std::cout << "   draw_type: " << draw_type_s << std::endl;
+    if (draw_type_s.compare("flat") == 0) {
+      draw_type = 0;
+    } else if (draw_type_s.compare("orientation") == 0) {
+      draw_type = 1;
+    } else {
+      draw_type = 2;
+    }
+  }
 
   if (insertion_type.compare("xyz") == 0) {
     std::cout << "Nope, not yet!\n";
@@ -68,7 +80,7 @@ void BrBeadSpecies::Configurator() {
     for (int i = 0; i < nbrbeads; ++i) {
       BrBead *member = new BrBead(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->Init();
-      member->SetColor(color, 0);
+      member->SetColor(color, draw_type);
       
       // Check if overlaps allowed
       if (can_overlap) {

@@ -213,7 +213,7 @@ void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
   std::copy(color_, color_+4, g_.color);
   g_.draw_type = draw_type_;
   g_.length = 0.5 * length_;
-  g_.diameter = 0.2*diameter_;
+  g_.diameter = 0.3*diameter_;
   graph_array->push_back(&g_);
   for (int i=0; i<n_dim_; ++i)
     r[i] = r2[i] - 0.25*length_*orientation_[i];
@@ -222,7 +222,7 @@ void Xlink::Draw(std::vector<graph_struct*> * graph_array) {
   std::copy(color_, color_+4, g2_.color);
   g2_.draw_type = draw_type_;
   g2_.length = 0.5 * length_;
-  g2_.diameter = 0.2*diameter_;
+  g2_.diameter = 0.3*diameter_;
   graph_array->push_back(&g2_);
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
     i_bead->SetColor(color_, draw_type_);
