@@ -14,7 +14,7 @@ rod_diffusion: 1
 rod_fixed: 0
 config_file: params/spindle_facsimilie.config.yaml
 xlink_diameter: 1
-cell_length: 10
+cell_length: 20
 graph_flag: 1
 n_graph: 100
 graph_background: 0
