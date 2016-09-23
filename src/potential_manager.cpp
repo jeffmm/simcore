@@ -3,6 +3,7 @@
 #include "potential_manager.h"
 
 #include "boundary_wca.h"
+#include "boundary_wca_tip.h"
 #include "harmonic.h"
 #include "helpers.h"
 #include "lennard_jones_12_6.h"
@@ -41,6 +42,7 @@ PotentialManager::RegisterPotentials() {
   REGISTER_POTENTIAL(Harmonic);
   REGISTER_POTENTIAL(XlinkHarmonic);
   REGISTER_POTENTIAL(BoundaryWCA);
+  REGISTER_POTENTIAL(BoundaryWCATip);
 }
 
 void

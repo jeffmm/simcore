@@ -27,9 +27,10 @@ potentials:
     rcut: 1000.0
     fcut: 10000
 
-  - name: BoundaryWCA
+  - name: BoundaryWCATip
     type: boundary
-    sid: xlink_head
+    sid: br_rod
     fcut: 100
     eps: 1
     sigma: 1
+    tip: 1 # plus end

@@ -9,6 +9,17 @@ br_rod:
     max_length: 200
     min_length: 2
     diameter: 1
+#  properties:
+#    insertion_type: xyz
+#    overlap: false
+#    draw_type: orientation
+#    max_length: 200
+#    min_length: 2
+#    diameter: 1
+#  rod:
+#    - length: 3.0
+#      x: [-3.088781603317358, 11.48382679290238, 53.24378076940775]
+#      u: [-0.7868880696419265, 0.5579026795929195, -0.263726687990129]
 
 xlink:
   properties:
