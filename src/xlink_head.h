@@ -15,6 +15,8 @@ class XlinkHead : public Simple {
     double n_exp_1_2_ = 0.0;
     bool bound_;
     int attachidx_ = -1;
+    int attachridx_ = -1;
+    int attachcidx_ = -1;
     double attachpos_ = 0.0;
     int headid_ = -2;
   public:
@@ -49,6 +51,8 @@ class XlinkHead : public Simple {
     bool const GetBound() {return bound_;}
     void SetBound(bool bound) {bound_=bound;}
     void Attach(int idx, double pos);
+    void Bind(int idx, int ridx, int cidx, double pos);
+    bool GetBind(int *idx, int *ridx, int *cidx, double *pos);
     std::pair<int, double> GetAttach() {return std::make_pair(attachidx_, attachpos_);}
     void SetHeadID(const int headid) {headid_ = headid;}
     const int GetHeadID() {return headid_;}

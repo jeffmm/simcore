@@ -23,8 +23,8 @@ kmc:
   equilibrium_length: 0.707
   #equilibrium_length: 0.0
   #equilibrium_length: 0.0001
-  #end_pause: [true, true]
-  end_pause: [false, false]
+  end_pause: [true, true]
+  #end_pause: [false, false]
   write_event: true
 
 - type: DynamicInstabilityKMC
@@ -32,7 +32,7 @@ kmc:
   sid2: br_rod
   write_event: true
   f_grow_to_pause: 0.0
-  f_grow_to_shrink: 0.0
+  f_grow_to_shrink: 0.05
   f_pause_to_grow: 0.0
   f_pause_to_shrink: 0.0
   f_shrink_to_grow: 0.05

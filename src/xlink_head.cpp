@@ -54,3 +54,19 @@ void XlinkHead::Attach(int idx, double pos) {
   attachidx_ = idx;
   attachpos_ = pos;
 }
+
+void XlinkHead::Bind(int idx, int ridx, int cidx, double pos) {
+  attachidx_ = idx;
+  attachridx_ = ridx;
+  attachcidx_ = cidx;
+  attachpos_ = pos;
+  bound_ = true;
+}
+
+bool XlinkHead::GetBind(int *idx, int *ridx, int *cidx, double *pos) {
+  (*idx) = attachidx_;
+  (*ridx) = attachridx_;
+  (*cidx) = attachcidx_;
+  (*pos) = attachpos_;
+  return bound_;
+}

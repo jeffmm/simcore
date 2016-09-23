@@ -467,6 +467,8 @@ void XlinkKMC::KMC_0_1() {
   // Loop over the xlinks to see who binds
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
+  BrRodSpecies* prspec = dynamic_cast<BrRodSpecies*>(spec2_);
+  auto rods = prspec->GetMembers();
   for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
     // Only take free ones
     if ((*xit)->GetBoundState() != unbound) continue;
@@ -569,12 +571,27 @@ void XlinkKMC::KMC_0_1() {
                   crosspos = l_rod;
               }
             }
-            // Attach to the OID of the particle, this is done for dynamic instability to work
-            head->Attach(part2->GetOID(), crosspos);
+            // Attach to the OID of the particle, this is done for dynamic instability to work, and the RID
+            BrRod *rod_original;
+            for (auto rodit = rods->begin(); rodit != rods->end(); ++rodit) {
+              if ((*rodit)->GetCID() == part2->GetCID()) {
+                rod_original = *rodit;
+                break;
+              }
+            }
+            Simple *mrodsimple = rod_original->GetSimples()[0];
+            head->Bind(mrodsimple->GetOID(),
+                       mrodsimple->GetRID(),
+                       mrodsimple->GetCID(),
+                       crosspos);
+            //head->Attach(part2->GetOID(), crosspos);
             if (debug_trace) {
+              std::cout << "Attaching to [" << mrodsimple->GetOID() << ", "
+                << mrodsimple->GetRID() << ", " << mrodsimple->GetCID()
+                << "] instead of [" << part2->GetOID() << "]\n";
               std::cout << std::setprecision(16) << "\t{" << mu << "}, {crosspos: " << crosspos << "}\n";
             }
-            head->SetBound(true);
+            //head->SetBound(true);
             (*xit)->CheckBoundState();
             break;
           } // the actual neighbor to fall on
@@ -653,6 +670,8 @@ void XlinkKMC::KMC_1_0() {
 void XlinkKMC::KMC_1_2() {
   XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
+  BrRodSpecies* prspec = dynamic_cast<BrRodSpecies*>(spec2_);
+  auto rods = prspec->GetMembers();
   double nexp_1_2 = pxspec->GetNExp_1_2();
   if (debug_trace) {
     double ntot_loc = nexp_1_2 * pxspec->GetDelta();
@@ -768,8 +787,21 @@ void XlinkKMC::KMC_1_2() {
               } while (itrial_loc < 100);
             }
 
-            freehead->Attach(mrod->GetOID(), crosspos);
-            freehead->SetBound(true);
+            BrRod *rod_original;
+            for (auto rodit = rods->begin(); rodit != rods->end(); ++rodit) {
+              if ((*rodit)->GetCID() == mrod->GetCID()) {
+                rod_original = *rodit;
+                break;
+              }
+            }
+            Simple *mrodsimple = rod_original->GetSimples()[0];
+            freehead->Bind(mrodsimple->GetOID(),
+                           mrodsimple->GetRID(),
+                           mrodsimple->GetCID(),
+                           crosspos);
+
+            //freehead->Attach(mrod->GetOID(), crosspos);
+            //freehead->SetBound(true);
             (*xit)->CheckBoundState();
 
             // Update the position of the xlink for the force calculation
@@ -777,10 +809,10 @@ void XlinkKMC::KMC_1_2() {
             auto headid_bound = boundhead->GetHeadID();
 
             if (headid_free == 0 && headid_bound == 1) {
-              (*xit)->UpdateStagePosition(mrod->GetRigidPosition(),
-                                          mrod->GetRigidOrientation(),
-                                          mrod->GetRigidLength(),
-                                          mrod->GetOID(),
+              (*xit)->UpdateStagePosition(mrodsimple->GetRigidPosition(),
+                                          mrodsimple->GetRigidOrientation(),
+                                          mrodsimple->GetRigidLength(),
+                                          mrodsimple->GetOID(),
                                           mrod_attached->GetRigidPosition(),
                                           mrod_attached->GetRigidOrientation(),
                                           mrod_attached->GetRigidLength(),
@@ -790,10 +822,10 @@ void XlinkKMC::KMC_1_2() {
                                           mrod_attached->GetRigidOrientation(),
                                           mrod_attached->GetRigidLength(),
                                           mrod_attached->GetOID(),
-                                          mrod->GetRigidPosition(),
-                                          mrod->GetRigidOrientation(),
-                                          mrod->GetRigidLength(),
-                                          mrod->GetOID());
+                                          mrodsimple->GetRigidPosition(),
+                                          mrodsimple->GetRigidOrientation(),
+                                          mrodsimple->GetRigidLength(),
+                                          mrodsimple->GetOID());
             } else {
               std::cout << "Some attachment has gone horribly wrong!\n";
               exit(1);

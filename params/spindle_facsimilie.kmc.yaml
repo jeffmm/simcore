@@ -6,7 +6,7 @@ kmc:
   concentration_1_2: 10.0
   on_rate_0_1: 0.003916
   on_rate_1_2: 0.001958
-  diffusion_singly_bound: 5.69
+  diffusion_singly_bound: 0.0
   diffusion_doubly_bound: 0.0
   alpha: 1.299
   rcut: 1.0
@@ -33,5 +33,5 @@ kmc:
   f_pause_to_shrink: 0.0
   f_shrink_to_grow: 0.00001
   f_shrink_to_pause: 0.0
-  v_poly: 0.06
-  v_depoly: 0.12
+  v_poly: 0.10
+  v_depoly: 0.159
