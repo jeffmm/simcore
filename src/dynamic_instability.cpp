@@ -197,6 +197,7 @@ void DynamicInstabilityKMC::GrowBonds() {
 
   double delta_L_depoly = -v_depoly_ * delta_;
   double delta_L_poly = v_poly_ * delta_;
+  double total_l = 0.0;
 
   for (auto rodit = rod_members->begin(); rodit != rod_members->end(); ++rodit) {
     BrRod *rod = *rodit;
@@ -238,7 +239,7 @@ void DynamicInstabilityKMC::GrowBonds() {
     }
 
     // Push this info to the rod so it can update child bonds, etc
-    rod->UpdateRodLength(delta_L);
+    total_l += rod->UpdateRodLength(delta_L);
   }
 }
 

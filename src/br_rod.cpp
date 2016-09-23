@@ -236,7 +236,7 @@ void BrRod::SetDiffusion() {
   rand_sigma_rot_ = sqrt(2.0*delta_/gamma_rot_);
 }
 
-void BrRod::UpdateRodLength(double delta_length) {
+double BrRod::UpdateRodLength(double delta_length) {
   // Intake this information from KMC
   // delta_length is already done via depoly or poly, 
   // so don't have to worry about that here
@@ -279,6 +279,7 @@ void BrRod::UpdateRodLength(double delta_length) {
 
   // Update our diffusion stuff
   SetDiffusion();
+  return length_;
 }
 
 void BrRod::Draw(std::vector<graph_struct*> * graph_array) {

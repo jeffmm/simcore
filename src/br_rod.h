@@ -148,7 +148,7 @@ class BrRod : public Composite<Site,Bond> {
       f_stabilize_vs_ = f_stab_vs;
       stabilization_state_=state;
     }
-    void UpdateRodLength(const double delta_length);
+    double UpdateRodLength(const double delta_length);
 
 };
 
