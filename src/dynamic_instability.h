@@ -42,8 +42,6 @@ class DynamicInstabilityKMC : public KMCBase {
 
     virtual void StepKMC();
 
-    virtual void PrepOutputs();
-
     // Specific Functions
     void UpdatePolymerizationState();
     void GrowBonds();
