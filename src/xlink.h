@@ -94,6 +94,7 @@ class Xlink : public Composite<XlinkHead> {
 
     void UpdateStagePosition(const double* const xr0, const double* const ur0, const double lr0, const int atidx0,
                              const double* const xr1, const double* const ur1, const double lr1, const int atidx1);
+    void UpdateStage0Position(const double* const xr);
     void UpdateStage1Position(const double* const xr0, const double* const ur0, const double lr0, const int atidx);
     void UpdateStage2Position(const double* const xr0, const double* const ur0, const double lr0, const int atidx0,
                              const double* const xr1, const double* const ur1, const double lr1, const int atidx1);
