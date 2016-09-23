@@ -22,6 +22,7 @@ class XlinkKMC : public KMCBase {
     double velocity_switch_costheta_[2];
     double diffusion_bound_1_[2];
     double diffusion_bound_2_[2];
+    double diffusion_free_;
     double alpha_;
     double barrier_weight_;
     double k_stretch_;
@@ -32,9 +33,12 @@ class XlinkKMC : public KMCBase {
     double rcutoff_1_2_;
     double r_equil_;
     double polar_affinity_;
+    double conf_rad_;
+    double conf_rad2_;
 
     bool end_pause_[2];
     bool first_potential_use = false;
+    bool reflect_ = true;
 
     int nfree_;
     int stall_type_;
@@ -60,6 +64,7 @@ class XlinkKMC : public KMCBase {
     void KMC_2_1_ForceDep();
     void Update_0_1(Xlink *xit);
     void Update_1_2(Xlink *xit);
+    void UpdateStage0(Xlink *xit);
     void UpdateStage1(Xlink *xit);
     void UpdateStage2(Xlink *xit);
     void ApplyStage2Force(Xlink *xit);
