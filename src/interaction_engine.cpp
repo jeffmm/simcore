@@ -105,6 +105,9 @@ void InteractionEngine::Interact() {
         TetherParticlesMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
         KMCParticlesMP(&(*nldx), idx, jdx);
       }
+
+      // Check against the boundary potential
+      InteractParticlesBoundaryMP(idx, fr, tr, pr_energy);
     } // pragma omp for schedule(runtime) nowait
 
     // Reduce once all threads have finished
@@ -343,6 +346,55 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
   #endif
 
   neighbor->kmc_ = fepot[ndim_];
+}
+
+// Interact particles with the boundary...
+void InteractionEngine::InteractParticlesBoundaryMP(int &idx,
+                                 double **fr,
+                                 double **tr,
+                                 double *pr_energy) {
+  auto part1 = (*simples_)[idx];
+  Simple* part2 = nullptr;
+
+  // Calculate the potential here
+  PotentialBase *pot = potentials_->GetPotentialBoundary(part1->GetSID());
+  if (pot == nullptr) return; // no interaction
+
+  // Fire off the potential calculation
+  interactionmindist idm;
+  double fepot[4];
+  pot->CalcPotential(&idm, part1, part2, fepot);
+
+  // Obtain the mapping between particle oid and position in the force superarray
+  auto oid1x = (*oid_position_map_)[part1->GetOID()];
+
+  #ifdef DEBUG
+  if (debug_trace && fepot[ndim_] > 0.0) {
+    std::cout << "\tPOT BOUNDARY Interacting[" << oid1x << "," << part1->GetOID()
+      << "] u: " << std::setprecision(16)
+      << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
+    if (ndim_ == 3) {
+      std::cout << ", " << fepot[2];
+    }
+    std::cout << ")\n";
+  }
+  #endif
+
+  // Do the potential energies
+  pr_energy[oid1x] += fepot[ndim_];
+
+  // Do the forces
+  for (int i = 0; i < ndim_; ++i) {
+      fr[i][oid1x] += fepot[i];
+  }
+
+  // Calculate the torques
+  double tau[3];
+  cross_product(idm.contact1, fepot, tau, ndim_);
+  //for (int i = 0; i < ndim_; ++i) {
+  for (int i = 0; i < 3; ++i) {
+      tr[i][oid1x] += tau[i];
+  }
 }
 
 // Reduce the particles back to their main versions

@@ -2,6 +2,7 @@
 
 #include "potential_manager.h"
 
+#include "boundary_wca.h"
 #include "harmonic.h"
 #include "helpers.h"
 #include "lennard_jones_12_6.h"
@@ -39,6 +40,7 @@ PotentialManager::RegisterPotentials() {
   REGISTER_POTENTIAL(SphereLineWell);
   REGISTER_POTENTIAL(Harmonic);
   REGISTER_POTENTIAL(XlinkHarmonic);
+  REGISTER_POTENTIAL(BoundaryWCA);
 }
 
 void
@@ -80,6 +82,9 @@ PotentialManager::ParsePotentials() {
       new_pot->Init(space_, ipot, node);
       // Add to the internal potential list, which actually owns it
       potential_vec_.push_back(new_pot);
+      std::ostringstream potstring;
+      potstring << "(" << (int)sid << ", n: " << internal_pairs.size() << ") : ";
+      potential_vec_names_types_.push_back(potstring.str());
       for (auto ipair = internal_pairs.begin(); ipair != internal_pairs.end(); ++ipair) {
         AddPotentialInternal(ipair->first, ipair->second, new_pot);
       }
@@ -88,6 +93,15 @@ PotentialManager::ParsePotentials() {
       // Not quite sure how to do this yet, because it might heavily depend on what we're tethering....
       std::cout << "Tethering not quite supported yet, have to figure out use cases, exiting\n";
       exit(1);
+    } else if (potential_type.compare("boundary") == 0) {
+      // Boundary potentials!
+      std::string potname = node["potentials"][ipot]["name"].as<std::string>();
+      std::string sids    = node["potentials"][ipot]["sid"].as<std::string>();
+      SID sid = StringToSID(sids); 
+      PotentialBase *new_pot = (PotentialBase*) pot_factory_.construct(potname);
+      new_pot->Init(space_, ipot, node);
+
+      boundaries_[sid] = new_pot;
     } else {
       std::cout << "Potential type " << potential_type << " not yet supported, exiting\n";
       exit(1);
@@ -136,6 +150,11 @@ PotentialBase* PotentialManager::GetPotentialTether(unsigned int oid1, unsigned 
   return NULL;
 }
 
+PotentialBase* PotentialManager::GetPotentialBoundary(SID sid) {
+  if (boundaries_.count(sid)) return boundaries_[sid];
+  return NULL;
+}
+
 std::vector<PotentialBase*> PotentialManager::GetAllPotentials() {
   // Needed to get all the potentials for making sure that the kmc
   // potentials (k and requil) are properly synced between configurations
@@ -166,9 +185,13 @@ void PotentialManager::Print() {
   // Internal potentials
   std::cout << "----------------\n";
   std::cout << "Internal potentials: \n";
-  for (auto pot=internal_potentials_.begin(); pot != internal_potentials_.end(); ++pot) {
-    std::cout << "(" << pot->first.first << ", " << pot->first.second << ") : ";
-    pot->second->Print();
+  //for (auto pot=internal_potentials_.begin(); pot != internal_potentials_.end(); ++pot) {
+  //  std::cout << "(" << pot->first.first << ", " << pot->first.second << ") : ";
+  //  pot->second->Print();
+  //}
+  for (int ipot = 0; ipot < (int)potential_vec_.size(); ++ipot) {
+    std::cout << potential_vec_names_types_[ipot];
+    potential_vec_[ipot]->Print();
   }
 
   // Tethering potentials
@@ -176,6 +199,14 @@ void PotentialManager::Print() {
   std::cout << "Tethering potentials: \n";
   for (auto pot=tethers_.begin(); pot!=tethers_.end(); ++pot) {
     std::cout << "(" << pot->first.first << ", " << pot->first.second << ") : ";
+    pot->second->Print();
+  }
+
+  // Boundaries
+  std::cout << "----------------\n";
+  std::cout << "Boundary potentials: \n";
+  for (auto pot = boundaries_.begin(); pot != boundaries_.end(); ++pot) {
+    std::cout << "(" << (int)pot->first << ", boundary) : ";
     pot->second->Print();
   }
 }

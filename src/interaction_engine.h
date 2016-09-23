@@ -48,6 +48,10 @@ class InteractionEngine {
                            double **tr,
                            double *pr_energy,
                            double *kmc_energy);
+    void InteractParticlesBoundaryMP(int &idx,
+                                     double **fr,
+                                     double **tr,
+                                     double *pr_energy);
     void KMCParticlesMP(neighbor_t *neighbor, int &idx, int &jdx);
     void ReduceParticlesMP();
     void Print();
