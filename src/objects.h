@@ -11,3 +11,4 @@
 #include "xlink.h"
 #include "filament.h"
 #include "md_bead_opt.h"
+#include "spindle_pole_body.h"
