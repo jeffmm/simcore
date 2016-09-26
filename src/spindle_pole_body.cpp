@@ -6,12 +6,17 @@ void SpindlePoleBody::InitConfigurator(const double r,
                                        const double phi,
                                        const double diameter,
                                        const double attach_diameter) {
+  if (space_->n_dim != 3) {
+    std::cout << "Spindle Pole Bodies require 3 dimensions!\n";
+    exit(1);
+  }
   diameter_ = diameter;
   attach_diameter_ = attach_diameter;
   std::cout << "Inserting SPB at\n" << std::setprecision(16)
     << "\tr: " << r << ", "
     << "theta: " << theta << ", "
     << "phi: " << phi << "\n";
+  conf_rad_ = r;
   double r_anchor[3] = {0.0, 0.0, 0.0};
   r_anchor[0] = r * sin(theta) * cos(phi);
   r_anchor[1] = r * sin(theta) * sin(phi);
@@ -19,7 +24,44 @@ void SpindlePoleBody::InitConfigurator(const double r,
   SetPosition(r_anchor);
   SetPrevPosition(r_anchor);
 
+  UpdateSPBRefVecs();
+  SetOrientation(u_anchor_);
+
+  UpdateSPBDragConstants();
+
   UpdatePeriodic();
+}
+
+void SpindlePoleBody::UpdateSPBRefVecs() {
+  // Update the u_anchor first (local u pointing to origin)
+  for (int i = 0; i < n_dim_; ++i) {
+    u_anchor_[i] = -2.0 * position_[i] / conf_rad_;
+  }
+  double norm_factor = sqrt(1.0/dot_product(3, u_anchor_, u_anchor_));
+  for (int i = 0; i < n_dim_; ++i) {
+    u_anchor_[i] *= norm_factor;
+  }
+
+  double vec0[3] = {1.0, 0.0, 0.0};
+  double vec1[3] = {0.0, 1.0, 0.0};
+  if (1.0 - ABS(u_anchor_[0]) > 1e-2)
+    cross_product(u_anchor_, vec0, v_anchor_, 3);
+  else
+    cross_product(u_anchor_, vec1, v_anchor_, 3);
+
+  norm_factor = sqrt(1.0/dot_product(3, v_anchor_, v_anchor_));
+  for (int i = 0; i < n_dim_; ++i) {
+    v_anchor_[i] *= norm_factor;
+  }
+
+  cross_product(u_anchor_, v_anchor_, w_anchor_, 3);
+}
+
+void SpindlePoleBody::UpdateSPBDragConstants() {
+  double spb_diffusion_coefficient = 0.017088; // FIXME
+
+  gamma_tra_ = 1.0 / spb_diffusion_coefficient;
+  gamma_rot_ = gamma_tra_*SQR(0.5 * attach_diameter_);
 }
 
 
