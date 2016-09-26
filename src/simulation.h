@@ -1,6 +1,7 @@
 #ifndef _SIMCORE_SIMULATION_H_
 #define _SIMCORE_SIMULATION_H_
 
+#include "anchor_list_generic.h"
 #include "space.h"
 #include "auxiliary.h"
 #include "write_outputs.h"
@@ -31,6 +32,7 @@ class Simulation {
     UberEngine uengine_;
     std::vector<SpeciesBase*> species_;
     rfh::factory species_factory_;
+    al_set anchors_;
     void InitSimulation();
     void InitSpecies();
     void InitPositInput();
@@ -52,6 +54,8 @@ class Simulation {
     std::vector<graph_struct*> graph_array;
     Simulation(const Simulation&){};
     void operator= (Simulation&);
+
+    void ConfigureSpindle();
 
   public:
     Simulation();
