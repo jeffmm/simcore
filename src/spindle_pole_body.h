@@ -11,6 +11,7 @@ class SpindlePoleBody : public Simple {
     double u_anchor_[3]; // u toward center of nucleus, (-ranchor/R)
     double v_anchor_[3];
     double w_anchor_[3];
+    double conf_rad_;
 
     double tau_local_[3]; // local torque about SPB axis
     double gamma_tra_;
@@ -29,12 +30,19 @@ class SpindlePoleBody : public Simple {
                           const double diameter,
                           const double attach_diameter);
     void Dump() {
-      std::cout << std::setprecision(16) << "{" << GetOID() << "," << GetRID() << "," << GetCID() << "}"
-        << " -> x(" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << "), "
+      std::cout << std::setprecision(16) << "{" << GetOID() << "," << GetRID() << "," << GetCID() << "}\n"
+        << " -> x(" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << ")\n"
+        << " -> u(" << u_anchor_[0] << ", " << u_anchor_[1] << ", " << u_anchor_[2] << ")\n"
+        << " -> v(" << v_anchor_[0] << ", " << v_anchor_[1] << ", " << v_anchor_[2] << ")\n"
+        << " -> w(" << w_anchor_[0] << ", " << w_anchor_[1] << ", " << w_anchor_[2] << ")\n"
         << "f(" << GetForce()[0] << ", " << GetForce()[1] << ", " << GetForce()[2] << "), "
         << "u(" << GetKineticEnergy() << "), p(" << GetPotentialEnergy() << "), "
         << "d(" << diameter_ << "), attach_diameter(" << attach_diameter_ << ")\n";
     }
+
+    // Special functions
+    void UpdateSPBRefVecs();
+    void UpdateSPBDragConstants();
 };
 
 
