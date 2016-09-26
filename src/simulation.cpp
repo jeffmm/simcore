@@ -128,6 +128,7 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(MDBeadOptSpecies,md_bead_opt);
   REGISTER_SPECIES(BrBeadSpecies,br_bead);
+  REGISTER_SPECIES(SpindlePoleBodySpecies,spb);
 
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file
