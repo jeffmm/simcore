@@ -43,6 +43,9 @@ class SpindlePoleBody : public Simple {
     // Special functions
     void UpdateSPBRefVecs();
     void UpdateSPBDragConstants();
+
+    // Movement along spherical boundary
+    void UpdatePositionMP();
 };
 
 

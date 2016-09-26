@@ -64,6 +64,69 @@ void SpindlePoleBody::UpdateSPBDragConstants() {
   gamma_rot_ = gamma_tra_*SQR(0.5 * attach_diameter_);
 }
 
+void SpindlePoleBody::UpdatePositionMP() {
+  // Update the information for the anchor.  There are two torques, the global
+  // one maps to translation of the anchor, the local one to the rotation of
+  // the anchor (since we're confined to a spherical boundary).  So we have
+  // to be careful, as have a translation and a rotation
+  //
+  // XXX FIXME
+  // Most of this is directly taken from bob, so probably can optimize somewhat
+  // if needed with correct torques, etc
+  double gamma_t = gamma_tra_ * conf_rad_;
+  double gamma_r = gamma_rot_;
+
+  double r_anchor_old[3] = {0.0, 0.0, 0.0};
+  double u_anchor_old[3] = {0.0, 0.0, 0.0};
+  
+  double f_dot_u = dot_product(n_dim_, GetForce(), u_anchor_);
+  double f_rand[3] = {
+    gsl_ran_gaussian_ziggurat(rng_.r, sqrt(2.0 * gamma_t / delta_)),
+    gsl_ran_gaussian_ziggurat(rng_.r, sqrt(2.0 * gamma_t / delta_)),
+    gsl_ran_gaussian_ziggurat(rng_.r, sqrt(2.0 * gamma_t / delta_))
+  };
+
+  // Position
+  f_dot_u += dot_product(n_dim_, f_rand, u_anchor_);
+
+  for (int i = 0; i < n_dim_; ++i) {
+    u_anchor_old[i] = u_anchor_[i];
+    u_anchor_[i] -= (GetForce()[i]+f_rand[i] -
+                     f_dot_u * u_anchor_[i]) * delta_ / gamma_t;
+  }
+
+  double norm_factor = sqrt(1.0/dot_product(n_dim_, u_anchor_, u_anchor_));
+  double r_anchor[3] = {0.0, 0.0, 0.0};
+  for (int i = 0; i < n_dim_; ++i) {
+    u_anchor_[i] *= norm_factor;
+    r_anchor_old[i] = position_[i];
+    r_anchor[i] = -u_anchor_[i] * conf_rad_;
+  }
+
+  SetPrevPosition(r_anchor_old);
+  SetPosition(r_anchor);
+  AddDr();
+  SetOrientation(u_anchor_);
+
+  // Orientation(s)
+  double tau_random = gsl_ran_gaussian(rng_.r, sqrt(2.0 * gamma_r / delta_));
+  double tau_body_full[3] = {
+    tau_local_[0] + u_anchor_[0] * tau_random,
+    tau_local_[1] + u_anchor_[1] * tau_random,
+    tau_local_[2] + u_anchor_[2] * tau_random
+  };
+  double dv[3] = {0.0, 0.0, 0.0};
+  cross_product(tau_body_full, v_anchor_, dv, 3);
+  for (int i = 0; i < 3; ++i) dv[i] *= delta_ / gamma_r;
+  for (int i = 0; i < 3; ++i) v_anchor_[i] += dv[i];
+  double orthocorrection = -dot_product(n_dim_, v_anchor_, u_anchor_);
+  for (int i = 0; i < 3; ++i) v_anchor_[i] += orthocorrection * u_anchor_old[i];
+  norm_factor = sqrt(1.0/dot_product(n_dim_, v_anchor_, v_anchor_));
+  for (int i = 0; i < 3; ++i) v_anchor_[i] *= norm_factor;
+
+  cross_product(u_anchor_, v_anchor_, w_anchor_, 3);
+}
+
 
 
 // Species specifics
