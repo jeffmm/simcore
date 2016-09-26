@@ -1,0 +1,63 @@
+#ifndef _SIMCORE_SPINDLE_POLE_BODY_H_
+#define _SIMCORE_SPINDLE_POLE_BODY_H_
+
+#include "auxiliary.h"
+#include "object.h"
+
+class SpindlePoleBody : public Simple {
+
+  protected:
+    // Local frame of reference for SPB
+    double u_anchor_[3]; // u toward center of nucleus, (-ranchor/R)
+    double v_anchor_[3];
+    double w_anchor_[3];
+
+    double tau_local_[3]; // local torque about SPB axis
+    double gamma_tra_;
+    double gamma_rot_;
+    double attach_diameter_;
+
+  public:
+    SpindlePoleBody(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {}
+    ~SpindlePoleBody() {}
+    SpindlePoleBody(const SpindlePoleBody& that) : Simple(that) {}
+    SpindlePoleBody& operator=(SpindlePoleBody const& that) {Simple::operator=(that); return *this;} 
+
+    void InitConfigurator(const double r,
+                          const double theta,
+                          const double phi,
+                          const double diameter,
+                          const double attach_diameter);
+    void Dump() {
+      std::cout << std::setprecision(16) << "{" << GetOID() << "," << GetRID() << "," << GetCID() << "}"
+        << " -> x(" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << "), "
+        << "f(" << GetForce()[0] << ", " << GetForce()[1] << ", " << GetForce()[2] << "), "
+        << "u(" << GetKineticEnergy() << "), p(" << GetPotentialEnergy() << "), "
+        << "d(" << diameter_ << "), attach_diameter(" << attach_diameter_ << ")\n";
+    }
+};
+
+
+#include "species.h"
+class SpindlePoleBodySpecies : Species<SpindlePoleBody> {
+
+  protected:
+
+  public:
+    SpindlePoleBodySpecies() : Species() {
+      SetSID(SID::spb);
+    }
+    SpindlePoleBodySpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
+      SetSID(SID::spb);
+    }
+    ~SpindlePoleBodySpecies() {}
+    SpindlePoleBodySpecies(const SpindlePoleBodySpecies& that) : Species(that) {}
+    Species& operator=(Species const& that) {
+      SpeciesBase::operator=(that);
+      return *this;
+    }
+
+    void Configurator();
+};
+
+#endif
