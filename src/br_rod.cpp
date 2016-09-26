@@ -4,6 +4,8 @@
 
 #include <iomanip>
 
+#include "sphero_overlap.h"
+
 void BrRod::Init() {
   InsertRandom(0.5*length_+diameter_);
   poly_state_ = GROW;
@@ -520,6 +522,148 @@ void BrRodSpecies::Configurator() {
   } else {
     printf("nope, not yet\n");
     exit(1);
+  }
+}
+
+void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
+                                       const double* const r_spb,
+                                       const double* const u_spb,
+                                       const double* const v_spb,
+                                       const double* const w_spb,
+                                       al_set *anchors) {
+  char *filename = params_->config_file;
+  std::cout << "BrRod species\n";
+
+  YAML::Node node = YAML::LoadFile(filename);
+
+  // XXX FIXME default to orientation draw
+  int draw_type = 1;
+  double color[3] = {1.0, 0.0, 0.0};
+  int nrods         = (int)node["spb"][ispb]["mt"].size();
+  std::cout << "nrods: " << nrods << std::endl;
+  double max_length = node["spb"][ispb]["properties"]["mt_max_length"].as<double>();
+  std::cout << std::setprecision(16) << "max_length: " << max_length << std::endl;
+  double min_length = node["spb"][ispb]["properties"]["mt_min_length"].as<double>();
+  double diameter   = node["spb"][ispb]["properties"]["mt_diameter"].as<double>();
+
+  params_->max_rod_length = max_length;
+  params_->min_rod_length = min_length;
+  max_length_ = max_length;
+  min_length_ = min_length;
+  params_->rod_diameter = diameter;
+
+  double spb_dia = node["spb"][ispb]["properties"]["attach_diameter"].as<double>();
+  double r0 = node["spb"][ispb]["properties"]["r0"].as<double>();
+
+  double conf_diameter = space_->unit_cell[0][0];
+  double conf_radius = 0.5 * conf_diameter;
+  int ndim = space_->n_dim;
+
+  double m_u_spb[3] = {-u_spb[0], -u_spb[1], -u_spb[2]};
+
+  for (int irod = 0; irod < nrods; ++irod) {
+    int overlap;
+    double mlength = node["spb"][ispb]["mt"][irod]["length"].as<double>();
+
+    double u_bond[3] = {0.0, 0.0, 0.0};
+    double v_bond[3] = {0.0, 0.0, 0.0};
+    double x_bond[3] = {0.0, 0.0, 0.0};
+
+    do {
+      // generate random anchor position within cell
+      double alpha;
+      double alpha_max = asin(spb_dia/conf_diameter);
+      double pos_vec[3];
+
+      do {
+        generate_random_unit_vector(ndim, pos_vec, rng_.r);
+        alpha = acos(dot_product(ndim, m_u_spb, pos_vec));
+      } while (alpha > alpha_max);
+
+      // Insert with random orientation
+      double rmag2;
+      do {
+        rmag2 = 0.0;
+        generate_random_unit_vector(ndim, u_bond, rng_.r);
+        // Get the - end of the bond, supposedly
+        for (int i = 0; i < ndim; ++i) {
+          v_bond[i] = mlength * u_bond[i];
+          rmag2 += SQR(conf_radius * pos_vec[i] + v_bond[i] + u_bond[i] * r0);
+        }
+
+      } while (rmag2 >= SQR(conf_radius - 0.5) || dot_product(ndim, m_u_spb, u_bond) > 0);
+
+      std::cout << "found an rmag2 we liked\n";
+      // Use helper functions to generate rod positions before we actually create
+      // and insert the rod (like bob)
+      for (int i = 0; i < ndim; ++i) {
+        x_bond[i] = conf_radius * pos_vec[i] +
+          0.5 * v_bond[i] +
+          u_bond[i] * r0;
+      }
+
+      // Check for overlaps
+      overlap = 0;
+      double s_bond[3] = {0.0, 0.0, 0.0};
+      for (int jrod = 0; jrod < irod-1; ++jrod) {
+        auto mrod = members_[jrod];
+        double mrod_x[3] = {0.0, 0.0, 0.0};
+        double mrod_s[3] = {0.0, 0.0, 0.0};
+        double mrod_u[3] = {0.0, 0.0, 0.0};
+        double mrod_l = mrod->GetLength();
+        std::copy(mrod->GetPosition(), mrod->GetPosition()+3, mrod_x);
+        std::copy(mrod->GetScaledPosition(), mrod->GetScaledPosition()+3, mrod_s);
+        std::copy(mrod->GetOrientation(), mrod->GetOrientation()+3, mrod_u);
+        overlap += sphero_overlap(ndim, 0, space_->unit_cell, 0.0, 1.0,
+            x_bond,
+            s_bond,
+            u_bond,
+            mlength,
+            mrod_x,
+            mrod_s,
+            mrod_u,
+            mrod_l
+            );
+      }
+    } while (overlap != 0);
+
+    // Insert the rod
+    BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+    member->InitConfigurator(x_bond, u_bond, mlength);
+    member->SetColor(color, draw_type);
+    member->Dump();
+    members_.push_back(member);
+
+    // Add to the anchor list!!!!
+    anchor_t new_anchor;
+    new_anchor.idx_base_ = spb_oid;
+    new_anchor.idx_other_ = member->GetOID();
+    for (int i = 0; i < ndim; ++i) {
+      new_anchor.pos_[i] = x_bond[i] - 
+        u_bond[i] * (0.5 * mlength + r0);
+    }
+    double r_rel[3] = {0.0, 0.0, 0.0};
+    for (int i = 0; i < ndim; ++i) {
+      r_rel[i] = new_anchor.pos_[i] - r_spb[i];
+    }
+    double u_proj = dot_product(ndim, r_rel, u_spb);
+    double v_proj = dot_product(ndim, r_rel, v_spb);
+    double w_proj = dot_product(ndim, r_rel, w_spb);
+    for (int i = 0; i < 3; ++i) {
+      new_anchor.pos_rel_[i] =
+        u_spb[i] * u_proj +
+        v_spb[i] * v_proj +
+        w_spb[i] * w_proj;
+    }
+    (*anchors)[spb_oid].push_back(new_anchor);
+
+    // Tell us what just happened
+    std::cout << "   New bond " << member->GetOID() << std::endl;
+    std::cout << std::setprecision(16)
+      << "      x(" << x_bond[0] << ", " << x_bond[1] << ", " << x_bond[2] << ")\n"
+      << "      binding site(" << new_anchor.pos_[0] << ", " << new_anchor.pos_[1] << ", " << new_anchor.pos_[2] << ")\n"
+      << "      length " << mlength << "\n"
+      << "      parent anchor = " << spb_oid << std::endl;
   }
 }
 

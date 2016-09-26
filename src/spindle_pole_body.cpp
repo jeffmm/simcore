@@ -184,3 +184,46 @@ void SpindlePoleBodySpecies::Configurator() {
     exit(1);
   }
 }
+
+void SpindlePoleBodySpecies::ConfiguratorSpindle(int ispb, al_set* anchors) {
+  char *filename = params_->config_file;
+  std::cout << "SpindlePoleBody species\n";
+
+  YAML::Node node = YAML::LoadFile(filename);
+
+  std::string insertion_type;
+  insertion_type = node["spb"][ispb]["properties"]["insertion_type"].as<std::string>();
+
+  // Coloring
+  double color[4] = {1.0, 0.0, 0.0, 1.0};
+  int draw_type = 0; // default to orientation
+  if (node["spb"][ispb]["properties"]["color"]) {
+    for (int i = 0; i < 4; ++i) {
+      color[i] = node["spb"][ispb]["properties"]["color"][i].as<double>();
+    }
+    std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
+      << color[3] << "]\n";
+  }
+  if (node["spb"][ispb]["properties"]["draw_type"]) {
+    std::string draw_type_s = node["spb"][ispb]["properties"]["draw_type"].as<std::string>();
+    std::cout << "   draw_type: " << draw_type_s << std::endl;
+    if (draw_type_s.compare("flat") == 0) {
+      draw_type = 0;
+    }
+  }
+
+  double diameter         = node["spb"][ispb]["properties"]["diameter"].as<double>();
+  double attach_diameter  = node["spb"][ispb]["properties"]["attach_diameter"].as<double>();
+  double spb_theta        = node["spb"][ispb]["properties"]["theta"].as<double>();
+  double spb_phi          = node["spb"][ispb]["properties"]["phi"].as<double>();
+
+  SpindlePoleBody *member = new SpindlePoleBody(params_, space_, gsl_rng_get(rng_.r), GetSID());
+  member->InitConfigurator(0.5 * space_->unit_cell[0][0], spb_theta, spb_phi, diameter, attach_diameter);
+  member->SetColor(color, draw_type);
+  members_.push_back(member);
+
+  // Create a anchor list entry for this spb
+  anchors->insert(std::make_pair(member->GetOID(), std::vector<anchor_t>()));
+
+  member->PrintSPBProperties(ispb);
+}

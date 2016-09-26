@@ -130,18 +130,80 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(BrBeadSpecies,br_bead);
   REGISTER_SPECIES(SpindlePoleBodySpecies,spb);
 
+  std::string config_type = "separate";
+  if (node["configuration_type"]) {
+    config_type = node["configuration_type"].as<std::string>();
+  }
+
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file
-  for (auto possibles = species_factory_.m_classes.begin(); 
-      possibles != species_factory_.m_classes.end(); ++possibles) {
-    if (node[possibles->first]) {
-      SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
-      spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-      spec->Configurator();
-      species_.push_back(spec);
+  if (config_type.compare("separate") == 0) {
+    for (auto possibles = species_factory_.m_classes.begin(); 
+        possibles != species_factory_.m_classes.end(); ++possibles) {
+      if (node[possibles->first]) {
+        SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
+        spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+        spec->Configurator();
+        species_.push_back(spec);
+      }
     }
+    output_mgr_.AddSpecies(&species_);
+  } else if (config_type.compare("spindle") == 0) {
+    ConfigureSpindle();
+  } else {
+    std::cout << "Unknown configuration type " << config_type << std::endl;
+    exit(1);
   }
-  output_mgr_.AddSpecies(&species_);
+}
+
+void Simulation::ConfigureSpindle() {
+  YAML::Node node = YAML::LoadFile(params_.config_file);
+  std::cout << "Configurator (Spindle) started using file " << params_.config_file << std::endl;
+
+  int nspbs = (int)node["spb"].size();
+  int nkcs = (int)node["kc"].size();
+
+  // Create the species that we know about for sure
+  SpindlePoleBodySpecies *pspbspec = (SpindlePoleBodySpecies*)species_factory_.construct("spb");
+  SpeciesBase *pspbspec_base = (SpeciesBase*)pspbspec;
+  // FIXME XXX change to microtubule species
+  BrRodSpecies *prspec = (BrRodSpecies*)species_factory_.construct("br_rod");
+  SpeciesBase *prspec_base = (SpeciesBase*)prspec;
+
+  assert(pspbspec != nullptr);
+  assert(prspec != nullptr);
+
+  pspbspec_base->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  prspec_base->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+
+  int nmts = 0;
+  for (int i = 0; i < nspbs; ++i) {
+    nmts += (int)node["spb"][i]["mt"].size();
+  }
+  nmts += (int)node["mt"].size();
+
+  std::cout << "\nBasic Parameters:\n";
+  std::cout << "   n spbs: " << nspbs << std::endl;
+  std::cout << "   n mts : " << nmts << std::endl;
+
+  params_.n_rod = nmts;
+
+  // initialize the spbs
+  anchors_.clear();
+  for (int ispb = 0; ispb < nspbs; ++ispb) {
+    pspbspec->ConfiguratorSpindle(ispb, &anchors_);
+    std::vector<SpindlePoleBody*>* spindle_pole_bodies = pspbspec->GetMembers();
+    prspec->ConfiguratorSpindle(ispb, (*spindle_pole_bodies)[ispb]->GetOID(),
+        (*spindle_pole_bodies)[ispb]->GetPosition(),
+        (*spindle_pole_bodies)[ispb]->GetUAnchor(),
+        (*spindle_pole_bodies)[ispb]->GetVAnchor(),
+        (*spindle_pole_bodies)[ispb]->GetWAnchor(),
+        &anchors_);
+  }
+
+  species_.push_back(pspbspec_base);
+  species_.push_back(prspec_base);
+
 }
 
 void Simulation::ClearSpecies() {
