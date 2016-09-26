@@ -1,6 +1,7 @@
 #ifndef _SIMCORE_SPINDLE_POLE_BODY_H_
 #define _SIMCORE_SPINDLE_POLE_BODY_H_
 
+#include "anchor_list_generic.h"
 #include "auxiliary.h"
 #include "object.h"
 
@@ -24,6 +25,10 @@ class SpindlePoleBody : public Simple {
     SpindlePoleBody(const SpindlePoleBody& that) : Simple(that) {}
     SpindlePoleBody& operator=(SpindlePoleBody const& that) {Simple::operator=(that); return *this;} 
 
+    const double* const GetUAnchor() {return u_anchor_;}
+    const double* const GetVAnchor() {return v_anchor_;}
+    const double* const GetWAnchor() {return w_anchor_;}
+
     void InitConfigurator(const double r,
                           const double theta,
                           const double phi,
@@ -40,6 +45,17 @@ class SpindlePoleBody : public Simple {
         << "d(" << diameter_ << "), attach_diameter(" << attach_diameter_ << ")\n";
     }
 
+    void PrintSPBProperties(int ispb) {
+      std::cout << "New Spindle Pole Body: " << GetOID() << std::endl;
+      std::cout << std::setprecision(16)
+        << "    x(" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << ")\n"
+        << "    u(" << u_anchor_[0] << ", " << u_anchor_[1] << ", " << u_anchor_[2] << ")\n"
+        << "    v(" << v_anchor_[0] << ", " << v_anchor_[1] << ", " << v_anchor_[2] << ")\n"
+        << "    w(" << w_anchor_[0] << ", " << w_anchor_[1] << ", " << w_anchor_[2] << ")\n"
+        << "    translational gamma: " << gamma_tra_ << "\n"
+        << "    rotational gamma: " << gamma_rot_ << "\n";
+    }
+
     // Special functions
     void UpdateSPBRefVecs();
     void UpdateSPBDragConstants();
@@ -50,7 +66,7 @@ class SpindlePoleBody : public Simple {
 
 
 #include "species.h"
-class SpindlePoleBodySpecies : Species<SpindlePoleBody> {
+class SpindlePoleBodySpecies : public Species<SpindlePoleBody> {
 
   protected:
 
@@ -69,6 +85,8 @@ class SpindlePoleBodySpecies : Species<SpindlePoleBody> {
     }
 
     void Configurator();
+    void ConfiguratorSpindle(int ispb, al_set *anchors);
+
 };
 
 #endif

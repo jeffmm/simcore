@@ -1,6 +1,7 @@
 #ifndef _SIMCORE_BR_ROD_H_
 #define _SIMCORE_BR_ROD_H_
 
+#include "anchor_list_generic.h"
 #include "site.h"
 #include "bond.h"
 #include "species.h"
@@ -185,6 +186,12 @@ class BrRodSpecies : public Species<BrRod> {
 
     // Special insertion routine
     void Configurator();
+    void ConfiguratorSpindle(int ispb, int spb_oid,
+                             const double* const r_spb,
+                             const double* const u_spb,
+                             const double* const v_spb,
+                             const double* const w_spb,
+                             al_set *anchors);
 
     static void CreateTestRod(BrRod **rod,
                               int ndim,
