@@ -4,10 +4,15 @@
 #include "object.h"
 
 // Pass in the main system properties information
-void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, long seed) {
+void UberEngine::Init(system_parameters *pParams,
+                      space_struct *pSpace,
+                      std::vector<SpeciesBase*> *pSpecies,
+                      al_set *pAnchors,
+                      long seed) {
   params_ = pParams;
   space_ = pSpace;
   species_ = pSpecies;
+  anchors_ = pAnchors;
   n_dim_ = space_->n_dim;
   n_periodic_ = space_->n_periodic;
   max_overlap_ = params_->max_overlap;
@@ -61,7 +66,8 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
         printf("Must specify a force substructure, exiting!\n");
         break;
    }
-  InitPotentials();
+  // Initialize the potentials
+  potentials_.Init(species_, space_, anchors_, params_->potfile);
 
   // Initialize the particle tracking
   ptrack_.Init(space_, species_, skin_, force_type_);
@@ -90,11 +96,6 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   // Run one step to make sure that we're all good
   ptrack_.UpdateTracking(true);
   fengine_.Interact();
-}
-
-void UberEngine::InitPotentials() {
-  // Ask the potential manager to parse the potentials file
-  potentials_.Init(species_, space_, params_->potfile);
 }
 
 void UberEngine::DumpAll() {

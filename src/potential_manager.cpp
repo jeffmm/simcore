@@ -5,6 +5,7 @@
 #include "boundary_wca.h"
 #include "boundary_wca_tip.h"
 #include "harmonic.h"
+#include "harmonic_tip.h"
 #include "helpers.h"
 #include "lennard_jones_12_6.h"
 #include "sphere_line_well.h"
@@ -17,10 +18,11 @@
 #define REGISTER_POTENTIAL(n) pot_factory_.register_class<n>(#n);
 
 void
-PotentialManager::Init(std::vector<SpeciesBase*> *pSpecies, space_struct *pSpace, char *pFname) {
+PotentialManager::Init(std::vector<SpeciesBase*> *pSpecies, space_struct *pSpace, al_set *pAnchors, char *pFname) {
   space_ = pSpace;
   fname_ = pFname;
   species_ = pSpecies;
+  anchors_ = pAnchors;
   std::cout << "********\n";
   std::cout << "Potentials Load ->\n";
   std::cout << "  file: " << fname_ << std::endl;
@@ -43,6 +45,7 @@ PotentialManager::RegisterPotentials() {
   REGISTER_POTENTIAL(XlinkHarmonic);
   REGISTER_POTENTIAL(BoundaryWCA);
   REGISTER_POTENTIAL(BoundaryWCATip);
+  REGISTER_POTENTIAL(HarmonicTip);
 }
 
 void
@@ -59,7 +62,6 @@ PotentialManager::ParsePotentials() {
 
     if (potential_type.compare("external") == 0) {
       std::string potname = node["potentials"][ipot]["name"].as<std::string>();
-      std::cout << potname << std::endl;
       std::string sid1s   = node["potentials"][ipot]["sid1"].as<std::string>();
       std::string sid2s   = node["potentials"][ipot]["sid2"].as<std::string>();
       SID sid1 = StringToSID(sid1s);
@@ -92,9 +94,22 @@ PotentialManager::ParsePotentials() {
       }
     } else if (potential_type.compare("tether") == 0) {
       // Tethers must be between specific particles
-      // Not quite sure how to do this yet, because it might heavily depend on what we're tethering....
-      std::cout << "Tethering not quite supported yet, have to figure out use cases, exiting\n";
-      exit(1);
+      // Have the anchor list from outside
+      std::string potname = node["potentials"][ipot]["name"].as<std::string>();
+      std::string sid1s   = node["potentials"][ipot]["sid1"].as<std::string>();
+      std::string sid2s   = node["potentials"][ipot]["sid2"].as<std::string>();
+      SID sid1 = StringToSID(sid1s);
+      SID sid2 = StringToSID(sid2s);
+      // Get the enum type
+      PotentialBase* new_pot = (PotentialBase*) pot_factory_.construct(potname);
+      new_pot->Init(space_, ipot, node);
+      potential_vec_tethers_.push_back(new_pot);
+      std::ostringstream potstring;
+      potstring << "(" << (int)sid1 << ", " << (int)sid2 << ") : ";
+      potential_vec_names_tethers_.push_back(potstring.str());
+
+      AddPotentialTether(sid1, sid2, new_pot);
+
     } else if (potential_type.compare("boundary") == 0) {
       // Boundary potentials!
       std::string potname = node["potentials"][ipot]["name"].as<std::string>();
@@ -125,6 +140,24 @@ void PotentialManager::AddPotentialInternal(unsigned int oid1, unsigned int oid2
   auto key2 = std::make_pair(oid2, oid1);
   if (internal_potentials_.count(key2)) return;
   internal_potentials_[key1] = pot;
+}
+
+void PotentialManager::AddPotentialTether(SID sid1, SID sid2, PotentialBase *pot) {
+  std::cout << "AddPotentialTether\n";
+  // We have 2 sids, plus the anchor list
+  // Loop through the anchor list, and find the appropriate particles
+  for (auto ait = anchors_->begin(); ait != anchors_->end(); ++ait) {
+    // What anchor are we on
+    std::cout << "Anchor: " << ait->first << std::endl;
+    auto avec = ait->second;
+    for (auto ait2 = avec.begin(); ait2 != avec.end(); ++ait2) {
+      std::cout << "   -> {" << ait2->idx_base_ << ", " << ait2->idx_other_ << "}\n";
+      // idx base and idx other are the particle oids, so we're good on that front
+      // they are also only in ONE order
+      auto key1 = std::make_pair(ait2->idx_base_, ait2->idx_other_);
+      tethers_[key1] = pot;
+    }
+  }
 }
 
 PotentialBase* PotentialManager::GetPotentialExternal(SID sid1, SID sid2) {

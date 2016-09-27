@@ -97,7 +97,7 @@ void Simulation::InitSimulation() {
   space_.Init(&params_, gsl_rng_get(rng_.r));
   output_mgr_.Init(&params_, &graph_array, &i_step_);
   InitSpecies();
-  uengine_.Init(&params_, space_.GetStruct(), &species_, gsl_rng_get(rng_.r));
+  uengine_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
   if (params_.graph_flag) {
     //When making a movie graphics are handled by output_mgr_
     if ( output_mgr_.IsMovie() ) output_mgr_.GetGraphicsStructure();

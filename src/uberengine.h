@@ -1,6 +1,7 @@
 #ifndef _SIMCORE_UBERENGINE_H_
 #define _SIMCORE_UBERENGINE_H_
 
+#include "anchor_list_generic.h"
 #include "auxiliary.h"
 #include "interaction_engine.h"
 #include "kmc_engine.h"
@@ -33,6 +34,7 @@ class UberEngine {
     FTYPE force_type_;
     space_struct *space_;
     std::vector<SpeciesBase*> *species_;
+    al_set *anchors_;
     PotentialManager potentials_;
     ParticleTracking ptrack_;
     InteractionEngine fengine_; //fengine = force engine.  get it?
@@ -45,11 +47,14 @@ class UberEngine {
 
     std::vector<graph_struct> draw_array_;
   public:
-    void Init(system_parameters *pParams, space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, long seed);
+    void Init(system_parameters *pParams,
+              space_struct *pSpace,
+              std::vector<SpeciesBase*> *pSpecies,
+              al_set *pAnchors,
+              long seed);
     void InteractMP();
     void StepKMC();
     void DumpAll();
-    void InitPotentials();
     void Draw(std::vector<graph_struct*> * graph_array);
     void PrepOutputs();
     void WriteOutputs(int istep);

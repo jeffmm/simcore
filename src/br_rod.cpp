@@ -532,7 +532,7 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
                                        const double* const w_spb,
                                        al_set *anchors) {
   char *filename = params_->config_file;
-  std::cout << "BrRod species\n";
+  //std::cout << "BrRod species\n";
 
   YAML::Node node = YAML::LoadFile(filename);
 
@@ -540,9 +540,9 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
   int draw_type = 1;
   double color[3] = {1.0, 0.0, 0.0};
   int nrods         = (int)node["spb"][ispb]["mt"].size();
-  std::cout << "nrods: " << nrods << std::endl;
+  //std::cout << "nrods: " << nrods << std::endl;
   double max_length = node["spb"][ispb]["properties"]["mt_max_length"].as<double>();
-  std::cout << std::setprecision(16) << "max_length: " << max_length << std::endl;
+  //std::cout << std::setprecision(16) << "max_length: " << max_length << std::endl;
   double min_length = node["spb"][ispb]["properties"]["mt_min_length"].as<double>();
   double diameter   = node["spb"][ispb]["properties"]["mt_diameter"].as<double>();
 
@@ -593,7 +593,7 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
 
       } while (rmag2 >= SQR(conf_radius - 0.5) || dot_product(ndim, m_u_spb, u_bond) > 0);
 
-      std::cout << "found an rmag2 we liked\n";
+      //std::cout << "found an rmag2 we liked\n";
       // Use helper functions to generate rod positions before we actually create
       // and insert the rod (like bob)
       for (int i = 0; i < ndim; ++i) {
@@ -631,13 +631,13 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
     BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
     member->InitConfigurator(x_bond, u_bond, mlength);
     member->SetColor(color, draw_type);
-    member->Dump();
+    //member->Dump();
     members_.push_back(member);
 
     // Add to the anchor list!!!!
     anchor_t new_anchor;
     new_anchor.idx_base_ = spb_oid;
-    new_anchor.idx_other_ = member->GetOID();
+    new_anchor.idx_other_ = member->GetSimples()[0]->GetOID();
     for (int i = 0; i < ndim; ++i) {
       new_anchor.pos_[i] = x_bond[i] - 
         u_bond[i] * (0.5 * mlength + r0);
