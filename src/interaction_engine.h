@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <memory>
 
+#include "anchor_list_generic.h"
 #include "auxiliary.h"
 #include "species.h"
 #include "minimum_distance.h"
@@ -25,7 +26,11 @@ class InteractionEngine {
       delete[] kmc_energy_;
     }
 
-    void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, ParticleTracking *pTracking, double pSkin);
+    void Init(space_struct *pSpace,
+              std::vector<SpeciesBase*> *pSpecies,
+              ParticleTracking *pTracking,
+              al_set *pAnchors,
+              double pSkin);
     void InitPotentials(PotentialManager *pPotentials);
     void InitMP();
 
@@ -43,7 +48,6 @@ class InteractionEngine {
                                      double *pr_energy,
                                      double *kmc_energy);
     void TetherParticlesMP(int &idx,
-                           int &jdx,
                            double **fr,
                            double **tr,
                            double *pr_energy,
@@ -78,6 +82,7 @@ class InteractionEngine {
     std::vector<Simple*>* simples_;
     std::vector<SpeciesBase*>* species_;
     std::unordered_map<int, int>* oid_position_map_;
+    al_set *anchors_;
 };
 
 // Helper functions for the setup/teardown of the MP

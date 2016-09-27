@@ -6,6 +6,8 @@ kmc:
   concentration_1_2: 10.0
   on_rate_0_1: 0.003916
   on_rate_1_2: 0.001958
+  reflect: false
+  diffusion_free: 256
   diffusion_singly_bound: 0.0
   diffusion_doubly_bound: 0.0
   alpha: 1.299

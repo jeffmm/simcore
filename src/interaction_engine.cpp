@@ -2,10 +2,15 @@
 
 #include "interaction_engine.h"
 
-void InteractionEngine::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, ParticleTracking *pTracking, double pSkin) {
+void InteractionEngine::Init(space_struct *pSpace,
+                             std::vector<SpeciesBase*> *pSpecies,
+                             ParticleTracking *pTracking,
+                             al_set *pAnchors,
+                             double pSkin) {
   space_ = pSpace;
   tracking_ = pTracking;
   species_ = pSpecies;
+  anchors_ = pAnchors;
   skin_= pSkin;
   ndim_ = space_->n_dim;
   nperiodic_ = space_->n_periodic;
@@ -102,9 +107,11 @@ void InteractionEngine::Interact() {
         //InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy);
         InteractParticlesExternalMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
         InteractParticlesInternalMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
-        TetherParticlesMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
         KMCParticlesMP(&(*nldx), idx, jdx);
       }
+
+      // Check anchors and tethering
+      TetherParticlesMP(idx, fr, tr, pr_energy, kmc_energy);
 
       // Check against the boundary potential
       InteractParticlesBoundaryMP(idx, fr, tr, pr_energy);
@@ -251,62 +258,95 @@ void InteractionEngine::InteractParticlesInternalMP(int &idx, int &jdx, double *
 }
 
 // Tethered particle pairs
-void InteractionEngine::TetherParticlesMP(int &idx, int &jdx, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
+void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
   // We are assuming the force/torque/energy superarrays are already set
-  // Exclude composite object interactions
-  if (idx < jdx) return; // Exclude double counting in force routines
   auto part1 = (*simples_)[idx];
-  auto part2 = (*simples_)[jdx];
+  
+  // Check to see if part1 exists in the anchors
+  if (!(*anchors_).count(part1->GetOID())) return;
 
-  // Get the tethering potential
-  PotentialBase *pot = potentials_->GetPotentialTether(part1->GetOID(), part2->GetOID());
-  if (pot == nullptr) return;
+  std::cout << "Found anchor idx: " << idx << ", oid: " << part1->GetOID() << std::endl;
+  // The anchor list exists, not iterate over it
+  for (auto ait = (*anchors_)[part1->GetOID()].begin(); ait != (*anchors_)[part1->GetOID()].end(); ++ait) {
+    std::cout << "oid me: " << ait->idx_base_ << ", you: " << ait->idx_other_ << std::endl;
+    auto jdx = (*oid_position_map_)[ait->idx_other_];
+    auto part2 = (*simples_)[jdx];
 
-  // Calculate the minimum distance, regardless of any cutoff
-  interactionmindist idm;
-  MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
+    part1->Dump();
+    part2->Dump();
 
-  // Obtain the mapping between particle oid and position in the force superarray
-  auto oid1x = (*oid_position_map_)[part1->GetOID()];
-  auto oid2x = (*oid_position_map_)[part2->GetOID()];
+    // Now that I have both particles (and their idxs), get the potential from the manager
+    PotentialBase *pot = potentials_->GetPotentialTether(part1->GetOID(), part2->GetOID());
+    if (pot == nullptr) return; // no interaction
 
-  // Fire off the potential calculation
-  double fepot[4];
-  pot->CalcPotential(&idm, part1, part2, fepot);
-
-  #ifdef DEBUG
-  if (debug_trace) {
-    std::cout << "\tTETHER Interacting[" << oid1x << "," << part1->GetOID()
-      << ":" << oid2x << "," << part2->GetOID() << "] u: " << std::setprecision(16)
-      << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
-    if (ndim_ == 3) {
-      std::cout << ", " << fepot[2];
+    std::cout << "Got the potential!\n";
+    // Calculating this potential is strange, since the minimum distance calculation is dependent on the
+    // anchor point, and the potential tip, so call with the anchor point in the first position, and
+    // the part2 in the second
+    double rx0[3] = {0.0, 0.0, 0.0};
+    double sx0[3] = {0.0, 0.0, 0.0};
+    double rx1[3] = {0.0, 0.0, 0.0};
+    double sx1[3] = {0.0, 0.0, 0.0};
+    std::copy(ait->pos0_, ait->pos0_+3, rx0);
+    std::copy(ait->pos1_, ait->pos1_+3, rx1);
+    double dr[3] = {0.0, 0.0, 0.0};
+    separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
+    interactionmindist idm;
+    std::copy(dr, dr+3, idm.dr);
+    for (int i = 0; i < ndim_; ++i) {
+      idm.dr_mag += SQR(idm.dr[i]);
     }
-    std::cout << ")\n";
-  }
-  #endif
+    idm.dr_mag = sqrt(idm.dr_mag);
 
-  // Do the potential energies
-  pr_energy[oid1x] += fepot[ndim_];
-  pr_energy[oid2x] += fepot[ndim_];
+    // Calculate the rcontacts for us, ugh (based on absolute vs relative positions)
+    for (int i = 0; i < ndim_; ++i) {
+      idm.contact1[i] = rx0[i] - part1->GetRigidPosition()[i];
+      idm.contact2[i] = rx1[i] - part2->GetRigidPosition()[i];
+    }
 
-  // Do the forces
-  for (int i = 0; i < ndim_; ++i) {
-      fr[i][oid1x] += fepot[i];
-      fr[i][oid2x] -= fepot[i];
-  }
+    // Call the potential calc
+    // Fire off the potential calculation
+    double fepot[4];
+    pot->CalcPotential(&idm, part1, part2, fepot);
 
-  // Calculate the torques
-  double tau[3];
-  cross_product(idm.contact1, fepot, tau, ndim_);
-  //for (int i = 0; i < ndim_; ++i) {
-  for (int i = 0; i < 3; ++i) {
-      tr[i][oid1x] += tau[i];
-  }
-  cross_product(idm.contact2, fepot, tau, ndim_);
-  //for (int i = 0; i < ndim_; ++i) {
-  for (int i = 0; i < 3; ++i) {
-      tr[i][oid2x] -= tau[i];
+    // Obtain the mapping between particle oid and position in the force superarray
+    auto oid1x = (*oid_position_map_)[part1->GetOID()];
+    auto oid2x = (*oid_position_map_)[part2->GetOID()];
+
+    #ifdef DEBUG
+    if (debug_trace) {
+      std::cout << "\tPOT TETHER Interacting[" << oid1x << "," << part1->GetOID()
+        << ":" << oid2x << "," << part2->GetOID() << "] u: " << std::setprecision(16)
+        << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
+      if (ndim_ == 3) {
+        std::cout << ", " << fepot[2];
+      }
+      std::cout << ")\n";
+    }
+    #endif
+
+    // Do the potential energies
+    pr_energy[oid1x] += fepot[ndim_];
+    pr_energy[oid2x] += fepot[ndim_];
+
+    // Do the forces
+    for (int i = 0; i < ndim_; ++i) {
+        fr[i][oid1x] += fepot[i];
+        fr[i][oid2x] -= fepot[i];
+    }
+
+    // Calculate the torques
+    double tau[3];
+    cross_product(idm.contact1, fepot, tau, ndim_);
+    //for (int i = 0; i < ndim_; ++i) {
+    for (int i = 0; i < 3; ++i) {
+        tr[i][oid1x] += tau[i];
+    }
+    cross_product(idm.contact2, fepot, tau, ndim_);
+    //for (int i = 0; i < ndim_; ++i) {
+    for (int i = 0; i < 3; ++i) {
+        tr[i][oid2x] -= tau[i];
+    }
   }
 }
 

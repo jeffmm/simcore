@@ -51,6 +51,7 @@ void BrRod::InitConfigurator(const double* const x, const double* const u, const
     bond->SetRigidPosition(position_);
     bond->SetRigidScaledPosition(scaled_position_);
     bond->SetRigidOrientation(orientation_);
+    std::cout << "Setting bond length: " << length_ << std::endl;
     bond->SetRigidLength(length_);
     bond->SetRigidDiameter(diameter_);
     bond->SetLength(child_length_);
@@ -58,6 +59,7 @@ void BrRod::InitConfigurator(const double* const x, const double* const u, const
   }
   // Set positions for sites and bonds
   UpdatePeriodic();
+  UpdateRodLength(0.0);
   UpdateBondPositions();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
     bond->UpdatePeriodic();
@@ -78,10 +80,47 @@ void BrRod::UpdatePositionMP() {
   Integrate();
   //UpdatePeriodic();
   UpdateSitePositions();
+  UpdateRodLength(0.0);
   // Update end site positions for tracking trajectory for neighbors
   UpdateBondPositions();
+  UpdateAnchors();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
     bond->UpdatePeriodic();
+}
+
+void BrRod::UpdateAnchors() {
+  // find the anchors
+  if (anchors_ == nullptr) return;
+
+  // Update our anchor relative position
+  bool found = false;
+  for (auto ait = anchors_->begin(); ait != anchors_->end() && !found; ++ait) {
+    // Look for our entry in the vector
+    for (auto p = ait->second.begin(); p != ait->second.end(); ++p) {
+      if (p->idx_other_ == GetSimples()[0]->GetOID()) {
+
+        auto mrod = GetSimples()[0];
+        std::cout << "Old Anchor pos1: (" << std::setprecision(16)
+          << p->pos1_[0] << ", " << p->pos1_[1] << ", " << p->pos1_[2] << ")\n";
+        std::cout << "Old Anchor pos_rel1: (" << std::setprecision(16)
+          << p->pos_rel1_[0] << ", " << p->pos_rel1_[1] << ", " << p->pos_rel1_[2] << ")\n";
+        for (int i = 0; i < 3; ++i) {
+          p->pos1_[i] = mrod->GetRigidPosition()[i] - 0.5 * mrod->GetRigidLength() *
+            mrod->GetRigidOrientation()[i];
+        }
+        p->pos_rel1_[0] = -0.5 * mrod->GetRigidLength();
+        p->pos_rel1_[1] = p->pos_rel1_[2] = 0.0;
+
+        std::cout << "New Anchor pos1: (" << std::setprecision(16)
+          << p->pos1_[0] << ", " << p->pos1_[1] << ", " << p->pos1_[2] << ")\n";
+        std::cout << "New Anchor pos_rel1: (" << std::setprecision(16)
+          << p->pos_rel1_[0] << ", " << p->pos_rel1_[1] << ", " << p->pos_rel1_[2] << ")\n";
+
+        found = true;
+        break;
+      }
+    }
+  }
 }
 
 void BrRod::UpdateSitePositions() {
@@ -629,9 +668,11 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
 
     // Insert the rod
     BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+    std::cout << "mlength setup: " << mlength << std::endl;
     member->InitConfigurator(x_bond, u_bond, mlength);
     member->SetColor(color, draw_type);
     //member->Dump();
+    member->SetAnchors(anchors);
     members_.push_back(member);
 
     // Add to the anchor list!!!!
@@ -639,18 +680,22 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
     new_anchor.idx_base_ = spb_oid;
     new_anchor.idx_other_ = member->GetSimples()[0]->GetOID();
     for (int i = 0; i < ndim; ++i) {
-      new_anchor.pos_[i] = x_bond[i] - 
+      new_anchor.pos0_[i] = x_bond[i] - 
         u_bond[i] * (0.5 * mlength + r0);
+      new_anchor.pos1_[i] = x_bond[i] -
+        mlength * u_bond[i] * 0.5;
     }
+    new_anchor.pos_rel1_[0] = -0.5 * mlength;
+    new_anchor.pos_rel1_[1] = new_anchor.pos_rel1_[2] = 0.0;
     double r_rel[3] = {0.0, 0.0, 0.0};
     for (int i = 0; i < ndim; ++i) {
-      r_rel[i] = new_anchor.pos_[i] - r_spb[i];
+      r_rel[i] = new_anchor.pos0_[i] - r_spb[i];
     }
     double u_proj = dot_product(ndim, r_rel, u_spb);
     double v_proj = dot_product(ndim, r_rel, v_spb);
     double w_proj = dot_product(ndim, r_rel, w_spb);
     for (int i = 0; i < 3; ++i) {
-      new_anchor.pos_rel_[i] =
+      new_anchor.pos_rel0_[i] =
         u_spb[i] * u_proj +
         v_spb[i] * v_proj +
         w_spb[i] * w_proj;
@@ -661,7 +706,8 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
     std::cout << "   New bond " << member->GetOID() << std::endl;
     std::cout << std::setprecision(16)
       << "      x(" << x_bond[0] << ", " << x_bond[1] << ", " << x_bond[2] << ")\n"
-      << "      binding site(" << new_anchor.pos_[0] << ", " << new_anchor.pos_[1] << ", " << new_anchor.pos_[2] << ")\n"
+      << "      binding site(" << new_anchor.pos0_[0] << ", " << new_anchor.pos0_[1] << ", " << new_anchor.pos0_[2] << ")\n"
+      << "      tip site    (" << new_anchor.pos1_[0] << ", " << new_anchor.pos1_[1] << ", " << new_anchor.pos1_[2] << ")\n"
       << "      length " << mlength << "\n"
       << "      parent anchor = " << spb_oid << std::endl;
   }

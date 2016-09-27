@@ -76,7 +76,7 @@ void UberEngine::Init(system_parameters *pParams,
   ptrack_.CheckOverlaps(max_overlap_);
 
   // Initialize the interaction engine
-  fengine_.Init(space_, species_, &ptrack_, skin_);
+  fengine_.Init(space_, species_, &ptrack_, anchors_, skin_);
   fengine_.InitPotentials(&potentials_);
   fengine_.InitMP();
 

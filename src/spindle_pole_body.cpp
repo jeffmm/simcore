@@ -110,6 +110,7 @@ void SpindlePoleBody::UpdatePositionMP() {
 
   // Orientation(s)
   double tau_random = gsl_ran_gaussian(rng_.r, sqrt(2.0 * gamma_r / delta_));
+  std::copy(torque_, torque_+3, tau_local_);
   double tau_body_full[3] = {
     tau_local_[0] + u_anchor_[0] * tau_random,
     tau_local_[1] + u_anchor_[1] * tau_random,
@@ -124,7 +125,59 @@ void SpindlePoleBody::UpdatePositionMP() {
   norm_factor = sqrt(1.0/dot_product(n_dim_, v_anchor_, v_anchor_));
   for (int i = 0; i < 3; ++i) v_anchor_[i] *= norm_factor;
 
+  double n[3] = {0.0, 0.0, 0.0};
+  cross_product(u_anchor_old, u_anchor_, n, n_dim_);
+  double sin_omega = dot_product(n_dim_, n, n);
+  norm_factor = 1.0/sqrt(sin_omega);
+  if (norm_factor > 1e-8) {
+    for (int i = 0; i < 3; ++i) n[i] *= norm_factor;
+    double cos_omega = dot_product(n_dim_, u_anchor_, u_anchor_old);
+    double vec1[3] = {0.0, 0.0, 0.0};
+    cross_product(n, v_anchor_, vec1, n_dim_);
+    double factor2 = dot_product(n_dim_, n, v_anchor_) * (1 - cos_omega);
+    for (int i = 0; i < 3; ++i) {
+      v_anchor_[i] = v_anchor_[i] * cos_omega +
+        vec1[i] * sin_omega + n[i] * factor2;
+    }
+  }
+
   cross_product(u_anchor_, v_anchor_, w_anchor_, 3);
+
+  // Update the Anchor list!
+  UpdateAnchors();
+}
+
+void SpindlePoleBody::UpdateAnchors() {
+  // find the anchor list
+  if (anchors_ == nullptr) return;
+
+  // Get our anchor
+  auto malist = (*anchors_)[GetOID()];
+  for (auto ait = malist.begin(); ait != malist.end(); ++ait) {
+    // Update just the first part, since we are the anchor
+    double factor_u = dot_product(n_dim_, ait->pos_rel0_, u_anchor_);
+    double factor_v = dot_product(n_dim_, ait->pos_rel0_, v_anchor_);
+    double factor_w = dot_product(n_dim_, ait->pos_rel0_, w_anchor_);
+
+    std::cout << "Old Anchor pos0: (" << std::setprecision(16)
+      << ait->pos0_[0] << ", " << ait->pos0_[1] << ", " << ait->pos0_[2] << ")\n";
+    std::cout << "Old Anchor pos_rel0: (" << std::setprecision(16)
+      << ait->pos_rel0_[0] << ", " << ait->pos_rel0_[1] << ", " << ait->pos_rel0_[2] << ")\n";
+
+    // Calculate the new lab frame coordinates
+    for (int i = 0; i < 3; ++i) {
+      ait->pos0_[i] = position_[i] + factor_u * u_anchor_[i] +
+        factor_v * v_anchor_[i] + factor_w * w_anchor_[i];
+    }
+
+    double norm_factor = conf_rad_ / sqrt(dot_product(n_dim_, ait->pos0_, ait->pos0_));
+    for (int i = 0; i < 3; ++i) ait->pos0_[i] *= norm_factor;
+
+    std::cout << "New Anchor pos0: (" << std::setprecision(16)
+      << ait->pos0_[0] << ", " << ait->pos0_[1] << ", " << ait->pos0_[2] << ")\n";
+    std::cout << "New Anchor pos_rel0: (" << std::setprecision(16)
+      << ait->pos_rel0_[0] << ", " << ait->pos_rel0_[1] << ", " << ait->pos_rel0_[2] << ")\n";
+  }
 }
 
 
@@ -220,6 +273,7 @@ void SpindlePoleBodySpecies::ConfiguratorSpindle(int ispb, al_set* anchors) {
   SpindlePoleBody *member = new SpindlePoleBody(params_, space_, gsl_rng_get(rng_.r), GetSID());
   member->InitConfigurator(0.5 * space_->unit_cell[0][0], spb_theta, spb_phi, diameter, attach_diameter);
   member->SetColor(color, draw_type);
+  member->SetAnchors(anchors);
   members_.push_back(member);
 
   // Create a anchor list entry for this spb
