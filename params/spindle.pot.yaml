@@ -35,12 +35,11 @@ potentials:
     sigma: 1
     tip: 1 # plus end
 
-  - name: HarmonicTip
+  - name: Harmonic
     type: tether
     sid1: spb
     sid2: br_rod
     k: 100.0
     equilibrium_length: 2.0
-    tip: 0
     rcut: 1000.0
     fcut: 10000
