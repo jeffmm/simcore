@@ -19,6 +19,8 @@ class SpindlePoleBody : public Simple {
     double gamma_rot_;
     double attach_diameter_;
 
+    void UpdateAnchors();
+
   public:
     SpindlePoleBody(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {}
     ~SpindlePoleBody() {}

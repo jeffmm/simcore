@@ -142,7 +142,7 @@ void Simulation::InitSpecies() {
         possibles != species_factory_.m_classes.end(); ++possibles) {
       if (node[possibles->first]) {
         SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
-        spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+        spec->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
         spec->Configurator();
         species_.push_back(spec);
       }
@@ -173,8 +173,8 @@ void Simulation::ConfigureSpindle() {
   assert(pspbspec != nullptr);
   assert(prspec != nullptr);
 
-  pspbspec_base->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-  prspec_base->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+  pspbspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
+  prspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
 
   int nmts = 0;
   for (int i = 0; i < nspbs; ++i) {

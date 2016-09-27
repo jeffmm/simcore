@@ -12,8 +12,10 @@
 struct _anchor {
   int idx_base_;
   int idx_other_;
-  double pos_[3]; // lab position
-  double pos_rel_[3]; // relative position if on structure
+  double pos0_[3]; // lab position of first particle
+  double pos_rel0_[3]; // relative position if on structure
+  double pos1_[3]; // lab position of second particle
+  double pos_rel1_[3];
 };
 typedef struct _anchor anchor_t;
 
