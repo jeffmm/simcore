@@ -1,6 +1,7 @@
 #ifndef _SIMCORE_OBJECT_H_
 #define _SIMCORE_OBJECT_H_
 
+#include "anchor_list_generic.h"
 #include "auxiliary.h"
 #include "neighbor_list_generic.h"
 
@@ -40,6 +41,7 @@ class Object {
     rng_properties rng_;
     std::vector<interaction> interactions_;
     std::vector<neighbor_t>* neighbors_;
+    al_set *anchors_;
     virtual void InsertRandom(double buffer);
   public:
     Object(system_parameters *params, space_struct *space, long seed, SID sid);
@@ -176,6 +178,8 @@ class Object {
         std::cout << "Reading rng state failed " << retval << std::endl;
       }
     }
+
+    void SetAnchors(al_set *pAnchors) {anchors_=pAnchors;}
 };
 
 class Simple : public Object {

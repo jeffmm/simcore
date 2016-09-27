@@ -89,7 +89,7 @@ bool TestXlinkKMCMoves::TestKMC_0_1(int test_num) {
     // Create an xlink and species...
     // Species first
     XlinkSpecies *testXlinkSpecies = new XlinkSpecies();
-    testXlinkSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), 10);
+    testXlinkSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), nullptr, 10);
     spec1_ = testXlinkSpecies;
     Xlink *testXlink = new Xlink(&params_sub_, space_sub_.GetStruct(), 10, SID::xlink);
     XlinkSpecies::CreateTestXlink(&testXlink, ndim_, simples_, oid_position_map_, filename_, name_, subtest, "xlink", itest);
@@ -108,7 +108,7 @@ bool TestXlinkKMCMoves::TestKMC_0_1(int test_num) {
     // Loop over the number of them, and create rods with the appropriate attributes
     int nrods = (int)node_[name_][subtest]["test"][itest]["neighbors"].size();
     BrRodSpecies *testRodSpecies = new BrRodSpecies();
-    testRodSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), 10);
+    testRodSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), nullptr, 10);
     for (int irod = 0; irod < nrods; ++irod) {
       // Add the rod
       BrRod *testRod = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
@@ -204,7 +204,7 @@ bool TestXlinkKMCMoves::TestKMC_1_0(int test_num) {
 
     // Create a rod and species
     BrRodSpecies *testRodSpecies = new BrRodSpecies();
-    testRodSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), 10);
+    testRodSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), nullptr ,10);
     // Add the rod
     BrRod *testRod = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);
     YAML::Node subnode =  node_[name_][subtest]["test"][itest]["rods"][0];
@@ -213,7 +213,7 @@ bool TestXlinkKMCMoves::TestKMC_1_0(int test_num) {
 
     // Create the xlink
     XlinkSpecies *testXlinkSpecies = new XlinkSpecies();
-    testXlinkSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), 10);
+    testXlinkSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), nullptr, 10);
     spec1_ = testXlinkSpecies;
     int ncopies = node_[name_][subtest]["test"][itest]["copyfactor_xlink"].as<int>();
     int ninterest = node_[name_][subtest]["test"][itest]["interest_xlink"].as<int>();
@@ -311,7 +311,7 @@ bool TestXlinkKMCMoves::TestKMC_1_2(int test_num) {
 
     int nrods = (int)node_[name_][subtest]["test"][itest]["rods"].size();
     BrRodSpecies *testRodSpecies = new BrRodSpecies();
-    testRodSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), 10);
+    testRodSpecies->InitConfig(&params_sub_, space_sub_.GetStruct(), nullptr, 10);
     for (int irod = 0; irod < nrods; ++irod) {
       // Add the rod
       BrRod *testRod = new BrRod(&params_sub_, space_sub_.GetStruct(), 10, SID::br_rod);

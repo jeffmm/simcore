@@ -1,6 +1,7 @@
 #ifndef _SIMCORE_SPECIES_H_
 #define _SIMCORE_SPECIES_H_
 
+#include "anchor_list_generic.h"
 #include "auxiliary.h"
 #include "object.h"
 #include "potential_base.h"
@@ -20,6 +21,7 @@ class SpeciesBase {
     std::fstream iposit_file_;
 
     space_struct *space_;
+    al_set *anchors_;
     rng_properties rng_;
     void SetSID(SID sid) {sid_=sid;}
     //std::vector<potential_pair> potentials_;
@@ -77,10 +79,11 @@ class SpeciesBase {
     virtual void UpdatePositions() {}
     virtual void UpdatePositionsMP() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
+    virtual void InitConfig(system_parameters *params, space_struct *space, al_set *pAnchors, long seed) {
       n_members_ = 0;
       params_ = params;
       space_ = space;
+      anchors_ = pAnchors;
       //is_kmc_ = false;
       kmc_update_ = false;
       rng_.init(seed);
@@ -154,8 +157,8 @@ class Species : public SpeciesBase {
     Species() {}
 
     // Initialize function for setting it up on the first pass
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
-      SpeciesBase::InitConfig(params, space, seed);
+    virtual void InitConfig(system_parameters *params, space_struct *space, al_set* pAnchors, long seed) {
+      SpeciesBase::InitConfig(params, space, pAnchors, seed);
     }
 
     // Configurator function must be overridden

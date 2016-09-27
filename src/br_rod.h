@@ -35,6 +35,7 @@ class BrRod : public Composite<Site,Bond> {
     poly_state_t poly_state_;
     void UpdateSitePositions();
     void UpdateBondPositions();
+    void UpdateAnchors();
     void SetDiffusion();
     void UpdateOrientation();
     void GetBodyFrame();

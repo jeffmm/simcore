@@ -68,6 +68,7 @@ Object::Object(const Object& that) {
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
   neighbors_ = that.neighbors_;
+  anchors_ = that.anchors_;
   draw_type_ = that.draw_type_;
 }
 
@@ -100,6 +101,7 @@ Object &Object::operator=(Object const& that) {
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
   neighbors_ = that.neighbors_;
+  anchors_ = that.anchors_;
   draw_type_ = that.draw_type_;
   return *this;
 }
