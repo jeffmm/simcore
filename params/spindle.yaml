@@ -8,7 +8,7 @@ system_radius: 55
 daughter_radius: 5
 mother_daughter_dist: 12
 boundary_type: 0
-rod_diffusion: 1
+rod_diffusion: 0
 rod_fixed: 0
 config_file: params/spindle.config.yaml
 cell_length: 20
@@ -20,11 +20,11 @@ delta: 0.00025
 #n_steps: 100000
 #n_steps: 5000
 #n_steps: 2500
-n_steps: 10000
+#n_steps: 10000
 #n_steps: 1000
 #n_steps: 100
 #n_steps: 10
-#n_steps: 2
+n_steps: 2
 #n_steps: 15758
 n_update_cells: 20
 time_flag: 1
