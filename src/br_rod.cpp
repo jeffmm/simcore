@@ -51,7 +51,6 @@ void BrRod::InitConfigurator(const double* const x, const double* const u, const
     bond->SetRigidPosition(position_);
     bond->SetRigidScaledPosition(scaled_position_);
     bond->SetRigidOrientation(orientation_);
-    std::cout << "Setting bond length: " << length_ << std::endl;
     bond->SetRigidLength(length_);
     bond->SetRigidDiameter(diameter_);
     bond->SetLength(child_length_);
@@ -705,9 +704,10 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
     // Tell us what just happened
     std::cout << "   New bond " << member->GetOID() << std::endl;
     std::cout << std::setprecision(16)
-      << "      x(" << x_bond[0] << ", " << x_bond[1] << ", " << x_bond[2] << ")\n"
-      << "      binding site(" << new_anchor.pos0_[0] << ", " << new_anchor.pos0_[1] << ", " << new_anchor.pos0_[2] << ")\n"
-      << "      tip site    (" << new_anchor.pos1_[0] << ", " << new_anchor.pos1_[1] << ", " << new_anchor.pos1_[2] << ")\n"
+      << "      x (" << x_bond[0] << ", " << x_bond[1] << ", " << x_bond[2] << ")\n"
+      << "      u (" << u_bond[0] << ", " << u_bond[1] << ", " << u_bond[2] << ")\n"
+      << "      binding site (" << new_anchor.pos0_[0] << ", " << new_anchor.pos0_[1] << ", " << new_anchor.pos0_[2] << ")\n"
+      << "      tip site     (" << new_anchor.pos1_[0] << ", " << new_anchor.pos1_[1] << ", " << new_anchor.pos1_[2] << ")\n"
       << "      length " << mlength << "\n"
       << "      parent anchor = " << spb_oid << std::endl;
   }

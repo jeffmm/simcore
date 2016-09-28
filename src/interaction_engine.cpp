@@ -265,10 +265,8 @@ void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, do
   // Check to see if part1 exists in the anchors
   if (!(*anchors_).count(part1->GetOID())) return;
 
-  std::cout << "Found anchor idx: " << idx << ", oid: " << part1->GetOID() << std::endl;
   // The anchor list exists, not iterate over it
   for (auto ait = (*anchors_)[part1->GetOID()].begin(); ait != (*anchors_)[part1->GetOID()].end(); ++ait) {
-    std::cout << "oid me: " << ait->idx_base_ << ", you: " << ait->idx_other_ << std::endl;
     auto jdx = (*oid_position_map_)[ait->idx_other_];
     auto part2 = (*simples_)[jdx];
 
@@ -279,7 +277,6 @@ void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, do
     PotentialBase *pot = potentials_->GetPotentialTether(part1->GetOID(), part2->GetOID());
     if (pot == nullptr) return; // no interaction
 
-    std::cout << "Got the potential!\n";
     // Calculating this potential is strange, since the minimum distance calculation is dependent on the
     // anchor point, and the potential tip, so call with the anchor point in the first position, and
     // the part2 in the second
@@ -303,6 +300,15 @@ void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, do
       idm.contact1[i] = rx0[i] - part1->GetRigidPosition()[i];
       idm.contact2[i] = rx1[i] - part2->GetRigidPosition()[i];
     }
+
+    std::cout << "Anchor position: (" << std::setprecision(16)
+      << part1->GetRigidPosition()[0] << ", " << part1->GetRigidPosition()[1] << ", " << part1->GetRigidPosition()[2] << ")\n";
+    std::cout << "Anchor-sub position: (" << std::setprecision(16)
+      << part2->GetRigidPosition()[0] << ", " << part2->GetRigidPosition()[1] << ", " << part2->GetRigidPosition()[2] << ")\n";
+
+    std::cout << std::setprecision(16)
+      << "rcontact1: (" << idm.contact1[0] << ", " << idm.contact1[1] << ", " << idm.contact1[2] << ")\n"
+      << "rcontact2: (" << idm.contact2[0] << ", " << idm.contact2[1] << ", " << idm.contact2[2] << ")\n";
 
     // Call the potential calc
     // Fire off the potential calculation

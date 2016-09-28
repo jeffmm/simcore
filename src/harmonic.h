@@ -40,9 +40,6 @@ class Harmonic : public PotentialBase {
       }
       double u = 0.0;
 
-      std::cout << "dr: (" << std::setprecision(16) << dr[0] << ", " << dr[1] << "," << dr[2] << ")\n";
-      std::cout << "DEBUG ffac: " << std::setprecision(16) << ffac << std::endl;
-
       if (ABS(ffac) > fcut_)
         ffac = SIGNOF(ffac) * fcut_;
       for (int i = 0; i < n_dim_; ++i)  {
