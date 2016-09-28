@@ -193,6 +193,8 @@ class BrRodSpecies : public Species<BrRod> {
                              const double* const v_spb,
                              const double* const w_spb,
                              al_set *anchors);
+    void InsertRandomMT();
+    void InsertRTPMT();
 
     static void CreateTestRod(BrRod **rod,
                               int ndim,

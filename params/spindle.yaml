@@ -24,7 +24,7 @@ delta: 0.00025
 #n_steps: 1000
 #n_steps: 100
 #n_steps: 10
-n_steps: 2
+n_steps: 3
 #n_steps: 15758
 n_update_cells: 20
 time_flag: 1

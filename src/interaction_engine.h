@@ -61,7 +61,7 @@ class InteractionEngine {
     void Print();
     void Dump();
 
-  private:
+  protected:
     int ndim_;
     int nperiodic_;
     int nthreads_;
