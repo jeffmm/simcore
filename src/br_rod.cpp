@@ -78,7 +78,7 @@ void BrRod::UpdatePositionMP() {
   UpdateSitePositions();
   // Update end site positions for tracking trajectory for neighbors
   UpdateBondPositions();
-  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
     bond->UpdatePeriodic();
 }
 
@@ -128,7 +128,7 @@ void BrRod::UpdateBondPositions() {
 }
 
 /* Integration scheme taken from Yu-Guo Tao,
-   J Chem Phys 122 244903 (2005) 
+   J Chem Phys 122 244903 (2005)
    Explicit calculation of the friction tensor acting on force vector,
 
    r(t+dt) = r(t) + (Xi^-1 . F_s(t)) * dt + dr(t),
@@ -147,7 +147,7 @@ void BrRod::Integrate() {
   //Explicit calculation of Xi.F_s
   for (int i=0; i<n_dim_; ++i) {
     for (int j=0; j<n_dim_; ++j) {
-      position_[i] += 
+      position_[i] +=
         gamma_par_*orientation_[i]*orientation_[j]*force_[j]*delta_;
     }
     position_[i] += force_[i]*gamma_perp_*delta_;
@@ -236,11 +236,84 @@ void BrRod::SetDiffusion() {
   rand_sigma_rot_ = sqrt(2.0*delta_/gamma_rot_);
 }
 
+<<<<<<< Updated upstream
 double BrRod::UpdateRodLength(double delta_length) {
   // Intake this information from KMC
   // delta_length is already done via depoly or poly, 
   // so don't have to worry about that here
   length_ += delta_length;
+=======
+void BrRod::DynamicInstability() {
+  // First update polymerization state
+  UpdatePolyState();
+  // Now update rod length
+  UpdateRodLength();
+  // Update diffusion coefficients
+  SetDiffusion();
+}
+
+void BrRod::UpdatePolyState() {
+  double roll = gsl_rng_uniform_pos(rng_.r);
+  // temporary variables used for modification from
+  // force induced catastrophe flag
+  double p_g2s = p_g2s_;
+  double p_p2s = p_p2s_;
+  if (force_induced_catastrophe_flag_ && tip_force_ > 0.0) {
+    double p_factor = exp(0.0828*tip_force_);
+    p_g2s = (p_g2s_+p_g2p_)*p_factor;
+    p_p2s = p_p2s_*p_factor;
+  }
+  double p_norm;
+  // Filament shrinking
+  if (poly_state_ == SHRINK) {
+    p_norm = p_s2g_ + p_s2p_;
+    if (p_norm > 1.0)
+      poly_state_ = (roll < p_s2g_/p_norm ? GROW : PAUSE);
+    else if (roll < p_s2g_)
+      poly_state_ = GROW;
+    else if (roll < (p_s2g_ + p_s2p_))
+      poly_state_ = PAUSE;
+  }
+  // Filament growing
+  else if (poly_state_ == GROW) {
+    p_norm = p_g2s + p_g2p_;
+    if (p_norm > 1.0)
+      poly_state_ = (roll < p_g2s/p_norm ? SHRINK : PAUSE);
+    else if (roll < p_g2s)
+      poly_state_ = SHRINK;
+    else if (roll < (p_g2s + p_g2p_))
+      poly_state_ = PAUSE;
+  }
+  // Filament paused
+  else if (poly_state_ == PAUSE) {
+    p_norm = p_p2g_ + p_p2s;
+    if (p_norm > 1)
+      poly_state_ = (roll < p_p2g_/p_norm ? GROW : SHRINK);
+    else if (roll < p_p2g_)
+      poly_state_ = GROW;
+    else if (roll < (p_p2g_ + p_p2s))
+      poly_state_ = SHRINK;
+  }
+
+  // Check to make sure the filament lengths stay in the correct ranges
+  if (length_ < min_length_)
+    poly_state_ = GROW;
+  else if (length_ > max_length_)
+    poly_state_ = SHRINK;
+}
+
+void BrRod::UpdateRodLength() {
+  if (poly_state_ == PAUSE) return;
+  double delta_length;
+  if (poly_state_ == GROW) {
+    delta_length = v_poly_ * delta_;
+    length_ += delta_length;
+  }
+  else if (poly_state_ == SHRINK) {
+    delta_length = v_depoly_ * delta_;
+    length_ -= delta_length;
+  }
+>>>>>>> Stashed changes
   // Update the bond lengths
   child_length_ = length_/n_bonds_;
   // If necessary, add or remove a bond
@@ -283,8 +356,12 @@ double BrRod::UpdateRodLength(double delta_length) {
 }
 
 void BrRod::Draw(std::vector<graph_struct*> * graph_array) {
+<<<<<<< Updated upstream
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)  {
     bond->SetColor(color_, draw_type_);
+=======
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
+>>>>>>> Stashed changes
     bond->Draw(graph_array);
   }
 }
@@ -426,7 +503,7 @@ void BrRodSpecies::Configurator() {
           for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
             interactionmindist idm;
             // Just check the 0th element of each
-            auto part1 = member->GetSimples()[0]; 
+            auto part1 = member->GetSimples()[0];
             auto part2 = (*rodit)->GetSimples()[0];
             MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
             double diameter2 = diameter*diameter;
@@ -488,7 +565,7 @@ void BrRodSpecies::Configurator() {
         for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
           interactionmindist idm;
           // Just check the 0th element of each
-          auto part1 = member->GetSimples()[0]; 
+          auto part1 = member->GetSimples()[0];
           auto part2 = (*rodit)->GetSimples()[0];
           MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
           double diameter2 = diameter*diameter;
@@ -517,6 +594,78 @@ void BrRodSpecies::Configurator() {
     }
     params_->n_rod = nrods;
     std::cout << "Inserted: " << nrods << " members (" << members_.size() << ")\n";
+  } else if (insertion_type.compare("oriented") == 0) {
+
+    printf("Hey there!\n");
+    //int orientation = node["br_rod"]["rod"]["orientation"].as<int>();
+
+    int nrods         = node["br_rod"]["rod"]["num"].as<int>();
+    double rlength    = node["br_rod"]["rod"]["length"].as<double>();
+    double max_length = node["br_rod"]["rod"]["max_length"].as<double>();
+    double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
+
+    std::cout << std::setw(25) << std::left << "   n rods:" << std::setw(10)
+      << std::left << nrods << std::endl;
+    std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
+      << std::left << rlength << std::endl;
+    std::cout << std::setw(25) << std::left << "   max length:" << std::setw(10)
+      << std::left << max_length << std::endl;
+    std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
+      << std::left << diameter << std::endl;
+
+    params_->n_rod = nrods;
+    params_->rod_length = rlength;
+    params_->max_rod_length = max_length;
+    max_length_ = max_length;
+    params_->rod_diameter = diameter;
+
+
+    for (int i = 0; i < nrods; ++i) {
+      BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->Init();
+
+      // Check against all other rods in the sytem
+      if (can_overlap) {
+        // Done, add to members
+        members_.push_back(member);
+      } else {
+        // Check against all other rods in system
+        bool isoverlap = true;
+        int numoverlaps = 0;
+        do {
+          numoverlaps++;
+          isoverlap = false;
+          for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
+            interactionmindist idm;
+            // Just check the 0th element of each
+            auto part1 = member->GetSimples()[0];
+            auto part2 = (*rodit)->GetSimples()[0];
+            MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+            double diameter2 = diameter*diameter;
+
+            if (idm.dr_mag2 < diameter2) {
+              isoverlap = true;
+
+
+
+              /*if (debug_trace) {
+                printf("Overlap detected [oid: %d,%d], [cid: %d, %d] -> (%2.2f < %2.2f)\n",
+                        part1->GetOID(), part2->GetOID(), part1->GetCID(), part2->GetCID(), idm.dr_mag2, diameter2);
+              }*/
+              // We can just call init again to get new random numbers
+              member->Init();
+            }
+          } // check against current members
+          if (numoverlaps > params_->max_overlap) {
+            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i << " of " << nrods;
+            std::cout << ".  Check packing ratio for objects.\n";
+            exit(1);
+          }
+        } while (isoverlap);
+        members_.push_back(member);
+      }
+    }
+
   } else {
     printf("nope, not yet\n");
     exit(1);
