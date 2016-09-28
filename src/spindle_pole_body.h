@@ -19,6 +19,8 @@ class SpindlePoleBody : public Simple {
     double gamma_rot_;
     double attach_diameter_;
 
+    bool diffuse_;
+
     void UpdateAnchors();
 
   public:
@@ -31,17 +33,18 @@ class SpindlePoleBody : public Simple {
     const double* const GetVAnchor() {return v_anchor_;}
     const double* const GetWAnchor() {return w_anchor_;}
 
-    void InitConfigurator(const double r,
+    void InitConfigurator(const bool diffuse,
+                          const double r,
                           const double theta,
                           const double phi,
                           const double diameter,
                           const double attach_diameter);
     void Dump() {
       std::cout << std::setprecision(16) << "{" << GetOID() << "," << GetRID() << "," << GetCID() << "}\n"
-        << " -> x(" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << ")\n"
-        << " -> u(" << u_anchor_[0] << ", " << u_anchor_[1] << ", " << u_anchor_[2] << ")\n"
-        << " -> v(" << v_anchor_[0] << ", " << v_anchor_[1] << ", " << v_anchor_[2] << ")\n"
-        << " -> w(" << w_anchor_[0] << ", " << w_anchor_[1] << ", " << w_anchor_[2] << ")\n"
+        << "\tx(" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << ")\n"
+        << "\tu(" << u_anchor_[0] << ", " << u_anchor_[1] << ", " << u_anchor_[2] << ")\n"
+        << "\tv(" << v_anchor_[0] << ", " << v_anchor_[1] << ", " << v_anchor_[2] << ")\n"
+        << "\tw(" << w_anchor_[0] << ", " << w_anchor_[1] << ", " << w_anchor_[2] << ")\n"
         << "f(" << GetForce()[0] << ", " << GetForce()[1] << ", " << GetForce()[2] << "), "
         << "u(" << GetKineticEnergy() << "), p(" << GetPotentialEnergy() << "), "
         << "d(" << diameter_ << "), attach_diameter(" << attach_diameter_ << ")\n";
@@ -50,10 +53,10 @@ class SpindlePoleBody : public Simple {
     void PrintSPBProperties(int ispb) {
       std::cout << "New Spindle Pole Body: " << GetOID() << std::endl;
       std::cout << std::setprecision(16)
-        << "    x(" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << ")\n"
-        << "    u(" << u_anchor_[0] << ", " << u_anchor_[1] << ", " << u_anchor_[2] << ")\n"
-        << "    v(" << v_anchor_[0] << ", " << v_anchor_[1] << ", " << v_anchor_[2] << ")\n"
-        << "    w(" << w_anchor_[0] << ", " << w_anchor_[1] << ", " << w_anchor_[2] << ")\n"
+        << "    x (" << GetPosition()[0] << ", " << GetPosition()[1] << ", " << GetPosition()[2] << ")\n"
+        << "    u (" << u_anchor_[0] << ", " << u_anchor_[1] << ", " << u_anchor_[2] << ")\n"
+        << "    v (" << v_anchor_[0] << ", " << v_anchor_[1] << ", " << v_anchor_[2] << ")\n"
+        << "    w (" << w_anchor_[0] << ", " << w_anchor_[1] << ", " << w_anchor_[2] << ")\n"
         << "    translational gamma: " << gamma_tra_ << "\n"
         << "    rotational gamma: " << gamma_rot_ << "\n";
     }
@@ -88,6 +91,12 @@ class SpindlePoleBodySpecies : public Species<SpindlePoleBody> {
 
     void Configurator();
     void ConfiguratorSpindle(int ispb, al_set *anchors);
+
+    static void CreateTestSPB(SpindlePoleBody **pspb,
+                              int ndim,
+                              std::vector<Simple*>* simples,
+                              std::unordered_map<int, int>* oid_position_map,
+                              YAML::Node *subnode);
 
 };
 

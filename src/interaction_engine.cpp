@@ -270,8 +270,8 @@ void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, do
     auto jdx = (*oid_position_map_)[ait->idx_other_];
     auto part2 = (*simples_)[jdx];
 
-    part1->Dump();
-    part2->Dump();
+    //part1->Dump();
+    //part2->Dump();
 
     // Now that I have both particles (and their idxs), get the potential from the manager
     PotentialBase *pot = potentials_->GetPotentialTether(part1->GetOID(), part2->GetOID());
@@ -301,14 +301,18 @@ void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, do
       idm.contact2[i] = rx1[i] - part2->GetRigidPosition()[i];
     }
 
-    std::cout << "Anchor position: (" << std::setprecision(16)
-      << part1->GetRigidPosition()[0] << ", " << part1->GetRigidPosition()[1] << ", " << part1->GetRigidPosition()[2] << ")\n";
-    std::cout << "Anchor-sub position: (" << std::setprecision(16)
-      << part2->GetRigidPosition()[0] << ", " << part2->GetRigidPosition()[1] << ", " << part2->GetRigidPosition()[2] << ")\n";
+    //std::cout << "SPB position: (" << std::setprecision(16)
+    //  << part1->GetRigidPosition()[0] << ", " << part1->GetRigidPosition()[1] << ", " << part1->GetRigidPosition()[2] << ")\n";
+    //std::cout << "SPB anchor  : (" << std::setprecision(16)
+    //  << rx0[0] << ", " << rx0[1] << ", " << rx0[2] << ")\n";
+    //std::cout << "ROD position: (" << std::setprecision(16)
+    //  << part2->GetRigidPosition()[0] << ", " << part2->GetRigidPosition()[1] << ", " << part2->GetRigidPosition()[2] << ")\n";
+    //std::cout << "ROD anchor  : (" << std::setprecision(16)
+    //  << rx1[0] << ", " << rx1[1] << ", " << rx1[2] << ")\n";
 
-    std::cout << std::setprecision(16)
-      << "rcontact1: (" << idm.contact1[0] << ", " << idm.contact1[1] << ", " << idm.contact1[2] << ")\n"
-      << "rcontact2: (" << idm.contact2[0] << ", " << idm.contact2[1] << ", " << idm.contact2[2] << ")\n";
+    //std::cout << std::setprecision(16)
+    //  << "rcontact1: (" << idm.contact1[0] << ", " << idm.contact1[1] << ", " << idm.contact1[2] << ")\n"
+    //  << "rcontact2: (" << idm.contact2[0] << ", " << idm.contact2[1] << ", " << idm.contact2[2] << ")\n";
 
     // Call the potential calc
     // Fire off the potential calculation

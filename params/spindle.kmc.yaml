@@ -35,5 +35,7 @@ kmc:
   f_pause_to_shrink: 0.0
   f_shrink_to_grow: 0.00001
   f_shrink_to_pause: 0.0
-  v_poly: 0.10
-  v_depoly: 0.159
+  #v_poly: 0.10
+  #v_depoly: 0.159
+  v_poly: 0.0
+  v_depoly: 0.0

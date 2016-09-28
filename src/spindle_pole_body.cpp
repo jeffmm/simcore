@@ -1,7 +1,8 @@
 #include "spindle_pole_body.h"
 
 // SPB specifics
-void SpindlePoleBody::InitConfigurator(const double r,
+void SpindlePoleBody::InitConfigurator(const bool diffuse,
+                                       const double r,
                                        const double theta,
                                        const double phi,
                                        const double diameter,
@@ -12,10 +13,13 @@ void SpindlePoleBody::InitConfigurator(const double r,
   }
   diameter_ = diameter;
   attach_diameter_ = attach_diameter;
-  std::cout << "Inserting SPB at\n" << std::setprecision(16)
-    << "\tr: " << r << ", "
-    << "theta: " << theta << ", "
-    << "phi: " << phi << "\n";
+  diffuse_ = diffuse;
+  if (debug_trace) {
+    std::cout << "Inserting SPB at\n" << std::setprecision(16)
+      << "\tr: " << r << ", "
+      << "theta: " << theta << ", "
+      << "phi: " << phi << "\n";
+  }
   conf_rad_ = r;
   double r_anchor[3] = {0.0, 0.0, 0.0};
   r_anchor[0] = r * sin(theta) * cos(phi);
@@ -25,7 +29,6 @@ void SpindlePoleBody::InitConfigurator(const double r,
   SetPrevPosition(r_anchor);
 
   UpdateSPBRefVecs();
-  SetOrientation(u_anchor_);
 
   UpdateSPBDragConstants();
 
@@ -55,6 +58,7 @@ void SpindlePoleBody::UpdateSPBRefVecs() {
   }
 
   cross_product(u_anchor_, v_anchor_, w_anchor_, 3);
+  SetOrientation(u_anchor_);
 }
 
 void SpindlePoleBody::UpdateSPBDragConstants() {
@@ -78,22 +82,36 @@ void SpindlePoleBody::UpdatePositionMP() {
 
   double r_anchor_old[3] = {0.0, 0.0, 0.0};
   double u_anchor_old[3] = {0.0, 0.0, 0.0};
+
+  //std::cout << "SPB update position mp\n";
+  //std::cout << "  Force : (" << std::setprecision(16)
+  //  << force_[0] << ", " << force_[1] << ", " << force_[2] << ")\n";
+  //std::cout << "  Torque: (" << std::setprecision(16)
+  //  << torque_[0] << ", " << torque_[1] << ", " << torque_[2] << ")\n";
   
-  double f_dot_u = dot_product(n_dim_, GetForce(), u_anchor_);
-  double f_rand[3] = {
-    gsl_ran_gaussian_ziggurat(rng_.r, sqrt(2.0 * gamma_t / delta_)),
-    gsl_ran_gaussian_ziggurat(rng_.r, sqrt(2.0 * gamma_t / delta_)),
-    gsl_ran_gaussian_ziggurat(rng_.r, sqrt(2.0 * gamma_t / delta_))
-  };
+  double f_dot_u = dot_product(n_dim_, force_, u_anchor_);
+  double f_rand[3] = {0.0, 0.0, 0.0};
+  if (diffuse_) {
+    for (int i = 0; i < n_dim_; ++i) {
+      f_rand[i] = gsl_ran_gaussian_ziggurat(rng_.r, sqrt(2.0 * gamma_t / delta_));
+    }
+  }
 
   // Position
   f_dot_u += dot_product(n_dim_, f_rand, u_anchor_);
 
+  //std::cout << std::setprecision(16) << "f_dot_u: " << f_dot_u << std::endl;
+
   for (int i = 0; i < n_dim_; ++i) {
     u_anchor_old[i] = u_anchor_[i];
-    u_anchor_[i] -= (GetForce()[i]+f_rand[i] -
+    u_anchor_[i] -= (force_[i]+f_rand[i] -
                      f_dot_u * u_anchor_[i]) * delta_ / gamma_t;
   }
+
+  //std::cout << "Updated u_anchor to: (" << std::setprecision(16)
+  //  << u_anchor_[0] << ", " << u_anchor_[1] << ", " << u_anchor_[2] << ")"
+  //  << " from: ("
+  //  << u_anchor_old[0] << ", " << u_anchor_old[1] << ", " << u_anchor_old[2] << ")\n";
 
   double norm_factor = sqrt(1.0/dot_product(n_dim_, u_anchor_, u_anchor_));
   double r_anchor[3] = {0.0, 0.0, 0.0};
@@ -103,19 +121,31 @@ void SpindlePoleBody::UpdatePositionMP() {
     r_anchor[i] = -u_anchor_[i] * conf_rad_;
   }
 
+  //std::cout << "Updated r_anchor to: ( " << std::setprecision(16)
+  //  << r_anchor[0] << ", " << r_anchor[1] << ", " << r_anchor[2] << ")"
+  //  << " from: ("
+  //  << r_anchor_old[0] << ", " << r_anchor_old[1] << ", " << r_anchor_old[2] << ")\n";
+
   SetPrevPosition(r_anchor_old);
   SetPosition(r_anchor);
   AddDr();
   SetOrientation(u_anchor_);
 
   // Orientation(s)
-  double tau_random = gsl_ran_gaussian(rng_.r, sqrt(2.0 * gamma_r / delta_));
+  double tau_random = 0.0;
+  if (diffuse_) {
+    double tau_random = gsl_ran_gaussian(rng_.r, sqrt(2.0 * gamma_r / delta_));
+  }
   std::copy(torque_, torque_+3, tau_local_);
   double tau_body_full[3] = {
     tau_local_[0] + u_anchor_[0] * tau_random,
     tau_local_[1] + u_anchor_[1] * tau_random,
     tau_local_[2] + u_anchor_[2] * tau_random
   };
+  //std::cout << "tau_body_full: (" << std::setprecision(16)
+  //  << tau_body_full[0] << ", " << tau_body_full[1] << ", " << tau_body_full[2] << ")\n";
+  //std::cout << "v_anchor start: (" << std::setprecision(16)
+  //  << v_anchor_[0] << ", " << v_anchor_[1] << ", " << v_anchor_[2] << ")\n";
   double dv[3] = {0.0, 0.0, 0.0};
   cross_product(tau_body_full, v_anchor_, dv, 3);
   for (int i = 0; i < 3; ++i) dv[i] *= delta_ / gamma_r;
@@ -128,7 +158,11 @@ void SpindlePoleBody::UpdatePositionMP() {
   double n[3] = {0.0, 0.0, 0.0};
   cross_product(u_anchor_old, u_anchor_, n, n_dim_);
   double sin_omega = dot_product(n_dim_, n, n);
-  norm_factor = 1.0/sqrt(sin_omega);
+  if (sin_omega == 0) {
+    norm_factor = 0.0;
+  } else {
+    norm_factor = 1.0/sqrt(sin_omega);
+  }
   if (norm_factor > 1e-8) {
     for (int i = 0; i < 3; ++i) n[i] *= norm_factor;
     double cos_omega = dot_product(n_dim_, u_anchor_, u_anchor_old);
@@ -152,17 +186,22 @@ void SpindlePoleBody::UpdateAnchors() {
   if (anchors_ == nullptr) return;
 
   // Get our anchor
-  auto malist = (*anchors_)[GetOID()];
-  for (auto ait = malist.begin(); ait != malist.end(); ++ait) {
+  std::vector<anchor_t>* malist;
+  malist = &(*anchors_)[GetOID()];
+  for (auto ait = malist->begin(); ait != malist->end(); ++ait) {
     // Update just the first part, since we are the anchor
     double factor_u = dot_product(n_dim_, ait->pos_rel0_, u_anchor_);
     double factor_v = dot_product(n_dim_, ait->pos_rel0_, v_anchor_);
     double factor_w = dot_product(n_dim_, ait->pos_rel0_, w_anchor_);
 
-    std::cout << "Old Anchor pos0: (" << std::setprecision(16)
-      << ait->pos0_[0] << ", " << ait->pos0_[1] << ", " << ait->pos0_[2] << ")\n";
-    std::cout << "Old Anchor pos_rel0: (" << std::setprecision(16)
-      << ait->pos_rel0_[0] << ", " << ait->pos_rel0_[1] << ", " << ait->pos_rel0_[2] << ")\n";
+    //std::cout << std::setprecision(16) << "factor_u: " << factor_u << std::endl;
+    //std::cout << std::setprecision(16) << "factor_v: " << factor_v << std::endl;
+    //std::cout << std::setprecision(16) << "factor_w: " << factor_w << std::endl;
+
+    //std::cout << "Old Anchor pos0: (" << std::setprecision(16)
+    //  << ait->pos0_[0] << ", " << ait->pos0_[1] << ", " << ait->pos0_[2] << ")\n";
+    //std::cout << "Old Anchor pos_rel0: (" << std::setprecision(16)
+    //  << ait->pos_rel0_[0] << ", " << ait->pos_rel0_[1] << ", " << ait->pos_rel0_[2] << ")\n";
 
     // Calculate the new lab frame coordinates
     for (int i = 0; i < 3; ++i) {
@@ -173,10 +212,10 @@ void SpindlePoleBody::UpdateAnchors() {
     double norm_factor = conf_rad_ / sqrt(dot_product(n_dim_, ait->pos0_, ait->pos0_));
     for (int i = 0; i < 3; ++i) ait->pos0_[i] *= norm_factor;
 
-    std::cout << "New Anchor pos0: (" << std::setprecision(16)
-      << ait->pos0_[0] << ", " << ait->pos0_[1] << ", " << ait->pos0_[2] << ")\n";
-    std::cout << "New Anchor pos_rel0: (" << std::setprecision(16)
-      << ait->pos_rel0_[0] << ", " << ait->pos_rel0_[1] << ", " << ait->pos_rel0_[2] << ")\n";
+    //std::cout << "New Anchor pos0: (" << std::setprecision(16)
+    //  << ait->pos0_[0] << ", " << ait->pos0_[1] << ", " << ait->pos0_[2] << ")\n";
+    //std::cout << "New Anchor pos_rel0: (" << std::setprecision(16)
+    //  << ait->pos_rel0_[0] << ", " << ait->pos_rel0_[1] << ", " << ait->pos_rel0_[2] << ")\n";
   }
 }
 
@@ -226,8 +265,9 @@ void SpindlePoleBodySpecies::Configurator() {
       double attach_diameter  = node["spb"]["spb"][ispb]["attach_diameter"].as<double>();
       double spb_theta        = node["spb"]["spb"][ispb]["theta"].as<double>();
       double spb_phi          = node["spb"]["spb"][ispb]["phi"].as<double>();
+      bool diffuse            = node["spb"]["spb"][ispb]["diffuse"].as<bool>();
       SpindlePoleBody *member = new SpindlePoleBody(params_, space_, gsl_rng_get(rng_.r), GetSID());
-      member->InitConfigurator(0.5 * space_->unit_cell[0][0], spb_theta, spb_phi, diameter, attach_diameter);
+      member->InitConfigurator(diffuse, 0.5 * space_->unit_cell[0][0], spb_theta, spb_phi, diameter, attach_diameter);
       member->SetColor(color, draw_type);
       member->Dump();
       members_.push_back(member);
@@ -269,9 +309,10 @@ void SpindlePoleBodySpecies::ConfiguratorSpindle(int ispb, al_set* anchors) {
   double attach_diameter  = node["spb"][ispb]["properties"]["attach_diameter"].as<double>();
   double spb_theta        = node["spb"][ispb]["properties"]["theta"].as<double>();
   double spb_phi          = node["spb"][ispb]["properties"]["phi"].as<double>();
+  bool diffuse            = node["spb"][ispb]["properties"]["diffuse"].as<bool>();
 
   SpindlePoleBody *member = new SpindlePoleBody(params_, space_, gsl_rng_get(rng_.r), GetSID());
-  member->InitConfigurator(0.5 * space_->unit_cell[0][0], spb_theta, spb_phi, diameter, attach_diameter);
+  member->InitConfigurator(diffuse, 0.5 * space_->unit_cell[0][0], spb_theta, spb_phi, diameter, attach_diameter);
   member->SetColor(color, draw_type);
   member->SetAnchors(anchors);
   members_.push_back(member);
@@ -280,4 +321,29 @@ void SpindlePoleBodySpecies::ConfiguratorSpindle(int ispb, al_set* anchors) {
   anchors->insert(std::make_pair(member->GetOID(), std::vector<anchor_t>()));
 
   member->PrintSPBProperties(ispb);
+}
+
+
+void SpindlePoleBodySpecies::CreateTestSPB(SpindlePoleBody **pspb,
+                                           int ndim,
+                                           std::vector<Simple*>* simples,
+                                           std::unordered_map<int, int>* oid_position_map,
+                                           YAML::Node *subnode) {
+  YAML::Node node = *subnode;
+  SpindlePoleBody *mspb = *pspb;
+  // Load the spb
+  std::cout << "SPB Node:\n" << node << std::endl;
+  double spb_theta    = node["theta"].as<double>();
+  double spb_phi      = node["phi"].as<double>();
+  double diameter     = node["diameter"].as<double>();
+  double adiameter    = node["attach_diameter"].as<double>();
+  double radius       = node["radius"].as<double>();
+  bool diffuse        = node["diffuse"].as<bool>();
+  mspb->InitConfigurator(diffuse, radius, spb_theta, spb_phi, diameter, adiameter);
+
+  std::vector<Simple*> sim_vec = mspb->GetSimples();
+  for (int i = 0; i < sim_vec.size(); ++i) {
+    simples->push_back(sim_vec[i]);
+    (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
+  }
 }
