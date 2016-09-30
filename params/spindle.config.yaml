@@ -84,3 +84,13 @@ spb:
         length: 3.0
       - insertion_type: random
         length: 3.0
+
+xlink:
+  properties:
+    insertion_type: random
+    overlap: true
+    draw_type: fill
+    color: [1.0, 0.0, 0.0, 1.0]
+  xit:
+    num: 500
+    diameter: 1
