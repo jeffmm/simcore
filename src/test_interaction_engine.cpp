@@ -130,4 +130,5 @@ bool TestInteractionEngine::TestTetherParticlesMP(int test_num) {
     anchors_->insert(std::make_pair(testSPB->GetOID(), std::vector<anchor_t>()));
 
   }
+  return success;
 }
