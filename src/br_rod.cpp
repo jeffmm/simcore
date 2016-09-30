@@ -615,6 +615,9 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
     double v_bond[3] = {0.0, 0.0, 0.0};
     double x_bond[3] = {0.0, 0.0, 0.0};
 
+    // Create the rod
+    BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+
     if (insert_type.compare("random") == 0) {
       int overlap;
       do {
@@ -650,29 +653,46 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
             u_bond[i] * r0;
         }
 
+        // Update the Rod
+        member->InitConfigurator(x_bond, u_bond, mlength);
+        member->SetColor(color, draw_type);
+
         // Check for overlaps
         overlap = 0;
         double s_bond[3] = {0.0, 0.0, 0.0};
-        for (int jrod = 0; jrod < irod-1; ++jrod) {
-          auto mrod = members_[jrod];
-          double mrod_x[3] = {0.0, 0.0, 0.0};
-          double mrod_s[3] = {0.0, 0.0, 0.0};
-          double mrod_u[3] = {0.0, 0.0, 0.0};
-          double mrod_l = mrod->GetLength();
-          std::copy(mrod->GetPosition(), mrod->GetPosition()+3, mrod_x);
-          std::copy(mrod->GetScaledPosition(), mrod->GetScaledPosition()+3, mrod_s);
-          std::copy(mrod->GetOrientation(), mrod->GetOrientation()+3, mrod_u);
-          overlap += sphero_overlap(ndim, 0, space_->unit_cell, 0.0, 1.0,
-              x_bond,
-              s_bond,
-              u_bond,
-              mlength,
-              mrod_x,
-              mrod_s,
-              mrod_u,
-              mrod_l
-              );
+
+        for (auto rodit = members_.begin(); rodit != members_.end(); ++rodit) {
+          auto part1 = member->GetSimples()[0];
+          auto part2 = (*rodit)->GetSimples()[0];
+          interactionmindist idm;
+          MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+          double diameter2 = diameter*diameter;
+          if (idm.dr_mag2 < diameter2) {
+            overlap++;
+          }
         }
+
+        //for (int jrod = 0; jrod < irod-1; ++jrod) {
+        //  auto mrod = members_[jrod];
+        //  auto part1 = member->GetSimples()[0];
+        //  double mrod_x[3] = {0.0, 0.0, 0.0};
+        //  double mrod_s[3] = {0.0, 0.0, 0.0};
+        //  double mrod_u[3] = {0.0, 0.0, 0.0};
+        //  double mrod_l = mrod->GetLength();
+        //  std::copy(mrod->GetPosition(), mrod->GetPosition()+3, mrod_x);
+        //  std::copy(mrod->GetScaledPosition(), mrod->GetScaledPosition()+3, mrod_s);
+        //  std::copy(mrod->GetOrientation(), mrod->GetOrientation()+3, mrod_u);
+        //  overlap += sphero_overlap(ndim, 0, space_->unit_cell, 0.0, 1.0,
+        //      x_bond,
+        //      s_bond,
+        //      u_bond,
+        //      mlength,
+        //      mrod_x,
+        //      mrod_s,
+        //      mrod_u,
+        //      mrod_l
+        //      );
+        //}
       } while (overlap != 0);
     } else if (insert_type.compare("rtp") == 0) {
       // r theta phi insert
@@ -694,9 +714,9 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
     }
 
     // Insert the rod
-    BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
-    member->InitConfigurator(x_bond, u_bond, mlength);
-    member->SetColor(color, draw_type);
+    //BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+    //member->InitConfigurator(x_bond, u_bond, mlength);
+    //member->SetColor(color, draw_type);
     //member->Dump();
     member->SetAnchors(anchors);
     members_.push_back(member);

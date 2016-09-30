@@ -201,8 +201,16 @@ void Simulation::ConfigureSpindle() {
         &anchors_);
   }
 
+  // Now the crosslinks
+  // XXX FIXME hardcoded for now
+  XlinkSpecies *pxspec = (XlinkSpecies*)species_factory_.construct("xlink");
+  SpeciesBase *pxspec_base = (SpeciesBase*)pxspec;
+  pxspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
+  pxspec_base->Configurator();
+
   species_.push_back(pspbspec_base);
   species_.push_back(prspec_base);
+  species_.push_back(pxspec_base);
 
 }
 
