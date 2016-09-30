@@ -43,6 +43,7 @@ class Object {
     std::vector<neighbor_t>* neighbors_;
     al_set *anchors_;
     virtual void InsertRandom(double buffer);
+    virtual void InsertOriented(double buffer);
   public:
     Object(system_parameters *params, space_struct *space, long seed, SID sid);
     Object(const Object& that);
@@ -121,6 +122,7 @@ class Object {
     double const GetLength() {return length_;}
     double const GetDelta() {return delta_;}
     virtual void Init() {InsertRandom(length_+diameter_);}
+    virtual void PolarInit() {InsertOriented(length_+diameter_);}
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePeriodic();
     virtual void UpdatePosition() {}
@@ -296,7 +298,7 @@ class Composite<T> : public Object {
     std::vector<T> elements_;
     virtual void InitElements(system_parameters *params) {}
   public:
-    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {} 
+    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {}
     //Destructor
     virtual ~Composite() {}
     //Copy constructor
@@ -328,7 +330,7 @@ class Composite<T> : public Object {
       double dr_max = 0;
       for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
         double dr_mag = it->GetDr();
-        if (dr_mag > dr_max) 
+        if (dr_mag > dr_max)
           dr_max = dr_mag;
       }
       return dr_max;
@@ -349,7 +351,7 @@ class Composite<T> : public Object {
         it->Dump();
       }
     }
-    
+
     virtual int GetCount() {
       return elements_.size();
     }
@@ -370,7 +372,7 @@ class Composite<T,V> : public Object {
     std::vector<T> elements_;
     std::vector<V> v_elements_;
   public:
-    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {} 
+    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {}
     //Destructor
     virtual ~Composite() {}
     //Copy constructor
@@ -426,7 +428,7 @@ class Composite<T,V> : public Object {
       double dr_max = 0;
       for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
         double dr_mag = it->GetDr();
-        if (dr_mag > dr_max) 
+        if (dr_mag > dr_max)
           dr_max = dr_mag;
       }
       return dr_max;
