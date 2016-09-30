@@ -12,7 +12,7 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   cid_ = oid_;
   sid_ = sid;
   space_ = space;
-  n_dim_ = space_->n_dim; 
+  n_dim_ = space_->n_dim;
   delta_ = params->delta;
   std::fill(position_,position_+3,0.0);
   std::fill(velocity_,velocity_+3,0.0);
@@ -124,7 +124,7 @@ void Object::InsertRandom(double buffer) {
   if (space_->n_periodic == n_dim_)
     buffer = 0;
   double R = space_->radius;
-  if (R - buffer < 0) 
+  if (R - buffer < 0)
     error_exit("ERROR: Object #%d is too large to place in system.\n",GetOID());
   if (space_->type.compare("sphere")==0) {
     generate_random_unit_vector(n_dim_, position_, rng_.r);
@@ -162,6 +162,24 @@ void Object::InsertRandom(double buffer) {
       }
     }
   }
+  generate_random_unit_vector(n_dim_, orientation_, rng_.r);
+  UpdatePeriodic();
+}
+
+void Object::InsertOriented(double buffer) {
+  double mag;
+  if (space_->n_periodic == n_dim_)
+    buffer = 0;
+  double R = space_->radius;
+  if (R - buffer < 0)
+    error_exit("ERROR: Object #%d is too large to place in system.\n",GetOID());
+  if (space_->type.compare("oriented")==0) {
+    for (int i=0; i<n_dim_; ++i) {
+      printf("Hello!\n");
+      position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1);
+
+      }
+    }
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   UpdatePeriodic();
 }
@@ -237,13 +255,13 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
   imd.buffer_mag = 0.5*(d1+d2);
   imd.buffer_mag2 = imd.buffer_mag*imd.buffer_mag;
   if (l1 == 0 && l2 == 0)
-    min_distance_point_point(ndim, nperiodic, space->unit_cell, 
+    min_distance_point_point(ndim, nperiodic, space->unit_cell,
                  r1, s1, r2, s2, imd.dr, &imd.dr_mag2);
-  else if (l1 == 0 && l2 > 0) 
+  else if (l1 == 0 && l2 > 0)
     min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
                    r1, s1, r2, s2, u2, l2,
                    imd.dr, &imd.dr_mag2, imd.contact2);
-  else if (l1 > 0 && l2 == 0) 
+  else if (l1 > 0 && l2 == 0)
     min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
                    r2, s2, r1, s1, u1, l1,
                    imd.dr, &imd.dr_mag2, imd.contact1);
