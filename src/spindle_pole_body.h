@@ -20,6 +20,7 @@ class SpindlePoleBody : public Simple {
     double attach_diameter_;
 
     bool diffuse_;
+    bool invisible_;
 
     void UpdateAnchors();
 
@@ -60,6 +61,9 @@ class SpindlePoleBody : public Simple {
         << "    translational gamma: " << gamma_tra_ << "\n"
         << "    rotational gamma: " << gamma_rot_ << "\n";
     }
+
+    void SetInvisible(bool invisible) {invisible_=invisible;}
+    virtual void Draw(std::vector<graph_struct*> * graph_array);
 
     // Special functions
     void UpdateSPBRefVecs();

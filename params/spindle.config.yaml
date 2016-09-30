@@ -7,42 +7,80 @@ spb:
       phi: 0.0
       diameter: 9.5
       attach_diameter: 6.5
-      diffuse: false
+      diffuse: true
+      invisible: true
       draw_type: fill
       color: [1.0, 1.0, 0.0, 1.0]
-      mt_max_length: 110.0
+      mt_max_length: 300.0
       mt_min_length: 2.0
       mt_diameter: 1.0
       r0: 2.0
     mt:
-#      - insertion_type: rtp
-#        theta: 0.07
-#        phi: 0.0
-#        u: [0.0, 0.0, -1.0]
-#        length: 20.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
       - insertion_type: random
-        length: 10.0
+        length: 3.0
+
+  - properties:
+      insertion_type: rtp
+      theta: 0.177
+      phi: 1.57
+      diameter: 9.5
+      attach_diameter: 6.5
+      diffuse: true
+      invisible: true
+      draw_type: fill
+      color: [1.0, 1.0, 0.0, 1.0]
+      mt_max_length: 300.0
+      mt_min_length: 2.0
+      mt_diameter: 1.0
+      r0: 2.0
+    mt:
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
+      - insertion_type: random
+        length: 3.0
