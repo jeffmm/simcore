@@ -207,6 +207,7 @@ void Simulation::InitOutputs() {
 }
 
 void Simulation::WriteOutputs() {
+  output_mgr_.WriteOutputs();
   if (i_step_ == 0) {
     return; // skip first step
   }
@@ -240,7 +241,6 @@ void Simulation::WriteOutputs() {
     en_file.close();
   }
 
-  output_mgr_.WriteOutputs();
 
   if (i_step_ == params_.n_steps-1) {
     for (auto it=species_.begin(); it!=species_.end(); ++it)
