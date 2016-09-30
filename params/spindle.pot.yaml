@@ -7,7 +7,7 @@ potentials:
     fcut: 100
     eps: 1
     sigma: 1
-    #overlap: true
+    overlap: true
 
 #  - name : SphereLineWell
 #    type: external

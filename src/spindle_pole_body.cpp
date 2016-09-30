@@ -219,6 +219,19 @@ void SpindlePoleBody::UpdateAnchors() {
   }
 }
 
+void SpindlePoleBody::Draw(std::vector<graph_struct*> * graph_array) {
+  if (!invisible_) {
+    std::copy(position_, position_+3, g_.r);
+    std::copy(orientation_, orientation_+3, g_.u);
+    std::copy(color_, color_+4, g_.color);
+    //g_.length = (length_-diameter_ > 0 ? length_-diameter_ : 0);
+    g_.length = length_;
+    g_.diameter = diameter_;
+    g_.draw_type = draw_type_;
+    graph_array->push_back(&g_);
+  }
+}
+
 
 
 // Species specifics
@@ -280,7 +293,6 @@ void SpindlePoleBodySpecies::Configurator() {
 
 void SpindlePoleBodySpecies::ConfiguratorSpindle(int ispb, al_set* anchors) {
   char *filename = params_->config_file;
-  std::cout << "SpindlePoleBody species\n";
 
   YAML::Node node = YAML::LoadFile(filename);
 
@@ -310,11 +322,13 @@ void SpindlePoleBodySpecies::ConfiguratorSpindle(int ispb, al_set* anchors) {
   double spb_theta        = node["spb"][ispb]["properties"]["theta"].as<double>();
   double spb_phi          = node["spb"][ispb]["properties"]["phi"].as<double>();
   bool diffuse            = node["spb"][ispb]["properties"]["diffuse"].as<bool>();
+  bool invisible       = node["spb"][ispb]["properties"]["invisible"].as<bool>();
 
   SpindlePoleBody *member = new SpindlePoleBody(params_, space_, gsl_rng_get(rng_.r), GetSID());
   member->InitConfigurator(diffuse, 0.5 * space_->unit_cell[0][0], spb_theta, spb_phi, diameter, attach_diameter);
   member->SetColor(color, draw_type);
   member->SetAnchors(anchors);
+  member->SetInvisible(invisible);
   members_.push_back(member);
 
   // Create a anchor list entry for this spb

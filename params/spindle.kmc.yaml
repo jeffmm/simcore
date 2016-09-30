@@ -31,11 +31,11 @@ kmc:
   write_event: true
   f_grow_to_pause: 0.0
   f_grow_to_shrink: 0.00237458231883
-  f_pause_to_grow: 0.0
+  f_pause_to_grow: 0.02
   f_pause_to_shrink: 0.0
   f_shrink_to_grow: 0.00001
   f_shrink_to_pause: 0.0
-  #v_poly: 0.10
-  #v_depoly: 0.159
-  v_poly: 0.0
-  v_depoly: 0.0
+  v_poly: 0.06
+  v_depoly: 0.12
+  #v_poly: 0.0
+  #v_depoly: 0.0
