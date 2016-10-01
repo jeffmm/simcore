@@ -458,7 +458,7 @@ void BrRodSpecies::Configurator() {
         for (int i=0; i<params_->n_dim; i++){
           director[i] = node["br_rod"]["properties"]["director"][i].as<double>();
         }
-        normalize_vector(director, params_->n_dim);
+        normalize_vector(director, 3);
         std::transform(director, director+3, mdirector, std::negate<int>());
       }
     else
@@ -540,7 +540,8 @@ void BrRodSpecies::Configurator() {
           director[i] = node["br_rod"]["properties"]["director"][i].as<double>();
         }
         normalize_vector(director, params_->n_dim);
-        std::transform(director, director+3, mdirector, std::negate<int>());
+        for (int i=0; i<params_->n_dim; i++)
+          mdirector[i] = -1.0*director[i];
       }
     else
       fill_type = "isotropic";
