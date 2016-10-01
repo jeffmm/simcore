@@ -31,6 +31,8 @@ class Object {
            k_energy_,
            p_energy_,
            kmc_energy_;
+
+    //double *spec_virial_;
     bool is_rigid_ = false;
     bool is_kmc_ = false;
     space_struct *space_;
@@ -79,6 +81,7 @@ class Object {
       std::fill(torque_,torque_+3,0.0);
       p_energy_ = 0.0;
       kmc_energy_ = 0.0;
+      //memset(virial_, 0, sizeof(virial_));
     }
     void ZeroDrTot() {
       //printf("[%d] zero dr tot\n", GetOID());
@@ -96,6 +99,21 @@ class Object {
       for (int i=0; i<3; ++i)
         torque_[i]+=t[i];
     }
+    //void AddVirial(double const * const f, double const * const dr);
+    //void AddVirial(double *f, double *dr);
+      //for (int i=0; i<n_dim_; ++i)
+        //for (int j=i; j<n_dim_; ++j){
+          //std::cout<<spec_virial_[0]<<std::endl;
+          //spec_virial_[3*i+j] = spec_virial_[3*j+i] += f[i] * dr[j];
+        //}
+    //}
+
+    //void GetVirial( double spec_virial[3][3] ){
+      //for (int i=0; i<n_dim_; ++i)
+        //for (int j=i; j<n_dim_; ++j)
+          //spec_virial_[i][j] = spec_virial_[j][i] += f[i]*dr[j];
+    //}
+
     void SetTorque(double const * const t) {
       for (int i=0; i<3; ++i)
         torque_[i]=t[i];
@@ -169,6 +187,10 @@ class Object {
         std::cout << "Reading rng state failed " << retval << std::endl;
       }
     }
+
+    //virtual void InitVirial(double *spec_virial){ 
+      //spec_virial_ = spec_virial; 
+    //}
 };
 
 class Simple : public Object {
@@ -281,11 +303,13 @@ template<typename...> class Composite;
 
 template <typename T>
 class Composite<T> : public Object {
+  private:
+    system_parameters *params_;
   protected:
     std::vector<T> elements_;
     virtual void InitElements(system_parameters *params) {}
   public:
-    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {} 
+    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {params_ = params;} 
     //Destructor
     virtual ~Composite() {}
     //Copy constructor
@@ -323,6 +347,11 @@ class Composite<T> : public Object {
       return dr_max;
     }
 
+    //virtual void InitVirial(double *spec_virial){ 
+      //for (auto& elem : elements_)
+        //elem.InitVirial(spec_virial);
+    //}
+
     virtual void ZeroDrTot() {
       std::fill(dr_tot_,dr_tot_+3,0.0);
       for (auto it=elements_.begin(); it!= elements_.end(); ++it) {
@@ -344,10 +373,22 @@ class Composite<T> : public Object {
     }
 
     virtual void WritePosit(std::fstream &op){
+      int size;
+      size = elements_.size();
+      op.write(reinterpret_cast<char*>(&size), sizeof(int));
+
       for (auto& elem : elements_)
         elem.WritePosit(op);
     }
+
     virtual void ReadPosit(std::fstream &ip){
+      if (ip.eof()) return;
+      int size;
+      std::cout<<"Size: "<<size<<std::endl;
+      T elmt(params_, space_, params_->seed, sid_);
+      ip.read(reinterpret_cast<char*>(&size), sizeof(int));
+      elements_.resize(size, elmt);
+
       for (auto& elem : elements_)
         elem.ReadPosit(ip);
     }
@@ -355,11 +396,13 @@ class Composite<T> : public Object {
 
 template <typename T, typename V>
 class Composite<T,V> : public Object {
+  private:
+    system_parameters *params_;
   protected:
     std::vector<T> elements_;
     std::vector<V> v_elements_;
   public:
-    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {} 
+    Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {params_ = params;}  
     //Destructor
     virtual ~Composite() {}
     //Copy constructor
@@ -422,18 +465,43 @@ class Composite<T,V> : public Object {
     }
 
     virtual void WritePosit(std::fstream &op){
+      int size;
+      size = elements_.size();
+      op.write(reinterpret_cast<char*>(&size), sizeof(size));
+      size = v_elements_.size();
+      op.write(reinterpret_cast<char*>(&size), sizeof(size));
+
       for (auto& elem : elements_)
         elem.WritePosit(op);
       for (auto& velem : v_elements_)
         velem.WritePosit(op);
     }
+
     virtual void ReadPosit(std::fstream &ip){
+      int size;
+      T elmt(params_, space_, params_->seed, sid_);
+      V v_elmt(params_, space_, params_->seed, sid_);
+
+      ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+      std::cout<<"T Size: "<<size<<std::endl;
+      elements_.resize(size, elmt);
+      ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+      std::cout<<"V Size: "<<size<<std::endl;
+      v_elements_.resize(size, v_elmt);
+
+
       for (auto& elem : elements_)
         elem.ReadPosit(ip);
       for (auto& velem : v_elements_)
         velem.ReadPosit(ip);
     }
 
+    //virtual void InitVirial(double *spec_virial){ 
+      //for (auto& elem : elements_)
+        //elem.InitVirial(spec_virial);
+      //for (auto& velem : v_elements_)
+        //velem.InitVirial(spec_virial);
+    //}
 };
 
 // *********

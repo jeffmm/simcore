@@ -38,6 +38,7 @@ class ParticleTracking {
     const int GetNSimples() {return nsimples_;}
     std::vector<Simple*>* GetSimples() {return &simples_;}
     const bool TriggerUpdate() {return trigger_update_;}
+    const int GetNSpecies() {return nspecies_;}
 
     void Print();
     void Dump();
@@ -49,6 +50,7 @@ class ParticleTracking {
     int nthreads_;
     int nsys_;
     int nsimples_;
+    double nspecies_;
     double rcut_;
     double skin_;
     double box_[3];

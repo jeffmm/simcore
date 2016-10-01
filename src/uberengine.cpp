@@ -90,6 +90,7 @@ void UberEngine::Init(system_parameters *pParams, space_struct *pSpace, std::vec
   // Run one step to make sure that we're all good
   ptrack_.UpdateTracking(true);
   fengine_.Interact();
+  std::cout<<"Here\n";
 }
 
 void UberEngine::InitPotentials() {

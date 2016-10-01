@@ -53,12 +53,13 @@ void Simulation::RunMovie(){
       printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
       fflush(stdout);
     }
+    //std::cout<<" CHECK 1 "<< (i_step_) % (params_.n_steps/100)<<std::endl;
     if (debug_trace)
       printf("********\nStep %d\n********\n", i_step_);
     if (i_step_%params_.n_posit == 0){
       output_mgr_.ReadSpeciesPositions(); 
     }
-    
+    //std::cout<<" CHECK 1 "<< (i_step_) % (params_.n_steps/100)<<std::endl;
     Draw();
     //WriteOutputs();
   }
@@ -100,7 +101,7 @@ void Simulation::ZeroForces() {
 void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
-  output_mgr_.Init(&params_, &graph_array, &i_step_);
+  output_mgr_.Init(&params_, &graph_array, &i_step_, run_name_);
   InitSpecies();
   uengine_.Init(&params_, space_.GetStruct(), &species_, gsl_rng_get(rng_.r));
   if (params_.graph_flag) {
@@ -155,8 +156,7 @@ void Simulation::ClearSpecies() {
 
 void Simulation::ClearSimulation() {
   space_.Clear();
-  if (params_.posit_flag == 1 || output_mgr_.IsMovie() )
-    output_mgr_.Close();
+  output_mgr_.Close();
   ClearSpecies();
   if (params_.graph_flag)
     graphics_.Clear();
@@ -203,7 +203,7 @@ void Simulation::InitOutputs() {
   {
     uengine_.PrepOutputs();
   }
-
+  output_mgr_.MakeHeaders();
 }
 
 void Simulation::WriteOutputs() {
@@ -257,6 +257,7 @@ void Simulation::WriteOutputs() {
 //TODO Make sure only species that are put through with m posit are initialized
 void Simulation::CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files){
   params_ = params;
+  run_name_ = name;
 
   //Graph and don't make new posit files
   params_.graph_flag = 1;
@@ -264,7 +265,6 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::ve
 
   output_mgr_.SetMovie(posit_files);
 
-  run_name_ = name;
   rng_.init(params_.seed);
   InitSimulation();
   RunMovie();

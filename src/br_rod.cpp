@@ -548,15 +548,15 @@ void BrRodSpecies::Configurator() {
 }
 
 //Only reading out bound positions but this you might want to change
-void BrRod::WritePosit(std::fstream &op){
-  for (auto& velem : v_elements_)
-    velem.WritePosit(op);
-}
+//void BrRod::WritePosit(std::fstream &op){
+  //for (auto& velem : v_elements_)
+    //velem.WritePosit(op);
+//}
 
-void BrRod::ReadPosit(std::fstream &ip){
-  for (auto& velem : v_elements_)
-    velem.ReadPosit(ip);
-}
+//void BrRod::ReadPosit(std::fstream &ip){
+  //for (auto& velem : v_elements_)
+    //velem.ReadPosit(ip);
+//}
 
 void BrRodSpecies::CreateTestRod(BrRod **rod,
                                  int ndim,
@@ -631,3 +631,4 @@ void BrRodSpecies::CreateTestRod(BrRod **rod,
     (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
   }
 }
+

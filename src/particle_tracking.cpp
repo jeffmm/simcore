@@ -13,6 +13,7 @@ void ParticleTracking::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSp
   nperiodic_ = space_->n_periodic;
   skin_ = pSkin;
   ftype_ = pFtype;
+  nspecies_ = (int)species_->size();
   for (int i = 0; i < ndim_; ++i) {
     box_[i] = space_->unit_cell[i][i];
   }
