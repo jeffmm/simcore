@@ -146,8 +146,8 @@ class BrRod : public Composite<Site,Bond> {
     // Specific functions for configurations
     void InitConfigurator(const double* const x, const double* const u, const double l);
 
-    void WritePosit(std::fstream &op);
-    void ReadPosit(std::fstream &ip);
+    //void WritePosit(std::fstream &op);
+    //void ReadPosit(std::fstream &ip);
 
 };
 

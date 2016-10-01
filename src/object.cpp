@@ -62,6 +62,7 @@ Object::Object(const Object& that) {
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
   neighbors_ = that.neighbors_;
+  //spec_virial_ = that.spec_virial_;
 }
 
 Object &Object::operator=(Object const& that) {
@@ -92,6 +93,7 @@ Object &Object::operator=(Object const& that) {
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
   neighbors_ = that.neighbors_;
+  //spec_virial_ = that.spec_virial_;
   return *this;
 }
 
@@ -242,7 +244,6 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
 }
 
 void Object::WritePosit(std::fstream &op){
-  //std::cout<<"Writing outputs\n";
   for(auto& pos : position_)
     op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
   for(auto& spos : scaled_position_)
@@ -254,6 +255,7 @@ void Object::WritePosit(std::fstream &op){
 }
 
 void Object::ReadPosit(std::fstream &ip){
+  if (ip.eof()) return;
   for(auto& pos : position_)
     ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
   for(auto& spos : scaled_position_)
@@ -262,7 +264,17 @@ void Object::ReadPosit(std::fstream &ip){
     ip.read(reinterpret_cast<char*>(&u), sizeof(u));
   ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
   ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
+  Dump();
 }
+
+//void Object::AddVirial(double const * const f, double const * const dr) {
+//void Object::AddVirial(double *f, double *dr) {
+  //for (int i=0; i<n_dim_; ++i)
+    //for (int j=i; j<n_dim_; ++j){
+      //printf("    fr%d=%f, dr%d=%f\n",i,f[i],j,dr[j]);
+      //spec_virial_[3*i+j] = spec_virial_[3*j+i] += f[i] * dr[j];
+    //}
+//}
 
 
 

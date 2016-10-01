@@ -7,10 +7,20 @@
 
 void grabber(int width, int height, char *fname, int framenum);
 
+typedef YAML::iterator yaml_it;
+
 class OutputManager{
   private:
     int *i_step_;
-    double tot_virial_[3][3];
+
+    double tot_energy_;
+    double tot_virial_[9];
+    //std::vector< std::vector<double> > tot_virial_;
+    double tot_direct_[3]; 
+    double tot_pol_direct_[3];
+
+    std::string run_name_;
+    std::fstream thermo_file_;
 
     YAML::Node node_;
     system_parameters *params_;
@@ -22,17 +32,26 @@ class OutputManager{
                                     //how often each species will be read in
     void InitPositInput();
 
-    void CalcVirial();
-    void WriteVirial();
+    void CalcOutputs();
+    void CalcSpeciesOutputs( SID sid, YAML::Node *data_type);
+
+
     void WriteSpeciesPosits();
+
+    void WriteTotalThermo();
+    void WriteSpeciesThermo();
 
     void AddSpecie(SpeciesBase *spec);
 
   public:
     OutputManager();
+    ~OutputManager() {}
     void Init(system_parameters *params, 
-        std::vector<graph_struct*> *graph_array, int *i_step);
-    void SetMovie(std::vector<std::string> posit_files) { posit_files_ = posit_files;}
+        std::vector<graph_struct*> *graph_array, 
+        int *i_step, std::string run_name);
+    void MakeHeaders();
+    void SetMovie(std::vector<std::string> posit_files) {
+      posit_files_ = posit_files; }
     bool IsMovie() { return !posit_files_.empty(); }
     void WriteOutputs();
     void AddSpecies(std::vector<SpeciesBase*> *species);
@@ -40,7 +59,6 @@ class OutputManager{
     void GetGraphicsStructure();
     void Close();
     void Clear();
-
 };
 
 #endif //_SIMCORE_OUTPUT_MANAGER_H_
