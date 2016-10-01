@@ -59,6 +59,19 @@ class Xlink : public Composite<XlinkHead> {
     void InitConfigurator(const double* const x, const double diameter);
     void UpdatePositionMP();
     void Draw(std::vector<graph_struct*> * graph_array);
+
+    virtual void WritePosit(std::fstream &op) { 
+      for(auto& u : orientation_)
+        op.write(reinterpret_cast<char*>(&u), sizeof(u));
+      Composite<XlinkHead>::WritePosit(op); 
+    }
+    virtual void ReadPosit(std::fstream &ip) {
+      if (ip.eof()) return;
+      for(auto& u : orientation_)
+        ip.read(reinterpret_cast<char*>(&u), sizeof(u));
+      Composite<XlinkHead>::ReadPosit(ip); 
+    }
+
     void ApplyInteractions();
     void Dump() {
       std::cout << std::setprecision(16) << "{" << GetOID() << "," << GetRID() << "," << GetCID() << "}"
