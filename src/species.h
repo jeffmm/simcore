@@ -378,7 +378,9 @@ class Species : public SpeciesBase {
         for (int i=0; i<n_dim; i++)
           pol_direct_[i] += u[i];
       }
-      normalize_vector(pol_direct_, n_dim);
+      for (int i=0; i<n_dim; i++)
+        pol_direct_[i] /= members_.size();
+      //normalize_vector(pol_direct_, n_dim);
       return pol_direct_;
     }
 

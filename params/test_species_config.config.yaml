@@ -2,6 +2,7 @@
   #properties:
     #insertion_type: random
     #overlap: false
+    #TODO Temp
   #mdbead:
     #num: 100
     #diameter: 1
@@ -11,6 +12,7 @@
   #properties:
     #insertion_type: random
     #overlap: false
+    #fill_type: nematic, #polar, isotropic, TODO crystal, smectic
   #brbead:
     #num: 50
     #diameter: 1
@@ -19,8 +21,10 @@ br_rod:
   properties:
     insertion_type: fill
     overlap: false
+    fill_type: nematic # isotropic, TODO crystal, smectic, polar
+    director: [1,0]  # need director for nematic stuff
   rod:
-    num: 7
+    num: 120
     length: 20
     max_length: 21
     diameter: 1
