@@ -326,6 +326,10 @@ else if (param_name.compare("n_posit") == 0){
 else if (param_name.compare("n_md_bead_opt") == 0){
   params_[i_var].n_md_bead_opt = atoi(param_value.c_str());
 }
+else if ( param_name.compare("datafile") == 0 ) {
+  params_[i_var].datafile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
+  strcpy(params_[i_var].datafile, param_value.c_str());
+}
 else {
   std::cout << "  WARNING: Parameter " << param_name << " not recognized!\n";
 }

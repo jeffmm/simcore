@@ -39,8 +39,12 @@ void InteractionEngine::InitPotentials(PotentialManager *pPotentials) {
 // Initialize the stuff needed for MP (superarrays, et al)
 void InteractionEngine::InitMP() {
   nsimples_ = tracking_->GetNSimples();
+  nspecies_ = tracking_->GetNSpecies();
   simples_ = tracking_->GetSimples();
   oid_position_map_ = tracking_->GetOIDPositionMap();
+
+  for (int i = 0; i<nspecies_; ++i)
+    spec_ind_map_[(*species_)[i]->GetSID()] = i;
 
   // Clear out things from before (if they exist)
   if (frc_ != nullptr) {
@@ -55,12 +59,16 @@ void InteractionEngine::InitMP() {
   if (kmc_energy_ != nullptr) {
     delete[] kmc_energy_;
   }
+  if (virial_ != nullptr) {
+    delete[] virial_;
+  }
 
   // Create the force and potential energy superarrays
   frc_ = new double[nthreads_*3*nsimples_];
   trqc_ = new double[nthreads_*3*nsimples_];
   prc_energy_ = new double[nthreads_*nsimples_];
   kmc_energy_ = new double[nthreads_*nsimples_];
+  virial_ = new double[nthreads_*9*nspecies_];
 }
 
 // Actual interaction routine
@@ -79,6 +87,7 @@ void InteractionEngine::Interact() {
     int tid;
     double **fr = new double*[3];
     double **tr = new double*[3];
+    double **virial = new double*[9];
     double *pr_energy;
     double *kmc_energy;
 
@@ -90,8 +99,9 @@ void InteractionEngine::Interact() {
     tid = 0;
     #endif
 
-    fmmph::InitMPRegion(tid, nsimples_, &frc_, &trqc_, &prc_energy_, &kmc_energy_,
-        &fr, &tr, &pr_energy, &kmc_energy);
+    fmmph::InitMPRegion(tid, nsimples_, nspecies_, 
+        &frc_, &trqc_, &prc_energy_, &kmc_energy_, &virial_, 
+        &fr, &tr, &pr_energy, &kmc_energy, &virial);
 
     #ifdef ENABLE_OPENMP
     #pragma omp for schedule(runtime) nowait
@@ -104,14 +114,14 @@ void InteractionEngine::Interact() {
         //auto part2 = (*simples_)[jdx];
 
         // Do the interactions
-        //InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy);
-        InteractParticlesExternalMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
+        //InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy)
+        InteractParticlesExternalMP(idx, jdx, fr, tr, pr_energy, kmc_energy, virial);
         InteractParticlesInternalMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
-        KMCParticlesMP(&(*nldx), idx, jdx);
+        KMCParticlesMP(&(*nldx), idx, jdx, kmc_energy, virial);
       }
 
       // Check anchors and tethering
-      TetherParticlesMP(idx, fr, tr, pr_energy, kmc_energy);
+      TetherParticlesMP(idx, fr, tr, pr_energy, kmc_energy, virial);
 
       // Check against the boundary potential
       InteractParticlesBoundaryMP(idx, fr, tr, pr_energy);
@@ -121,16 +131,18 @@ void InteractionEngine::Interact() {
     #ifdef ENABLE_OPENMP
     #pragma omp barrier
     #endif
-    fmmph::ReduceMPRegion(tid, nsimples_, nthreads_, &frc_, &trqc_, &prc_energy_, &kmc_energy_);
+    fmmph::ReduceMPRegion(tid, nsimples_, nspecies_, nthreads_, 
+        &frc_, &trqc_, &virial_, &prc_energy_, &kmc_energy_);
 
     delete[] fr;
     delete[] tr;
+    delete[] virial;
   } // pragma omp parallel
   ReduceParticlesMP();
 }
 
 // Main interaction routine for particles via external potentials
-void InteractionEngine::InteractParticlesExternalMP(int &idx, int &jdx, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
+void InteractionEngine::InteractParticlesExternalMP(int &idx, int &jdx, double **fr, double **tr, double *pr_energy, double *kmc_energy, double **virial) {
   // We are assuming the force/torque/energy superarrays are already set
   // Exclude composite object interactions
   if (idx < jdx) return; // Exclude double counting in force routines
@@ -151,9 +163,11 @@ void InteractionEngine::InteractParticlesExternalMP(int &idx, int &jdx, double *
   // Obtain the mapping between particle oid and position in the force superarray
   auto oid1x = (*oid_position_map_)[part1->GetOID()];
   auto oid2x = (*oid_position_map_)[part2->GetOID()];
+  //auto sid1x = spec_ind_map_[part2->GetSID()];
+  auto sid2x = spec_ind_map_[part2->GetSID()];
 
   // Fire off the potential calculation
-  double fepot[4];
+  double fepot[4] = {0};
   pot->CalcPotential(&idm, part1, part2, fepot);
 
   #ifdef DEBUG
@@ -176,6 +190,10 @@ void InteractionEngine::InteractParticlesExternalMP(int &idx, int &jdx, double *
   for (int i = 0; i < ndim_; ++i) {
       fr[i][oid1x] += fepot[i];
       fr[i][oid2x] -= fepot[i];
+      //Calculate virial only on particle two
+      //FIXME This shouldn't be by species but by potential
+      for(int j = i; j < ndim_; ++j)
+        virial[3*i+j][sid2x] = virial[3*j+i][sid2x] += fr[i][oid2x]*idm.dr[j];
   }
 
   // Calculate the torques
@@ -190,6 +208,13 @@ void InteractionEngine::InteractParticlesExternalMP(int &idx, int &jdx, double *
   for (int i = 0; i < 3; ++i) {
       tr[i][oid2x] -= tau[i];
   }
+
+  //double minus_dr[3]; 
+  //std::transform(idm.dr, idm.dr+3, minus_dr, std::negate<double>());
+
+  //Only do the virial theorem for one?
+  //part1->AddVirial(fepot, idm.dr);
+  //part2->AddVirial(fepot, minus_dr);
 }
 
 // Main interaction routine for particles via INTERNAL potentials
@@ -218,7 +243,7 @@ void InteractionEngine::InteractParticlesInternalMP(int &idx, int &jdx, double *
   auto oid2x = (*oid_position_map_)[part2->GetOID()];
 
   // Fire off the potential calculation
-  double fepot[4];
+  double fepot[4] = {};
   pot->CalcPotential(&idm, part1, part2, fepot);
 
   #ifdef DEBUG
@@ -258,7 +283,7 @@ void InteractionEngine::InteractParticlesInternalMP(int &idx, int &jdx, double *
 }
 
 // Tethered particle pairs
-void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
+void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, double *pr_energy, double *kmc_energy, double **virial) {
   // We are assuming the force/torque/energy superarrays are already set
   auto part1 = (*simples_)[idx];
   
@@ -269,6 +294,7 @@ void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, do
   for (auto ait = (*anchors_)[part1->GetOID()].begin(); ait != (*anchors_)[part1->GetOID()].end(); ++ait) {
     auto jdx = (*oid_position_map_)[ait->idx_other_];
     auto part2 = (*simples_)[jdx];
+    auto sid2x = spec_ind_map_[part2->GetSID()];
 
     //part1->Dump();
     //part2->Dump();
@@ -343,6 +369,9 @@ void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, do
     for (int i = 0; i < ndim_; ++i) {
         fr[i][oid1x] += fepot[i];
         fr[i][oid2x] -= fepot[i];
+
+        for(int j = i; j < ndim_; ++j)
+          virial[3*i+j][sid2x] = virial[3*j+i][sid2x] += fr[i][oid2x]*idm.dr[j];
     }
 
     // Calculate the torques
@@ -358,15 +387,17 @@ void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, do
         tr[i][oid2x] -= tau[i];
     }
   }
+  //part1->AddVirial(fepot, idm.dr);
 }
 
 // Do the KMC interactions separately, they depend on the nl_list
 // being 2-way
-void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx) {
+void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx, double *kmc_energy, double** virial) {
   // We have to manually rezero the neighbor kmc, if it wanders away
   neighbor->kmc_ = 0.0;
   auto part1 = (*simples_)[idx];
   auto part2 = (*simples_)[jdx];
+  auto sid2x = spec_ind_map_[part2->GetSID()];
 
   // Calculate the potential here
   PotentialBase *pot = potentials_->GetPotentialExternal(part1->GetSID(), part2->GetSID());
@@ -381,7 +412,7 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
   if (idm.dr_mag2 > pot->GetRCut2()) return;
 
   // Fire off the potential calculation
-  double fepot[4];
+  double fepot[4] = {};
   pot->CalcPotential(&idm, part1, part2, fepot);
 
   #ifdef DEBUG
@@ -395,7 +426,13 @@ void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx)
   }
   #endif
 
+  //TODO Check to make sure this is done properly
+  for(int i = 0; i < ndim_; ++i)
+    for(int j = i; j < ndim_; ++j)
+      //-= used since fepot is the force acting on partcle 1
+      virial[3*i+j][sid2x] = virial[3*j+i][sid2x] -= fepot[i]*idm.dr[j];
   neighbor->kmc_ = fepot[ndim_];
+  //part1->AddVirial(fepot, idm.dr);
 }
 
 // Interact particles with the boundary...
@@ -464,6 +501,17 @@ void InteractionEngine::ReduceParticlesMP() {
       printf("               t(%2.8f, %2.8f, %2.8f)\n", subtorque[0], subtorque[1], subtorque[2]);
     }*/
     part->AddForceTorqueEnergyKMC(subforce, subtorque, prc_energy_[oidx], kmc_energy_[oidx]);
+  }
+
+  //Add virial components to species
+  for (int i = 0; i < nspecies_; ++i) {
+    auto spec = (*species_)[i];
+    double subvirial[9] = {};
+    for (int j = 0; j < 9; ++j){
+      subvirial[j] = virial_[j*nspecies_+i];
+    }
+    //std::copy(subvirial, subvirial+9, std::ostream_iterator<double>(std::cout,", "));
+    spec->SetVirial(subvirial);
   }
 }
 

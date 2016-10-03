@@ -1,6 +1,6 @@
 # params.yaml
 ---
-seed : 32679122673370
+seed : 32679122673372
 n_runs: 1
 n_dim: 2
 n_periodic: 2
@@ -23,7 +23,7 @@ delta: 0.00025
 n_steps: 100000
 #n_steps: 5000
 #n_steps: 2500
-#n_steps: 10000
+n_steps: 30000
 #n_steps: 1000
 #n_steps: 100
 #n_steps: 10
