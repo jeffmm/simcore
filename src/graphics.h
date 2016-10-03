@@ -1,6 +1,8 @@
 #ifndef _GRAPHICS_H
 #define _GRAPHICS_H
 
+#ifndef NOGRAPH
+
 #include <vector>
 #include <GL/glew.h>
 #define GLEW_STATIC
@@ -146,5 +148,7 @@ class Graphics {
                 //int n_sites, double **r_site, double *sphero_diameter, double sphere_diameter);
     //void Draw3d(int n_bonds, double **r, double **u, double *length, double *sphero_diameter);
 };
+
+#endif
 
 #endif

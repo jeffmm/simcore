@@ -105,8 +105,10 @@ void Simulation::InitSimulation() {
     else GetGraphicsStructure();
       
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);
+    #ifndef NOGRAPH
     graphics_.Init(&graph_array, space_.GetStruct(), background_color);
     graphics_.DrawLoop();
+    #endif
   }
   InitOutputs();
 }
@@ -224,11 +226,14 @@ void Simulation::ClearSimulation() {
   space_.Clear();
   output_mgr_.Close();
   ClearSpecies();
+  #ifndef NOGRAPH
   if (params_.graph_flag)
     graphics_.Clear();
+  #endif
 }
 
 void Simulation::Draw() {
+  #ifndef NOGRAPH
   if (params_.graph_flag && i_step_%params_.n_graph==0) {
     if ( !output_mgr_.IsMovie() )
       GetGraphicsStructure();
@@ -239,6 +244,7 @@ void Simulation::Draw() {
               params_.grab_file, (int) i_step_/params_.n_graph);
     }
   }
+  #endif
 }
 
 void Simulation::GetGraphicsStructure() {

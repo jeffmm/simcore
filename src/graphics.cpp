@@ -1,3 +1,5 @@
+#ifndef NOGRAPH
+
 #include <GL/glew.h>
 
 #include "graphics.h"
@@ -1641,3 +1643,5 @@ void GraphicsPrimitive::MakeProgram() {
     }
 }
 
+
+#endif
