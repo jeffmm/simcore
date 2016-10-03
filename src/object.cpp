@@ -312,7 +312,6 @@ void Object::ReadPosit(std::fstream &ip){
     ip.read(reinterpret_cast<char*>(&u), sizeof(u));
   ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
   ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
-  Dump();
 }
 
 //void Object::AddVirial(double const * const f, double const * const dr) {

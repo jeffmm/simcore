@@ -187,6 +187,8 @@ class XlinkSpecies : public Species<Xlink> {
     const int* const GetNBound2() {return nbound2_;}
     void SetNBound2(int n0, int n1) {nbound2_[0]=n0; nbound2_[1]=n1;}
 
+    virtual const double* const GetDirector(){ return direct_;}
+
     virtual void DumpKMC() {
       for (auto it = members_.begin(); it != members_.end(); ++it) {
         (*it)->DumpKMC();
