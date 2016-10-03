@@ -22,7 +22,7 @@ br_rod:
     insertion_type: fill
     overlap: false
     fill_type: nematic # isotropic, TODO crystal, smectic, polar
-    director: [1,1]  # need director for nematic stuff
+    director: [0,1]  # need director for nematic stuff
   rod:
     num: 120
     length: 20

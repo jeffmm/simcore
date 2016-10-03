@@ -157,24 +157,25 @@ void Object::InsertRandom(double buffer) {
   UpdatePeriodic();
 }
 
-void Object::InsertOriented( double buffer, const double* const u){
+void Object::InsertOriented(double* buffer, const double* const u){
   SetOrientation(u);
   double mag;
   if (space_->n_periodic == n_dim_)
-    buffer = 0;
+    std::fill(buffer, buffer+3 , 0);
   double R = space_->radius;
-  if (R - buffer < 0) 
+  double buffer_mag = sqrt(dot_product(n_dim_, buffer, buffer));
+  if (R - buffer_mag < 0) 
     error_exit("ERROR: Object #%d is too large to place in system.\n",GetOID());
   if (space_->type.compare("sphere")==0) {
     generate_random_unit_vector(n_dim_, position_, rng_.r);
-    mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer);
+    mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer_mag);
     for (int i=0; i<n_dim_; ++i) {
       position_[i] *= mag;
     }
   }
   else if (space_->type.compare("cube")==0) {
     for (int i=0; i<n_dim_; ++i)
-      position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer);
+      position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer[i]);
   }
   else if (space_->type.compare("snowman")==0) {
     double r = space_->bud_radius;
@@ -188,14 +189,14 @@ void Object::InsertOriented( double buffer, const double* const u){
     generate_random_unit_vector(n_dim_, position_, rng_.r);
     if (roll < v_ratio) {
       // Place coordinate in daughter cell
-      mag *= (r - buffer);
+      mag *= (r - buffer_mag);
       for (int i=0; i<n_dim_; ++i) {
         position_[i] *= mag;
       }
       position_[n_dim_-1] += space_->bud_height;
     }
     else {
-      mag *= (R - buffer);
+      mag *= (R - buffer_mag);
       for (int i=0; i<n_dim_; ++i) {
         position_[i] *= mag;
       }

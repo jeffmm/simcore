@@ -41,7 +41,7 @@ class Object {
     std::vector<interaction> interactions_;
     std::vector<neighbor_t>* neighbors_;
     virtual void InsertRandom(double buffer);
-    virtual void InsertOriented(double buffer, const double* const u);
+    virtual void InsertOriented( double* buffer, const double* const u);
   public:
     Object(system_parameters *params, space_struct *space, long seed, SID sid);
     Object(const Object& that);

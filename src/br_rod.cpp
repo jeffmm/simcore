@@ -27,7 +27,11 @@ void BrRod::Init() {
 }
 
 void BrRod::InitOriented(const double* const u){
-  InsertOriented(0.5*length_+diameter_, u);
+  double buffer[3] = {};
+  for (int i=0; i<n_dim_;i++) 
+    buffer[i] = 0.5*length_*ABS(u[i])+diameter_;
+
+  InsertOriented(buffer, u);
   poly_state_ = GROW;
   SetDiffusion();
   std::fill(body_frame_, body_frame_+6, 0.0);
