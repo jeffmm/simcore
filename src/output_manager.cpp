@@ -164,6 +164,7 @@ void OutputManager::CalcSpeciesOutputs(SID sid, YAML::Node *data_list) {
       spec_direct = species_[sid]->GetDirector();
       for (int i=0; i<n_dim; i++)
         tot_direct_[i] += spec_direct[i];
+      normalize_vector(tot_direct_, n_dim);
     }
     else if (data_it->as<std::string>().compare("polar_director") == 0){
       spec_direct = species_[sid]->GetPolarDirector();

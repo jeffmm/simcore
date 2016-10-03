@@ -271,8 +271,3 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::ve
   ClearSimulation();
 }
 
-//TODO Move to Output manager
-void Simulation::ReadSpeciesPositions(){
-  for (auto it=species_.begin(); it!=species_.end(); ++it)
-    (*it)->ReadPosits();
-}

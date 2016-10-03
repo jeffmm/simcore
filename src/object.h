@@ -385,7 +385,6 @@ class Composite<T> : public Object {
     virtual void ReadPosit(std::fstream &ip){
       if (ip.eof()) return;
       int size;
-      std::cout<<"Size: "<<size<<std::endl;
       T elmt(params_, space_, params_->seed, sid_);
       ip.read(reinterpret_cast<char*>(&size), sizeof(int));
       elements_.resize(size, elmt);
@@ -484,10 +483,8 @@ class Composite<T,V> : public Object {
       V v_elmt(params_, space_, params_->seed, sid_);
 
       ip.read(reinterpret_cast<char*>(&size), sizeof(size));
-      std::cout<<"T Size: "<<size<<std::endl;
       elements_.resize(size, elmt);
       ip.read(reinterpret_cast<char*>(&size), sizeof(size));
-      std::cout<<"V Size: "<<size<<std::endl;
       v_elements_.resize(size, v_elmt);
 
 
