@@ -22,7 +22,7 @@ potentials:
   - name: XlinkHarmonic
     type: internal
     sid: xlink
-    k: 45.29
+    k: 31.25
     equilibrium_length: 3.12
     rcut: 1000.0
     fcut: 10000
