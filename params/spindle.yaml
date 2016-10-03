@@ -42,4 +42,5 @@ masterskin: 10.0
 max_overlap: 10000
 n_posit: 100
 posit_flag: 1
+datafile: params/spindle.dat.yaml
 ...

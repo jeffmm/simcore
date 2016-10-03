@@ -96,6 +96,7 @@ void UberEngine::Init(system_parameters *pParams,
   // Run one step to make sure that we're all good
   ptrack_.UpdateTracking(true);
   fengine_.Interact();
+  std::cout<<"Here\n";
 }
 
 void UberEngine::DumpAll() {

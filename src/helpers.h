@@ -99,4 +99,8 @@ namespace hashh {
   };
 }
 
+// yaml helpers to find if something failed
+namespace yamlh {
+}
+
 #endif
