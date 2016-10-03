@@ -109,3 +109,4 @@ param_file << "n_filament : " << params.n_filament << "\n";
 param_file << "posit_flag : " << params.posit_flag << "\n";
 param_file << "n_posit : " << params.n_posit << "\n";
 param_file << "n_md_bead_opt : " << params.n_md_bead_opt << "\n";
+param_file << "datafile : " << params.datafile << "\n";

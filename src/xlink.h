@@ -59,6 +59,19 @@ class Xlink : public Composite<XlinkHead> {
     void InitConfigurator(const double* const x, const double diameter);
     void UpdatePositionMP();
     void Draw(std::vector<graph_struct*> * graph_array);
+
+    virtual void WritePosit(std::fstream &op) { 
+      for(auto& u : orientation_)
+        op.write(reinterpret_cast<char*>(&u), sizeof(u));
+      Composite<XlinkHead>::WritePosit(op); 
+    }
+    virtual void ReadPosit(std::fstream &ip) {
+      if (ip.eof()) return;
+      for(auto& u : orientation_)
+        ip.read(reinterpret_cast<char*>(&u), sizeof(u));
+      Composite<XlinkHead>::ReadPosit(ip); 
+    }
+
     void ApplyInteractions();
     void Dump() {
       std::cout << std::setprecision(16) << "{" << GetOID() << "," << GetRID() << "," << GetCID() << "}"
@@ -174,6 +187,8 @@ class XlinkSpecies : public Species<Xlink> {
     void SetNBound1(int n0, int n1) {nbound1_[0]=n0; nbound1_[1]=n1;}
     const int* const GetNBound2() {return nbound2_;}
     void SetNBound2(int n0, int n1) {nbound2_[0]=n0; nbound2_[1]=n1;}
+
+    virtual const double* const GetDirector(){ return direct_;}
 
     virtual void DumpKMC() {
       for (auto it = members_.begin(); it != members_.end(); ++it) {

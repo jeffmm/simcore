@@ -112,6 +112,7 @@ struct system_parameters {
   int posit_flag = 0;
   int n_posit = 100;
   int n_md_bead_opt = 100;
+  char *datafile;
 
 };
 

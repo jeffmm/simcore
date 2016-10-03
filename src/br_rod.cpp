@@ -34,6 +34,34 @@ void BrRod::Init() {
     bond->UpdatePeriodic();
 }
 
+void BrRod::InitOriented(const double* const u){
+  double buffer[3] = {};
+  for (int i=0; i<n_dim_;i++) 
+    buffer[i] = 0.5*length_*ABS(u[i])+diameter_;
+
+  InsertOriented(buffer, u);
+  poly_state_ = GROW;
+  SetDiffusion();
+  std::fill(body_frame_, body_frame_+6, 0.0);
+  // Init bond lengths and diameter
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
+    bond->SetRigidPosition(position_);
+    bond->SetRigidScaledPosition(scaled_position_);
+    bond->SetRigidOrientation(orientation_);
+    bond->SetRigidLength(length_);
+    bond->SetRigidDiameter(diameter_);
+    bond->SetLength(child_length_);
+    bond->SetDiameter(diameter_);
+  }
+  // Set positions for sites and bonds
+  UpdatePeriodic();
+  UpdateBondPositions();
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
+    bond->UpdatePeriodic();
+}
+
+
+
 void BrRod::InitConfigurator(const double* const x, const double* const u, const double l) {
   length_ = l;
   SetPosition(x);
@@ -430,6 +458,24 @@ void BrRodSpecies::Configurator() {
     double min_length = node["br_rod"]["rod"]["min_length"].as<double>();
     double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
 
+    //Set fill type for neumatics and other kinds of forms
+    std::string fill_type; 
+    double director[3] = {};
+    double mdirector[3] = {};
+    if ( node["br_rod"]["properties"]["fill_type"] ){
+      fill_type = node["br_rod"]["properties"]["fill_type"].as<std::string>();
+      //TODO add in other types of fill
+      if (fill_type == "nematic"){
+        for (int i=0; i<params_->n_dim; i++){
+          director[i] = node["br_rod"]["properties"]["director"][i].as<double>();
+        }
+        normalize_vector(director, 3);
+        std::transform(director, director+3, mdirector, std::negate<int>());
+      }
+    else
+      fill_type = "isotropic";
+    }
+
     std::cout << std::setw(25) << std::left << "   n rods:" << std::setw(10)
       << std::left << nrods << std::endl;
     std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
@@ -449,10 +495,18 @@ void BrRodSpecies::Configurator() {
     min_length_ = min_length;
     params_->rod_diameter = diameter;
 
-    for (int i = 0; i < nrods; ++i) {
+    for (int i_mem = 0; i_mem < nrods; ++i_mem) {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
-      member->Init();
+      //member->Init();
       member->SetColor(color, draw_type);
+
+      if ( fill_type == "nematic"){
+        //Determine sign of insertion
+        (i_mem % 2 == 0) ? (member->InitOriented(director)) : (member->InitOriented(mdirector));
+      }
+      else {
+        member->Init();
+      }
 
       // Check against all other rods in the sytem
       if (can_overlap) {
@@ -475,16 +529,15 @@ void BrRodSpecies::Configurator() {
 
             if (idm.dr_mag2 < diameter2) {
               isoverlap = true;
-              /*if (debug_trace) {
-                printf("Overlap detected [oid: %d,%d], [cid: %d, %d] -> (%2.2f < %2.2f)\n",
-                        part1->GetOID(), part2->GetOID(), part1->GetCID(), part2->GetCID(), idm.dr_mag2, diameter2);
-              }*/
-              // We can just call init again to get new random numbers
-              member->Init();
+              if ( fill_type == "nematic")
+                //Determine sign of insertion
+                (i_mem % 2 == 0) ? (member->InitOriented(director)) : (member->InitOriented(mdirector));
+              else
+                member->Init();
             }
           } // check against current members
           if (numoverlaps > params_->max_overlap) {
-            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i << " of " << nrods;
+            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i_mem << " of " << nrods;
             std::cout << ".  Check packing ratio for objects.\n";
             exit(1);
           }
@@ -493,6 +546,25 @@ void BrRodSpecies::Configurator() {
       }
     }
   } else if (insertion_type.compare("fill") == 0) {
+    
+    //Set fill type
+    std::string fill_type; 
+    double director[3], mdirector[3] = {};
+    if ( node["br_rod"]["properties"]["fill_type"] ){
+      fill_type = node["br_rod"]["properties"]["fill_type"].as<std::string>();
+      //TODO add in other types of fill
+      if (fill_type == "nematic"){
+        for (int i=0; i<params_->n_dim; i++){
+          director[i] = node["br_rod"]["properties"]["director"][i].as<double>();
+        }
+        normalize_vector(director, params_->n_dim);
+        for (int i=0; i<params_->n_dim; i++)
+          mdirector[i] = -1.0*director[i];
+      }
+    else
+      fill_type = "isotropic";
+    }
+      
     double rlength    = node["br_rod"]["rod"]["length"].as<double>();
     double max_length = node["br_rod"]["rod"]["max_length"].as<double>();
     double min_length = node["br_rod"]["rod"]["min_length"].as<double>();
@@ -516,11 +588,22 @@ void BrRodSpecies::Configurator() {
 
     // Try just inserting as many rods as we can
     int nrods = 0;
+    int i_mem = 0;
     bool inserting = true;
     while(inserting) {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
-      member->Init();
       member->SetColor(color, draw_type);
+      //member->Init();
+
+      if ( fill_type == "nematic"){
+        //Determine sign of insertion
+        (i_mem % 2 == 0) ? (member->InitOriented(director)) : (member->InitOriented(mdirector));
+        i_mem++;
+      }
+      else  {
+        member->Init();
+      }
+        
       // Check against all other rods in system
       bool isoverlap = true;
       int numoverlaps = 0;
@@ -537,12 +620,12 @@ void BrRodSpecies::Configurator() {
 
           if (idm.dr_mag2 < diameter2) {
             isoverlap = true;
-            /*if (debug_trace) {
-              printf("Overlap detected [oid: %d,%d], [cid: %d, %d] -> (%2.2f < %2.2f)\n",
-                      part1->GetOID(), part2->GetOID(), part1->GetCID(), part2->GetCID(), idm.dr_mag2, diameter2);
-            }*/
             // We can just call init again to get new random numbers
-            member->Init();
+            if ( fill_type == "nematic")
+              //Determine sign of insertion
+              (i_mem % 2 == 0) ? (member->InitOriented(director)) : (member->InitOriented(mdirector));
+            else
+              member->Init();
           }
         } // check against current members
         if (numoverlaps > params_->max_overlap) {
@@ -835,15 +918,15 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
 }
 
 //Only reading out bound positions but this you might want to change
-void BrRod::WritePosit(std::fstream &op){
-  for (auto& velem : v_elements_)
-    velem.WritePosit(op);
-}
+//void BrRod::WritePosit(std::fstream &op){
+  //for (auto& velem : v_elements_)
+    //velem.WritePosit(op);
+//}
 
-void BrRod::ReadPosit(std::fstream &ip){
-  for (auto& velem : v_elements_)
-    velem.ReadPosit(ip);
-}
+//void BrRod::ReadPosit(std::fstream &ip){
+  //for (auto& velem : v_elements_)
+    //velem.ReadPosit(ip);
+//}
 
 void BrRodSpecies::CreateTestRod(BrRod **rod,
                                  int ndim,
@@ -920,3 +1003,5 @@ void BrRodSpecies::CreateTestRod(BrRod **rod,
     (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
   }
 }
+
+
