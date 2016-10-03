@@ -357,7 +357,8 @@ class Species : public SpeciesBase {
       int n_dim = params_->n_dim;
       double const *u;
       double north[] ={0,0,0};
-      //Pick direction for northern hemisphere based on dimensionality
+      //Pick direction for upper hemisphere based on dimensionality
+      //This is done because the director is a psuedo vector
       (n_dim == 2) ? (north[2] = 1) : (north[3] = 1);
 
       for (auto mem_it: members_){

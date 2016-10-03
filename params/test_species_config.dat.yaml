@@ -7,8 +7,8 @@ posit_files:
 thermo:
   steps: 100
   species: 
-    all: [energy, virial]
-    br_rod: [polar_director]
+    all: [energy, virial, director]
+    #br_rod: [polar_director]
 
   
 
