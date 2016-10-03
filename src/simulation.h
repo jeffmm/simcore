@@ -26,8 +26,10 @@ class Simulation {
     OutputManager output_mgr_;
     system_parameters params_;
     rng_properties rng_;
-    
+   
+    #ifndef NOGRAPH
     Graphics graphics_;
+    #endif
     SpaceProperties space_;
     UberEngine uengine_;
     std::vector<SpeciesBase*> species_;

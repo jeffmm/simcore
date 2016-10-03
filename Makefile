@@ -18,7 +18,7 @@ ifeq ($(THREADING),eomp)
 	LINK_FLAGS += -fopenmp
 endif
 
-ifeq ($(NOGRAPH),yes)
+ifeq ($(NOGRAPH),true)
 	COMPILE_FLAGS += -D NOGRAPH
 	LINK_FLAGS += -D NOGRAPH
 endif
