@@ -119,7 +119,7 @@ void BrRod::UpdatePositionMP() {
 
 void BrRod::UpdateAnchors() {
   // find the anchors
-  if (anchors_ == nullptr) return;
+  if (!anchors_) return;
 
   // Update our anchor relative position
   bool found = false;
@@ -448,6 +448,7 @@ void BrRodSpecies::Configurator() {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->InitConfigurator(x, u, rlength);
       member->SetColor(color, draw_type);
+      member->SetAnchors(anchors_);
       member->Dump();
       members_.push_back(member);
     }

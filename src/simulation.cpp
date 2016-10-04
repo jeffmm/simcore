@@ -3,7 +3,9 @@
 
 #define REGISTER_SPECIES(n,m) species_factory_.register_class<n>(#m);
 
-Simulation::Simulation() {}
+Simulation::Simulation() {
+  utype_ = 1;
+}
 Simulation::~Simulation() {}
 
 void Simulation::Run(system_parameters params, std::string name) {
@@ -98,7 +100,11 @@ void Simulation::InitSimulation() {
   space_.Init(&params_, gsl_rng_get(rng_.r));
   output_mgr_.Init(&params_, &graph_array, &i_step_, run_name_);
   InitSpecies();
-  uengine_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
+  if (utype_ == 0) {
+    uengine_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
+  } else {
+    uenginev2_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
+  }
   if (params_.graph_flag) {
     //When making a movie graphics are handled by output_mgr_
     if ( output_mgr_.IsMovie() ) output_mgr_.GetGraphicsStructure();
@@ -137,6 +143,8 @@ void Simulation::InitSpecies() {
   if (node["configuration_type"]) {
     config_type = node["configuration_type"].as<std::string>();
   }
+
+  anchors_.clear();
 
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file

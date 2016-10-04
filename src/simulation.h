@@ -9,6 +9,7 @@
 #include "species.h"
 #include "objects.h"
 #include "uberengine.h"
+#include "uberengine_v2.h"
 #include "helpers.h"
 #include "output_manager.h"
 
@@ -17,6 +18,7 @@ class Simulation {
   private:
     int i_step_,
         n_steps_;
+    int utype_;
     double time_,
            cpu_init_time_;
     std::string run_name_;
@@ -32,6 +34,7 @@ class Simulation {
     #endif
     SpaceProperties space_;
     UberEngine uengine_;
+    UberEngineV2 uenginev2_;
     std::vector<SpeciesBase*> species_;
     rfh::factory species_factory_;
     al_set anchors_;
