@@ -27,6 +27,7 @@ class PotentialManager {
     std::unordered_map<std::pair<unsigned int, unsigned int>, PotentialBase*, hashh::pair_hash> tethers_;
     std::map<SID, PotentialBase*> boundaries_;
     std::vector<SpeciesBase*> *species_;
+    std::vector<SID> internal_sids_;
 
     rfh::factory pot_factory_;
 
@@ -50,6 +51,7 @@ class PotentialManager {
     PotentialBase * GetPotentialTether(unsigned int oid1, unsigned int oid2);
     PotentialBase * GetPotentialBoundary(SID sid);
     std::vector<PotentialBase*> GetAllPotentials();
+    std::vector<SID> *GetInternalSIDs() {return &internal_sids_;}
     void Print();
 };
 

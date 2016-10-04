@@ -301,7 +301,7 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
     min_distance_sphero(ndim, nperiodic, space->unit_cell,
               r1, s1, u1, l1, r2, s2, u2, l2,
               imd.dr, &imd.dr_mag2, imd.contact1, imd.contact2);
-  imd.dr_mag = sqrt(imd.dr_mag2);
+  imd.dr_mag = sqrt(imd.dr_mag2); // XXX FIXME should take out and only compute if necessary
 }
 
 void Object::WritePosit(std::fstream &op){
