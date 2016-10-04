@@ -125,15 +125,15 @@ void TrackingNeighborListAP::AllPairsUpdate2() {
         int rid2 = p2->GetRID();
         if (rid1 == rid2) continue;
 
-        // Check if we've already seen this rid for ourselves
-        if (rid_check_local->count(rid2)) {
-          continue;
-        }
-
         // Check if there is even an interaction
         PotentialBase *pot1 = potentials_->GetPotentialExternal(p1->GetSID(), p2->GetSID());
         PotentialBase *pot2 = potentials_->GetPotentialInternal(p1->GetOID(), p2->GetOID());
         if ((pot1 == nullptr) && (pot2 == nullptr)) continue;
+
+        // Check if we've already seen this rid for ourselves
+        if (rid_check_local->count(rid2)) {
+          continue;
+        }
 
         // Minimum distance
         interactionmindist idm;
