@@ -44,6 +44,7 @@ class Simulation {
     void ClearSpecies();
     void InitOutputs();
     void RunSimulation();
+    void RunSimulation2();
     void RunMovie();
     void ClearSimulation();
     void Draw();

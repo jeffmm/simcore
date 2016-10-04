@@ -16,10 +16,9 @@
 
 #define REGISTER_POTENTIAL(n) pot_factory_.register_class<n>(#n);
 
-void PotentialManagerV2::Init(std::vector<SpeciesBase*> *pSpecies, space_struct *pSpace, al_set *pAnchors) {
+void PotentialManagerV2::Init(space_struct *pSpace, al_set *pAnchors) {
   std::cout << "Potential Manager V2 Init\n";
   space_ = pSpace;
-  species_ = pSpecies;
   anchors_ = pAnchors;
 
   // Register the potentials

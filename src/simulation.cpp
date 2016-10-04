@@ -13,7 +13,8 @@ void Simulation::Run(system_parameters params, std::string name) {
   run_name_ = name;
   rng_.init(params_.seed);
   InitSimulation();
-  RunSimulation();
+  //RunSimulation();
+  RunSimulation2();
   ClearSimulation();
 }
 
@@ -41,6 +42,14 @@ void Simulation::RunSimulation() {
     #endif
     Draw();
     WriteOutputs();
+  }
+}
+
+void Simulation::RunSimulation2() {
+  std::cout << "Running simulation: " << run_name_ << std::endl;
+  std::cout << "   steps: " << params_.n_steps << std::endl;
+  for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
+
   }
 }
 

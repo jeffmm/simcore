@@ -15,7 +15,6 @@ class PotentialManagerV2 {
 
     space_struct *space_;
     al_set *anchors_;
-    std::vector<SpeciesBase*> *species_;
 
     rfh::factory pot_factory_;
 
@@ -25,7 +24,7 @@ class PotentialManagerV2 {
     PotentialManagerV2() {}
     ~PotentialManagerV2() {}
     
-    void Init(std::vector<SpeciesBase*> *pSpecies, space_struct *pSpace, al_set *pAnchors);
+    void Init(space_struct *pSpace, al_set *pAnchors);
     void RegisterPotentials();
     void Print();
 

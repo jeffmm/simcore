@@ -33,9 +33,11 @@ void ParticleEngine::Init(system_parameters *pParams,
   #endif
 
   // Init the potential manager
-  potentials_.Init(species_, space_, anchors_);
+  potentials_.Init(space_, anchors_);
 
   RegisterSchemes();
+
+  LoadSimples();
 
   std::cout << "Particle Engine Init done\n";
 }
@@ -49,9 +51,60 @@ void ParticleEngine::Print() {
   }
 }
 
+void ParticleEngine::Dump() {
+  #ifdef DEBUG
+  std::cout << "----------------\n";
+  std::cout << "ParticleEngine::Dump\n";
+  DumpSimples();
+  DumpInteractions();
+  #endif
+}
+
+void ParticleEngine::DumpInteractions() {
+  #ifdef DEBUG
+  std::cout << "----------------\n";
+  std::cout << "DumpInteractions\n";
+  for (int ixs = 0; ixs < interactions_->size(); ++ixs) {
+    auto mixs = (*interactions_)[ixs];
+    std::cout << "[" << ixs << "] {" << mixs.idx_ << " -> " << mixs.jdx_ << "}, type: "
+      << PtypeToString(mixs.type_) << std::endl;
+  }
+  #endif
+}
+
+void ParticleEngine::DumpSimples() {
+  #ifdef DEBUG
+  std::cout << "----------------\n";
+  std::cout << "DumpSimples\n";
+  for (int idx = 0; idx < (int)simples_.size(); ++idx) {
+    auto part = simples_[idx];
+    part->Dump();
+  }
+  #endif
+}
+
 // Register the tracking schemes we know about
 void ParticleEngine::RegisterSchemes() {
   REGISTER_SCHEME(TrackingSchemeAllPairs,allpairs);
+}
+
+// Load our simples array
+void ParticleEngine::LoadSimples() {
+  nsys_ = (int)species_->size();
+  simples_.clear();
+  for (int ispec = 0; ispec < nsys_; ++ispec) {
+    std::vector<Simple*> sim_vec = (*species_)[ispec]->GetSimples();
+    simples_.insert(simples_.end(), sim_vec.begin(), sim_vec.end());
+  }
+  nsimples_ = (int)simples_.size();
+
+  // Ugh, figure out the OID stuff
+  oid_position_map_.clear();
+  for (int i = 0; i < nsimples_; ++i) {
+    auto part = simples_[i];
+    int oid = part->GetOID();
+    oid_position_map_[oid] = i;
+  }
 }
 
 // Create all of the tracking information
@@ -105,12 +158,56 @@ void ParticleEngine::CreateExternalPotential(YAML::Node *subnode, int potidx) {
     std::cout << "Scheme " << schemes << " not found, exiting\n";
     exit(1);
   }
-  scheme->Init(space_, mypot, interactions_, &node);
-
-
-  //scheme->Print();
+  scheme->Init(space_,
+               mypot,
+               interactions_,
+               species_,
+               &simples_,
+               &oid_position_map_,
+               &node);
   tracking_.push_back(scheme);
 
-
   std::cout << "Particle Engine CreateExternalPotential done\n";
+}
+
+// Check if a global update has been triggered
+void ParticleEngine::CheckTriggerUpdate() {
+  int simples_count = 0;
+  for (auto ispec = species_->begin(); ispec != species_->end(); ++ispec) {
+    simples_count += (*ispec)->GetCount();
+  }
+  if (simples_count != nsimples_) {
+    if (debug_trace) {
+      std::cout << "ParticleEngine nsimples changed, forcing update\n";
+    }
+    trigger_update_ = true;
+  }
+  for (int ispec = 0; ispec < nsys_; ++ispec) {
+    if ((*species_)[ispec]->GetUpdate()) {
+      if (debug_trace) {
+        std::cout << "ParticleEngine species should update, forcing update\n";
+      }
+      (*species_)[ispec]->SetUpdate(false);
+      trigger_update_ = true;
+    }
+  }
+
+  if (trigger_update_) {
+    LoadSimples();
+  }
+}
+
+// Generate the interactions
+void ParticleEngine::UpdateInteractions() {
+  // Clear interactions, will reload with cached version if no update needed, 
+  // but this is handled at the scheme level
+  interactions_->clear();
+  // Check for an update that requires rebuilding the simples, etc
+  trigger_update_ = false;
+  CheckTriggerUpdate();
+  // External and kmc interactions
+  for (auto ixs = tracking_.begin(); ixs != tracking_.end(); ++ixs) {
+    (*ixs)->GenerateInteractions(trigger_update_);
+  }
+
 }
