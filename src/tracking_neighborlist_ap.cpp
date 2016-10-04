@@ -130,6 +130,11 @@ void TrackingNeighborListAP::AllPairsUpdate2() {
           continue;
         }
 
+        // Check if there is even an interaction
+        PotentialBase *pot1 = potentials_->GetPotentialExternal(p1->GetSID(), p2->GetSID());
+        PotentialBase *pot2 = potentials_->GetPotentialInternal(p1->GetOID(), p2->GetOID());
+        if ((pot1 == nullptr) && (pot2 == nullptr)) continue;
+
         // Minimum distance
         interactionmindist idm;
         MinimumDistance(p1, p2, idm, ndim_, nperiodic_, space_);

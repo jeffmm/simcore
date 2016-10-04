@@ -70,8 +70,7 @@ void UberEngine::Init(system_parameters *pParams,
   potentials_.Init(species_, space_, anchors_, params_->potfile);
 
   // Initialize the particle tracking
-  ptrack_.Init(space_, species_, skin_, force_type_);
-  ptrack_.InitPotentials(&potentials_);
+  ptrack_.Init(space_, species_, &potentials_, skin_, force_type_);
   ptrack_.InitTracking();
   ptrack_.CheckOverlaps(max_overlap_);
 
@@ -96,7 +95,6 @@ void UberEngine::Init(system_parameters *pParams,
   // Run one step to make sure that we're all good
   ptrack_.UpdateTracking(true);
   fengine_.Interact();
-  std::cout<<"Here\n";
 }
 
 void UberEngine::DumpAll() {
