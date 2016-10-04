@@ -87,6 +87,8 @@ void TrackingNeighborListAP::AllPairsUpdate2() {
   rid_self_check_->resize(maxrigid_+1);
   std::fill(rid_self_check_->begin(), rid_self_check_->end(), false);
 
+  std::vector<SID> *internal_sids = potentials_->GetInternalSIDs();
+
   #ifdef ENABLE_OPENMP
   #pragma omp parallel
   #endif
@@ -127,8 +129,18 @@ void TrackingNeighborListAP::AllPairsUpdate2() {
 
         // Check if there is even an interaction
         PotentialBase *pot1 = potentials_->GetPotentialExternal(p1->GetSID(), p2->GetSID());
-        PotentialBase *pot2 = potentials_->GetPotentialInternal(p1->GetOID(), p2->GetOID());
-        if ((pot1 == nullptr) && (pot2 == nullptr)) continue;
+        //PotentialBase *pot2 = potentials_->GetPotentialInternal(p1->GetOID(), p2->GetOID());
+        //if ((pot1 == nullptr) && (pot2 == nullptr)) continue;
+        bool found_internal_sid = false;
+        for (auto sidit = internal_sids->begin(); sidit != internal_sids->end(); ++sidit) {
+          //std::cout << "Internal sid: " << (int)(*sidit) << std::endl;
+          //std::cout << "against: " << (int)p1->GetSID() << ", " << (int)p2->GetSID() << std::endl;
+          if (((*sidit) == p1->GetSID()) || ((*sidit) == p2->GetSID())) {
+            found_internal_sid = true;
+            break;
+          }
+        }
+        if ((pot1 == nullptr) && !found_internal_sid) continue;
 
         // Check if we've already seen this rid for ourselves
         if (rid_check_local->count(rid2)) {
