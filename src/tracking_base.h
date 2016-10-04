@@ -6,6 +6,7 @@
 
 #include "auxiliary.h"
 #include "neighbor_list_generic.h"
+#include "potential_manager.h"
 #include "species.h"
 
 #include <unordered_set>
@@ -25,7 +26,11 @@ class TrackingBase {
       //delete[] rid_interactions_;
     }
 
-    virtual void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, std::vector<Simple*> *pSimples, double pSkin);
+    virtual void Init(space_struct *pSpace,
+                      std::vector<SpeciesBase*> *pSpecies,
+                      std::vector<Simple*> *pSimples,
+                      PotentialManager *pPotentials,
+                      double pSkin);
 
     virtual void print() = 0; // print information
     virtual void dump() = 0;
@@ -57,6 +62,7 @@ class TrackingBase {
     std::vector<Simple*> *simples_;
     std::vector<SpeciesBase*> *species_;
     nl_list* neighbors_;
+    PotentialManager *potentials_;
   
     // Rigid stuff
     std::unordered_set<std::pair<int, int>, hashh::pair_hash>* rid_interactions_;

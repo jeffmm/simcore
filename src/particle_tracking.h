@@ -23,9 +23,12 @@ class ParticleTracking {
       printf("\tUpdates: %d\n", tracking_->NUpdates());
     }
 
-    void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin, FTYPE pFtype);
+    void Init(space_struct *pSpace,
+              std::vector<SpeciesBase*> *pSpecies,
+              PotentialManager *pPotentials,
+              double pSkin,
+              FTYPE pFtype);
     void LoadSimples();
-    void InitPotentials(PotentialManager *pPotentials);
     void InitTracking();
     void CheckOverlaps(int pMaxOverlaps);
 

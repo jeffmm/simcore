@@ -71,7 +71,9 @@ PotentialManager::ParsePotentials() {
     } else if (potential_type.compare("internal") == 0) {
       std::string potname = node["potentials"][ipot]["name"].as<std::string>();
       std::string sids    = node["potentials"][ipot]["sid"].as<std::string>();
+      std::string subsids = node["potentials"][ipot]["subsid"].as<std::string>();
       SID sid = StringToSID(sids); 
+      SID subsid = StringToSID(subsids);
       SpeciesBase *sit;
       for (auto msit = species_->begin(); msit != species_->end(); ++msit) {
         if ((*msit)->GetSID() == sid) {
@@ -79,6 +81,7 @@ PotentialManager::ParsePotentials() {
           break;
         }
       }
+      internal_sids_.push_back(subsid);
       auto internal_pairs = sit->GetInternalPairs();
       PotentialBase *new_pot = (PotentialBase*) pot_factory_.construct(potname);
       new_pot->Init(space_, ipot, node);
