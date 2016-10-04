@@ -89,6 +89,7 @@ void TrackingAllPairs::UpdateTracking(bool pForceUpdate) {
           auto p2 = (*simples_)[jdx];
           int rid2 = p2->GetRID();
           if (rid1 == rid2) continue;
+
           // Check if there is even an interaction
           PotentialBase *pot1 = potentials_->GetPotentialExternal(p1->GetSID(), p2->GetSID());
           PotentialBase *pot2 = potentials_->GetPotentialInternal(p1->GetOID(), p2->GetOID());
