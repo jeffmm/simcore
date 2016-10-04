@@ -471,6 +471,22 @@ void BrRodSpecies::Configurator() {
     max_length_ = max_length;
     min_length_ = min_length;
     params_->rod_diameter = diameter;
+    diffusion_validation_ = params_->diffusion_validation_flag ? true : false;
+    n_dim_ = params_->n_dim;
+   
+    if (diffusion_validation_) {
+      nbins_ =  (int) floor(params_->n_steps/params_->n_validate);
+      nvalidate_ = params_->n_validate;
+      orientations_ = new double**[n_members_];
+      for (int i=0; i<n_members_; ++i) {
+        orientations_[i] = new double*[2];
+        for (int j=0; j<2; ++j) {
+          orientations_[i][j] = new double[nbins_];
+        }
+      }
+    }
+    ibin_ = 0;
+    ivalidate_ = 0;
 
     // Try just inserting as many rods as we can
     int nrods = 0;
@@ -607,3 +623,27 @@ void BrRodSpecies::CreateTestRod(BrRod **rod,
     (*oid_position_map)[sim_vec[i]->GetOID()] = simples->size() -1;
   }
 }
+
+void BrRodSpecies::WriteDiffusionValidation(std::string run_name) {
+  std::ostringstream file_name;
+  file_name << run_name << "-diffusion.log";
+  std::ofstream diffusion_file(file_name.str().c_str(), std::ios_base::out);
+  diffusion_file << "timestep ";
+  for (int i_member=0; i_member<n_members_; ++i_member) {
+    diffusion_file << "fil_" << i_member+1 << "_theta" << " ";
+    if (n_dim_ == 3)
+      diffusion_file << "fil_" << i_member+1 << "_phi" << " ";
+  }
+  diffusion_file << "\n";
+  for (int i_bin=0; i_bin<nbins_; ++i_bin) {
+    int time = i_bin*nvalidate_;
+    diffusion_file << time << " ";
+    for (int i_member=0; i_member<n_members_; ++i_member) {
+      diffusion_file << orientations_[i_member][0][i_bin] << " ";
+      if (n_dim_ == 3)
+        diffusion_file << orientations_[i_member][1][i_bin] << " ";
+    }
+    diffusion_file << "\n";
+  }
+}
+

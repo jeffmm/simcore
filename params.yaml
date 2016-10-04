@@ -1,7 +1,7 @@
 # params.yaml
 ---
-seed : 48916713496714
-n_runs: 1
+seed : 38487756103405
+n_runs: 5
 n_dim: 2
 n_periodic: 2
 system_radius: 20
@@ -13,7 +13,8 @@ n_rod: 0
 n_filament: 1
 rod_diameter: 1
 rod_length: 8
-theta_validation_flag: 1
+theta_validation_flag: 0
+diffusion_validation_flag: 1
 dynamic_instability_flag: 0
 force_induced_catastrophe_flag: 0
 n_dimer: 0
@@ -33,11 +34,12 @@ cell_length: 2
 graph_flag: 0
 n_graph: 500
 graph_background: 1
-delta: 0.01
-n_steps: 2000000
+delta: 0.001
+n_steps: 10000000
+n_validate: 500
 n_update_cells: 20
 time_flag: 1
-energy_analysis_flag: 1
+energy_analysis_flag: 0
 lj_epsilon: 1
 n_neon: 0
 n_argon: 0
