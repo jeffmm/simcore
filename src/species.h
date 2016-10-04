@@ -164,8 +164,8 @@ class SpeciesBase {
       return retval;
     }
     virtual void ClearThermo(){}
-    virtual double const * const GetDirector(){}
-    virtual double const * const GetPolarDirector(){}
+    virtual double const * const GetDirector(){return nullptr;}
+    virtual double const * const GetPolarDirector(){return nullptr;}
 };
 
 template <typename T>
