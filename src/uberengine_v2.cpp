@@ -31,9 +31,11 @@ void UberEngineV2::Init(system_parameters *pParams,
   // Create the particle engine scheme, which will take care of the potentials as well
   pengine_.Init(params_, space_, species_, anchors_, &interactions_, gsl_rng_get(rng_.r));
   pengine_.CreateTracking();
+  pengine_.UpdateInteractions();
 
   pengine_.Print();
+  pengine_.Dump();
 
-  std::cout << "DEBUG, exiting\n";
+  std::cout << "DEBUG, exitin\n";
   exit(1);
 }

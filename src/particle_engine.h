@@ -24,16 +24,26 @@ class ParticleEngine {
               std::vector<interaction_t> *pInteractions,
               long seed);
 
-    void CreateTracking();
+    void CheckTriggerUpdate();
     void CreateExternalPotential(YAML::Node *subnode, int potidx);
+    void CreateTracking();
+    void Dump();
+    void DumpInteractions();
+    void DumpSimples();
+    void LoadSimples();
     void Print();
     void RegisterSchemes();
+    void UpdateInteractions();
 
   private:
+    bool trigger_update_ = false;
+
     int ndim_;
     int nperiodic_;
     int nthreads_;
     int npots_;
+    int nsys_;
+    int nsimples_;
     
     system_parameters *params_;
     space_struct *space_;
@@ -42,6 +52,8 @@ class ParticleEngine {
 
     std::vector<interaction_t> *interactions_;
     std::vector<SpeciesBase*> *species_;
+    std::vector<Simple*> simples_;
+    std::unordered_map<int, int> oid_position_map_;
 
     // Things we actually own
     YAML::Node node_;
