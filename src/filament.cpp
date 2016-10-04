@@ -22,6 +22,7 @@ void Filament::SetParameters(system_parameters *params) {
   gamma_ratio_ = params->gamma_ratio;
   metric_forces_ = params->metric_forces;
   theta_validation_flag_ = params->theta_validation_flag;
+  diffusion_validation_flag_ = params->diffusion_validation_flag;
 }
 
 void Filament::InitElements(system_parameters *params, space_struct *space) {
@@ -73,31 +74,33 @@ void Filament::InitElements(system_parameters *params, space_struct *space) {
   cos_thetas_.resize(n_sites_-2); //max_sites-2
 }
 
-//void Filament::TempInit() {
-  //position_[0] = -4.0;
-  //position_[1] = 0.0;
-  //position_[2] = 0.0;
-  //orientation_[0] = 1.0;
-  //orientation_[1] = 0.0;
-  //orientation_[2] = 0.0;
-  //for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
-    //site->SetDiameter(diameter_);
-    //site->SetLength(child_length_);
-    //site->SetPosition(position_);
-    //site->SetOrientation(orientation_);
-    //for (int i=0; i<n_dim_; ++i)
-      //position_[i] = position_[i] + orientation_[i] * child_length_;
-  //}
-  //UpdatePrevPositions();
-  //CalculateAngles();
-  //UpdateBondPositions();
-  //SetDiffusion();
-  //poly_state_ = GROW;
-  //rng_.clear();
-  //rng_.init(1944944);
-//}
+void Filament::DiffusionInit() {
+  for (int i=0; i<3; ++i) {
+    position_[i] = 0.0;
+    orientation_[i] = 0.0;
+  }
+  position_[n_dim_-1] = -0.5*length_;
+  orientation_[n_dim_-1] = 1.0;
+  for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
+    site->SetDiameter(diameter_);
+    site->SetLength(child_length_);
+    site->SetPosition(position_);
+    site->SetOrientation(orientation_);
+    for (int i=0; i<n_dim_; ++i)
+      position_[i] = position_[i] + orientation_[i] * child_length_;
+  }
+  UpdatePrevPositions();
+  CalculateAngles();
+  UpdateBondPositions();
+  SetDiffusion();
+  poly_state_ = GROW;
+}
 
 void Filament::Init() {
+  if (diffusion_validation_flag_) {
+    DiffusionInit();
+    return;
+  }
   InsertRandom(length_+diameter_);
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
@@ -249,12 +252,6 @@ void Filament::UpdatePrevPositions() {
 void Filament::AddRandomForces() {
   for (auto site=elements_.begin(); site!=elements_.end(); ++site)
     site->AddRandomForce();
-}
-
-void Filament::PopulateVector(std::vector<double> *a) {
-  for (int i=0; i<a->size(); ++i) {
-    (*a)[i] = 0.01*i;
-  }
 }
 
 //void Filament::ValidateThetaDistribution() {
@@ -967,6 +964,12 @@ void FilamentSpecies::Configurator() {
     exit(1);
   }
   theta_validation_ = params_->theta_validation_flag ? true : false;
+  diffusion_validation_ = params_->diffusion_validation_flag ? true : false;
+  if (theta_validation_ && diffusion_validation_) {
+    warning("Diffusion validation and theta validation are incompatible! Disabling diffusion validation!");
+    diffusion_validation_ = false;
+  }
+  n_dim_ = params_->n_dim;
   if (theta_validation_) {
     nbins_ = params_->n_bins;
     theta_distribution_ = new int**[n_members_];
@@ -978,14 +981,27 @@ void FilamentSpecies::Configurator() {
       }
     }
   }
+  else if (diffusion_validation_) {
+    nbins_ =  (int) floor(params_->n_steps/params_->n_validate);
+    nvalidate_ = params_->n_validate;
+    orientations_ = new double**[n_members_];
+    for (int i=0; i<n_members_; ++i) {
+      orientations_[i] = new double*[2];
+      for (int j=0; j<2; ++j) {
+        orientations_[i][j] = new double[nbins_];
+      }
+    }
+  }
   midstep_ = true;
+  ibin_ = 0;
+  ivalidate_ = 0;
 
   std::cout << "****************\n";
   std::cout << "Filament insertion not done yet, BE CAREFUL!!!!!!\n";
   std::cout << "****************\n";
 }
 
-void FilamentSpecies::WriteOutputs(std::string run_name) {
+void FilamentSpecies::WriteThetaValidation(std::string run_name) {
   std::ostringstream file_name;
   file_name << run_name << "-thetas.log";
   std::ofstream thetas_file(file_name.str().c_str(), std::ios_base::out);
@@ -1008,6 +1024,110 @@ void FilamentSpecies::WriteOutputs(std::string run_name) {
     }
     thetas_file << "\n";
   }
+}
+
+
+void FilamentSpecies::WriteDiffusionValidation(std::string run_name) {
+  std::ostringstream file_name;
+  file_name << run_name << "-diffusion.log";
+  std::ofstream diffusion_file(file_name.str().c_str(), std::ios_base::out);
+  diffusion_file << "timestep ";
+  for (int i_member=0; i_member<n_members_; ++i_member) {
+    diffusion_file << "fil_" << i_member+1 << "_theta" << " ";
+    if (n_dim_ == 3)
+      diffusion_file << "fil_" << i_member+1 << "_phi" << " ";
+  }
+  diffusion_file << "\n";
+  for (int i_bin=0; i_bin<nbins_; ++i_bin) {
+    int time = i_bin*nvalidate_;
+    diffusion_file << time << " ";
+    for (int i_member=0; i_member<n_members_; ++i_member) {
+      diffusion_file << orientations_[i_member][0][i_bin] << " ";
+      if (n_dim_ == 3)
+        diffusion_file << orientations_[i_member][1][i_bin] << " ";
+    }
+    diffusion_file << "\n";
+  }
+}
+
+
+
+void FilamentSpecies::WriteOutputs(std::string run_name) {
+  if (theta_validation_) {
+    WriteThetaValidation(run_name);
+  }
+  else if (diffusion_validation_) {
+    WriteDiffusionValidation(run_name);
+  }
+}
+
+void FilamentSpecies::ValidateThetaDistributions() {
+  int i = 0;
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    std::vector<double> const * const thetas = (*it)->GetThetas();
+    for (int j=0; j<7; ++j) {
+      int bin_number = (int) floor( (1 + (*thetas)[j]) * (nbins_/2) );
+      // Check boundaries
+      if (bin_number == nbins_)
+        bin_number = nbins_-1;
+      else if (bin_number == -1)
+        bin_number = 0;
+      // Check for nonsensical values
+      else if (bin_number > nbins_ || bin_number < 0) error_exit("Something went wrong in ValidateThetaDistributions!\n");
+      theta_distribution_[i][j][bin_number]++;
+    }
+    i++;
+  }
+}
+
+void FilamentSpecies::ValidateDiffusion() {
+  int i_member = 0;
+  double u[3];
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    (*it)->GetAvgOrientation(u);
+    if (n_dim_ == 2) {
+      orientations_[i_member][0][ibin_] = acos(u[1]);
+      orientations_[i_member][1][ibin_] = 0;
+    }
+    if (n_dim_ == 3) {
+      orientations_[i_member][0][ibin_] = acos(u[2]);
+      orientations_[i_member][1][ibin_] = atan2(u[1],u[0]);
+    }
+    i_member++;
+  }
+  ibin_++;
+}
+
+void Filament::GetAvgOrientation(double * au) {
+  double avg_u[3] = {0.0, 0.0, 0.0};
+  int size=0;
+  for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
+    double const * const u = it->GetOrientation();
+    for (int i=0; i<n_dim_; ++i)
+      avg_u[i] += u[i];
+    size++;
+  }
+  if (size == 0)
+    error_exit("ERROR! Something went wrong in GetAvgOrientation!\n");
+  for (int i=0; i<n_dim_; ++i)
+    avg_u[i]/=size;
+  std::copy(avg_u, avg_u+3, au);
+}
+
+void Filament::GetAvgPosition(double * ap) {
+  double avg_p[3] = {0.0, 0.0, 0.0};
+  int size=0;
+  for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
+    double const * const p = it->GetPosition();
+    for (int i=0; i<n_dim_; ++i)
+      avg_p[i] += p[i];
+    size++;
+  }
+  if (size == 0)
+    error_exit("ERROR! Something went wrong in GetAvgPosition!\n");
+  for (int i=0; i<n_dim_; ++i)
+    avg_p[i]/=size;
+  std::copy(avg_p, avg_p+3, ap);
 }
 
 void Filament::DumpAll() {

@@ -155,8 +155,16 @@ class BrRod : public Composite<Site,Bond> {
 class BrRodSpecies : public Species<BrRod> {
   protected:
     //void InitPotentials(system_parameters *params);
+    bool diffusion_validation_;
     double max_length_;
+    double ***orientations_;
     double min_length_;
+    int nbins_,
+        ibin_,
+        nvalidate_,
+        ivalidate_;
+    void ValidateDiffusion();
+    void WriteDiffusionValidation(std::string run_name);
   public:
     BrRodSpecies() : Species() {
       SetSID(SID::br_rod);
@@ -169,9 +177,24 @@ class BrRodSpecies : public Species<BrRod> {
       max_length_ = params_->max_rod_length;
     }
     ~BrRodSpecies() {}
-    BrRodSpecies(const BrRodSpecies& that) : Species(that) {}
+    BrRodSpecies(const BrRodSpecies& that) : Species(that) {
+      max_length_ = that.max_length_;
+      min_length_ = that.min_length_;
+      nbins_ = that.nbins_;
+      ibin_ = that.ibin_;
+      nvalidate_ = that.nvalidate_;
+      ivalidate_ = that.ivalidate_;
+      orientations_ = that.orientations_;
+    }
     Species& operator=(Species const& that) {
       SpeciesBase::operator=(that);
+      max_length_ = that.max_length_;
+      min_length_ = that.min_length_;
+      nbins_ = that.nbins_;
+      ibin_ = that.ibin_;
+      nvalidate_ = that.nvalidate_;
+      ivalidate_ = that.ivalidate_;
+      orientations_ = that.orientations_;
       return *this;
     }
     //virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
@@ -182,6 +205,15 @@ class BrRodSpecies : public Species<BrRod> {
     }
     double const GetMaxLength() {return max_length_;}
     double const GetMinLength() {return min_length_;}
+
+    void UpdatePositionsMP() {
+      if (diffusion_validation_ && ivalidate_%nvalidate_ == 0)
+        ValidateDiffusion();
+      for (auto it=members_.begin(); it != members_.end(); ++it) {
+        (*it)->UpdatePositionMP();
+      }
+      ivalidate_++;
+    }
 
     // Special insertion routine
     void Configurator();
