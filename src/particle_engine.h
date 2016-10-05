@@ -35,6 +35,10 @@ class ParticleEngine {
     void RegisterSchemes();
     void UpdateInteractions();
 
+    std::vector<Simple*> *GetSimples() {return &simples_;}
+    std::vector<SpeciesBase*> *GetSpecies() {return species_;}
+    std::unordered_map<int, int> *GetOIDPositionMap() {return &oid_position_map_;}
+
   private:
     bool trigger_update_ = false;
 
