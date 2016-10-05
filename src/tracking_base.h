@@ -39,7 +39,10 @@ class TrackingBase {
     virtual void Rebuild(nl_list **pNeighbors);
     virtual void UpdateRcut(double pRcut) = 0; // Force the change in rcut
 
-    std::string Name() const {return name_;}
+    const std::string Name() const {
+      std::cout << "My name is " << name_ << std::endl;
+      return name_;
+    }
     const int NUpdates() {return nupdates_;}
 
   protected:
