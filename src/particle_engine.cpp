@@ -56,7 +56,7 @@ void ParticleEngine::Dump() {
   std::cout << "----------------\n";
   std::cout << "ParticleEngine::Dump\n";
   DumpSimples();
-  DumpInteractions();
+  //DumpInteractions();
   #endif
 }
 

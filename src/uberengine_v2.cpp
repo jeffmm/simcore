@@ -41,7 +41,16 @@ void UberEngineV2::Init(system_parameters *pParams,
   pengine_.Print();
   pengine_.Dump();
   fengine_.Dump();
+}
 
-  std::cout << "DEBUG, exiting\n";
-  exit(1);
+void UberEngineV2::InteractMP() {
+  pengine_.UpdateInteractions();
+  fengine_.Interact();
+}
+
+void UberEngineV2::DumpAll() {
+  #ifdef DEBUG
+  pengine_.Dump();
+  fengine_.Dump();
+  #endif
 }
