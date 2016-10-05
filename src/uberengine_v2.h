@@ -4,6 +4,7 @@
 #include "anchor_list_generic.h"
 #include "auxiliary.h"
 #include "interaction.h"
+#include "interaction_engine_v2.h"
 #include "particle_engine.h"
 #include "species.h"
 
@@ -24,6 +25,7 @@ class UberEngineV2 {
 
     // v2.0 stuff
     ParticleEngine pengine_;
+    InteractionEngineV2 fengine_;
 
     std::vector<interaction_t> interactions_;
 

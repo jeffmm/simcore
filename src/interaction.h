@@ -48,7 +48,7 @@ inline std::string PtypeToString(const ptype& p) {
 struct _interaction {
   int idx_;
   int jdx_;
-  PotentialBase *pot;
+  PotentialBase *pot_;
   ptype type_;
 };
 typedef struct _interaction interaction_t;
