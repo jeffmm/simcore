@@ -49,7 +49,24 @@ void Simulation::RunSimulation2() {
   std::cout << "Running simulation: " << run_name_ << std::endl;
   std::cout << "   steps: " << params_.n_steps << std::endl;
   for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
-
+    time_ = (i_step_+1) * params_.delta; 
+    if ((100*i_step_) % (params_.n_steps) == 0) {
+      printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
+      fflush(stdout);
+    }
+    if (debug_trace)
+      printf("********\nStep %d\n********\n", i_step_);
+    ZeroForces();
+    InteractMP2();
+    //KinteticMonteCarloMP2();
+    IntegrateMP();
+    // Only will run if DEBUG is enabled
+    #ifdef DEBUG
+    if (debug_trace)
+      DumpAll2(i_step_);
+    #endif
+    Draw();
+    WriteOutputs();
   }
 }
 
@@ -80,6 +97,10 @@ void Simulation::DumpAll(int i_step) {
     uengine_.DumpAll();
 }
 
+void Simulation::DumpAll2(int i_step) {
+  uenginev2_.DumpAll();
+}
+
 void Simulation::Integrate() {
   for (auto it=species_.begin(); it!=species_.end(); ++it)
     (*it)->UpdatePositions();
@@ -92,6 +113,10 @@ void Simulation::IntegrateMP() {
 
 void Simulation::InteractMP() {
   uengine_.InteractMP();
+}
+
+void Simulation::InteractMP2() {
+  uenginev2_.InteractMP();
 }
 
 void Simulation::KineticMonteCarloMP() {

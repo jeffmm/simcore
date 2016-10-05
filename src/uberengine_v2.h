@@ -34,11 +34,13 @@ class UberEngineV2 {
     ~UberEngineV2() {}
 
   public:
+    void DumpAll();
     void Init(system_parameters *pParams,
               space_struct *pSpace,
               std::vector<SpeciesBase*> *pSpecies,
               al_set *pAnchors,
               long seed);
+    void InteractMP();
 };
 
 #endif // _SIMCORE_UBERENGINE_V2_H_
