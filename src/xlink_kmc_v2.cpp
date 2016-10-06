@@ -356,35 +356,32 @@ void XlinkKMCV2::GenerateKMCNeighborList() {
 }
 
 void XlinkKMCV2::PrepKMC() {
-//  simples_ = tracking_->GetSimples();
-//  nsimples_ = tracking_->GetNSimples();
-//  oid_position_map_ = tracking_->GetOIDPositionMap();
-//  neighbors_ = tracking_->GetNeighbors();
-//
-//  // Prepare each composite particle for the upcoming kmc step
-//  //if (spec1_->GetSID() != sid1_) return;
-//  XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
-//  double ntot_0_1 = 0.0;
-//  double ntot_1_2 = 0.0;
-//  auto xlinks = pxspec->GetXlinks(); 
-//
-//  for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
-//    // Determine what state we're in so that we can do the appropriate thing
-//    // XXX Do the rest of this
-//    switch((*xit)->GetBoundState()) {
-//      case unbound:
-//        Update_0_1(*xit);
-//        ntot_0_1 += (*xit)->GetNExp_0_1();
-//        break;
-//      case singly:
-//        Update_1_2(*xit);
-//        ntot_1_2 += (*xit)->GetNExp_1_2();
-//        break;
-//    }
-//  }
-//
-//  pxspec->SetNExp_0_1(ntot_0_1);
-//  pxspec->SetNExp_1_2(ntot_1_2);
+  nsimples_ = (int)simples_->size();
+
+  // Prepare each composite particle for the upcoming kmc step
+  //if (spec1_->GetSID() != sid1_) return;
+  XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
+  double ntot_0_1 = 0.0;
+  double ntot_1_2 = 0.0;
+  auto xlinks = pxspec->GetXlinks(); 
+
+  for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
+    // Determine what state we're in so that we can do the appropriate thing
+    // XXX Do the rest of this
+    switch((*xit)->GetBoundState()) {
+      case unbound:
+        Update_0_1(*xit);
+        ntot_0_1 += (*xit)->GetNExp_0_1();
+        break;
+      case singly:
+        Update_1_2(*xit);
+        ntot_1_2 += (*xit)->GetNExp_1_2();
+        break;
+    }
+  }
+
+  pxspec->SetNExp_0_1(ntot_0_1);
+  pxspec->SetNExp_1_2(ntot_1_2);
 }
 
 void XlinkKMCV2::Update_0_1(Xlink* xit) {
