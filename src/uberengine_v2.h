@@ -5,6 +5,7 @@
 #include "auxiliary.h"
 #include "interaction.h"
 #include "interaction_engine_v2.h"
+#include "kmc_engine_v2.h"
 #include "particle_engine.h"
 #include "species.h"
 
@@ -26,6 +27,7 @@ class UberEngineV2 {
     // v2.0 stuff
     ParticleEngine pengine_;
     InteractionEngineV2 fengine_;
+    kmcEngineV2 kengine_;
 
     std::vector<interaction_t> interactions_;
 
@@ -41,6 +43,7 @@ class UberEngineV2 {
               al_set *pAnchors,
               long seed);
     void InteractMP();
+    void StepKMC();
 };
 
 #endif // _SIMCORE_UBERENGINE_V2_H_

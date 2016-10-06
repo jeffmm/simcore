@@ -10,17 +10,17 @@ potentials:
     scheme: allpairs
     #overlap: true
 
-  - name : SphereLineWell
-    type: kmc
-    sid1 : xlink
-    sid2 : br_rod
-    overlap : true
-    rcut: 1.0
-    fcut: 1000
-    scheme: allpairs
-    kmc: true
-    kmc_target: xlink
-
+#  - name : SphereLineWell
+#    type: kmc
+#    sid1 : xlink
+#    sid2 : br_rod
+#    overlap : true
+#    rcut: 1.0
+#    fcut: 1000
+#    scheme: allpairs
+#    kmc: true
+#    kmc_target: xlink
+#
 #  - name: XlinkHarmonic
 #    type: internal
 #    sid: xlink

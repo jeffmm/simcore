@@ -58,7 +58,7 @@ void Simulation::RunSimulation2() {
       printf("********\nStep %d\n********\n", i_step_);
     ZeroForces();
     InteractMP2();
-    //KinteticMonteCarloMP2();
+    KineticMonteCarloMP2();
     IntegrateMP();
     // Only will run if DEBUG is enabled
     #ifdef DEBUG
@@ -121,6 +121,10 @@ void Simulation::InteractMP2() {
 
 void Simulation::KineticMonteCarloMP() {
   uengine_.StepKMC();
+}
+
+void Simulation::KineticMonteCarloMP2() {
+  uenginev2_.StepKMC();
 }
 
 void Simulation::ZeroForces() {

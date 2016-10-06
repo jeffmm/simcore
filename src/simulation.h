@@ -56,6 +56,7 @@ class Simulation {
     void InteractMP2();
     void ReadSpeciesPositions();
     void KineticMonteCarloMP();
+    void KineticMonteCarloMP2();
     void ZeroForces();
     void DumpAll(int i_step);
     void DumpAll2(int i_step);

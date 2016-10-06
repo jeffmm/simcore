@@ -36,16 +36,25 @@ void UberEngineV2::Init(system_parameters *pParams,
   fengine_.Init(space_, &pengine_, &interactions_);
   fengine_.InitMP();
 
+  kengine_.Init(params_, space_, &pengine_, &interactions_, gsl_rng_get(rng_.r));
+  kengine_.InitMP();
+
   fengine_.Interact();
 
   pengine_.Print();
+  kengine_.Print();
   pengine_.Dump();
   fengine_.Dump();
+  kengine_.Dump();
 }
 
 void UberEngineV2::InteractMP() {
   pengine_.UpdateInteractions();
   fengine_.Interact();
+}
+
+void UberEngineV2::StepKMC() {
+  kengine_.StepKMC();
 }
 
 void UberEngineV2::DumpAll() {

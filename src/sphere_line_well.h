@@ -7,7 +7,8 @@
 
 class SphereLineWell : public PotentialBase {
   protected:
-
+    double rcut_touch_;
+    double rcut_touch2_;
   public:
     SphereLineWell() : PotentialBase(nullptr, 0.0, 0.0) {
       pot_name_ = "SphereLineWell";
@@ -17,7 +18,7 @@ class SphereLineWell : public PotentialBase {
     }
     virtual void Print() {
       PotentialBase::Print();
-      std::cout << "\t{linepot: " << (4./3.)*M_PI*rcut_*rcut_*rcut_ << "}\n";
+      std::cout << "\t{linepot: " << (4./3.)*M_PI*rcut_touch_*rcut_touch_*rcut_touch_ << "}\n";
     }
 
     virtual void CalcPotential(interactionmindist *idm,
@@ -27,8 +28,8 @@ class SphereLineWell : public PotentialBase {
       std::fill(fpote, fpote + n_dim_ + 1, 0.0);
       // 0 force, return depth when inside well
       double dr_mag2 = idm->dr_mag2;
-      if (dr_mag2 < rcut2_) {
-        double a = sqrt(rcut2_ - dr_mag2);
+      if (dr_mag2 < rcut_touch2_) {
+        double a = sqrt(rcut_touch2_ - dr_mag2);
         double *rcontact;
         double rlength;
         // We have to know which one is the point, and which is the sphereo
@@ -62,7 +63,7 @@ class SphereLineWell : public PotentialBase {
         else if (rmin < -0.5 * rlength)
           rmin = -0.5 * rlength;
 
-        fpote[n_dim_] = (rmax - rmin) / (4.0/3.0 * M_PI * rcut_*rcut_*rcut_);
+        fpote[n_dim_] = (rmax - rmin) / (4.0/3.0 * M_PI * rcut_touch_*rcut_touch_*rcut_touch_);
       } else {
         fpote[n_dim_] = 0.0;
       }
@@ -83,9 +84,11 @@ class SphereLineWell : public PotentialBase {
       PotentialBase::Init(pSpace, &node);
 
       // Now, let's look at the particular yaml node we are supposed to be interested in
-      rcut_   = node["rcut"].as<double>();
-      fcut_   = node["fcut"].as<double>();
+      rcut_       = node["rcut"].as<double>();
+      fcut_       = node["fcut"].as<double>();
+      rcut_touch_ = node["rcut_touch"].as<double>();
 
+      rcut_touch2_ = rcut_touch_*rcut_touch_;
       rcut2_ = rcut_*rcut_;
     }
 
