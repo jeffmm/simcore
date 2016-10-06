@@ -95,7 +95,6 @@ void TrackingScheme::Print() {
 
 // Overall load simples functionality
 void TrackingScheme::LoadSimples() {
-  std::cout << "TrackingScheme Load Simples\n";
   std::vector<Simple*> sim_vec0 = spec0_->GetSimples();
   std::vector<Simple*> sim_vec1 = spec1_->GetSimples();
 
