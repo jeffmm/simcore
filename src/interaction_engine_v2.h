@@ -54,6 +54,7 @@ class InteractionEngineV2 {
 
     void AttachParticleEngine();
     void DumpInteractions();
+    void DumpSpecies();
     void ReduceParticlesMP();
 
     // All interaction types
