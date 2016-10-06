@@ -32,13 +32,11 @@ void TrackingSchemeAllPairs::PrintStatistics() {
 
 // Create the all pairs tracking scheme
 void TrackingSchemeAllPairs::CreateTrackingScheme() {
-  std::cout << "TrackingSchemeAllPairs CreateTrackingScheme\n";
   GenerateAllPairs();
 }
 
 // Generate the interactions
 void TrackingSchemeAllPairs::GenerateInteractions(bool pForceUpdate) {
-  std::cout << "TrackingSchemeAllPairs GenerateInteractions\n";
   // Check to see if we have to update because the particle numbers changed, or something like that
   if (pForceUpdate) {
     LoadSimples();
@@ -51,7 +49,6 @@ void TrackingSchemeAllPairs::GenerateInteractions(bool pForceUpdate) {
 // XXX FIXME maybe we don't need this, and can just loop over rigids
 // and not do the checking at all?
 void TrackingSchemeAllPairs::GenerateAllPairs() {
-  std::cout << "TrackingSchemeAllPairs GenerateAllPairs\n";
   // Clear the interactions
   nupdates_++;
   m_interactions_.clear();

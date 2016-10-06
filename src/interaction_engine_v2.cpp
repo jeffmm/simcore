@@ -117,7 +117,7 @@ void InteractionEngineV2::Interact() {
     for (int ix = 0; ix < nix; ++ix) {
       // Alias the interaction
       interaction_t *pix = &((*interactions_)[ix]);
-      std::cout << "[" << ix << "] -> {" << pix->idx_ << " -> " << pix->jdx_ << "}\n";
+      //std::cout << "[" << ix << "] -> {" << pix->idx_ << " -> " << pix->jdx_ << "}\n";
       switch(pix->type_) {
         case ptype::external:
           InteractParticlesExternalMP(&pix, fr, tr, pr_energy, virial);
