@@ -125,7 +125,7 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
         new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
         new_interaction.type_ = type_;
         new_interaction.pot_ = pbase_;
-        //new_interaction.kmc_track_module_ = moduleid_;
+        new_interaction.kmc_track_module_ = moduleid_;
         
         // KMC specifics
         if (type_ == ptype::kmc) {

@@ -135,9 +135,8 @@ void ParticleEngine::CreateTracking() {
 
     std::string types   = node_["potentials"][ipot]["type"].as<std::string>();
     // Determine what kind of potential we have, as it affects if we attach to something or not
-    if (types.compare("external") == 0 ||
-        types.compare("kmc") == 0) {
-      std::cout << "External or kmc, need tracking\n";
+    if (types.compare("external") == 0) {
+      std::cout << "External need tracking\n";
       CreateExternalPotential(&subnode, potidx);
     } else if (types.compare("internal") == 0 ||
                types.compare("boundary") == 0 ||
@@ -179,6 +178,44 @@ void ParticleEngine::CreateExternalPotential(YAML::Node *subnode, int potidx) {
   tracking_.push_back(scheme);
 
   std::cout << "Particle Engine CreateExternalPotential done\n";
+}
+
+// Create a special KMC tracking node
+TrackingScheme* ParticleEngine::CreateKMCTracking(YAML::Node *subnode) {
+  std::cout << "CreateKMCTracking\n";
+
+  YAML::Node node = *subnode;
+  std::string types = node["type"].as<std::string>();
+  if (types.compare("kmc") != 0) {
+    std::cout << "Attempting a KMC load potential with " << types << std::endl;
+    exit(1);
+  }
+
+  // Create the potential(s)
+  int potidx = potentials_.AddPotential(&node);
+  std::cout << "Put pot in idx: " << potidx << std::endl;
+
+  PotentialBase *mypot = potentials_.GetPotential(potidx);
+
+  // Get the listed scheme
+  std::string schemes = node["scheme"].as<std::string>();
+  TrackingScheme *scheme = (TrackingScheme*) scheme_factory_.construct(schemes);
+
+  if (!scheme) {
+    std::cout << "Scheme " << schemes << " not found, exiting\n";
+    exit(1);
+  }
+  scheme->Init((int)tracking_.size(),
+               space_,
+               mypot,
+               interactions_,
+               species_,
+               &simples_,
+               &oid_position_map_,
+               &node);
+  tracking_.push_back(scheme);
+
+  return scheme;
 }
 
 // Check if a global update has been triggered
