@@ -21,7 +21,6 @@ void ParticleEngine::Init(system_parameters *pParams,
                           al_set *pAnchors,
                           std::vector<interaction_t> *pInteractions,
                           long seed) {
-  std::cout << "Particle Engine Init\n";
   params_ = pParams;
   space_ = pSpace;
   species_ = pSpecies;
@@ -49,7 +48,6 @@ void ParticleEngine::Init(system_parameters *pParams,
 
   LoadSimples();
 
-  std::cout << "Particle Engine Init done\n";
 }
 
 void ParticleEngine::Print() {
@@ -65,7 +63,7 @@ void ParticleEngine::Dump() {
   #ifdef DEBUG
   std::cout << "----------------\n";
   std::cout << "ParticleEngine::Dump\n";
-  DumpSimples();
+  //DumpSimples();
   //DumpInteractions();
   #endif
 }
@@ -119,24 +117,18 @@ void ParticleEngine::LoadSimples() {
 
 // Create all of the tracking information
 void ParticleEngine::CreateTracking() {
-  std::cout << "Particle Engine CreateTracking\n";
-
   // Load the potential file
   char *fname = params_->potfile;
-  std::cout << "Loading potentials from " << fname << std::endl;
   node_ = YAML::LoadFile(fname);
   npots_ = (int)node_["potentials"].size();
-  std::cout << "Found " << npots_ << " potentials\n";
   for (int ipot = 0; ipot < npots_; ++ipot) {
     // Add the potential to the potential manager, and get the entry
     YAML::Node subnode = node_["potentials"][ipot];
     int potidx = potentials_.AddPotential(&subnode);
-    std::cout << "Put pot in idx: " << potidx << std::endl;
 
     std::string types   = node_["potentials"][ipot]["type"].as<std::string>();
     // Determine what kind of potential we have, as it affects if we attach to something or not
     if (types.compare("external") == 0) {
-      std::cout << "External need tracking\n";
       CreateExternalPotential(&subnode, potidx);
     } else if (types.compare("internal") == 0 ||
                types.compare("boundary") == 0 ||
@@ -147,15 +139,9 @@ void ParticleEngine::CreateTracking() {
       exit(1);
     }
   }
-
-  //potentials_.Print();
-
-  std::cout << "Particle Engine CreateTracking done\n";
 }
 
 void ParticleEngine::CreateExternalPotential(YAML::Node *subnode, int potidx) {
-  std::cout << "Particle Engine CreateExternalPotential\n";
-
   YAML::Node node = *subnode;
   PotentialBase *mypot = potentials_.GetPotential(potidx);
 
@@ -176,14 +162,10 @@ void ParticleEngine::CreateExternalPotential(YAML::Node *subnode, int potidx) {
                &oid_position_map_,
                &node);
   tracking_.push_back(scheme);
-
-  std::cout << "Particle Engine CreateExternalPotential done\n";
 }
 
 // Create a special KMC tracking node
 TrackingScheme* ParticleEngine::CreateKMCTracking(YAML::Node *subnode) {
-  std::cout << "CreateKMCTracking\n";
-
   YAML::Node node = *subnode;
   std::string types = node["type"].as<std::string>();
   if (types.compare("kmc") != 0) {
@@ -193,7 +175,6 @@ TrackingScheme* ParticleEngine::CreateKMCTracking(YAML::Node *subnode) {
 
   // Create the potential(s)
   int potidx = potentials_.AddPotential(&node);
-  std::cout << "Put pot in idx: " << potidx << std::endl;
 
   PotentialBase *mypot = potentials_.GetPotential(potidx);
 

@@ -17,13 +17,11 @@
 #define REGISTER_POTENTIAL(n) pot_factory_.register_class<n>(#n);
 
 void PotentialManagerV2::Init(space_struct *pSpace, al_set *pAnchors) {
-  std::cout << "Potential Manager V2 Init\n";
   space_ = pSpace;
   anchors_ = pAnchors;
 
   // Register the potentials
   RegisterPotentials();
-  std::cout << "Potential Manager V2 Init done\n";
 }
 
 void PotentialManagerV2::RegisterPotentials() {

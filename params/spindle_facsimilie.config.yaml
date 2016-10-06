@@ -19,8 +19,11 @@ br_rod:
       x: [0.0, 0.0, 0.0]
       u: [1.0, 0.0, 0.0]
     - length: 20.0
-      x: [0.0, 1.0, 0.0]
+      x: [0.0, 1.5, 0.0]
       u: [-1.0, 0.0, 0.0]
+    - length: 20.0
+      x: [0.0, 3.0, 0.0]
+      u: [1.0, 0.0, 0.0]
 
 xlink:
 #  properties:
@@ -29,8 +32,7 @@ xlink:
 #    draw_type: fill
 #    color: [1.0, 0.0, 0.0, 1.0]
 #  xit:
-#    #num: 304
-#    num: 1
+#    num: 304
 #    diameter: 1
   properties:
     insertion_type: xyz
@@ -40,3 +42,5 @@ xlink:
   xit:
     - diameter: 1.0
       x: [0.0, 0.0, 0.0]
+    - diameter: 1.0
+      x: [0.0, 1.0, 0.0]

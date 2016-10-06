@@ -318,15 +318,15 @@ void XlinkKMCV2::GenerateKMCNeighborList() {
   // Loop over interactions and build
   nl_kmc_.clear();
   nl_kmc_.resize(nsimples_);
-  std::cout << "Generating neighbor list for: " << nsimples_ << " simples\n";
+  //std::cout << "Generating neighbor list for: " << nsimples_ << " simples\n";
 
   for (auto ixs = interactions_->begin(); ixs != interactions_->end(); ++ixs) {
     auto mixs = *ixs;
     if (mixs.kmc_track_module_ == scheme_id_) {
-      std::cout << "Found a match!\n";
+      //std::cout << "Found a match!\n";
       // Determine which way the interaction was done
-      std::cout << "[" << mixs.idx_ << ", " << mixs.jdx_ << ", " << PtypeToString(mixs.type_)
-        << std::setprecision(16) << "] kmc: " << mixs.kmc_ << ", target: " << SIDToString(mixs.kmc_target_) << std::endl;
+      //std::cout << "[" << mixs.idx_ << ", " << mixs.jdx_ << ", " << PtypeToString(mixs.type_)
+      //  << std::setprecision(16) << "] kmc: " << mixs.kmc_ << ", target: " << SIDToString(mixs.kmc_target_) << std::endl;
       auto part1 = (*simples_)[mixs.idx_];
       auto part2 = (*simples_)[mixs.jdx_];
       neighbor_kmc_t new_neighbor;
