@@ -15,7 +15,7 @@ class ParticleEngine {
   public:
 
     ParticleEngine() {}
-    ~ParticleEngine() {}
+    ~ParticleEngine();
 
     void Init(system_parameters *pParams,
               space_struct *pSpace,
@@ -32,6 +32,7 @@ class ParticleEngine {
     void DumpSimples();
     void LoadSimples();
     void Print();
+    void PrintStatistics();
     void RegisterSchemes();
     void UpdateInteractions();
 
@@ -39,7 +40,7 @@ class ParticleEngine {
     std::vector<SpeciesBase*> *GetSpecies() {return species_;}
     std::unordered_map<int, int> *GetOIDPositionMap() {return &oid_position_map_;}
 
-  private:
+  protected:
     bool trigger_update_ = false;
 
     int ndim_;
@@ -66,6 +67,7 @@ class ParticleEngine {
 
     // Potential mappings
     std::vector<TrackingScheme*> tracking_;
+
 };
 
 #endif /* _SIMCORE_PARTICLE_ENGINE_H_ */

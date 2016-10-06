@@ -33,7 +33,7 @@ class Xlink : public Composite<XlinkHead> {
     //Constructor
     Xlink(system_parameters *params, space_struct *space, long seed, SID sid) : Composite(params, space, seed, sid) {
       for (int i=0; i<2; ++i) {
-        XlinkHead b(params, space, gsl_rng_get(rng_.r), SID::xlink_head);
+        XlinkHead b(params, space, gsl_rng_get(rng_.r), SID::xlink);
         b.SetCID(GetCID());
         elements_.push_back(b);
         bound_ = unbound;

@@ -18,13 +18,18 @@ class TrackingScheme {
 
     TrackingScheme() {}
     virtual ~TrackingScheme() {
-      delete unique_rids_;
-      delete rid_self_check_;
-      delete[] rid_check_local_;
+      if (unique_rids_)
+        delete unique_rids_;
+      if (rid_self_check_)
+        delete rid_self_check_;
+      if (rid_check_local_)
+        delete[] rid_check_local_;
     }
 
+    // Virtual functions
     virtual void GenerateInteractions(bool pForceUpdate = false) = 0;
-    virtual void Init(space_struct *pSpace,
+    virtual void Init(int pModuleID,
+                      space_struct *pSpace,
                       PotentialBase *pPotentialBase,
                       std::vector<interaction_t> *pInteractions,
                       std::vector<SpeciesBase*> *pSpecies,
@@ -32,6 +37,11 @@ class TrackingScheme {
                       std::unordered_map<int, int>* pOIDMap,
                       YAML::Node *pNode);
     virtual void Print();
+    virtual void PrintStatistics() = 0;
+
+    // Non virtual functions
+    ptype GetModuleType() {return type_;}
+    int GetModuleID() {return moduleid_;}
 
   protected:
 
@@ -42,9 +52,11 @@ class TrackingScheme {
     int nmsimples_ = -1;
     int nupdates_ = 0;
     int maxrigid_ = 0;
+    int moduleid_ = -1;
 
     SID sid0_;
     SID sid1_;
+    SID kmc_target_;
     ptype type_;
     SpeciesBase *spec0_ = nullptr;
     SpeciesBase *spec1_ = nullptr;
@@ -60,6 +72,7 @@ class TrackingScheme {
     std::vector<Simple*> m_simples_;
     std::unordered_map<int, int> *oid_position_map_;
 
+    void CreateKMCNeighbors();
     void LoadSimples();
 
     virtual void CreateTrackingScheme() = 0;
@@ -68,6 +81,7 @@ class TrackingScheme {
     std::vector<bool> *rid_self_check_;
     std::set<int> *unique_rids_;
     std::unordered_set<int>** rid_check_local_;
+
 };
 
 #endif
