@@ -4,6 +4,16 @@
 
 #define REGISTER_SCHEME(n,m) scheme_factory_.register_class<n>(#m);
 
+// Destructor
+ParticleEngine::~ParticleEngine() {
+  std::cout << "********\n";
+  std::cout << "Particle Engine - Final Statistics\n";
+  for (auto ixs = tracking_.begin(); ixs != tracking_.end(); ++ixs) {
+    (*ixs)->PrintStatistics();
+    delete (*ixs);
+  }
+}
+
 // Pass in the main system properties information
 void ParticleEngine::Init(system_parameters *pParams,
                           space_struct *pSpace,
@@ -158,7 +168,8 @@ void ParticleEngine::CreateExternalPotential(YAML::Node *subnode, int potidx) {
     std::cout << "Scheme " << schemes << " not found, exiting\n";
     exit(1);
   }
-  scheme->Init(space_,
+  scheme->Init((int)tracking_.size(),
+               space_,
                mypot,
                interactions_,
                species_,
@@ -211,3 +222,4 @@ void ParticleEngine::UpdateInteractions() {
   }
 
 }
+

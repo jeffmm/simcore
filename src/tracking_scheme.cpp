@@ -3,7 +3,8 @@
 #include "tracking_scheme.h"
 
 // Initialize
-void TrackingScheme::Init(space_struct *pSpace,
+void TrackingScheme::Init(int pModuleID,
+                          space_struct *pSpace,
                           PotentialBase *pPotentialBase,
                           std::vector<interaction_t> *pInteractions,
                           std::vector<SpeciesBase*> *pSpecies,
@@ -18,6 +19,7 @@ void TrackingScheme::Init(space_struct *pSpace,
   interactions_ = pInteractions;
   simples_ = pSimples;
   oid_position_map_ = pOIDMap;
+  moduleid_ = pModuleID;
 
   #ifdef ENABLE_OPENMP
   #pragma omp parallel
@@ -42,6 +44,12 @@ void TrackingScheme::Init(space_struct *pSpace,
   std::string types = node["type"].as<std::string>();
   type_ = StringToPtype(types);
 
+  // KMC target if there is one
+  if (node["kmc_target"]) {
+    std::string kmc_targets = node["kmc_target"].as<std::string>();
+    kmc_target_ = StringToSID(kmc_targets);
+  }
+
   // Locate the two species we're interested in
   for (auto spec = pSpecies->begin(); spec != pSpecies->end(); ++spec) {
     if ((*spec)->GetSID() == sid0_) {
@@ -62,7 +70,6 @@ void TrackingScheme::Init(space_struct *pSpace,
   }
 
   LoadSimples();
-  nsimples_ = (int)simples_->size();
 
   // Generate the rigid checkers
   rid_self_check_ = new std::vector<bool>();
@@ -75,12 +82,15 @@ void TrackingScheme::Init(space_struct *pSpace,
 
 // Print out the information for this tracking scheme
 void TrackingScheme::Print() {
-  std::cout << name_ << " Tracking Scheme" << std::endl;
+  std::cout << name_ << " Tracking Scheme [" << moduleid_ << "]\n";
   std::cout << "   potential: ->\n";
   std::cout << "   {" << SIDToString(sid0_) << ", " << SIDToString(sid1_) << "} : ";
   pbase_->Print();
   std::cout << "   type: " << PtypeToString(type_) << std::endl;
   std::cout << "   my nsimples: " << nmsimples_ << std::endl;
+  if (type_ == ptype::kmc) {
+    std::cout << "   kmc_target: " << SIDToString(kmc_target_) << std::endl;
+  }
 }
 
 // Overall load simples functionality
@@ -96,5 +106,6 @@ void TrackingScheme::LoadSimples() {
   }
 
   nmsimples_ = (int)m_simples_.size();
-}
+  nsimples_ = (int)simples_->size();
 
+}

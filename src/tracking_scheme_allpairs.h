@@ -13,7 +13,8 @@ class TrackingSchemeAllPairs : public TrackingScheme {
     virtual ~TrackingSchemeAllPairs() {}
 
     virtual void GenerateInteractions(bool pForceUpdate = false);
-    virtual void Init(space_struct *pSpace,
+    virtual void Init(int pModuleID,
+                      space_struct *pSpace,
                       PotentialBase *pPotentialBase,
                       std::vector<interaction_t> *pInteractions,
                       std::vector<SpeciesBase*> *pSpecies,
@@ -21,6 +22,7 @@ class TrackingSchemeAllPairs : public TrackingScheme {
                       std::unordered_map<int, int> *pOIDMap,
                       YAML::Node *pNode);
     virtual void Print();
+    virtual void PrintStatistics();
 
   protected:
 

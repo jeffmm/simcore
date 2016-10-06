@@ -3,14 +3,15 @@
 #include "tracking_scheme_allpairs.h"
 
 // Init funcitonality
-void TrackingSchemeAllPairs::Init(space_struct *pSpace,
+void TrackingSchemeAllPairs::Init(int pModuleID,
+                                  space_struct *pSpace,
                                   PotentialBase *pPotentialBase,
                                   std::vector<interaction_t> *pInteractions,
                                   std::vector<SpeciesBase*> *pSpecies,
                                   std::vector<Simple*> *pSimples,
                                   std::unordered_map<int, int> *pOIDMap,
                                   YAML::Node *pNode) {
-  TrackingScheme::Init(pSpace, pPotentialBase, pInteractions, pSpecies, pSimples, pOIDMap, pNode);
+  TrackingScheme::Init(pModuleID, pSpace, pPotentialBase, pInteractions, pSpecies, pSimples, pOIDMap, pNode);
 
   CreateTrackingScheme();
 }
@@ -18,6 +19,15 @@ void TrackingSchemeAllPairs::Init(space_struct *pSpace,
 // Print functionality
 void TrackingSchemeAllPairs::Print() {
   TrackingScheme::Print();
+}
+
+// Print statistics
+void TrackingSchemeAllPairs::PrintStatistics() {
+  std::cout << "********\n";
+  std::cout << name_ << std::endl;
+  std::cout << "   {" << SIDToString(sid0_) << ", " << SIDToString(sid1_) << "}\n";
+  std::cout << "   type: " << PtypeToString(type_) << std::endl;
+  std::cout << "   nupdates: " << nupdates_ << std::endl;
 }
 
 // Create the all pairs tracking scheme
@@ -38,6 +48,8 @@ void TrackingSchemeAllPairs::GenerateInteractions(bool pForceUpdate) {
 }
 
 // Generate the all pairs stuff
+// XXX FIXME maybe we don't need this, and can just loop over rigids
+// and not do the checking at all?
 void TrackingSchemeAllPairs::GenerateAllPairs() {
   std::cout << "TrackingSchemeAllPairs GenerateAllPairs\n";
   // Clear the interactions
@@ -95,6 +107,12 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
         int rid2 = p2->GetRID();
         if (rid1 == rid2) continue;
 
+        // XXX FIXME this might not be optimal, but check anyway....
+        auto sid0 = p1->GetSID();
+        auto sid1 = p2->GetSID();
+        if (!(sid0 == sid0_ && sid1 == sid1_) &&
+            !(sid1 == sid0_ && sid0 == sid1_)) continue;
+
         // We are guranteed for an interaction
         if (rid_check_local->count(rid2)) {
           continue;
@@ -107,6 +125,12 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
         new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
         new_interaction.type_ = type_;
         new_interaction.pot_ = pbase_;
+        //new_interaction.kmc_track_module_ = moduleid_;
+        
+        // KMC specifics
+        if (type_ == ptype::kmc) {
+          new_interaction.kmc_target_ = kmc_target_;
+        }
         
         #ifdef ENABLE_OPENMP
         #pragma omp critical
@@ -114,9 +138,6 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
         {
           m_interactions_.push_back(new_interaction);
         }
-
-
-
       } // for loop over second particle
     } // for loop over first particle
   } // omp parallel
