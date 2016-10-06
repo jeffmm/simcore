@@ -7,22 +7,24 @@ potentials:
     fcut: 100
     eps: 1
     sigma: 1
+    scheme: allpairs
     #overlap: true
 
   - name : SphereLineWell
-    type: external
-    sid1 : xlink_head
+    type: kmc
+    sid1 : xlink
     sid2 : br_rod
     overlap : true
     rcut: 1.0
     fcut: 1000
+    scheme: allpairs
     kmc: true
-    kmc_target: xlink_head
+    kmc_target: xlink
 
-  - name: XlinkHarmonic
-    type: internal
-    sid: xlink
-    k: 45.29
-    equilibrium_length: 3.12
-    rcut: 1000.0
-    fcut: 10000
+#  - name: XlinkHarmonic
+#    type: internal
+#    sid: xlink
+#    k: 45.29
+#    equilibrium_length: 3.12
+#    rcut: 1000.0
+#    fcut: 10000

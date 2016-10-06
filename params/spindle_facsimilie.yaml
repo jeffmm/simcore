@@ -20,13 +20,13 @@ n_graph: 100
 graph_background: 0
 delta: 0.00025
 #n_steps: 1000000
-n_steps: 100000
+#n_steps: 100000
 #n_steps: 5000
 #n_steps: 2500
-n_steps: 30000
+#n_steps: 30000
 #n_steps: 1000
 #n_steps: 100
-#n_steps: 10
+n_steps: 10
 #n_steps: 2
 #n_steps: 15758
 n_update_cells: 20
@@ -45,4 +45,5 @@ masterskin: 1.5
 max_overlap: 10000
 n_posit: 100
 posit_flag: 1
+datafile: params/spindle.dat.yaml
 ...

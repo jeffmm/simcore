@@ -50,6 +50,11 @@ struct _interaction {
   int jdx_;
   PotentialBase *pot_;
   ptype type_;
+  int kmc_track_module_;
+
+  // KMC stuff
+  double kmc_;
+  SID kmc_target_ = SID::none;
 };
 typedef struct _interaction interaction_t;
 

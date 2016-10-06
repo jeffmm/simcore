@@ -122,6 +122,9 @@ void InteractionEngineV2::Interact() {
         case ptype::external:
           InteractParticlesExternalMP(&pix, fr, tr, pr_energy, virial);
           break;
+        case ptype::kmc:
+          InteractParticlesKMCMP(&pix, fr, tr, pr_energy, virial);
+          break;
         default:
           std::cout << "Wrong interaction type: " << (int)pix->type_ << std::endl;
           exit(1);
@@ -156,11 +159,11 @@ void InteractionEngineV2::InteractParticlesExternalMP(interaction_t **pix,
   int jdx = (*pix)->jdx_;
   auto part1 = (*simples_)[idx];
   auto part2 = (*simples_)[jdx];
-  if (part1->GetCID() == part2->GetCID()) return;
+  //if (part1->GetCID() == part2->GetCID()) return;
 
   // Calculate the potential, which we already have from the interaction
   PotentialBase *pot = (*pix)->pot_;
-  if (pot->IsKMC()) return;
+  if (pot->IsKMC()) return; // XXX FIXME is this necessary, guranteed to be the correct thing...
 
   // Minimum distance calc
   interactionmindist idm;
@@ -211,6 +214,47 @@ void InteractionEngineV2::InteractParticlesExternalMP(interaction_t **pix,
       tr[i][jdx] -= tau[i];
   }
 }
+
+// KMC interactions
+void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
+                                                 double **fr,
+                                                 double **tr,
+                                                 double *pe,
+                                                 double **virial) {
+  int idx = (*pix)->idx_;
+  int jdx = (*pix)->jdx_;
+  auto part1 = (*simples_)[idx];
+  auto part2 = (*simples_)[jdx];
+
+  (*pix)->kmc_ = 0.0;
+
+  // Calculate the potential
+  PotentialBase *pot = (*pix)->pot_;
+  if (!pot->IsKMC()) {
+    std::cout << "InteractParticlesKMCMP wrong potential somehow, exiting\n";
+    exit(1);
+  }
+
+  // Minimum distance calc
+  interactionmindist idm;
+  MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
+  if ((idm.dr_mag2) > pot->GetRCut2()) return;
+
+  // Fire off the potential calc
+  double fepot[3] = {0};
+  pot->CalcPotential(&idm, part1, part2, fepot);
+
+  #ifdef DEBUG
+  if (debug_trace) {
+    std::cout << "\tKMC Interacting[" << idx << "," << part1->GetOID()
+      << ":" << jdx << "," << part2->GetOID() << "] kmc: " << std::setprecision(16)
+      << fepot[ndim_] << ", (rmag: " << idm.dr_mag << ")\n";
+  }
+  #endif
+
+  (*pix)->kmc_ = fepot[ndim_];
+}
+
 
 // Reduce the particles and load the forces back onto them
 void InteractionEngineV2::ReduceParticlesMP() {
@@ -263,7 +307,12 @@ void InteractionEngineV2::DumpInteractions() {
   for (int ixs = 0; ixs < interactions_->size(); ++ixs) {
     auto mixs = (*interactions_)[ixs];
     std::cout << "[" << ixs << "] {" << mixs.idx_ << " -> " << mixs.jdx_ << "}, type: "
-      << PtypeToString(mixs.type_) << std::endl;
+      << PtypeToString(mixs.type_);
+    if (mixs.kmc_target_ != SID::none) {
+      std::cout << ", kmc_target: " << SIDToString(mixs.kmc_target_)
+        << std::setprecision(16) << ", kmc: " << mixs.kmc_;
+    }
+    std::cout << std::endl;
   }
   #endif
 }

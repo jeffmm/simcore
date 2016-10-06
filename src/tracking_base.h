@@ -20,9 +20,12 @@ class TrackingBase {
 
     TrackingBase() {}
     virtual ~TrackingBase() {
-      delete unique_rids_;
-      delete rid_self_check_;
-      delete[] rid_check_local_;
+      if (unique_rids_)
+        delete unique_rids_;
+      if (rid_self_check_)
+        delete rid_self_check_;
+      if (rid_check_local_)
+        delete[] rid_check_local_;
       //delete[] rid_interactions_;
     }
 
