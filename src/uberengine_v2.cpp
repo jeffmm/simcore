@@ -61,5 +61,6 @@ void UberEngineV2::DumpAll() {
   #ifdef DEBUG
   pengine_.Dump();
   fengine_.Dump();
+  kengine_.Dump();
   #endif
 }

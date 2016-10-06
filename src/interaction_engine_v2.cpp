@@ -295,7 +295,22 @@ void InteractionEngineV2::Dump() {
   #ifdef DEBUG
   std::cout << "----------------\n";
   std::cout << "InteractionEngineV2::Dump\n";
+  DumpSpecies();
   DumpInteractions();
+  #endif
+}
+
+// Dump Species information
+void InteractionEngineV2::DumpSpecies() {
+  #ifdef DEBUG
+  if (debug_trace) {
+    std::cout << "----------------\n";
+    std::cout << "DumpSpecies\n";
+    for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+      std::cout << "Species[" << (int)(*spec)->GetSID() << "] ->\n";
+      (*spec)->Dump();
+    }
+  }
   #endif
 }
 
