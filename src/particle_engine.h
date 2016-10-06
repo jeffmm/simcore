@@ -26,6 +26,7 @@ class ParticleEngine {
 
     void CheckTriggerUpdate();
     void CreateExternalPotential(YAML::Node *subnode, int potidx);
+    TrackingScheme *CreateKMCTracking(YAML::Node *subnode);
     void CreateTracking();
     void Dump();
     void DumpInteractions();
@@ -39,6 +40,7 @@ class ParticleEngine {
     std::vector<Simple*> *GetSimples() {return &simples_;}
     std::vector<SpeciesBase*> *GetSpecies() {return species_;}
     std::unordered_map<int, int> *GetOIDPositionMap() {return &oid_position_map_;}
+    std::vector<interaction_t> *GetInteractions() {return interactions_;}
 
   protected:
     bool trigger_update_ = false;
