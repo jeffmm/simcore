@@ -17,6 +17,9 @@
 #define REGISTER_POTENTIAL(n) pot_factory_.register_class<n>(#n);
 
 void PotentialManagerV2::Init(space_struct *pSpace, al_set *pAnchors) {
+  if (debug_trace) {
+    std::cout << "PotentialManagerV2::Init\n";
+  }
   space_ = pSpace;
   anchors_ = pAnchors;
 
@@ -39,6 +42,9 @@ void PotentialManagerV2::RegisterPotentials() {
 int PotentialManagerV2::AddPotential(YAML::Node *subnode) {
   YAML::Node node = *subnode;
   std::string potname = node["name"].as<std::string>();
+  if (debug_trace) {
+    std::cout << "PotentialManagerV2::AddPotential: " << potname << std::endl;
+  }
   PotentialBase *new_pot = (PotentialBase*) pot_factory_.construct(potname);
   new_pot->Init(space_, &node);
   potentials_.push_back(new_pot);

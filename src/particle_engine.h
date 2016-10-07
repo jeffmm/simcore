@@ -29,6 +29,7 @@ class ParticleEngine {
     TrackingScheme *CreateKMCExternal(YAML::Node *subnode);
     PotentialBase *CreateKMCInternal(YAML::Node *subnode);
     void CreateInternalPotential(YAML::Node *subnode, int potidx);
+    void CreateBoundaryPotential(YAML::Node *subnode, int potidx);
     void CreateTracking();
     void Dump();
     void DumpInteractions();
@@ -62,6 +63,7 @@ class ParticleEngine {
 
     std::vector<interaction_t> *interactions_;
     std::vector<interaction_t> m_internal_interactions_; // internal interactions that never change
+    std::vector<interaction_t> m_boundary_interactions_; // boundary interactions that never change
     std::vector<SpeciesBase*> *species_;
     std::vector<Simple*> simples_;
     std::unordered_map<int, int> oid_position_map_;
