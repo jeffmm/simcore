@@ -8,25 +8,26 @@ potentials:
     eps: 1
     sigma: 1
     overlap: true
+    scheme: allpairs
 
-  - name : SphereLineWell
-    type: external
-    sid1 : xlink_head
-    sid2 : br_rod
-    overlap : true
-    rcut: 1.0
-    fcut: 1000
-    kmc: true
-    kmc_target: xlink_head
+#  - name : SphereLineWell
+#    type: external
+#    sid1 : xlink_head
+#    sid2 : br_rod
+#    overlap : true
+#    rcut: 1.0
+#    fcut: 1000
+#    kmc: true
+#    kmc_target: xlink_head
 
-  - name: XlinkHarmonic
-    type: internal
-    sid: xlink
-    subsid: xlink_head
-    k: 31.25
-    equilibrium_length: 3.12
-    rcut: 1000.0
-    fcut: 10000
+#  - name: XlinkHarmonic
+#    type: internal
+#    sid: xlink
+#    subsid: xlink_head
+#    k: 31.25
+#    equilibrium_length: 3.12
+#    rcut: 1000.0
+#    fcut: 10000
 
   - name: BoundaryWCATip
     type: boundary
@@ -35,6 +36,14 @@ potentials:
     eps: 1
     sigma: 1
     tip: 1 # plus end
+
+  - name: BoundaryWCATip
+    type: boundary
+    sid: br_rod
+    fcut: 100
+    eps: 1
+    sigma: 1
+    tip: 0 # minus end
 
   - name: Harmonic
     type: tether

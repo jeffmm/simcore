@@ -21,6 +21,9 @@ void ParticleEngine::Init(system_parameters *pParams,
                           al_set *pAnchors,
                           std::vector<interaction_t> *pInteractions,
                           long seed) {
+  if (debug_trace) {
+    std::cout << "ParticleEngine::Init\n";
+  }
   params_ = pParams;
   space_ = pSpace;
   species_ = pSpecies;
@@ -105,6 +108,9 @@ void ParticleEngine::RegisterSchemes() {
 
 // Load our simples array
 void ParticleEngine::LoadSimples() {
+  if (debug_trace) {
+    std::cout << "ParticleEngine::LoadSimples\n";
+  }
   nsys_ = (int)species_->size();
   simples_.clear();
   for (int ispec = 0; ispec < nsys_; ++ispec) {
@@ -124,6 +130,9 @@ void ParticleEngine::LoadSimples() {
 
 // Create all of the tracking information
 void ParticleEngine::CreateTracking() {
+  if (debug_trace) {
+    std::cout << "ParticleEngine::CreateTracking\n";
+  }
   // Load the potential file
   char *fname = params_->potfile;
   node_ = YAML::LoadFile(fname);
@@ -139,8 +148,9 @@ void ParticleEngine::CreateTracking() {
       CreateExternalPotential(&subnode, potidx);
     } else if (types.compare("internal") == 0) {
       CreateInternalPotential(&subnode, potidx); 
-    } else if (types.compare("boundary") == 0 ||
-               types.compare("tether") == 0) {
+    } else if (types.compare("boundary") == 0) {
+      CreateBoundaryPotential(&subnode, potidx);
+    } else if (types.compare("tether") == 0) {
       std::cout << "Found one of the other types\n";
     } else {
       std::cout << "Please specify a potential type we understand, exiting\n";
@@ -149,6 +159,7 @@ void ParticleEngine::CreateTracking() {
   }
 }
 
+// Create an external potential
 void ParticleEngine::CreateExternalPotential(YAML::Node *subnode, int potidx) {
   YAML::Node node = *subnode;
   PotentialBase *mypot = potentials_.GetPotential(potidx);
@@ -195,6 +206,46 @@ void ParticleEngine::CreateInternalPotential(YAML::Node *subnode, int potidx) {
     new_interaction.type_ = ptype::internal;
     new_interaction.pot_ = mypot;
     m_internal_interactions_.push_back(new_interaction);
+  }
+}
+
+// Creat boundary potentials
+void ParticleEngine::CreateBoundaryPotential(YAML::Node *subnode, int potidx) {
+  YAML::Node node = *subnode;
+  PotentialBase *mypot = potentials_.GetPotential(potidx);
+
+  // No scheme, just attach to boundary stuff
+  std::string sids = node["sid"].as<std::string>();
+  SID sid = StringToSID(sids);
+  SpeciesBase *sit;
+  for (auto msit = species_->begin(); msit != species_->end(); ++msit) {
+    if ((*msit)->GetSID() == sid) {
+      sit = (*msit);
+      break;
+    }
+  }
+
+  auto spec_simples = sit->GetSimples();
+  // Loop over the spec_members, getting unique element 0 simples from each
+  // member
+  // Each RID can interact with a boundary
+  int nsimp = (int)spec_simples.size();
+  int last_rid = -1;
+  std::cout << "very first rid: " << last_rid << std::endl;
+  for (int idx = 0; idx < nsimp; ++idx) {
+    auto part = spec_simples[idx];
+    part->Dump();
+    if (part->GetRID() != last_rid) {
+      last_rid = part->GetRID();
+      interaction_t new_interaction;
+      new_interaction.idx_ = oid_position_map_[part->GetOID()];
+      new_interaction.jdx_ = -1;
+      new_interaction.type_ = ptype::boundary;
+      new_interaction.pot_ = mypot;
+      m_boundary_interactions_.push_back(new_interaction);
+    } else {
+      // Just continue, not a unique RID for this
+    }
   }
 }
 
@@ -294,5 +345,7 @@ void ParticleEngine::UpdateInteractions() {
   }
   // Add the internal interactions
   interactions_->insert(interactions_->end(), m_internal_interactions_.begin(), m_internal_interactions_.end());
+  // Boundary interactions
+  interactions_->insert(interactions_->end(), m_boundary_interactions_.begin(), m_boundary_interactions_.end());
 }
 

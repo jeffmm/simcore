@@ -17,31 +17,33 @@ spb:
       r0: 2.0
     mt:
       - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
+        length: 20.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
 
   - properties:
       insertion_type: rtp
@@ -59,31 +61,33 @@ spb:
       r0: 2.0
     mt:
       - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
-      - insertion_type: random
-        length: 3.0
+        length: 20.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
+#      - insertion_type: random
+#        length: 3.0
 
 xlink:
   properties:
@@ -92,5 +96,6 @@ xlink:
     draw_type: fill
     color: [1.0, 0.0, 0.0, 1.0]
   xit:
-    num: 500
+    #num: 500
+    num: 1
     diameter: 1

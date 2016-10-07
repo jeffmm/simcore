@@ -10,6 +10,9 @@ void UberEngineV2::Init(system_parameters *pParams,
                         std::vector<SpeciesBase*> *pSpecies,
                         al_set *pAnchors,
                         long seed) {
+  if(debug_trace) {
+    std::cout << "UberEngineV2::Init\n";
+  }
   params_ = pParams;
   space_ = pSpace;
   species_ = pSpecies;

@@ -72,6 +72,13 @@ class InteractionEngineV2 {
                                 double **fr,
                                 double **tr,
                                 double *pe);
+    void InteractParticlesBoundaryMP(interaction_t **pix,
+                                     double **fr,
+                                     double **tr,
+                                     double *pe,
+                                     double **virial);
+
+
 };
 
 // Helper functions for the setup/teardown of the MP
