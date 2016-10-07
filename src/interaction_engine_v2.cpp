@@ -128,6 +128,9 @@ void InteractionEngineV2::Interact() {
         case ptype::internal:
           InteractParticlesInternalMP(&pix, fr, tr, pr_energy);
           break;
+        case ptype::boundary:
+          InteractParticlesBoundaryMP(&pix, fr, tr, pr_energy, virial);
+          break;
         default:
           std::cout << "Wrong interaction type: " << (int)pix->type_ << std::endl;
           exit(1);
@@ -313,6 +316,55 @@ void InteractionEngineV2::InteractParticlesInternalMP(interaction_t **pix,
   cross_product(idm.contact2, fepot, tau, ndim_);
   for (int i = 0; i < 3; ++i) {
       tr[i][jdx] -= tau[i];
+  }
+}
+
+// Boundary interactions
+void InteractionEngineV2::InteractParticlesBoundaryMP(interaction_t **pix,
+                                                      double **fr,
+                                                      double **tr,
+                                                      double *pe,
+                                                      double **virial) {
+  // Only 1 particle
+  int idx = (*pix)->idx_;
+  auto part1 = (*simples_)[idx];
+  auto part2 = nullptr;
+
+  // Always just do the calculation, boundary potentials know about their own
+  // interaction distance calc
+  interactionmindist idm;
+
+  // Do the potential calc
+  double fepot[4] = {0};
+  PotentialBase *pot = (*pix)->pot_;
+  pot->CalcPotential(&idm, part1, part2, fepot);
+
+  #ifdef DEBUG
+  if (debug_trace && fepot[ndim_] > 0.0) {
+    std::cout << "\tPOT BOUNDARY Interacting[" << idx << "," << part1->GetOID()
+      << "] u: " << std::setprecision(16)
+      << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
+    if (ndim_ == 3) {
+      std::cout << ", " << fepot[2];
+    }
+    std::cout << ")\n";
+  }
+  #endif
+
+  // Potential Energies
+  pe[idx] += fepot[ndim_];
+
+  // Do the forces
+  for (int i = 0; i < ndim_; ++i) {
+      fr[i][idx] += fepot[i];
+  }
+
+  // Torques
+  // Calculate the torques
+  double tau[3];
+  cross_product(idm.contact1, fepot, tau, ndim_);
+  for (int i = 0; i < 3; ++i) {
+      tr[i][idx] += tau[i];
   }
 }
 
