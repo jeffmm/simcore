@@ -43,6 +43,19 @@ class SphereSquareWell : public PotentialBase {
 
       rcut2_ = rcut_*rcut_;
     }
+
+    virtual void Init(space_struct *pSpace, YAML::Node *subnode) {
+      YAML::Node node = *subnode;
+      PotentialBase::Init(pSpace, &node);
+
+      // Now, let's look at the particular yaml node we are supposed to be interested in
+      depth_  = node["depth"].as<double>();
+      rcut_   = node["rcut"].as<double>();
+      fcut_   = node["fcut"].as<double>();
+
+      rcut2_ = rcut_*rcut_;
+    }
+
 };
 
 #endif
