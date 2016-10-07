@@ -98,6 +98,7 @@ void TrackingScheme::LoadSimples() {
   std::vector<Simple*> sim_vec0 = spec0_->GetSimples();
   std::vector<Simple*> sim_vec1 = spec1_->GetSimples();
 
+  m_simples_.clear();
   m_simples_.insert(m_simples_.end(), sim_vec0.begin(), sim_vec0.end());
   // Avoiding adding twice if we're the same species
   if (sid0_ != sid1_) {
