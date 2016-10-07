@@ -263,11 +263,18 @@ void XlinkKMCV2::GenerateTrackingScheme(YAML::Node *subnode) {
   // Swap out the rcut silliness...
   // We only have 1, so just do it
   // XXX FIXME
-  YAML::Node node = node_original["potentials"][0];
-  node["rcut"] = rcutoff_1_2_;
+  YAML::Node node_slw = node_original["stage_0_1_potential"];
+  node_slw["rcut"] = rcutoff_1_2_;
 
-  scheme_ = ptrack_->CreateKMCTracking(&node);
-  scheme_id_ = scheme_->GetModuleID();
+  stage_0_1_scheme_ = ptrack_->CreateKMCExternal(&node_slw);
+  stage_0_1_scheme_id_ = stage_0_1_scheme_->GetModuleID();
+
+  // We also want the internal potential for xlinks
+  YAML::Node node_xi = node_original["xlink_internal_potential"];
+  node_xi["k"] = k_stretch_;
+  node_xi["equilibrium_length"] = r_equil_;
+
+  xlink_internal_potential_ = ptrack_->CreateKMCInternal(&node_xi);
 }
 
 void XlinkKMCV2::Print() {
@@ -308,7 +315,7 @@ void XlinkKMCV2::Print() {
   std::cout << "\trcutoff_1_2: " << std::setprecision(16) << rcutoff_1_2_ << std::endl;
   std::cout << "\talpha: " << std::setprecision(16) << alpha_ << std::endl;
   std::cout << "   Tracking Scheme:\n";
-  scheme_->Print(); 
+  stage_0_1_scheme_->Print(); 
 }
 
 // Generate my own neighbor lists for the stupid particles, based
@@ -322,7 +329,7 @@ void XlinkKMCV2::GenerateKMCNeighborList() {
 
   for (auto ixs = interactions_->begin(); ixs != interactions_->end(); ++ixs) {
     auto mixs = *ixs;
-    if (mixs.kmc_track_module_ == scheme_id_) {
+    if (mixs.kmc_track_module_ == stage_0_1_scheme_id_) {
       //std::cout << "Found a match!\n";
       // Determine which way the interaction was done
       //std::cout << "[" << mixs.idx_ << ", " << mixs.jdx_ << ", " << PtypeToString(mixs.type_)
@@ -485,6 +492,9 @@ void XlinkKMCV2::Update_1_2(Xlink *xit) {
         double term1 = n_exp_lookup_.Lookup(x) * ((lim1 < 0) ? -1.0 : 1.0);
         // OVERRIDE the kmc_ value of this neighbor list
         nldx->kmc_ = binding_affinity * (term1 - term0) * polar_affinity;
+        if (nldx->kmc_ < 0.0) {
+          nldx->kmc_ = 0.0; // XXX FIXME sometimes this gets super small e-21 and then fails on nexp
+        }
         n_exp += nldx->kmc_;
       }
       if (debug_trace) {
@@ -901,12 +911,11 @@ void XlinkKMCV2::KMC_1_2() {
             }
 
             // Calculate the potentials and forces of this xlink
-            //PotentialBase *xlink_pot = potentials_->GetPotentialInternal(freehead->GetOID(), boundhead->GetOID());
-            PotentialBase *xlink_pot = nullptr;
-            if (xlink_pot == nullptr) {
-              std::cout << "Uhhhh......\n";
-              exit(1);
-            }
+            PotentialBase *xlink_pot = xlink_internal_potential_;
+            //if (xlink_pot == nullptr) {
+            //  std::cout << "Uhhhh......, no potential\n";
+            //  exit(1);
+            //}
 
             if (!first_potential_use) {
               first_potential_use = true;

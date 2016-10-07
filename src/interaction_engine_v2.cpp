@@ -125,6 +125,9 @@ void InteractionEngineV2::Interact() {
         case ptype::kmc:
           InteractParticlesKMCMP(&pix, fr, tr, pr_energy, virial);
           break;
+        case ptype::internal:
+          InteractParticlesInternalMP(&pix, fr, tr, pr_energy);
+          break;
         default:
           std::cout << "Wrong interaction type: " << (int)pix->type_ << std::endl;
           exit(1);
@@ -174,7 +177,7 @@ void InteractionEngineV2::InteractParticlesExternalMP(interaction_t **pix,
   auto sid2x = spec_ind_map_[part2->GetSID()];
 
   // Fire off the potential calc
-  double fepot[3] = {0};
+  double fepot[4] = {0};
   pot->CalcPotential(&idm, part1, part2, fepot);
 
   #ifdef DEBUG
@@ -241,7 +244,7 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
   if ((idm.dr_mag2) > pot->GetRCut2()) return;
 
   // Fire off the potential calc
-  double fepot[3] = {0};
+  double fepot[4] = {0};
   pot->CalcPotential(&idm, part1, part2, fepot);
 
   #ifdef DEBUG
@@ -253,6 +256,64 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
   #endif
 
   (*pix)->kmc_ = fepot[ndim_];
+}
+
+// Internal interactions
+void InteractionEngineV2::InteractParticlesInternalMP(interaction_t **pix,
+                                                      double **fr,
+                                                      double **tr,
+                                                      double *pe) {
+  int idx = (*pix)->idx_;
+  int jdx = (*pix)->jdx_;
+  auto part1 = (*simples_)[idx];
+  auto part2 = (*simples_)[jdx];
+
+  // Check to see if we are doing this calculation (xlinks not being doubley bound...)
+  bool do_calc = true;
+  do_calc &= part1->ApplyInternalForce();
+  do_calc &= part2->ApplyInternalForce();
+  if (!do_calc) return;
+
+  interactionmindist idm;
+  MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
+
+  // Do the potential calc
+  double fepot[4] = {0};
+  PotentialBase *pot = (*pix)->pot_;
+  pot->CalcPotential(&idm, part1, part2, fepot);
+
+  #ifdef DEBUG
+  if (debug_trace) {
+    std::cout << "\tPOT INTERNAL Interacting[" << idx << "," << part1->GetOID()
+      << ":" << jdx << "," << part2->GetOID() << "] u: " << std::setprecision(16)
+      << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
+    if (ndim_ == 3) {
+      std::cout << ", " << fepot[2];
+    }
+    std::cout << ")\n";
+  }
+  #endif
+
+  // Potential Energies
+  pe[idx] += fepot[ndim_];
+  pe[jdx] += fepot[ndim_];
+
+  // Do the forces
+  for (int i = 0; i < ndim_; ++i) {
+      fr[i][idx] += fepot[i];
+      fr[i][jdx] -= fepot[i];
+  }
+
+  // Calculate the torques
+  double tau[3];
+  cross_product(idm.contact1, fepot, tau, ndim_);
+  for (int i = 0; i < 3; ++i) {
+      tr[i][idx] += tau[i];
+  }
+  cross_product(idm.contact2, fepot, tau, ndim_);
+  for (int i = 0; i < 3; ++i) {
+      tr[i][jdx] -= tau[i];
+  }
 }
 
 

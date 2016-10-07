@@ -52,11 +52,18 @@ void ParticleEngine::Init(system_parameters *pParams,
 
 void ParticleEngine::Print() {
   std::cout << "********\n";
-  std::cout << "Particle Tracking Engine ->\n";
+  std::cout << "Particle Tracking Engine -> Schemes\n";
   for (int i = 0; i < (int)tracking_.size(); ++i) {
     std::cout << "[" << i << "] : ";
     tracking_[i]->Print();
   }
+  PrintPotentials();
+}
+
+void ParticleEngine::PrintPotentials() {
+  std::cout << "********\n";
+  std::cout << "Particle Tracking Engine -> Potentials\n";
+  potentials_.Print();
 }
 
 void ParticleEngine::Dump() {
@@ -130,8 +137,9 @@ void ParticleEngine::CreateTracking() {
     // Determine what kind of potential we have, as it affects if we attach to something or not
     if (types.compare("external") == 0) {
       CreateExternalPotential(&subnode, potidx);
-    } else if (types.compare("internal") == 0 ||
-               types.compare("boundary") == 0 ||
+    } else if (types.compare("internal") == 0) {
+      CreateInternalPotential(&subnode, potidx); 
+    } else if (types.compare("boundary") == 0 ||
                types.compare("tether") == 0) {
       std::cout << "Found one of the other types\n";
     } else {
@@ -164,8 +172,34 @@ void ParticleEngine::CreateExternalPotential(YAML::Node *subnode, int potidx) {
   tracking_.push_back(scheme);
 }
 
+// Create the internal potential
+void ParticleEngine::CreateInternalPotential(YAML::Node *subnode, int potidx) {
+  YAML::Node node = *subnode;
+  PotentialBase *mypot = potentials_.GetPotential(potidx);
+
+  // There is no scheme, just raw information
+  std::string sids = node["sid"].as<std::string>();
+  SID sid = StringToSID(sids);
+  SpeciesBase *sit;
+  for (auto msit = species_->begin(); msit != species_->end(); ++msit) {
+    if ((*msit)->GetSID() == sid) {
+      sit = (*msit);
+      break;
+    }
+  }
+  auto internal_pairs = sit->GetInternalPairs();
+  for (auto ipair = internal_pairs.begin(); ipair != internal_pairs.end(); ++ipair) {
+    interaction_t new_interaction;
+    new_interaction.idx_ = oid_position_map_[ipair->first];
+    new_interaction.jdx_ = oid_position_map_[ipair->second];
+    new_interaction.type_ = ptype::internal;
+    new_interaction.pot_ = mypot;
+    m_internal_interactions_.push_back(new_interaction);
+  }
+}
+
 // Create a special KMC tracking node
-TrackingScheme* ParticleEngine::CreateKMCTracking(YAML::Node *subnode) {
+TrackingScheme* ParticleEngine::CreateKMCExternal(YAML::Node *subnode) {
   YAML::Node node = *subnode;
   std::string types = node["type"].as<std::string>();
   if (types.compare("kmc") != 0) {
@@ -197,6 +231,26 @@ TrackingScheme* ParticleEngine::CreateKMCTracking(YAML::Node *subnode) {
   tracking_.push_back(scheme);
 
   return scheme;
+}
+
+// Create a special KMC internal set of interactions (eg xlinks)
+PotentialBase *ParticleEngine::CreateKMCInternal(YAML::Node *subnode) {
+  YAML::Node node = *subnode;
+  std::string types = node["type"].as<std::string>();
+  if (types.compare("internal") != 0) {
+    std::cout << "Attempting a KMC internal load potential with " << types << std::endl;
+    exit(1);
+  }
+
+  // Create the potential
+  int potidx = potentials_.AddPotential(&node);
+
+  PotentialBase *mypot = potentials_.GetPotential(potidx);
+
+  // Internal, so there is no scheme
+  CreateInternalPotential(&node, potidx);
+
+  return mypot;
 }
 
 // Check if a global update has been triggered
@@ -238,6 +292,7 @@ void ParticleEngine::UpdateInteractions() {
   for (auto ixs = tracking_.begin(); ixs != tracking_.end(); ++ixs) {
     (*ixs)->GenerateInteractions(trigger_update_);
   }
-
+  // Add the internal interactions
+  interactions_->insert(interactions_->end(), m_internal_interactions_.begin(), m_internal_interactions_.end());
 }
 

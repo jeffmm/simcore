@@ -51,8 +51,9 @@ class XlinkKMCV2 : public KMCBaseV2 {
     std::ostringstream kmc_file_name_;
     std::ofstream kmc_file;
 
-    TrackingScheme *scheme_;
-    int scheme_id_;
+    TrackingScheme *stage_0_1_scheme_;
+    PotentialBase *xlink_internal_potential_;
+    int stage_0_1_scheme_id_;
     LookupTable n_exp_lookup_;
 
     void KMC_0_1();
