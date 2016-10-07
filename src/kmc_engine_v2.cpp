@@ -2,6 +2,7 @@
 
 #include "kmc_engine_v2.h"
 
+#include "dynamic_instability_v2.h"
 #include "xlink_kmc_v2.h"
 
 #define REGISTER_KMC(n) kmc_factory_.register_class<n>(#n);
@@ -40,6 +41,7 @@ void kmcEngineV2::Init(system_parameters *pParams,
 // Register the KMC modules
 void kmcEngineV2::RegisterKMC() {
   REGISTER_KMC(XlinkKMCV2);
+  REGISTER_KMC(DynamicInstabilityKMCV2);
 }
 
 // Attach to the particle engine
