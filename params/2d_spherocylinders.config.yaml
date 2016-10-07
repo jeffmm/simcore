@@ -1,78 +1,46 @@
 br_rod:
-<<<<<<< Updated upstream
-  properties:
-    insertion_type: xyz
-    overlap: false
-    max_length: 50
-    min_length: 3
-    color: [1.0, 0.0, 0.0, 1.0]
-    draw_type: flat
-  rod:
-    - length: 20.0
-      x: [0.0, 0.0, 0.0]
-      #u: [0.866, 0.5, 0.0]
-      u: [1.0, 0.0, 0.0]
-    - length: 20.0
-      x: [0.0, 1.5, 0.0]
-      #u: [-0.85, -0.5, 0.0]
-      u: [-1.0, 0.0, 0.0]
 #  properties:
-#    insertion_type: random
+#    insertion_type: fill
 #    overlap: false
+#    draw_type: orientation
 #  rod:
-#    num: 100
 #    length: 20
-#    max_length: 45
+#    max_length: 25
+#    min_length: 3
 #    diameter: 1
-
-xlink:
   properties:
     insertion_type: xyz
     overlap: true
-    color: [0.0, 0.0, 1.0, 1.0]
-  xit:
-    - diameter: 1.0
-      x: [-9.0, 0.0, 0.0]
+    max_length: 50
+    min_length: 3
+    draw_type: orientation
+  rod:
+    - length: 20.0
+      x: [0.0, 0.0, 0.0]
+      u: [1.0, 0.0, 0.0]
+    - length: 20.0
+      x: [0.0, 1.5, 0.0]
+      u: [-1.0, 0.0, 0.0]
+    - length: 20.0
+      x: [0.0, 3.0, 0.0]
+      u: [1.0, 0.0, 0.0]
+
+xlink:
 #  properties:
 #    insertion_type: random
 #    overlap: true
+#    draw_type: fill
+#    color: [1.0, 0.0, 0.0, 1.0]
 #  xit:
-#    num: 200
+#    num: 304
 #    diameter: 1
-=======
-# properties:
-#   insertion_type: random
-#   overlap: false
-#   max_length: 110
-# rod:
-#   - length: 20.0
-#     x: [0.0, 0.0, 0.0]
-#     #u: [0.866, 0.5, 0.0]
-#     u: [1.0, 0.0, 0.0]
-#   - length: 20.0
-#     x: [0.0, 1.5, 0.0]
-#     #u: [-0.85, -0.5, 0.0]
-#     u: [-1.0, 0.0, 0.0]
-   properties:
-     insertion_type: oriented
-     overlap: false
-   rod:
-     num: 100
-     length: 20
-     max_length: 45
-     diameter: 1
-
-xlink:
-# properties:
-#   insertion_type: xyz
-#   overlap: true
-# xit:
-#   - diameter: 1.0
-#     x: [-9.0, 0.0, 0.0]
-   properties:
-     insertion_type: random
-     overlap: true
-   xit:
-     num: 200
-     diameter: 1
->>>>>>> Stashed changes
+  properties:
+    insertion_type: xyz
+    overlap: true
+    draw_type: fill
+    color: [1.0, 0.0, 0.0, 1.0]
+  xit:
+    - diameter: 1.0
+      x: [0.0, 0.0, 0.0]
+    - diameter: 1.0
+      x: [0.0, 1.0, 0.0]

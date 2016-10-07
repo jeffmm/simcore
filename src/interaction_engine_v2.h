@@ -68,6 +68,10 @@ class InteractionEngineV2 {
                                 double **tr,
                                 double *pe,
                                 double **virial);
+    void InteractParticlesInternalMP(interaction_t **pix,
+                                double **fr,
+                                double **tr,
+                                double *pe);
 };
 
 // Helper functions for the setup/teardown of the MP

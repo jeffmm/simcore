@@ -26,13 +26,16 @@ class ParticleEngine {
 
     void CheckTriggerUpdate();
     void CreateExternalPotential(YAML::Node *subnode, int potidx);
-    TrackingScheme *CreateKMCTracking(YAML::Node *subnode);
+    TrackingScheme *CreateKMCExternal(YAML::Node *subnode);
+    PotentialBase *CreateKMCInternal(YAML::Node *subnode);
+    void CreateInternalPotential(YAML::Node *subnode, int potidx);
     void CreateTracking();
     void Dump();
     void DumpInteractions();
     void DumpSimples();
     void LoadSimples();
     void Print();
+    void PrintPotentials();
     void PrintStatistics();
     void RegisterSchemes();
     void UpdateInteractions();
@@ -58,6 +61,7 @@ class ParticleEngine {
     rng_properties rng_;
 
     std::vector<interaction_t> *interactions_;
+    std::vector<interaction_t> m_internal_interactions_; // internal interactions that never change
     std::vector<SpeciesBase*> *species_;
     std::vector<Simple*> simples_;
     std::unordered_map<int, int> oid_position_map_;
