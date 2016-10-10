@@ -1,7 +1,7 @@
 # params.yaml
 ---
-seed : 38487756103405
-n_runs: 5
+seed : 416987467145
+n_runs: 1
 n_dim: 2
 n_periodic: 2
 system_radius: 20
@@ -10,9 +10,11 @@ mother_daughter_dist: 0
 boundary_type: 1
 metric_forces: 1
 n_rod: 0
-n_filament: 1
+n_filament: 0
 rod_diameter: 1
 rod_length: 8
+rod_diffusion: 1
+rod_fixed: 0
 theta_validation_flag: 0
 diffusion_validation_flag: 1
 dynamic_instability_flag: 0
@@ -31,12 +33,12 @@ max_rod_length: 100
 min_rod_length: 1.5
 max_overlap: 100000
 cell_length: 2
-graph_flag: 0
+graph_flag: 1
 n_graph: 500
 graph_background: 1
-delta: 0.001
-n_steps: 10000000
-n_validate: 500
+delta: 0.0001
+n_steps: 50000
+n_validate: 250
 n_update_cells: 20
 time_flag: 1
 energy_analysis_flag: 0
@@ -49,9 +51,9 @@ draw_interactions: 0
 ftype: 4
 v_poly: 0.44
 v_depoly: 0.793
-potfile: params/filament_test.pot.yaml
-kmcfile: params/filament_test.kmc.yaml
-config_file: params/filament_test.config.yaml
+potfile: params/hard_rods.pot.yaml
+kmcfile: params/hard_rods.kmc.yaml
+config_file: params/hard_rods.config.yaml
 persistence_length: 0
 #[brownian_dimer]:
     #num: [2,4]
