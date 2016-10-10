@@ -151,7 +151,7 @@ void ParticleEngine::CreateTracking() {
     } else if (types.compare("boundary") == 0) {
       CreateBoundaryPotential(&subnode, potidx);
     } else if (types.compare("tether") == 0) {
-      std::cout << "Found one of the other types\n";
+      CreateTetherPotential(&subnode, potidx);
     } else {
       std::cout << "Please specify a potential type we understand, exiting\n";
       exit(1);
@@ -231,10 +231,8 @@ void ParticleEngine::CreateBoundaryPotential(YAML::Node *subnode, int potidx) {
   // Each RID can interact with a boundary
   int nsimp = (int)spec_simples.size();
   int last_rid = -1;
-  std::cout << "very first rid: " << last_rid << std::endl;
   for (int idx = 0; idx < nsimp; ++idx) {
     auto part = spec_simples[idx];
-    part->Dump();
     if (part->GetRID() != last_rid) {
       last_rid = part->GetRID();
       interaction_t new_interaction;
@@ -246,6 +244,24 @@ void ParticleEngine::CreateBoundaryPotential(YAML::Node *subnode, int potidx) {
     } else {
       // Just continue, not a unique RID for this
     }
+  }
+}
+
+// Create a tether potential
+void ParticleEngine::CreateTetherPotential(YAML::Node *subnode, int potidx) {
+  YAML::Node node = *subnode;
+  PotentialBase *mypot = potentials_.GetPotential(potidx);
+
+  // No scheme, but have to use the anchor list to attach
+  for (auto ait = anchors_->begin(); ait != anchors_->end(); ++ait) {
+    // What anchor are we on
+    std::cout << "Anchor: " << ait->first << std::endl;
+    interaction_t new_interaction;
+    new_interaction.idx_ = oid_position_map_[ait->first];
+    new_interaction.jdx_ = -1;
+    new_interaction.type_ = ptype::tether;
+    new_interaction.pot_ = mypot;
+    m_tether_interactions_.push_back(new_interaction);
   }
 }
 
@@ -347,5 +363,7 @@ void ParticleEngine::UpdateInteractions() {
   interactions_->insert(interactions_->end(), m_internal_interactions_.begin(), m_internal_interactions_.end());
   // Boundary interactions
   interactions_->insert(interactions_->end(), m_boundary_interactions_.begin(), m_boundary_interactions_.end());
+  // Tethers
+  interactions_->insert(interactions_->end(), m_tether_interactions_.begin(), m_tether_interactions_.end());
 }
 
