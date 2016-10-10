@@ -5,9 +5,9 @@ filament:
   fil:
     num: 50
     length: 10
-    persistence_length: 10000
+    persistence_length: 100000
     max_length: 100
-    min_length: 1.0
-    max_child_length: 1.5
+    min_length: 1.5
+    max_child_length: 4.0
     diameter: 1
 

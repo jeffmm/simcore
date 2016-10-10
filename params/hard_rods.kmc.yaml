@@ -1,13 +1,13 @@
-kmc:
-- type: DynamicInstabilityKMC
-  sid1: br_rod
-  sid2: br_rod
-  write_event: true
-  f_grow_to_pause: 0.0
-  f_grow_to_shrink: 0.05
-  f_pause_to_grow: 0.0
-  f_pause_to_shrink: 0.0
-  f_shrink_to_grow: 0.05
-  f_shrink_to_pause: 0.0
-  v_poly: 10.0
-  v_depoly: 11.0
+#kmc:
+#- type: DynamicInstabilityKMC
+  #sid1: br_rod
+  #sid2: br_rod
+  #write_event: true
+  #f_grow_to_pause: 0.0
+  #f_grow_to_shrink: 0.05
+  #f_pause_to_grow: 0.0
+  #f_pause_to_shrink: 0.0
+  #f_shrink_to_grow: 0.05
+  #f_shrink_to_pause: 0.0
+  #v_poly: 10.0
+  #v_depoly: 11.0

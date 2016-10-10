@@ -178,7 +178,7 @@ class Filament : public Composite<Site,Bond> {
 class FilamentSpecies : public Species<Filament> {
   protected:
     //void InitPotentials(system_parameters *params);
-    DiffusionProperties diffusion_properties_;
+    //DiffusionProperties diffusion_properties_;
     bool theta_validation_,
          diffusion_validation_,
          midstep_;
