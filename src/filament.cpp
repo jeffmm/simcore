@@ -8,7 +8,8 @@ void Filament::SetParameters(system_parameters *params) {
   diameter_ = params->rod_diameter;
   max_length_ = params->max_rod_length;
   min_length_ = params->min_rod_length;
-  max_child_length_ = 0.5*params->cell_length;
+  //max_child_length_ = 0.5*params->cell_length;
+  max_child_length_ = params->max_child_length;
   dynamic_instability_flag_ = params->dynamic_instability_flag;
   force_induced_catastrophe_flag_ = params->force_induced_catastrophe_flag;
   p_g2s_ = params->f_grow_to_shrink*delta_;
@@ -120,12 +121,18 @@ void Filament::Init() {
 }
 
 void Filament::SetDiffusion() {
-  double eps = log(2.0*length_);
+  double eps = log(2.0*length_/diameter_);
   double gamma_0 = 4.0/3.0*eps*((1+0.64*eps)/(1-1.15*eps) + 1.659 * SQR(eps));
+  //double logLD = log((1+child_length_)/diameter_);
+  //gamma_par_ = 2.0*(1+child_length_) / (3.0*logLD);
+  //gamma_perp_ = gamma_ratio_*gamma_par_;
+  //printf("Gamma par: %2.2f\n Gamma_perp: %2.2f\n", gamma_par_,gamma_perp_);
   gamma_perp_ = child_length_ * gamma_0;
   gamma_par_ = gamma_perp_ / gamma_ratio_;
-  rand_sigma_perp_ = sqrt(24.0*gamma_perp_/delta_);
-  rand_sigma_par_ = sqrt(24.0*gamma_par_/delta_);
+  //printf("Gamma par: %2.2f\n Gamma_perp: %2.2f\n", gamma_par_,gamma_perp_);
+  //error_exit("\n");
+  rand_sigma_perp_ = 10*sqrt(24.0*gamma_perp_ / delta_);
+  rand_sigma_par_ = 10*sqrt(24.0*gamma_par_ / delta_);
 }
 
 void Filament::GenerateProbableOrientation() {
@@ -940,7 +947,7 @@ void FilamentSpecies::Configurator() {
     params_->persistence_length = plength;
     params_->max_rod_length = max_length;
     params_->min_rod_length = min_length;
-    //params_->max_child_length = max_child_length; XXX right now uses the cell size...
+    params_->max_child_length = max_child_length; //XXX right now uses the cell size...
     params_->rod_diameter = diameter;
 
     n_members_ = 0;
