@@ -77,6 +77,12 @@ class InteractionEngineV2 {
                                      double **tr,
                                      double *pe,
                                      double **virial);
+    void InteractParticlesTetherMP(interaction_t **pix,
+                                   double **fr,
+                                   double **tr,
+                                   double *pe,
+                                   double **virial);
+
 
 
 };

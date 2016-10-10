@@ -30,6 +30,7 @@ class ParticleEngine {
     PotentialBase *CreateKMCInternal(YAML::Node *subnode);
     void CreateInternalPotential(YAML::Node *subnode, int potidx);
     void CreateBoundaryPotential(YAML::Node *subnode, int potidx);
+    void CreateTetherPotential(YAML::Node *subnode, int potidx);
     void CreateTracking();
     void Dump();
     void DumpInteractions();
@@ -45,6 +46,7 @@ class ParticleEngine {
     std::vector<SpeciesBase*> *GetSpecies() {return species_;}
     std::unordered_map<int, int> *GetOIDPositionMap() {return &oid_position_map_;}
     std::vector<interaction_t> *GetInteractions() {return interactions_;}
+    al_set *GetAnchors() {return anchors_;}
 
   protected:
     bool trigger_update_ = false;
@@ -64,6 +66,7 @@ class ParticleEngine {
     std::vector<interaction_t> *interactions_;
     std::vector<interaction_t> m_internal_interactions_; // internal interactions that never change
     std::vector<interaction_t> m_boundary_interactions_; // boundary interactions that never change
+    std::vector<interaction_t> m_tether_interactions_; // tether interactions that never change
     std::vector<SpeciesBase*> *species_;
     std::vector<Simple*> simples_;
     std::unordered_map<int, int> oid_position_map_;
