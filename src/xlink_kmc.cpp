@@ -138,6 +138,10 @@ void XlinkKMC::Init(space_struct *pSpace,
       break;
   }
 
+  // Diffusion free
+  diffusion_free_ = node["kmc"][ikmc]["diffusion_free"].as<double>();
+  reflect_        = node["kmc"][ikmc]["reflect"].as<bool>();
+
   // Diffusion singly bound
   switch (node["kmc"][ikmc]["diffusion_singly_bound"].Type()) {
     case YAML::NodeType::Scalar:
@@ -189,6 +193,10 @@ void XlinkKMC::Init(space_struct *pSpace,
   // Things that we need for the tables and CalcCutoff
   BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec2_);
   max_length_ = prspec->GetMaxLength();
+
+  // Calculate the conf rad
+  conf_rad_ = 0.5 * space_->unit_cell[0][0];
+  conf_rad2_ = SQR(conf_rad_);
 
   CalcCutoff();
 
@@ -269,6 +277,8 @@ void XlinkKMC::Print() {
   std::cout << std::setprecision(16) << "\tvelocity_polar_scale:     [" << velocity_p_scale_[0] << ", " << velocity_p_scale_[1] << "]\n";
   std::cout << std::setprecision(16) << "\tvelocity_antipolar_scale: [" << velocity_ap_scale_[0] << ", " << velocity_ap_scale_[1] << "]\n";
   std::cout << std::setprecision(16) << "\tvelocity_switch_costheta: [" << velocity_switch_costheta_[0] << ", " << velocity_switch_costheta_[1] << "]\n";
+  std::cout <<                          "\treflect_boundary:         [" << (reflect_ ? "true" : "false") << "]\n";
+  std::cout << std::setprecision(16) << "\tdiffusion_free:           [" << diffusion_free_ << "]\n";
   std::cout << std::setprecision(16) << "\tdiffusion_singly_bound:   [" << diffusion_bound_1_[0] << ", " << diffusion_bound_1_[1] << "]\n";
   std::cout << std::setprecision(16) << "\tdiffusion_doubly_bound:   [" << diffusion_bound_2_[0] << ", " << diffusion_bound_2_[1] << "]\n";
   std::cout << "\tbarrier_weight: " << std::setprecision(16) << barrier_weight_ << std::endl;
@@ -1187,6 +1197,7 @@ void XlinkKMC::UpdateKMC() {
   for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
     switch((*xit)->GetBoundState()) {
       case unbound:
+        UpdateStage0(*xit);
         nfree_++;
         break;
       case singly:
@@ -1201,6 +1212,64 @@ void XlinkKMC::UpdateKMC() {
   pxspec->SetNFree(nfree_);
   pxspec->SetNBound1(nbound1_[0], nbound1_[1]);
   pxspec->SetNBound2(nbound2_[0], nbound2_[0]);
+}
+
+void XlinkKMC::UpdateStage0(Xlink *xit) {
+  double sigma_d = sqrt(2.0 * xit->GetDelta() * diffusion_free_);
+  double dr[3] = {0.0, 0.0, 0.0};
+  double rinitial[3] = {0.0, 0.0, 0.0};
+  double rfinal[3] = {0.0, 0.0, 0.0};
+  std::copy(xit->GetPosition(), xit->GetPosition()+3, rinitial);
+  auto mrng = xit->GetRNG();
+  for (int i = 0; i < ndim_; ++i) {
+    dr[i] = gsl_ran_gaussian_ziggurat(mrng->r, sigma_d);
+    rfinal[i] = rinitial[i] + dr[i];
+  }
+
+  if (reflect_) {
+    // Assuming a spherical boundary because stuff
+    int i_iter = 0;
+    double rmag2 = dot_product(ndim_, rfinal, rfinal);
+
+    while (rmag2 > conf_rad2_) {
+      i_iter++;
+      double u[3] = {0.0, 0.0, 0.0};
+      double factor = 1.0/sqrt(dot_product(ndim_, dr, dr));
+      for (int i = 0; i < ndim_; ++i) {
+        u[i] = factor * dr[i];
+      }
+
+      double r_dot_u = dot_product(ndim_, rinitial, u);
+      double r_prev_mag2 = dot_product(ndim_, rinitial, rinitial);
+      double mu0 = -r_dot_u + sqrt(SQR(r_dot_u) - (r_prev_mag2-conf_rad2_));
+
+      double R_hat[3] = {0.0, 0.0, 0.0};
+      for (int i = 0; i < ndim_; ++i) {
+        R_hat[i] = (rinitial[i] + mu0 * u[i])/conf_rad_;
+      }
+
+      double dr_par = dot_product(ndim_, dr, R_hat);
+      double u_dot_R = dot_product(ndim_, u, R_hat);
+
+      for (int i = 0; i < ndim_; ++i) {
+        rfinal[i] = rfinal[i] - 2.0 * (dr_par - mu0*u_dot_R) * R_hat[i];
+        rinitial[i] = R_hat[i] * conf_rad_;
+        dr[i] = rfinal[i] - rinitial[i];
+      }
+      rmag2 = dot_product(ndim_, rfinal, rfinal);
+
+      if (i_iter == 10) {
+        // Break this
+        double factor = conf_rad_/sqrt(dot_product(ndim_, rfinal, rfinal));
+        for (int i = 0; i < ndim_; ++i) {
+          rfinal[i] = factor * rfinal[i];
+        }
+        break;
+      }
+    } // while reflecting
+  } // check if we should even reflect
+
+  xit->UpdateStage0Position(rfinal);
 }
 
 void XlinkKMC::UpdateStage1(Xlink *xit) {

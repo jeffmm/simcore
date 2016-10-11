@@ -1,0 +1,19 @@
+TestInteractionEngine:
+  TestInit:
+    test:
+      - ndim: 3
+        nperiodic: 0
+  TestTetherParticlesMP:
+    test:
+      - ndim: 3
+        nperiodic: 0
+        rods:
+          - x: [5.0, 0.0, 0.0]
+            u: [1.0, 0.0, 0.0]
+            l: 10.0
+        spbs:
+          - theta: 0.0
+            phi: 0.0
+            diameter: 9.5
+            attach_diameter: 6.5
+            radius: 55

@@ -1,6 +1,7 @@
 #ifndef _SIMCORE_BR_ROD_H_
 #define _SIMCORE_BR_ROD_H_
 
+#include "anchor_list_generic.h"
 #include "site.h"
 #include "bond.h"
 #include "species.h"
@@ -35,6 +36,7 @@ class BrRod : public Composite<Site,Bond> {
     poly_state_t poly_state_;
     void UpdateSitePositions();
     void UpdateBondPositions();
+    void UpdateAnchors();
     void SetDiffusion();
     void UpdateOrientation();
     void GetBodyFrame();
@@ -124,9 +126,10 @@ class BrRod : public Composite<Site,Bond> {
 
     // Specific functions for configurations
     void InitConfigurator(const double* const x, const double* const u, const double l);
+    void InitOriented(const double* const u);
 
-    void WritePosit(std::fstream &op);
-    void ReadPosit(std::fstream &ip);
+    //void WritePosit(std::fstream &op);
+    //void ReadPosit(std::fstream &ip);
 
     // KMC information
     poly_state_t GetPolyState() {return poly_state_;}
@@ -233,6 +236,14 @@ class BrRodSpecies : public Species<BrRod> {
 
     // Special insertion routine
     void Configurator();
+    void ConfiguratorSpindle(int ispb, int spb_oid,
+                             const double* const r_spb,
+                             const double* const u_spb,
+                             const double* const v_spb,
+                             const double* const w_spb,
+                             al_set *anchors);
+    void InsertRandomMT();
+    void InsertRTPMT();
 
     static void CreateTestRod(BrRod **rod,
                               int ndim,
@@ -250,6 +261,15 @@ class BrRodSpecies : public Species<BrRod> {
                               std::unordered_map<int, int>* oid_position_map,
                               YAML::Node *subnode);
                               
+};
+
+//TODO Use these in the configurator and not strings
+enum class ins_type : unsigned char {
+  isotropic,
+  polar,
+  crystal,
+  smectic,
+  neumatic
 };
 
 #endif // _SIMCORE_BR_ROD_H_

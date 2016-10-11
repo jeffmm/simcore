@@ -1,8 +1,10 @@
 #ifndef _SIMCORE_SPECIES_H_
 #define _SIMCORE_SPECIES_H_
 
+#include "anchor_list_generic.h"
 #include "auxiliary.h"
 #include "object.h"
+#include <iterator>
 #include "potential_base.h"
 
 class OutputManager;
@@ -20,15 +22,14 @@ class SpeciesBase {
     std::fstream iposit_file_;
 
     space_struct *space_;
+    al_set *anchors_;
     rng_properties rng_;
     void SetSID(SID sid) {sid_=sid;}
-    //std::vector<potential_pair> potentials_;
-    //virtual void InitPotentials(system_parameters *params) {}
-    //void AddPotential(SID sid1, SID sid2, PotentialBase * potential) {
-      //sid_pair sids = std::make_pair(sid1, sid2);
-      //potential_pair pot_pair = std::make_pair(sids,potential);
-      ////potentials_.push_back(pot_pair);
-    //}
+
+    double direct_[3] = {0};  //Neumatic director
+    double pol_direct_[3] = {0}; //Polar neumatic director
+    double virial_[9] = {0};
+
   public:
     SpeciesBase(int n_members, system_parameters *params, space_struct *space, long seed) {
       sid_ = SID::none;
@@ -39,6 +40,7 @@ class SpeciesBase {
       kmc_update_ = false;
       rng_.init(seed);
       delta_ = params->delta;
+      ClearThermo();
     }
     SpeciesBase() {
       sid_ = SID::none;
@@ -77,10 +79,11 @@ class SpeciesBase {
     virtual void UpdatePositions() {}
     virtual void UpdatePositionsMP() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
+    virtual void InitConfig(system_parameters *params, space_struct *space, al_set *pAnchors, long seed) {
       n_members_ = 0;
       params_ = params;
       space_ = space;
+      anchors_ = pAnchors;
       //is_kmc_ = false;
       kmc_update_ = false;
       rng_.init(seed);
@@ -88,6 +91,7 @@ class SpeciesBase {
     }
     virtual void Init() {}
     virtual void ReInit(unsigned int const cid) {}
+    //virtual void InitVirial() {}
     virtual double GetDrMax() {return 0.0;}
     virtual void ZeroDr() {}
     virtual void ZeroForces() {}
@@ -98,6 +102,17 @@ class SpeciesBase {
     virtual double GetKineticEnergy() {return 0;}
     virtual double GetPotentialEnergy() {return 0;}
     virtual double GetTotalEnergy() {return 0;}
+    //virtual double const * const GetDirector(){ return direct_; }
+    //virtual double const * const GetPolarDirector(){ return pol_direct_; }
+    virtual void GetVirial(double *tot_virial){ 
+      for (int i=0; i<params_->n_dim; i++)
+        for (int j=i; j<params_->n_dim; j++){
+          tot_virial[3*i+j] += virial_[3*i+j];
+          tot_virial[3*j+i] = virial_[3*i+j];
+        }
+    }
+
+    virtual void SetVirial(double* vl) {std::copy(vl, vl+9, virial_);}
     SID const GetSID() {return sid_;}
     bool IsKMC() {return is_kmc_;}
     bool const GetUpdate() {return kmc_update_;}
@@ -117,8 +132,8 @@ class SpeciesBase {
     virtual void ReadPosits() {}
     virtual void InitOutputFile() {
       std::string sid_str = SIDToString(sid_);
-      std::cout<<"sid_str is "<< sid_str <<" \n";
       std::string file_name = sid_str + ".posit";
+      std::cout<<"Posit file name is "<< sid_str <<" \n";
       oposit_file_.open(file_name, std::ios::out | std::ios::binary ); 
       if (!oposit_file_.is_open())
         std::cout<<"Output "<< file_name <<" file did not open\n";
@@ -136,13 +151,21 @@ class SpeciesBase {
       iposit_file_.seekg(beg);
     }
 
-    virtual int IsOpen(){ return oposit_file_.is_open(); }
-    virtual void Close(){ oposit_file_.close(); iposit_file_.close(); }
-
+    virtual int OutputIsOpen(){ return oposit_file_.is_open(); }
+    virtual int InputIsOpen(){ return iposit_file_.is_open(); }
+    virtual void Close(){ 
+      if (oposit_file_.is_open())
+        oposit_file_.close(); 
+      if (iposit_file_.is_open())
+        iposit_file_.close(); 
+    }
     virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
       std::vector<std::pair<unsigned int, unsigned int>> retval;
       return retval;
     }
+    virtual void ClearThermo(){}
+    virtual double const * const GetDirector(){return nullptr;}
+    virtual double const * const GetPolarDirector(){return nullptr;}
 };
 
 template <typename T>
@@ -154,8 +177,8 @@ class Species : public SpeciesBase {
     Species() {}
 
     // Initialize function for setting it up on the first pass
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
-      SpeciesBase::InitConfig(params, space, seed);
+    virtual void InitConfig(system_parameters *params, space_struct *space, al_set* pAnchors, long seed) {
+      SpeciesBase::InitConfig(params, space, pAnchors, seed);
     }
 
     // Configurator function must be overridden
@@ -216,7 +239,7 @@ class Species : public SpeciesBase {
       members_.push_back(newmem);
       n_members_++;
     }
-
+    
     virtual void Draw(std::vector<graph_struct*> * graph_array) {
       for (auto it=members_.begin(); it!=members_.end(); ++it)
         (*it)->Draw(graph_array);
@@ -279,6 +302,7 @@ class Species : public SpeciesBase {
       for (auto it=members_.begin(); it!=members_.end(); ++it) {
         (*it)->ZeroForce();
       }
+      ClearThermo();
     }
     virtual void Dump() {
       for (auto it=members_.begin(); it!=members_.end(); ++it) {
@@ -322,6 +346,56 @@ class Species : public SpeciesBase {
 
     virtual std::vector<T*>* GetMembers() {return &members_;}
 
+    //virtual void GetVirial(double *tot_virial){ 
+      //for (int i=0; i<params_->n_dim; i++)
+        //for (int j=i; j<params_->n_dim; j++)
+          //tot_virial[3*i+j] = tot_virial[3*j+i] += virial_[3*i+j];
+    //}
+
+    virtual void ClearThermo(){
+      std::fill(direct_, direct_+3, 0);
+      std::fill(pol_direct_, pol_direct_+3, 0);
+      std::fill(virial_, virial_+9, 0);
+      //memset(virial_, 0, sizeof(virial_));
+    }
+    virtual double const * const GetDirector(){
+      int n_dim = params_->n_dim;
+      double const *u;
+      double north[] ={0,0,0};
+      //Pick direction for upper hemisphere based on dimensionality
+      //This is done because the director is a psuedo vector
+      (n_dim == 2) ? (north[2] = 1) : (north[3] = 1);
+
+      for (auto mem_it: members_){
+        u = mem_it->GetOrientation();
+        for (int i=0; i<n_dim; i++)
+          direct_[i] += SIGN( u[i], dot_product(n_dim, north, u));
+      }
+      normalize_vector(direct_, n_dim);
+      return direct_;
+    }
+
+    virtual double const * const GetPolarDirector(){
+      int n_dim = params_->n_dim;
+      double const *u;
+
+      for (auto mem_it: members_){
+        u = mem_it->GetOrientation();
+        for (int i=0; i<n_dim; i++)
+          pol_direct_[i] += u[i];
+      }
+      for (int i=0; i<n_dim; i++)
+        pol_direct_[i] /= members_.size();
+      //normalize_vector(pol_direct_, n_dim);
+      return pol_direct_;
+    }
+
+    //virtual void InitVirial() {
+    //  //memset(virial_, 0, sizeof(double)*9);
+    //  std::fill(virial_, virial_+9, 0);
+    //  for (auto mem : members_)
+    //    mem->InitVirial(virial_);
+    //}
 };
 
 #endif // _SIMCORE_SPECIES_H_

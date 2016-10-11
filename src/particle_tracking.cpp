@@ -6,13 +6,16 @@
 #include "particle_tracking.h"
 
 // Pass in the main system parameters
-void ParticleTracking::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin, FTYPE pFtype) {
+void ParticleTracking::Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, PotentialManager *pPotentials, double pSkin, FTYPE pFtype) {
   space_ = pSpace;
   species_ = pSpecies;
   ndim_ = space_->n_dim;
   nperiodic_ = space_->n_periodic;
   skin_ = pSkin;
   ftype_ = pFtype;
+  potentials_ = pPotentials;
+  rcut_ = potentials_->GetMaxRCut();
+  nspecies_ = (int)species_->size();
   for (int i = 0; i < ndim_; ++i) {
     box_[i] = space_->unit_cell[i][i];
   }
@@ -72,19 +75,13 @@ void ParticleTracking::LoadSimples() {
   }
 }
 
-// Attach to the potential manager
-void ParticleTracking::InitPotentials(PotentialManager* pPotentials) {
-  potentials_ = pPotentials;
-  rcut_ = potentials_->GetMaxRCut();
-}
-
 // Initialize the tracking
 void ParticleTracking::InitTracking() {
   neighbors_ = new nl_list[nsimples_];
 
   // Create the neighbor list based on the tracking criteria
   // IE Brute
-  tracking_->Init(space_, species_, &simples_, skin_);
+  tracking_->Init(space_, species_, &simples_, potentials_, skin_);
   tracking_->CreateSubstructure(rcut_, &neighbors_);
   tracking_->UpdateTracking(true);
 }

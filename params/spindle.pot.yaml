@@ -7,7 +7,7 @@ potentials:
     fcut: 100
     eps: 1
     sigma: 1
-    #overlap: true
+    overlap: true
 
   - name : SphereLineWell
     type: external
@@ -22,7 +22,8 @@ potentials:
   - name: XlinkHarmonic
     type: internal
     sid: xlink
-    k: 45.29
+    subsid: xlink_head
+    k: 31.25
     equilibrium_length: 3.12
     rcut: 1000.0
     fcut: 10000
@@ -34,3 +35,12 @@ potentials:
     eps: 1
     sigma: 1
     tip: 1 # plus end
+
+  - name: Harmonic
+    type: tether
+    sid1: spb
+    sid2: br_rod
+    k: 100.0
+    equilibrium_length: 2.0
+    rcut: 1000.0
+    fcut: 1000

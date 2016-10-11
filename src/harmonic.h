@@ -51,12 +51,11 @@ class Harmonic : public PotentialBase {
     }
 
     virtual void Init(space_struct *pSpace, int ipot, YAML::Node &node) {
-      std::cout << "harmoic init\n";
         PotentialBase::Init(pSpace, ipot, node);
 
-        std::cout << "specifices\n";
         // Now, let's look at the particular yaml node we are supposed to be interested in
         rcut_     = node["potentials"][ipot]["rcut"].as<double>();
+        fcut_     = node["potentials"][ipot]["fcut"].as<double>();
         k_        = node["potentials"][ipot]["k"].as<double>();
         r_equil_  = node["potentials"][ipot]["equilibrium_length"].as<double>();
 
