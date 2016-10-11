@@ -12,7 +12,7 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   cid_ = oid_;
   sid_ = sid;
   space_ = space;
-  n_dim_ = space_->n_dim; 
+  n_dim_ = space_->n_dim;
   delta_ = params->delta;
   std::fill(position_,position_+3,0.0);
   std::fill(velocity_,velocity_+3,0.0);
@@ -68,7 +68,9 @@ Object::Object(const Object& that) {
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
   neighbors_ = that.neighbors_;
+  anchors_ = that.anchors_;
   draw_type_ = that.draw_type_;
+  //spec_virial_ = that.spec_virial_;
 }
 
 Object &Object::operator=(Object const& that) {
@@ -100,7 +102,9 @@ Object &Object::operator=(Object const& that) {
   is_rigid_=that.is_rigid_;
   is_kmc_=that.is_kmc_;
   neighbors_ = that.neighbors_;
+  anchors_ = that.anchors_;
   draw_type_ = that.draw_type_;
+  //spec_virial_ = that.spec_virial_;
   return *this;
 }
 
@@ -122,7 +126,7 @@ void Object::InsertRandom(double buffer) {
   if (space_->n_periodic == n_dim_)
     buffer = 0;
   double R = space_->radius;
-  if (R - buffer < 0) 
+  if (R - buffer < 0)
     error_exit("ERROR: Object #%d is too large to place in system.\n",GetOID());
   if (space_->type.compare("sphere")==0) {
     generate_random_unit_vector(n_dim_, position_, rng_.r);
@@ -161,6 +165,54 @@ void Object::InsertRandom(double buffer) {
     }
   }
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
+  UpdatePeriodic();
+}
+
+void Object::InsertOriented(double* buffer, const double* const u){
+  SetOrientation(u);
+  double mag;
+  if (space_->n_periodic == n_dim_)
+    std::fill(buffer, buffer+3 , 0);
+  double R = space_->radius;
+  double buffer_mag = sqrt(dot_product(n_dim_, buffer, buffer));
+  if (R - buffer_mag < 0) 
+    error_exit("ERROR: Object #%d is too large to place in system.\n",GetOID());
+  if (space_->type.compare("sphere")==0) {
+    generate_random_unit_vector(n_dim_, position_, rng_.r);
+    mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer_mag);
+    for (int i=0; i<n_dim_; ++i) {
+      position_[i] *= mag;
+    }
+  }
+  else if (space_->type.compare("cube")==0) {
+    for (int i=0; i<n_dim_; ++i)
+      position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer[i]);
+  }
+  else if (space_->type.compare("snowman")==0) {
+    double r = space_->bud_radius;
+    double roll = gsl_rng_uniform_pos(rng_.r);
+    double v_ratio;
+    if (n_dim_ == 2)
+      v_ratio = SQR(r) / (SQR(r)+SQR(R));
+    if (n_dim_ == 3)
+      v_ratio = CUBE(r) / (CUBE(r)+CUBE(R));
+    mag = gsl_rng_uniform_pos(rng_.r);
+    generate_random_unit_vector(n_dim_, position_, rng_.r);
+    if (roll < v_ratio) {
+      // Place coordinate in daughter cell
+      mag *= (r - buffer_mag);
+      for (int i=0; i<n_dim_; ++i) {
+        position_[i] *= mag;
+      }
+      position_[n_dim_-1] += space_->bud_height;
+    }
+    else {
+      mag *= (R - buffer_mag);
+      for (int i=0; i<n_dim_; ++i) {
+        position_[i] *= mag;
+      }
+    }
+  }
   UpdatePeriodic();
 }
 
@@ -235,13 +287,13 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
   imd.buffer_mag = 0.5*(d1+d2);
   imd.buffer_mag2 = imd.buffer_mag*imd.buffer_mag;
   if (l1 == 0 && l2 == 0)
-    min_distance_point_point(ndim, nperiodic, space->unit_cell, 
+    min_distance_point_point(ndim, nperiodic, space->unit_cell,
                  r1, s1, r2, s2, imd.dr, &imd.dr_mag2);
-  else if (l1 == 0 && l2 > 0) 
+  else if (l1 == 0 && l2 > 0)
     min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
                    r1, s1, r2, s2, u2, l2,
                    imd.dr, &imd.dr_mag2, imd.contact2);
-  else if (l1 > 0 && l2 == 0) 
+  else if (l1 > 0 && l2 == 0)
     min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
                    r2, s2, r1, s1, u1, l1,
                    imd.dr, &imd.dr_mag2, imd.contact1);
@@ -249,11 +301,10 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
     min_distance_sphero(ndim, nperiodic, space->unit_cell,
               r1, s1, u1, l1, r2, s2, u2, l2,
               imd.dr, &imd.dr_mag2, imd.contact1, imd.contact2);
-  imd.dr_mag = sqrt(imd.dr_mag2);
+  imd.dr_mag = sqrt(imd.dr_mag2); // XXX FIXME should take out and only compute if necessary
 }
 
 void Object::WritePosit(std::fstream &op){
-  //std::cout<<"Writing outputs\n";
   for(auto& pos : position_)
     op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
   for(auto& spos : scaled_position_)
@@ -265,6 +316,7 @@ void Object::WritePosit(std::fstream &op){
 }
 
 void Object::ReadPosit(std::fstream &ip){
+  if (ip.eof()) return;
   for(auto& pos : position_)
     ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
   for(auto& spos : scaled_position_)
@@ -274,6 +326,15 @@ void Object::ReadPosit(std::fstream &ip){
   ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
   ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
 }
+
+//void Object::AddVirial(double const * const f, double const * const dr) {
+//void Object::AddVirial(double *f, double *dr) {
+  //for (int i=0; i<n_dim_; ++i)
+    //for (int j=i; j<n_dim_; ++j){
+      //printf("    fr%d=%f, dr%d=%f\n",i,f[i],j,dr[j]);
+      //spec_virial_[3*i+j] = spec_virial_[3*j+i] += f[i] * dr[j];
+    //}
+//}
 
 
 

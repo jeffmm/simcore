@@ -111,3 +111,4 @@ param_file << "system_radius : " << params.system_radius << "\n";
 param_file << "n_periodic : " << params.n_periodic << "\n";
 param_file << "boundary_type : " << params.boundary_type << "\n";
 param_file << "insert_type : " << params.insert_type << "\n";
+param_file << "datafile : " << params.datafile << "\n";

@@ -23,9 +23,12 @@ class ParticleTracking {
       printf("\tUpdates: %d\n", tracking_->NUpdates());
     }
 
-    void Init(space_struct *pSpace, std::vector<SpeciesBase*> *pSpecies, double pSkin, FTYPE pFtype);
+    void Init(space_struct *pSpace,
+              std::vector<SpeciesBase*> *pSpecies,
+              PotentialManager *pPotentials,
+              double pSkin,
+              FTYPE pFtype);
     void LoadSimples();
-    void InitPotentials(PotentialManager *pPotentials);
     void InitTracking();
     void CheckOverlaps(int pMaxOverlaps);
 
@@ -38,6 +41,7 @@ class ParticleTracking {
     const int GetNSimples() {return nsimples_;}
     std::vector<Simple*>* GetSimples() {return &simples_;}
     const bool TriggerUpdate() {return trigger_update_;}
+    const int GetNSpecies() {return nspecies_;}
 
     void Print();
     void Dump();
@@ -49,6 +53,7 @@ class ParticleTracking {
     int nthreads_;
     int nsys_;
     int nsimples_;
+    double nspecies_;
     double rcut_;
     double skin_;
     double box_[3];

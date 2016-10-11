@@ -1,3 +1,5 @@
+#ifndef NOGRAPH
+
 #include "graphics.h"
 #include "writebmp.h"
 
@@ -131,3 +133,5 @@ void checkvalues(int width, int height, GLvoid * pixels)
     }
 }
 
+
+#endif

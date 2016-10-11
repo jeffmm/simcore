@@ -2,24 +2,26 @@ kmc:
 - type: XlinkKMC
   sid1: xlink
   sid2: br_rod
-  concentration_0_1: 30190
-  concentration_1_2: 10.0
-  on_rate_0_1: 0.003916
-  on_rate_1_2: 0.001958
-  diffusion_singly_bound: 0.0
-  diffusion_doubly_bound: 0.0
+  concentration_0_1: 33210
+  concentration_1_2: 20.0
+  on_rate_0_1: 0.00356
+  on_rate_1_2: 0.00177
+  reflect: true
+  diffusion_free: 256.0
+  diffusion_singly_bound: 5.69
+  diffusion_doubly_bound: 5.69
   alpha: 1.299
   rcut: 1.0
-  velocity: -0.142
-  velocity_polar_scale: 0.5
-  velocity_antipolar_scale: -0.08
+  velocity: 0.0
+  velocity_polar_scale: 1.0
+  velocity_antipolar_scale: 1.0
   velocity_switch_costheta: 0.0
-  stall_force: 30.2
+  stall_force: 60.4
   stall_type: parallel
-  spring_constant: 45.29
-  barrier_weight: 0.25
+  spring_constant: 31.25
+  barrier_weight: 0.5
   equilibrium_length: 3.12
-  polar_affinity: 1.0
+  polar_affinity: 0.0
   end_pause: [true, true]
   write_event: true
 
@@ -29,9 +31,9 @@ kmc:
   write_event: true
   f_grow_to_pause: 0.0
   f_grow_to_shrink: 0.00237458231883
-  f_pause_to_grow: 0.0
+  f_pause_to_grow: 0.02
   f_pause_to_shrink: 0.0
   f_shrink_to_grow: 0.00001
   f_shrink_to_pause: 0.0
-  v_poly: 0.10
-  v_depoly: 0.159
+  v_poly: 0.06
+  v_depoly: 0.12

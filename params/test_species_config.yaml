@@ -24,4 +24,4 @@ energy_analysis_flag: 1
 ftype: 4
 #masterskin: 1.5
 #cell_length: 10
-dynamic_instability_flag: 0
+dynamic_instability_flag: 1

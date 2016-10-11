@@ -1,3 +1,8 @@
+#ifndef _SIMCORE_WRITE_BMP_H_
+#define _SIMCORE_WRITE_BMP_H_
+
+#include <stdint.h>
+
 #define ERROR 1
 #define SUCCESS 0
 
@@ -22,3 +27,5 @@ struct template_bmpfile {
     uint32_t biclrused;
     uint32_t biclrimportant;
 };
+
+#endif
