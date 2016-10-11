@@ -2,6 +2,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "test_interaction_engine.h"
 #include "test_lookup_table.h"
 #include "test_xlink_kmc.h"
 #include "test_xlink_kmc_moves.h"
@@ -35,6 +36,7 @@ void TestManager::RegisterTestModules() {
   REGISTER_TEST_MODULE(TestLookupTable);
   REGISTER_TEST_MODULE(TestXlinkKMC);
   REGISTER_TEST_MODULE(TestXlinkKMCMoves);
+  REGISTER_TEST_MODULE(TestInteractionEngine);
 }
 
 void TestManager::RunTestModules() {

@@ -52,12 +52,13 @@ void Simulation::RunMovie(){
       printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
       fflush(stdout);
     }
+    //std::cout<<" CHECK 1 "<< (i_step_) % (params_.n_steps/100)<<std::endl;
     if (debug_trace)
       printf("********\nStep %d\n********\n", i_step_);
     if (i_step_%params_.n_posit == 0){
       output_mgr_.ReadSpeciesPositions(); 
     }
-    
+    //std::cout<<" CHECK 1 "<< (i_step_) % (params_.n_steps/100)<<std::endl;
     Draw();
     //WriteOutputs();
   }
@@ -95,17 +96,19 @@ void Simulation::ZeroForces() {
 void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
-  output_mgr_.Init(&params_, &graph_array, &i_step_);
+  output_mgr_.Init(&params_, &graph_array, &i_step_, run_name_);
   InitSpecies();
-  uengine_.Init(&params_, space_.GetStruct(), &species_, gsl_rng_get(rng_.r));
+  uengine_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
   if (params_.graph_flag) {
     //When making a movie graphics are handled by output_mgr_
     if ( output_mgr_.IsMovie() ) output_mgr_.GetGraphicsStructure();
     else GetGraphicsStructure();
       
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);
+    #ifndef NOGRAPH
     graphics_.Init(&graph_array, space_.GetStruct(), background_color);
     graphics_.DrawLoop();
+    #endif
   }
   InitOutputs();
 }
@@ -128,19 +131,90 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(MDBeadOptSpecies,md_bead_opt);
   REGISTER_SPECIES(BrBeadSpecies,br_bead);
+  REGISTER_SPECIES(SpindlePoleBodySpecies,spb);
+
+  std::string config_type = "separate";
+  if (node["configuration_type"]) {
+    config_type = node["configuration_type"].as<std::string>();
+  }
 
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file
-  for (auto possibles = species_factory_.m_classes.begin(); 
-      possibles != species_factory_.m_classes.end(); ++possibles) {
-    if (node[possibles->first]) {
-      SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
-      spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-      spec->Configurator();
-      species_.push_back(spec);
+  if (config_type.compare("separate") == 0) {
+    for (auto possibles = species_factory_.m_classes.begin(); 
+        possibles != species_factory_.m_classes.end(); ++possibles) {
+      if (node[possibles->first]) {
+        SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
+        spec->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
+        spec->Configurator();
+        species_.push_back(spec);
+      }
     }
+    output_mgr_.AddSpecies(&species_);
+  } else if (config_type.compare("spindle") == 0) {
+    ConfigureSpindle();
+  } else {
+    std::cout << "Unknown configuration type " << config_type << std::endl;
+    exit(1);
   }
-  output_mgr_.AddSpecies(&species_);
+}
+
+void Simulation::ConfigureSpindle() {
+  YAML::Node node = YAML::LoadFile(params_.config_file);
+  std::cout << "Configurator (Spindle) started using file " << params_.config_file << std::endl;
+
+  int nspbs = (int)node["spb"].size();
+  int nkcs = (int)node["kc"].size();
+
+  // Create the species that we know about for sure
+  SpindlePoleBodySpecies *pspbspec = (SpindlePoleBodySpecies*)species_factory_.construct("spb");
+  SpeciesBase *pspbspec_base = (SpeciesBase*)pspbspec;
+  // FIXME XXX change to microtubule species
+  BrRodSpecies *prspec = (BrRodSpecies*)species_factory_.construct("br_rod");
+  SpeciesBase *prspec_base = (SpeciesBase*)prspec;
+
+  assert(pspbspec != nullptr);
+  assert(prspec != nullptr);
+
+  pspbspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
+  prspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
+
+  int nmts = 0;
+  for (int i = 0; i < nspbs; ++i) {
+    nmts += (int)node["spb"][i]["mt"].size();
+  }
+  nmts += (int)node["mt"].size();
+
+  std::cout << "\nBasic Parameters:\n";
+  std::cout << "   n spbs: " << nspbs << std::endl;
+  std::cout << "   n mts : " << nmts << std::endl;
+
+  params_.n_rod = nmts;
+
+  // initialize the spbs
+  anchors_.clear();
+  for (int ispb = 0; ispb < nspbs; ++ispb) {
+    pspbspec->ConfiguratorSpindle(ispb, &anchors_);
+    std::vector<SpindlePoleBody*>* spindle_pole_bodies = pspbspec->GetMembers();
+    prspec->ConfiguratorSpindle(ispb, (*spindle_pole_bodies)[ispb]->GetOID(),
+        (*spindle_pole_bodies)[ispb]->GetPosition(),
+        (*spindle_pole_bodies)[ispb]->GetUAnchor(),
+        (*spindle_pole_bodies)[ispb]->GetVAnchor(),
+        (*spindle_pole_bodies)[ispb]->GetWAnchor(),
+        &anchors_);
+  }
+
+  // Now the crosslinks
+  // XXX FIXME hardcoded for now
+  XlinkSpecies *pxspec = (XlinkSpecies*)species_factory_.construct("xlink");
+  SpeciesBase *pxspec_base = (SpeciesBase*)pxspec;
+  pxspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
+  pxspec_base->Configurator();
+
+  species_.push_back(pspbspec_base);
+  species_.push_back(prspec_base);
+  species_.push_back(pxspec_base);
+
 }
 
 void Simulation::ClearSpecies() {
@@ -150,14 +224,16 @@ void Simulation::ClearSpecies() {
 
 void Simulation::ClearSimulation() {
   space_.Clear();
-  if (params_.posit_flag == 1 || output_mgr_.IsMovie() )
-    output_mgr_.Close();
+  output_mgr_.Close();
   ClearSpecies();
+  #ifndef NOGRAPH
   if (params_.graph_flag)
     graphics_.Clear();
+  #endif
 }
 
 void Simulation::Draw() {
+  #ifndef NOGRAPH
   if (params_.graph_flag && i_step_%params_.n_graph==0) {
     if ( !output_mgr_.IsMovie() )
       GetGraphicsStructure();
@@ -168,6 +244,7 @@ void Simulation::Draw() {
               params_.grab_file, (int) i_step_/params_.n_graph);
     }
   }
+  #endif
 }
 
 void Simulation::GetGraphicsStructure() {
@@ -198,10 +275,11 @@ void Simulation::InitOutputs() {
   {
     uengine_.PrepOutputs();
   }
-
+  output_mgr_.MakeHeaders();
 }
 
 void Simulation::WriteOutputs() {
+  output_mgr_.WriteOutputs();
   if (i_step_ == 0) {
     return; // skip first step
   }
@@ -235,7 +313,6 @@ void Simulation::WriteOutputs() {
     en_file.close();
   }
 
-  output_mgr_.WriteOutputs();
 
   if (i_step_ == params_.n_steps-1) {
     for (auto it=species_.begin(); it!=species_.end(); ++it)
@@ -252,6 +329,7 @@ void Simulation::WriteOutputs() {
 //TODO Make sure only species that are put through with m posit are initialized
 void Simulation::CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files){
   params_ = params;
+  run_name_ = name;
 
   //Graph and don't make new posit files
   params_.graph_flag = 1;
@@ -259,15 +337,9 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::ve
 
   output_mgr_.SetMovie(posit_files);
 
-  run_name_ = name;
   rng_.init(params_.seed);
   InitSimulation();
   RunMovie();
   ClearSimulation();
 }
 
-//TODO Move to Output manager
-void Simulation::ReadSpeciesPositions(){
-  for (auto it=species_.begin(); it!=species_.end(); ++it)
-    (*it)->ReadPosits();
-}

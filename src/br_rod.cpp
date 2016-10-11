@@ -4,6 +4,8 @@
 
 #include <iomanip>
 
+#include "sphero_overlap.h"
+
 void BrRod::Init() {
   if (diffusion_validation_flag_) {
     for (int i=0; i<n_dim_; ++i)
@@ -35,10 +37,39 @@ void BrRod::Init() {
   }
   // Set positions for sites and bonds
   UpdatePeriodic();
+  UpdateRodLength(0.0);
   UpdateBondPositions();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
     bond->UpdatePeriodic();
 }
+
+void BrRod::InitOriented(const double* const u){
+  double buffer[3] = {};
+  for (int i=0; i<n_dim_;i++) 
+    buffer[i] = 0.5*length_*ABS(u[i])+diameter_;
+
+  InsertOriented(buffer, u);
+  poly_state_ = GROW;
+  SetDiffusion();
+  std::fill(body_frame_, body_frame_+6, 0.0);
+  // Init bond lengths and diameter
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
+    bond->SetRigidPosition(position_);
+    bond->SetRigidScaledPosition(scaled_position_);
+    bond->SetRigidOrientation(orientation_);
+    bond->SetRigidLength(length_);
+    bond->SetRigidDiameter(diameter_);
+    bond->SetLength(child_length_);
+    bond->SetDiameter(diameter_);
+  }
+  // Set positions for sites and bonds
+  UpdatePeriodic();
+  UpdateBondPositions();
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
+    bond->UpdatePeriodic();
+}
+
+
 
 void BrRod::InitConfigurator(const double* const x, const double* const u, const double l) {
   length_ = l;
@@ -65,9 +96,11 @@ void BrRod::InitConfigurator(const double* const x, const double* const u, const
   }
   // Set positions for sites and bonds
   UpdatePeriodic();
+  UpdateRodLength(0.0);
   UpdateBondPositions();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
     bond->UpdatePeriodic();
+  UpdateSitePositions();
 }
 
 void BrRod::ApplyForcesTorques() {
@@ -85,10 +118,47 @@ void BrRod::UpdatePositionMP() {
   Integrate();
   //UpdatePeriodic();
   UpdateSitePositions();
+  UpdateRodLength(0.0);
   // Update end site positions for tracking trajectory for neighbors
   UpdateBondPositions();
+  UpdateAnchors();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) 
     bond->UpdatePeriodic();
+}
+
+void BrRod::UpdateAnchors() {
+  // find the anchors
+  if (anchors_ == nullptr) return;
+
+  // Update our anchor relative position
+  bool found = false;
+  for (auto ait = anchors_->begin(); ait != anchors_->end() && !found; ++ait) {
+    // Look for our entry in the vector
+    for (auto p = ait->second.begin(); p != ait->second.end(); ++p) {
+      if (p->idx_other_ == GetSimples()[0]->GetOID()) {
+
+        auto mrod = GetSimples()[0];
+        //std::cout << "Old Anchor pos1: (" << std::setprecision(16)
+        //  << p->pos1_[0] << ", " << p->pos1_[1] << ", " << p->pos1_[2] << ")\n";
+        //std::cout << "Old Anchor pos_rel1: (" << std::setprecision(16)
+        //  << p->pos_rel1_[0] << ", " << p->pos_rel1_[1] << ", " << p->pos_rel1_[2] << ")\n";
+        for (int i = 0; i < 3; ++i) {
+          p->pos1_[i] = mrod->GetRigidPosition()[i] - 0.5 * mrod->GetRigidLength() *
+            mrod->GetRigidOrientation()[i];
+        }
+        p->pos_rel1_[0] = -0.5 * mrod->GetRigidLength();
+        p->pos_rel1_[1] = p->pos_rel1_[2] = 0.0;
+
+        //std::cout << "New Anchor pos1: (" << std::setprecision(16)
+        //  << p->pos1_[0] << ", " << p->pos1_[1] << ", " << p->pos1_[2] << ")\n";
+        //std::cout << "New Anchor pos_rel1: (" << std::setprecision(16)
+        //  << p->pos_rel1_[0] << ", " << p->pos_rel1_[1] << ", " << p->pos_rel1_[2] << ")\n";
+
+        found = true;
+        break;
+      }
+    }
+  }
 }
 
 void BrRod::UpdateSitePositions() {
@@ -137,7 +207,7 @@ void BrRod::UpdateBondPositions() {
 }
 
 /* Integration scheme taken from Yu-Guo Tao,
-   J Chem Phys 122 244903 (2005) 
+   J Chem Phys 122 244903 (2005)
    Explicit calculation of the friction tensor acting on force vector,
 
    r(t+dt) = r(t) + (Xi^-1 . F_s(t)) * dt + dr(t),
@@ -156,7 +226,7 @@ void BrRod::Integrate() {
   //Explicit calculation of Xi.F_s
   for (int i=0; i<n_dim_; ++i) {
     for (int j=0; j<n_dim_; ++j) {
-      position_[i] += 
+      position_[i] +=
         gamma_par_*orientation_[i]*orientation_[j]*force_[j]*delta_;
     }
     position_[i] += force_[i]*gamma_perp_*delta_;
@@ -399,6 +469,24 @@ void BrRodSpecies::Configurator() {
     double min_length = node["br_rod"]["rod"]["min_length"].as<double>();
     double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
 
+    //Set fill type for neumatics and other kinds of forms
+    std::string fill_type; 
+    double director[3] = {};
+    double mdirector[3] = {};
+    if ( node["br_rod"]["properties"]["fill_type"] ){
+      fill_type = node["br_rod"]["properties"]["fill_type"].as<std::string>();
+      //TODO add in other types of fill
+      if (fill_type == "nematic"){
+        for (int i=0; i<params_->n_dim; i++){
+          director[i] = node["br_rod"]["properties"]["director"][i].as<double>();
+        }
+        normalize_vector(director, 3);
+        std::transform(director, director+3, mdirector, std::negate<int>());
+      }
+    else
+      fill_type = "isotropic";
+    }
+
     std::cout << std::setw(25) << std::left << "   n rods:" << std::setw(10)
       << std::left << nrods << std::endl;
     std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
@@ -419,10 +507,18 @@ void BrRodSpecies::Configurator() {
     params_->rod_diameter = diameter;
    
 
-    for (int i = 0; i < nrods; ++i) {
+    for (int i_mem = 0; i_mem < nrods; ++i_mem) {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
-      member->Init();
+      //member->Init();
       member->SetColor(color, draw_type);
+
+      if ( fill_type == "nematic"){
+        //Determine sign of insertion
+        (i_mem % 2 == 0) ? (member->InitOriented(director)) : (member->InitOriented(mdirector));
+      }
+      else {
+        member->Init();
+      }
 
       // Check against all other rods in the sytem
       if (can_overlap) {
@@ -438,23 +534,22 @@ void BrRodSpecies::Configurator() {
           for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
             interactionmindist idm;
             // Just check the 0th element of each
-            auto part1 = member->GetSimples()[0]; 
+            auto part1 = member->GetSimples()[0];
             auto part2 = (*rodit)->GetSimples()[0];
             MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
             double diameter2 = diameter*diameter;
 
             if (idm.dr_mag2 < diameter2) {
               isoverlap = true;
-              /*if (debug_trace) {
-                printf("Overlap detected [oid: %d,%d], [cid: %d, %d] -> (%2.2f < %2.2f)\n",
-                        part1->GetOID(), part2->GetOID(), part1->GetCID(), part2->GetCID(), idm.dr_mag2, diameter2);
-              }*/
-              // We can just call init again to get new random numbers
-              member->Init();
+              if ( fill_type == "nematic")
+                //Determine sign of insertion
+                (i_mem % 2 == 0) ? (member->InitOriented(director)) : (member->InitOriented(mdirector));
+              else
+                member->Init();
             }
           } // check against current members
           if (numoverlaps > params_->max_overlap) {
-            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i << " of " << nrods;
+            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i_mem << " of " << nrods;
             std::cout << ".  Check packing ratio for objects.\n";
             exit(1);
           }
@@ -463,6 +558,25 @@ void BrRodSpecies::Configurator() {
       }
     }
   } else if (insertion_type.compare("fill") == 0) {
+    
+    //Set fill type
+    std::string fill_type; 
+    double director[3], mdirector[3] = {};
+    if ( node["br_rod"]["properties"]["fill_type"] ){
+      fill_type = node["br_rod"]["properties"]["fill_type"].as<std::string>();
+      //TODO add in other types of fill
+      if (fill_type == "nematic"){
+        for (int i=0; i<params_->n_dim; i++){
+          director[i] = node["br_rod"]["properties"]["director"][i].as<double>();
+        }
+        normalize_vector(director, params_->n_dim);
+        for (int i=0; i<params_->n_dim; i++)
+          mdirector[i] = -1.0*director[i];
+      }
+    else
+      fill_type = "isotropic";
+    }
+      
     double rlength    = node["br_rod"]["rod"]["length"].as<double>();
     double max_length = node["br_rod"]["rod"]["max_length"].as<double>();
     double min_length = node["br_rod"]["rod"]["min_length"].as<double>();
@@ -486,11 +600,22 @@ void BrRodSpecies::Configurator() {
 
     // Try just inserting as many rods as we can
     int nrods = 0;
+    int i_mem = 0;
     bool inserting = true;
     while(inserting) {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
-      member->Init();
       member->SetColor(color, draw_type);
+      //member->Init();
+
+      if ( fill_type == "nematic"){
+        //Determine sign of insertion
+        (i_mem % 2 == 0) ? (member->InitOriented(director)) : (member->InitOriented(mdirector));
+        i_mem++;
+      }
+      else  {
+        member->Init();
+      }
+        
       // Check against all other rods in system
       bool isoverlap = true;
       int numoverlaps = 0;
@@ -500,19 +625,19 @@ void BrRodSpecies::Configurator() {
         for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
           interactionmindist idm;
           // Just check the 0th element of each
-          auto part1 = member->GetSimples()[0]; 
+          auto part1 = member->GetSimples()[0];
           auto part2 = (*rodit)->GetSimples()[0];
           MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
           double diameter2 = diameter*diameter;
 
           if (idm.dr_mag2 < diameter2) {
             isoverlap = true;
-            /*if (debug_trace) {
-              printf("Overlap detected [oid: %d,%d], [cid: %d, %d] -> (%2.2f < %2.2f)\n",
-                      part1->GetOID(), part2->GetOID(), part1->GetCID(), part2->GetCID(), idm.dr_mag2, diameter2);
-            }*/
             // We can just call init again to get new random numbers
-            member->Init();
+            if ( fill_type == "nematic")
+              //Determine sign of insertion
+              (i_mem % 2 == 0) ? (member->InitOriented(director)) : (member->InitOriented(mdirector));
+            else
+              member->Init();
           }
         } // check against current members
         if (numoverlaps > params_->max_overlap) {
@@ -529,6 +654,78 @@ void BrRodSpecies::Configurator() {
     }
     params_->n_rod = nrods;
     std::cout << "Inserted: " << nrods << " members (" << members_.size() << ")\n";
+  } else if (insertion_type.compare("oriented") == 0) {
+
+    printf("Hey there!\n");
+    //int orientation = node["br_rod"]["rod"]["orientation"].as<int>();
+
+    int nrods         = node["br_rod"]["rod"]["num"].as<int>();
+    double rlength    = node["br_rod"]["rod"]["length"].as<double>();
+    double max_length = node["br_rod"]["rod"]["max_length"].as<double>();
+    double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
+
+    std::cout << std::setw(25) << std::left << "   n rods:" << std::setw(10)
+      << std::left << nrods << std::endl;
+    std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
+      << std::left << rlength << std::endl;
+    std::cout << std::setw(25) << std::left << "   max length:" << std::setw(10)
+      << std::left << max_length << std::endl;
+    std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
+      << std::left << diameter << std::endl;
+
+    params_->n_rod = nrods;
+    params_->rod_length = rlength;
+    params_->max_rod_length = max_length;
+    max_length_ = max_length;
+    params_->rod_diameter = diameter;
+
+
+    for (int i = 0; i < nrods; ++i) {
+      BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->Init();
+
+      // Check against all other rods in the sytem
+      if (can_overlap) {
+        // Done, add to members
+        members_.push_back(member);
+      } else {
+        // Check against all other rods in system
+        bool isoverlap = true;
+        int numoverlaps = 0;
+        do {
+          numoverlaps++;
+          isoverlap = false;
+          for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
+            interactionmindist idm;
+            // Just check the 0th element of each
+            auto part1 = member->GetSimples()[0];
+            auto part2 = (*rodit)->GetSimples()[0];
+            MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+            double diameter2 = diameter*diameter;
+
+            if (idm.dr_mag2 < diameter2) {
+              isoverlap = true;
+
+
+
+              /*if (debug_trace) {
+                printf("Overlap detected [oid: %d,%d], [cid: %d, %d] -> (%2.2f < %2.2f)\n",
+                        part1->GetOID(), part2->GetOID(), part1->GetCID(), part2->GetCID(), idm.dr_mag2, diameter2);
+              }*/
+              // We can just call init again to get new random numbers
+              member->Init();
+            }
+          } // check against current members
+          if (numoverlaps > params_->max_overlap) {
+            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i << " of " << nrods;
+            std::cout << ".  Check packing ratio for objects.\n";
+            exit(1);
+          }
+        } while (isoverlap);
+        members_.push_back(member);
+      }
+    }
+
   } else {
     printf("nope, not yet\n");
     exit(1);
@@ -553,16 +750,213 @@ void BrRodSpecies::Configurator() {
   ivalidate_ = 0;
 }
 
-//Only reading out bound positions but this you might want to change
-void BrRod::WritePosit(std::fstream &op){
-  for (auto& velem : v_elements_)
-    velem.WritePosit(op);
+void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
+                                       const double* const r_spb,
+                                       const double* const u_spb,
+                                       const double* const v_spb,
+                                       const double* const w_spb,
+                                       al_set *anchors) {
+  char *filename = params_->config_file;
+  //std::cout << "BrRod species\n";
+
+  YAML::Node node = YAML::LoadFile(filename);
+
+  // XXX FIXME default to orientation draw
+  int draw_type = 1;
+  double color[3] = {1.0, 0.0, 0.0};
+  int nrods         = (int)node["spb"][ispb]["mt"].size();
+  //std::cout << "nrods: " << nrods << std::endl;
+  double max_length = node["spb"][ispb]["properties"]["mt_max_length"].as<double>();
+  //std::cout << std::setprecision(16) << "max_length: " << max_length << std::endl;
+  double min_length = node["spb"][ispb]["properties"]["mt_min_length"].as<double>();
+  double diameter   = node["spb"][ispb]["properties"]["mt_diameter"].as<double>();
+
+  params_->max_rod_length = max_length;
+  params_->min_rod_length = min_length;
+  max_length_ = max_length;
+  min_length_ = min_length;
+  params_->rod_diameter = diameter;
+
+  double spb_dia = node["spb"][ispb]["properties"]["attach_diameter"].as<double>();
+  double r0 = node["spb"][ispb]["properties"]["r0"].as<double>();
+
+  double conf_diameter = space_->unit_cell[0][0];
+  double conf_radius = 0.5 * conf_diameter;
+  int ndim = space_->n_dim;
+
+  double m_u_spb[3] = {0.0, 0.0, 0.0};
+  for (int i = 0; i < ndim; ++i) m_u_spb[i] = r_spb[i]/conf_radius;
+
+  std::cout << "u pointing to spb: (" << std::setprecision(16)
+    << m_u_spb[0] << ", " << m_u_spb[1] << ", " << m_u_spb[2] << ")\n";
+
+  for (int irod = 0; irod < nrods; ++irod) {
+
+    // Break into 2 sections, one for random insertion, the other for rtp
+    std::string insert_type = node["spb"][ispb]["mt"][irod]["insertion_type"].as<std::string>();
+    double mlength = node["spb"][ispb]["mt"][irod]["length"].as<double>();
+
+    double u_bond[3] = {0.0, 0.0, 0.0};
+    double v_bond[3] = {0.0, 0.0, 0.0};
+    double x_bond[3] = {0.0, 0.0, 0.0};
+
+    // Create the rod
+    BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+
+    if (insert_type.compare("random") == 0) {
+      int overlap;
+      do {
+        // generate random anchor position within cell
+        double alpha;
+        double alpha_max = asin(spb_dia/conf_diameter);
+        double pos_vec[3];
+
+        do {
+          generate_random_unit_vector(ndim, pos_vec, rng_.r);
+          alpha = acos(dot_product(ndim, m_u_spb, pos_vec));
+        } while (alpha > alpha_max);
+
+        // Insert with random orientation
+        double rmag2;
+        do {
+          rmag2 = 0.0;
+          generate_random_unit_vector(ndim, u_bond, rng_.r);
+          // Get the - end of the bond, supposedly
+          for (int i = 0; i < ndim; ++i) {
+            v_bond[i] = mlength * u_bond[i];
+            rmag2 += SQR(conf_radius * pos_vec[i] + v_bond[i] + u_bond[i] * r0);
+          }
+
+        } while (rmag2 >= SQR(conf_radius - 0.5) || dot_product(ndim, m_u_spb, u_bond) > 0);
+
+        //std::cout << "found an rmag2 we liked\n";
+        // Use helper functions to generate rod positions before we actually create
+        // and insert the rod (like bob)
+        for (int i = 0; i < ndim; ++i) {
+          x_bond[i] = conf_radius * pos_vec[i] +
+            0.5 * v_bond[i] +
+            u_bond[i] * r0;
+        }
+
+        // Update the Rod
+        member->InitConfigurator(x_bond, u_bond, mlength);
+        member->SetColor(color, draw_type);
+
+        // Check for overlaps
+        overlap = 0;
+        double s_bond[3] = {0.0, 0.0, 0.0};
+
+        for (auto rodit = members_.begin(); rodit != members_.end(); ++rodit) {
+          auto part1 = member->GetSimples()[0];
+          auto part2 = (*rodit)->GetSimples()[0];
+          interactionmindist idm;
+          MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+          double diameter2 = diameter*diameter;
+          if (idm.dr_mag2 < diameter2) {
+            overlap++;
+          }
+        }
+
+        //for (int jrod = 0; jrod < irod-1; ++jrod) {
+        //  auto mrod = members_[jrod];
+        //  auto part1 = member->GetSimples()[0];
+        //  double mrod_x[3] = {0.0, 0.0, 0.0};
+        //  double mrod_s[3] = {0.0, 0.0, 0.0};
+        //  double mrod_u[3] = {0.0, 0.0, 0.0};
+        //  double mrod_l = mrod->GetLength();
+        //  std::copy(mrod->GetPosition(), mrod->GetPosition()+3, mrod_x);
+        //  std::copy(mrod->GetScaledPosition(), mrod->GetScaledPosition()+3, mrod_s);
+        //  std::copy(mrod->GetOrientation(), mrod->GetOrientation()+3, mrod_u);
+        //  overlap += sphero_overlap(ndim, 0, space_->unit_cell, 0.0, 1.0,
+        //      x_bond,
+        //      s_bond,
+        //      u_bond,
+        //      mlength,
+        //      mrod_x,
+        //      mrod_s,
+        //      mrod_u,
+        //      mrod_l
+        //      );
+        //}
+      } while (overlap != 0);
+    } else if (insert_type.compare("rtp") == 0) {
+      // r theta phi insert
+      double rod_theta = node["spb"][ispb]["mt"][irod]["theta"].as<double>();
+      double rod_phi   = node["spb"][ispb]["mt"][irod]["phi"].as<double>();
+
+      double orient[3] = {0.0, 0.0, 0.0};
+      for (int i = 0; i < ndim; ++i) {
+        orient[i] = node["spb"][ispb]["mt"][irod]["u"][i].as<double>();
+      }
+      double umag = sqrt(dot_product(ndim, orient, orient));
+      for (int i = 0; i < ndim; ++i) {
+        u_bond[i] = orient[i] /= umag;
+      }
+
+      x_bond[0] = conf_radius * sin(rod_theta) * cos(rod_phi) + (0.5 * mlength + r0) * u_bond[0];
+      x_bond[1] = conf_radius * sin(rod_theta) * sin(rod_phi) + (0.5 * mlength + r0) * u_bond[1];
+      x_bond[2] = conf_radius * cos(rod_theta) + (0.5 * mlength + r0) * u_bond[2];
+    }
+
+    // Insert the rod
+    //BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+    //member->InitConfigurator(x_bond, u_bond, mlength);
+    //member->SetColor(color, draw_type);
+    //member->Dump();
+    member->SetAnchors(anchors);
+    members_.push_back(member);
+
+    // Add to the anchor list!!!!
+    anchor_t new_anchor;
+    new_anchor.idx_base_ = spb_oid;
+    new_anchor.idx_other_ = member->GetSimples()[0]->GetOID();
+    for (int i = 0; i < ndim; ++i) {
+      new_anchor.pos0_[i] = x_bond[i] - 
+        u_bond[i] * (0.5 * mlength + r0);
+      new_anchor.pos1_[i] = x_bond[i] -
+        mlength * u_bond[i] * 0.5;
+    }
+    new_anchor.pos_rel1_[0] = -0.5 * mlength;
+    new_anchor.pos_rel1_[1] = new_anchor.pos_rel1_[2] = 0.0;
+    double r_rel[3] = {0.0, 0.0, 0.0};
+    for (int i = 0; i < ndim; ++i) {
+      r_rel[i] = new_anchor.pos0_[i] - r_spb[i];
+    }
+    double u_proj = dot_product(ndim, r_rel, u_spb);
+    double v_proj = dot_product(ndim, r_rel, v_spb);
+    double w_proj = dot_product(ndim, r_rel, w_spb);
+    for (int i = 0; i < 3; ++i) {
+      new_anchor.pos_rel0_[i] =
+        u_spb[i] * u_proj +
+        v_spb[i] * v_proj +
+        w_spb[i] * w_proj;
+    }
+    (*anchors)[spb_oid].push_back(new_anchor);
+
+    // Tell us what just happened
+    std::cout << "   New bond " << member->GetOID() << std::endl;
+    std::cout << std::setprecision(16)
+      << "      x (" << x_bond[0] << ", " << x_bond[1] << ", " << x_bond[2] << ")\n"
+      << "      u (" << u_bond[0] << ", " << u_bond[1] << ", " << u_bond[2] << ")\n"
+      << "      binding site (" << new_anchor.pos0_[0] << ", " << new_anchor.pos0_[1] << ", " << new_anchor.pos0_[2] << ")\n"
+      << "      binding site rel (" << new_anchor.pos_rel0_[0] << ", " << new_anchor.pos_rel0_[1] << ", " << new_anchor.pos_rel0_[2] << ")\n"
+      << "      tip site     (" << new_anchor.pos1_[0] << ", " << new_anchor.pos1_[1] << ", " << new_anchor.pos1_[2] << ")\n"
+      << "      tip site rel (" << new_anchor.pos_rel1_[0] << ", " << new_anchor.pos_rel1_[1] << ", " << new_anchor.pos_rel1_[2] << ")\n"
+      << "      length " << mlength << "\n"
+      << "      parent anchor = " << spb_oid << std::endl;
+  }
 }
 
-void BrRod::ReadPosit(std::fstream &ip){
-  for (auto& velem : v_elements_)
-    velem.ReadPosit(ip);
-}
+//Only reading out bound positions but this you might want to change
+//void BrRod::WritePosit(std::fstream &op){
+  //for (auto& velem : v_elements_)
+    //velem.WritePosit(op);
+//}
+
+//void BrRod::ReadPosit(std::fstream &ip){
+  //for (auto& velem : v_elements_)
+    //velem.ReadPosit(ip);
+//}
 
 void BrRodSpecies::CreateTestRod(BrRod **rod,
                                  int ndim,
@@ -596,6 +990,7 @@ void BrRodSpecies::CreateTestRod(BrRod **rod,
   //std::cout << std::setprecision(16) << "u: (" << ur[0] << ", " << ur[1] << ", " << ur[2] << "), ";
   //std::cout << std::setprecision(16) << "l: " << lrod << std::endl;
   mrod->InitConfigurator(xr, ur, lrod);
+  mrod->UpdateRodLength(0.0);
   //mrod->Dump();
 
   // Add the simples to the correct location and the oid position map
@@ -630,6 +1025,7 @@ void BrRodSpecies::CreateTestRod(BrRod **rod,
   }
   double lr = node["l"].as<double>();
   mrod->InitConfigurator(xr, ur, lr);
+  mrod->UpdateRodLength(0.0);
 
   std::vector<Simple*> sim_vec = mrod->GetSimples();
   for (int i = 0; i < sim_vec.size(); ++i) {

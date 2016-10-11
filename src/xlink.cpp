@@ -170,11 +170,11 @@ void Xlink::ApplyInteractions() {
 
 void Xlink::Integrate() {
   // Different actions due to being free, singly, or doubly bound
-  switch(bound_) {
-    case unbound:
-      DiffuseXlink();
-      break;
-  }
+  //switch(bound_) {
+  //  case unbound:
+  //    DiffuseXlink();
+  //    break;
+  //}
   /*double pos[3] = {0, 0, 0};
   // the beads know how to update position and periodicity
   for (auto i_bead = elements_.begin(); i_bead != elements_.end(); ++i_bead) {
@@ -253,6 +253,36 @@ void Xlink::UpdateStagePosition(const double* const xr0, const double* const ur0
       break;
   }
   UpdateOrientation();
+}
+
+void Xlink::UpdateStage0Position(const double* const xr) {
+  if (xr == nullptr) {
+    std::cout << "Passed in null pointers to Xlink::UpdateStage0Position, exiting\n";
+    exit(1);
+  }
+  double rxold[3] = {0.0, 0.0, 0.0};
+  double rxnew[3] = {0.0, 0.0, 0.0};
+  double rsnew[3] = {0.0, 0.0, 0.0};
+  XlinkHead *head0, *head1;
+  auto isbound = GetBoundHeads(&head0, &head1);
+  std::copy(head0->GetPosition(), head0->GetPosition()+space_->n_dim, rxold);
+  std::copy(xr, xr+space_->n_dim, rxnew);
+  // Bound rxnew inside the PBCs (if they exist)
+  periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, rxnew, rsnew);
+  // Set head0
+  head0->SetPrevPosition(rxold);
+  head0->SetPosition(rxnew);
+  head0->UpdatePeriodic();
+  head0->AddDr();
+  // Head1
+  head1->SetPrevPosition(rxold);
+  head1->SetPosition(rxnew);
+  head1->UpdatePeriodic();
+  head1->AddDr();
+  // Main xlink
+  SetPrevPosition(rxold);
+  SetPosition(rxnew);
+  UpdatePeriodic();
 }
 
 void Xlink::UpdateStage1Position(const double* const xr, const double* const ur, const double lr, const int atidx) {

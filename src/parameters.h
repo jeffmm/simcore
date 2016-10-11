@@ -114,6 +114,7 @@ struct system_parameters {
   int n_periodic = 0;
   int boundary_type = 0;
   int insert_type = 0;
+  char *datafile;
 
 };
 

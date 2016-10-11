@@ -1,6 +1,8 @@
 #include "auxiliary.h"
 #include "graphics.h"
 
+#ifndef NOGRAPH
+
 /* Functions in writegif.c */
 /* extern void writegif(FILE *fp, XImage *image, int width, int height, int numcol, unsigned char rgb[][256]); */
 
@@ -101,3 +103,5 @@ void putelem2d(int fwdvalue, int i, int j, int k, int width, int height, int dep
 {
     array3d[k + depth * (j + height * i)] = fwdvalue;
 }
+
+#endif
