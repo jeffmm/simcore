@@ -1,6 +1,7 @@
 #ifndef _SIMCORE_INTERACTION_H_
 #define _SIMCORE_INTERACTION_H_
 
+#include "anchor_list_generic.h"
 #include "auxiliary.h"
 
 enum class ptype: int {
@@ -55,6 +56,9 @@ struct _interaction {
   // KMC stuff
   double kmc_;
   SID kmc_target_ = SID::none;
+
+  // Anchor
+  anchor_t *anchor_ = nullptr;
 };
 typedef struct _interaction interaction_t;
 
