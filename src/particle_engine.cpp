@@ -256,12 +256,19 @@ void ParticleEngine::CreateTetherPotential(YAML::Node *subnode, int potidx) {
   for (auto ait = anchors_->begin(); ait != anchors_->end(); ++ait) {
     // What anchor are we on
     std::cout << "Anchor: " << ait->first << std::endl;
-    interaction_t new_interaction;
-    new_interaction.idx_ = oid_position_map_[ait->first];
-    new_interaction.jdx_ = -1;
-    new_interaction.type_ = ptype::tether;
-    new_interaction.pot_ = mypot;
-    m_tether_interactions_.push_back(new_interaction);
+    std::vector<anchor_t>* avec = &(ait->second);
+    for (auto ait2 = avec->begin(); ait2 != avec->end(); ++ait2) {
+      // Get the pointer to the anchor
+      anchor_t *manchor = &(*ait2);
+      std::cout << "   -> {" << manchor->idx_base_ << ", " << manchor->idx_other_ << "}\n";
+      interaction_t new_interaction;
+      new_interaction.idx_ = oid_position_map_[manchor->idx_base_];
+      new_interaction.jdx_ = oid_position_map_[manchor->idx_other_];
+      new_interaction.type_ = ptype::tether;
+      new_interaction.pot_ = mypot;
+      new_interaction.anchor_ = manchor;
+      m_tether_interactions_.push_back(new_interaction);
+    }
   }
 }
 

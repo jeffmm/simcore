@@ -378,83 +378,80 @@ void InteractionEngineV2::InteractParticlesTetherMP(interaction_t **pix,
                                                     double **tr,
                                                     double *pe,
                                                     double **virial) {
+  // We cache the anchor information in the interaction in the case of
+  // an anchor potential, so can just directly rip out of pix
   int idx = (*pix)->idx_;
+  int jdx = (*pix)->jdx_;
   auto part1 = (*simples_)[idx];
+  auto part2 = (*simples_)[jdx];
+  auto sid2x = spec_ind_map_[part2->GetSID()];
 
-  // XXX FIXME should do interactions on a basis of per particle
-  // rather than this way, which loops over the set after the fact
-  // should just have interactions that handle this correctly
+  // Anchor information
+  anchor_t *manchor = (*pix)->anchor_;
 
-  // The anchor list contains the entries, loop over
-  for (auto ait = (*anchors_)[part1->GetOID()].begin(); ait != (*anchors_)[part1->GetOID()].end(); ++ait) {
-    int jdx = (*oid_position_map_)[ait->idx_other_];
-    auto part2 = (*simples_)[jdx];
-    auto sid2x = spec_ind_map_[part2->GetSID()];
+  // Calculating this potential is strange, since the minimum distance calculation is dependent
+  // on the anchor point, and the potential tip, so call with the anchor point in the first position,
+  // and part 2 in the second
+  double rx0[3] = {0.0, 0.0, 0.0};
+  double sx0[3] = {0.0, 0.0, 0.0};
+  double rx1[3] = {0.0, 0.0, 0.0};
+  double sx1[3] = {0.0, 0.0, 0.0};
+  std::copy(manchor->pos0_, manchor->pos0_+3, rx0);
+  std::copy(manchor->pos1_, manchor->pos1_+3, rx1);
+  double dr[3] = {0.0, 0.0, 0.0};
+  separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
+  interactionmindist idm;
+  std::copy(dr, dr+3, idm.dr);
+  for (int i = 0; i < ndim_; ++i) {
+    idm.dr_mag += SQR(idm.dr[i]);
+  }
 
-    // Calculating this potential is strange, since the minimum distance calculation is dependent
-    // on the anchor point, and the potential tip, so call with the anchor point in the first position,
-    // and part 2 in the second
-    double rx0[3] = {0.0, 0.0, 0.0};
-    double sx0[3] = {0.0, 0.0, 0.0};
-    double rx1[3] = {0.0, 0.0, 0.0};
-    double sx1[3] = {0.0, 0.0, 0.0};
-    std::copy(ait->pos0_, ait->pos0_+3, rx0);
-    std::copy(ait->pos1_, ait->pos1_+3, rx1);
-    double dr[3] = {0.0, 0.0, 0.0};
-    separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
-    interactionmindist idm;
-    std::copy(dr, dr+3, idm.dr);
-    for (int i = 0; i < ndim_; ++i) {
-      idm.dr_mag += SQR(idm.dr[i]);
+  // Calculate the rcontacts for us, ugh (based on absolute vs relative positions)
+  for (int i = 0; i < ndim_; ++i) {
+    idm.contact1[i] = rx0[i] - part1->GetRigidPosition()[i];
+    idm.contact2[i] = rx1[i] - part2->GetRigidPosition()[i];
+  }
+
+  // Fire off the potential calculation
+  double fepot[4] = {0.0};
+  PotentialBase *pot = (*pix)->pot_;
+  pot->CalcPotential(&idm, part1, part2, fepot);
+
+  #ifdef DEBUG
+  if (debug_trace) {
+    std::cout << "\tPOT TETHER Interacting[" << idx << "," << part1->GetOID()
+      << ":" << jdx << "," << part2->GetOID() << "] u: " << std::setprecision(16)
+      << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
+    if (ndim_ == 3) {
+      std::cout << ", " << fepot[2];
     }
+    std::cout << ")\n";
+  }
+  #endif
 
-    // Calculate the rcontacts for us, ugh (based on absolute vs relative positions)
-    for (int i = 0; i < ndim_; ++i) {
-      idm.contact1[i] = rx0[i] - part1->GetRigidPosition()[i];
-      idm.contact2[i] = rx1[i] - part2->GetRigidPosition()[i];
-    }
+  // Potential Energies
+  pe[idx] += fepot[ndim_];
+  pe[jdx] += fepot[ndim_];
 
-    // Fire off the potential calculation
-    double fepot[4] = {0.0};
-    PotentialBase *pot = (*pix)->pot_;
-    pot->CalcPotential(&idm, part1, part2, fepot);
+  // Do the forces
+  for (int i = 0; i < ndim_; ++i) {
+      fr[i][idx] += fepot[i];
+      fr[i][jdx] -= fepot[i];
+      //Calculate virial only on particle two
+      //FIXME This shouldn't be by species but by potential
+      for(int j = i; j < ndim_; ++j)
+        virial[3*i+j][sid2x] = virial[3*j+i][sid2x] += fr[i][jdx]*idm.dr[j];
+  }
 
-    #ifdef DEBUG
-    if (debug_trace) {
-      std::cout << "\tPOT TETHER Interacting[" << idx << "," << part1->GetOID()
-        << ":" << jdx << "," << part2->GetOID() << "] u: " << std::setprecision(16)
-        << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
-      if (ndim_ == 3) {
-        std::cout << ", " << fepot[2];
-      }
-      std::cout << ")\n";
-    }
-    #endif
-
-    // Potential Energies
-    pe[idx] += fepot[ndim_];
-    pe[jdx] += fepot[ndim_];
-
-    // Do the forces
-    for (int i = 0; i < ndim_; ++i) {
-        fr[i][idx] += fepot[i];
-        fr[i][jdx] -= fepot[i];
-        //Calculate virial only on particle two
-        //FIXME This shouldn't be by species but by potential
-        for(int j = i; j < ndim_; ++j)
-          virial[3*i+j][sid2x] = virial[3*j+i][sid2x] += fr[i][jdx]*idm.dr[j];
-    }
-
-    // Calculate the torques
-    double tau[3];
-    cross_product(idm.contact1, fepot, tau, ndim_);
-    for (int i = 0; i < 3; ++i) {
-        tr[i][idx] += tau[i];
-    }
-    cross_product(idm.contact2, fepot, tau, ndim_);
-    for (int i = 0; i < 3; ++i) {
-        tr[i][jdx] -= tau[i];
-    }
+  // Calculate the torques
+  double tau[3];
+  cross_product(idm.contact1, fepot, tau, ndim_);
+  for (int i = 0; i < 3; ++i) {
+      tr[i][idx] += tau[i];
+  }
+  cross_product(idm.contact2, fepot, tau, ndim_);
+  for (int i = 0; i < 3; ++i) {
+      tr[i][jdx] -= tau[i];
   }
 }
 
@@ -473,10 +470,6 @@ void InteractionEngineV2::ReduceParticlesMP() {
       subforce[idim] = frc_[idim*nsimples_+oidx];
       subtorque[idim] = trqc_[idim*nsimples_+oidx]; 
     }
-    /*if (debug_trace) {
-      printf("INTERACT[%d] -> f(%2.8f, %2.8f, %2.8f)\n", part->GetOID(), subforce[0], subforce[1], subforce[2]);
-      printf("               t(%2.8f, %2.8f, %2.8f)\n", subtorque[0], subtorque[1], subtorque[2]);
-    }*/
     part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[oidx]);
   }
 

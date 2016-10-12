@@ -213,6 +213,10 @@ void BrRod::UpdateBondPositions() {
    sqrt(2*kT*dt/gamma_(par/perp)) along par/perp unit vectors
    relative to rod. */
 void BrRod::Integrate() {
+  //std::cout << "DEBUG, dangerous!\n";
+  //force_[0] = 1.0;
+  //force_[1] = 1.0;
+  //force_[2] = -1.0;
   if (rod_fixed_ == 1) return;
   //Explicit calculation of Xi.F_s
   for (int i=0; i<n_dim_; ++i) {
