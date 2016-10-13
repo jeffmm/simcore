@@ -33,6 +33,7 @@ xlink:
     color: [1.0, 0.0, 0.0, 1.0]
   xit:
     num: 304
+    #num: 10
     diameter: 1
 #  properties:
 #    insertion_type: xyz

@@ -18,6 +18,7 @@ class kmcEngineV2 {
     ~kmcEngineV2() {}
 
     void Dump();
+    void PreGenerateNeighbors();
     void Init(system_parameters *pParams,
               space_struct *pSpace,
               ParticleEngine *pTrackEngine,

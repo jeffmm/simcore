@@ -47,6 +47,9 @@ class ParticleEngine {
     std::unordered_map<int, int> *GetOIDPositionMap() {return &oid_position_map_;}
     std::vector<interaction_t> *GetInteractions() {return interactions_;}
     al_set *GetAnchors() {return anchors_;}
+    const bool GetTriggerUpdate() {return trigger_update_;}
+
+    void SetTriggerUpdate(bool trigger_update) {trigger_update_=trigger_update;}
 
   protected:
     bool trigger_update_ = false;

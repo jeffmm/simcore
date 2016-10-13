@@ -96,6 +96,6 @@ xlink:
     draw_type: fill
     color: [1.0, 0.0, 0.0, 1.0]
   xit:
-    #num: 500
-    num: 1
+    num: 500
+    #num: 1
     diameter: 1
