@@ -10,25 +10,6 @@ potentials:
     overlap: true
     scheme: allpairs
 
-#  - name : SphereLineWell
-#    type: external
-#    sid1 : xlink_head
-#    sid2 : br_rod
-#    overlap : true
-#    rcut: 1.0
-#    fcut: 1000
-#    kmc: true
-#    kmc_target: xlink_head
-
-#  - name: XlinkHarmonic
-#    type: internal
-#    sid: xlink
-#    subsid: xlink_head
-#    k: 31.25
-#    equilibrium_length: 3.12
-#    rcut: 1000.0
-#    fcut: 10000
-
   - name: BoundaryWCATip
     type: boundary
     sid: br_rod

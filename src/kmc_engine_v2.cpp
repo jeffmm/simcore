@@ -93,6 +93,13 @@ void kmcEngineV2::ParseKMC() {
   }
 }
 
+// Pre generate the neighbor lists if needed
+void kmcEngineV2::PreGenerateNeighbors() {
+  for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
+    (*kmc)->GenerateKMCNeighborList();
+  }
+}
+
 // Run the modules IN ORDER!!!!
 void kmcEngineV2::StepKMC() {
   // Run this in order
