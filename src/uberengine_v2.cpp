@@ -42,9 +42,12 @@ void UberEngineV2::Init(system_parameters *pParams,
   kengine_.Init(params_, space_, &pengine_, &interactions_, gsl_rng_get(rng_.r));
   kengine_.InitMP();
 
+  // Set the engine to calculate neighbor lists for kmc particles on the first go around
   pengine_.UpdateInteractions();
+  pengine_.SetTriggerUpdate(true);
 
   fengine_.Interact();
+  kengine_.PreGenerateNeighbors();
 
   pengine_.Print();
   kengine_.Print();

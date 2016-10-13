@@ -323,6 +323,13 @@ void XlinkKMCV2::Print() {
 void XlinkKMCV2::GenerateKMCNeighborList() {
   nsimples_ = (int)simples_->size();
   // Loop over interactions and build
+  // ONLY IF NEEDED!!!!!
+  bool trigger_update = ptrack_->GetTriggerUpdate();
+  if (!trigger_update) return;
+
+  if (debug_trace) {
+    std::cout << "[XlinkKMC] Generating Neighbor List\n";
+  }
   nl_kmc_.clear();
   nl_kmc_.resize(nsimples_);
   //std::cout << "Generating neighbor list for: " << nsimples_ << " simples\n";
