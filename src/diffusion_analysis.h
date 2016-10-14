@@ -124,14 +124,11 @@ class DiffusionAnalysis {
       while (preader_.GetNext(&nobj, positions_,
              scaled_pos_, orientations_, diameters_, lengths_)) {
         if (nobj != n_objs_) {
-          printf("%d %d\n",nobj, n_objs_);
-          printf("ERROR: Number of objects changed in diffusion analysis!\n");
-          exit(1);
+          printf("n_objs_new: %d, n_objs_prev: %d\n",nobj, n_objs_);
+          error_exit("ERROR: Number of objects changed in diffusion analysis!\n");
         }
-        else if (time_ > n_time_) {
-          printf("ERROR: Didn't hit EOF when expected in diffusion analysis!\n");
-          exit(1);
-        }
+        else if (time_ > n_time_)
+          error_exit("ERROR: Didn't hit EOF when expected in diffusion analysis.\n");
         CalcVCF();
         CalcMSD();
         time_++;

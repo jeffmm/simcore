@@ -172,6 +172,8 @@ class PositReader {
     void CloseFile() {
       ClosePosit();
       DeallocateObjs();
+      position_ = nullptr;
+      max_objs_ = 0;
     }
 };
 #endif // _SIMCORE_POSIT_READER_H_
