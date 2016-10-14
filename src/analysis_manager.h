@@ -15,7 +15,7 @@ class AnalysisManager {
       for (auto pfile : pfiles) {
         if (params.diffusion_analysis) {
           std::cout << "    Performing diffusion analysis on " << pfile << "\n";
-          diff_analyzer_.CalculateDiffusion(pfile);
+          diff_analyzer_.CalculateDiffusion(&params, pfile);
         }
       }
       std::cout << "  Finished analyses.\n";
