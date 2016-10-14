@@ -40,6 +40,9 @@ int main(int argc, char *argv[]) {
     // Recreate Movie of past simulations using posit file
     if (run_opts.m_flag)
       sim.RunMovieManager(run_opts.posit_files);
+    // Analyze existing posit files
+    if (run_opts.a_flag)
+      sim.RunAnalyses(run_opts.posit_files);
     // Main control function
     else
       sim.RunManager();
