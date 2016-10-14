@@ -9,7 +9,7 @@
 //       as well as any flag descriptions in the static string array below
 //       when adding new flags.
 
-static const int n_flags = 7; 
+static const int n_flags = 8;
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
@@ -18,6 +18,7 @@ static struct option long_options[] = {
   {"n-runs", required_argument, 0, 'n'},
   {"test", no_argument, 0, 't'},
   {"movie", required_argument, 0, 'm'},
+  {"analysis",required_argument, 0, 'a'},
   {0, 0, 0, 0}
 };
 
@@ -28,13 +29,14 @@ static const std::string desc[n_flags][2] = {
   {"where fname is the input parameter file (REQUIRED)\n", "fname"},
   {"where rname is the name of a run session (for organizing batch jobs)\n", "rname"},
   {"where num is the number of independent runs to perform with the given parameters\n", "num"},
+  {"run program in test mode\n", "none"},
   {"where movie is the posit file name to recreate previous simulation. You can use this option more than once\n", "movie"},
-  {"run program in test mode\n", "none"}
+  {"where pname is the name of the posit file used for analysis\n", "pname"}
 };
 
 // Run parameters that needs to be carried forward should be stored here.
 struct run_options {
-  run_options() {n_runs = 1; debug = 0; test = 0; f_flag = 0; r_flag = 0; n_flag = 0; m_flag = 0; run_name = "sc";}
+  run_options() {n_runs = 1; debug = 0; test = 0; f_flag = 0; r_flag = 0; n_flag = 0; a_flag = 0; m_flag = 0; run_name = "sc";}
   int n_runs;
   int debug;
   int test;
@@ -42,6 +44,7 @@ struct run_options {
   int r_flag;
   int n_flag;
   int m_flag;
+  int a_flag;
   std::string param_file;
   std::string run_name;
   std::vector<std::string> posit_files;
@@ -84,7 +87,7 @@ run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdtr:f:n:m:", long_options, &option_index);
+    tmp = getopt_long(argc, argv, "hdtr:f:n:m:a:", long_options, &option_index);
     if (tmp == -1)
       break;
     
@@ -118,6 +121,9 @@ run_options parse_opts(int argc, char *argv[]) {
         run_opts.m_flag = 1;
         run_opts.posit_files.push_back(optarg);
         break;
+      case 'a':
+        run_opts.a_flag = 1;
+        run_opts.posit_files.push_back(optarg);
       case '?':
         break;
       default:

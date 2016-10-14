@@ -66,6 +66,7 @@ class Filament : public Composite<Site,Bond> {
     void ApplyForcesTorques();
     void SetParameters(system_parameters *params);
     void InitElements(system_parameters *params, space_struct *space);
+    void UpdateAvgPosition();
     //void UpdateOrientation();
     //void AddRandomDisplacement();
     //void ApplyForcesTorques();

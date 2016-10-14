@@ -185,6 +185,24 @@ void Filament::UpdatePositionMP(bool midstep) {
   ZeroForce();
   ApplyForcesTorques();
   Integrate(midstep);
+  UpdateAvgPosition();
+}
+
+void Filament::UpdateAvgPosition() {
+  std::fill(position_, position_+3, 0.0);
+  std::fill(orientation_, orientation_+3, 0.0);
+  for (auto site_it : elements_) {
+    double const * const site_pos = site_it.GetPosition();
+    double const * const site_u = site_it.GetOrientation();
+    for (int i=0; i<n_dim_; ++i) {
+      position_[i] += site_pos[i];
+      orientation_[i] += site_u[i];
+    }
+  }
+  normalize_vector(orientation_, n_dim_);
+  for (int i=0; i<n_dim_; ++i) {
+    position_[i] /= n_sites_;
+  }
 }
 
 void Filament::Integrate(bool midstep) {

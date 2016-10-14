@@ -381,6 +381,10 @@ class Composite<T> : public Object {
     }
 
     virtual void WritePosit(std::fstream &op){
+      if (params_->avg_posits) {
+        Object::WritePosit(op);
+        return;
+      }
       int size;
       size = elements_.size();
       op.write(reinterpret_cast<char*>(&size), sizeof(int));
@@ -391,6 +395,10 @@ class Composite<T> : public Object {
 
     virtual void ReadPosit(std::fstream &ip){
       if (ip.eof()) return;
+      if (params_->avg_posits) {
+        Object::ReadPosit(ip);
+        return;
+      }
       int size;
       T elmt(params_, space_, params_->seed, sid_);
       ip.read(reinterpret_cast<char*>(&size), sizeof(int));
@@ -472,6 +480,10 @@ class Composite<T,V> : public Object {
     }
 
     virtual void WritePosit(std::fstream &op){
+      if (params_->avg_posits) {
+        Object::WritePosit(op);
+        return;
+      }
       int size;
       size = elements_.size();
       op.write(reinterpret_cast<char*>(&size), sizeof(size));
@@ -485,6 +497,10 @@ class Composite<T,V> : public Object {
     }
 
     virtual void ReadPosit(std::fstream &ip){
+      if (params_->avg_posits) {
+        Object::ReadPosit(ip);
+        return;
+      }
       int size;
       T elmt(params_, space_, params_->seed, sid_);
       V v_elmt(params_, space_, params_->seed, sid_);

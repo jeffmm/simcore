@@ -220,5 +220,20 @@ void SimulationManager::RunMovieManager(std::vector<std::string> posit_files) {
   title.str("");
   title.clear();
 }
+
+void SimulationManager::RunAnalyses(std::vector<std::string> pfiles) {
+  // FIXME Decide how to use parameter variations with analysis arguments
+  // We'll just be using the first variation for now.
+  InitVariations();
+  ParseParams();
+  AnalysisManager aman;
+  std::ostringstream title;
+  // use first variation
+  int i_var = 0; 
+  // Set the run with a unique seed, in case we need random numbers in analysis.
+  params_[i_var].seed = gsl_rng_get(rng_.r);
+  analyzer_.RunAnalyses(params_[i_var], pfiles);
+}
+
   
 

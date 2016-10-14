@@ -209,6 +209,7 @@ class Species : public SpeciesBase {
         T * member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
         member->Init();
         members_.push_back(member);
+        delete member;
       }
     }
 
@@ -233,6 +234,7 @@ class Species : public SpeciesBase {
       newmember->Init();
       members_.push_back(newmember);
       n_members_++;
+      delete newmember;
     }
 
     virtual void AddMember(T* newmem) {
@@ -318,14 +320,21 @@ class Species : public SpeciesBase {
     }
     
     virtual void WritePosits() {
+      int size = members_.size();
+      oposit_file_.write(reinterpret_cast<char*>(&size), sizeof(size));
       for( auto& mem_it : members_)
         mem_it->WritePosit(oposit_file_);
     }
 
     virtual void ReadPosits() {
+      T * member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      int size;
+      iposit_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
+      members_.resize(size, member);
       for( auto& mem_it : members_){
         mem_it->ReadPosit(iposit_file_);
       }
+      delete member;
     }
 
     virtual std::vector<std::pair<SID, SID>> GetInternalInteractionSIDs() {
