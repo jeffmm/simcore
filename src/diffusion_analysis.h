@@ -33,11 +33,7 @@ class DiffusionAnalysis {
     double gamma_rot_;
 
     void SetInitPos() {
-      n_dim_ = 2;
-      if (!preader_.GetNObjs(&n_objs_)) {
-        printf("Something went wrong in diffusion init.\n");
-        exit(1);
-      }
+      preader_.GetNObjs(&n_objs_);
       positions_0_ = new double[n_objs_*3];
       orientations_0_ = new double[n_objs_*3];
       positions_ = new double[n_objs_*3];
@@ -45,10 +41,7 @@ class DiffusionAnalysis {
       orientations_ = new double[n_objs_*3];
       diameters_ = new double[n_objs_];
       lengths_ = new double[n_objs_];
-      if (!preader_.GetPosit(positions_, scaled_pos_, orientations_, diameters_, lengths_)) {
-        printf("Something went wrong in diffusion init.\n");
-        exit(1);
-      }
+      preader_.GetPosit(positions_, scaled_pos_, orientations_, diameters_, lengths_);
       std::copy(positions_, positions_+3*n_objs_, positions_0_);
       std::copy(orientations_, orientations_+3*n_objs_, orientations_0_);
     }
@@ -83,6 +76,7 @@ class DiffusionAnalysis {
       vcf_err_ = new double[n_time_];
       msd_err_ = new double[n_time_];
     }
+    // Calculate vector correlation function <u(t).u(o)> and standard error
     void CalcVCF() {
       double inv_sqrt_nobj = 1.0/sqrt(n_objs_);
       double avg_udotu0 = 0.0;
@@ -91,31 +85,51 @@ class DiffusionAnalysis {
         double udotu0 = 0.0;
         for (int j=0; j<n_dim_; ++j) {
           udotu0 += orientations_[ix(i,j)] * orientations_0_[ix(i,j)];
-          //printf("%2.8f ",orientations_0_[ix(i,j)]);
         }
-        //printf("\n");
         avg_udotu0 += udotu0;
         avg_udotu0_sqr += udotu0*udotu0;
       }
-      //exit(1);
       avg_udotu0/=n_objs_;
       avg_udotu0_sqr/=n_objs_;
       vcf_[time_] = avg_udotu0;
       vcf_err_[time_] = inv_sqrt_nobj * sqrt(avg_udotu0_sqr - SQR(avg_udotu0));
     }
-    void CalcMSD() {} // TODO
+    // Calculate mean square distance <(r(t)-r(o))^2> and standard error
+    void CalcMSD() {
+      double inv_sqrt_nobj = 1.0/sqrt(n_objs_);
+      double avg_sqr_dist = 0.0;
+      double avg_sqr_dist_sqr = 0.0;
+      for (int i=0; i<n_objs_; ++i) {
+        for (int j=0; j<n_dim_; ++j) {
+          double r_diff = positions_[ix(i,j)] - positions_0_[ix(i,j)];
+          r_diff = SQR(r_diff);
+          avg_sqr_dist += r_diff;
+          avg_sqr_dist_sqr += SQR(r_diff);
+        }
+      }
+      avg_sqr_dist/=n_objs_;
+      avg_sqr_dist_sqr/=n_objs_;
+      msd_[time_] = avg_sqr_dist;
+      msd_err_[time_] = inv_sqrt_nobj * sqrt(avg_sqr_dist_sqr - SQR(avg_sqr_dist));
+    } 
     void WriteData() {
       std::ostringstream file_name;
       file_name << posit_file_name_ << ".diffusion";
       std::ofstream diff_file(file_name.str().c_str(), std::ios_base::out);
-      diff_file << n_objs_ << " " << n_steps_ << " " << n_posit_ << "\n";
+      diff_file << "# n_dim delta n_steps n_posit n_objs\n";
+      diff_file << n_dim_ << " " << delta_ << " " << n_steps_ << " " << n_posit_ << " " << n_objs_ << "\n";
+      diff_file << "# time msd msd_err vcf vcf_err\n";
+      diff_file << "0.0 0.0 0.0 1.0 0.0\n";
       for (int t=0; t<n_time_; ++t)
-        diff_file << vcf_[t] << " " << vcf_err_[t] << "\n";
+        diff_file << (t+1)*delta_*n_posit_ << " " << msd_[t] << " " << msd_err_[t]
+          << " " << vcf_[t] << " " << vcf_err_[t] << "\n";
       diff_file.close();
     }
 
   public:
-    void CalculateDiffusion(std::string posit_file_name) {
+    void CalculateDiffusion(system_parameters *params, std::string posit_file_name) {
+      delta_ = params->delta;
+      n_dim_ = params->n_dim;
       posit_file_name_ = posit_file_name;
       preader_.LoadFile(posit_file_name);
       DiffusionInit();
