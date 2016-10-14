@@ -4,6 +4,7 @@
 #include "simulation.h"
 //#include <yaml.h>
 #include <yaml-cpp/yaml.h>
+#include "analysis_manager.h"
 #include "auxiliary.h"
 
 class SimulationManager {
@@ -14,6 +15,7 @@ class SimulationManager {
     std::string run_name_;
     std::string param_file_; //Name of param yaml file
     Simulation *sim_; //New sim created and destroyed for every set of parameters
+    AnalysisManager analyzer_;
     system_parameters *params_; //array of system parameter structures for each sim that will be run
     rng_properties rng_;
     void ParseParams();
@@ -32,6 +34,7 @@ class SimulationManager {
     void SetNRuns(int n_runs);
     void SetRunName(std::string run_name);
     void RunMovieManager(std::vector<std::string> posit_files);
+    void RunAnalyses(std::vector<std::string> pfiles);
 };
 
 
