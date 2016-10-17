@@ -40,7 +40,7 @@ class ParticleEngine {
     void PrintPotentials();
     void PrintStatistics();
     void RegisterSchemes();
-    void UpdateInteractions();
+    void UpdateInteractions(bool pForceUpdate = false);
 
     std::vector<Simple*> *GetSimples() {return &simples_;}
     std::vector<SpeciesBase*> *GetSpecies() {return species_;}

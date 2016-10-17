@@ -1,6 +1,7 @@
 #include "particle_engine.h"
 
 #include "tracking_scheme_allpairs.h"
+#include "tracking_scheme_nlap.h"
 
 #define REGISTER_SCHEME(n,m) scheme_factory_.register_class<n>(#m);
 
@@ -104,6 +105,7 @@ void ParticleEngine::DumpSimples() {
 // Register the tracking schemes we know about
 void ParticleEngine::RegisterSchemes() {
   REGISTER_SCHEME(TrackingSchemeAllPairs,allpairs);
+  REGISTER_SCHEME(TrackingSchemeNeighborListAllPairs,neighborlistallpairs);
 }
 
 // Load our simples array
@@ -355,12 +357,12 @@ void ParticleEngine::CheckTriggerUpdate() {
 }
 
 // Generate the interactions
-void ParticleEngine::UpdateInteractions() {
+void ParticleEngine::UpdateInteractions(bool pForceUpdate) {
   // Clear interactions, will reload with cached version if no update needed, 
   // but this is handled at the scheme level
   interactions_->clear();
   // Check for an update that requires rebuilding the simples, etc
-  trigger_update_ = false;
+  trigger_update_ = pForceUpdate;
   CheckTriggerUpdate();
   // External and kmc interactions
   for (auto ixs = tracking_.begin(); ixs != tracking_.end(); ++ixs) {
