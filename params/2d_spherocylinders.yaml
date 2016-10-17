@@ -11,7 +11,7 @@ mother_daughter_dist: 12
 boundary_type: 1
 rod_diameter: 1
 rod_length: 20
-rod_diffusion: 0
+rod_diffusion: 1
 rod_fixed: 0
 config_file: params/2d_spherocylinders.config.yaml
 xlink_diameter: 1
@@ -21,13 +21,13 @@ n_graph: 100
 graph_background: 0
 delta: 0.00025
 #n_steps: 1000000
-n_steps: 100000
+#n_steps: 100000
 #n_steps: 5000
 #n_steps: 2500
 #n_steps: 30000
 #n_steps: 1000
 #n_steps: 100
-#n_steps: 10
+n_steps: 10
 #n_steps: 2
 #n_steps: 15758
 n_update_cells: 20
