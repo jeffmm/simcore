@@ -28,6 +28,7 @@ class TrackingScheme {
 
     // Virtual functions
     virtual void GenerateInteractions(bool pForceUpdate = false) = 0;
+    virtual void GenerateStatistics() {}
     virtual void Init(int pModuleID,
                       space_struct *pSpace,
                       PotentialBase *pPotentialBase,

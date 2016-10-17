@@ -1,47 +1,47 @@
 br_rod:
-  properties:
-    insertion_type: fill
-    overlap: false
-    draw_type: orientation
-  rod:
-    length: 20
-    max_length: 25
-    min_length: 3
-    diameter: 1
+#  properties:
+#    insertion_type: fill
+#    overlap: false
+#    draw_type: orientation
+#  rod:
+#    length: 20
+#    max_length: 25
+#    min_length: 3
+#    diameter: 1
   properties:
     insertion_type: xyz
     overlap: true
     max_length: 50
     min_length: 3
     draw_type: orientation
-#  rod:
-#    - length: 20.0
-#      x: [0.0, 0.0, 0.0]
-#      u: [1.0, 0.0, 0.0]
-#    - length: 20.0
-#      x: [0.0, 1.5, 0.0]
-#      u: [-1.0, 0.0, 0.0]
-#    - length: 20.0
-#      x: [0.0, 3.0, 0.0]
-#      u: [1.0, 0.0, 0.0]
+  rod:
+    - length: 20.0
+      x: [0.0, 0.0, 0.0]
+      u: [1.0, 0.0, 0.0]
+    - length: 20.0
+      x: [0.0, 1.5, 0.0]
+      u: [-1.0, 0.0, 0.0]
+    - length: 20.0
+      x: [0.0, 10.0, 0.0]
+      u: [1.0, 0.0, 0.0]
 
 xlink:
-  properties:
-    insertion_type: random
-    overlap: true
-    draw_type: fill
-    color: [1.0, 0.0, 0.0, 1.0]
-  xit:
-    num: 304
-    #num: 10
-    diameter: 1
 #  properties:
-#    insertion_type: xyz
+#    insertion_type: random
 #    overlap: true
 #    draw_type: fill
 #    color: [1.0, 0.0, 0.0, 1.0]
 #  xit:
-#    - diameter: 1.0
-#      x: [0.0, 0.0, 0.0]
-#    - diameter: 1.0
-#      x: [0.0, 1.0, 0.0]
+#    num: 304
+#    #num: 10
+#    diameter: 1
+  properties:
+    insertion_type: xyz
+    overlap: true
+    draw_type: fill
+    color: [1.0, 0.0, 0.0, 1.0]
+  xit:
+    - diameter: 1.0
+      x: [0.0, 0.0, 0.0]
+    - diameter: 1.0
+      x: [0.0, 1.0, 0.0]
