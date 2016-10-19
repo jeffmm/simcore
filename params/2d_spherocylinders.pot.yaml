@@ -7,9 +7,9 @@ potentials:
     fcut: 100
     eps: 1
     sigma: 1
-    #scheme: allpairs
-    scheme: neighborlistallpairs
-    skin: 2.0
+    scheme: allpairs
+    #scheme: neighborlistallpairs
+    #skin: 2.0
     #overlap: true
 
 #  - name : SphereLineWell
