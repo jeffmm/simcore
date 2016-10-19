@@ -448,6 +448,7 @@ void BrRodSpecies::Configurator() {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->InitConfigurator(x, u, rlength);
       member->SetColor(color, draw_type);
+      member->SetAnchors(anchors_);
       member->Dump();
       members_.push_back(member);
     }
@@ -499,6 +500,7 @@ void BrRodSpecies::Configurator() {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       //member->Init();
       member->SetColor(color, draw_type);
+      member->SetAnchors(anchors_);
 
       if ( fill_type == "nematic"){
         //Determine sign of insertion
@@ -593,6 +595,7 @@ void BrRodSpecies::Configurator() {
     while(inserting) {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->SetColor(color, draw_type);
+      member->SetAnchors(anchors_);
       //member->Init();
 
       if ( fill_type == "nematic"){
@@ -811,6 +814,7 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
         // Update the Rod
         member->InitConfigurator(x_bond, u_bond, mlength);
         member->SetColor(color, draw_type);
+        member->SetAnchors(anchors_);
 
         // Check for overlaps
         overlap = 0;
