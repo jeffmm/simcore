@@ -8,7 +8,9 @@ potentials:
     eps: 1
     sigma: 1
     overlap: true
-    scheme: allpairs
+    #scheme: allpairs
+    scheme: neighborlistallpairs
+    skin: 1.5
 
   - name: BoundaryWCATip
     type: boundary
