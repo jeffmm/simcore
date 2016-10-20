@@ -174,6 +174,7 @@ void Simulation::InitSpecies() {
 
   // We have to search for the various types of species that we have
   // Maybe hijack init_species.h for this
+  REGISTER_SPECIES(ArgonSpecies,argon);
   REGISTER_SPECIES(MDBeadSpecies,md_bead);
   REGISTER_SPECIES(BrRodSpecies,br_rod);
   REGISTER_SPECIES(XlinkSpecies,xlink);
