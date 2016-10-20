@@ -21,6 +21,7 @@ class Argon : public Simple {
       Simple::operator=(that); return *this;
     }
     virtual void Init();
+    void InitConfigurator(std::array<double, 3> rx, std::array<double, 3> vx);
     virtual void UpdatePosition();
     virtual void UpdatePositionMP();
     virtual void Integrate();
