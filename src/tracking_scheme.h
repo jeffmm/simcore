@@ -74,7 +74,7 @@ class TrackingScheme {
     std::unordered_map<int, int> *oid_position_map_;
 
     void CreateKMCNeighbors();
-    void LoadSimples();
+    virtual void LoadSimples();
 
     virtual void CreateTrackingScheme() = 0;
 

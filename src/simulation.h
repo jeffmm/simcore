@@ -60,6 +60,7 @@ class Simulation {
     void ZeroForces();
     void DumpAll(int i_step);
     void DumpAll2(int i_step);
+    void GenerateStatistics(int istep);
     std::vector<graph_struct*> graph_array;
     Simulation(const Simulation&){};
     void operator= (Simulation&);

@@ -65,6 +65,16 @@
 		42AB3DCE1D9EDBEE00E42AEF /* libGLEW.2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 42AB3DCD1D9EDBEE00E42AEF /* libGLEW.2.0.0.dylib */; };
 		42AB3DD01D9EDC1F00E42AEF /* libglfw3.3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 42AB3DCF1D9EDC1F00E42AEF /* libglfw3.3.2.dylib */; };
 		42AB3DD21D9EDC4A00E42AEF /* libgsl.19.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 42AB3DD11D9EDC4A00E42AEF /* libgsl.19.dylib */; };
+		42B6590F1DB830860015A096 /* dynamic_instability_v2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B658F91DB830860015A096 /* dynamic_instability_v2.cpp */; };
+		42B659101DB830860015A096 /* interaction_engine_v2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B658FB1DB830860015A096 /* interaction_engine_v2.cpp */; };
+		42B659111DB830860015A096 /* kmc_engine_v2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B658FE1DB830860015A096 /* kmc_engine_v2.cpp */; };
+		42B659121DB830860015A096 /* particle_engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B659011DB830860015A096 /* particle_engine.cpp */; };
+		42B659131DB830860015A096 /* potential_manager_v2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B659031DB830860015A096 /* potential_manager_v2.cpp */; };
+		42B659141DB830860015A096 /* tracking_scheme_allpairs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B659051DB830860015A096 /* tracking_scheme_allpairs.cpp */; };
+		42B659151DB830860015A096 /* tracking_scheme_nlap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B659071DB830860015A096 /* tracking_scheme_nlap.cpp */; };
+		42B659161DB830860015A096 /* tracking_scheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B659091DB830860015A096 /* tracking_scheme.cpp */; };
+		42B659171DB830860015A096 /* uberengine_v2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B6590B1DB830860015A096 /* uberengine_v2.cpp */; };
+		42B659181DB830860015A096 /* xlink_kmc_v2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42B6590D1DB830860015A096 /* xlink_kmc_v2.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -279,6 +289,28 @@
 		42AB3DCD1D9EDBEE00E42AEF /* libGLEW.2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libGLEW.2.0.0.dylib; path = ../../../../../usr/local/Cellar/glew/2.0.0/lib/libGLEW.2.0.0.dylib; sourceTree = "<group>"; };
 		42AB3DCF1D9EDC1F00E42AEF /* libglfw3.3.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw3.3.2.dylib; path = ../../../../../usr/local/Cellar/glfw3/3.2.1/lib/libglfw3.3.2.dylib; sourceTree = "<group>"; };
 		42AB3DD11D9EDC4A00E42AEF /* libgsl.19.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgsl.19.dylib; path = ../../../../../usr/local/Cellar/gsl/2.2.1/lib/libgsl.19.dylib; sourceTree = "<group>"; };
+		42B658F91DB830860015A096 /* dynamic_instability_v2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dynamic_instability_v2.cpp; sourceTree = "<group>"; };
+		42B658FA1DB830860015A096 /* dynamic_instability_v2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dynamic_instability_v2.h; sourceTree = "<group>"; };
+		42B658FB1DB830860015A096 /* interaction_engine_v2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = interaction_engine_v2.cpp; sourceTree = "<group>"; };
+		42B658FC1DB830860015A096 /* interaction_engine_v2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interaction_engine_v2.h; sourceTree = "<group>"; };
+		42B658FD1DB830860015A096 /* kmc_base_v2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kmc_base_v2.h; sourceTree = "<group>"; };
+		42B658FE1DB830860015A096 /* kmc_engine_v2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kmc_engine_v2.cpp; sourceTree = "<group>"; };
+		42B658FF1DB830860015A096 /* kmc_engine_v2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kmc_engine_v2.h; sourceTree = "<group>"; };
+		42B659001DB830860015A096 /* neighbor_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = neighbor_list.h; sourceTree = "<group>"; };
+		42B659011DB830860015A096 /* particle_engine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle_engine.cpp; sourceTree = "<group>"; };
+		42B659021DB830860015A096 /* particle_engine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = particle_engine.h; sourceTree = "<group>"; };
+		42B659031DB830860015A096 /* potential_manager_v2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = potential_manager_v2.cpp; sourceTree = "<group>"; };
+		42B659041DB830860015A096 /* potential_manager_v2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = potential_manager_v2.h; sourceTree = "<group>"; };
+		42B659051DB830860015A096 /* tracking_scheme_allpairs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tracking_scheme_allpairs.cpp; sourceTree = "<group>"; };
+		42B659061DB830860015A096 /* tracking_scheme_allpairs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tracking_scheme_allpairs.h; sourceTree = "<group>"; };
+		42B659071DB830860015A096 /* tracking_scheme_nlap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tracking_scheme_nlap.cpp; sourceTree = "<group>"; };
+		42B659081DB830860015A096 /* tracking_scheme_nlap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tracking_scheme_nlap.h; sourceTree = "<group>"; };
+		42B659091DB830860015A096 /* tracking_scheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tracking_scheme.cpp; sourceTree = "<group>"; };
+		42B6590A1DB830860015A096 /* tracking_scheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tracking_scheme.h; sourceTree = "<group>"; };
+		42B6590B1DB830860015A096 /* uberengine_v2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uberengine_v2.cpp; sourceTree = "<group>"; };
+		42B6590C1DB830860015A096 /* uberengine_v2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uberengine_v2.h; sourceTree = "<group>"; };
+		42B6590D1DB830860015A096 /* xlink_kmc_v2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xlink_kmc_v2.cpp; sourceTree = "<group>"; };
+		42B6590E1DB830860015A096 /* xlink_kmc_v2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xlink_kmc_v2.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -396,10 +428,10 @@
 				42AB3D0B1D9ED78E00E42AEF /* bead.h */,
 				42AB3D0C1D9ED78E00E42AEF /* bond.cpp */,
 				42AB3D0D1D9ED78E00E42AEF /* bond.h */,
-				42AB3D0E1D9ED78E00E42AEF /* boundary_wca.cpp */,
-				42AB3D0F1D9ED78E00E42AEF /* boundary_wca.h */,
 				42AB3D101D9ED78E00E42AEF /* boundary_wca_tip.cpp */,
 				42AB3D111D9ED78E00E42AEF /* boundary_wca_tip.h */,
+				42AB3D0E1D9ED78E00E42AEF /* boundary_wca.cpp */,
+				42AB3D0F1D9ED78E00E42AEF /* boundary_wca.h */,
 				42AB3D121D9ED78E00E42AEF /* br_bead.cpp */,
 				42AB3D131D9ED78E00E42AEF /* br_bead.h */,
 				42AB3D141D9ED78E00E42AEF /* br_dimer.cpp */,
@@ -412,6 +444,8 @@
 				42AB3D1B1D9ED78E00E42AEF /* br_walker.h */,
 				42AB3D1C1D9ED78E00E42AEF /* configure_simcore.cpp */,
 				42AB3D1D1D9ED78E00E42AEF /* cpu.cpp */,
+				42B658F91DB830860015A096 /* dynamic_instability_v2.cpp */,
+				42B658FA1DB830860015A096 /* dynamic_instability_v2.h */,
 				42AB3D1E1D9ED78E00E42AEF /* dynamic_instability.cpp */,
 				42AB3D1F1D9ED78E00E42AEF /* dynamic_instability.h */,
 				42AB3D201D9ED78E00E42AEF /* error_exit.cpp */,
@@ -425,13 +459,18 @@
 				42AB3D281D9ED78E00E42AEF /* harmonic.h */,
 				42AB3D291D9ED78E00E42AEF /* helpers.h */,
 				42AB3D2A1D9ED78E00E42AEF /* init_species.h */,
-				42AB3D2B1D9ED78E00E42AEF /* integrator.h */,
 				42AB3D2C1D9ED78E00E42AEF /* integrator_manager.cpp */,
 				42AB3D2D1D9ED78E00E42AEF /* integrator_manager.h */,
-				42AB3D2E1D9ED78E00E42AEF /* interaction.h */,
+				42AB3D2B1D9ED78E00E42AEF /* integrator.h */,
+				42B658FB1DB830860015A096 /* interaction_engine_v2.cpp */,
+				42B658FC1DB830860015A096 /* interaction_engine_v2.h */,
 				42AB3D2F1D9ED78E00E42AEF /* interaction_engine.cpp */,
 				42AB3D301D9ED78E00E42AEF /* interaction_engine.h */,
+				42AB3D2E1D9ED78E00E42AEF /* interaction.h */,
+				42B658FD1DB830860015A096 /* kmc_base_v2.h */,
 				42AB3D311D9ED78E00E42AEF /* kmc_base.h */,
+				42B658FE1DB830860015A096 /* kmc_engine_v2.cpp */,
+				42B658FF1DB830860015A096 /* kmc_engine_v2.h */,
 				42AB3D321D9ED78E00E42AEF /* kmc_engine.cpp */,
 				42AB3D331D9ED78E00E42AEF /* kmc_engine.h */,
 				42AB3D341D9ED78E00E42AEF /* lennard_jones_12_6.h */,
@@ -440,20 +479,21 @@
 				42AB3D371D9ED78E00E42AEF /* macros.h */,
 				42AB3D381D9ED78E00E42AEF /* make_params.cpp */,
 				42AB3D391D9ED78E00E42AEF /* master_params.yaml */,
-				42AB3D3A1D9ED78E00E42AEF /* md_bead.cpp */,
-				42AB3D3B1D9ED78E00E42AEF /* md_bead.h */,
 				42AB3D3C1D9ED78E00E42AEF /* md_bead_opt.cpp */,
 				42AB3D3D1D9ED78E00E42AEF /* md_bead_opt.h */,
+				42AB3D3A1D9ED78E00E42AEF /* md_bead.cpp */,
+				42AB3D3B1D9ED78E00E42AEF /* md_bead.h */,
 				42AB3D3E1D9ED78E00E42AEF /* md_kmc_bead.cpp */,
 				42AB3D3F1D9ED78E00E42AEF /* md_kmc_bead.h */,
 				42AB3D401D9ED78E00E42AEF /* minimum_distance.cpp */,
 				42AB3D411D9ED78E00E42AEF /* minimum_distance.h */,
 				42AB3D421D9ED78E00E42AEF /* neighbor_list_generic.h */,
+				42B659001DB830860015A096 /* neighbor_list.h */,
 				42AB3D431D9ED78E00E42AEF /* neon.cpp */,
 				42AB3D441D9ED78E00E42AEF /* neon.h */,
+				42AB3D471D9ED78E00E42AEF /* object_old.h */,
 				42AB3D451D9ED78E00E42AEF /* object.cpp */,
 				42AB3D461D9ED78E00E42AEF /* object.h */,
-				42AB3D471D9ED78E00E42AEF /* object_old.h */,
 				42AB3D481D9ED78E00E42AEF /* objects.h */,
 				42AB3D491D9ED78E00E42AEF /* objects.h.orig */,
 				42AB3D4A1D9ED78E00E42AEF /* output_manager.cpp */,
@@ -461,21 +501,25 @@
 				42AB3D4C1D9ED78E00E42AEF /* parameters.h */,
 				42AB3D4D1D9ED78E00E42AEF /* parse_flags.h */,
 				42AB3D4E1D9ED78E00E42AEF /* parse_params_body.h */,
-				42AB3D4F1D9ED78E00E42AEF /* particle.h */,
-				42AB3D501D9ED78E00E42AEF /* particle_md.h */,
+				42B659011DB830860015A096 /* particle_engine.cpp */,
+				42B659021DB830860015A096 /* particle_engine.h */,
 				42AB3D511D9ED78E00E42AEF /* particle_md_system.h */,
+				42AB3D501D9ED78E00E42AEF /* particle_md.h */,
 				42AB3D521D9ED78E00E42AEF /* particle_tracking.cpp */,
 				42AB3D531D9ED78E00E42AEF /* particle_tracking.h */,
+				42AB3D4F1D9ED78E00E42AEF /* particle.h */,
 				42AB3D541D9ED78E00E42AEF /* potential_base.h */,
+				42B659031DB830860015A096 /* potential_manager_v2.cpp */,
+				42B659041DB830860015A096 /* potential_manager_v2.h */,
 				42AB3D551D9ED78E00E42AEF /* potential_manager.cpp */,
 				42AB3D561D9ED78E00E42AEF /* potential_manager.h */,
 				42AB3D571D9ED78E00E42AEF /* print_params_body.h */,
 				42AB3D581D9ED78E00E42AEF /* simcore_main.cpp */,
+				42AB3D5C1D9ED78E00E42AEF /* simulation_manager.cpp */,
+				42AB3D5D1D9ED78E00E42AEF /* simulation_manager.h */,
 				42AB3D591D9ED78E00E42AEF /* simulation.cpp */,
 				42AB3D5A1D9ED78E00E42AEF /* simulation.cpp.bak */,
 				42AB3D5B1D9ED78E00E42AEF /* simulation.h */,
-				42AB3D5C1D9ED78E00E42AEF /* simulation_manager.cpp */,
-				42AB3D5D1D9ED78E00E42AEF /* simulation_manager.h */,
 				42AB3D5E1D9ED78E00E42AEF /* site.cpp */,
 				42AB3D5F1D9ED78E00E42AEF /* site.h */,
 				42AB3D601D9ED78E00E42AEF /* space.cpp */,
@@ -496,10 +540,10 @@
 				42AB3D6F1D9ED78E00E42AEF /* test_manager.h */,
 				42AB3D701D9ED78E00E42AEF /* test_module_base.h */,
 				42AB3D711D9ED78E00E42AEF /* test_potential.h */,
-				42AB3D721D9ED78E00E42AEF /* test_xlink_kmc.cpp */,
-				42AB3D731D9ED78E00E42AEF /* test_xlink_kmc.h */,
 				42AB3D741D9ED78E00E42AEF /* test_xlink_kmc_moves.cpp */,
 				42AB3D751D9ED78E00E42AEF /* test_xlink_kmc_moves.h */,
+				42AB3D721D9ED78E00E42AEF /* test_xlink_kmc.cpp */,
+				42AB3D731D9ED78E00E42AEF /* test_xlink_kmc.h */,
 				42AB3D761D9ED78E00E42AEF /* timetester.h */,
 				42AB3D771D9ED78E00E42AEF /* tracking_allpairs.cpp */,
 				42AB3D781D9ED78E00E42AEF /* tracking_allpairs.h */,
@@ -507,7 +551,15 @@
 				42AB3D7A1D9ED78E00E42AEF /* tracking_base.h */,
 				42AB3D7B1D9ED78E00E42AEF /* tracking_neighborlist_ap.cpp */,
 				42AB3D7C1D9ED78E00E42AEF /* tracking_neighborlist_ap.h */,
+				42B659051DB830860015A096 /* tracking_scheme_allpairs.cpp */,
+				42B659061DB830860015A096 /* tracking_scheme_allpairs.h */,
+				42B659071DB830860015A096 /* tracking_scheme_nlap.cpp */,
+				42B659081DB830860015A096 /* tracking_scheme_nlap.h */,
+				42B659091DB830860015A096 /* tracking_scheme.cpp */,
+				42B6590A1DB830860015A096 /* tracking_scheme.h */,
 				42AB3D7D1D9ED78E00E42AEF /* tridiagonal_solver.cpp */,
+				42B6590B1DB830860015A096 /* uberengine_v2.cpp */,
+				42B6590C1DB830860015A096 /* uberengine_v2.h */,
 				42AB3D7E1D9ED78E00E42AEF /* uberengine.cpp */,
 				42AB3D7F1D9ED78E00E42AEF /* uberengine.h */,
 				42AB3D801D9ED78E00E42AEF /* vector_algebra.cpp */,
@@ -517,15 +569,17 @@
 				42AB3D841D9ED78E00E42AEF /* write_outputs.h */,
 				42AB3D851D9ED78E00E42AEF /* writebmp.cpp */,
 				42AB3D861D9ED78E00E42AEF /* writebmp.h */,
-				42AB3D871D9ED78E00E42AEF /* xlink.cpp */,
-				42AB3D881D9ED78E00E42AEF /* xlink.h */,
 				42AB3D891D9ED78E00E42AEF /* xlink_harmonic.cpp */,
 				42AB3D8A1D9ED78E00E42AEF /* xlink_harmonic.h */,
 				42AB3D8B1D9ED78E00E42AEF /* xlink_head.cpp */,
 				42AB3D8C1D9ED78E00E42AEF /* xlink_head.h */,
 				42AB3D8D1D9ED78E00E42AEF /* xlink_helpers.h */,
+				42B6590D1DB830860015A096 /* xlink_kmc_v2.cpp */,
+				42B6590E1DB830860015A096 /* xlink_kmc_v2.h */,
 				42AB3D8E1D9ED78E00E42AEF /* xlink_kmc.cpp */,
 				42AB3D8F1D9ED78E00E42AEF /* xlink_kmc.h */,
+				42AB3D871D9ED78E00E42AEF /* xlink.cpp */,
+				42AB3D881D9ED78E00E42AEF /* xlink.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -599,6 +653,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				42B6590F1DB830860015A096 /* dynamic_instability_v2.cpp in Sources */,
+				42B659171DB830860015A096 /* uberengine_v2.cpp in Sources */,
+				42B659181DB830860015A096 /* xlink_kmc_v2.cpp in Sources */,
 				42AB3DA51D9ED78F00E42AEF /* lookup_table.cpp in Sources */,
 				42AB3D9B1D9ED78F00E42AEF /* cpu.cpp in Sources */,
 				42AB3DB31D9ED78F00E42AEF /* site.cpp in Sources */,
@@ -616,20 +673,25 @@
 				42AB3DBE1D9ED78F00E42AEF /* tracking_neighborlist_ap.cpp in Sources */,
 				42AB3DB61D9ED78F00E42AEF /* spindle_pole_body.cpp in Sources */,
 				42AB3DBB1D9ED78F00E42AEF /* test_xlink_kmc_moves.cpp in Sources */,
+				42B659151DB830860015A096 /* tracking_scheme_nlap.cpp in Sources */,
 				42AB3D911D9ED78E00E42AEF /* argon.cpp in Sources */,
 				42AB3DAB1D9ED78F00E42AEF /* neon.cpp in Sources */,
 				42AB3DA71D9ED78F00E42AEF /* md_bead.cpp in Sources */,
 				42AB3D981D9ED78F00E42AEF /* br_simple_rod.cpp in Sources */,
 				42AB3D9E1D9ED78F00E42AEF /* filament.cpp in Sources */,
 				42AB3D991D9ED78F00E42AEF /* br_walker.cpp in Sources */,
+				42B659131DB830860015A096 /* potential_manager_v2.cpp in Sources */,
 				42AB3DC51D9ED78F00E42AEF /* xlink_harmonic.cpp in Sources */,
 				42AB3DAD1D9ED78F00E42AEF /* output_manager.cpp in Sources */,
 				42AB3D921D9ED78E00E42AEF /* bond.cpp in Sources */,
 				42AB3DBA1D9ED78F00E42AEF /* test_xlink_kmc.cpp in Sources */,
+				42B659101DB830860015A096 /* interaction_engine_v2.cpp in Sources */,
+				42B659121DB830860015A096 /* particle_engine.cpp in Sources */,
 				42AB3DAF1D9ED78F00E42AEF /* potential_manager.cpp in Sources */,
 				42AB3DB81D9ED78F00E42AEF /* test_lookup_table.cpp in Sources */,
 				42AB3DAC1D9ED78F00E42AEF /* object.cpp in Sources */,
 				42AB3DA41D9ED78F00E42AEF /* kmc_engine.cpp in Sources */,
+				42B659111DB830860015A096 /* kmc_engine_v2.cpp in Sources */,
 				42AB3DAA1D9ED78F00E42AEF /* minimum_distance.cpp in Sources */,
 				42AB3DC31D9ED78F00E42AEF /* writebmp.cpp in Sources */,
 				42AB3D971D9ED78F00E42AEF /* br_rod.cpp in Sources */,
@@ -637,12 +699,14 @@
 				42AB3D931D9ED78E00E42AEF /* boundary_wca.cpp in Sources */,
 				42AB3DA31D9ED78F00E42AEF /* interaction_engine.cpp in Sources */,
 				42AB3DC11D9ED78F00E42AEF /* vector_algebra.cpp in Sources */,
+				42B659141DB830860015A096 /* tracking_scheme_allpairs.cpp in Sources */,
 				42AB3DA91D9ED78F00E42AEF /* md_kmc_bead.cpp in Sources */,
 				42AB3DB91D9ED78F00E42AEF /* test_manager.cpp in Sources */,
 				42AB3DB21D9ED78F00E42AEF /* simulation_manager.cpp in Sources */,
 				42AB3D9D1D9ED78F00E42AEF /* error_exit.cpp in Sources */,
 				42AB3DB71D9ED78F00E42AEF /* test_interaction_engine.cpp in Sources */,
 				42AB3D9F1D9ED78F00E42AEF /* generate_random_unit_vector.cpp in Sources */,
+				42B659161DB830860015A096 /* tracking_scheme.cpp in Sources */,
 				42AB3DAE1D9ED78F00E42AEF /* particle_tracking.cpp in Sources */,
 				42AB3DA11D9ED78F00E42AEF /* graphics.cpp in Sources */,
 				42AB3D941D9ED78E00E42AEF /* boundary_wca_tip.cpp in Sources */,

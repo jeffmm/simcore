@@ -2,6 +2,8 @@
 
 #include "interaction_engine_v2.h"
 
+#include <cassert>
+
 void InteractionEngineV2::Init(space_struct *pSpace,
                                ParticleEngine *pTrackEngine,
                                std::vector<interaction_t> *pInteractions) {
@@ -460,17 +462,20 @@ void InteractionEngineV2::InteractParticlesTetherMP(interaction_t **pix,
 void InteractionEngineV2::ReduceParticlesMP() {
   for (int i = 0; i < nsimples_; ++i) {
     auto part = (*simples_)[i];
+    #ifdef DEBUG
     int oidx = (*oid_position_map_)[part->GetOID()];
-    if (i != oidx) {
-      std::cout << "Isn't " << i << " = " << oidx << std::endl;
-    }
+    assert(i == oidx);
+    #endif
+    //if (i != oidx) {
+    //  std::cout << "Isn't " << i << " = " << oidx << std::endl;
+    //}
     double subforce[3] = {0.0, 0.0, 0.0};
     double subtorque[3] = {0.0, 0.0, 0.0};
     for (int idim = 0; idim < 3; ++idim) {
-      subforce[idim] = frc_[idim*nsimples_+oidx];
-      subtorque[idim] = trqc_[idim*nsimples_+oidx]; 
+      subforce[idim] = frc_[idim*nsimples_+i];
+      subtorque[idim] = trqc_[idim*nsimples_+i];
     }
-    part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[oidx]);
+    part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[i]);
   }
 
   //Add virial components to species
