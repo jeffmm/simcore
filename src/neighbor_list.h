@@ -9,4 +9,10 @@ struct _neighbor_kmc {
 };
 typedef struct _neighbor_kmc neighbor_kmc_t;
 
+struct _neighbor_v2 {
+  int oidx_;
+  int ojdx_;
+};
+typedef struct _neighbor_v2 neighbor_v2_t;
+
 #endif

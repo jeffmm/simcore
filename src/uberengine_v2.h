@@ -13,6 +13,8 @@
 #include <omp.h>
 #endif
 
+#include <chrono>
+
 class UberEngineV2 {
   private:
     int ndim_,
@@ -31,18 +33,29 @@ class UberEngineV2 {
 
     std::vector<interaction_t> interactions_;
 
+    // Statistics and timing
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_time_;
+    std::chrono::time_point<std::chrono::high_resolution_clock> this_time_;
+    int ndatapoints_;
+    int ninteractions_;
+
+
   public:
     UberEngineV2() {}
-    ~UberEngineV2() {}
+    ~UberEngineV2() {
+      PrintStatistics();
+    }
 
   public:
     void DumpAll();
+    void GenerateStatistics(int istep);
     void Init(system_parameters *pParams,
               space_struct *pSpace,
               std::vector<SpeciesBase*> *pSpecies,
               al_set *pAnchors,
               long seed);
     void InteractMP();
+    void PrintStatistics();
     void StepKMC();
 };
 

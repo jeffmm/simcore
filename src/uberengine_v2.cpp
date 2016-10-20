@@ -54,6 +54,10 @@ void UberEngineV2::Init(system_parameters *pParams,
   pengine_.Dump();
   fengine_.Dump();
   kengine_.Dump();
+
+  last_time_ = std::chrono::high_resolution_clock::now();
+  ndatapoints_ = 0;
+  ninteractions_ = 0;
 }
 
 void UberEngineV2::InteractMP() {
@@ -71,4 +75,30 @@ void UberEngineV2::DumpAll() {
   fengine_.Dump();
   kengine_.Dump();
   #endif
+}
+
+void UberEngineV2::GenerateStatistics(int istep) {
+  // Generate the statistics for this step
+  // Compute the elapsed time
+  if (istep % 100 != 0) return;
+  ndatapoints_++;
+  this_time_ = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::micro> elapsed_microseconds = this_time_ - last_time_;
+  last_time_ = this_time_;
+
+  // Compute interaction quantities
+  ninteractions_ += (int)interactions_.size();
+
+  std::cout << "--------\n";
+  std::cout << "Generate Statistics ->\n";
+  std::cout << "Elapsed time: " << std::setprecision(8) << elapsed_microseconds.count() << " microseconds\n";
+  std::cout << "N interactions (this delta): " << interactions_.size() << std::endl;
+  std::cout << "N interactions avg:          " << std::setprecision(8) << (double)ninteractions_/(int)ndatapoints_ << std::endl;
+
+}
+
+void UberEngineV2::PrintStatistics() {
+  std::cout << "********\n";
+  std::cout << "UberEngineV2 - Final Statistics\n";
+  std::cout << "N interactions avg: " << std::setprecision(8) << (double)ninteractions_/(int)ndatapoints_ << std::endl;
 }

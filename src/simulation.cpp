@@ -60,6 +60,7 @@ void Simulation::RunSimulation2() {
     InteractMP2();
     KineticMonteCarloMP2();
     IntegrateMP();
+    GenerateStatistics(i_step_);
     // Only will run if DEBUG is enabled
     #ifdef DEBUG
     if (debug_trace)
@@ -131,6 +132,10 @@ void Simulation::ZeroForces() {
   for (auto it=species_.begin(); it != species_.end(); ++it) {
     (*it)->ZeroForces();
   }
+}
+
+void Simulation::GenerateStatistics(int istep) {
+  uenginev2_.GenerateStatistics(istep);
 }
 
 void Simulation::InitSimulation() {
