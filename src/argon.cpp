@@ -9,6 +9,18 @@ void Argon::Init() {
   }
   orientation_[0] = 0; // Set default color to red
 }
+
+void Argon::InitConfigurator(std::array<double, 3> rx, std::array<double, 3> vx) {
+  Simple::Init();
+  for (int i = 0; i < n_dim_; ++i) {
+    orientation_[i] = 1.0/sqrt(n_dim_);
+    velocity_[i] = vx[i];
+    position_[i] = rx[i];
+    prev_position_[i] = position_[i] - delta_ * velocity_[i];
+  }
+  UpdatePeriodic();
+}
+
 void Argon::UpdatePosition() {
   ZeroForce();
   ApplyInteractions();
@@ -66,6 +78,39 @@ void ArgonSpecies::Configurator() {
   if (insertion_type.compare("xyz") == 0) {
     std::cout << "Nope, not yet!\n";
     exit(1);
+  } else if (insertion_type.compare("dat") == 0) {
+    int nargon      = node["argon"]["ar"]["num"].as<int>(); 
+    double mass     = node["argon"]["ar"]["mass"].as<double>();
+    double diameter = node["argon"]["ar"]["diameter"].as<double>();
+    std::cout << "   n_argons: " << nargon << std::endl;
+    std::cout << "   mass:     " << mass << std::endl;
+    std::cout << "   diameter: " << diameter << std::endl;
+
+    // Grab the restart file
+    std::string restfile = node["argon"]["ar"]["restfile"].as<std::string>();
+    FILE *rfile = fopen(restfile.c_str(), "r");
+
+    std::vector<std::array<double, 3>> positions;
+    std::vector<std::array<double, 3>> velocities;
+    for (int i = 0; i < nargon; ++i) {
+      std::array<double, 3> rx = {0};
+      fscanf(rfile, "%lf%lf%lf", &rx[0], &rx[1], &rx[2]);
+      positions.push_back(rx);
+    }
+    for (int i = 0; i < nargon; ++i) {
+      std::array<double, 3> vx = {0};
+      fscanf(rfile, "%lf%lf%lf", &vx[0], &vx[1], &vx[2]);
+      velocities.push_back(vx);
+    }
+    fclose(rfile);
+
+    for (int i = 0; i < nargon; ++i) {
+      Argon *member = new Argon(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->InitConfigurator(positions[i], velocities[i]); 
+      members_.push_back(member);
+    }
+
+
   } else if (insertion_type.compare("random") == 0) {
     int nmdbeads    = node["argon"]["mdbead"]["num"].as<int>();
     double diameter = node["argon"]["mdbead"]["diameter"].as<double>();
