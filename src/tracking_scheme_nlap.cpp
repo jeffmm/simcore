@@ -21,6 +21,9 @@ void TrackingSchemeNeighborListAllPairs::Init(int pModuleID,
   skin_ = node["skin"].as<double>();
 
   CreateTrackingScheme();
+  last_time_ = std::chrono::high_resolution_clock::now();
+  avg_update_time_ = 0.0;
+  avg_occupancy_ = 0.0;
 }
 
 // Print functionality
@@ -44,11 +47,30 @@ void TrackingSchemeNeighborListAllPairs::PrintStatistics() {
   std::cout << "   skin:     " << std::setprecision(16) << skin_ << std::endl;
   std::cout << "   eff cut:  " << std::setprecision(16) << sqrt(rcs2_) << std::endl;
   std::cout << "   dmax:     " << std::setprecision(16) << sqrt(half_skin2_) << std::endl;
+  std::cout << "   avg time between updates: " << std::setprecision(8) << avg_update_time_/nupdates_ << " microseconds\n";
+  std::cout << "   avg occpancy:             " << std::setprecision(8) << avg_occupancy_/nupdates_ << " particles\n";
 }
 
 // Generate the statistics
 void TrackingSchemeNeighborListAllPairs::GenerateStatistics() {
   // Generate avg occupancy of neighbor list, etc
+  // Get the time
+  this_time_ = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::micro> elapsed_microseconds = this_time_ - last_time_;
+  if (debug_trace) {
+    std::cout << "[TrackingSchemeNeighborListAllPairs] Update Elapsed: " << std::setprecision(8) << elapsed_microseconds.count() << std::endl;
+  }
+  last_time_ = this_time_;
+  avg_update_time_ += elapsed_microseconds.count();
+
+  // Get the occupancy
+  int nneighbors = 0;
+  for (int idx = 0; idx < nmsimples_; ++idx) {
+    nl_kmc_list *mlist = &mneighbors_[idx];
+    nneighbors += (int)mlist->size();
+  }
+  // XXX FIXME switch out for the nsteps that elapsed, and do over all steps of the system
+  avg_occupancy_ += nneighbors/nmsimples_;
 }
 
 // Generate the neighbor list tracking scheme (if needed)
@@ -59,12 +81,27 @@ void TrackingSchemeNeighborListAllPairs::CreateTrackingScheme() {
   half_skin2_ = 0.25*skin2_;
 }
 
+// Overload the LoadSimples functionality to generate neighbor list
+void TrackingSchemeNeighborListAllPairs::LoadSimples() {
+  if (debug_trace) {
+    std::cout << "TrackingNeighborListAllPairs::LoadSimples\n";
+  }
+  TrackingScheme::LoadSimples();
+
+  if (mneighbors_ != nullptr) {
+    delete[] mneighbors_;
+  }
+
+  mneighbors_ = new nl_kmc_list[nmsimples_];
+}
+
 // Generate the interactions
 void TrackingSchemeNeighborListAllPairs::GenerateInteractions(bool pForceUpdate) {
   nl_update_ = pForceUpdate;
 
   // Check accumulators
-  double dr2 = spec0_->GetDrMax();
+  double dr2 = 0.0;
+  dr2 = spec0_->GetDrMax();
   nl_update_ = nl_update_ || (dr2 > half_skin2_);
   dr2 = spec1_->GetDrMax();
   nl_update_ = nl_update_ || (dr2 > half_skin2_);
@@ -72,6 +109,7 @@ void TrackingSchemeNeighborListAllPairs::GenerateInteractions(bool pForceUpdate)
   if (nl_update_) {
     LoadSimples();
     UpdateNeighborList();
+    GenerateStatistics();
 
     // Reset accumulators
     spec0_->ZeroDr();
@@ -92,6 +130,7 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborList() {
   unique_rids_->clear();
   for (int i = 0; i < nmsimples_; ++i) {
     unique_rids_->insert(m_simples_[i]->GetRID());
+    mneighbors_[i].clear();
   }
   maxrigid_ = *(unique_rids_->rbegin());
 
@@ -159,27 +198,27 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborList() {
         // Check this out
         if (idm.dr_mag2 < rcs2_) {
           // Create the interaction
-          interaction_t new_interaction;
-          new_interaction.idx_ = (*oid_position_map_)[p1->GetOID()];
-          new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
-          new_interaction.type_ = type_;
-          new_interaction.pot_ = pbase_;
-          new_interaction.kmc_track_module_ = moduleid_;
-          
-          // KMC specifics
-          if (type_ == ptype::kmc) {
-            new_interaction.kmc_target_ = kmc_target_;
-          }
-          
-          #ifdef ENABLE_OPENMP
-          #pragma omp critical
-          #endif
-          {
-            m_interactions_.push_back(new_interaction);
-          }
-          //neighbor_t new_neighbor;
-          //new_neighbor.idx_ = jdx;
-          //neighbors_[idx].push_back(new_neighbor);
+          //interaction_t new_interaction;
+          //new_interaction.idx_ = (*oid_position_map_)[p1->GetOID()];
+          //new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
+          //new_interaction.type_ = type_;
+          //new_interaction.pot_ = pbase_;
+          //new_interaction.kmc_track_module_ = moduleid_;
+          //
+          //// KMC specifics
+          //if (type_ == ptype::kmc) {
+          //  new_interaction.kmc_target_ = kmc_target_;
+          //}
+          //
+          //#ifdef ENABLE_OPENMP
+          //#pragma omp critical
+          //#endif
+          //{
+          //  m_interactions_.push_back(new_interaction);
+          //}
+          neighbor_kmc_t new_neighbor;
+          new_neighbor.idx_ = jdx;
+          mneighbors_[idx].push_back(new_neighbor);
           rid_check_local->insert(rid2);
         }
       } // inner loop for second particle
@@ -189,4 +228,26 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborList() {
     #pragma omp barrier
     #endif
   } // omp parallel
+
+  // Serialize the new interactions to the neighbor list
+  for (int idx = 0; idx < nmsimples_; ++idx) {
+    auto p1 = m_simples_[idx];
+    nl_kmc_list *mlist = &mneighbors_[idx];
+    for (auto nldx = mlist->begin(); nldx != mlist->end(); ++nldx) {
+      auto p2 = m_simples_[nldx->idx_];
+      interaction_t new_interaction;
+      new_interaction.idx_ = (*oid_position_map_)[p1->GetOID()];
+      new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
+      new_interaction.type_ = type_;
+      new_interaction.pot_ = pbase_;
+      new_interaction.kmc_track_module_ = moduleid_;
+
+      // KMC specifics
+      if (type_ == ptype::kmc) {
+        new_interaction.kmc_target_ = kmc_target_;
+      }
+
+      m_interactions_.push_back(new_interaction);
+    }
+  } //serialized add
 }

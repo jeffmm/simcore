@@ -89,11 +89,13 @@ void UberEngineV2::GenerateStatistics(int istep) {
   // Compute interaction quantities
   ninteractions_ += (int)interactions_.size();
 
-  std::cout << "--------\n";
-  std::cout << "Generate Statistics ->\n";
-  std::cout << "Elapsed time: " << std::setprecision(8) << elapsed_microseconds.count() << " microseconds\n";
-  std::cout << "N interactions (this delta): " << interactions_.size() << std::endl;
-  std::cout << "N interactions avg:          " << std::setprecision(8) << (double)ninteractions_/(int)ndatapoints_ << std::endl;
+  if (debug_trace) {
+    std::cout << "--------\n";
+    std::cout << "Generate Statistics ->\n";
+    std::cout << "Elapsed time: " << std::setprecision(8) << elapsed_microseconds.count() << " microseconds\n";
+    std::cout << "N interactions (this delta): " << interactions_.size() << std::endl;
+    std::cout << "N interactions avg:          " << std::setprecision(8) << (double)ninteractions_/(int)ndatapoints_ << std::endl;
+  }
 
 }
 

@@ -10,6 +10,7 @@
 #include <omp.h>
 #endif
 
+#include <chrono>
 #include <unordered_set>
 #include <set>
 
@@ -82,6 +83,12 @@ class TrackingScheme {
     std::vector<bool> *rid_self_check_;
     std::set<int> *unique_rids_;
     std::unordered_set<int>** rid_check_local_;
+
+    // Statistics and timing
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_time_;
+    std::chrono::time_point<std::chrono::high_resolution_clock> this_time_;
+    double avg_update_time_;
+    double avg_occupancy_;
 
 };
 
