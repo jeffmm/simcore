@@ -1076,9 +1076,6 @@ void BrRodSpecies::WriteDiffusionValidation(std::string run_name) {
 }
 
 void BrRodSpecies::WriteOutputs(std::string run_name) {
-  if (!diffusion_validation_) {
-    printf("\nSOMEONE MUST PAY\n\n");
-  }
   if (diffusion_validation_) {
     WriteDiffusionValidation(run_name);
   }

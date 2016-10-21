@@ -127,12 +127,12 @@ void Filament::SetDiffusion() {
   //gamma_par_ = 2.0*(1+child_length_) / (3.0*logLD);
   //gamma_perp_ = gamma_ratio_*gamma_par_;
   //printf("Gamma par: %2.2f\n Gamma_perp: %2.2f\n", gamma_par_,gamma_perp_);
-  gamma_perp_ = child_length_ * gamma_0;
+  gamma_perp_ = (child_length_/length_) * gamma_0;
   gamma_par_ = gamma_perp_ / gamma_ratio_;
   //printf("Gamma par: %2.2f\n Gamma_perp: %2.2f\n", gamma_par_,gamma_perp_);
   //error_exit("\n");
-  rand_sigma_perp_ = 10*sqrt(24.0*gamma_perp_ / delta_);
-  rand_sigma_par_ = 10*sqrt(24.0*gamma_par_ / delta_);
+  rand_sigma_perp_ = sqrt(24.0*gamma_perp_ / delta_);
+  rand_sigma_par_ = sqrt(24.0*gamma_par_ / delta_);
 }
 
 void Filament::GenerateProbableOrientation() {
@@ -1200,5 +1200,41 @@ void Filament::DumpAll() {
   for (int i=0; i<n_sites_-2; ++i)
     printf(" %5.5f ",k_eff_[i]);
   printf("}\n\n\n");
+}
+
+void Filament::WritePosit(std::fstream &op){
+  // Calculate squared end to end distance
+  // useful for calculating persistence length
+  double end_to_end = 0;
+  double const * const r0 = elements_[0].GetPosition();
+  double const * const rL = elements_[n_sites_-1].GetPosition();
+  for (int i=0; i<n_dim_; ++i) {
+    double diff = (rL[i]-r0[i]);
+    end_to_end += diff*diff;
+  }
+  if (params_->avg_posits) {
+    for(auto& pos : position_)
+      op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
+    for(auto& spos : scaled_position_)
+      op.write(reinterpret_cast<char*>(&spos), sizeof(spos));
+    for(auto& u : orientation_)
+      op.write(reinterpret_cast<char*>(&u), sizeof(u));
+    op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+    op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
+    op.write(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
+    op.write(reinterpret_cast<char*>(&end_to_end), sizeof(end_to_end));
+    op.write(reinterpret_cast<char*>(&(cos_thetas_[0])), sizeof(cos_thetas_[0]));
+    return;
+  }
+  int size;
+  size = elements_.size();
+  op.write(reinterpret_cast<char*>(&size), sizeof(size));
+  size = v_elements_.size();
+  op.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+  for (auto& elem : elements_)
+    elem.WritePosit(op);
+  for (auto& velem : v_elements_)
+    velem.WritePosit(op);
 }
 

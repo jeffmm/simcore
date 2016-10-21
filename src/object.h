@@ -311,9 +311,8 @@ template<typename...> class Composite;
 
 template <typename T>
 class Composite<T> : public Object {
-  private:
-    system_parameters *params_;
   protected:
+    system_parameters *params_;
     std::vector<T> elements_;
     virtual void InitElements(system_parameters *params) {}
   public:
@@ -411,9 +410,8 @@ class Composite<T> : public Object {
 
 template <typename T, typename V>
 class Composite<T,V> : public Object {
-  private:
-    system_parameters *params_;
   protected:
+    system_parameters *params_;
     std::vector<T> elements_;
     std::vector<V> v_elements_;
   public:
