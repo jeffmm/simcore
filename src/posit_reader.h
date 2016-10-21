@@ -8,18 +8,25 @@ class PositReader {
         n_posit_,
         n_steps_,
         n_objs_,
-        max_objs_ = -1;
+        max_objs_ = -1,
+        n_misc_ = 0,
+        count_ = 0; // XXX REMOVE THIS
     double *position_ = nullptr,
            *scaled_position_,
            *orientation_,
            *diameter_,
-           *length_;
+           *length_,
+           *misc_;
     bool print_ = false;
     std::fstream ip_;
+    SID sid_posit_;
 
     // Converts 2d array index to 1d contiguous array index, assuming 3 dimensions
     int ix(int x, int y) {
       return 3*x+y;
+    }
+    int misc_ix(int x, int y) {
+      return n_misc_*x+y;
     }
 
     void OpenPosit(std::string file_name) {
@@ -49,6 +56,8 @@ class PositReader {
         delete[] orientation_;
         delete[] diameter_;
         delete[] length_;
+        if (n_misc_ > 0)
+          delete[] misc_;
       }
     }
     void AllocateObjs() {
@@ -59,6 +68,8 @@ class PositReader {
       orientation_ = new double[max_objs_*3];
       diameter_ = new double[max_objs_];
       length_ = new double[max_objs_];
+      if (n_misc_>0)
+        misc_ = new double[max_objs_*n_misc_];
     }
 
     // Simply prints the information from the posit file for debugging purposes
@@ -70,6 +81,8 @@ class PositReader {
         printf("orientation_ %d: {%2.2f, %2.2f, %2.2f}\n",i+1,orientation_[ix(i,0)],orientation_[ix(i,1)],orientation_[ix(i,2)]);
         printf("diameter_ %d: %2.2f\n",i+1,diameter_[i]);
         printf("length_ %d: %2.2f\n",i+1,length_[i]);
+        for (int j=0; j<n_misc_; ++j)
+          printf("misc_%d %d: %2.2f\n",j,i,misc_[misc_ix(i,j)]);
       }
     }
 
@@ -85,12 +98,22 @@ class PositReader {
         printf("n_steps: %d\n",n_steps_);
         printf("n_posit_: %d\n",n_posit_);
       }
+      sid_posit_ = StringToSID(sid_str);
+      switch (sid_posit_) {
+        case (SID::filament): 
+          n_misc_=3;
+          break;
+        default:
+          break;
+      }
       ReadIteration();
     }
 
     // Reads next iteration of data from the posit file
     bool ReadIteration() {
-      if (ip_.eof()) return false;
+      if (ip_.eof()) {
+        return false;
+      }
       ip_.read(reinterpret_cast<char*>(&n_objs_), sizeof(n_objs_));
       //printf("n_objs_: %d\n",n_objs_);
       if (n_objs_ > max_objs_) 
@@ -101,6 +124,9 @@ class PositReader {
         ip_.read(reinterpret_cast<char*>(&orientation_[ix(i,0)]), 3*sizeof(double));
         ip_.read(reinterpret_cast<char*>(&diameter_[i]), sizeof(double));
         ip_.read(reinterpret_cast<char*>(&length_[i]), sizeof(double));
+        for (int j=0; j<n_misc_; ++j) {
+          ip_.read(reinterpret_cast<char*>(&misc_[misc_ix(i,j)]), sizeof(double));
+        }
       }
       return true;
     }
@@ -132,6 +158,10 @@ class PositReader {
       return true;
     }
 
+    bool ReadNext() {
+      return ReadIteration();
+    }
+
     // Returns just the number of objects from the posit file
     // (for allocation of arrays, for example)
     void GetNObjs(int *n_objs) {
@@ -145,6 +175,15 @@ class PositReader {
       std::copy(orientation_, orientation_+3*n_objs_, u);
       std::copy(diameter_, diameter_+n_objs_, d);
       std::copy(length_, length_+n_objs_, l);
+    }
+    void GetDiameter(double *d) {
+      std::copy(diameter_, diameter_+n_objs_, d);
+    }
+    void GetLength(double *l) {
+      std::copy(length_, length_+n_objs_, l);
+    }
+    void GetMisc(double *misc) {
+      std::copy(misc_, misc_+n_misc_*n_objs_, misc);
     }
 
     // Print entire posit file to screen, for debugging
@@ -171,7 +210,11 @@ class PositReader {
       ClosePosit();
       DeallocateObjs();
       position_ = nullptr;
+      n_misc_ = 0;
       max_objs_ = -1;
+    }
+    SID GetSID() {
+      return sid_posit_;
     }
 };
 #endif // _SIMCORE_POSIT_READER_H_

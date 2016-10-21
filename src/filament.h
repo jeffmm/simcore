@@ -174,6 +174,7 @@ class Filament : public Composite<Site,Bond> {
     std::vector<double> const * const GetThetas() {
       return &cos_thetas_;
     }
+    void WritePosit(std::fstream &op);
 };
 
 class FilamentSpecies : public Species<Filament> {

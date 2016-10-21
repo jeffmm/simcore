@@ -14,10 +14,11 @@ class DiffusionAnalysis {
     int n_steps_;
     int n_time_;
     int n_validate_;
+    int n_interval_; // Number of time avgs depending on n_interval and n_steps
     int time_avg_interval_; // The number of iterations over which to time average
     int time_;
     double delta_;
-    double * positions_0_;
+    double * positions_0_ = nullptr;
     double * orientations_0_;
     double * positions_;
     double * scaled_pos_;
@@ -34,13 +35,15 @@ class DiffusionAnalysis {
 
     void SetInitPos() {
       preader_.GetNObjs(&n_objs_);
-      positions_0_ = new double[n_objs_*3];
-      orientations_0_ = new double[n_objs_*3];
-      positions_ = new double[n_objs_*3];
-      scaled_pos_ = new double[n_objs_*3];
-      orientations_ = new double[n_objs_*3];
-      diameters_ = new double[n_objs_];
-      lengths_ = new double[n_objs_];
+      if (positions_0_ == nullptr) {
+        positions_0_ = new double[n_objs_*3];
+        orientations_0_ = new double[n_objs_*3];
+        positions_ = new double[n_objs_*3];
+        scaled_pos_ = new double[n_objs_*3];
+        orientations_ = new double[n_objs_*3];
+        diameters_ = new double[n_objs_];
+        lengths_ = new double[n_objs_];
+      }
       preader_.GetPosit(positions_, scaled_pos_, orientations_, diameters_, lengths_);
       std::copy(positions_, positions_+3*n_objs_, positions_0_);
       std::copy(orientations_, orientations_+3*n_objs_, orientations_0_);
@@ -67,18 +70,25 @@ class DiffusionAnalysis {
       n_steps_ = preader_.NSteps();
       n_posit_ = preader_.NPosit();
       n_time_ = n_steps_/n_posit_;
+      // Make use of integer division here
+      n_interval_ = n_time_/time_avg_interval_;
+      n_interval_ = (n_interval_ < 1 ? 1 : n_interval_);
+      time_avg_interval_ = n_time_/n_interval_;
       SetInitPos();
       AllocateAnalysis();
     }
     void AllocateAnalysis() {
-      vcf_ = new double[n_time_];
-      msd_ = new double[n_time_];
-      vcf_err_ = new double[n_time_];
-      msd_err_ = new double[n_time_];
+      vcf_ = new double[time_avg_interval_];
+      msd_ = new double[time_avg_interval_];
+      vcf_err_ = new double[time_avg_interval_];
+      msd_err_ = new double[time_avg_interval_];
+      std::fill(msd_,msd_+time_avg_interval_,0.0);
+      std::fill(vcf_,vcf_+time_avg_interval_,0.0);
+      std::fill(msd_err_,msd_err_+time_avg_interval_,0.0);
+      std::fill(vcf_err_,vcf_err_+time_avg_interval_,0.0);
     }
     // Calculate vector correlation function <u(t).u(o)> and standard error
     void CalcVCF() {
-      double inv_sqrt_nobj = 1.0/sqrt(n_objs_);
       double avg_udotu0 = 0.0;
       double avg_udotu0_sqr = 0.0;
       for (int i=0; i<n_objs_; ++i) {
@@ -91,12 +101,12 @@ class DiffusionAnalysis {
       }
       avg_udotu0/=n_objs_;
       avg_udotu0_sqr/=n_objs_;
-      vcf_[time_] = avg_udotu0;
-      vcf_err_[time_] = inv_sqrt_nobj * sqrt(avg_udotu0_sqr - SQR(avg_udotu0));
+      double stdev2 = avg_udotu0_sqr - SQR(avg_udotu0);
+      vcf_[time_] += avg_udotu0/stdev2;
+      vcf_err_[time_] += 1.0/stdev2;
     }
     // Calculate mean square distance <(r(t)-r(o))^2> and standard error
     void CalcMSD() {
-      double inv_sqrt_nobj = 1.0/sqrt(n_objs_);
       double avg_sqr_dist = 0.0;
       double avg_sqr_dist_sqr = 0.0;
       for (int i=0; i<n_objs_; ++i) {
@@ -109,27 +119,41 @@ class DiffusionAnalysis {
       }
       avg_sqr_dist/=n_objs_;
       avg_sqr_dist_sqr/=n_objs_;
-      msd_[time_] = avg_sqr_dist;
-      msd_err_[time_] = inv_sqrt_nobj * sqrt(avg_sqr_dist_sqr - SQR(avg_sqr_dist));
+      double stdev2 = avg_sqr_dist_sqr - SQR(avg_sqr_dist);
+      msd_[time_] += avg_sqr_dist/stdev2;
+      msd_err_[time_] += 1.0/stdev2;
     } 
     void WriteData() {
       std::ostringstream file_name;
       file_name << posit_file_name_ << ".diffusion";
       std::ofstream diff_file(file_name.str().c_str(), std::ios_base::out);
-      diff_file << "# n_dim delta n_steps n_posit n_objs\n";
-      diff_file << n_dim_ << " " << delta_ << " " << n_steps_ << " " << n_posit_ << " " << n_objs_ << "\n";
+      diff_file << "# n_dim delta n_steps n_posit n_objs n_interval\n";
+      diff_file << n_dim_ << " " << delta_ << " " << n_steps_ << " " << n_posit_ << " " << n_objs_ << " " << n_interval_ << "\n";
       diff_file << "# time msd msd_err vcf vcf_err\n";
       diff_file << "0.0 0.0 0.0 1.0 0.0\n";
-      for (int t=0; t<n_time_; ++t)
+      for (int t=0; t<time_avg_interval_; ++t)
         diff_file << (t+1)*delta_*n_posit_ << " " << msd_[t] << " " << msd_err_[t]
           << " " << vcf_[t] << " " << vcf_err_[t] << "\n";
       diff_file.close();
+    }
+    void FinalizeData() {
+      // vcf_err_ is 1/std^2 = sum_i{1/std_i^2}
+      // vcf_ is sum_i{a_i / std^2}
+      // need vcf_ to be a = sum_i{a_i / std^2} / sum_i {1.0/std^2}
+      // need vcf_err_ to be SEM = std/sqrt(n_objs)
+      for (int t=0; t<time_avg_interval_; ++t) {
+        msd_[t] = msd_[t]/msd_err_[t];
+        vcf_[t] = vcf_[t]/vcf_err_[t];
+        msd_err_[t] = 1.0/sqrt(n_objs_*msd_err_[t]);
+        vcf_err_[t] = 1.0/sqrt(n_objs_*vcf_err_[t]);
+      }
     }
 
   public:
     void CalculateDiffusion(system_parameters *params, std::string posit_file_name) {
       delta_ = params->delta;
       n_dim_ = params->n_dim;
+      time_avg_interval_ = params->diffusion_interval;
       posit_file_name_ = posit_file_name;
       preader_.LoadFile(posit_file_name);
       DiffusionInit();
@@ -141,12 +165,21 @@ class DiffusionAnalysis {
           printf("n_objs_new: %d, n_objs_prev: %d\n",nobj, n_objs_);
           error_exit("ERROR: Number of objects changed in diffusion analysis!\n");
         }
-        else if (time_ > n_time_)
+        else if (time_ > n_time_ || time_ > time_avg_interval_)
           error_exit("ERROR: Didn't hit EOF when expected in diffusion analysis.\n");
-        CalcVCF();
-        CalcMSD();
-        time_++;
+        if (time_ == time_avg_interval_) {
+          if (n_interval_ == 1)
+            error_exit("Something went wrong in diffusion analysis\n");
+          SetInitPos();
+          time_=0;
+        }
+        else {
+          CalcVCF();
+          CalcMSD();
+          time_++;
+        }
       }
+      FinalizeData();
       WriteData();
       CleanUp();
     }
