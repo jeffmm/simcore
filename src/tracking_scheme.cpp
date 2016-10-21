@@ -93,6 +93,23 @@ void TrackingScheme::Print() {
   }
 }
 
+// Dump the internal neighbor list stuff
+void TrackingScheme::Dump() {
+  #ifdef DEBUG
+  std::cout << name_ << " Tracking Scheme [" << moduleid_ << "] -> Dump\n";
+  std::cout << "--------\n";
+  for (int idx = 0; idx < nmsimples_; ++idx) {
+    std::cout << "[" << idx << "] -> [";
+    nl_kmc_list *mlist = &mneighbors_[idx];
+    for (auto nldx = mlist->begin(); nldx != mlist->end(); ++nldx) {
+      std::cout << nldx->idx_ << ", ";
+    }
+    std::cout << "]\n";
+  }
+  std::cout << "--------\n";
+  #endif
+}
+
 // Overall load simples functionality
 void TrackingScheme::LoadSimples() {
   if (debug_trace) {
@@ -111,4 +128,35 @@ void TrackingScheme::LoadSimples() {
   nmsimples_ = (int)m_simples_.size();
   nsimples_ = (int)simples_->size();
 
+  // Set up neighbor list to track sets of interactions
+  if (mneighbors_ != nullptr) {
+    delete[] mneighbors_;
+  }
+
+  mneighbors_ = new nl_kmc_list[nmsimples_];
+}
+
+// Generate the statistics
+void TrackingScheme::GenerateStatistics() {
+  // Generate avg occupancy of neighbor list, etc
+  // Get the time
+  this_time_ = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::micro> elapsed_microseconds = this_time_ - last_time_;
+  if (debug_trace) {
+    std::cout << "[TrackingScheme] Update Elapsed: " << std::setprecision(8) << elapsed_microseconds.count() << std::endl;
+  }
+  last_time_ = this_time_;
+  avg_update_time_ += elapsed_microseconds.count();
+
+  // Get the occupancy
+  int nneighbors = 0;
+  for (int idx = 0; idx < nmsimples_; ++idx) {
+    nl_kmc_list *mlist = &mneighbors_[idx];
+    nneighbors += (int)mlist->size();
+  }
+  // XXX FIXME switch out for the nsteps that elapsed, and do over all steps of the system
+  avg_occupancy_ += (double)nneighbors/(double)nmsimples_;
+  if (debug_trace) {
+    std::cout << "[TrackingScheme] Avg Occupancy: " << std::setprecision(8) << (double)nneighbors/(double)nmsimples_ << std::endl;
+  }
 }

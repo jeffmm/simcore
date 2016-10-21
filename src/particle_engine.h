@@ -34,6 +34,7 @@ class ParticleEngine {
     void CreateTracking();
     void Dump();
     void DumpInteractions();
+    void DumpNeighbors();
     void DumpSimples();
     void LoadSimples();
     void Print();

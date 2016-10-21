@@ -1,7 +1,6 @@
 #ifndef _SIMCORE_TRACKING_SCHEME_NEIGHBOR_LIST_ALLPAIRS_H_
 #define _SIMCORE_TRACKING_SCHEME_NEIGHBOR_LIST_ALLPAIRS_H_
 
-#include "neighbor_list.h"
 #include "tracking_scheme.h"
 
 class TrackingSchemeNeighborListAllPairs : public TrackingScheme {
@@ -11,14 +10,9 @@ class TrackingSchemeNeighborListAllPairs : public TrackingScheme {
     TrackingSchemeNeighborListAllPairs() {
       name_ = "NeighborListAllPairs";
     }
-    virtual ~TrackingSchemeNeighborListAllPairs() {
-      if (mneighbors_) {
-        delete[] mneighbors_;
-      }
-    }
+    virtual ~TrackingSchemeNeighborListAllPairs() {}
 
     virtual void GenerateInteractions(bool pForceUpdate = false);
-    virtual void GenerateStatistics();
     virtual void Init(int pModuleID,
                       space_struct *pSpace,
                       PotentialBase *pPotentialBase,
@@ -43,7 +37,6 @@ class TrackingSchemeNeighborListAllPairs : public TrackingScheme {
     double skin2_ = 0.0;
     double rcs2_ = 0.0;
     double half_skin2_ = 0.0;
-    nl_kmc_list* mneighbors_ = nullptr;
 };
 
 #endif

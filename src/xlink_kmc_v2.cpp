@@ -324,8 +324,8 @@ void XlinkKMCV2::GenerateKMCNeighborList() {
   nsimples_ = (int)simples_->size();
   // Loop over interactions and build
   // ONLY IF NEEDED!!!!!
-  bool trigger_update = ptrack_->GetTriggerUpdate();
-  if (!trigger_update) return;
+  //bool trigger_update = ptrack_->GetTriggerUpdate();
+  //if (!trigger_update) return;
 
   if (debug_trace) {
     std::cout << "[XlinkKMC] Generating Neighbor List\n";
@@ -397,6 +397,10 @@ void XlinkKMCV2::PrepKMC() {
 
   pxspec->SetNExp_0_1(ntot_0_1);
   pxspec->SetNExp_1_2(ntot_1_2);
+  if (debug_trace) {
+    std::cout << "[KMC_PrepKMC] n01: " << std::setprecision(16) << ntot_0_1 << ", n12: " << ntot_1_2
+      << std::endl;
+  }
 }
 
 void XlinkKMCV2::Update_0_1(Xlink* xit) {

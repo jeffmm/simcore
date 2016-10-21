@@ -104,3 +104,11 @@ void UberEngineV2::PrintStatistics() {
   std::cout << "UberEngineV2 - Final Statistics\n";
   std::cout << "N interactions avg: " << std::setprecision(8) << (double)ninteractions_/(int)ndatapoints_ << std::endl;
 }
+
+void UberEngineV2::PrepOutputs() {
+  kengine_.PrepOutputs();
+}
+
+void UberEngineV2::WriteOutputs(int istep) {
+  kengine_.WriteOutputs(istep);
+}

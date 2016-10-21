@@ -133,3 +133,16 @@ void kmcEngineV2::Dump() {
   }
   #endif
 }
+
+// Prep outputs
+void kmcEngineV2::PrepOutputs() {
+  for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
+    (*kmc)->PrepOutputs(); 
+  }
+}
+
+void kmcEngineV2::WriteOutputs(int istep) {
+  for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
+    (*kmc)->WriteOutputs(istep); 
+  }
+}
