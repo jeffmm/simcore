@@ -3,7 +3,7 @@ configuration_type: spindle
 spb:
   - properties:
       insertion_type: rtp
-      theta: 0.0
+      theta: 3.1415926535897
       phi: 0.0
       diameter: 9.5
       attach_diameter: 6.5
@@ -47,7 +47,8 @@ spb:
 
   - properties:
       insertion_type: rtp
-      theta: 0.177
+      #theta: 0.177
+      theta: 3.31859265359
       phi: 1.57
       diameter: 9.5
       attach_diameter: 6.5

@@ -55,8 +55,10 @@ class UberEngineV2 {
               al_set *pAnchors,
               long seed);
     void InteractMP();
+    void PrepOutputs();
     void PrintStatistics();
     void StepKMC();
+    void WriteOutputs(int istep);
 };
 
 #endif // _SIMCORE_UBERENGINE_V2_H_
