@@ -25,8 +25,10 @@ class kmcEngineV2 {
               std::vector<interaction_t> *pInteractions,
               long seed);
     void InitMP();
+    void PrepOutputs();
     void Print();
     void StepKMC();
+    void WriteOutputs(int istep);
 
   protected:
       int ndim_;

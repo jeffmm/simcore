@@ -3,6 +3,7 @@
 
 #include "auxiliary.h"
 #include "interaction.h"
+#include "neighbor_list.h"
 #include "potential_base.h"
 #include "species.h"
 
@@ -25,11 +26,14 @@ class TrackingScheme {
         delete rid_self_check_;
       if (rid_check_local_)
         delete[] rid_check_local_;
+      if (mneighbors_)
+        delete[] mneighbors_;
     }
 
     // Virtual functions
+    virtual void Dump();
     virtual void GenerateInteractions(bool pForceUpdate = false) = 0;
-    virtual void GenerateStatistics() {}
+    virtual void GenerateStatistics();
     virtual void Init(int pModuleID,
                       space_struct *pSpace,
                       PotentialBase *pPotentialBase,
@@ -89,6 +93,9 @@ class TrackingScheme {
     std::chrono::time_point<std::chrono::high_resolution_clock> this_time_;
     double avg_update_time_;
     double avg_occupancy_;
+
+    // KMC stuff
+    nl_kmc_list* mneighbors_ = nullptr;
 
 };
 

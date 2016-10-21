@@ -326,6 +326,7 @@ void Simulation::InitOutputs() {
 
   {
     uengine_.PrepOutputs();
+    uenginev2_.PrepOutputs();
   }
   output_mgr_.MakeHeaders();
 }
@@ -374,6 +375,7 @@ void Simulation::WriteOutputs() {
   // XXX CJE FIXME write outputs more clearly
   if (i_step_%1000==0) {
     uengine_.WriteOutputs(i_step_);
+    uenginev2_.WriteOutputs(i_step_);
   }
 
 }

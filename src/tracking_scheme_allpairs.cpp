@@ -23,11 +23,14 @@ void TrackingSchemeAllPairs::Print() {
 
 // Print statistics
 void TrackingSchemeAllPairs::PrintStatistics() {
+  GenerateStatistics();
   std::cout << "********\n";
   std::cout << name_ << std::endl;
   std::cout << "   {" << SIDToString(sid0_) << ", " << SIDToString(sid1_) << "}\n";
   std::cout << "   type: " << PtypeToString(type_) << std::endl;
   std::cout << "   nupdates: " << nupdates_ << std::endl;
+  std::cout << "   avg time between updates: " << std::setprecision(8) << avg_update_time_/nupdates_ << " microseconds\n";
+  std::cout << "   avg occpancy:             " << std::setprecision(8) << avg_occupancy_/nupdates_ << " particles\n";
 }
 
 // Create the all pairs tracking scheme
@@ -41,6 +44,7 @@ void TrackingSchemeAllPairs::GenerateInteractions(bool pForceUpdate) {
   if (pForceUpdate) {
     LoadSimples();
     GenerateAllPairs();
+    GenerateStatistics();
   }
   interactions_->insert(interactions_->end(), m_interactions_.begin(), m_interactions_.end());
 }
@@ -57,6 +61,7 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
   unique_rids_->clear();
   for (int i = 0; i < nmsimples_; ++i) {
     unique_rids_->insert(m_simples_[i]->GetRID());
+    mneighbors_[i].clear();
   }
   maxrigid_ = *(unique_rids_->rbegin());
 
@@ -116,26 +121,51 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
         }
         rid_check_local->insert(rid2);
 
-        // Create the interaction
-        interaction_t new_interaction;
-        new_interaction.idx_ = (*oid_position_map_)[p1->GetOID()];
-        new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
-        new_interaction.type_ = type_;
-        new_interaction.pot_ = pbase_;
-        new_interaction.kmc_track_module_ = moduleid_;
-        
-        // KMC specifics
-        if (type_ == ptype::kmc) {
-          new_interaction.kmc_target_ = kmc_target_;
-        }
-        
-        #ifdef ENABLE_OPENMP
-        #pragma omp critical
-        #endif
-        {
-          m_interactions_.push_back(new_interaction);
-        }
+        //// Create the interaction
+        //interaction_t new_interaction;
+        //new_interaction.idx_ = (*oid_position_map_)[p1->GetOID()];
+        //new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
+        //new_interaction.type_ = type_;
+        //new_interaction.pot_ = pbase_;
+        //new_interaction.kmc_track_module_ = moduleid_;
+        //
+        //// KMC specifics
+        //if (type_ == ptype::kmc) {
+        //  new_interaction.kmc_target_ = kmc_target_;
+        //}
+        //
+        //#ifdef ENABLE_OPENMP
+        //#pragma omp critical
+        //#endif
+        //{
+        //  m_interactions_.push_back(new_interaction);
+        //}
+        neighbor_kmc_t new_neighbor;
+        new_neighbor.idx_ = jdx;
+        mneighbors_[idx].push_back(new_neighbor);
       } // for loop over second particle
     } // for loop over first particle
   } // omp parallel
+
+  // Serialize the new interactions to the neighbor list
+  for (int idx = 0; idx < nmsimples_; ++idx) {
+    auto p1 = m_simples_[idx];
+    nl_kmc_list *mlist = &mneighbors_[idx];
+    for (auto nldx = mlist->begin(); nldx != mlist->end(); ++nldx) {
+      auto p2 = m_simples_[nldx->idx_];
+      interaction_t new_interaction;
+      new_interaction.idx_ = (*oid_position_map_)[p1->GetOID()];
+      new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
+      new_interaction.type_ = type_;
+      new_interaction.pot_ = pbase_;
+      new_interaction.kmc_track_module_ = moduleid_;
+
+      // KMC specifics
+      if (type_ == ptype::kmc) {
+        new_interaction.kmc_target_ = kmc_target_;
+      }
+
+      m_interactions_.push_back(new_interaction);
+    }
+  } //serialized add
 }

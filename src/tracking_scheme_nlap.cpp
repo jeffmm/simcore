@@ -51,28 +51,6 @@ void TrackingSchemeNeighborListAllPairs::PrintStatistics() {
   std::cout << "   avg occpancy:             " << std::setprecision(8) << avg_occupancy_/nupdates_ << " particles\n";
 }
 
-// Generate the statistics
-void TrackingSchemeNeighborListAllPairs::GenerateStatistics() {
-  // Generate avg occupancy of neighbor list, etc
-  // Get the time
-  this_time_ = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::micro> elapsed_microseconds = this_time_ - last_time_;
-  if (debug_trace) {
-    std::cout << "[TrackingSchemeNeighborListAllPairs] Update Elapsed: " << std::setprecision(8) << elapsed_microseconds.count() << std::endl;
-  }
-  last_time_ = this_time_;
-  avg_update_time_ += elapsed_microseconds.count();
-
-  // Get the occupancy
-  int nneighbors = 0;
-  for (int idx = 0; idx < nmsimples_; ++idx) {
-    nl_kmc_list *mlist = &mneighbors_[idx];
-    nneighbors += (int)mlist->size();
-  }
-  // XXX FIXME switch out for the nsteps that elapsed, and do over all steps of the system
-  avg_occupancy_ += nneighbors/nmsimples_;
-}
-
 // Generate the neighbor list tracking scheme (if needed)
 void TrackingSchemeNeighborListAllPairs::CreateTrackingScheme() {
   rcut2_ = rcut_*rcut_;
@@ -87,12 +65,6 @@ void TrackingSchemeNeighborListAllPairs::LoadSimples() {
     std::cout << "TrackingNeighborListAllPairs::LoadSimples\n";
   }
   TrackingScheme::LoadSimples();
-
-  if (mneighbors_ != nullptr) {
-    delete[] mneighbors_;
-  }
-
-  mneighbors_ = new nl_kmc_list[nmsimples_];
 }
 
 // Generate the interactions

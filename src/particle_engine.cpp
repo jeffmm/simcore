@@ -74,6 +74,7 @@ void ParticleEngine::Dump() {
   #ifdef DEBUG
   std::cout << "----------------\n";
   std::cout << "ParticleEngine::Dump\n";
+  DumpNeighbors();
   //DumpSimples();
   //DumpInteractions();
   #endif
@@ -98,6 +99,16 @@ void ParticleEngine::DumpSimples() {
   for (int idx = 0; idx < (int)simples_.size(); ++idx) {
     auto part = simples_[idx];
     part->Dump();
+  }
+  #endif
+}
+
+void ParticleEngine::DumpNeighbors() {
+  #ifdef DEBUG
+  std::cout << "----------------\n";
+  std::cout << "DumpNeighbors\n";
+  for (auto tix = tracking_.begin(); tix != tracking_.end(); ++tix) {
+    (*tix)->Dump();
   }
   #endif
 }
