@@ -134,6 +134,15 @@ void TrackingScheme::LoadSimples() {
   }
 
   mneighbors_ = new nl_kmc_list[nmsimples_];
+
+  // Set up the master neighbor list for this is we've got
+  // KMC enabled
+  if (type_ == ptype::kmc) {
+    if (neighbors_ != nullptr) {
+      delete[] neighbors_;
+    }
+    neighbors_ = new nl_kmc_list[nsimples_];
+  }
 }
 
 // Generate the statistics

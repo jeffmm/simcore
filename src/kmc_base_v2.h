@@ -21,7 +21,7 @@ class KMCBaseV2 {
     SpeciesBase *spec1_;
     SpeciesBase *spec2_;
 
-    std::vector<std::vector<neighbor_kmc_t>> nl_kmc_;
+    nl_kmc_list *nl_kmc_;
     std::vector<Simple*> *simples_;
     std::vector<SpeciesBase*> *species_;
     std::vector<interaction_t> *interactions_;
