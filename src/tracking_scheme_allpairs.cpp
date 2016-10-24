@@ -42,9 +42,9 @@ void TrackingSchemeAllPairs::CreateTrackingScheme() {
 void TrackingSchemeAllPairs::GenerateInteractions(bool pForceUpdate) {
   // Check to see if we have to update because the particle numbers changed, or something like that
   if (pForceUpdate) {
+    GenerateStatistics(); // Generate before we update....
     LoadSimples();
     GenerateAllPairs();
-    GenerateStatistics();
   }
   interactions_->insert(interactions_->end(), m_interactions_.begin(), m_interactions_.end());
 }
@@ -64,6 +64,13 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
     mneighbors_[i].clear();
   }
   maxrigid_ = *(unique_rids_->rbegin());
+
+  // clear out the kmc neighbor list
+  if (type_ == ptype::kmc) {
+    for (int i = 0; i < nsimples_; ++i) {
+      neighbors_[i].clear();
+    }
+  }
 
   // Loop over particles, generate the interactions
   rid_self_check_->clear();
@@ -143,6 +150,15 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
         neighbor_kmc_t new_neighbor;
         new_neighbor.idx_ = jdx;
         mneighbors_[idx].push_back(new_neighbor);
+
+        // If necessary, build the main KMC neighbor list
+        if (type_ == ptype::kmc) {
+          neighbor_kmc_t new_neighbor_master;
+          int nidx = (*oid_position_map_)[p1->GetOID()];
+          int njdx = (*oid_position_map_)[p2->GetOID()];
+          new_neighbor_master.idx_ = njdx; 
+          neighbors_[nidx].push_back(new_neighbor_master);
+        }
       } // for loop over second particle
     } // for loop over first particle
   } // omp parallel
@@ -154,8 +170,10 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
     for (auto nldx = mlist->begin(); nldx != mlist->end(); ++nldx) {
       auto p2 = m_simples_[nldx->idx_];
       interaction_t new_interaction;
-      new_interaction.idx_ = (*oid_position_map_)[p1->GetOID()];
-      new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
+      int nidx = (*oid_position_map_)[p1->GetOID()];
+      int njdx = (*oid_position_map_)[p2->GetOID()];
+      new_interaction.idx_ = nidx;
+      new_interaction.jdx_ = njdx;
       new_interaction.type_ = type_;
       new_interaction.pot_ = pbase_;
       new_interaction.kmc_track_module_ = moduleid_;
@@ -163,6 +181,24 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
       // KMC specifics
       if (type_ == ptype::kmc) {
         new_interaction.kmc_target_ = kmc_target_;
+
+        // Create a bigger neighbor list so that we dno't have to
+        // calculate it from the interactions later, just cache
+        // it to the interaction
+        neighbor_kmc_t *target_neighbor;
+        for (auto nldx = neighbors_[nidx].begin(); nldx != neighbors_[nidx].end(); ++nldx) {
+          if (nldx->idx_ == njdx) {
+            target_neighbor = &(*nldx);
+            break;
+          }
+        }
+        new_interaction.neighbor_ = target_neighbor;
+        if (debug_trace) {
+          std::cout << "[KMC] Assigning [" << nidx << ", " << njdx << "] ->\n"
+            << "   neighbor: " << new_interaction.neighbor_ << std::endl
+            << "   original: " << &(neighbors_[nidx].back()) << std::endl
+            << "   neighbor jdx: " << new_interaction.neighbor_->idx_ << std::endl;
+        }
       }
 
       m_interactions_.push_back(new_interaction);

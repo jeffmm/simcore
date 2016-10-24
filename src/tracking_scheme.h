@@ -28,6 +28,8 @@ class TrackingScheme {
         delete[] rid_check_local_;
       if (mneighbors_)
         delete[] mneighbors_;
+      if (neighbors_)
+        delete[] neighbors_;
     }
 
     // Virtual functions
@@ -48,8 +50,9 @@ class TrackingScheme {
     // Non virtual functions
     ptype GetModuleType() {return type_;}
     int GetModuleID() {return moduleid_;}
+    nl_kmc_list **GetKMCNeighbors() { return &neighbors_; }
 
-  protected:
+protected:
 
     int ndim_ = -1;
     int nperiodic_ = -1;
@@ -95,7 +98,8 @@ class TrackingScheme {
     double avg_occupancy_;
 
     // KMC stuff
-    nl_kmc_list* mneighbors_ = nullptr;
+    nl_kmc_list* mneighbors_ = nullptr; // local copy of neighbors list
+    nl_kmc_list* neighbors_ = nullptr; // global copy of neighbor list for just KMC
 
 };
 
