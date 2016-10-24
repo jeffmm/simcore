@@ -321,40 +321,44 @@ void XlinkKMCV2::Print() {
 // Generate my own neighbor lists for the stupid particles, based
 // on the interactions list
 void XlinkKMCV2::GenerateKMCNeighborList() {
+  // Get the neighbor list from the tracking module
+  auto neighbors = stage_0_1_scheme_->GetKMCNeighbors();
+  nl_kmc_ = (*neighbors);
   nsimples_ = (int)simples_->size();
-  // Loop over interactions and build
-  // ONLY IF NEEDED!!!!!
-  //bool trigger_update = ptrack_->GetTriggerUpdate();
-  //if (!trigger_update) return;
 
-  if (debug_trace) {
-    std::cout << "[XlinkKMC] Generating Neighbor List\n";
-  }
-  nl_kmc_.clear();
-  nl_kmc_.resize(nsimples_);
-  //std::cout << "Generating neighbor list for: " << nsimples_ << " simples\n";
-
-  for (auto ixs = interactions_->begin(); ixs != interactions_->end(); ++ixs) {
-    auto mixs = *ixs;
-    if (mixs.kmc_track_module_ == stage_0_1_scheme_id_) {
-      //std::cout << "Found a match!\n";
-      // Determine which way the interaction was done
-      //std::cout << "[" << mixs.idx_ << ", " << mixs.jdx_ << ", " << PtypeToString(mixs.type_)
-      //  << std::setprecision(16) << "] kmc: " << mixs.kmc_ << ", target: " << SIDToString(mixs.kmc_target_) << std::endl;
-      auto part1 = (*simples_)[mixs.idx_];
-      auto part2 = (*simples_)[mixs.jdx_];
-      neighbor_kmc_t new_neighbor;
-      new_neighbor.kmc_ = mixs.kmc_;
-      if (part1->GetSID() == mixs.kmc_target_) {
-        new_neighbor.idx_ = mixs.jdx_;
-        nl_kmc_[mixs.idx_].push_back(new_neighbor);
-      } else if (part2->GetSID() == mixs.kmc_target_) {
-        new_neighbor.idx_ = mixs.idx_;
-        nl_kmc_[mixs.jdx_].push_back(new_neighbor);
-      }
-    }
-  }
-
+//  // Loop over interactions and build
+//  // ONLY IF NEEDED!!!!!
+//  //bool trigger_update = ptrack_->GetTriggerUpdate();
+//  //if (!trigger_update) return;
+//
+//  if (debug_trace) {
+//    std::cout << "[XlinkKMC] Generating Neighbor List\n";
+//  }
+//  nl_kmc_.clear();
+//  nl_kmc_.resize(nsimples_);
+//  //std::cout << "Generating neighbor list for: " << nsimples_ << " simples\n";
+//
+//  for (auto ixs = interactions_->begin(); ixs != interactions_->end(); ++ixs) {
+//    auto mixs = *ixs;
+//    if (mixs.kmc_track_module_ == stage_0_1_scheme_id_) {
+//      //std::cout << "Found a match!\n";
+//      // Determine which way the interaction was done
+//      //std::cout << "[" << mixs.idx_ << ", " << mixs.jdx_ << ", " << PtypeToString(mixs.type_)
+//      //  << std::setprecision(16) << "] kmc: " << mixs.kmc_ << ", target: " << SIDToString(mixs.kmc_target_) << std::endl;
+//      auto part1 = (*simples_)[mixs.idx_];
+//      auto part2 = (*simples_)[mixs.jdx_];
+//      neighbor_kmc_t new_neighbor;
+//      new_neighbor.kmc_ = mixs.kmc_;
+//      if (part1->GetSID() == mixs.kmc_target_) {
+//        new_neighbor.idx_ = mixs.jdx_;
+//        nl_kmc_[mixs.idx_].push_back(new_neighbor);
+//      } else if (part2->GetSID() == mixs.kmc_target_) {
+//        new_neighbor.idx_ = mixs.idx_;
+//        nl_kmc_[mixs.jdx_].push_back(new_neighbor);
+//      }
+//    }
+//  }
+//
   if (debug_trace) {
     std::cout << "[KMC] Generating neighbor list\n";
     // Print out the neighbor list

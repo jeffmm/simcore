@@ -247,6 +247,18 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
     exit(1);
   }
 
+  // Check the neighbor list vs. interaction
+  auto neighbor = (*pix)->neighbor_;
+  neighbor->kmc_= 0.0;
+  #ifdef DEBUG
+  if (neighbor->idx_ != (*pix)->jdx_) {
+    std::cout << "Interaction neighbor translation wrong! Interaction: [" << (*pix)->idx_
+      << ", " << (*pix)->jdx_ << "], neighbor idx: " << neighbor->idx_ << ", addr: "
+      << &neighbor << std::endl;
+    exit(1);
+  }
+  #endif
+
   // Minimum distance calc
   interactionmindist idm;
   MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
@@ -265,6 +277,7 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
   #endif
 
   (*pix)->kmc_ = fepot[ndim_];
+  neighbor->kmc_ = fepot[ndim_];
 }
 
 // Internal interactions

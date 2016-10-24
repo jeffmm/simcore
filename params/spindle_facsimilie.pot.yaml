@@ -8,6 +8,7 @@ potentials:
     eps: 1
     sigma: 1
     scheme: neighborlistallpairs
+    #scheme: allpairs
     skin: 1.0
     #overlap: true
 

@@ -3,6 +3,7 @@
 
 #include "anchor_list_generic.h"
 #include "auxiliary.h"
+#include "neighbor_list.h"
 
 enum class ptype: int {
   external = 0,
@@ -56,6 +57,7 @@ struct _interaction {
   // KMC stuff
   double kmc_;
   SID kmc_target_ = SID::none;
+  neighbor_kmc_t *neighbor_ = nullptr;
 
   // Anchor
   anchor_t *anchor_ = nullptr;
