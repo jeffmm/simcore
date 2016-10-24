@@ -18,11 +18,11 @@ graph_background: 1
 delta: 0.00025
 #n_steps: 50000000
 #n_steps: 1000000
-#n_steps: 100000
+n_steps: 100000
 #n_steps: 5000
 #n_steps: 2500
 #n_steps: 10000
-n_steps: 20000
+#n_steps: 20000
 #n_steps: 1000
 #n_steps: 100
 #n_steps: 10

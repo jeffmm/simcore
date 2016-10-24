@@ -1260,6 +1260,7 @@ void XlinkKMCV2::Detach_2_0(Xlink *xit) {
   xit->CheckBoundState();
 }
 
+// Multithreaded update of kmc positions
 void XlinkKMCV2::UpdateKMC() {
   nsimples_ = (int)simples_->size();
 
@@ -1271,17 +1272,53 @@ void XlinkKMCV2::UpdateKMC() {
   // Loop over the xlinks to see who  does what
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
-  for (auto xit = xlinks->begin(); xit != xlinks->end(); ++xit) {
-    switch((*xit)->GetBoundState()) {
+  int nx = (int)xlinks->size();
+  #ifdef ENABLE_OPENMP
+  #pragma omp parallel for schedule(runtime)
+  #endif
+  for (int ixit = 0; ixit < nx; ++ixit) {
+    Xlink *xit = (*xlinks)[ixit];
+    switch(xit->GetBoundState()) {
       case unbound:
-        UpdateStage0(*xit);
+        UpdateStage0(xit);
+        //nfree_++;
+        break;
+      case singly:
+        UpdateStage1(xit);
+        break;
+      case doubly:
+        UpdateStage2(xit);
+        break;
+    }
+  } // pragma omp parallel for
+
+  // Loop over everybody again outside of a parallel region
+  // and update the numbers
+  for (int ixit = 0; ixit < nx; ++ixit) {
+    Xlink *xit = (*xlinks)[ixit];
+    switch(xit->GetBoundState()) {
+      case unbound:
         nfree_++;
         break;
       case singly:
-        UpdateStage1(*xit);
+        {
+          XlinkHead *freehead, *boundhead;
+          auto isbound = xit->GetBoundHeads(&freehead, &boundhead);
+          int bound_idx = 0;
+          if (isbound.first) {
+            bound_idx = 0;
+          } else if (isbound.second) {
+            bound_idx = 1;
+          } else {
+            printf("Something has gone horribly wrong!\n");
+            exit(1);
+          }
+          nbound1_[bound_idx]++;
+        }
         break;
       case doubly:
-        UpdateStage2(*xit);
+        nbound2_[0]++;
+        nbound2_[1]++;
         break;
     }
   }
@@ -1410,10 +1447,10 @@ void XlinkKMCV2::UpdateStage1(Xlink *xit) {
   if (unbind) {
     // Detach this head and put the xlink back out into the nucleoplasm
     Detach_1_0(xit, freehead, boundhead);
-  } else {
+  } //else {
     // Head is still attached, so we're all good
-    nbound1_[bound_idx]++;
-  }
+    //nbound1_[bound_idx]++;
+  //}
 }
 
 void XlinkKMCV2::UpdateStage2(Xlink *xit) {
@@ -1590,8 +1627,8 @@ void XlinkKMCV2::UpdateStage2(Xlink *xit) {
     //xit->SetPrevPosition(oldxitpos);
     //xit->UpdatePeriodic();
     // Figure out which ehads are attached
-    nbound2_[0]++;
-    nbound2_[1]++;
+    //nbound2_[0]++;
+    //nbound2_[1]++;
   }
 }
 
@@ -1702,10 +1739,15 @@ void XlinkKMCV2::PrepOutputs() {
 }
 
 void XlinkKMCV2::WriteEvent(const std::string &pString) {
-  if (write_event_) {
-    kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out | std::ios_base::app);
-    kmc_file << pString << std::endl;
-    kmc_file.close();
+  #ifdef ENABLE_OPENMP
+  #pragma omp critical
+  #endif
+  {
+    if (write_event_) {
+      kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out | std::ios_base::app);
+      kmc_file << pString << std::endl;
+      kmc_file.close();
+    }
   }
 }
 
