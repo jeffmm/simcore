@@ -239,6 +239,7 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborList() {
         // Create a bigger neighbor list so that we dno't have to
         // calculate it from the interactions later, just cache
         // it to the interaction
+        // XXX FIXME better way to do this?
         neighbor_kmc_t *target_neighbor;
         for (auto nldx = neighbors_[nidx].begin(); nldx != neighbors_[nidx].end(); ++nldx) {
           if (nldx->idx_ == njdx) {

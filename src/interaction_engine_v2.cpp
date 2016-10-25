@@ -238,18 +238,29 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
   auto part1 = (*simples_)[idx];
   auto part2 = (*simples_)[jdx];
 
+  auto neighbor = (*pix)->neighbor_;
+  neighbor->kmc_= 0.0;
   (*pix)->kmc_ = 0.0;
+  // Check part1 for if we actually need to calculate or not, if not, just move on
+  if (!part1->ApplyKMCInteraction()) {
+    #ifdef DEBUG
+    if (debug_trace) {
+      std::cout << part1->GetOID() << " not applying KMC interaction\n";
+    }
+    #endif
+    return;
+  }
 
   // Calculate the potential
   PotentialBase *pot = (*pix)->pot_;
+  #ifdef DEBUG
   if (!pot->IsKMC()) {
     std::cout << "InteractParticlesKMCMP wrong potential somehow, exiting\n";
     exit(1);
   }
+  #endif
 
   // Check the neighbor list vs. interaction
-  auto neighbor = (*pix)->neighbor_;
-  neighbor->kmc_= 0.0;
   #ifdef DEBUG
   if (neighbor->idx_ != (*pix)->jdx_) {
     std::cout << "Interaction neighbor translation wrong! Interaction: [" << (*pix)->idx_
@@ -276,7 +287,7 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
   }
   #endif
 
-  (*pix)->kmc_ = fepot[ndim_];
+  (*pix)->kmc_ = fepot[ndim_]; // XXX FIXME might not need this now
   neighbor->kmc_ = fepot[ndim_];
 }
 
