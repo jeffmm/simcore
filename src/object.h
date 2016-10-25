@@ -181,6 +181,10 @@ class Object {
       return false;
     }
 
+    virtual bool ApplyKMCInteraction() {
+      return false;
+    }
+
     // KMC specific stuff
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors) {}
     virtual void StepKMC() {}
