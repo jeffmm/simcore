@@ -9,12 +9,6 @@
 #include <iomanip>
 #include <unordered_map>
 
-enum attach_type {
-  unbound = 0,
-  singly,
-  doubly
-};
-
 class Xlink : public Composite<XlinkHead> {
   private:
     /* Unique to Xlink */
