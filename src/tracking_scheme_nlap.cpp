@@ -29,11 +29,6 @@ void TrackingSchemeNeighborListAllPairs::Init(int pModuleID,
   avg_update_time_ = 0.0;
   avg_occupancy_ = 0.0;
 
-  if (!symmetric_ && !partial_update_) {
-    std::cout << "[ERROR]Neighbor list scheme partial update not turned on in asymmetric case."
-      << " Not currently supported. Exiting\n";
-  }
-
   if (!symmetric_ && partial_update_) {
     std::cout << "[WARNING]!\n";
     std::cout << "[WARNING]! Asymmetric use of neighbor lists is specialized, so I hope you"
@@ -78,15 +73,15 @@ void TrackingSchemeNeighborListAllPairs::CreateTrackingScheme() {
 // Generate the inteactions symmetric or not (differing updates of accumulators
 // for both)
 void TrackingSchemeNeighborListAllPairs::GenerateInteractions(bool pForceUpdate) {
-  if (symmetric_) {
-    GenerateInteractionsSymmetric(pForceUpdate);
+  if (!partial_update_) {
+    GenerateInteractionsNormal(pForceUpdate);
   } else {
     GenerateInteractionsAsymmetricPartial(pForceUpdate);
   }
 }
 
 // Generate the interactions
-void TrackingSchemeNeighborListAllPairs::GenerateInteractionsSymmetric(bool pForceUpdate) {
+void TrackingSchemeNeighborListAllPairs::GenerateInteractionsNormal(bool pForceUpdate) {
   nl_update_ = pForceUpdate;
 
   // Check accumulators
@@ -99,11 +94,17 @@ void TrackingSchemeNeighborListAllPairs::GenerateInteractionsSymmetric(bool pFor
   if (nl_update_) {
     GenerateStatistics();
     LoadSimples();
-    UpdateNeighborListSymmetric();
+
+    if (symmetric_) {
+      UpdateNeighborListSymmetric();
+    } else {
+      UpdateNeighborListAsymmetric();
+    }
 
     // Reset accumulators
     spec0_->ZeroDr();
-    spec1_->ZeroDr();
+    //spec1_->ZeroDr(); //XXX FIXME only reset accumulator for the faster of the two
+    //need separate accumulators to work properly, ugh
   }
   interactions_->insert(interactions_->end(), m_interactions_.begin(), m_interactions_.end());
 }
@@ -215,6 +216,119 @@ void TrackingSchemeNeighborListAllPairs::GenerateInteractionsAsymmetricPartial(b
 
   // Add the damn interactions
   interactions_->insert(interactions_->end(), m_interactions_.begin(), m_interactions_.end());
+}
+
+// Actually update the neighbor list
+void TrackingSchemeNeighborListAllPairs::UpdateNeighborListAsymmetric() {
+  if (debug_trace) {
+    std::cout << "[" << moduleid_ << "]TrackingSchemeNeighborListAllPairs Updating NL\n";
+  }
+  nupdates_++;
+  m_interactions_.clear();
+
+  // Find the unique rigids
+  unique_rids_->clear();
+  for (int i = 0; i < nmsimples_; ++i) {
+    unique_rids_->insert(m_simples_[i]->GetRID());
+    mneighbors_[i].clear();
+  }
+  maxrigid_ = *(unique_rids_->rbegin());
+
+  // Loop over particles, generate the interactions
+  rid_self_check_->clear();
+  rid_self_check_->resize(maxrigid_+1);
+  std::fill(rid_self_check_->begin(), rid_self_check_->end(), false);
+
+  #ifdef ENABLE_OPENMP
+  #pragma omp parallel
+  #endif
+  {
+    int tid = 0;
+    #ifdef ENABLE_OPENMP
+    tid = omp_get_thread_num();
+    #else
+    tid = 0;
+    #endif
+
+    #ifdef ENABLE_OPENMP
+    #pragma omp for schedule(runtime) nowait
+    #endif
+    for (int idx = 0; idx < nmsimples0_; ++idx) {
+      auto p1 = m_simples_[idx];
+      int rid1 = p1->GetRID();
+
+      bool should_exit = false;
+      #ifdef ENABLE_OPENMP
+      #pragma omp critical
+      #endif
+      {
+        should_exit = (*rid_self_check_)[rid1];
+        (*rid_self_check_)[rid1] = true;
+      }
+      if (should_exit) {
+        continue;
+      }
+
+      std::unordered_set<int>* rid_check_local = rid_check_local_[tid];
+      rid_check_local->clear();
+
+      for (int jdx = nmsimples0_; jdx < nmsimples_; ++jdx) {
+        if (idx == jdx) continue;
+        auto p2 = m_simples_[jdx];
+        int rid2 = p2->GetRID();
+        if (rid1 == rid2) continue;
+
+        // We are guranteed for an interaction
+        if (rid_check_local->count(rid2)) {
+          continue;
+        }
+        // Only insert if we've found an interaction
+        // otherwise, we miss stuff
+
+        // Minimum distance calc
+        interactionmindist idm;
+        MinimumDistance(p1, p2, idm, ndim_, nperiodic_, space_);
+
+        // Check this out
+        if (idm.dr_mag2 < rcs2_) {
+          neighbor_kmc_t new_neighbor;
+          new_neighbor.idx_ = jdx;
+          mneighbors_[idx].push_back(new_neighbor);
+          rid_check_local->insert(rid2);
+        }
+      } // inner loop for second particle
+    } // omp for schedule(runtime) nowait
+
+    #ifdef ENABLE_OPENMP
+    #pragma omp barrier
+    #endif
+  } // omp parallel
+
+  // Serialize the new interactions to the neighbor list
+  for (int idx = 0; idx < nmsimples_; ++idx) {
+    auto p1 = m_simples_[idx];
+    nl_kmc_list *mlist = &mneighbors_[idx];
+    for (auto nldx = mlist->begin(); nldx != mlist->end(); ++nldx) {
+      auto p2 = m_simples_[nldx->idx_];
+      interaction_t new_interaction;
+      int nidx = (*oid_position_map_)[p1->GetOID()];
+      int njdx = (*oid_position_map_)[p2->GetOID()];
+      nldx->g_idx_ = njdx;
+      new_interaction.idx_ = nidx;
+      new_interaction.jdx_ = njdx;
+      new_interaction.type_ = type_;
+      new_interaction.pot_ = pbase_;
+      new_interaction.kmc_track_module_ = moduleid_;
+
+      // KMC specifics
+      if (type_ == ptype::kmc) {
+        new_interaction.kmc_target_ = kmc_target_;
+        new_interaction.neighbor_ = &(*nldx);
+      }
+
+      m_interactions_.push_back(new_interaction);
+    }
+  } //serialized add
 }
 
 // Actually update the neighbor list

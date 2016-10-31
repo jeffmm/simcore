@@ -28,7 +28,8 @@ class TrackingSchemeNeighborListAllPairs : public TrackingScheme {
 
     virtual void CreateTrackingScheme();
     void UpdateNeighborListSymmetric();
-    void GenerateInteractionsSymmetric(bool pForceUpdate);
+    void UpdateNeighborListAsymmetric();
+    void GenerateInteractionsNormal(bool pForceUpdate);
     void GenerateInteractionsAsymmetricPartial(bool pForceUpdate);
 
     bool nl_update_ = false;

@@ -21,7 +21,7 @@ void XlinkHarmonic::CalcPotential(interactionmindist *idm,
   if (!head0->GetBound() || !head1->GetBound()) {
     return;
   }
-  double rmag = idm->dr_mag;
+  double rmag = sqrt(idm->dr_mag2);
   double *dr = idm->dr;
 
   double k = k_;

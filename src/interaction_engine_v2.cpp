@@ -285,7 +285,7 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
   if (debug_trace) {
     std::cout << "\tKMC Interacting[" << idx << "," << part1->GetOID()
       << ":" << jdx << "," << part2->GetOID() << "] kmc: " << std::setprecision(16)
-      << fepot[ndim_] << ", (rmag: " << idm.dr_mag << ")\n";
+      << fepot[ndim_] << ", (rmag2: " << idm.dr_mag2 << ")\n";
   }
   #endif
 
@@ -429,9 +429,6 @@ void InteractionEngineV2::InteractParticlesTetherMP(interaction_t **pix,
   separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
   interactionmindist idm;
   std::copy(dr, dr+3, idm.dr);
-  for (int i = 0; i < ndim_; ++i) {
-    idm.dr_mag += SQR(idm.dr[i]);
-  }
 
   // Calculate the rcontacts for us, ugh (based on absolute vs relative positions)
   for (int i = 0; i < ndim_; ++i) {
