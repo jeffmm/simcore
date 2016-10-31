@@ -36,6 +36,7 @@ kmc:
     #scheme: allpairs
     scheme: neighborlistallpairs
     skin: 24.0
+    #partial_update: true
     kmc: true
     kmc_target: xlink
   xlink_internal_potential:
