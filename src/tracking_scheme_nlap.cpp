@@ -20,10 +20,26 @@ void TrackingSchemeNeighborListAllPairs::Init(int pModuleID,
   rcut_ = pbase_->GetRCut();
   skin_ = node["skin"].as<double>();
 
+  if (node["partial_update"]) {
+    partial_update_ = node["partial_update"].as<bool>();
+  }
+
   CreateTrackingScheme();
   last_time_ = std::chrono::high_resolution_clock::now();
   avg_update_time_ = 0.0;
   avg_occupancy_ = 0.0;
+
+  if (!symmetric_ && !partial_update_) {
+    std::cout << "[ERROR]Neighbor list scheme partial update not turned on in asymmetric case."
+      << " Not currently supported. Exiting\n";
+  }
+
+  if (!symmetric_ && partial_update_) {
+    std::cout << "[WARNING]!\n";
+    std::cout << "[WARNING]! Asymmetric use of neighbor lists is specialized, so I hope you"
+      << " know exactly what you're doing\n";
+    std::cout << "[WARNING]!\n";
+  }
 }
 
 // Print functionality
@@ -59,16 +75,18 @@ void TrackingSchemeNeighborListAllPairs::CreateTrackingScheme() {
   half_skin2_ = 0.25*skin2_;
 }
 
-// Overload the LoadSimples functionality to generate neighbor list
-void TrackingSchemeNeighborListAllPairs::LoadSimples() {
-  if (debug_trace) {
-    std::cout << "TrackingNeighborListAllPairs::LoadSimples\n";
+// Generate the inteactions symmetric or not (differing updates of accumulators
+// for both)
+void TrackingSchemeNeighborListAllPairs::GenerateInteractions(bool pForceUpdate) {
+  if (symmetric_) {
+    GenerateInteractionsSymmetric(pForceUpdate);
+  } else {
+    GenerateInteractionsAsymmetricPartial(pForceUpdate);
   }
-  TrackingScheme::LoadSimples();
 }
 
 // Generate the interactions
-void TrackingSchemeNeighborListAllPairs::GenerateInteractions(bool pForceUpdate) {
+void TrackingSchemeNeighborListAllPairs::GenerateInteractionsSymmetric(bool pForceUpdate) {
   nl_update_ = pForceUpdate;
 
   // Check accumulators
@@ -81,7 +99,7 @@ void TrackingSchemeNeighborListAllPairs::GenerateInteractions(bool pForceUpdate)
   if (nl_update_) {
     GenerateStatistics();
     LoadSimples();
-    UpdateNeighborList();
+    UpdateNeighborListSymmetric();
 
     // Reset accumulators
     spec0_->ZeroDr();
@@ -90,8 +108,117 @@ void TrackingSchemeNeighborListAllPairs::GenerateInteractions(bool pForceUpdate)
   interactions_->insert(interactions_->end(), m_interactions_.begin(), m_interactions_.end());
 }
 
+// Asymmetric interactions
+void TrackingSchemeNeighborListAllPairs::GenerateInteractionsAsymmetricPartial(bool pForceUpdate) {
+  nl_update_ = pForceUpdate;
+  // Do the accumulator's differently, check each individual particle in a species (for xlinks
+  // that move faster than other things in the system)
+
+  // Always have to clear the interactions
+  m_interactions_.clear();
+  nupdates_++;
+
+  if (nl_update_) {
+    GenerateStatistics();
+    LoadSimples();
+
+    // Find the unique rigids if it changed
+    unique_rids_->clear();
+    for (int i = 0; i < nmsimples_; ++i) {
+      unique_rids_->insert(m_simples_[i]->GetRID());
+      mneighbors_[i].clear();
+    }
+    maxrigid_ = *(unique_rids_->rbegin());
+  }
+
+  
+  #ifdef ENABLE_OPENMP
+  #pragma omp parallel
+  #endif
+  {
+    int tid = 0;
+    #ifdef ENABLE_OPENMP
+    tid = omp_get_thread_num();
+    #else
+    tid = 0;
+    #endif
+
+    // Check accumulators and set list(species 0 only)
+    #ifdef ENABLE_OPENMP
+    #pragma omp for schedule(runtime)
+    #endif
+    for (int idx = 0; idx < nmsimples0_; ++idx) {
+      double dr2 = m_simples_[idx]->GetDr(); 
+      if ((dr2 > half_skin2_) || nl_update_) {
+        if (debug_trace) {
+          std::cout << "[NL Partial Update]local particle idx: " << idx << ", oid: " << m_simples_[idx]->GetOID()
+            << ", dr2: " << std::setprecision(16) << dr2 << std::endl;
+        }
+        // Clear the neighbors of this thing
+        mneighbors_[idx].clear();
+
+        // Loop over the other particles in the system and add them to the neighbor list
+        std::unordered_set<int>* rid_check_local = rid_check_local_[tid];
+        rid_check_local->clear();
+        for (int jdx = nmsimples0_; jdx < nmsimples_; ++jdx) {
+          if (idx == jdx) continue;
+          auto p1 = m_simples_[idx];
+          auto p2 = m_simples_[jdx];
+          int rid2 = p2->GetRID();
+
+          // We are guranteed for an interaction
+          if (rid_check_local->count(rid2)) {
+            continue;
+          }
+
+          // Minimum distance calc
+          interactionmindist idm;
+          MinimumDistance(p1, p2, idm, ndim_, nperiodic_, space_);
+
+          // Check this out
+          if (idm.dr_mag2 < rcs2_) {
+            neighbor_kmc_t new_neighbor;
+            new_neighbor.idx_ = jdx;
+            mneighbors_[idx].push_back(new_neighbor);
+            rid_check_local->insert(rid2);
+          }
+        }
+      }
+    }
+  } // pragma omp parallel
+
+  // Set the interactions
+  for (int idx = 0; idx < nmsimples_; ++idx) {
+    auto p1 = m_simples_[idx];
+    nl_kmc_list *mlist = &mneighbors_[idx];
+    for (auto nldx = mlist->begin(); nldx != mlist->end(); ++nldx) {
+      auto p2 = m_simples_[nldx->idx_];
+      interaction_t new_interaction;
+      int nidx = (*oid_position_map_)[p1->GetOID()];
+      int njdx = (*oid_position_map_)[p2->GetOID()];
+      nldx->g_idx_ = njdx;
+      new_interaction.idx_ = nidx;
+      new_interaction.jdx_ = njdx;
+      new_interaction.type_ = type_;
+      new_interaction.pot_ = pbase_;
+      new_interaction.kmc_track_module_ = moduleid_;
+
+      // KMC specifics
+      if (type_ == ptype::kmc) {
+        new_interaction.kmc_target_ = kmc_target_;
+        new_interaction.neighbor_ = &(*nldx);
+      }
+
+      m_interactions_.push_back(new_interaction);
+    }
+  } //serialized add
+
+  // Add the damn interactions
+  interactions_->insert(interactions_->end(), m_interactions_.begin(), m_interactions_.end());
+}
+
 // Actually update the neighbor list
-void TrackingSchemeNeighborListAllPairs::UpdateNeighborList() {
+void TrackingSchemeNeighborListAllPairs::UpdateNeighborListSymmetric() {
   if (debug_trace) {
     std::cout << "[" << moduleid_ << "]TrackingSchemeNeighborListAllPairs Updating NL\n";
   }
@@ -105,13 +232,6 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborList() {
     mneighbors_[i].clear();
   }
   maxrigid_ = *(unique_rids_->rbegin());
-
-  // clear out the kmc neighbor list
-  if (type_ == ptype::kmc) {
-    for (int i = 0; i < nsimples_; ++i) {
-      neighbors_[i].clear();
-    }
-  }
 
   // Loop over particles, generate the interactions
   rid_self_check_->clear();
@@ -206,7 +326,7 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborList() {
             int nidx = (*oid_position_map_)[p1->GetOID()];
             int njdx = (*oid_position_map_)[p2->GetOID()];
             new_neighbor_master.idx_ = njdx; 
-            neighbors_[nidx].push_back(new_neighbor_master);
+            //neighbors_[nidx].push_back(new_neighbor_master);
           }
         }
       } // inner loop for second particle
@@ -240,20 +360,20 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborList() {
         // calculate it from the interactions later, just cache
         // it to the interaction
         // XXX FIXME better way to do this?
-        neighbor_kmc_t *target_neighbor;
-        for (auto nldx = neighbors_[nidx].begin(); nldx != neighbors_[nidx].end(); ++nldx) {
-          if (nldx->idx_ == njdx) {
-            target_neighbor = &(*nldx);
-            break;
-          }
-        }
-        new_interaction.neighbor_ = target_neighbor;
-        if (debug_trace) {
-          std::cout << "[KMC] Assigning [" << nidx << ", " << njdx << "] ->\n"
-            << "   neighbor: " << new_interaction.neighbor_ << std::endl
-            << "   original: " << &(neighbors_[nidx].back()) << std::endl
-            << "   neighbor jdx: " << new_interaction.neighbor_->idx_ << std::endl;
-        }
+        //neighbor_kmc_t *target_neighbor;
+        //for (auto nldx = neighbors_[nidx].begin(); nldx != neighbors_[nidx].end(); ++nldx) {
+        //  if (nldx->idx_ == njdx) {
+        //    target_neighbor = &(*nldx);
+        //    break;
+        //  }
+        //}
+        //new_interaction.neighbor_ = target_neighbor;
+        //if (debug_trace) {
+        //  std::cout << "[KMC] Assigning [" << nidx << ", " << njdx << "] ->\n"
+        //    << "   neighbor: " << new_interaction.neighbor_ << std::endl
+        //    << "   original: " << &(neighbors_[nidx].back()) << std::endl
+        //    << "   neighbor jdx: " << new_interaction.neighbor_->idx_ << std::endl;
+        //}
       }
 
       m_interactions_.push_back(new_interaction);
