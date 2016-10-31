@@ -55,7 +55,6 @@ struct _interaction {
   int kmc_track_module_;
 
   // KMC stuff
-  double kmc_;
   SID kmc_target_ = SID::none;
   neighbor_kmc_t *neighbor_ = nullptr;
 

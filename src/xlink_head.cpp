@@ -4,6 +4,7 @@ void XlinkHead::Init() {
   Simple::Init();
   n_exp_0_1_ = 0.0;
   n_exp_1_2_ = 0.0;
+  overbound_ = unbound;
 }
 
 void XlinkHead::KickBead() {

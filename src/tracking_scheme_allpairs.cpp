@@ -49,10 +49,19 @@ void TrackingSchemeAllPairs::GenerateInteractions(bool pForceUpdate) {
   interactions_->insert(interactions_->end(), m_interactions_.begin(), m_interactions_.end());
 }
 
+// Generate all pairs symmetric or not
+void TrackingSchemeAllPairs::GenerateAllPairs() {
+  if (symmetric_) {
+    GenerateAllPairsSymmetric();
+  } else {
+    GenerateAllPairsAsymmetric();
+  }
+}
+
 // Generate the all pairs stuff
 // XXX FIXME maybe we don't need this, and can just loop over rigids
 // and not do the checking at all?
-void TrackingSchemeAllPairs::GenerateAllPairs() {
+void TrackingSchemeAllPairs::GenerateAllPairsSymmetric() {
   // Clear the interactions
   nupdates_++;
   m_interactions_.clear();
@@ -64,13 +73,6 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
     mneighbors_[i].clear();
   }
   maxrigid_ = *(unique_rids_->rbegin());
-
-  // clear out the kmc neighbor list
-  if (type_ == ptype::kmc) {
-    for (int i = 0; i < nsimples_; ++i) {
-      neighbors_[i].clear();
-    }
-  }
 
   // Loop over particles, generate the interactions
   rid_self_check_->clear();
@@ -116,49 +118,15 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
         int rid2 = p2->GetRID();
         if (rid1 == rid2) continue;
 
-        // XXX FIXME this might not be optimal, but check anyway....
-        auto sid0 = p1->GetSID();
-        auto sid1 = p2->GetSID();
-        if (!(sid0 == sid0_ && sid1 == sid1_) &&
-            !(sid1 == sid0_ && sid0 == sid1_)) continue;
-
         // We are guranteed for an interaction
         if (rid_check_local->count(rid2)) {
           continue;
         }
-        rid_check_local->insert(rid2);
 
-        //// Create the interaction
-        //interaction_t new_interaction;
-        //new_interaction.idx_ = (*oid_position_map_)[p1->GetOID()];
-        //new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
-        //new_interaction.type_ = type_;
-        //new_interaction.pot_ = pbase_;
-        //new_interaction.kmc_track_module_ = moduleid_;
-        //
-        //// KMC specifics
-        //if (type_ == ptype::kmc) {
-        //  new_interaction.kmc_target_ = kmc_target_;
-        //}
-        //
-        //#ifdef ENABLE_OPENMP
-        //#pragma omp critical
-        //#endif
-        //{
-        //  m_interactions_.push_back(new_interaction);
-        //}
         neighbor_kmc_t new_neighbor;
         new_neighbor.idx_ = jdx;
         mneighbors_[idx].push_back(new_neighbor);
-
-        // If necessary, build the main KMC neighbor list
-        if (type_ == ptype::kmc) {
-          neighbor_kmc_t new_neighbor_master;
-          int nidx = (*oid_position_map_)[p1->GetOID()];
-          int njdx = (*oid_position_map_)[p2->GetOID()];
-          new_neighbor_master.idx_ = njdx; 
-          neighbors_[nidx].push_back(new_neighbor_master);
-        }
+        rid_check_local->insert(rid2);
       } // for loop over second particle
     } // for loop over first particle
   } // omp parallel
@@ -172,6 +140,7 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
       interaction_t new_interaction;
       int nidx = (*oid_position_map_)[p1->GetOID()];
       int njdx = (*oid_position_map_)[p2->GetOID()];
+      nldx->g_idx_ = njdx;
       new_interaction.idx_ = nidx;
       new_interaction.jdx_ = njdx;
       new_interaction.type_ = type_;
@@ -181,27 +150,113 @@ void TrackingSchemeAllPairs::GenerateAllPairs() {
       // KMC specifics
       if (type_ == ptype::kmc) {
         new_interaction.kmc_target_ = kmc_target_;
-
-        // Create a bigger neighbor list so that we dno't have to
-        // calculate it from the interactions later, just cache
-        // it to the interaction
-        neighbor_kmc_t *target_neighbor;
-        for (auto nldx = neighbors_[nidx].begin(); nldx != neighbors_[nidx].end(); ++nldx) {
-          if (nldx->idx_ == njdx) {
-            target_neighbor = &(*nldx);
-            break;
-          }
-        }
-        new_interaction.neighbor_ = target_neighbor;
-        if (debug_trace) {
-          std::cout << "[KMC] Assigning [" << nidx << ", " << njdx << "] ->\n"
-            << "   neighbor: " << new_interaction.neighbor_ << std::endl
-            << "   original: " << &(neighbors_[nidx].back()) << std::endl
-            << "   neighbor jdx: " << new_interaction.neighbor_->idx_ << std::endl;
-        }
+        new_interaction.neighbor_ = &(*nldx);
       }
 
       m_interactions_.push_back(new_interaction);
     }
   } //serialized add
 }
+
+// Generate the all pairs stuff asymmetric case
+// and not do the checking at all?
+void TrackingSchemeAllPairs::GenerateAllPairsAsymmetric() {
+  // Clear the interactions
+  nupdates_++;
+  m_interactions_.clear();
+
+  // Find the unique rigids
+  unique_rids_->clear();
+  for (int i = 0; i < nmsimples_; ++i) {
+    unique_rids_->insert(m_simples_[i]->GetRID());
+    mneighbors_[i].clear();
+  }
+  maxrigid_ = *(unique_rids_->rbegin());
+
+  // Loop over particles, generate the interactions
+  rid_self_check_->clear();
+  rid_self_check_->resize(maxrigid_+1);
+  std::fill(rid_self_check_->begin(), rid_self_check_->end(), false);
+
+  #ifdef ENABLE_OPENMP
+  #pragma omp parallel
+  #endif
+  {
+    int tid = 0;
+    #ifdef ENABLE_OPENMP
+    tid = omp_get_thread_num();
+    #else
+    tid = 0;
+    #endif
+
+    // Loop over the first species only
+    #ifdef ENABLE_OPENMP
+    #pragma omp for schedule(runtime) nowait
+    #endif
+    for (int idx = 0; idx < nmsimples0_; ++idx) {
+      auto p1 = m_simples_[idx];
+      int rid1 = p1->GetRID();
+
+      bool should_exit = false;
+      #ifdef ENABLE_OPENMP
+      #pragma omp critical
+      #endif
+      {
+        should_exit = (*rid_self_check_)[rid1];
+        (*rid_self_check_)[rid1] = true;
+      }
+      if (should_exit) {
+        continue;
+      }
+
+      std::unordered_set<int>* rid_check_local = rid_check_local_[tid];
+      rid_check_local->clear();
+
+      // Start the loop where the second species begins
+      for (int jdx = nmsimples0_; jdx < nmsimples_; ++jdx) {
+        if (idx == jdx) continue;
+        auto p2 = m_simples_[jdx];
+        int rid2 = p2->GetRID();
+        if (rid1 == rid2) continue;
+
+        // We are guranteed for an interaction
+        if (rid_check_local->count(rid2)) {
+          continue;
+        }
+        rid_check_local->insert(rid2);
+
+        neighbor_kmc_t new_neighbor;
+        new_neighbor.idx_ = jdx;
+        mneighbors_[idx].push_back(new_neighbor);
+      } // for loop over second particle
+    } // for loop over first particle
+  } // omp parallel
+
+  // Serialize the new interactions to the neighbor list
+  for (int idx = 0; idx < nmsimples_; ++idx) {
+    auto p1 = m_simples_[idx];
+    nl_kmc_list *mlist = &mneighbors_[idx];
+    for (auto nldx = mlist->begin(); nldx != mlist->end(); ++nldx) {
+      auto p2 = m_simples_[nldx->idx_];
+      interaction_t new_interaction;
+      int nidx = (*oid_position_map_)[p1->GetOID()];
+      int njdx = (*oid_position_map_)[p2->GetOID()];
+      nldx->g_idx_ = njdx;
+      new_interaction.idx_ = nidx;
+      new_interaction.jdx_ = njdx;
+      new_interaction.type_ = type_;
+      new_interaction.pot_ = pbase_;
+      new_interaction.kmc_track_module_ = moduleid_;
+
+      // KMC specifics
+      if (type_ == ptype::kmc) {
+        new_interaction.kmc_target_ = kmc_target_;
+        new_interaction.neighbor_ = &(*nldx);
+      }
+
+      m_interactions_.push_back(new_interaction);
+    }
+  } //serialized add
+}
+
+

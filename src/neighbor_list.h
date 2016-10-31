@@ -7,6 +7,7 @@
 
 struct _neighbor_kmc {
   int idx_;
+  int g_idx_; // global index of particle
   double kmc_ = 0.0;
 };
 typedef struct _neighbor_kmc neighbor_kmc_t;

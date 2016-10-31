@@ -56,6 +56,12 @@ class XlinkKMCV2 : public KMCBaseV2 {
     int stage_0_1_scheme_id_;
     LookupTable n_exp_lookup_;
 
+    // New stuff
+    int nsimples_0_1_;
+    std::vector<Simple*> *m_simples_0_1_;
+    std::unordered_map<int, int> *m_oid_map_0_1_;
+    nl_kmc_list *neighbors_0_1_;
+
     void KMC_0_1();
     void KMC_1_0();
     void KMC_1_2();

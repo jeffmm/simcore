@@ -28,8 +28,6 @@ class TrackingScheme {
         delete[] rid_check_local_;
       if (mneighbors_)
         delete[] mneighbors_;
-      if (neighbors_)
-        delete[] neighbors_;
     }
 
     // Virtual functions
@@ -50,15 +48,22 @@ class TrackingScheme {
     // Non virtual functions
     ptype GetModuleType() {return type_;}
     int GetModuleID() {return moduleid_;}
-    nl_kmc_list **GetKMCNeighbors() { return &neighbors_; }
+    nl_kmc_list **GetKMCNeighbors() { return &mneighbors_; }
+    int GetNKMCNeighbors() { return nmsimples_; }
+    std::vector<Simple*>* GetLocalSimples() { return &m_simples_; }
+    std::unordered_map<int, int>* GetLocalOIDMap() { return &m_oid_position_map_; }
 
 protected:
+
+    bool symmetric_ = false;
 
     int ndim_ = -1;
     int nperiodic_ = -1;
     int nthreads_ = -1;
     int nsimples_ = -1;
     int nmsimples_ = -1;
+    int nmsimples0_ = 0;
+    int nmsimples1_ = 0;
     int nupdates_ = 0;
     int maxrigid_ = 0;
     int moduleid_ = -1;
@@ -80,6 +85,7 @@ protected:
     std::vector<Simple*> *simples_;
     std::vector<Simple*> m_simples_;
     std::unordered_map<int, int> *oid_position_map_;
+    std::unordered_map<int, int> m_oid_position_map_;
 
     void CreateKMCNeighbors();
     virtual void LoadSimples();
@@ -99,7 +105,6 @@ protected:
 
     // KMC stuff
     nl_kmc_list* mneighbors_ = nullptr; // local copy of neighbors list
-    nl_kmc_list* neighbors_ = nullptr; // global copy of neighbor list for just KMC
 
 };
 
