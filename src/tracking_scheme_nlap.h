@@ -27,10 +27,12 @@ class TrackingSchemeNeighborListAllPairs : public TrackingScheme {
   protected:
 
     virtual void CreateTrackingScheme();
-    virtual void LoadSimples();
-    void UpdateNeighborList();
+    void UpdateNeighborListSymmetric();
+    void GenerateInteractionsSymmetric(bool pForceUpdate);
+    void GenerateInteractionsAsymmetricPartial(bool pForceUpdate);
 
     bool nl_update_ = false;
+    bool partial_update_ = false;
     double rcut_ = 0.0;
     double rcut2_ = 0.0;
     double skin_ = 0.0;

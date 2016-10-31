@@ -26,7 +26,7 @@ class XlinkHead : public Simple {
     double attachpos_ = 0.0;
     int headid_ = -2;
 
-    attach_type overbound_;
+    attach_type overbound_ = unbound;
   public:
     XlinkHead(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {
       diameter_=params->br_walker_diameter;

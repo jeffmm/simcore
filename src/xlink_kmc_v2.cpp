@@ -322,19 +322,21 @@ void XlinkKMCV2::Print() {
 // on the interactions list
 void XlinkKMCV2::GenerateKMCNeighborList() {
   // Get the neighbor list from the tracking module
-  auto neighbors = stage_0_1_scheme_->GetKMCNeighbors();
-  nl_kmc_ = (*neighbors);
-  nsimples_ = (int)simples_->size();
+  //auto neighbors = stage_0_1_scheme_->GetKMCNeighbors();
+  //nl_kmc_ = (*neighbors);
+  nsimples_0_1_ = stage_0_1_scheme_->GetNKMCNeighbors();
+  neighbors_0_1_ = *(stage_0_1_scheme_->GetKMCNeighbors());
+  m_simples_0_1_ = stage_0_1_scheme_->GetLocalSimples();
+  m_oid_map_0_1_ = stage_0_1_scheme_->GetLocalOIDMap();
 
   if (debug_trace) {
     std::cout << "[KMC] Generating neighbor list\n";
     // Print out the neighbor list
-    for (int idx = 0; idx < nsimples_; ++idx) {
-      auto part = (*simples_)[idx];
+    for (int idx = 0; idx < nsimples_0_1_; ++idx) {
+      auto part = (*m_simples_0_1_)[idx];
       std::cout << "[" << idx << "] -> [";
-      for (auto nldx = nl_kmc_[idx].begin(); nldx != nl_kmc_[idx].end(); ++nldx) {
-        int jdx = nldx->idx_; 
-        std::cout << jdx << ", ";
+      for (auto nldx = neighbors_0_1_[idx].begin(); nldx != neighbors_0_1_[idx].end(); ++nldx) {
+        std::cout << nldx->idx_ << "(" << nldx->g_idx_ << "), ";
       }
       std::cout << "]\n";
     }
@@ -383,8 +385,8 @@ void XlinkKMCV2::Update_0_1(Xlink* xit) {
     auto head = &(*heads)[i];
     double nexp = 0.0;
     double binding_affinity = eps_eff_0_1_[i] * on_rate_0_1_[i] * alpha_ * xit->GetDelta();
-    auto idx = (*oid_position_map_)[head->GetOID()];
-    for (auto nldx = nl_kmc_[idx].begin(); nldx != nl_kmc_[idx].end(); ++nldx) {
+    auto idx = (*m_oid_map_0_1_)[head->GetOID()];
+    for (auto nldx = neighbors_0_1_[idx].begin(); nldx != neighbors_0_1_[idx].end(); ++nldx) {
       nexp += binding_affinity * nldx->kmc_;
     }
     head->SetNExp_0_1(nexp);
@@ -403,16 +405,20 @@ void XlinkKMCV2::Update_1_2(Xlink *xit) {
 
   double binding_affinity = eps_eff_1_2_[free_i] * on_rate_1_2_[free_i];
   auto free_idx = (*oid_position_map_)[freehead->GetOID()];
+  auto free_idx_nl01 = (*m_oid_map_0_1_)[freehead->GetOID()]; // XXX piggyback on the stage 0 1 nl
   // Get the attached rod
   auto attach_info = boundhead->GetAttach();
-  auto attach_info_idx = (*oid_position_map_)[attach_info.first];
+  auto attach_info_idx = (*oid_position_map_)[attach_info.first]; // Use the global OID position map
   auto mrod_attached = (*simples_)[attach_info_idx];
   if (binding_affinity > 0.0) {
     double n_exp = 0.0;
 
     // We have to look at all of our neighbors withint the mrcut
-    for (auto nldx = nl_kmc_[free_idx].begin(); nldx != nl_kmc_[free_idx].end(); ++nldx) {
-      auto mrod = (*simples_)[nldx->idx_];
+    // Piggyback on the stage 0 1 list
+    //for (auto nldx = nl_kmc_[free_idx].begin(); nldx != nl_kmc_[free_idx].end(); ++nldx) {
+    for (auto nldx = neighbors_0_1_[free_idx_nl01].begin(); nldx != neighbors_0_1_[free_idx_nl01].end(); ++nldx) {
+      //auto mrod = (*simples_)[nldx->idx_];
+      auto mrod = (*m_simples_0_1_)[nldx->idx_];
       // Check to see if it's really a rod, and if it's the same one we're already attached to
       if (mrod->GetSID() != sid2_) continue;
       if (mrod->GetRID() == mrod_attached->GetRID()) {
@@ -560,7 +566,8 @@ void XlinkKMCV2::KMC_0_1() {
           std::cout << kmc_event.str() << std::endl;
         }
         double pos = 0.0;
-        int idx = (*oid_position_map_)[head->GetOID()];
+        //int idx = (*oid_position_map_)[head->GetOID()];
+        int idx = (*m_oid_map_0_1_)[head->GetOID()];
         // Search through the neighbors of this head to figure out who we want to bind to
         //int ineighb = 0;
         // DEBUG XXX FIXME totalval
@@ -569,9 +576,9 @@ void XlinkKMCV2::KMC_0_1() {
         //  totalval += binding_affinity * nldx->kmc_;
         //}
         //std::cout << "totalval: " << std::setprecision(16) << totalval << std::endl;
-        for (auto nldx = nl_kmc_[idx].begin(); nldx != nl_kmc_[idx].end(); ++nldx) {
+        for (auto nldx = neighbors_0_1_[idx].begin(); nldx != neighbors_0_1_[idx].end(); ++nldx) {
           //std::cout << "[" << idx << "] -> neighbor[" << ineighb << "]\n";
-          auto part2 = (*simples_)[nldx->idx_];
+          auto part2 = (*m_simples_0_1_)[nldx->idx_];
           if (part2->GetSID() != sid2_) continue; // Make sure it's what we want to bind to
           //std::cout << std::setprecision(16) << "my binding aff: " << binding_affinity * nldx->kmc_ << std::endl;
           pos += binding_affinity * nldx->kmc_;
@@ -766,10 +773,13 @@ void XlinkKMCV2::KMC_1_2() {
         XlinkHead *freehead, *boundhead;
         auto isbound = (*xit)->GetBoundHeads(&freehead, &boundhead);
         int idx = (*oid_position_map_)[freehead->GetOID()];
+        int idx_nl01 = (*m_oid_map_0_1_)[freehead->GetOID()];
 
         // Loop over my neighbors to figure out which to fall on
-        for (auto nldx = nl_kmc_[idx].begin(); nldx != nl_kmc_[idx].end(); ++nldx) {
-          auto mrod = (*simples_)[nldx->idx_];
+        //for (auto nldx = nl_kmc_[idx].begin(); nldx != nl_kmc_[idx].end(); ++nldx) {
+        for (auto nldx = neighbors_0_1_[idx_nl01].begin(); nldx != neighbors_0_1_[idx_nl01].end(); ++nldx) {
+          //auto mrod = (*simples_)[nldx->idx_];
+          auto mrod = (*m_simples_0_1_)[nldx->idx_];
           // Make sure it's the right species to attach to
           if (mrod->GetSID() != sid2_) continue;
 

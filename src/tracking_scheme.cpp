@@ -40,6 +40,8 @@ void TrackingScheme::Init(int pModuleID,
   sid0_ = StringToSID(sid0s);
   sid1_ = StringToSID(sid1s);
 
+  symmetric_ = (sid0_ == sid1_) ? true : false;
+
   // Type of interaction
   std::string types = node["type"].as<std::string>();
   type_ = StringToPtype(types);
@@ -83,6 +85,7 @@ void TrackingScheme::Init(int pModuleID,
 // Print out the information for this tracking scheme
 void TrackingScheme::Print() {
   std::cout << name_ << " Tracking Scheme [" << moduleid_ << "]\n";
+  std::cout << "   symmetric: " << (symmetric_ ? "true" : "false") << std::endl;
   std::cout << "   potential: ->\n";
   std::cout << "   {" << SIDToString(sid0_) << ", " << SIDToString(sid1_) << "} : ";
   pbase_->Print();
@@ -110,38 +113,37 @@ void TrackingScheme::Dump() {
   #endif
 }
 
-// Overall load simples functionality
+// Load the simples symmetric or asymmetric
 void TrackingScheme::LoadSimples() {
   if (debug_trace) {
     std::cout << "TrackingScheme::LoadSimples\n";
   }
+  nsimples_ = (int)simples_->size();
+
   std::vector<Simple*> sim_vec0 = spec0_->GetSimples();
   std::vector<Simple*> sim_vec1 = spec1_->GetSimples();
 
   m_simples_.clear();
+  nmsimples0_ = (int)sim_vec0.size();
+  nmsimples1_ = (int)sim_vec1.size();
   m_simples_.insert(m_simples_.end(), sim_vec0.begin(), sim_vec0.end());
-  // Avoiding adding twice if we're the same species
-  if (sid0_ != sid1_) {
+  if (!symmetric_) {
     m_simples_.insert(m_simples_.end(), sim_vec1.begin(), sim_vec1.end());
   }
-
   nmsimples_ = (int)m_simples_.size();
-  nsimples_ = (int)simples_->size();
 
-  // Set up neighbor list to track sets of interactions
+  // Set up the neighbor list
   if (mneighbors_ != nullptr) {
     delete[] mneighbors_;
   }
-
   mneighbors_ = new nl_kmc_list[nmsimples_];
 
-  // Set up the master neighbor list for this is we've got
-  // KMC enabled
-  if (type_ == ptype::kmc) {
-    if (neighbors_ != nullptr) {
-      delete[] neighbors_;
-    }
-    neighbors_ = new nl_kmc_list[nsimples_];
+  // Ugh, figure out the OID stuff
+  m_oid_position_map_.clear();
+  for (int i = 0; i < nmsimples_; ++i) {
+    auto part = m_simples_[i];
+    int oid = part->GetOID();
+    m_oid_position_map_[oid] = i;
   }
 }
 

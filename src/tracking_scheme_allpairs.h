@@ -28,6 +28,8 @@ class TrackingSchemeAllPairs : public TrackingScheme {
 
     virtual void CreateTrackingScheme();
     void GenerateAllPairs();
+    void GenerateAllPairsSymmetric();
+    void GenerateAllPairsAsymmetric();
 };
 
 #endif

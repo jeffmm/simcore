@@ -1,29 +1,29 @@
 br_rod:
-  properties:
-    insertion_type: fill
-    overlap: false
-    draw_type: orientation
-  rod:
-    length: 20
-    max_length: 25
-    min_length: 3
-    diameter: 1
 #  properties:
-#    insertion_type: xyz
-#    overlap: true
-#    max_length: 50
-#    min_length: 3
+#    insertion_type: fill
+#    overlap: false
 #    draw_type: orientation
 #  rod:
-#    - length: 20.0
-#      x: [0.0, 0.0, 0.0]
-#      u: [1.0, 0.0, 0.0]
-#    - length: 20.0
-#      x: [0.0, 1.5, 0.0]
-#      u: [-1.0, 0.0, 0.0]
-#    - length: 20.0
-#      x: [0.0, 3.0, 0.0]
-#      u: [1.0, 0.0, 0.0]
+#    length: 20
+#    max_length: 25
+#    min_length: 3
+#    diameter: 1
+  properties:
+    insertion_type: xyz
+    overlap: true
+    max_length: 50
+    min_length: 3
+    draw_type: orientation
+  rod:
+    - length: 20.0
+      x: [0.0, 0.0, 0.0]
+      u: [1.0, 0.0, 0.0]
+    - length: 20.0
+      x: [0.0, 1.0, 0.0]
+      u: [-1.0, 0.0, 0.0]
+    - length: 20.0
+      x: [0.0, 2.0, 0.0]
+      u: [1.0, 0.0, 0.0]
 
 #xlink:
 #  properties:

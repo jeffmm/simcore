@@ -240,7 +240,6 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
 
   auto neighbor = (*pix)->neighbor_;
   neighbor->kmc_= 0.0;
-  (*pix)->kmc_ = 0.0;
   // Check part1 for if we actually need to calculate or not, if not, just move on
   if (!part1->ApplyKMCInteraction()) {
     #ifdef DEBUG
@@ -262,10 +261,13 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
 
   // Check the neighbor list vs. interaction
   #ifdef DEBUG
-  if (neighbor->idx_ != (*pix)->jdx_) {
+  // The neighbor references the position in the LOCAL list of 
+  // particles, not the global scope, so check to make sure that
+  // they're the same thing
+  if (neighbor->g_idx_ != (*pix)->jdx_) {
     std::cout << "Interaction neighbor translation wrong! Interaction: [" << (*pix)->idx_
-      << ", " << (*pix)->jdx_ << "], neighbor idx: " << neighbor->idx_ << ", addr: "
-      << &neighbor << std::endl;
+      << ", " << (*pix)->jdx_ << "], global neighbor idx: " << neighbor->g_idx_
+      << ", local neighbor idx: " << neighbor->idx_ << std::endl;
     exit(1);
   }
   #endif
@@ -287,7 +289,6 @@ void InteractionEngineV2::InteractParticlesKMCMP(interaction_t **pix,
   }
   #endif
 
-  (*pix)->kmc_ = fepot[ndim_]; // XXX FIXME might not need this now
   neighbor->kmc_ = fepot[ndim_];
 }
 
@@ -549,7 +550,7 @@ void InteractionEngineV2::DumpInteractions() {
       << PtypeToString(mixs.type_);
     if (mixs.kmc_target_ != SID::none) {
       std::cout << ", kmc_target: " << SIDToString(mixs.kmc_target_)
-        << std::setprecision(16) << ", kmc: " << mixs.kmc_;
+        << std::setprecision(16) << ", kmc: " << mixs.neighbor_->kmc_;
     }
     std::cout << std::endl;
   }
