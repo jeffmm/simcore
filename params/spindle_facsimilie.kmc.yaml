@@ -3,8 +3,7 @@ kmc:
   sid1: xlink
   sid2: br_rod
   concentration_0_1: 33210
-  #concentration_1_2: 10.0
-  concentration_1_2: 1000
+  concentration_1_2: [10.0, 10.0]
   on_rate_0_1: 0.003916
   on_rate_1_2: 0.003958
   reflect: false
@@ -34,10 +33,10 @@ kmc:
     rcut: 1.0
     rcut_touch: 1.0
     fcut: 1000
-    scheme: allpairs
-    #scheme: neighborlistallpairs
-    #skin: 1.0
-    #partial_update: true
+    i#scheme: allpairs
+    scheme: neighborlistallpairs
+    skin: 8.0
+    partial_update: true
     kmc: true
     kmc_target: xlink
   xlink_internal_potential:
@@ -45,7 +44,7 @@ kmc:
     type: internal
     sid: xlink
     rcut: 1000.0
-    fcut: 10000
+    fcut: 100
 
 #- type: DynamicInstabilityKMCV2
 #  sid1: br_rod

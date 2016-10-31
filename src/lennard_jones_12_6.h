@@ -33,7 +33,7 @@ class LJ126 : public PotentialBase {
                                Simple *part2,
                                double *fpote) {
       //std::fill(fpote, fpote + n_dim_ + 1, 0.0);
-      double rmag = idm->dr_mag;
+      double rmag = sqrt(idm->dr_mag2);
       double ffac, r6, rinv;
       double *dr = idm->dr;
 

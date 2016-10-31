@@ -203,7 +203,7 @@ struct interaction {
 
 // XXX: CJE working title for now
 struct interactionmindist {
-    double dr_mag;
+    //double dr_mag;
     double dr_mag2;
     double buffer_mag;
     double buffer_mag2;

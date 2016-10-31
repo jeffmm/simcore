@@ -25,7 +25,7 @@ class SphereSquareWell : public PotentialBase {
                                double *fpote) {
       std::fill(fpote, fpote + n_dim_ + 1, 0.0);
       // 0 force, return depth when inside well
-      double dr_mag = idm->dr_mag;
+      double dr_mag = sqrt(idm->dr_mag2);
       if (dr_mag < rcut_) {
         fpote[n_dim_] = depth_;
       } else {
