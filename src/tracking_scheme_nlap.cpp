@@ -88,8 +88,8 @@ void TrackingSchemeNeighborListAllPairs::GenerateInteractionsNormal(bool pForceU
   double dr2 = 0.0;
   dr2 = spec0_->GetDrMax();
   nl_update_ = nl_update_ || (dr2 > half_skin2_);
-  dr2 = spec1_->GetDrMax();
-  nl_update_ = nl_update_ || (dr2 > half_skin2_);
+  //dr2 = spec1_->GetDrMax();
+  //nl_update_ = nl_update_ || (dr2 > half_skin2_);
   
   if (nl_update_) {
     GenerateStatistics();
@@ -391,12 +391,6 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborListSymmetric() {
         int rid2 = p2->GetRID();
         if (rid1 == rid2) continue;
 
-        // XXX FIXME this might not be optimal, but check anyway....
-        auto sid0 = p1->GetSID();
-        auto sid1 = p2->GetSID();
-        if (!(sid0 == sid0_ && sid1 == sid1_) &&
-            !(sid1 == sid0_ && sid0 == sid1_)) continue;
-
         // We are guranteed for an interaction
         if (rid_check_local->count(rid2)) {
           continue;
@@ -410,38 +404,10 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborListSymmetric() {
 
         // Check this out
         if (idm.dr_mag2 < rcs2_) {
-          // Create the interaction
-          //interaction_t new_interaction;
-          //new_interaction.idx_ = (*oid_position_map_)[p1->GetOID()];
-          //new_interaction.jdx_ = (*oid_position_map_)[p2->GetOID()];
-          //new_interaction.type_ = type_;
-          //new_interaction.pot_ = pbase_;
-          //new_interaction.kmc_track_module_ = moduleid_;
-          //
-          //// KMC specifics
-          //if (type_ == ptype::kmc) {
-          //  new_interaction.kmc_target_ = kmc_target_;
-          //}
-          //
-          //#ifdef ENABLE_OPENMP
-          //#pragma omp critical
-          //#endif
-          //{
-          //  m_interactions_.push_back(new_interaction);
-          //}
           neighbor_kmc_t new_neighbor;
           new_neighbor.idx_ = jdx;
           mneighbors_[idx].push_back(new_neighbor);
           rid_check_local->insert(rid2);
-
-          // If necessary, build the main KMC neighbor list
-          if (type_ == ptype::kmc) {
-            neighbor_kmc_t new_neighbor_master;
-            int nidx = (*oid_position_map_)[p1->GetOID()];
-            int njdx = (*oid_position_map_)[p2->GetOID()];
-            new_neighbor_master.idx_ = njdx; 
-            //neighbors_[nidx].push_back(new_neighbor_master);
-          }
         }
       } // inner loop for second particle
     } // omp for schedule(runtime) nowait
@@ -460,36 +426,19 @@ void TrackingSchemeNeighborListAllPairs::UpdateNeighborListSymmetric() {
       interaction_t new_interaction;
       int nidx = (*oid_position_map_)[p1->GetOID()];
       int njdx = (*oid_position_map_)[p2->GetOID()];
+      nldx->g_idx_ = njdx;
       new_interaction.idx_ = nidx;
       new_interaction.jdx_ = njdx;
       new_interaction.type_ = type_;
       new_interaction.pot_ = pbase_;
       new_interaction.kmc_track_module_ = moduleid_;
-
+      
       // KMC specifics
       if (type_ == ptype::kmc) {
         new_interaction.kmc_target_ = kmc_target_;
-
-        // Create a bigger neighbor list so that we dno't have to
-        // calculate it from the interactions later, just cache
-        // it to the interaction
-        // XXX FIXME better way to do this?
-        //neighbor_kmc_t *target_neighbor;
-        //for (auto nldx = neighbors_[nidx].begin(); nldx != neighbors_[nidx].end(); ++nldx) {
-        //  if (nldx->idx_ == njdx) {
-        //    target_neighbor = &(*nldx);
-        //    break;
-        //  }
-        //}
-        //new_interaction.neighbor_ = target_neighbor;
-        //if (debug_trace) {
-        //  std::cout << "[KMC] Assigning [" << nidx << ", " << njdx << "] ->\n"
-        //    << "   neighbor: " << new_interaction.neighbor_ << std::endl
-        //    << "   original: " << &(neighbors_[nidx].back()) << std::endl
-        //    << "   neighbor jdx: " << new_interaction.neighbor_->idx_ << std::endl;
-        //}
+        new_interaction.neighbor_ = &(*nldx);
       }
-
+      
       m_interactions_.push_back(new_interaction);
     }
   } //serialized add

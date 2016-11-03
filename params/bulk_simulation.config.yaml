@@ -1,16 +1,19 @@
 br_rod:
   properties:
-    insertion_type: fill
+    insertion_type: xyzbob
     overlap: false
+    draw_type: orientation
   rod:
     length: 20
     max_length: 20
+    min_length: 3
     diameter: 1
+    bobfile: params/fluid_sphero.config
 
-xlink:
-  properties:
-    insertion_type: random
-    overlap: true
-  xit:
-    num: 298
-    diameter: 1
+#xlink:
+#  properties:
+#    insertion_type: random
+#    overlap: true
+#  xit:
+#    num: 298
+#    diameter: 1

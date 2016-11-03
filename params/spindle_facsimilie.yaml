@@ -11,12 +11,12 @@ mother_daughter_dist: 12
 boundary_type: 1
 rod_diameter: 1
 rod_length: 20
-rod_diffusion: 0
+rod_diffusion: 1
 rod_fixed: 0
 config_file: params/spindle_facsimilie.config.yaml
 xlink_diameter: 1
 cell_length: 8
-graph_flag: 1
+graph_flag: 0
 n_graph: 1000
 graph_background: 0
 delta: 0.00025
