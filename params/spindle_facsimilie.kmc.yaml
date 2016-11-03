@@ -33,10 +33,10 @@ kmc:
     rcut: 1.0
     rcut_touch: 1.0
     fcut: 1000
-    i#scheme: allpairs
+    #scheme: allpairs
     scheme: neighborlistallpairs
     skin: 8.0
-    partial_update: true
+    #partial_update: true
     kmc: true
     kmc_target: xlink
   xlink_internal_potential:

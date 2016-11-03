@@ -65,6 +65,10 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-f params/spindle.yaml"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-f params/bulk_simulation.yaml"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

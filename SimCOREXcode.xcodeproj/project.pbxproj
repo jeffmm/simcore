@@ -95,12 +95,6 @@
 		42AB3CCF1D9ED78E00E42AEF /* 2d_spherocylinders.kmc.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 2d_spherocylinders.kmc.yaml; sourceTree = "<group>"; };
 		42AB3CD01D9ED78E00E42AEF /* 2d_spherocylinders.pot.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 2d_spherocylinders.pot.yaml; sourceTree = "<group>"; };
 		42AB3CD11D9ED78E00E42AEF /* 2d_spherocylinders.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 2d_spherocylinders.yaml; sourceTree = "<group>"; };
-		42AB3CD21D9ED78E00E42AEF /* argon.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = argon.yaml; sourceTree = "<group>"; };
-		42AB3CD31D9ED78E00E42AEF /* argon1024_nograph.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = argon1024_nograph.yaml; sourceTree = "<group>"; };
-		42AB3CD41D9ED78E00E42AEF /* argon256_nograph.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = argon256_nograph.yaml; sourceTree = "<group>"; };
-		42AB3CD51D9ED78E00E42AEF /* argon4096_nograph.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = argon4096_nograph.yaml; sourceTree = "<group>"; };
-		42AB3CD61D9ED78E00E42AEF /* argon_kmc.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = argon_kmc.yaml; sourceTree = "<group>"; };
-		42AB3CD71D9ED78E00E42AEF /* argon_pot.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = argon_pot.yaml; sourceTree = "<group>"; };
 		42AB3CD81D9ED78E00E42AEF /* bulk_simulation.config.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bulk_simulation.config.yaml; sourceTree = "<group>"; };
 		42AB3CD91D9ED78E00E42AEF /* bulk_simulation.kmc.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bulk_simulation.kmc.yaml; sourceTree = "<group>"; };
 		42AB3CDA1D9ED78E00E42AEF /* bulk_simulation.pot.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bulk_simulation.pot.yaml; sourceTree = "<group>"; };
@@ -362,12 +356,6 @@
 				42AB3CCF1D9ED78E00E42AEF /* 2d_spherocylinders.kmc.yaml */,
 				42AB3CD01D9ED78E00E42AEF /* 2d_spherocylinders.pot.yaml */,
 				42AB3CD11D9ED78E00E42AEF /* 2d_spherocylinders.yaml */,
-				42AB3CD21D9ED78E00E42AEF /* argon.yaml */,
-				42AB3CD31D9ED78E00E42AEF /* argon1024_nograph.yaml */,
-				42AB3CD41D9ED78E00E42AEF /* argon256_nograph.yaml */,
-				42AB3CD51D9ED78E00E42AEF /* argon4096_nograph.yaml */,
-				42AB3CD61D9ED78E00E42AEF /* argon_kmc.yaml */,
-				42AB3CD71D9ED78E00E42AEF /* argon_pot.yaml */,
 				42AB3CD81D9ED78E00E42AEF /* bulk_simulation.config.yaml */,
 				42AB3CD91D9ED78E00E42AEF /* bulk_simulation.kmc.yaml */,
 				42AB3CDA1D9ED78E00E42AEF /* bulk_simulation.pot.yaml */,
