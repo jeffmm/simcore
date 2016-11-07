@@ -2,6 +2,8 @@
 #ifndef _SIMCORE_NEIGHBORLIST_GENERIC_H_
 #define _SIMCORE_NEIGHBORLIST_GENERIC_H_
 
+#include <vector>
+
 struct _neighbor {
     int idx_;
     int rid_me_;

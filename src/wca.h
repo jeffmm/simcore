@@ -28,7 +28,7 @@ class WCA : public PotentialBase {
                                Simple *part2,
                                double *fpote) {
       std::fill(fpote, fpote + n_dim_ + 1, 0.0);
-      double rmag = idm->dr_mag;
+      double rmag = sqrt(idm->dr_mag2);
       double ffac, r6, rinv;
       double *dr = idm->dr;
 
@@ -61,6 +61,25 @@ class WCA : public PotentialBase {
         rcut2_ = rcut_*rcut_;
         c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
         c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
+    }
+
+    virtual void Init(space_struct *pSpace, YAML::Node *subnode) {
+      YAML::Node node = *subnode;
+      PotentialBase::Init(pSpace, &node);
+
+      // Now, let's look at the particular yaml node we are supposed to be interested in
+      eps_    = node["eps"].as<double>();
+      sigma_  = node["sigma"].as<double>();
+      fcut_   = node["fcut"].as<double>();
+
+      // For WCA potentials, the rcutoff is actually important, as it must be
+      // restricted to be at 2^(1/6)sigma
+
+      rcut_ = pow(2.0, 1.0/6.0)*sigma_;
+
+      rcut2_ = rcut_*rcut_;
+      c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
+      c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
     }
 
 };

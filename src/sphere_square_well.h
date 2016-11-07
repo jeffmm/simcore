@@ -25,7 +25,7 @@ class SphereSquareWell : public PotentialBase {
                                double *fpote) {
       std::fill(fpote, fpote + n_dim_ + 1, 0.0);
       // 0 force, return depth when inside well
-      double dr_mag = idm->dr_mag;
+      double dr_mag = sqrt(idm->dr_mag2);
       if (dr_mag < rcut_) {
         fpote[n_dim_] = depth_;
       } else {
@@ -43,6 +43,19 @@ class SphereSquareWell : public PotentialBase {
 
       rcut2_ = rcut_*rcut_;
     }
+
+    virtual void Init(space_struct *pSpace, YAML::Node *subnode) {
+      YAML::Node node = *subnode;
+      PotentialBase::Init(pSpace, &node);
+
+      // Now, let's look at the particular yaml node we are supposed to be interested in
+      depth_  = node["depth"].as<double>();
+      rcut_   = node["rcut"].as<double>();
+      fcut_   = node["fcut"].as<double>();
+
+      rcut2_ = rcut_*rcut_;
+    }
+
 };
 
 #endif

@@ -3,7 +3,7 @@ configuration_type: spindle
 spb:
   - properties:
       insertion_type: rtp
-      theta: 0.0
+      theta: 3.1415926535897
       phi: 0.0
       diameter: 9.5
       attach_diameter: 6.5
@@ -16,6 +16,8 @@ spb:
       mt_diameter: 1.0
       r0: 2.0
     mt:
+#      - insertion_type: random
+#        length: 20.0
       - insertion_type: random
         length: 3.0
       - insertion_type: random
@@ -45,7 +47,8 @@ spb:
 
   - properties:
       insertion_type: rtp
-      theta: 0.177
+      #theta: 0.177
+      theta: 3.31859265359
       phi: 1.57
       diameter: 9.5
       attach_diameter: 6.5
@@ -58,6 +61,8 @@ spb:
       mt_diameter: 1.0
       r0: 2.0
     mt:
+#      - insertion_type: random
+#        length: 20.0
       - insertion_type: random
         length: 3.0
       - insertion_type: random
@@ -93,4 +98,5 @@ xlink:
     color: [1.0, 0.0, 0.0, 1.0]
   xit:
     num: 500
+    #num: 1
     diameter: 1

@@ -21,7 +21,7 @@ void XlinkHarmonic::CalcPotential(interactionmindist *idm,
   if (!head0->GetBound() || !head1->GetBound()) {
     return;
   }
-  double rmag = idm->dr_mag;
+  double rmag = sqrt(idm->dr_mag2);
   double *dr = idm->dr;
 
   double k = k_;
@@ -54,4 +54,18 @@ void XlinkHarmonic::Init(space_struct *pSpace, int ipot, YAML::Node &node) {
 
   rcut2_ = rcut_*rcut_;
 }
+
+void XlinkHarmonic::Init(space_struct *pSpace, YAML::Node *subnode) {
+  YAML::Node node = *subnode;
+  PotentialBase::Init(pSpace, &node);
+
+  // Now, let's look at the particular yaml node we are supposed to be interested in
+  rcut_     = node["rcut"].as<double>();
+  k_        = node["k"].as<double>();
+  r_equil_  = node["equilibrium_length"].as<double>();
+  fcut_     = node["fcut"].as<double>();
+
+  rcut2_ = rcut_*rcut_;
+}
+
 
