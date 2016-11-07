@@ -33,7 +33,7 @@ class LJ126 : public PotentialBase {
                                Simple *part2,
                                double *fpote) {
       //std::fill(fpote, fpote + n_dim_ + 1, 0.0);
-      double rmag = idm->dr_mag;
+      double rmag = sqrt(idm->dr_mag2);
       double ffac, r6, rinv;
       double *dr = idm->dr;
 
@@ -64,6 +64,25 @@ class LJ126 : public PotentialBase {
         double rcutinv = 1.0/rcut_;
         double rcutinv6 = pow(rcutinv, 6.0);
         shift_ = rcutinv6*(c12_*rcutinv6 - c6_);
+    }
+
+    virtual void Init(space_struct *pSpace, YAML::Node *subnode) {
+      YAML::Node node = *subnode;
+      PotentialBase::Init(pSpace, &node);
+
+      // Now, let's look at the particular yaml node we are supposed to be interested in
+      rcut_   = node["rcut"].as<double>();
+      eps_    = node["eps"].as<double>();
+      sigma_  = node["sigma"].as<double>();
+      fcut_   = node["fcut"].as<double>();
+
+      rcut2_ = rcut_*rcut_;
+      c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
+      c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
+      // Shift potential so it goes to zero at rcut
+      double rcutinv = 1.0/rcut_;
+      double rcutinv6 = pow(rcutinv, 6.0);
+      shift_ = rcutinv6*(c12_*rcutinv6 - c6_);
     }
 };
 

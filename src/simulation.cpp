@@ -3,7 +3,9 @@
 
 #define REGISTER_SPECIES(n,m) species_factory_.register_class<n>(#m);
 
-Simulation::Simulation() {}
+Simulation::Simulation() {
+  utype_ = 1;
+}
 Simulation::~Simulation() {}
 
 void Simulation::Run(system_parameters params, std::string name) {
@@ -11,7 +13,8 @@ void Simulation::Run(system_parameters params, std::string name) {
   run_name_ = name;
   rng_.init(params_.seed);
   InitSimulation();
-  RunSimulation();
+  //RunSimulation();
+  RunSimulation2();
   ClearSimulation();
 }
 
@@ -36,6 +39,32 @@ void Simulation::RunSimulation() {
     #ifdef DEBUG
     if (debug_trace)
       DumpAll(i_step_);
+    #endif
+    Draw();
+    WriteOutputs();
+  }
+}
+
+void Simulation::RunSimulation2() {
+  std::cout << "Running simulation: " << run_name_ << std::endl;
+  std::cout << "   steps: " << params_.n_steps << std::endl;
+  for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
+    time_ = (i_step_+1) * params_.delta; 
+    if ((100*i_step_) % (params_.n_steps) == 0) {
+      printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
+      fflush(stdout);
+    }
+    if (debug_trace)
+      printf("********\nStep %d\n********\n", i_step_);
+    ZeroForces();
+    InteractMP2();
+    KineticMonteCarloMP2();
+    IntegrateMP();
+    GenerateStatistics(i_step_);
+    // Only will run if DEBUG is enabled
+    #ifdef DEBUG
+    if (debug_trace)
+      DumpAll2(i_step_);
     #endif
     Draw();
     WriteOutputs();
@@ -69,6 +98,10 @@ void Simulation::DumpAll(int i_step) {
     uengine_.DumpAll();
 }
 
+void Simulation::DumpAll2(int i_step) {
+  uenginev2_.DumpAll();
+}
+
 void Simulation::Integrate() {
   for (auto it=species_.begin(); it!=species_.end(); ++it)
     (*it)->UpdatePositions();
@@ -83,8 +116,16 @@ void Simulation::InteractMP() {
   uengine_.InteractMP();
 }
 
+void Simulation::InteractMP2() {
+  uenginev2_.InteractMP();
+}
+
 void Simulation::KineticMonteCarloMP() {
   uengine_.StepKMC();
+}
+
+void Simulation::KineticMonteCarloMP2() {
+  uenginev2_.StepKMC();
 }
 
 void Simulation::ZeroForces() {
@@ -93,12 +134,20 @@ void Simulation::ZeroForces() {
   }
 }
 
+void Simulation::GenerateStatistics(int istep) {
+  uenginev2_.GenerateStatistics(istep);
+}
+
 void Simulation::InitSimulation() {
 
   space_.Init(&params_, gsl_rng_get(rng_.r));
   output_mgr_.Init(&params_, &graph_array, &i_step_, run_name_);
   InitSpecies();
-  uengine_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
+  if (utype_ == 0) {
+    uengine_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
+  } else {
+    uenginev2_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
+  }
   if (params_.graph_flag) {
     //When making a movie graphics are handled by output_mgr_
     if ( output_mgr_.IsMovie() ) output_mgr_.GetGraphicsStructure();
@@ -125,6 +174,7 @@ void Simulation::InitSpecies() {
 
   // We have to search for the various types of species that we have
   // Maybe hijack init_species.h for this
+  REGISTER_SPECIES(ArgonSpecies,argon);
   REGISTER_SPECIES(MDBeadSpecies,md_bead);
   REGISTER_SPECIES(BrRodSpecies,br_rod);
   REGISTER_SPECIES(XlinkSpecies,xlink);
@@ -137,6 +187,8 @@ void Simulation::InitSpecies() {
   if (node["configuration_type"]) {
     config_type = node["configuration_type"].as<std::string>();
   }
+
+  anchors_.clear();
 
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file
@@ -274,6 +326,7 @@ void Simulation::InitOutputs() {
 
   {
     uengine_.PrepOutputs();
+    uenginev2_.PrepOutputs();
   }
   output_mgr_.MakeHeaders();
 }
@@ -322,6 +375,7 @@ void Simulation::WriteOutputs() {
   // XXX CJE FIXME write outputs more clearly
   if (i_step_%1000==0) {
     uengine_.WriteOutputs(i_step_);
+    uenginev2_.WriteOutputs(i_step_);
   }
 
 }

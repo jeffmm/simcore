@@ -38,10 +38,11 @@ else
 	GLFW3INCS = -I/home/cedelmaier/common/glfw/include
 	GLFW3LIBS = -L/home/cedelmaier/common/glfw/build/src -lglfw3 -lGLEW -lGLU -lGL -lX11 -lXxf86vm -lpthread -ldl -lXrandr -lXi -lXcursor -lXinerama
 	YAMLINCS = -I/home/cedelmaier/common/yaml-cpp/include
-	YAMLLIBS = -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
+	#YAMLLIBS = -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
+	YAMLLIBS = -Wl,-rpath,/home/cedelmaier/common/yaml-cpp/build -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
 	INCLUDES = $(GLFW3INCS) $(YAMLINCS) $(GSLINCS)
 	LIBS = $(GLFW3LIBS) $(YAMLLIBS) $(GSLLIBS)
-	export LD_LIBRARY_PATH=/home/cedelmaier/common/glfw/build/src:/home/cedelmaier/common/yaml-cpp/build:$LD_LIBRARY_PATH
+	#export LD_LIBRARY_PATH=/home/cedelmaier/common/glfw/build/src:/home/cedelmaier/common/yaml-cpp/build:$LD_LIBRARY_PATH
 endif
 
 print-%: ; @echo $*=$($*)

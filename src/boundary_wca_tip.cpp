@@ -87,3 +87,28 @@ void BoundaryWCATip::Init(space_struct *pSpace, int ipot, YAML::Node &node) {
     conf_radius_ = 0.5 * space_->unit_cell[0][0] - rcut_ + 0.5;
     conf_radius2_ = conf_radius_ * conf_radius_;
 }
+
+void BoundaryWCATip::Init(space_struct *pSpace, YAML::Node *subnode) {
+  YAML::Node node = *subnode;
+  PotentialBase::Init(pSpace, &node);
+
+  // Now, let's look at the particular yaml node we are supposed to be interested in
+  eps_    = node["eps"].as<double>();
+  sigma_  = node["sigma"].as<double>();
+  fcut_   = node["fcut"].as<double>();
+  tip_    = node["tip"].as<int>();
+
+  // For WCA potentials, the rcutoff is actually important, as it must be
+  // restricted to be at 2^(1/6)sigma
+
+  rcut_ = pow(2.0, 1.0/6.0)*sigma_;
+
+  rcut2_ = rcut_*rcut_;
+  c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
+  c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
+
+  // The radius is set by the system boundary!!!!
+  // Taken from the definition in bob
+  conf_radius_ = 0.5 * space_->unit_cell[0][0] - rcut_ + 0.5;
+  conf_radius2_ = conf_radius_ * conf_radius_;
+}

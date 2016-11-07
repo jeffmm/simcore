@@ -99,15 +99,23 @@ void Xlink::CheckBoundState() {
   bool bound0 = head0->GetBound();
   bool bound1 = head1->GetBound();
   if (!bound0 && !bound1) {
+    head0->SetOverbound(unbound);
+    head1->SetOverbound(unbound);
   }
   if (bound0 && !bound1) {
     bound_ = singly;
+    head0->SetOverbound(singly);
+    head1->SetOverbound(singly);
   }
   if (!bound0 && bound1) {
     bound_ = singly;
+    head0->SetOverbound(singly);
+    head1->SetOverbound(singly);
   }
   if (bound0 && bound1) {
     bound_ = doubly;
+    head0->SetOverbound(doubly);
+    head1->SetOverbound(doubly);
   }
 }
 

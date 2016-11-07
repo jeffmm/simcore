@@ -316,10 +316,11 @@ void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, do
     separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
     interactionmindist idm;
     std::copy(dr, dr+3, idm.dr);
+    double dr_mag = 0.0;
     for (int i = 0; i < ndim_; ++i) {
-      idm.dr_mag += SQR(idm.dr[i]);
+      dr_mag += SQR(idm.dr[i]);
     }
-    idm.dr_mag = sqrt(idm.dr_mag);
+    dr_mag = sqrt(dr_mag);
 
     // Calculate the rcontacts for us, ugh (based on absolute vs relative positions)
     for (int i = 0; i < ndim_; ++i) {

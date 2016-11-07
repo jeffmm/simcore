@@ -16,11 +16,13 @@ class ParticleTracking {
   public:
     ParticleTracking() {}
     ~ParticleTracking() {
-      delete[] neighbors_;
+      if (neighbors_)
+        delete[] neighbors_;
       oid_position_map_.clear();
       printf("********\n");
       printf("ParticleTracking Stats ->\n");
-      printf("\tUpdates: %d\n", tracking_->NUpdates());
+      if (tracking_)
+        printf("\tUpdates: %d\n", tracking_->NUpdates());
     }
 
     void Init(space_struct *pSpace,
