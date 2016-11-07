@@ -2,34 +2,45 @@
 #define _SIMCORE_ARGON_H_
 
 #include "species.h"
-#include "md_bead.h"
+#include "object.h"
 #include "auxiliary.h"
-#include "lennard_jones_12_6.h"
 
-class Argon : public MDBead {
+class Argon : public Simple {
+  protected:
+    double mass_;
   public:
-    Argon(system_parameters *params, space_struct *space, long seed, SID sid) : MDBead(params, space, seed, sid) {
+    Argon(system_parameters *params, space_struct *space, 
+        long seed, SID sid) : Simple(params, space, seed, sid) {
+      // Set parameters unique to MD bead
       diameter_ = params->argon_diameter;
       mass_ = params->argon_mass;
     }
     ~Argon() {}
-    Argon(const Argon& that) : MDBead(that) {}
-    Argon& operator=(Argon const& that) {MDBead::operator=(that); return *this;} 
-    void Init();
-    void UpdatePosition() {MDBead::UpdatePosition();}
-    void Integrate() {MDBead::Integrate();}
-    void UpdateKineticEnergy() {MDBead::UpdateKineticEnergy();}
-    double const GetKineticEnergy() {return MDBead::GetKineticEnergy();}
+    Argon(const Argon& that) : Simple(that) {}
+    Argon& operator=(Argon const& that) {
+      Simple::operator=(that); return *this;
+    }
+    virtual void Init();
+    void InitConfigurator(std::array<double, 3> rx, std::array<double, 3> vx);
+    virtual void UpdatePosition();
+    virtual void UpdatePositionMP();
+    virtual void Integrate();
+    virtual void UpdateKineticEnergy();
+    virtual double const GetKineticEnergy();
+
 };
 
 class ArgonSpecies : public Species<Argon> {
   protected:
-    //void InitPotentials (system_parameters *params);
 
   public:
-    ArgonSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
+    ArgonSpecies() : Species() {
       SetSID(SID::argon);
-      //InitPotentials(params);
+    }
+    ArgonSpecies(int n_members, system_parameters *params, 
+        space_struct *space, long seed) 
+      : Species(n_members, params, space, seed) {
+      SetSID(SID::argon);
     }
     ~ArgonSpecies() {}
     ArgonSpecies(const ArgonSpecies& that) : Species(that) {}
@@ -40,6 +51,9 @@ class ArgonSpecies : public Species<Argon> {
     void Init() {
       Species::Init();
     }
+
+    // Configurations
+    void Configurator();
 };
 
 #endif // _SIMCORE_ARGON_H_

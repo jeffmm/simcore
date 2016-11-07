@@ -6,6 +6,12 @@
 
 #include <iomanip>
 
+enum attach_type {
+  unbound = 0,
+  singly,
+  doubly
+};
+
 class XlinkHead : public Simple {
   private:
     double diffusion_;
@@ -19,11 +25,14 @@ class XlinkHead : public Simple {
     int attachcidx_ = -1;
     double attachpos_ = 0.0;
     int headid_ = -2;
+
+    attach_type overbound_ = unbound;
   public:
     XlinkHead(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {
       diameter_=params->br_walker_diameter;
       is_kmc_ = true;
       bound_ = false;
+      overbound_ = unbound;
       SetDiffusion();
     }
     ~XlinkHead() {}
@@ -40,6 +49,11 @@ class XlinkHead : public Simple {
       return bound_;
     }
 
+    // KMC should I calculate the KMC potential or just exit
+    virtual bool ApplyKMCInteraction() {
+      return overbound_ == unbound;
+    }
+
     // kmc specifics
     virtual void PrepKMC(std::vector<neighbor_t>* neighbors);
     virtual void StepKMC();
@@ -49,6 +63,7 @@ class XlinkHead : public Simple {
     void SetNExp_1_2(double const n) {n_exp_1_2_=n;}
     bool const GetBound() {return bound_;}
     void SetBound(bool bound) {bound_=bound;}
+    void SetOverbound(attach_type obound) {overbound_=obound;}
     void Attach(int idx, double pos);
     void Bind(int idx, int ridx, int cidx, double pos);
     bool GetBind(int *idx, int *ridx, int *cidx, double *pos);

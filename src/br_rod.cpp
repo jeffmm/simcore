@@ -127,7 +127,7 @@ void BrRod::UpdatePositionMP() {
 
 void BrRod::UpdateAnchors() {
   // find the anchors
-  if (anchors_ == nullptr) return;
+  if (!anchors_) return;
 
   // Update our anchor relative position
   bool found = false;
@@ -221,6 +221,10 @@ void BrRod::UpdateBondPositions() {
    sqrt(2*kT*dt/gamma_(par/perp)) along par/perp unit vectors
    relative to rod. */
 void BrRod::Integrate() {
+  //std::cout << "DEBUG, dangerous!\n";
+  //force_[0] = 1.0;
+  //force_[1] = 1.0;
+  //force_[2] = -1.0;
   if (rod_fixed_ == 1) return;
   //Explicit calculation of Xi.F_s
   for (int i=0; i<n_dim_; ++i) {
@@ -457,6 +461,110 @@ void BrRodSpecies::Configurator() {
 
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->InitConfigurator(x, u, rlength);
+      member->SetColor(color, draw_type);
+      member->SetAnchors(anchors_);
+      member->Dump();
+      members_.push_back(member);
+    }
+  } else if (insertion_type.compare("xyzbob") == 0) {
+    double rlength    = node["br_rod"]["rod"]["length"].as<double>();
+    double max_length = node["br_rod"]["rod"]["max_length"].as<double>();
+    double min_length = node["br_rod"]["rod"]["min_length"].as<double>();
+    double diameter   = node["br_rod"]["rod"]["diameter"].as<double>();
+
+    std::string bobfile = node["br_rod"]["rod"]["bobfile"].as<std::string>();
+    std::cout << "   loading from bob config file: " << bobfile << std::endl;
+
+    FILE *f_config;
+    f_config = fopen(bobfile.c_str(), "r");
+
+    // ndim local
+    int mndim = 0;
+    fread(&mndim, sizeof(int), 1, f_config);
+    mndim = ABS(mndim);
+
+    std::cout << "   read ndim: " << mndim << std::endl;
+
+    int nbonds = 0;
+    fread(&nbonds, sizeof(int), 1, f_config);
+
+    std::cout << "   read nbonds: " << nbonds << std::endl;
+
+    params_->n_rod = nbonds;
+    params_->rod_length = rlength;
+    params_->max_rod_length = max_length;
+    params_->min_rod_length = min_length;
+    max_length_ = max_length;
+    min_length_ = min_length;
+    params_->rod_diameter = diameter;
+
+    // Read unit cell data
+    double h[3][3] = {0};
+    for (int idim = 0; idim < mndim; ++idim) {
+      fread(h[idim], sizeof(double), mndim, f_config);
+    }
+
+    for (int idim = 0; idim < mndim; ++idim) {
+      for (int jdim = 0; jdim < mndim; ++jdim) {
+        std::cout << "   read h[" << idim << "][" << jdim << "]: " << std::setprecision(16) << h[idim][jdim]
+          << std::endl;
+      }
+    }
+
+    // read the sites, and convert to the nbonds
+    for (int ibond = 0; ibond < nbonds; ++ibond) {
+      double r0[3] = {0};
+      double r1[3] = {0};
+      double v0[3] = {0};
+      double v1[3] = {0};
+      fread(r0, sizeof(double), mndim, f_config);
+      fread(v0, sizeof(double), mndim, f_config);
+      fread(r1, sizeof(double), mndim, f_config);
+      fread(v1, sizeof(double), mndim, f_config);
+
+      // find the orientation from r0 to r1 i guess?
+      double u[3] = {0};
+      double norm_factor = 0.0;
+      for (int idim = 0; idim < mndim; ++idim) {
+        u[idim] = r1[idim] - r0[idim];
+        double rsnew[3] = {0};
+        periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, u, rsnew);
+        norm_factor += SQR(u[idim]);
+      }
+      norm_factor = sqrt(norm_factor);
+      for (int idim = 0; idim < mndim; ++idim) {
+        u[idim] = u[idim] / norm_factor;
+      }
+
+      double center[3] = {0};
+      for (int idim = 0; idim < mndim; ++idim) {
+        center[idim] = r0[idim] + 0.5 * norm_factor * u[idim];
+      }
+
+      if (norm_factor > 20.1) {
+        std::cout << "found a length that is wrong: " << norm_factor << std::endl;
+        exit(1);
+      }
+
+      BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      member->InitConfigurator(center, u, norm_factor);
+
+      // Check for overlaps....
+      //for (auto rodit = members_.begin(); rodit != members_.end(); ++rodit) {
+      //  interactionmindist idm;
+      //  // Just check the 0th element of each
+      //  auto part1 = member->GetSimples()[0];
+      //  auto part2 = (*rodit)->GetSimples()[0];
+      //  MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+      //  double diameter2 = diameter*diameter;
+      //  if (idm.dr_mag2 < diameter2) {
+      //    double rmag = sqrt(idm.dr_mag2);
+      //    std::cout << "particles overlapping somehow ->\n";
+      //    std::cout << "   drmag: " << rmag << std::endl;
+      //    member->Dump();
+      //    (*rodit)->Dump();
+      //  }
+      //}
       member->SetColor(color, draw_type);
       member->SetAnchors(anchors_);
       member->Dump();

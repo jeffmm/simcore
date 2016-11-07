@@ -63,6 +63,23 @@ class PotentialBase {
         kmc_target_ = kmc_sid;
       }
     }
+
+    virtual void Init(space_struct *pSpace, YAML::Node *subnode) {
+      YAML::Node node = *subnode;
+      space_ = pSpace;
+      n_dim_ = space_->n_dim;
+
+      if (node["overlap"]) {
+        can_overlap_ = node["overlap"].as<bool>();
+      }
+      if (node["kmc"]) {
+        is_kmc_ = node["kmc"].as<bool>();
+        // Must specifcy a kmc_target for particles
+        std::string kmc_sid_str = node["kmc_target"].as<std::string>();
+        SID kmc_sid = StringToSID(kmc_sid_str);
+        kmc_target_ = kmc_sid;
+      }
+    }
 };
 
 typedef std::pair<sid_pair, PotentialBase*> potential_pair;

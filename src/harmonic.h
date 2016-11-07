@@ -28,7 +28,7 @@ class Harmonic : public PotentialBase {
                                Simple *part2,
                                double *fpote) {
       std::fill(fpote, fpote + n_dim_ + 1, 0.0);
-      double rmag = idm->dr_mag;
+      double rmag = sqrt(idm->dr_mag2);
       double *dr = idm->dr;
 
       double k = k_;
@@ -60,6 +60,19 @@ class Harmonic : public PotentialBase {
         r_equil_  = node["potentials"][ipot]["equilibrium_length"].as<double>();
 
         rcut2_ = rcut_*rcut_;
+    }
+
+    virtual void Init(space_struct *pSpace, YAML::Node *subnode) {
+      YAML::Node node = *subnode;
+      PotentialBase::Init(pSpace, &node);
+
+      // Now, let's look at the particular yaml node we are supposed to be interested in
+      rcut_     = node["rcut"].as<double>();
+      k_        = node["k"].as<double>();
+      r_equil_  = node["equilibrium_length"].as<double>();
+      fcut_     = node["fcut"].as<double>();
+
+      rcut2_ = rcut_*rcut_;
     }
 };
 

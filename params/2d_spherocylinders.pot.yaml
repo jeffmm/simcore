@@ -1,29 +1,32 @@
 potentials:
   - name : WCA
+    type: external
     sid1 : br_rod
     sid2 : br_rod
     rcut: 2.5
     fcut: 100
     eps: 1
     sigma: 1
-    type: external
+    scheme: allpairs
+    #scheme: neighborlistallpairs
+    #skin: 2.0
     #overlap: true
 
 #  - name : SphereLineWell
-#    sid1 : xlink_head
+#    type: kmc
+#    sid1 : xlink
 #    sid2 : br_rod
 #    overlap : true
 #    rcut: 1.0
-#    fcut: 10000
+#    fcut: 1000
+#    scheme: allpairs
 #    kmc: true
-#    kmc_target: xlink_head
-#    type: external
-
+#    kmc_target: xlink
+#
 #  - name: XlinkHarmonic
 #    type: internal
 #    sid: xlink
-#    k: 1.98171
-#    equilibrium_length: 0.707
+#    k: 45.29
+#    equilibrium_length: 3.12
 #    rcut: 1000.0
 #    fcut: 10000
-#  :# type: external

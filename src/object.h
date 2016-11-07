@@ -125,6 +125,7 @@ class Object {
     }
     void AddPotential(double const p) {p_energy_ += p;}
     void AddKMCEnergy(double const k) {kmc_energy_ += k;}
+    void AddForceTorqueEnergy(double const * const F, double const * const T, double const p);
     void AddForceTorqueEnergyKMC(double const * const F, double const * const T, double const p, double const k);
     double const * const GetPosition() {return position_;}
     double const * const GetPrevPosition() {return prev_position_;}
@@ -177,6 +178,10 @@ class Object {
     }
 
     virtual bool ApplyInternalForce() {
+      return false;
+    }
+
+    virtual bool ApplyKMCInteraction() {
       return false;
     }
 

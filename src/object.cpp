@@ -265,6 +265,15 @@ void Object::AddForceTorqueEnergyKMC(double const * const F, double const * cons
     AddKMCEnergy(k);
 }
 
+// Apply the force/torque/energy to this particle, override if necessary
+void Object::AddForceTorqueEnergy(double const * const F, double const * const T, double const p) {
+    // XXX: CJE assume that we need to zero out the force and energy first
+    //ZeroForce();
+    AddForce(F);
+    AddTorque(T);
+    AddPotential(p);
+}
+
 // Find the minimum distance beween two particles
 void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim, int& nperiodic, space_struct *space) {
   double const * const r1 = o1->GetRigidPosition();
@@ -301,7 +310,7 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
     min_distance_sphero(ndim, nperiodic, space->unit_cell,
               r1, s1, u1, l1, r2, s2, u2, l2,
               imd.dr, &imd.dr_mag2, imd.contact1, imd.contact2);
-  imd.dr_mag = sqrt(imd.dr_mag2); // XXX FIXME should take out and only compute if necessary
+  //imd.dr_mag = sqrt(imd.dr_mag2); // XXX FIXME should take out and only compute if necessary
 }
 
 void Object::WritePosit(std::fstream &op){
