@@ -2,9 +2,9 @@
 ---
 seed : 2257751503118
 n_runs: 1
-n_dim: 3
+n_dim: 2
 n_periodic: 0
-delta: 0.000001
+delta: 0.00001
 n_steps: 50000
 system_radius: 50
 graph_flag: 1
