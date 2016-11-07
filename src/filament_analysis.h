@@ -93,7 +93,7 @@ class FilamentAnalysis {
     }
     void WriteData() {
       std::ostringstream file_name;
-      file_name << posit_file_name_ << ".filament";
+      file_name << posit_file_name_.substr(0,posit_file_name_.find_last_of(".")) << ".filament";
       std::ofstream fil_file(file_name.str().c_str(), std::ios_base::out);
       fil_file << "# n_dim delta n_steps n_posit n_objs \n";
       fil_file << n_dim_ << " " << delta_ << " " << n_steps_ << " " << n_posit_ << " " << n_objs_ << " " << "\n";

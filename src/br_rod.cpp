@@ -10,7 +10,6 @@ void BrRod::Init() {
   if (diffusion_validation_flag_) {
     for (int i=0; i<n_dim_; ++i)
       position_[i] = orientation_[i] = 0.0;
-    position_[n_dim_-1] = -0.5*length_;
     orientation_[n_dim_-1] = 1.0;
     UpdatePeriodic();
   }
@@ -1054,7 +1053,7 @@ void BrRodSpecies::ValidateDiffusion() {
 
 void BrRodSpecies::WriteDiffusionValidation(std::string run_name) {
   std::ostringstream file_name;
-  file_name << run_name << "-diffusion.log";
+  file_name << run_name << ".diffusion";
   std::ofstream diffusion_file(file_name.str().c_str(), std::ios_base::out);
   diffusion_file << "timestep ";
   for (int i_member=0; i_member<n_members_; ++i_member) {

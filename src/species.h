@@ -130,10 +130,10 @@ class SpeciesBase {
     virtual void WriteOutputs(std::string run_name) {}
     virtual void WritePosits() {}
     virtual void ReadPosits() {}
-    virtual void InitOutputFile() {
+    virtual void InitOutputFile(std::string run_name) {
       std::string sid_str = SIDToString(sid_);
-      std::string file_name = sid_str + ".posit";
-      std::cout<<"Posit file name is "<< sid_str <<" \n";
+      std::string file_name = run_name + "_" + sid_str + ".posit";
+      std::cout<<"Posit file name is "<< run_name <<"_"<< sid_str <<" \n";
       oposit_file_.open(file_name, std::ios::out | std::ios::binary ); 
       if (!oposit_file_.is_open())
         std::cout<<"Output "<< file_name <<" file did not open\n";

@@ -152,7 +152,7 @@ void SimulationManager::ParseParameter(std::string param_name, std::string param
    *************************************/
 void SimulationManager::PrintParams(system_parameters params, std::string name) {
   std::ostringstream file_name;
-  file_name << name << "-params.yaml";
+  file_name << name << "_params.yaml";
   std::ofstream param_file((file_name.str()).c_str(), std::ios_base::out);
 #include "print_params_body.h"
   param_file.close();
@@ -173,9 +173,9 @@ void SimulationManager::RunSimulations() {
       // Set each run with a unique seed
       title << run_name_;
       if (n_var_ > 1)
-        title << "-v" << i_var+1;
+        title << "_v" << i_var+1;
       if (n_runs_ > 1) 
-        title << "-r" << i_run+1;
+        title << "_r" << i_run+1;
       params_[i_var].seed = gsl_rng_get(rng_.r);
       PrintParams(params_[i_var], title.str());
       sim = new Simulation;
@@ -209,9 +209,9 @@ void SimulationManager::RunMovieManager(std::vector<std::string> posit_files) {
   title << run_name_;
 
   if (n_var_ > 1)
-    title << "-v" << i_var+1;
+    title << "_v" << i_var+1;
   if (n_runs_ > 1) 
-    title << "-r" << i_run+1;
+    title << "_r" << i_run+1;
   params_[i_var].seed = gsl_rng_get(rng_.r);
   PrintParams(params_[i_var], title.str());
   sim = new Simulation;
