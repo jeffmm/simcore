@@ -1,11 +1,11 @@
 potentials:
-  - name : WCA
-    type: external
-    sid1 : br_bead
-    sid2 : br_bead
-    rcut: 2.5
-    fcut: 100
-    eps: 1
-    sigma: 1
+  #- name : WCA
+    #type: external
+    #sid1 : br_bead
+    #sid2 : br_bead
+    #rcut: 2.5
+    #fcut: 100
+    #eps: 1
+    #sigma: 1
     #overlap: true
 

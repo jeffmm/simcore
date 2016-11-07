@@ -7,7 +7,15 @@
 #include "sphero_overlap.h"
 
 void BrRod::Init() {
-  InsertRandom(0.5*length_+diameter_);
+  if (diffusion_validation_flag_) {
+    for (int i=0; i<n_dim_; ++i)
+      position_[i] = orientation_[i] = 0.0;
+    orientation_[n_dim_-1] = 1.0;
+    UpdatePeriodic();
+  }
+  else {
+    InsertRandom(0.5*length_+diameter_);
+  }
   poly_state_ = GROW;
   stabilization_state_ = 0;
   f_stabilize_fr_ = 1.0;
@@ -415,6 +423,8 @@ void BrRodSpecies::Configurator() {
     }
   }
 
+
+  // BEGIN SPAGHETTI
   if (insertion_type.compare("xyz") == 0) {
     if (!can_overlap) {
       std::cout << "Warning, location insertion overrides overlap\n";
@@ -495,6 +505,7 @@ void BrRodSpecies::Configurator() {
     max_length_ = max_length;
     min_length_ = min_length;
     params_->rod_diameter = diameter;
+   
 
     for (int i_mem = 0; i_mem < nrods; ++i_mem) {
       BrRod *member = new BrRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
@@ -721,6 +732,24 @@ void BrRodSpecies::Configurator() {
     printf("nope, not yet\n");
     exit(1);
   }
+
+  // DONT YOU FUCKERS TOUCH THIS
+  diffusion_validation_ = params_->diffusion_validation_flag ? true : false;
+  n_members_ = members_.size();
+  n_dim_ = params_->n_dim;
+  if (diffusion_validation_) {
+    nbins_ =  (int) floor(params_->n_steps/params_->n_validate);
+    nvalidate_ = params_->n_validate;
+    orientations_ = new double**[n_members_];
+    for (int i=0; i<n_members_; ++i) {
+      orientations_[i] = new double*[2];
+      for (int j=0; j<2; ++j) {
+        orientations_[i][j] = new double[nbins_];
+      }
+    }
+  }
+  ibin_ = 0;
+  ivalidate_ = 0;
 }
 
 void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
@@ -1008,4 +1037,50 @@ void BrRodSpecies::CreateTestRod(BrRod **rod,
   }
 }
 
+void BrRodSpecies::ValidateDiffusion() {
+  int i_member = 0;
+  double u[3];
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    double const * const u = (*it)->GetOrientation();
+    if (n_dim_ == 2) {
+      orientations_[i_member][0][ibin_] = acos(u[1]);
+      orientations_[i_member][1][ibin_] = 0;
+    }
+    if (n_dim_ == 3) {
+      orientations_[i_member][0][ibin_] = acos(u[2]);
+      orientations_[i_member][1][ibin_] = atan2(u[1],u[0]);
+    }
+    i_member++;
+  }
+  ibin_++;
+}
+
+void BrRodSpecies::WriteDiffusionValidation(std::string run_name) {
+  std::ostringstream file_name;
+  file_name << run_name << ".diffusion";
+  std::ofstream diffusion_file(file_name.str().c_str(), std::ios_base::out);
+  diffusion_file << "timestep ";
+  for (int i_member=0; i_member<n_members_; ++i_member) {
+    diffusion_file << "fil_" << i_member+1 << "_theta" << " ";
+    if (n_dim_ == 3)
+      diffusion_file << "fil_" << i_member+1 << "_phi" << " ";
+  }
+  diffusion_file << "\n";
+  for (int i_bin=0; i_bin<nbins_; ++i_bin) {
+    int time = i_bin*nvalidate_;
+    diffusion_file << time << " ";
+    for (int i_member=0; i_member<n_members_; ++i_member) {
+      diffusion_file << orientations_[i_member][0][i_bin] << " ";
+      if (n_dim_ == 3)
+        diffusion_file << orientations_[i_member][1][i_bin] << " ";
+    }
+    diffusion_file << "\n";
+  }
+}
+
+void BrRodSpecies::WriteOutputs(std::string run_name) {
+  if (diffusion_validation_) {
+    WriteDiffusionValidation(run_name);
+  }
+}
 
