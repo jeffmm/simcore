@@ -43,7 +43,7 @@ class Object {
     rng_properties rng_;
     std::vector<interaction> interactions_;
     std::vector<neighbor_t>* neighbors_;
-    al_set *anchors_;
+    al_set *anchors_ = nullptr;
     virtual void InsertRandom(double buffer);
     virtual void InsertOriented( double* buffer, const double* const u);
   public:
@@ -311,9 +311,8 @@ template<typename...> class Composite;
 
 template <typename T>
 class Composite<T> : public Object {
-  private:
-    system_parameters *params_;
   protected:
+    system_parameters *params_;
     std::vector<T> elements_;
     virtual void InitElements(system_parameters *params) {}
   public:
@@ -381,6 +380,10 @@ class Composite<T> : public Object {
     }
 
     virtual void WritePosit(std::fstream &op){
+      if (params_->avg_posits) {
+        Object::WritePosit(op);
+        return;
+      }
       int size;
       size = elements_.size();
       op.write(reinterpret_cast<char*>(&size), sizeof(int));
@@ -391,6 +394,10 @@ class Composite<T> : public Object {
 
     virtual void ReadPosit(std::fstream &ip){
       if (ip.eof()) return;
+      if (params_->avg_posits) {
+        Object::ReadPosit(ip);
+        return;
+      }
       int size;
       T elmt(params_, space_, params_->seed, sid_);
       ip.read(reinterpret_cast<char*>(&size), sizeof(int));
@@ -403,9 +410,8 @@ class Composite<T> : public Object {
 
 template <typename T, typename V>
 class Composite<T,V> : public Object {
-  private:
-    system_parameters *params_;
   protected:
+    system_parameters *params_;
     std::vector<T> elements_;
     std::vector<V> v_elements_;
   public:
@@ -472,6 +478,10 @@ class Composite<T,V> : public Object {
     }
 
     virtual void WritePosit(std::fstream &op){
+      if (params_->avg_posits) {
+        Object::WritePosit(op);
+        return;
+      }
       int size;
       size = elements_.size();
       op.write(reinterpret_cast<char*>(&size), sizeof(size));
@@ -485,6 +495,10 @@ class Composite<T,V> : public Object {
     }
 
     virtual void ReadPosit(std::fstream &ip){
+      if (params_->avg_posits) {
+        Object::ReadPosit(ip);
+        return;
+      }
       int size;
       T elmt(params_, space_, params_->seed, sid_);
       V v_elmt(params_, space_, params_->seed, sid_);
