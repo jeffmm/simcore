@@ -9,8 +9,7 @@ class PositReader {
         n_steps_,
         n_objs_,
         max_objs_ = -1,
-        n_misc_ = 0,
-        count_ = 0; // XXX REMOVE THIS
+        n_misc_ = 0;
     double *position_ = nullptr,
            *scaled_position_,
            *orientation_,
@@ -76,13 +75,13 @@ class PositReader {
     void PrintAll() {
       if (!print_) return;
       for (int i=0; i<n_objs_; ++i) {
-        printf("position_ %d: {%2.2f, %2.2f, %2.2f}\n",i+1,position_[ix(i,0)],position_[ix(i,1)],position_[ix(i,2)]);
-        printf("scaled_position_ %d: {%2.2f, %2.2f, %2.2f}\n",i+1,scaled_position_[ix(i,0)],scaled_position_[ix(i,1)],scaled_position_[ix(i,2)]);
-        printf("orientation_ %d: {%2.2f, %2.2f, %2.2f}\n",i+1,orientation_[ix(i,0)],orientation_[ix(i,1)],orientation_[ix(i,2)]);
-        printf("diameter_ %d: %2.2f\n",i+1,diameter_[i]);
-        printf("length_ %d: %2.2f\n",i+1,length_[i]);
+        printf("position_ %d: {%3.6f, %3.6f, %3.6f}\n",i+1,position_[ix(i,0)],position_[ix(i,1)],position_[ix(i,2)]);
+        printf("scaled_position_ %d: {%3.6f, %3.6f, %3.6f}\n",i+1,scaled_position_[ix(i,0)],scaled_position_[ix(i,1)],scaled_position_[ix(i,2)]);
+        printf("orientation_ %d: {%3.6f, %3.6f, %3.6f}\n",i+1,orientation_[ix(i,0)],orientation_[ix(i,1)],orientation_[ix(i,2)]);
+        printf("diameter_ %d: %3.2f\n",i+1,diameter_[i]);
+        printf("length_ %d: %3.2f\n",i+1,length_[i]);
         for (int j=0; j<n_misc_; ++j)
-          printf("misc_%d %d: %2.2f\n",j,i,misc_[misc_ix(i,j)]);
+          printf("misc_%d %d: %3.6f\n",j,i,misc_[misc_ix(i,j)]);
       }
     }
 
@@ -132,11 +131,10 @@ class PositReader {
     }
 
     void ReadAll() {
-      bool still_reading = ReadIteration();
-      do {
+      PrintAll();
+      while(ReadIteration()) {
         PrintAll();
-        still_reading = ReadIteration();
-      } while (still_reading);
+      }
     }
 
     void SetPrint(bool p) {
@@ -189,11 +187,9 @@ class PositReader {
     // Print entire posit file to screen, for debugging
     void PrintPosit(std::string file_name) {
       SetPrint(true);
-      OpenPosit(file_name);
-      Init();
+      LoadFile(file_name);
       ReadAll();
-      ClosePosit();
-      DeallocateObjs();
+      CloseFile();
       SetPrint(false);
     }
     int NPosit() {

@@ -32,7 +32,7 @@ void UberEngine::Init(system_parameters *pParams,
   // Switch for interaction substructure type
   std::cout << "********\n";
   std::cout << "Creating UberEngine (" << species_->size() << " species)\n";
-  switch (params_->ftype) {
+  switch (params_->tracking_type) {
     case 0:
         printf("Must specify a tracking substructure, exiting!\n");
         exit(1);

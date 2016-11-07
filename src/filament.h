@@ -57,8 +57,8 @@ class Filament : public Composite<Site,Bond> {
     void CalculateTangents();
     void UpdatePrevPositions();
     void AddRandomForces();
-    void GenerateRandomForces();
-    void ProjectRandomForces();
+    void ConstructUnprojectedRandomForces();
+    void GeometricallyProjectRandomForces();
     void CalculateBendingForces();
     void CalculateTensions();
     void UpdateSitePositions(bool midstep);
@@ -67,9 +67,6 @@ class Filament : public Composite<Site,Bond> {
     void SetParameters(system_parameters *params);
     void InitElements(system_parameters *params, space_struct *space);
     void UpdateAvgPosition();
-    //void UpdateOrientation();
-    //void AddRandomDisplacement();
-    //void ApplyForcesTorques();
     //void DynamicInstability();
     void DumpAll();
 
@@ -161,7 +158,7 @@ class Filament : public Composite<Site,Bond> {
       return *this;
     } 
     virtual void Init();
-    void DiffusionInit();
+    void DiffusionValidationInit();
     virtual void Integrate(bool midstep);
     virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);

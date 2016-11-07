@@ -239,6 +239,9 @@ else if (param_name.compare("md_bead_mass") == 0){
 else if (param_name.compare("argon_diameter") == 0){
   params_[i_var].argon_diameter = atof(param_value.c_str());
 }
+else if (param_name.compare("masterskin") == 0){
+  params_[i_var].masterskin = atof(param_value.c_str());
+}
 else if (param_name.compare("cell_length") == 0){
   params_[i_var].cell_length = atof(param_value.c_str());
 }
@@ -263,8 +266,8 @@ else if (param_name.compare("neon_mass") == 0){
 else if (param_name.compare("n_argon") == 0){
   params_[i_var].n_argon = atoi(param_value.c_str());
 }
-else if (param_name.compare("masterskin") == 0){
-  params_[i_var].masterskin = atof(param_value.c_str());
+else if (param_name.compare("avg_posits") == 0){
+  params_[i_var].avg_posits = atoi(param_value.c_str());
 }
 else if (param_name.compare("n_neon") == 0){
   params_[i_var].n_neon = atoi(param_value.c_str());
@@ -293,16 +296,16 @@ else if (param_name.compare("rod_fixed") == 0){
 else if (param_name.compare("draw_interactions") == 0){
   params_[i_var].draw_interactions = atoi(param_value.c_str());
 }
-else if (param_name.compare("ftype") == 0){
-  params_[i_var].ftype = atoi(param_value.c_str());
-}
-else if ( param_name.compare("kmcfile") == 0 ) {
-  params_[i_var].kmcfile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
-  strcpy(params_[i_var].kmcfile, param_value.c_str());
+else if (param_name.compare("tracking_type") == 0){
+  params_[i_var].tracking_type = atoi(param_value.c_str());
 }
 else if ( param_name.compare("potfile") == 0 ) {
   params_[i_var].potfile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
   strcpy(params_[i_var].potfile, param_value.c_str());
+}
+else if ( param_name.compare("kmcfile") == 0 ) {
+  params_[i_var].kmcfile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
+  strcpy(params_[i_var].kmcfile, param_value.c_str());
 }
 else if (param_name.compare("max_overlap") == 0){
   params_[i_var].max_overlap = atoi(param_value.c_str());
@@ -320,30 +323,27 @@ else if (param_name.compare("n_filament") == 0){
 else if (param_name.compare("posit_flag") == 0){
   params_[i_var].posit_flag = atoi(param_value.c_str());
 }
-else if ( param_name.compare("datafile") == 0 ) {
-  params_[i_var].datafile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
-  strcpy(params_[i_var].datafile, param_value.c_str());
-}
 else if (param_name.compare("n_posit") == 0){
   params_[i_var].n_posit = atoi(param_value.c_str());
 }
 else if (param_name.compare("n_md_bead_opt") == 0){
   params_[i_var].n_md_bead_opt = atoi(param_value.c_str());
 }
-else if (param_name.compare("diffusion_validation_flag") == 0){
-  params_[i_var].diffusion_validation_flag = atoi(param_value.c_str());
-}
 else if (param_name.compare("diffusion_analysis") == 0){
   params_[i_var].diffusion_analysis = atoi(param_value.c_str());
+}
+else if (param_name.compare("diffusion_validation_flag") == 0){
+  params_[i_var].diffusion_validation_flag = atoi(param_value.c_str());
 }
 else if (param_name.compare("max_child_length") == 0){
   params_[i_var].max_child_length = atof(param_value.c_str());
 }
+else if ( param_name.compare("datafile") == 0 ) {
+  params_[i_var].datafile = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
+  strcpy(params_[i_var].datafile, param_value.c_str());
+}
 else if (param_name.compare("diffusion_interval") == 0){
   params_[i_var].diffusion_interval = atoi(param_value.c_str());
-}
-else if (param_name.compare("avg_posits") == 0){
-  params_[i_var].avg_posits = atoi(param_value.c_str());
 }
 else if (param_name.compare("filament_analysis") == 0){
   params_[i_var].filament_analysis = atoi(param_value.c_str());

@@ -91,7 +91,7 @@ inline SID StringToSID(std::string &s) {
     else if (s == "spb")
         return SID::spb;
     else
-        std::cout << "Go fuck yourself!\n";
+        std::cout << "Go fuck yourself!!\n";
     return SID::none;
 }
 
