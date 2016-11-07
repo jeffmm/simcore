@@ -33,7 +33,7 @@ void OutputManager::AddSpecie(SpeciesBase *spec){
   //TODO Only Init and use viral if necessary
   //spec->InitVirial();
   if (params_->posit_flag == 1){
-    spec->InitOutputFile();
+    spec->InitOutputFile(run_name_);
   }
 }
 

@@ -61,6 +61,7 @@ class DiffusionAnalysis {
       delete[] vcf_err_;
       delete[] msd_;
       delete[] msd_err_;
+      positions_0_ = nullptr;
     }
     // Returns index of contiguous array from 2d coords
     int ix(int x, int y) {
@@ -72,8 +73,12 @@ class DiffusionAnalysis {
       n_time_ = n_steps_/n_posit_;
       // Make use of integer division here
       n_interval_ = n_time_/time_avg_interval_;
-      n_interval_ = (n_interval_ < 1 ? 1 : n_interval_);
+      if (n_interval_ < 1)
+        n_interval_ = 1;
       time_avg_interval_ = n_time_/n_interval_;
+      if (time_avg_interval_ < 1) {
+        error_exit("Something went wrong in diffusion analysis\n n_time, n_interval: %d, %d\n",n_time_,n_interval_);
+      }
       SetInitPos();
       AllocateAnalysis();
     }
@@ -110,23 +115,28 @@ class DiffusionAnalysis {
       double avg_sqr_dist = 0.0;
       double avg_sqr_dist_sqr = 0.0;
       for (int i=0; i<n_objs_; ++i) {
+        double temp = 0;
         for (int j=0; j<n_dim_; ++j) {
           double r_diff = positions_[ix(i,j)] - positions_0_[ix(i,j)];
-          r_diff = SQR(r_diff);
-          avg_sqr_dist += r_diff;
-          avg_sqr_dist_sqr += SQR(r_diff);
+          temp += SQR(r_diff);
         }
+        avg_sqr_dist += temp;
+        avg_sqr_dist_sqr += SQR(temp);
       }
       avg_sqr_dist/=n_objs_;
       avg_sqr_dist_sqr/=n_objs_;
       double stdev2 = avg_sqr_dist_sqr - SQR(avg_sqr_dist);
+      if (stdev2 < 0) {
+        error_exit("Something was negative in diffusion analysis, when it really shouldn't have been!\n");
+      }
       msd_[time_] += avg_sqr_dist/stdev2;
       msd_err_[time_] += 1.0/stdev2;
     } 
+
     void WriteData() {
-      std::ostringstream file_name;
-      file_name << posit_file_name_ << ".diffusion";
-      std::ofstream diff_file(file_name.str().c_str(), std::ios_base::out);
+      std::string file_name = posit_file_name_.substr(0,posit_file_name_.find_last_of(".")) + ".diffusion";
+      //file_name << posit_file_name_.substr(0,posit_file_name_.find_last_of(".")) << ".diffusion";
+      std::ofstream diff_file(file_name.c_str(), std::ios_base::out);
       diff_file << "# n_dim delta n_steps n_posit n_objs n_interval\n";
       diff_file << n_dim_ << " " << delta_ << " " << n_steps_ << " " << n_posit_ << " " << n_objs_ << " " << n_interval_ << "\n";
       diff_file << "# time msd msd_err vcf vcf_err\n";
@@ -136,6 +146,7 @@ class DiffusionAnalysis {
           << " " << vcf_[t] << " " << vcf_err_[t] << "\n";
       diff_file.close();
     }
+
     void FinalizeData() {
       // vcf_err_ is 1/std^2 = sum_i{1/std_i^2}
       // vcf_ is sum_i{a_i / std^2}

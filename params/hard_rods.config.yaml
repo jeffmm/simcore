@@ -6,9 +6,9 @@ br_rod:
     draw_type: flat
   rod:
     num: 50
-    length: 10
+    length: 100
     min_length: 10
-    max_length: 10
+    max_length: 100
     diameter: 1
   #properties:
     #insertion_type: random
