@@ -14,3 +14,9 @@ tags
 .DS_Store
 bin
 obj
+*.posit
+*.diffusion
+*.filament
+*_params.yaml
+*.log
+sc-*

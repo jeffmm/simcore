@@ -15,6 +15,7 @@ class Filament : public Composite<Site,Bond> {
         dynamic_instability_flag_,
         force_induced_catastrophe_flag_,
         theta_validation_flag_,
+        diffusion_validation_flag_,
         metric_forces_;
     double max_length_,
            min_length_,
@@ -56,8 +57,8 @@ class Filament : public Composite<Site,Bond> {
     void CalculateTangents();
     void UpdatePrevPositions();
     void AddRandomForces();
-    void GenerateRandomForces();
-    void ProjectRandomForces();
+    void ConstructUnprojectedRandomForces();
+    void GeometricallyProjectRandomForces();
     void CalculateBendingForces();
     void CalculateTensions();
     void UpdateSitePositions(bool midstep);
@@ -65,12 +66,9 @@ class Filament : public Composite<Site,Bond> {
     void ApplyForcesTorques();
     void SetParameters(system_parameters *params);
     void InitElements(system_parameters *params, space_struct *space);
-    //void UpdateOrientation();
-    //void AddRandomDisplacement();
-    //void ApplyForcesTorques();
+    void UpdateAvgPosition();
     //void DynamicInstability();
     void DumpAll();
-    void PopulateVector(std::vector<double> *a);
 
   public:
     Filament(system_parameters *params, space_struct * space, 
@@ -160,7 +158,7 @@ class Filament : public Composite<Site,Bond> {
       return *this;
     } 
     virtual void Init();
-    //void TempInit();
+    void DiffusionValidationInit();
     virtual void Integrate(bool midstep);
     virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
@@ -168,53 +166,72 @@ class Filament : public Composite<Site,Bond> {
     virtual void UpdatePositionMP() {}
     virtual void UpdatePosition(bool midstep);
     virtual void UpdatePositionMP(bool midstep);
+    void GetAvgOrientation(double * au);
+    void GetAvgPosition(double * ap);
     std::vector<double> const * const GetThetas() {
       return &cos_thetas_;
     }
+    void WritePosit(std::fstream &op);
 };
 
 class FilamentSpecies : public Species<Filament> {
   protected:
     //void InitPotentials(system_parameters *params);
+    //DiffusionProperties diffusion_properties_;
     bool theta_validation_,
+         diffusion_validation_,
          midstep_;
     int ***theta_distribution_;
-    int nbins_;
-    void ValidateThetaDistributions() {
-      int i = 0;
-      for (auto it=members_.begin(); it!=members_.end(); ++it) {
-        std::vector<double> const * const thetas = (*it)->GetThetas();
-        for (int j=0; j<7; ++j) {
-          int bin_number = (int) floor( (1 + (*thetas)[j]) * (nbins_/2) );
-          // Check boundaries
-          if (bin_number == nbins_)
-            bin_number = nbins_-1;
-          else if (bin_number == -1)
-            bin_number = 0;
-          // Check for nonsensical values
-          else if (bin_number > nbins_ || bin_number < 0) error_exit("Something went wrong in ValidateThetaDistributions!\n");
-          theta_distribution_[i][j][bin_number]++;
-        }
-        i++;
-      }
-
-    }
+    double ***orientations_;
+    int nbins_,
+        ibin_,
+        n_dim_,
+        nvalidate_,
+        ivalidate_;
+    void ValidateDiffusion();
+    void ValidateThetaDistributions();
+    void WriteThetaValidation(std::string run_name);
+    void WriteDiffusionValidation(std::string run_name);
   public:
     FilamentSpecies() : Species() {
       SetSID(SID::filament);
       midstep_ = true;
+      ibin_ = 0;
     }
-    ~FilamentSpecies() {}
+    ~FilamentSpecies() {
+      if (theta_validation_) {
+        for (int i=0; i<n_members_; ++i) {
+          for (int j=0; j<7; ++j) {
+            delete[] theta_distribution_[i][j];
+          }
+          delete[] theta_distribution_[i];
+        }
+        delete[] theta_distribution_;
+      }
+      if (diffusion_validation_) {
+        for (int i=0; i<n_members_; ++i) {
+          for (int j=0; j<2; ++j) {
+            delete[] orientations_[i][j];
+          }
+          delete[] orientations_[i];
+        }
+        delete[] orientations_;
+      }
+    }
     FilamentSpecies(const FilamentSpecies& that) : Species(that) {
       theta_distribution_ = that.theta_distribution_;
       theta_validation_ = that.theta_validation_;
       midstep_ = that.midstep_;
+      ibin_ = that.ibin_;
+      nbins_ = that.nbins_;
     }
     FilamentSpecies& operator=(FilamentSpecies const& that) {
       Species::operator=(that);
       theta_distribution_ = that.theta_distribution_;
       theta_validation_ = that.theta_validation_;
       midstep_ = that.midstep_;
+      ibin_ = that.ibin_;
+      nbins_ = that.nbins_;
       return *this;
     }
     void Init() {
@@ -226,12 +243,15 @@ class FilamentSpecies : public Species<Filament> {
       }
     }
     void UpdatePositionsMP() {
+      if (diffusion_validation_ && ivalidate_%nvalidate_ == 0)
+        ValidateDiffusion();
       for (auto it=members_.begin(); it!=members_.end(); ++it) {
         (*it)->UpdatePositionMP(midstep_);
       }
       if (theta_validation_ && midstep_)
         ValidateThetaDistributions();
       midstep_ = !midstep_;
+      ivalidate_++;
     }
     void WriteOutputs(std::string run_name);
     void Configurator();

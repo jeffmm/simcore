@@ -29,8 +29,8 @@ void Simulation::RunSimulation() {
       printf("********\nStep %d\n********\n", i_step_);
     ZeroForces();
     //KineticMonteCarloMP();
-    InteractMP();
-    KineticMonteCarloMP();
+    //InteractMP();
+    //KineticMonteCarloMP();
     IntegrateMP();
     // Only will run if DEBUG is enabled
     #ifdef DEBUG
@@ -266,7 +266,7 @@ void Simulation::InitOutputs() {
   }
   if (params_.energy_analysis_flag) {
     std::ostringstream file_name;
-    file_name << run_name_ << "-energy.log";
+    file_name << run_name_ << ".energy";
     std::ofstream en_file(file_name.str().c_str(), std::ios_base::out);
     en_file << "#kinetic  #potential  #total\n";
     en_file.close();
