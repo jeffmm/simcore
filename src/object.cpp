@@ -6,7 +6,8 @@
 unsigned int Object::next_oid_ = 0;
 unsigned int Object::next_rid_ = 0;
 
-Object::Object(system_parameters *params, space_struct *space, long seed, SID sid) {
+Object::Object(system_parameters *params, space_struct *space, long seed, SID sid) 
+  : rng_(seed) {
   oid_ = ++next_oid_;
   rid_ = ++next_rid_;
   cid_ = oid_;
@@ -23,7 +24,6 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   std::fill(force_,force_+3,0.0);
   std::fill(torque_, torque_+3, 0.0);
   std::fill(dr_tot_, dr_tot_+3, 0.0);
-  rng_.init(seed);
   interactions_.clear();
   // Set some defaults
   diameter_ = 1;
@@ -37,75 +37,6 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   color_[1] = 0.0;
   color_[2] = 0.0;
   color_[3] = 1.0;
-}
-
-Object::Object(const Object& that) {
-  n_dim_=that.n_dim_;
-  oid_ = that.oid_;
-  cid_ = that.cid_;
-  sid_ = that.sid_;
-  rid_ = that.rid_;
-  next_oid_=that.next_oid_;
-  delta_ = that.delta_;
-  std::copy(that.position_, that.position_+3, position_);
-  std::copy(that.velocity_, that.velocity_+3, velocity_);
-  std::copy(that.anglevel_, that.anglevel_+3, anglevel_);
-  std::copy(that.scaled_position_, that.scaled_position_+3, scaled_position_);
-  std::copy(that.prev_position_, that.prev_position_+3, prev_position_);
-  std::copy(that.orientation_, that.orientation_+3, orientation_);
-  std::copy(that.force_, that.force_+3, force_);
-  std::copy(that.torque_, that.torque_+3, torque_);
-  std::copy(that.dr_tot_, that.dr_tot_+3, dr_tot_);
-  std::copy(that.color_, that.color_+4, color_);
-  diameter_ = that.diameter_;
-  length_ = that.length_;
-  k_energy_ = that.k_energy_;
-  p_energy_ = that.p_energy_;
-  space_ = that.space_;
-  interactions_ = that.interactions_;
-  g_ = that.g_;
-  rng_.init(gsl_rng_get(that.rng_.r));
-  is_rigid_=that.is_rigid_;
-  is_kmc_=that.is_kmc_;
-  neighbors_ = that.neighbors_;
-  anchors_ = that.anchors_;
-  draw_type_ = that.draw_type_;
-  //spec_virial_ = that.spec_virial_;
-}
-
-Object &Object::operator=(Object const& that) {
-  n_dim_=that.n_dim_;
-  oid_=that.oid_;
-  cid_=that.cid_;
-  sid_=that.sid_;
-  rid_=that.rid_;
-  next_oid_=that.next_oid_;
-  delta_ = that.delta_;
-  std::copy(that.position_, that.position_+3, position_);
-  std::copy(that.velocity_, that.velocity_+3, velocity_);
-  std::copy(that.anglevel_, that.anglevel_+3, anglevel_);
-  std::copy(that.scaled_position_, that.scaled_position_+3, scaled_position_);
-  std::copy(that.prev_position_, that.prev_position_+3, prev_position_);
-  std::copy(that.orientation_, that.orientation_+3, orientation_);
-  std::copy(that.force_, that.force_+3, force_);
-  std::copy(that.torque_, that.torque_+3, torque_);
-  std::copy(that.dr_tot_, that.dr_tot_+3, dr_tot_);
-  std::copy(that.color_, that.color_+4, color_);
-  diameter_ = that.diameter_;
-  length_ = that.length_;
-  k_energy_ = that.k_energy_;
-  p_energy_ = that.p_energy_;
-  space_ = that.space_;
-  interactions_ = that.interactions_;
-  g_ = that.g_;
-  rng_.init(gsl_rng_get(that.rng_.r));
-  is_rigid_=that.is_rigid_;
-  is_kmc_=that.is_kmc_;
-  neighbors_ = that.neighbors_;
-  anchors_ = that.anchors_;
-  draw_type_ = that.draw_type_;
-  //spec_virial_ = that.spec_virial_;
-  return *this;
 }
 
 //void Object::Dump() {
@@ -127,7 +58,7 @@ void Object::InsertRandom(double buffer) {
     buffer = 0;
   double R = space_->radius;
   if (R - buffer < 0)
-    error_exit("ERROR: Object #%d is too large to place in system.\n",GetOID());
+    error_exit("ERROR: Object #%d is too large to place in system.\n system radius: %2.2f, buffer: %2.2f\n",GetOID(), R, buffer);
   if (space_->type.compare("sphere")==0) {
     generate_random_unit_vector(n_dim_, position_, rng_.r);
     mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer);

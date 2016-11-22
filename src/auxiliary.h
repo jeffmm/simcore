@@ -143,18 +143,34 @@ enum class FTYPE : unsigned char {
 
 typedef std::pair<SID, SID> sid_pair;
 
-struct rng_properties { 
-  gsl_rng *r;
-  const gsl_rng_type *T;
-  void init(long seed) {
-    gsl_rng_env_setup();
-    T = gsl_rng_default;
-    r = gsl_rng_alloc(T);
-    gsl_rng_set(r, seed);
-  }
-  void clear() {
-    gsl_rng_free(r);
-  }
+class rng_properties { 
+  private:
+    const gsl_rng_type *T;
+    void clear() {
+      gsl_rng_free(r);
+    }
+  public:
+    gsl_rng *r;
+    rng_properties() {}
+    rng_properties(long seed) {
+      init(seed);
+    }
+    ~rng_properties() {
+      clear();
+    }
+    void init(long seed) {
+      gsl_rng_env_setup();
+      T = gsl_rng_default;
+      r = gsl_rng_alloc(T);
+      gsl_rng_set(r, seed);
+    }
+    rng_properties(const rng_properties& that) {
+      this->init(gsl_rng_get(that.r));
+    }
+    rng_properties& operator=(rng_properties const&that) {
+      this->init(gsl_rng_get(that.r));
+      return *this;
+    }
 };
 
 struct space_struct {

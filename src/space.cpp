@@ -40,7 +40,6 @@ void SpaceProperties::Init(system_parameters *params, long seed) {
 }
 
 void SpaceProperties::Clear() {
-  rng_.clear();
   ClearUnitCell();
 }
 

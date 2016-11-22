@@ -13,9 +13,6 @@ class BrBead : public Simple {
       diameter_=params->br_bead_diameter;
       SetDiffusion();
     }
-    ~BrBead() {}
-    BrBead(const BrBead& that) : Simple(that) {}
-    BrBead& operator=(BrBead const& that) {Simple::operator=(that); return *this;} 
     void SetDiffusion() {diffusion_ = sqrt(24.0*diameter_/delta_);}
     void KickBead();
     void UpdatePosition();
@@ -34,13 +31,6 @@ class BrBeadSpecies : public Species<BrBead> {
     BrBeadSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::br_bead);
     }
-    ~BrBeadSpecies() {}
-    BrBeadSpecies(const BrBeadSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
-    }
-
     void Init() {
       Species::Init();
     }

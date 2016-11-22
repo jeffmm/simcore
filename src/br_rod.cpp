@@ -846,13 +846,13 @@ void BrRodSpecies::Configurator() {
   if (diffusion_validation_) {
     nbins_ =  (int) floor(params_->n_steps/params_->n_validate);
     nvalidate_ = params_->n_validate;
-    orientations_ = new double**[n_members_];
-    for (int i=0; i<n_members_; ++i) {
-      orientations_[i] = new double*[2];
-      for (int j=0; j<2; ++j) {
-        orientations_[i][j] = new double[nbins_];
-      }
-    }
+    //orientations_ = new double**[n_members_];
+    //for (int i=0; i<n_members_; ++i) {
+      //orientations_[i] = new double*[2];
+      //for (int j=0; j<2; ++j) {
+        //orientations_[i][j] = new double[nbins_];
+      //}
+    //}
   }
   ibin_ = 0;
   ivalidate_ = 0;
@@ -1144,49 +1144,49 @@ void BrRodSpecies::CreateTestRod(BrRod **rod,
 }
 
 void BrRodSpecies::ValidateDiffusion() {
-  int i_member = 0;
-  double u[3];
-  for (auto it=members_.begin(); it!=members_.end(); ++it) {
-    double const * const u = (*it)->GetOrientation();
-    if (n_dim_ == 2) {
-      orientations_[i_member][0][ibin_] = acos(u[1]);
-      orientations_[i_member][1][ibin_] = 0;
-    }
-    if (n_dim_ == 3) {
-      orientations_[i_member][0][ibin_] = acos(u[2]);
-      orientations_[i_member][1][ibin_] = atan2(u[1],u[0]);
-    }
-    i_member++;
-  }
-  ibin_++;
+  //int i_member = 0;
+  //double u[3];
+  //for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    //double const * const u = (*it)->GetOrientation();
+    //if (n_dim_ == 2) {
+      //orientations_[i_member][0][ibin_] = acos(u[1]);
+      //orientations_[i_member][1][ibin_] = 0;
+    //}
+    //if (n_dim_ == 3) {
+      //orientations_[i_member][0][ibin_] = acos(u[2]);
+      //orientations_[i_member][1][ibin_] = atan2(u[1],u[0]);
+    //}
+    //i_member++;
+  //}
+  //ibin_++;
 }
 
 void BrRodSpecies::WriteDiffusionValidation(std::string run_name) {
-  std::ostringstream file_name;
-  file_name << run_name << ".diffusion";
-  std::ofstream diffusion_file(file_name.str().c_str(), std::ios_base::out);
-  diffusion_file << "timestep ";
-  for (int i_member=0; i_member<n_members_; ++i_member) {
-    diffusion_file << "fil_" << i_member+1 << "_theta" << " ";
-    if (n_dim_ == 3)
-      diffusion_file << "fil_" << i_member+1 << "_phi" << " ";
-  }
-  diffusion_file << "\n";
-  for (int i_bin=0; i_bin<nbins_; ++i_bin) {
-    int time = i_bin*nvalidate_;
-    diffusion_file << time << " ";
-    for (int i_member=0; i_member<n_members_; ++i_member) {
-      diffusion_file << orientations_[i_member][0][i_bin] << " ";
-      if (n_dim_ == 3)
-        diffusion_file << orientations_[i_member][1][i_bin] << " ";
-    }
-    diffusion_file << "\n";
-  }
+  //std::ostringstream file_name;
+  //file_name << run_name << ".diffusion";
+  //std::ofstream diffusion_file(file_name.str().c_str(), std::ios_base::out);
+  //diffusion_file << "timestep ";
+  //for (int i_member=0; i_member<n_members_; ++i_member) {
+    //diffusion_file << "fil_" << i_member+1 << "_theta" << " ";
+    //if (n_dim_ == 3)
+      //diffusion_file << "fil_" << i_member+1 << "_phi" << " ";
+  //}
+  //diffusion_file << "\n";
+  //for (int i_bin=0; i_bin<nbins_; ++i_bin) {
+    //int time = i_bin*nvalidate_;
+    //diffusion_file << time << " ";
+    //for (int i_member=0; i_member<n_members_; ++i_member) {
+      //diffusion_file << orientations_[i_member][0][i_bin] << " ";
+      //if (n_dim_ == 3)
+        //diffusion_file << orientations_[i_member][1][i_bin] << " ";
+    //}
+    //diffusion_file << "\n";
+  //}
 }
 
 void BrRodSpecies::WriteOutputs(std::string run_name) {
-  if (diffusion_validation_) {
-    WriteDiffusionValidation(run_name);
-  }
+  //if (diffusion_validation_) {
+    //WriteDiffusionValidation(run_name);
+  //}
 }
 

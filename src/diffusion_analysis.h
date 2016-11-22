@@ -137,6 +137,9 @@ class DiffusionAnalysis {
       std::string file_name = posit_file_name_.substr(0,posit_file_name_.find_last_of(".")) + ".diffusion";
       //file_name << posit_file_name_.substr(0,posit_file_name_.find_last_of(".")) << ".diffusion";
       std::ofstream diff_file(file_name.c_str(), std::ios_base::out);
+      diff_file.precision(16);
+      diff_file.setf(std::ios::fixed);
+      diff_file.setf(std::ios::showpoint);
       diff_file << "# n_dim delta n_steps n_posit n_objs n_interval\n";
       diff_file << n_dim_ << " " << delta_ << " " << n_steps_ << " " << n_posit_ << " " << n_objs_ << " " << n_interval_ << "\n";
       diff_file << "# time msd msd_err vcf vcf_err\n";

@@ -33,21 +33,6 @@ class BrDimer : public Composite<BrBead> {
       k_spring_ = params->dimer_k_spring;
     }
     //Destructor
-    ~BrDimer() {}
-    //Copy constructor
-    BrDimer(const BrDimer& that) : Composite(that) {
-      eq_length_=that.eq_length_;
-      k_spring_=that.k_spring_;
-      g2_=that.g2_;
-    }
-    //Assignment constructor
-    BrDimer& operator=(BrDimer const& that) {
-      Composite::operator=(that);
-      eq_length_=that.eq_length_;
-      k_spring_=that.k_spring_;
-      g2_=that.g2_;
-      return *this;
-    };
     /* Define virtual functions */
     void Init();
     void UpdatePosition();
@@ -71,12 +56,6 @@ class BrDimerSpecies : public Species<BrDimer> {
     BrDimerSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::br_dimer);
       //InitPotentials(params);
-    }
-    ~BrDimerSpecies() {}
-    BrDimerSpecies(const BrDimerSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
     }
 };
 

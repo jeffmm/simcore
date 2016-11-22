@@ -28,9 +28,6 @@ class BrSimpleRod : public Simple {
         if (length_ > max_length)
           length_=max_length;
       }
-    ~BrSimpleRod() {}
-    BrSimpleRod(const BrSimpleRod& that) : Simple(that) {}
-    BrSimpleRod& operator=(BrSimpleRod const& that) {Simple::operator=(that); return *this;} 
     void Init();
     void UpdatePosition();
     void UpdatePositionMP();
@@ -46,12 +43,6 @@ class BrSimpleRodSpecies : public Species<BrSimpleRod> {
       : Species(n_members, params, space, seed) {
       SetSID(SID::br_simple_rod);
       //InitPotentials(params);
-    }
-    ~BrSimpleRodSpecies() {}
-    BrSimpleRodSpecies(const BrSimpleRodSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
     }
     void Init() {
       Species::Init();
