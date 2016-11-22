@@ -5,7 +5,7 @@ filament:
   fil:
     num: 20
     length: 100
-    persistence_length: 10000
+    persistence_length: 100000
     max_length: 100
     min_length: 1
     max_child_length: 4

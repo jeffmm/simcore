@@ -21,9 +21,6 @@ class BrWalker : public Simple {
       bound_ = false;
       SetDiffusion();
     }
-    ~BrWalker() {}
-    BrWalker(const BrWalker& that) : Simple(that) {}
-    BrWalker& operator=(BrWalker const& that) {Simple::operator=(that); return *this;} 
     void SetDiffusion() {diffusion_ = sqrt(24.0*diameter_/delta_);}
     void KickBead();
     void UpdatePosition();
@@ -54,12 +51,6 @@ class BrWalkerSpecies : public Species<BrWalker> {
       SetSID(SID::br_walker);
       is_kmc_ = true;
       //InitPotentials(params);
-    }
-    ~BrWalkerSpecies() {}
-    BrWalkerSpecies(const BrWalkerSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
     }
     virtual void DumpKMC() {
       for (auto it = members_.begin(); it != members_.end(); ++it) {

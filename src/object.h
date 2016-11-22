@@ -48,11 +48,6 @@ class Object {
     virtual void InsertOriented( double* buffer, const double* const u);
   public:
     Object(system_parameters *params, space_struct *space, long seed, SID sid);
-    Object(const Object& that);
-    Object& operator=(Object const& that);
-
-    virtual ~Object() {
-      rng_.clear();}
     bool IsRigid() {return is_rigid_;}
     bool IsKMC() { return is_kmc_; }
     void InitOID() { oid_ = ++next_oid_;}
@@ -210,12 +205,6 @@ class Simple : public Object {
   public:
     Simple(system_parameters *params, space_struct *space, long seed, SID sid) :
       Object(params, space, seed, sid) {}
-    virtual ~Simple() {}
-    Simple(const Simple& that) : Object(that) {}
-    Simple& operator=(Simple const& that) {
-      Object::operator=(that);
-      return *this;
-    }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> sim_vec;
       sim_vec.push_back(this);
@@ -273,30 +262,6 @@ class Rigid : public Simple {
         rigid_diameter_=1;
         is_rigid_ = true;
     }
-    virtual ~Rigid() {}
-    Rigid(const Rigid& that) : Simple(that) {
-      std::copy(that.rigid_position_,that.rigid_position_+3,rigid_position_);
-      std::copy(that.rigid_scaled_position_,that.rigid_scaled_position_+3,rigid_scaled_position_);
-      std::copy(that.rigid_orientation_,that.rigid_orientation_+3,rigid_orientation_);
-      rigid_length_ = that.rigid_length_;
-      rigid_diameter_ = that.rigid_diameter_;
-    }
-    Rigid& operator=(Rigid const& that) {
-      Simple::operator=(that);
-      std::copy(that.rigid_position_,that.rigid_position_+3,rigid_position_);
-      std::copy(that.rigid_scaled_position_,that.rigid_scaled_position_+3,rigid_scaled_position_);
-      std::copy(that.rigid_orientation_,that.rigid_orientation_+3,rigid_orientation_);
-      rigid_length_ = that.rigid_length_;
-      rigid_diameter_ = that.rigid_diameter_;
-      return *this;
-    }
-    //virtual void InsertRandom(double buffer) {
-      //Simple::InsertRandom(buffer);
-      //std::copy(position_,position_+3,rigid_position_);
-      //std::copy(orientation_,orientation_+3,rigid_orientation_);
-      //rigid_length_ = length_;
-      //rigid_diameter_ = diameter_;
-    //}
     void SetRigidLength(double len) {rigid_length_=len;}
     void SetRigidDiameter(double d) {rigid_diameter_=d;}
     void SetRigidPosition(double *pos) {std::copy(pos, pos+3,rigid_position_);}
@@ -322,18 +287,6 @@ class Composite<T> : public Object {
     virtual void InitElements(system_parameters *params) {}
   public:
     Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {params_ = params;} 
-    //Destructor
-    virtual ~Composite() {}
-    //Copy constructor
-    Composite(const Composite& that) : Object(that) {
-      elements_=that.elements_;
-    }
-    //Assignment constructor
-    Composite& operator=(Composite const& that) {
-      Object::operator=(that);
-      elements_=that.elements_;
-      return *this;
-    }
     virtual void ZeroForce() {
       std::fill(force_,force_+3,0.0);
       std::fill(torque_,torque_+3,0.0);
@@ -421,20 +374,6 @@ class Composite<T,V> : public Object {
     std::vector<V> v_elements_;
   public:
     Composite(system_parameters *params, space_struct *space, long seed, SID sid) : Object(params, space, seed, sid) {params_ = params;}  
-    //Destructor
-    virtual ~Composite() {}
-    //Copy constructor
-    Composite(const Composite& that) : Object(that) {
-      elements_=that.elements_;
-      v_elements_ = that.v_elements_;
-    }
-    //Assignment constructor
-    Composite& operator=(Composite const& that) {
-      Object::operator=(that);
-      elements_=that.elements_;
-      v_elements_ = that.v_elements_;
-      return *this;
-    }
     virtual void ZeroForce() {
       std::fill(force_,force_+3,0.0);
       std::fill(torque_,torque_+3,0.0);

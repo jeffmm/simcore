@@ -31,14 +31,14 @@ class SpeciesBase {
     double virial_[9] = {0};
 
   public:
-    SpeciesBase(int n_members, system_parameters *params, space_struct *space, long seed) {
+    SpeciesBase(int n_members, system_parameters *params, space_struct *space, long seed) 
+    : rng_(seed) {
       sid_ = SID::none;
       n_members_ = n_members;
       params_ = params;
       space_ = space;
       is_kmc_ = false;
       kmc_update_ = false;
-      rng_.init(seed);
       delta_ = params->delta;
       ClearThermo();
     }
@@ -46,35 +46,6 @@ class SpeciesBase {
       sid_ = SID::none;
       is_kmc_ = false;
       kmc_update_ = false;
-    }
-    virtual ~SpeciesBase() {
-      rng_.clear();
-      //for (auto it=potentials_.begin(); it!=potentials_.end(); ++it)
-        //delete it->second;
-      //potentials_.clear();
-    }
-    SpeciesBase(const SpeciesBase& that) {
-      sid_=that.sid_;
-      n_members_ = that.n_members_;
-      params_=that.params_;
-      space_=that.space_;
-      //potentials_=that.potentials_;
-      is_kmc_ = that.is_kmc_;
-      kmc_update_ = that.kmc_update_;
-      rng_.init(gsl_rng_get(that.rng_.r));
-      delta_=that.delta_;
-    }
-    SpeciesBase& operator=(SpeciesBase const& that) {
-      sid_=that.sid_;
-      n_members_ = that.n_members_;
-      params_=that.params_;
-      space_=that.space_;
-      //potentials_=that.potentials_;
-      is_kmc_=that.is_kmc_;
-      kmc_update_ = that.kmc_update_;
-      rng_.init(gsl_rng_get(that.rng_.r));
-      delta_=that.delta_;
-      return *this;
     }
     virtual void UpdatePositions() {}
     virtual void UpdatePositionsMP() {}
@@ -188,21 +159,6 @@ class Species : public SpeciesBase {
     }
 
     Species(int n_members, system_parameters *params, space_struct *space, long seed) : SpeciesBase(n_members, params, space, seed) {}
-    //Destructor
-    virtual ~Species() {
-      for (auto it=members_.begin(); it!=members_.end(); ++it)
-        delete (*it);
-    }
-    //Copy constructor
-    Species(const Species& that) : SpeciesBase(that) {
-      members_=that.members_;
-    }
-    //Assignment constructor
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      members_=that.members_;
-      return *this;
-    }
     //Virtual functions
     virtual void Init() {
       for (int i=0; i<n_members_; ++i) {

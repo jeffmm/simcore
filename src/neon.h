@@ -15,11 +15,6 @@ class Neon : public MDBead {
       diameter_ = params->neon_diameter;
       mass_ = params->neon_mass;
     }
-    ~Neon() {}
-    Neon(const Neon& that) : MDBead(that) {}
-    Neon& operator=(Neon const& that) {
-      MDBead::operator=(that); return *this;
-    }
     // Define simple particle virtual functions for Neon
     void Init();
     void UpdatePosition() {MDBead::UpdatePosition();}
@@ -38,12 +33,6 @@ class NeonSpecies : public Species<Neon> {
       // Set species ID for Neon
       SetSID(SID::neon);
       //InitPotentials(params);
-    }
-    ~NeonSpecies() {}
-    NeonSpecies(const NeonSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
     }
     void Init() {
       Species::Init();

@@ -36,18 +36,6 @@ class Xlink : public Composite<XlinkHead> {
       diameter_ = params->xlink_diameter;
       length_ = 0.0;
     }
-    //Destructor
-    ~Xlink() {}
-    //Copy constructor
-    Xlink(const Xlink& that) : Composite(that) {
-      g2_=that.g2_;
-    }
-    //Assignment constructor
-    Xlink& operator=(Xlink const& that) {
-      Composite::operator=(that);
-      g2_=that.g2_;
-      return *this;
-    };
     /* Define virtual functions */
     void Init();
     void InitConfigurator(const double* const x, const double diameter);
@@ -159,12 +147,6 @@ class XlinkSpecies : public Species<Xlink> {
     XlinkSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::xlink);
       is_kmc_ = true;
-    }
-    ~XlinkSpecies() {}
-    XlinkSpecies(const XlinkSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
     }
 
     // Specific initialization

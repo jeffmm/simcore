@@ -76,87 +76,6 @@ class Filament : public Composite<Site,Bond> {
       SetParameters(params);
       InitElements(params, space);
     }
-    ~Filament() {}
-    Filament(const Filament& that) : Composite(that) {
-      n_bonds_=that.n_bonds_;
-      n_sites_ = that.n_sites_;
-      dynamic_instability_flag_ = that.dynamic_instability_flag_;
-      force_induced_catastrophe_flag_ = that.force_induced_catastrophe_flag_;
-      metric_forces_ = that.metric_forces_;
-      theta_validation_flag_ = that.theta_validation_flag_;
-      max_length_ = that.max_length_;
-      min_length_ = that.min_length_;
-      max_child_length_ = that.max_child_length_;
-      gamma_par_ = that.gamma_par_;
-      gamma_perp_ = that.gamma_perp_;
-      gamma_ratio_ = that.gamma_ratio_;
-      rand_sigma_par_ = that.rand_sigma_par_;
-      rand_sigma_perp_ = that.rand_sigma_perp_;
-      v_poly_ = that.v_poly_;
-      v_depoly_ = that.v_depoly_;
-      p_s2g_ = that.p_s2g_;
-      p_s2p_ = that.p_s2p_;
-      p_p2s_ = that.p_p2s_;
-      p_p2g_ = that.p_p2g_;
-      p_g2s_ = that.p_g2s_;
-      p_g2p_ = that.p_g2p_;
-      tip_force_ = that.tip_force_;
-      gamma_inverse_ = that.gamma_inverse_;
-      tensions_ = that.tensions_;
-      g_mat_lower_ = that.g_mat_lower_;
-      g_mat_upper_ = that.g_mat_upper_;
-      g_mat_diag_ = that.g_mat_diag_;
-      h_mat_diag_ = that.h_mat_diag_;
-      h_mat_lower_ = that.h_mat_lower_;
-      h_mat_upper_ = that.h_mat_upper_;
-      cos_thetas_ = that.cos_thetas_;
-      k_eff_ = that.k_eff_;
-      g_mat_inverse_ = that.g_mat_inverse_;
-      det_t_mat_ = that.det_t_mat_;
-      det_b_mat_ = that.det_b_mat_;
-      poly_state_ = that.poly_state_;
-    }
-    Filament& operator=(Filament const& that) {
-      Composite::operator=(that); 
-      n_bonds_=that.n_bonds_;
-      n_sites_ = that.n_sites_;
-      dynamic_instability_flag_ = that.dynamic_instability_flag_;
-      force_induced_catastrophe_flag_ = that.force_induced_catastrophe_flag_;
-      theta_validation_flag_ = that.theta_validation_flag_;
-      metric_forces_ = that.metric_forces_;
-      max_length_ = that.max_length_;
-      min_length_ = that.min_length_;
-      max_child_length_ = that.max_child_length_;
-      gamma_par_ = that.gamma_par_;
-      gamma_perp_ = that.gamma_perp_;
-      gamma_ratio_ = that.gamma_ratio_;
-      rand_sigma_par_ = that.rand_sigma_par_;
-      rand_sigma_perp_ = that.rand_sigma_perp_;
-      v_poly_ = that.v_poly_;
-      v_depoly_ = that.v_depoly_;
-      p_s2g_ = that.p_s2g_;
-      p_s2p_ = that.p_s2p_;
-      p_p2s_ = that.p_p2s_;
-      p_p2g_ = that.p_p2g_;
-      p_g2s_ = that.p_g2s_;
-      p_g2p_ = that.p_g2p_;
-      tip_force_ = that.tip_force_;
-      gamma_inverse_ = that.gamma_inverse_;
-      tensions_ = that.tensions_;
-      g_mat_lower_ = that.g_mat_lower_;
-      g_mat_upper_ = that.g_mat_upper_;
-      g_mat_diag_ = that.g_mat_diag_;
-      h_mat_diag_ = that.h_mat_diag_;
-      h_mat_lower_ = that.h_mat_lower_;
-      h_mat_upper_ = that.h_mat_upper_;
-      cos_thetas_ = that.cos_thetas_;
-      k_eff_ = that.k_eff_;
-      g_mat_inverse_ = that.g_mat_inverse_;
-      det_t_mat_ = that.det_t_mat_;
-      det_b_mat_ = that.det_b_mat_;
-      poly_state_ = that.poly_state_;
-      return *this;
-    } 
     virtual void Init();
     void DiffusionValidationInit();
     virtual void Integrate(bool midstep);
@@ -182,7 +101,6 @@ class FilamentSpecies : public Species<Filament> {
          diffusion_validation_,
          midstep_;
     int ***theta_distribution_;
-    double ***orientations_;
     int nbins_,
         ibin_,
         n_dim_,
@@ -208,17 +126,8 @@ class FilamentSpecies : public Species<Filament> {
         }
         delete[] theta_distribution_;
       }
-      if (diffusion_validation_) {
-        for (int i=0; i<n_members_; ++i) {
-          for (int j=0; j<2; ++j) {
-            delete[] orientations_[i][j];
-          }
-          delete[] orientations_[i];
-        }
-        delete[] orientations_;
-      }
     }
-    FilamentSpecies(const FilamentSpecies& that) : Species(that) {
+    FilamentSpecies(const FilamentSpecies& that) {
       theta_distribution_ = that.theta_distribution_;
       theta_validation_ = that.theta_validation_;
       midstep_ = that.midstep_;
@@ -226,7 +135,6 @@ class FilamentSpecies : public Species<Filament> {
       nbins_ = that.nbins_;
     }
     FilamentSpecies& operator=(FilamentSpecies const& that) {
-      Species::operator=(that);
       theta_distribution_ = that.theta_distribution_;
       theta_validation_ = that.theta_validation_;
       midstep_ = that.midstep_;

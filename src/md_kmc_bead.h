@@ -26,11 +26,6 @@ class MDKMCBead : public Simple {
       is_kmc_ = true;
       bound_ = false;
     }
-    ~MDKMCBead() {}
-    MDKMCBead(const MDKMCBead& that) : Simple(that) {}
-    MDKMCBead& operator=(MDKMCBead const& that) {
-      Simple::operator=(that); return *this;
-    }
     virtual void Init();
     virtual void UpdatePosition();
     virtual void UpdatePositionMP();
@@ -65,12 +60,6 @@ class MDKMCBeadSpecies : public Species<MDKMCBead> {
       is_kmc_ = true;
       nbound_ = 0;
       n_exp_ = 0.0;
-    }
-    ~MDKMCBeadSpecies() {}
-    MDKMCBeadSpecies(const MDKMCBeadSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
     }
     void Init() {
       Species::Init();
