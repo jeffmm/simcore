@@ -428,7 +428,6 @@ void BrRodSpecies::Configurator() {
   }
 
 
-  // BEGIN SPAGHETTI
   if (insertion_type.compare("xyz") == 0) {
     if (!can_overlap) {
       std::cout << "Warning, location insertion overrides overlap\n";
@@ -841,7 +840,6 @@ void BrRodSpecies::Configurator() {
     exit(1);
   }
 
-  // DONT YOU FUCKERS TOUCH THIS
   diffusion_validation_ = params_->diffusion_validation_flag ? true : false;
   n_members_ = members_.size();
   n_dim_ = params_->n_dim;

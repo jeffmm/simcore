@@ -168,6 +168,10 @@ class DiffusionAnalysis {
       posit_file_name_ = posit_file_name;
       preader_.LoadFile(posit_file_name);
       DiffusionInit();
+      bool start_calc = true;
+      if (n_interval_ > 1) {
+        start_calc = false;
+      }
       time_=0;
       int nobj;
       while (preader_.GetNext(&nobj, positions_,
@@ -181,6 +185,7 @@ class DiffusionAnalysis {
         if (time_ == time_avg_interval_) {
           if (n_interval_ == 1)
             error_exit("Something went wrong in diffusion analysis\n");
+          start_calc=true;
           SetInitPos();
           time_=0;
         }
