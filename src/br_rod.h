@@ -70,53 +70,6 @@ class BrRod : public Composite<Site,Bond> {
           v_elements_.push_back(b);
         }
       }
-    ~BrRod() {}
-    BrRod(const BrRod& that) : Composite(that) {
-      n_bonds_=that.n_bonds_;
-      max_length_ = that.max_length_;
-      min_length_ = that.min_length_;
-      max_child_length_ = that.max_child_length_;
-      gamma_par_ = that.gamma_par_;
-      gamma_perp_ = that.gamma_perp_;
-      gamma_rot_ = that.gamma_rot_;
-      rand_sigma_par_ = that.rand_sigma_par_;
-      rand_sigma_perp_ = that.rand_sigma_perp_;
-      rand_sigma_rot_ = that.rand_sigma_rot_;
-      std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
-      poly_state_ = that.poly_state_;
-      stabilization_state_ = that.stabilization_state_;
-      f_stabilize_fr_ = that.f_stabilize_fr_;
-      f_stabilize_fc_ = that.f_stabilize_fc_;
-      f_stabilize_vg_ = that.f_stabilize_vg_;
-      f_stabilize_vs_ = that.f_stabilize_vs_;
-      rod_diffusion_=that.rod_diffusion_;
-      rod_fixed_=that.rod_fixed_;
-      diffusion_validation_flag_ = that.diffusion_validation_flag_;
-    }
-    BrRod& operator=(BrRod const& that) {
-      Composite::operator=(that); 
-      n_bonds_=that.n_bonds_;
-      max_length_ = that.max_length_;
-      min_length_ = that.min_length_;
-      max_child_length_ = that.max_child_length_;
-      gamma_par_ = that.gamma_par_;
-      gamma_perp_ = that.gamma_perp_;
-      gamma_rot_ = that.gamma_rot_;
-      rand_sigma_par_ = that.rand_sigma_par_;
-      rand_sigma_perp_ = that.rand_sigma_perp_;
-      rand_sigma_rot_ = that.rand_sigma_rot_;
-      std::copy(that.body_frame_, that.body_frame_+6, body_frame_);
-      poly_state_ = that.poly_state_;
-      stabilization_state_ = that.stabilization_state_;
-      f_stabilize_fr_ = that.f_stabilize_fr_;
-      f_stabilize_fc_ = that.f_stabilize_fc_;
-      f_stabilize_vg_ = that.f_stabilize_vg_;
-      f_stabilize_vs_ = that.f_stabilize_vs_;
-      rod_diffusion_ = that.rod_diffusion_;
-      rod_fixed_=that.rod_fixed_;
-      diffusion_validation_flag_ = that.diffusion_validation_flag_;
-      return *this;
-    } 
     virtual void Init();
     virtual void Integrate();
     //virtual double const * const GetDrTot();
@@ -164,7 +117,6 @@ class BrRodSpecies : public Species<BrRod> {
     //void InitPotentials(system_parameters *params);
     bool diffusion_validation_;
     double max_length_;
-    double ***orientations_;
     double min_length_;
     int n_dim_,
         nbins_,
@@ -184,40 +136,6 @@ class BrRodSpecies : public Species<BrRod> {
       //InitPotentials(params);
       max_length_ = params_->max_rod_length;
     }
-    ~BrRodSpecies() {
-      if (diffusion_validation_) {
-        for (int i=0; i<n_members_; ++i) {
-          for (int j=0; j<2; ++j) {
-            delete[] orientations_[i][j];
-          }
-          delete[] orientations_[i];
-        }
-        delete[] orientations_;
-      }
-    }
-    BrRodSpecies(const BrRodSpecies& that) : Species(that) {
-      max_length_ = that.max_length_;
-      min_length_ = that.min_length_;
-      nbins_ = that.nbins_;
-      ibin_ = that.ibin_;
-      nvalidate_ = that.nvalidate_;
-      ivalidate_ = that.ivalidate_;
-      orientations_ = that.orientations_;
-    }
-    BrRodSpecies& operator=(BrRodSpecies const& that) {
-      Species::operator=(that);
-      max_length_ = that.max_length_;
-      min_length_ = that.min_length_;
-      nbins_ = that.nbins_;
-      ibin_ = that.ibin_;
-      nvalidate_ = that.nvalidate_;
-      ivalidate_ = that.ivalidate_;
-      orientations_ = that.orientations_;
-      return *this;
-    }
-    //virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
-      //Species::InitConfig(params, space, seed);
-    //}
     void Init() {
       Species::Init();
     }
@@ -225,12 +143,12 @@ class BrRodSpecies : public Species<BrRod> {
     double const GetMinLength() {return min_length_;}
 
     void UpdatePositionsMP() {
-      if (diffusion_validation_ && ivalidate_%nvalidate_ == 0)
-        ValidateDiffusion();
+      //if (diffusion_validation_ && ivalidate_%nvalidate_ == 0)
+        //ValidateDiffusion();
       for (auto it=members_.begin(); it != members_.end(); ++it) {
         (*it)->UpdatePositionMP();
       }
-      ivalidate_++;
+      //ivalidate_++;
     }
     void WriteOutputs(std::string run_name);
 

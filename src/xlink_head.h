@@ -35,9 +35,6 @@ class XlinkHead : public Simple {
       overbound_ = unbound;
       SetDiffusion();
     }
-    ~XlinkHead() {}
-    XlinkHead(const XlinkHead& that) : Simple(that) {}
-    XlinkHead& operator=(XlinkHead const& that) {Simple::operator=(that); return *this;} 
     void SetDiffusion() {diffusion_ = sqrt(24.0*diameter_/delta_);}
     void KickBead();
     void UpdatePositionMP();
@@ -107,12 +104,6 @@ class XlinkHeadSpecies : public Species<XlinkHead> {
     XlinkHeadSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::xlink_head);
       is_kmc_ = true;
-    }
-    ~XlinkHeadSpecies() {}
-    XlinkHeadSpecies(const XlinkHeadSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
     }
     virtual void DumpKMC() {
       for (auto it = members_.begin(); it != members_.end(); ++it) {

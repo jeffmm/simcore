@@ -8,7 +8,6 @@ class MDBeadOpt : public MDBead {
   public:
     MDBeadOpt(system_parameters *params, space_struct *space, 
         long seed, SID sid) : MDBead(params, space, seed, sid) {}
-    ~MDBeadOpt() {}
 
   //void WritePosit(std::ofstream &op);
   //void ReadPosit(std::ifstream &ip);
@@ -31,12 +30,6 @@ class MDBeadOptSpecies : public Species<MDBeadOpt> {
       SetSID(SID::md_bead_opt);
     }
 
-    ~MDBeadOptSpecies() {}
-    MDBeadOptSpecies(const MDBeadOptSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) { //FIXME not sure if this is right
-      SpeciesBase::operator=(that);
-      return *this;
-    }
     void Init() {
       Species::Init();
     }

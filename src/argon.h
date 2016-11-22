@@ -15,11 +15,6 @@ class Argon : public Simple {
       diameter_ = params->argon_diameter;
       mass_ = params->argon_mass;
     }
-    ~Argon() {}
-    Argon(const Argon& that) : Simple(that) {}
-    Argon& operator=(Argon const& that) {
-      Simple::operator=(that); return *this;
-    }
     virtual void Init();
     void InitConfigurator(std::array<double, 3> rx, std::array<double, 3> vx);
     virtual void UpdatePosition();
@@ -41,12 +36,6 @@ class ArgonSpecies : public Species<Argon> {
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
       SetSID(SID::argon);
-    }
-    ~ArgonSpecies() {}
-    ArgonSpecies(const ArgonSpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
     }
     void Init() {
       Species::Init();

@@ -26,9 +26,6 @@ class SpindlePoleBody : public Simple {
 
   public:
     SpindlePoleBody(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {}
-    ~SpindlePoleBody() {}
-    SpindlePoleBody(const SpindlePoleBody& that) : Simple(that) {}
-    SpindlePoleBody& operator=(SpindlePoleBody const& that) {Simple::operator=(that); return *this;} 
 
     const double* const GetUAnchor() {return u_anchor_;}
     const double* const GetVAnchor() {return v_anchor_;}
@@ -85,12 +82,6 @@ class SpindlePoleBodySpecies : public Species<SpindlePoleBody> {
     }
     SpindlePoleBodySpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::spb);
-    }
-    ~SpindlePoleBodySpecies() {}
-    SpindlePoleBodySpecies(const SpindlePoleBodySpecies& that) : Species(that) {}
-    Species& operator=(Species const& that) {
-      SpeciesBase::operator=(that);
-      return *this;
     }
 
     void Configurator();
