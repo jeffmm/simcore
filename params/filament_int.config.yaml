@@ -3,9 +3,9 @@ filament:
     insertion_type: random
     overlap: true
   fil:
-    num: 100
-    length: 40
-    persistence_length: 40000
+    num: 20
+    length: 100
+    persistence_length: 10000
     max_length: 100
     min_length: 1
     max_child_length: 4

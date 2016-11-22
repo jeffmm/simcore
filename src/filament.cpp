@@ -81,6 +81,7 @@ void Filament::Init() {
     DiffusionValidationInit();
     return;
   }
+  printf("0.5*l+d: %2.2f\n",0.5*length_+diameter_);
   InsertRandom(0.5*length_+diameter_);
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
@@ -122,10 +123,10 @@ void Filament::DiffusionValidationInit() {
 }
 
 void Filament::SetDiffusion() {
-  double eps = log(2.0*length_/diameter_);
+  double logLD = log(length_/diameter_);
   //double gamma_0 = 4.0/3.0*eps*((1+0.64*eps)/(1-1.15*eps) + 1.659 * SQR(eps));
   //gamma_perp_ = child_length_ * gamma_0;
-  gamma_perp_ = 4.0*child_length_*n_bonds_/n_sites_/3.0/eps;
+  gamma_perp_ = 4.0*length_/(3.0*n_sites_*logLD);
   gamma_par_ = gamma_perp_ / gamma_ratio_;
   rand_sigma_perp_ = sqrt(24.0*gamma_perp_/delta_);
   rand_sigma_par_ = sqrt(24.0*gamma_par_/delta_);
@@ -230,12 +231,15 @@ void Filament::CalculateTangents() {
 }
 
 void Filament::ConstructUnprojectedRandomForces() {
+  // Create unprojected forces, see J. Chem. Phys. 122, 084903 (2005), eqn. 40.
+  // xi is the random force vector with elements that are uncorrelated and randomly
+  // distributed uniformly between -0.5 and 0.5, xi_term is the outer product of the
+  // tangent vector u_tan_i u_tan_i acting on the vector xi
   double xi[3], xi_term[3], f_rand[3];
   for (int i_site=0; i_site<n_sites_; ++i_site) {
     double const * const utan = elements_[i_site].GetTangent();
     for (int i=0; i<n_dim_; ++i) 
       xi[i] = gsl_rng_uniform_pos(rng_.r) - 0.5;
-    // Create unprojected forces, see J. Chem. Phys. 122, 084903 (2005), eqn. 40.
     if (n_dim_ == 2) {
       xi_term[0] = SQR(utan[0]) * xi[0] + utan[0] * utan[1] * xi[1];
       xi_term[1] = SQR(utan[1]) * xi[1] + utan[0] * utan[1] * xi[0];
@@ -259,7 +263,8 @@ void Filament::ConstructUnprojectedRandomForces() {
 void Filament::GeometricallyProjectRandomForces() {
   double f_rand_temp[3];
   for (int i_site=0; i_site<n_sites_-1; ++i_site) {
-    // First get the tensions_ elements
+    // Use the tensions vector to calculate the hard components of the random forces
+    // These are not the same as the tensions, they will be calculated later
     double const * const f_rand1 = elements_[i_site].GetRandomForce();
     double const * const f_rand2 = elements_[i_site+1].GetRandomForce();
     double const * const u_site = elements_[i_site].GetOrientation();

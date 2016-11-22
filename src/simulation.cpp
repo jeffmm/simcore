@@ -32,8 +32,8 @@ void Simulation::RunSimulation() {
       printf("********\nStep %d\n********\n", i_step_);
     ZeroForces();
     //KineticMonteCarloMP();
-    //InteractMP();
-    //KineticMonteCarloMP();
+    InteractMP();
+    KineticMonteCarloMP();
     IntegrateMP();
     // Only will run if DEBUG is enabled
     #ifdef DEBUG
