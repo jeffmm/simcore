@@ -48,6 +48,7 @@ enum class SID : unsigned char {
   argon,
   neon,
   br_rod,
+  dy_rod,
   filament,
   br_simple_rod,
   md_kmc_bead,
@@ -74,6 +75,8 @@ inline SID StringToSID(std::string &s) {
         return SID::argon;
     else if (s == "neon")
         return SID::neon;
+    else if (s == "dy_rod")
+        return SID::dy_rod;
     else if (s == "br_rod")
         return SID::br_rod;
     else if (s == "filament")
@@ -111,6 +114,8 @@ inline std::string SIDToString(SID &s) {
         return "argon";
     else if (s == SID::neon)
         return "neon";
+    else if (s == SID::dy_rod)
+        return "dy_rod";
     else if (s == SID::br_rod)
         return "br_rod";
     else if (s == SID::filament)
