@@ -177,6 +177,7 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(ArgonSpecies,argon);
   REGISTER_SPECIES(MDBeadSpecies,md_bead);
   REGISTER_SPECIES(BrRodSpecies,br_rod);
+  REGISTER_SPECIES(DyRodSpecies,dy_rod);
   REGISTER_SPECIES(XlinkSpecies,xlink);
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(MDBeadOptSpecies,md_bead_opt);
