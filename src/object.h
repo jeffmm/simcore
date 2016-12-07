@@ -262,11 +262,11 @@ class Rigid : public Simple {
         rigid_diameter_=1;
         is_rigid_ = true;
     }
-    void SetRigidLength(double len) {rigid_length_=len;}
-    void SetRigidDiameter(double d) {rigid_diameter_=d;}
-    void SetRigidPosition(double *pos) {std::copy(pos, pos+3,rigid_position_);}
-    void SetRigidScaledPosition(double *scaled_pos) {std::copy(scaled_pos, scaled_pos+3,rigid_scaled_position_);}
-    void SetRigidOrientation(double *u) {std::copy(u, u+3, rigid_orientation_);}
+    void SetRigidLength(double const len) {rigid_length_=len;}
+    void SetRigidDiameter(double const d) {rigid_diameter_=d;}
+    void SetRigidPosition(double const * const pos) {std::copy(pos, pos+3,rigid_position_);}
+    void SetRigidScaledPosition(double const * const scaled_pos) {std::copy(scaled_pos, scaled_pos+3,rigid_scaled_position_);}
+    void SetRigidOrientation(double const * const u) {std::copy(u, u+3, rigid_orientation_);}
     virtual double const GetRigidLength() {return rigid_length_;}
     virtual double const GetRigidDiameter() {return rigid_diameter_;}
     virtual double const * const GetRigidPosition() {return rigid_position_;}

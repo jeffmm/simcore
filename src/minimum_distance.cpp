@@ -141,7 +141,6 @@ void min_distance_sphero(int n_dim, int n_periodic, double **h,
     /* Compute various constants. */
     half_length_1 = 0.5 * length_1;
     half_length_2 = 0.5 * length_2;
-
     /* Compute pair separation vector. */
     for (i = 0; i < n_periodic; ++i) {  /* First handle periodic subspace. */
         ds[i] = s_2[i] - s_1[i];
@@ -250,7 +249,6 @@ void min_distance_sphero(int n_dim, int n_periodic, double **h,
             *r_min_mag2 += SQR(r_min[i]);
         }
     } else {
-
         /* Calculate minimum distance between two spherocylinders. */
         *r_min_mag2 = 0.0;
         for (i = 0; i < n_dim; ++i) {
@@ -262,7 +260,6 @@ void min_distance_sphero(int n_dim, int n_periodic, double **h,
       contact_1[i] = lambda * u_1[i];
       contact_2[i] = mu * u_2[i];
     }
-
     return;
 }
 

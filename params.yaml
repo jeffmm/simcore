@@ -5,7 +5,7 @@ n_runs: 1
 n_dim: 2
 n_periodic: 2
 delta: 0.001
-n_steps: 500000
+n_steps: 50000
 system_radius: 50
 graph_flag: 1
 graph_diameter: 1
@@ -15,7 +15,7 @@ n_update_cells: 20
 diffusion_validation_flag: 0
 n_validate: 250
 time_flag: 1
-driving_factor: 40
+driving_factor: 3
 tracking_type: 1 # 0 none, 1 ap, 2 mcells, 3 cells, 4 nl ap, 5 nl cells
 potfile: params/filament_int.pot.yaml
 kmcfile: params/filament_int.kmc.yaml
