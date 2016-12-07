@@ -1,11 +1,11 @@
-#ifndef _SIMCORE_DYNAMIC_INSTABILITY_V2_H_
-#define _SIMCORE_DYNAMIC_INSTABILITY_V2_H_
+#ifndef _SIMCORE_DYNAMIC_INSTABILITY_H_
+#define _SIMCORE_DYNAMIC_INSTABILITY_H_
 
 #include "auxiliary.h"
 #include "br_rod.h"
-#include "kmc_base_v2.h"
+#include "kmc_base.h"
 
-class DynamicInstabilityKMCV2 : public KMCBaseV2 {
+class DynamicInstabilityKMC : public KMCBase {
 
   protected:
     double delta_;
@@ -32,12 +32,10 @@ class DynamicInstabilityKMCV2 : public KMCBaseV2 {
 
   public:
 
-    virtual void Init(space_struct *pSpace,
-                      ParticleEngine *pTrackEngine,
-                      SpeciesBase *spec1,
-                      SpeciesBase *spec2,
-                      YAML::Node *subnode,
-                      long seed);
+    virtual void Init(space_struct *pSpace, ParticleTracking *pTracking,
+        PotentialManager *pPotentials,
+        SpeciesBase *spec1, SpeciesBase *spec2, int ikmc, YAML::Node &node,
+        long seed);
     virtual void Print();
     virtual void Dump();
     virtual double GetMaxRcut() {return 0.0;}

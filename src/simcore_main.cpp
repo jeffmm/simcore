@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "parse_flags.h"
 #include "simulation_manager.h"
-#include "test_manager.h"
+
 /*************************
    ::SimCORE Main::
    Parse commandline flags and start simulation manager
@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
   SimulationManager sim;
+
   if (run_opts.debug) {
     // Debug mode should be very hands-off
     sim.DebugMode();
@@ -26,9 +27,7 @@ int main(int argc, char *argv[]) {
   if (run_opts.test) {
     // Run the test mode operation
     debug_trace = true;
-    TestManager testm;
-    testm.InitManager(run_opts.param_file);
-    testm.RunTestModules();
+
   } else {
     // Initialize param_file, rng, run_name, n_runs (if in param_file)
     sim.InitManager(run_opts.param_file);

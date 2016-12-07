@@ -6,11 +6,10 @@
 
 #include "anchor_list_generic.h"
 #include "auxiliary.h"
+#include "interaction.h"
+#include "particle_engine.h"
 #include "species.h"
 #include "minimum_distance.h"
-#include "neighbor_list_generic.h"
-#include "particle_tracking.h"
-#include "potential_manager.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -19,54 +18,14 @@
 class InteractionEngine {
   public:
     InteractionEngine() {}
-    ~InteractionEngine() {
-      delete[] frc_;
-      delete[] trqc_;
-      delete[] prc_energy_;
-      delete[] kmc_energy_;
-      delete[] virial_;
-    }
+    virtual ~InteractionEngine() {}
 
-    void Init(space_struct *pSpace,
-              std::vector<SpeciesBase*> *pSpecies,
-              ParticleTracking *pTracking,
-              al_set *pAnchors,
-              double pSkin);
-    void InitPotentials(PotentialManager *pPotentials);
-    void InitMP();
-
-    void Interact();
-    void InteractParticlesExternalMP(int &idx,
-                                     int &jdx,
-                                     double **fr,
-                                     double **tr,
-                                     double *pr_energy,
-                                     double *kmc_energy,
-                                     double **virial);
-    void InteractParticlesInternalMP(int &idx,
-                                     int &jdx,
-                                     double **fr,
-                                     double **tr,
-                                     double *pr_energy,
-                                     double *kmc_energy);
-    void TetherParticlesMP(int &idx,
-                           double **fr,
-                           double **tr,
-                           double *pr_energy,
-                           double *kmc_energy,
-                           double **virial);
-    void InteractParticlesBoundaryMP(int &idx,
-                                     double **fr,
-                                     double **tr,
-                                     double *pr_energy);
-    void KMCParticlesMP(neighbor_t *neighbor,
-                        int &idx,
-                        int &jdx,
-                        double *kmc_energy,
-                        double **virial);
-    void ReduceParticlesMP();
-    void Print();
     void Dump();
+    void Init(space_struct *pSpace,
+              ParticleEngine *pTrackEngine,
+              std::vector<interaction_t> *pInteractions);
+    void InitMP();
+    void Interact();
 
   protected:
     int ndim_;
@@ -75,29 +34,62 @@ class InteractionEngine {
     int nsimples_;
     int nspecies_;
 
-    double max_rcut_;
-    double skin_;
     double box_[3];
 
-    double* frc_ = nullptr; // Force superarray
-    double* trqc_ = nullptr; // torque superarray
-    double* prc_energy_ = nullptr; // Potential energy superarray
-    double* kmc_energy_ = nullptr; // kmc energy superarray
-    double* virial_ = nullptr; // virial superarray
+    // Superarrays
+    double *frc_  = nullptr;
+    double *trqc_ = nullptr;
+    double *prc_energy_ = nullptr;
+    double *virial_ = nullptr;
 
     space_struct *space_;
-    ParticleTracking *tracking_;
-    PotentialManager *potentials_;
-    std::vector<Simple*>* simples_;
-    std::vector<SpeciesBase*>* species_;
-    std::map<SID, int> spec_ind_map_;
-    std::unordered_map<int, int>* oid_position_map_;
+    ParticleEngine *ptrack_;
+    std::vector<interaction_t> *interactions_;
+    std::vector<Simple*> *simples_;
+    std::vector<SpeciesBase*> *species_;
+    std::unordered_map<int, int> *oid_position_map_;
     al_set *anchors_;
+
+    std::map<SID, int> spec_ind_map_;
+
+    void AttachParticleEngine();
+    void DumpInteractions();
+    void DumpSpecies();
+    void ReduceParticlesMP();
+
+    // All interaction types
+    void InteractParticlesExternalMP(interaction_t **pix,
+                                     double **fr,
+                                     double **tr,
+                                     double *pe,
+                                     double **virial);
+    void InteractParticlesKMCMP(interaction_t **pix,
+                                double **fr,
+                                double **tr,
+                                double *pe,
+                                double **virial);
+    void InteractParticlesInternalMP(interaction_t **pix,
+                                double **fr,
+                                double **tr,
+                                double *pe);
+    void InteractParticlesBoundaryMP(interaction_t **pix,
+                                     double **fr,
+                                     double **tr,
+                                     double *pe,
+                                     double **virial);
+    void InteractParticlesTetherMP(interaction_t **pix,
+                                   double **fr,
+                                   double **tr,
+                                   double *pe,
+                                   double **virial);
+
+
+
 };
 
 // Helper functions for the setup/teardown of the MP
 // regions
-namespace fmmph {
+namespace ieh {
   // Init the MP region (all pointers)
   // HAve to main ref to pointers(gross)
   inline void InitMPRegion(int &tid,
@@ -106,21 +98,17 @@ namespace fmmph {
                            double **frc,
                            double **trqc,
                            double **prc_energy,
-                           double **kmc_energy,
                            double **virialc,
                            double ***fr,
                            double ***tr,
                            double **pr,
-                           double **kmcr,
                            double ***virial) {
     // Set up the pointers to the force and torque superarrays
     // Do all 3 dimensions to be safe
     // Do 1d first, it's easier
     (*pr)   = (*prc_energy) + (tid * nparticles);
-    (*kmcr) = (*kmc_energy) + (tid * nparticles);
     for (int i = 0; i < nparticles; ++i) {
       (*pr)[i]    = 0.0;
-      (*kmcr)[i]  = 0.0;
     }
 
     // Multidimensional now
@@ -151,8 +139,7 @@ namespace fmmph {
                              double **frc,
                              double **trqc,
                              double **virialc,
-                             double **prc_energy,
-                             double **kmc_energy) {
+                             double **prc_energy) {
     int i = 1 + (3 * nparticles / nthreads);
     int ii = 1 + (nparticles / nthreads);
     int is = 1 + (9 * nspecies / nthreads);
@@ -185,7 +172,6 @@ namespace fmmph {
 
       for (int jj = fromidx2; jj < toidx2; ++jj) {
         (*prc_energy)[jj] += (*prc_energy)[offs+jj];
-        (*kmc_energy)[jj] += (*kmc_energy)[offs+jj];
       }
     }
 
@@ -197,4 +183,4 @@ namespace fmmph {
   }
 }
 
-#endif
+#endif /* _SIMCORE_INTERACTION_ENGINE_H_ */

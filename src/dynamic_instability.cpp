@@ -1,25 +1,23 @@
 #include "dynamic_instability.h"
 
-
 void DynamicInstabilityKMC::Init(space_struct *pSpace,
-                                 ParticleTracking *pTracking,
-                                 PotentialManager *pPotentials,
-                                 SpeciesBase *spec1,
-                                 SpeciesBase *spec2,
-                                 int ikmc,
-                                 YAML::Node &node,
-                                 long seed) {
-  KMCBase::Init(pSpace, pTracking, pPotentials, spec1, spec2, ikmc, node, seed);
+                                   ParticleEngine *pTrackEngine,
+                                   SpeciesBase *spec1,
+                                   SpeciesBase *spec2,
+                                   YAML::Node *subnode,
+                                   long seed) {
+  KMCBase::Init(pSpace, pTrackEngine, spec1, spec2, subnode, seed);
+  YAML::Node node = *subnode;
 
   delta_ = spec1_->GetDelta();
 
   // Grab our specific claims
-  f_shrink_to_grow_   = node["kmc"][ikmc]["f_shrink_to_grow"].as<double>();
-  f_shrink_to_pause_  = node["kmc"][ikmc]["f_shrink_to_pause"].as<double>();
-  f_pause_to_shrink_  = node["kmc"][ikmc]["f_pause_to_shrink"].as<double>();
-  f_pause_to_grow_    = node["kmc"][ikmc]["f_pause_to_grow"].as<double>();
-  f_grow_to_shrink_   = node["kmc"][ikmc]["f_grow_to_shrink"].as<double>();
-  f_grow_to_pause_    = node["kmc"][ikmc]["f_grow_to_pause"].as<double>();
+  f_shrink_to_grow_   = node["f_shrink_to_grow"].as<double>();
+  f_shrink_to_pause_  = node["f_shrink_to_pause"].as<double>();
+  f_pause_to_shrink_  = node["f_pause_to_shrink"].as<double>();
+  f_pause_to_grow_    = node["f_pause_to_grow"].as<double>();
+  f_grow_to_shrink_   = node["f_grow_to_shrink"].as<double>();
+  f_grow_to_pause_    = node["f_grow_to_pause"].as<double>();
   // Convert to probabilities
   p_stg_ = f_shrink_to_grow_ * delta_;
   p_stp_ = f_shrink_to_pause_ * delta_;
@@ -27,8 +25,8 @@ void DynamicInstabilityKMC::Init(space_struct *pSpace,
   p_gtp_ = f_grow_to_pause_ * delta_;
   p_ptg_ = f_pause_to_grow_ * delta_;
   p_pts_ = f_pause_to_shrink_ * delta_;
-  v_poly_             = node["kmc"][ikmc]["v_poly"].as<double>();
-  v_depoly_           = node["kmc"][ikmc]["v_depoly"].as<double>();
+  v_poly_             = node["v_poly"].as<double>();
+  v_depoly_           = node["v_depoly"].as<double>();
 
   BrRodSpecies* prspec = dynamic_cast<BrRodSpecies*>(spec1_);
   max_length_ = prspec->GetMaxLength();

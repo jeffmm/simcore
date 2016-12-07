@@ -4,7 +4,7 @@
 #include "anchor_list_generic.h"
 #include "auxiliary.h"
 #include "interaction.h"
-#include "potential_manager_v2.h"
+#include "potential_manager.h"
 #include "tracking_scheme.h"
 #include "species.h"
 
@@ -77,7 +77,7 @@ class ParticleEngine {
 
     // Things we actually own
     YAML::Node node_;
-    PotentialManagerV2 potentials_;
+    PotentialManager potentials_;
     rfh::factory scheme_factory_;
 
     // Potential mappings

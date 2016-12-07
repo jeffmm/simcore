@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "xlink_kmc_v2.h"
+#include "xlink_kmc.h"
 
 #include "xlink.h"
 #include "xlink_head.h"
@@ -13,13 +13,13 @@
 
 #include <iomanip>
 
-void XlinkKMCV2::Init(space_struct *pSpace,
+void XlinkKMC::Init(space_struct *pSpace,
                       ParticleEngine *pTrackEngine,
                       SpeciesBase *spec1,
                       SpeciesBase *spec2,
                       YAML::Node *subnode,
                       long seed) {
-  KMCBaseV2::Init(pSpace, pTrackEngine, spec1, spec2, subnode, seed);
+  KMCBase::Init(pSpace, pTrackEngine, spec1, spec2, subnode, seed);
   YAML::Node node = *subnode;
 
   // Grab our specific claims
@@ -206,7 +206,7 @@ void XlinkKMCV2::Init(space_struct *pSpace,
   GenerateTrackingScheme(&node);
 }
 
-void XlinkKMCV2::CalcCutoff() {
+void XlinkKMC::CalcCutoff() {
   rcutoff_1_2_ = 0.0;
   const double temp = 1.0;
   const double smalleps = 1E-3;
@@ -217,7 +217,7 @@ void XlinkKMCV2::CalcCutoff() {
   rcutoff_1_2_ = r_equil_ + rc_0;
 }
 
-double XlinkKMCV2::XKMCErfinv(double x) {
+double XlinkKMC::XKMCErfinv(double x) {
   // See: A handy approximation for the error function and its inverse
   // (Winitzki 2008) (google it).  This isn't a great approximation, but
   // it will do the trick.  It's not programmed for efficiency since it should
@@ -232,7 +232,7 @@ double XlinkKMCV2::XKMCErfinv(double x) {
   return sqrt(t1 + t2 + sqrt(t3*t3 + t4));
 }
 
-void XlinkKMCV2::BuildTables() {
+void XlinkKMC::BuildTables() {
   if (r_equil_ != 0.0) {
     std::vector<double> x[2];
     double bin_size = 0.05;
@@ -255,7 +255,7 @@ void XlinkKMCV2::BuildTables() {
   }
 }
 
-void XlinkKMCV2::GenerateTrackingScheme(YAML::Node *subnode) {
+void XlinkKMC::GenerateTrackingScheme(YAML::Node *subnode) {
   // We know that we have to generate the sphereical line well potential, with ourselves
   // so do so
   
@@ -277,9 +277,9 @@ void XlinkKMCV2::GenerateTrackingScheme(YAML::Node *subnode) {
   xlink_internal_potential_ = ptrack_->CreateKMCInternal(&node_xi);
 }
 
-void XlinkKMCV2::Print() {
+void XlinkKMC::Print() {
   std::cout << "Xlink - BrRod KMC Module\n";
-  KMCBaseV2::Print();
+  KMCBase::Print();
   std::cout << std::setprecision(16) << "\teps_eff 0 -> 1:           [" << eps_eff_0_1_[0] << ", " << eps_eff_0_1_[1] << "]\n";
   std::cout << std::setprecision(16) << "\teps_eff 1 -> 2:           [" << eps_eff_1_2_[0] << ", " << eps_eff_1_2_[1] << "]\n";
   std::cout << std::setprecision(16) << "\ton_rate 0 -> 1:           [" << on_rate_0_1_[0] << ", " << on_rate_0_1_[1] << "]\n";
@@ -320,7 +320,7 @@ void XlinkKMCV2::Print() {
 
 // Generate my own neighbor lists for the stupid particles, based
 // on the interactions list
-void XlinkKMCV2::GenerateKMCNeighborList() {
+void XlinkKMC::GenerateKMCNeighborList() {
   // Get the neighbor list from the tracking module
   //auto neighbors = stage_0_1_scheme_->GetKMCNeighbors();
   //nl_kmc_ = (*neighbors);
@@ -343,7 +343,7 @@ void XlinkKMCV2::GenerateKMCNeighborList() {
   }
 }
 
-void XlinkKMCV2::PrepKMC() {
+void XlinkKMC::PrepKMC() {
   nsimples_ = (int)simples_->size();
 
   // Prepare each composite particle for the upcoming kmc step
@@ -376,7 +376,7 @@ void XlinkKMCV2::PrepKMC() {
   }
 }
 
-void XlinkKMCV2::Update_0_1(Xlink* xit) {
+void XlinkKMC::Update_0_1(Xlink* xit) {
   double nexp_xlink = 0.0;
   auto heads = xit->GetHeads();
 
@@ -396,7 +396,7 @@ void XlinkKMCV2::Update_0_1(Xlink* xit) {
   xit->SetNExp_0_1(nexp_xlink);
 }
 
-void XlinkKMCV2::Update_1_2(Xlink *xit) {
+void XlinkKMC::Update_1_2(Xlink *xit) {
   XlinkHead *freehead, *boundhead;
   auto isbound = xit->GetBoundHeads(&freehead, &boundhead);
   // If the first head is bound, then the second one is free, and vice
@@ -497,7 +497,7 @@ void XlinkKMCV2::Update_1_2(Xlink *xit) {
   }
 }
 
-void XlinkKMCV2::StepKMC() {
+void XlinkKMC::StepKMC() {
   nsimples_ = (int)simples_->size();
 
   // Run the bind unbind
@@ -510,7 +510,7 @@ void XlinkKMCV2::StepKMC() {
   }
 
   if (debug_trace)
-    std::cout << "XlinkKMCV2 module " << g[0] << " -> " << g[1] << " -> " << g[2] << " -> " << g[3] << std::endl;
+    std::cout << "XlinkKMC module " << g[0] << " -> " << g[1] << " -> " << g[2] << " -> " << g[3] << std::endl;
 
   for (int i = 0; i < 4; ++i) {
     switch (g[i]) {
@@ -530,7 +530,7 @@ void XlinkKMCV2::StepKMC() {
   }
 }
 
-void XlinkKMCV2::KMC_0_1() {
+void XlinkKMC::KMC_0_1() {
   // Loop over the xlinks to see who binds
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
@@ -669,7 +669,7 @@ void XlinkKMCV2::KMC_0_1() {
   } // loop over all xlinks
 }
 
-void XlinkKMCV2::KMC_1_0() {
+void XlinkKMC::KMC_1_0() {
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
   int nbound1[2];
@@ -735,7 +735,7 @@ void XlinkKMCV2::KMC_1_0() {
   } // How many to remove
 }
 
-void XlinkKMCV2::KMC_1_2() {
+void XlinkKMC::KMC_1_2() {
   XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
   BrRodSpecies* prspec = dynamic_cast<BrRodSpecies*>(spec2_);
@@ -957,7 +957,7 @@ void XlinkKMCV2::KMC_1_2() {
   }
 }
 
-void XlinkKMCV2::KMC_2_1() {
+void XlinkKMC::KMC_2_1() {
   if (barrier_weight_ == 0.0) {
     // All detachments equally probable, do via a poisson distribution
     KMC_2_1_ForceIndep();
@@ -966,7 +966,7 @@ void XlinkKMCV2::KMC_2_1() {
   }
 }
 
-void XlinkKMCV2::KMC_2_1_ForceIndep() {
+void XlinkKMC::KMC_2_1_ForceIndep() {
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
   int nheads[2] = {0, 0};
@@ -1021,7 +1021,7 @@ void XlinkKMCV2::KMC_2_1_ForceIndep() {
   } // remove ntrials
 }
 
-void XlinkKMCV2::KMC_2_1_ForceDep() {
+void XlinkKMC::KMC_2_1_ForceDep() {
   // Force dependent detachment!
   XlinkSpecies* pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   auto xlinks = pxspec->GetXlinks();
@@ -1073,7 +1073,7 @@ void XlinkKMCV2::KMC_2_1_ForceDep() {
   }
 }
 
-void XlinkKMCV2::Detach_1_0(Xlink *xit, XlinkHead *freehead, XlinkHead *boundhead) {
+void XlinkKMC::Detach_1_0(Xlink *xit, XlinkHead *freehead, XlinkHead *boundhead) {
   // Let's get the information and make sure it's right
   std::ostringstream kmc_event;
   kmc_event << "    [" << xit->GetOID() << "] Singly Bound Single Head Detach {" << boundhead->GetOID() << "}";
@@ -1131,7 +1131,7 @@ void XlinkKMCV2::Detach_1_0(Xlink *xit, XlinkHead *freehead, XlinkHead *boundhea
   xit->CheckBoundState();
 }
 
-void XlinkKMCV2::Detach_2_1(Xlink *xit, int headtype) {
+void XlinkKMC::Detach_2_1(Xlink *xit, int headtype) {
   // Remove head headtype, set location to other head (not double detach)
   auto heads = xit->GetHeads();
   auto head0 = heads->begin();
@@ -1190,7 +1190,7 @@ void XlinkKMCV2::Detach_2_1(Xlink *xit, int headtype) {
   xit->CheckBoundState();
 }
 
-void XlinkKMCV2::Detach_2_0(Xlink *xit) {
+void XlinkKMC::Detach_2_0(Xlink *xit) {
   // Both heads are detaching, set the location to the midpoint of the two heads
   // Easy, set the head to the midpoint of the xlink and fall off both
   auto heads = xit->GetHeads();
@@ -1242,7 +1242,7 @@ void XlinkKMCV2::Detach_2_0(Xlink *xit) {
 }
 
 // Multithreaded update of kmc positions
-void XlinkKMCV2::UpdateKMC() {
+void XlinkKMC::UpdateKMC() {
   nsimples_ = (int)simples_->size();
 
   nfree_ = 0.0;
@@ -1309,7 +1309,7 @@ void XlinkKMCV2::UpdateKMC() {
   pxspec->SetNBound2(nbound2_[0], nbound2_[0]);
 }
 
-void XlinkKMCV2::UpdateStage0(Xlink *xit) {
+void XlinkKMC::UpdateStage0(Xlink *xit) {
   double sigma_d = sqrt(2.0 * xit->GetDelta() * diffusion_free_);
   double dr[3] = {0.0, 0.0, 0.0};
   double rinitial[3] = {0.0, 0.0, 0.0};
@@ -1367,7 +1367,7 @@ void XlinkKMCV2::UpdateStage0(Xlink *xit) {
   xit->UpdateStage0Position(rfinal);
 }
 
-void XlinkKMCV2::UpdateStage1(Xlink *xit) {
+void XlinkKMC::UpdateStage1(Xlink *xit) {
   // Set nexp to zero for all involved
   xit->SetNExp_0_1(0.0);
   XlinkHead *freehead, *boundhead;
@@ -1434,7 +1434,7 @@ void XlinkKMCV2::UpdateStage1(Xlink *xit) {
   //}
 }
 
-void XlinkKMCV2::UpdateStage2(Xlink *xit) {
+void XlinkKMC::UpdateStage2(Xlink *xit) {
   // Set nexp to zero for all involved
   // New hotness
   xit->SetNExp_1_2(0.0);
@@ -1613,7 +1613,7 @@ void XlinkKMCV2::UpdateStage2(Xlink *xit) {
   }
 }
 
-void XlinkKMCV2::TransferForces() {
+void XlinkKMC::TransferForces() {
   // Transfer the forces from doubly bound xlinks to their
   // bound rods
   nsimples_ = (int)simples_->size();
@@ -1628,7 +1628,7 @@ void XlinkKMCV2::TransferForces() {
   }
 }
 
-void XlinkKMCV2::ApplyStage2Force(Xlink *xit) {
+void XlinkKMC::ApplyStage2Force(Xlink *xit) {
   auto heads = xit->GetHeads();
   auto head0 = heads->begin();
   auto head1 = heads->begin()+1;
@@ -1699,11 +1699,11 @@ void XlinkKMCV2::ApplyStage2Force(Xlink *xit) {
 
 }
 
-void XlinkKMCV2::Dump() {
+void XlinkKMC::Dump() {
   // print out the information appropriate to kmc
   if (debug_trace) {
     XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
-    printf("XlinkKMCV2 -> dump\n");
+    printf("XlinkKMC -> dump\n");
     printf("\t{n_exp_0_1: %2.4f, n_exp_1_2: %2.4f}\n", pxspec->GetNExp_0_1(), pxspec->GetNExp_1_2());
     printf("\t{nfree:  %d}\n", pxspec->GetNFree());
     printf("\t{nbound1: %d,%d}\n", pxspec->GetNBound1()[0], pxspec->GetNBound1()[1]);
@@ -1712,14 +1712,14 @@ void XlinkKMCV2::Dump() {
   }
 }
 
-void XlinkKMCV2::PrepOutputs() {
-  kmc_file_name_ << "sc-kmc-XlinkKMCV2.log";
+void XlinkKMC::PrepOutputs() {
+  kmc_file_name_ << "sc-kmc-XlinkKMC.log";
   kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out);
   kmc_file << "step #ntot #nfree #nbound1[0] #nbound1[1] #nbound2[0] #nbound2[1] nexp01 nexp12\n";
   kmc_file.close();
 }
 
-void XlinkKMCV2::WriteEvent(const std::string &pString) {
+void XlinkKMC::WriteEvent(const std::string &pString) {
   #ifdef ENABLE_OPENMP
   #pragma omp critical
   #endif
@@ -1732,7 +1732,7 @@ void XlinkKMCV2::WriteEvent(const std::string &pString) {
   }
 }
 
-void XlinkKMCV2::WriteOutputs(int istep) {
+void XlinkKMC::WriteOutputs(int istep) {
   XlinkSpecies *pxspec = dynamic_cast<XlinkSpecies*>(spec1_);
   kmc_file.open(kmc_file_name_.str().c_str(), std::ios_base::out | std::ios_base::app);
   kmc_file.precision(16);

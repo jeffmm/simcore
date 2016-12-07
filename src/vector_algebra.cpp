@@ -11,7 +11,9 @@ double dot_product(int n_dim, double const * const a, double const * const b)
     return mag;
 }
 
-void cross_product(double *a, double *b, double *c, int n_dim) {
+// WARNING: Must always use n_dim=3 if you are using torques,
+//          since they point in the z direction when using 2D
+void cross_product(double const * const a, double const * const b, double *c, int n_dim) {
   if (n_dim == 2) {
     c[0] = 0.0;
     c[1] = 0.0;
@@ -129,7 +131,8 @@ void periodic_boundary_conditions(int n_periodic, double **h, double **h_inv,
   }
 }
 
-/* Computes determinant of square matrix mat of size n using recursion*/
+/* Computes determinant of square matrix mat of size n using recursion (and
+   ugly dynamic memory allocation ) */
 double determinant(int n, double **mat) {
   double det=0;
   double **submat = new double*[n];

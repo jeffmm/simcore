@@ -1,14 +1,14 @@
 // Implementation of KMC engine v2
 
-#include "kmc_engine_v2.h"
+#include "kmc_engine.h"
 
-#include "dynamic_instability_v2.h"
-#include "xlink_kmc_v2.h"
+#include "dynamic_instability.h"
+#include "xlink_kmc.h"
 
 #define REGISTER_KMC(n) kmc_factory_.register_class<n>(#n);
 
 // Initialize with everything
-void kmcEngineV2::Init(system_parameters *pParams,
+void kmcEngine::Init(system_parameters *pParams,
                        space_struct *pSpace,
                        ParticleEngine *pTrackEngine,
                        std::vector<interaction_t> *pInteractions,
@@ -39,19 +39,19 @@ void kmcEngineV2::Init(system_parameters *pParams,
 }
 
 // Register the KMC modules
-void kmcEngineV2::RegisterKMC() {
-  REGISTER_KMC(XlinkKMCV2);
-  REGISTER_KMC(DynamicInstabilityKMCV2);
+void kmcEngine::RegisterKMC() {
+  REGISTER_KMC(XlinkKMC);
+  REGISTER_KMC(DynamicInstabilityKMC);
 }
 
 // Attach to the particle engine
-void kmcEngineV2::AttachParticleEngine() {
+void kmcEngine::AttachParticleEngine() {
   simples_ = ptrack_->GetSimples();
   species_ = ptrack_->GetSpecies();
 }
 
 // Initialize the MP stuff (really just get particle numbers)
-void kmcEngineV2::InitMP() {
+void kmcEngine::InitMP() {
   nsimples_ = (int)simples_->size();
   nspecies_ = (int)species_->size();
 
@@ -59,7 +59,7 @@ void kmcEngineV2::InitMP() {
 }
 
 // Parse the KMC file
-void kmcEngineV2::ParseKMC() {
+void kmcEngine::ParseKMC() {
   // Initialize based on file given to from params
   std::cout << "********\n";
   std::cout << "KMC Load ->\n";
@@ -87,21 +87,21 @@ void kmcEngineV2::ParseKMC() {
       if ((*spec)->GetSID() == sid2)
         spec2 = (*spec);
     }
-    KMCBaseV2 *new_kmc = (KMCBaseV2*) kmc_factory_.construct(kmcname);
+    KMCBase *new_kmc = (KMCBase*) kmc_factory_.construct(kmcname);
     new_kmc->Init(space_, ptrack_, spec1, spec2, &subnode, gsl_rng_get(rng_.r));
     kmc_modules_[ikmc] = new_kmc;
   }
 }
 
 // Pre generate the neighbor lists if needed
-void kmcEngineV2::PreGenerateNeighbors() {
+void kmcEngine::PreGenerateNeighbors() {
   for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
     (*kmc)->GenerateKMCNeighborList();
   }
 }
 
 // Run the modules IN ORDER!!!!
-void kmcEngineV2::StepKMC() {
+void kmcEngine::StepKMC() {
   // Run this in order
   for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
     (*kmc)->GenerateKMCNeighborList();
@@ -113,7 +113,7 @@ void kmcEngineV2::StepKMC() {
 }
 
 // Print stuff
-void kmcEngineV2::Print() {
+void kmcEngine::Print() {
   std::cout << "********\n";
   std::cout << "kmcEngine -> print\n";
   for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
@@ -124,7 +124,7 @@ void kmcEngineV2::Print() {
 }
 
 // Dump stuff
-void kmcEngineV2::Dump() {
+void kmcEngine::Dump() {
   #ifdef DEBUG
   std::cout << "--------\n";
   std::cout << "kmcEngine -> dump\n";
@@ -135,13 +135,13 @@ void kmcEngineV2::Dump() {
 }
 
 // Prep outputs
-void kmcEngineV2::PrepOutputs() {
+void kmcEngine::PrepOutputs() {
   for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
     (*kmc)->PrepOutputs(); 
   }
 }
 
-void kmcEngineV2::WriteOutputs(int istep) {
+void kmcEngine::WriteOutputs(int istep) {
   for (auto kmc = kmc_modules_.begin(); kmc != kmc_modules_.end(); ++kmc) {
     (*kmc)->WriteOutputs(istep); 
   }

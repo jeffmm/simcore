@@ -1,52 +1,54 @@
-// Implementation for interaction engine
+// Implementation of new interaction engine
 
 #include "interaction_engine.h"
 
+#include <cassert>
+
 void InteractionEngine::Init(space_struct *pSpace,
-                             std::vector<SpeciesBase*> *pSpecies,
-                             ParticleTracking *pTracking,
-                             al_set *pAnchors,
-                             double pSkin) {
+                               ParticleEngine *pTrackEngine,
+                               std::vector<interaction_t> *pInteractions) {
   space_ = pSpace;
-  tracking_ = pTracking;
-  species_ = pSpecies;
-  anchors_ = pAnchors;
-  skin_= pSkin;
+  ptrack_ = pTrackEngine;
+  interactions_ = pInteractions;
+
   ndim_ = space_->n_dim;
   nperiodic_ = space_->n_periodic;
+
   for (int i = 0; i < ndim_; ++i) {
     box_[i] = space_->unit_cell[i][i];
   }
+
   #ifdef ENABLE_OPENMP
   #pragma omp parallel
   {
     if (0 == omp_get_thread_num()) {
       nthreads_ = omp_get_num_threads();
-      printf("Running with %d OpenMP threads\n", nthreads_);
+      std::cout << "Running with " << nthreads_ << " OpenMP threads\n";
     }
   }
   #else
   nthreads_ = 1;
   #endif
+
+  AttachParticleEngine();
 }
 
-// Initialize the potentials, get the maximum rcut value
-void InteractionEngine::InitPotentials(PotentialManager *pPotentials) {
-  potentials_ = pPotentials;
-  max_rcut_ = potentials_->GetMaxRCut();
+void InteractionEngine::AttachParticleEngine() {
+  // Attach to the particle engine
+  simples_  = ptrack_->GetSimples();
+  species_  = ptrack_->GetSpecies();
+  oid_position_map_ = ptrack_->GetOIDPositionMap();
+  anchors_  = ptrack_->GetAnchors();
 }
 
-// Initialize the stuff needed for MP (superarrays, et al)
 void InteractionEngine::InitMP() {
-  nsimples_ = tracking_->GetNSimples();
-  nspecies_ = tracking_->GetNSpecies();
-  simples_ = tracking_->GetSimples();
-  oid_position_map_ = tracking_->GetOIDPositionMap();
+  nsimples_ = (int)simples_->size();
+  nspecies_ = (int)species_->size();
 
-  for (int i = 0; i<nspecies_; ++i)
+  for (int i = 0; i < nspecies_; ++i) {
     spec_ind_map_[(*species_)[i]->GetSID()] = i;
+  }
 
-  // Clear out things from before (if they exist)
   if (frc_ != nullptr) {
     delete[] frc_;
   }
@@ -56,27 +58,28 @@ void InteractionEngine::InitMP() {
   if (prc_energy_ != nullptr) {
     delete[] prc_energy_;
   }
-  if (kmc_energy_ != nullptr) {
-    delete[] kmc_energy_;
-  }
   if (virial_ != nullptr) {
     delete[] virial_;
   }
 
-  // Create the force and potential energy superarrays
-  frc_ = new double[nthreads_*3*nsimples_];
+  // Create the superarrays
+  frc_  = new double[nthreads_*3*nsimples_];
   trqc_ = new double[nthreads_*3*nsimples_];
   prc_energy_ = new double[nthreads_*nsimples_];
-  kmc_energy_ = new double[nthreads_*nsimples_];
-  virial_ = new double[nthreads_*9*nspecies_];
+  virial_     = new double[nthreads_*9*nspecies_];
 }
 
-// Actual interaction routine
-// Always uses neighbor list
 void InteractionEngine::Interact() {
+  // Particle engine should have already updated if necessary
+  // Update the other information of note
 
-  // XXX Check reinit?
-  if (tracking_->TriggerUpdate()) {
+  int new_nsimples  = (int)simples_->size();
+  int new_nspecies  = (int)species_->size();
+  // If we've had a change in particle number or something, then
+  // we need to update the superarrays
+  if ((new_nsimples != nsimples_) ||
+      (new_nspecies != nspecies_)) {
+    std::cout << "Interaction engine got a different number of simples, rebuilding\n";
     InitMP();
   }
 
@@ -89,9 +92,6 @@ void InteractionEngine::Interact() {
     double **tr = new double*[3];
     double **virial = new double*[9];
     double *pr_energy;
-    double *kmc_energy;
-
-    auto neighbors = tracking_->GetNeighbors();
 
     #ifdef ENABLE_OPENMP
     tid = omp_get_thread_num();
@@ -99,81 +99,100 @@ void InteractionEngine::Interact() {
     tid = 0;
     #endif
 
-    fmmph::InitMPRegion(tid, nsimples_, nspecies_, 
-        &frc_, &trqc_, &prc_energy_, &kmc_energy_, &virial_, 
-        &fr, &tr, &pr_energy, &kmc_energy, &virial);
+    // Set up the connection to the superarrays
+    ieh::InitMPRegion(tid,
+                      nsimples_,
+                      nspecies_,
+                      &frc_,
+                      &trqc_,
+                      &prc_energy_,
+                      &virial_,
+                      &fr,
+                      &tr,
+                      &pr_energy,
+                      &virial);
 
+    // Loop over the interactions
+    int nix = (int)interactions_->size();
     #ifdef ENABLE_OPENMP
     #pragma omp for schedule(runtime) nowait
     #endif
-    for (int idx = 0; idx < nsimples_; ++idx) {
-      // Iterate over our neighbors
-      for (auto nldx = neighbors[idx].begin(); nldx != neighbors[idx].end(); ++nldx) {
-        int jdx = nldx->idx_;
-        //auto part1 = (*simples_)[idx];
-        //auto part2 = (*simples_)[jdx];
-
-        // Do the interactions
-        //InteractParticlesMP(&(*nldx), part1, part2, fr, tr, pr_energy, kmc_energy)
-        InteractParticlesExternalMP(idx, jdx, fr, tr, pr_energy, kmc_energy, virial);
-        InteractParticlesInternalMP(idx, jdx, fr, tr, pr_energy, kmc_energy);
-        KMCParticlesMP(&(*nldx), idx, jdx, kmc_energy, virial);
+    for (int ix = 0; ix < nix; ++ix) {
+      // Alias the interaction
+      interaction_t *pix = &((*interactions_)[ix]);
+      //std::cout << "[" << ix << "] -> {" << pix->idx_ << " -> " << pix->jdx_ << "}\n";
+      switch(pix->type_) {
+        case ptype::external:
+          InteractParticlesExternalMP(&pix, fr, tr, pr_energy, virial);
+          break;
+        case ptype::kmc:
+          InteractParticlesKMCMP(&pix, fr, tr, pr_energy, virial);
+          break;
+        case ptype::internal:
+          InteractParticlesInternalMP(&pix, fr, tr, pr_energy);
+          break;
+        case ptype::boundary:
+          InteractParticlesBoundaryMP(&pix, fr, tr, pr_energy, virial);
+          break;
+        case ptype::tether:
+          InteractParticlesTetherMP(&pix, fr, tr, pr_energy, virial);
+          break;
+        default:
+          std::cout << "Wrong interaction type: " << (int)pix->type_ << std::endl;
+          exit(1);
+          break;
       }
 
-      // Check anchors and tethering
-      TetherParticlesMP(idx, fr, tr, pr_energy, kmc_energy, virial);
-
-      // Check against the boundary potential
-      InteractParticlesBoundaryMP(idx, fr, tr, pr_energy);
-    } // pragma omp for schedule(runtime) nowait
-
+      // Determine the interaction type, and run appropriate function
+    } // omp for schedule(runtime) nowait (over interactions)
+   
     // Reduce once all threads have finished
     #ifdef ENABLE_OPENMP
     #pragma omp barrier
     #endif
-    fmmph::ReduceMPRegion(tid, nsimples_, nspecies_, nthreads_, 
-        &frc_, &trqc_, &virial_, &prc_energy_, &kmc_energy_);
+    ieh::ReduceMPRegion(tid, nsimples_, nspecies_, nthreads_, 
+        &frc_, &trqc_, &virial_, &prc_energy_);
 
     delete[] fr;
     delete[] tr;
     delete[] virial;
   } // pragma omp parallel
+
   ReduceParticlesMP();
 }
 
-// Main interaction routine for particles via external potentials
-void InteractionEngine::InteractParticlesExternalMP(int &idx, int &jdx, double **fr, double **tr, double *pr_energy, double *kmc_energy, double **virial) {
-  // We are assuming the force/torque/energy superarrays are already set
-  // Exclude composite object interactions
-  if (idx < jdx) return; // Exclude double counting in force routines
+// External interactions
+void InteractionEngine::InteractParticlesExternalMP(interaction_t **pix,
+                                                      double **fr,
+                                                      double **tr,
+                                                      double *pe,
+                                                      double **virial) {
+  int idx = (*pix)->idx_; // actual locations
+  int jdx = (*pix)->jdx_;
   auto part1 = (*simples_)[idx];
   auto part2 = (*simples_)[jdx];
-  if (part1->GetCID() == part2->GetCID()) return;
+  //if (part1->GetCID() == part2->GetCID()) return;
 
-  // Calculate the potential here
-  PotentialBase *pot = potentials_->GetPotentialExternal(part1->GetSID(), part2->GetSID());
-  if (pot == nullptr) return; // no interaction
-  if (pot->IsKMC()) return; // do not do kmc interactions here, bail before min calc
-  // Minimum distance here@@@@!!!!
-  // XXX: CJE ewwwwwww, more elegant way?
+  // Calculate the potential, which we already have from the interaction
+  PotentialBase *pot = (*pix)->pot_;
+  if (pot->IsKMC()) return; // XXX FIXME is this necessary, guranteed to be the correct thing...
+
+  // Minimum distance calc
   interactionmindist idm;
   MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
-  if (idm.dr_mag2 > pot->GetRCut2()) return;
+  if ((idm.dr_mag2) > pot->GetRCut2()) return;
 
-  // Obtain the mapping between particle oid and position in the force superarray
-  auto oid1x = (*oid_position_map_)[part1->GetOID()];
-  auto oid2x = (*oid_position_map_)[part2->GetOID()];
-  //auto sid1x = spec_ind_map_[part2->GetSID()];
+  // Already have manifest the location, no need to do an oid mapping
   auto sid2x = spec_ind_map_[part2->GetSID()];
 
-  // Fire off the potential calculation
+  // Fire off the potential calc
   double fepot[4] = {0};
   pot->CalcPotential(&idm, part1, part2, fepot);
 
   #ifdef DEBUG
   if (debug_trace) {
-    std::cout << "\tPOT EXTERNAL Interacting[" << oid1x << "," << part1->GetOID()
-      << ":" << oid2x << "," << part2->GetOID() << "] u: " << std::setprecision(16)
+    std::cout << "\tPOT EXTERNAL Interacting[" << idx << "," << part1->GetOID()
+      << ":" << jdx << "," << part2->GetOID() << "] u: " << std::setprecision(16)
       << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
     if (ndim_ == 3) {
       std::cout << ", " << fepot[2];
@@ -182,54 +201,108 @@ void InteractionEngine::InteractParticlesExternalMP(int &idx, int &jdx, double *
   }
   #endif
 
-  // Do the potential energies
-  pr_energy[oid1x] += fepot[ndim_];
-  pr_energy[oid2x] += fepot[ndim_];
+  // Potential Energies
+  pe[idx] += fepot[ndim_];
+  pe[jdx] += fepot[ndim_];
 
   // Do the forces
   for (int i = 0; i < ndim_; ++i) {
-      fr[i][oid1x] += fepot[i];
-      fr[i][oid2x] -= fepot[i];
+      fr[i][idx] += fepot[i];
+      fr[i][jdx] -= fepot[i];
       //Calculate virial only on particle two
       //FIXME This shouldn't be by species but by potential
       for(int j = i; j < ndim_; ++j)
-        virial[3*i+j][sid2x] = virial[3*j+i][sid2x] += fr[i][oid2x]*idm.dr[j];
+        virial[3*i+j][sid2x] = virial[3*j+i][sid2x] += fr[i][jdx]*idm.dr[j];
   }
 
   // Calculate the torques
   double tau[3];
   cross_product(idm.contact1, fepot, tau, ndim_);
-  //for (int i = 0; i < ndim_; ++i) {
   for (int i = 0; i < 3; ++i) {
-      tr[i][oid1x] += tau[i];
+      tr[i][idx] += tau[i];
   }
   cross_product(idm.contact2, fepot, tau, ndim_);
-  //for (int i = 0; i < ndim_; ++i) {
   for (int i = 0; i < 3; ++i) {
-      tr[i][oid2x] -= tau[i];
+      tr[i][jdx] -= tau[i];
   }
-
-  //double minus_dr[3]; 
-  //std::transform(idm.dr, idm.dr+3, minus_dr, std::negate<double>());
-
-  //Only do the virial theorem for one?
-  //part1->AddVirial(fepot, idm.dr);
-  //part2->AddVirial(fepot, minus_dr);
 }
 
-// Main interaction routine for particles via INTERNAL potentials
-void InteractionEngine::InteractParticlesInternalMP(int &idx, int &jdx, double **fr, double **tr, double *pr_energy, double *kmc_energy) {
-  // We are assuming the force/torque/energy superarrays are already set
-  // Exclude composite object interactions
-  if (idx < jdx) return; // Exclude double counting in force routines
+// KMC interactions
+void InteractionEngine::InteractParticlesKMCMP(interaction_t **pix,
+                                                 double **fr,
+                                                 double **tr,
+                                                 double *pe,
+                                                 double **virial) {
+  int idx = (*pix)->idx_;
+  int jdx = (*pix)->jdx_;
   auto part1 = (*simples_)[idx];
   auto part2 = (*simples_)[jdx];
 
-  // Calculate the potential here
-  PotentialBase *pot = potentials_->GetPotentialInternal(part1->GetOID(), part2->GetOID());
-  if (pot == nullptr) return; // no interaction
+  auto neighbor = (*pix)->neighbor_;
+  neighbor->kmc_= 0.0;
+  // Check part1 for if we actually need to calculate or not, if not, just move on
+  if (!part1->ApplyKMCInteraction()) {
+    #ifdef DEBUG
+    if (debug_trace) {
+      std::cout << part1->GetOID() << " not applying KMC interaction\n";
+    }
+    #endif
+    return;
+  }
 
-  // Check the particles to see if we need to calculate it
+  // Calculate the potential
+  PotentialBase *pot = (*pix)->pot_;
+  #ifdef DEBUG
+  if (!pot->IsKMC()) {
+    std::cout << "InteractParticlesKMCMP wrong potential somehow, exiting\n";
+    exit(1);
+  }
+  #endif
+
+  // Check the neighbor list vs. interaction
+  #ifdef DEBUG
+  // The neighbor references the position in the LOCAL list of 
+  // particles, not the global scope, so check to make sure that
+  // they're the same thing
+  if (neighbor->g_idx_ != (*pix)->jdx_) {
+    std::cout << "Interaction neighbor translation wrong! Interaction: [" << (*pix)->idx_
+      << ", " << (*pix)->jdx_ << "], global neighbor idx: " << neighbor->g_idx_
+      << ", local neighbor idx: " << neighbor->idx_ << std::endl;
+    exit(1);
+  }
+  #endif
+
+  // Minimum distance calc
+  interactionmindist idm;
+  MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
+  if ((idm.dr_mag2) > pot->GetRCut2()) return;
+
+  // Fire off the potential calc
+  double fepot[4] = {0};
+  pot->CalcPotential(&idm, part1, part2, fepot);
+
+  #ifdef DEBUG
+  if (debug_trace) {
+    std::cout << "\tKMC Interacting[" << idx << "," << part1->GetOID()
+      << ":" << jdx << "," << part2->GetOID() << "] kmc: " << std::setprecision(16)
+      << fepot[ndim_] << ", (rmag2: " << idm.dr_mag2 << ")\n";
+  }
+  #endif
+
+  neighbor->kmc_ = fepot[ndim_];
+}
+
+// Internal interactions
+void InteractionEngine::InteractParticlesInternalMP(interaction_t **pix,
+                                                      double **fr,
+                                                      double **tr,
+                                                      double *pe) {
+  int idx = (*pix)->idx_;
+  int jdx = (*pix)->jdx_;
+  auto part1 = (*simples_)[idx];
+  auto part2 = (*simples_)[jdx];
+
+  // Check to see if we are doing this calculation (xlinks not being doubley bound...)
   bool do_calc = true;
   do_calc &= part1->ApplyInternalForce();
   do_calc &= part2->ApplyInternalForce();
@@ -238,18 +311,15 @@ void InteractionEngine::InteractParticlesInternalMP(int &idx, int &jdx, double *
   interactionmindist idm;
   MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
 
-  // Obtain the mapping between particle oid and position in the force superarray
-  auto oid1x = (*oid_position_map_)[part1->GetOID()];
-  auto oid2x = (*oid_position_map_)[part2->GetOID()];
-
-  // Fire off the potential calculation
-  double fepot[4] = {};
+  // Do the potential calc
+  double fepot[4] = {0};
+  PotentialBase *pot = (*pix)->pot_;
   pot->CalcPotential(&idm, part1, part2, fepot);
 
   #ifdef DEBUG
   if (debug_trace) {
-    std::cout << "\tPOT INTERNAL Interacting[" << oid1x << "," << part1->GetOID()
-      << ":" << oid2x << "," << part2->GetOID() << "] u: " << std::setprecision(16)
+    std::cout << "\tPOT INTERNAL Interacting[" << idx << "," << part1->GetOID()
+      << ":" << jdx << "," << part2->GetOID() << "] u: " << std::setprecision(16)
       << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
     if (ndim_ == 3) {
       std::cout << ", " << fepot[2];
@@ -258,207 +328,51 @@ void InteractionEngine::InteractParticlesInternalMP(int &idx, int &jdx, double *
   }
   #endif
 
-  // Do the potential energies
-  pr_energy[oid1x] += fepot[ndim_];
-  pr_energy[oid2x] += fepot[ndim_];
+  // Potential Energies
+  pe[idx] += fepot[ndim_];
+  pe[jdx] += fepot[ndim_];
 
   // Do the forces
   for (int i = 0; i < ndim_; ++i) {
-      fr[i][oid1x] += fepot[i];
-      fr[i][oid2x] -= fepot[i];
+      fr[i][idx] += fepot[i];
+      fr[i][jdx] -= fepot[i];
   }
 
   // Calculate the torques
   double tau[3];
   cross_product(idm.contact1, fepot, tau, ndim_);
-  //for (int i = 0; i < ndim_; ++i) {
   for (int i = 0; i < 3; ++i) {
-      tr[i][oid1x] += tau[i];
+      tr[i][idx] += tau[i];
   }
   cross_product(idm.contact2, fepot, tau, ndim_);
-  //for (int i = 0; i < ndim_; ++i) {
   for (int i = 0; i < 3; ++i) {
-      tr[i][oid2x] -= tau[i];
+      tr[i][jdx] -= tau[i];
   }
 }
 
-// Tethered particle pairs
-void InteractionEngine::TetherParticlesMP(int &idx, double **fr, double **tr, double *pr_energy, double *kmc_energy, double **virial) {
-  // We are assuming the force/torque/energy superarrays are already set
+// Boundary interactions
+void InteractionEngine::InteractParticlesBoundaryMP(interaction_t **pix,
+                                                      double **fr,
+                                                      double **tr,
+                                                      double *pe,
+                                                      double **virial) {
+  // Only 1 particle
+  int idx = (*pix)->idx_;
   auto part1 = (*simples_)[idx];
-  
-  // Check to see if part1 exists in the anchors
-  if (!(*anchors_).count(part1->GetOID())) return;
+  auto part2 = nullptr;
 
-  // The anchor list exists, not iterate over it
-  for (auto ait = (*anchors_)[part1->GetOID()].begin(); ait != (*anchors_)[part1->GetOID()].end(); ++ait) {
-    auto jdx = (*oid_position_map_)[ait->idx_other_];
-    auto part2 = (*simples_)[jdx];
-    auto sid2x = spec_ind_map_[part2->GetSID()];
-
-    //part1->Dump();
-    //part2->Dump();
-
-    // Now that I have both particles (and their idxs), get the potential from the manager
-    PotentialBase *pot = potentials_->GetPotentialTether(part1->GetOID(), part2->GetOID());
-    if (pot == nullptr) return; // no interaction
-
-    // Calculating this potential is strange, since the minimum distance calculation is dependent on the
-    // anchor point, and the potential tip, so call with the anchor point in the first position, and
-    // the part2 in the second
-    double rx0[3] = {0.0, 0.0, 0.0};
-    double sx0[3] = {0.0, 0.0, 0.0};
-    double rx1[3] = {0.0, 0.0, 0.0};
-    double sx1[3] = {0.0, 0.0, 0.0};
-    std::copy(ait->pos0_, ait->pos0_+3, rx0);
-    std::copy(ait->pos1_, ait->pos1_+3, rx1);
-    double dr[3] = {0.0, 0.0, 0.0};
-    separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
-    interactionmindist idm;
-    std::copy(dr, dr+3, idm.dr);
-    double dr_mag = 0.0;
-    for (int i = 0; i < ndim_; ++i) {
-      dr_mag += SQR(idm.dr[i]);
-    }
-    dr_mag = sqrt(dr_mag);
-
-    // Calculate the rcontacts for us, ugh (based on absolute vs relative positions)
-    for (int i = 0; i < ndim_; ++i) {
-      idm.contact1[i] = rx0[i] - part1->GetRigidPosition()[i];
-      idm.contact2[i] = rx1[i] - part2->GetRigidPosition()[i];
-    }
-
-    //std::cout << "SPB position: (" << std::setprecision(16)
-    //  << part1->GetRigidPosition()[0] << ", " << part1->GetRigidPosition()[1] << ", " << part1->GetRigidPosition()[2] << ")\n";
-    //std::cout << "SPB anchor  : (" << std::setprecision(16)
-    //  << rx0[0] << ", " << rx0[1] << ", " << rx0[2] << ")\n";
-    //std::cout << "ROD position: (" << std::setprecision(16)
-    //  << part2->GetRigidPosition()[0] << ", " << part2->GetRigidPosition()[1] << ", " << part2->GetRigidPosition()[2] << ")\n";
-    //std::cout << "ROD anchor  : (" << std::setprecision(16)
-    //  << rx1[0] << ", " << rx1[1] << ", " << rx1[2] << ")\n";
-
-    //std::cout << std::setprecision(16)
-    //  << "rcontact1: (" << idm.contact1[0] << ", " << idm.contact1[1] << ", " << idm.contact1[2] << ")\n"
-    //  << "rcontact2: (" << idm.contact2[0] << ", " << idm.contact2[1] << ", " << idm.contact2[2] << ")\n";
-
-    // Call the potential calc
-    // Fire off the potential calculation
-    double fepot[4];
-    pot->CalcPotential(&idm, part1, part2, fepot);
-
-    // Obtain the mapping between particle oid and position in the force superarray
-    auto oid1x = (*oid_position_map_)[part1->GetOID()];
-    auto oid2x = (*oid_position_map_)[part2->GetOID()];
-
-    #ifdef DEBUG
-    if (debug_trace) {
-      std::cout << "\tPOT TETHER Interacting[" << oid1x << "," << part1->GetOID()
-        << ":" << oid2x << "," << part2->GetOID() << "] u: " << std::setprecision(16)
-        << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
-      if (ndim_ == 3) {
-        std::cout << ", " << fepot[2];
-      }
-      std::cout << ")\n";
-    }
-    #endif
-
-    // Do the potential energies
-    pr_energy[oid1x] += fepot[ndim_];
-    pr_energy[oid2x] += fepot[ndim_];
-
-    // Do the forces
-    for (int i = 0; i < ndim_; ++i) {
-        fr[i][oid1x] += fepot[i];
-        fr[i][oid2x] -= fepot[i];
-
-        for(int j = i; j < ndim_; ++j)
-          virial[3*i+j][sid2x] = virial[3*j+i][sid2x] += fr[i][oid2x]*idm.dr[j];
-    }
-
-    // Calculate the torques
-    double tau[3];
-    cross_product(idm.contact1, fepot, tau, ndim_);
-    //for (int i = 0; i < ndim_; ++i) {
-    for (int i = 0; i < 3; ++i) {
-        tr[i][oid1x] += tau[i];
-    }
-    cross_product(idm.contact2, fepot, tau, ndim_);
-    //for (int i = 0; i < ndim_; ++i) {
-    for (int i = 0; i < 3; ++i) {
-        tr[i][oid2x] -= tau[i];
-    }
-  }
-  //part1->AddVirial(fepot, idm.dr);
-}
-
-// Do the KMC interactions separately, they depend on the nl_list
-// being 2-way
-void InteractionEngine::KMCParticlesMP(neighbor_t* neighbor, int &idx, int &jdx, double *kmc_energy, double** virial) {
-  // We have to manually rezero the neighbor kmc, if it wanders away
-  neighbor->kmc_ = 0.0;
-  auto part1 = (*simples_)[idx];
-  auto part2 = (*simples_)[jdx];
-  auto sid2x = spec_ind_map_[part2->GetSID()];
-
-  // Calculate the potential here
-  PotentialBase *pot = potentials_->GetPotentialExternal(part1->GetSID(), part2->GetSID());
-  if (pot == nullptr) return; // no interaction
-  if (!pot->IsKMC()) return; // do the kmc interactions here, bail before min calc
-  SID kmc_target = pot->GetKMCTarget();
-  if (part1->GetSID() != kmc_target) return; // only do the kmc calc once for the target
-  // Minimum distance here@@@@!!!!
-  // XXX: CJE ewwwwwww, more elegant way?
+  // Always just do the calculation, boundary potentials know about their own
+  // interaction distance calc
   interactionmindist idm;
-  MinimumDistance(part1, part2, idm, ndim_, nperiodic_, space_);
-  if (idm.dr_mag2 > pot->GetRCut2()) return;
 
-  // Fire off the potential calculation
-  double fepot[4] = {};
+  // Do the potential calc
+  double fepot[4] = {0};
+  PotentialBase *pot = (*pix)->pot_;
   pot->CalcPotential(&idm, part1, part2, fepot);
-
-  #ifdef DEBUG
-  // Obtain the mapping between particle oid and position in the force superarray
-  auto oid1x = (*oid_position_map_)[part1->GetOID()];
-  auto oid2x = (*oid_position_map_)[part2->GetOID()];
-  if (debug_trace) {
-    std::cout << "\tKMC Interacting[" << oid1x << "," << part1->GetOID()
-      << ":" << oid2x << "," << part2->GetOID() << "] kmc: " << std::setprecision(16)
-      << fepot[ndim_] << std::endl;
-  }
-  #endif
-
-  //TODO Check to make sure this is done properly
-  for(int i = 0; i < ndim_; ++i)
-    for(int j = i; j < ndim_; ++j)
-      //-= used since fepot is the force acting on partcle 1
-      virial[3*i+j][sid2x] = virial[3*j+i][sid2x] -= fepot[i]*idm.dr[j];
-  neighbor->kmc_ = fepot[ndim_];
-  //part1->AddVirial(fepot, idm.dr);
-}
-
-// Interact particles with the boundary...
-void InteractionEngine::InteractParticlesBoundaryMP(int &idx,
-                                 double **fr,
-                                 double **tr,
-                                 double *pr_energy) {
-  auto part1 = (*simples_)[idx];
-  Simple* part2 = nullptr;
-
-  // Calculate the potential here
-  PotentialBase *pot = potentials_->GetPotentialBoundary(part1->GetSID());
-  if (pot == nullptr) return; // no interaction
-
-  // Fire off the potential calculation
-  interactionmindist idm;
-  double fepot[4];
-  pot->CalcPotential(&idm, part1, part2, fepot);
-
-  // Obtain the mapping between particle oid and position in the force superarray
-  auto oid1x = (*oid_position_map_)[part1->GetOID()];
 
   #ifdef DEBUG
   if (debug_trace && fepot[ndim_] > 0.0) {
-    std::cout << "\tPOT BOUNDARY Interacting[" << oid1x << "," << part1->GetOID()
+    std::cout << "\tPOT BOUNDARY Interacting[" << idx << "," << part1->GetOID()
       << "] u: " << std::setprecision(16)
       << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
     if (ndim_ == 3) {
@@ -468,40 +382,122 @@ void InteractionEngine::InteractParticlesBoundaryMP(int &idx,
   }
   #endif
 
-  // Do the potential energies
-  pr_energy[oid1x] += fepot[ndim_];
+  // Potential Energies
+  pe[idx] += fepot[ndim_];
 
   // Do the forces
   for (int i = 0; i < ndim_; ++i) {
-      fr[i][oid1x] += fepot[i];
+      fr[i][idx] += fepot[i];
+  }
+
+  // Torques
+  // Calculate the torques
+  double tau[3];
+  cross_product(idm.contact1, fepot, tau, ndim_);
+  for (int i = 0; i < 3; ++i) {
+      tr[i][idx] += tau[i];
+  }
+}
+
+// Tether interactions
+void InteractionEngine::InteractParticlesTetherMP(interaction_t **pix,
+                                                    double **fr,
+                                                    double **tr,
+                                                    double *pe,
+                                                    double **virial) {
+  // We cache the anchor information in the interaction in the case of
+  // an anchor potential, so can just directly rip out of pix
+  int idx = (*pix)->idx_;
+  int jdx = (*pix)->jdx_;
+  auto part1 = (*simples_)[idx];
+  auto part2 = (*simples_)[jdx];
+  auto sid2x = spec_ind_map_[part2->GetSID()];
+
+  // Anchor information
+  anchor_t *manchor = (*pix)->anchor_;
+
+  // Calculating this potential is strange, since the minimum distance calculation is dependent
+  // on the anchor point, and the potential tip, so call with the anchor point in the first position,
+  // and part 2 in the second
+  double rx0[3] = {0.0, 0.0, 0.0};
+  double sx0[3] = {0.0, 0.0, 0.0};
+  double rx1[3] = {0.0, 0.0, 0.0};
+  double sx1[3] = {0.0, 0.0, 0.0};
+  std::copy(manchor->pos0_, manchor->pos0_+3, rx0);
+  std::copy(manchor->pos1_, manchor->pos1_+3, rx1);
+  double dr[3] = {0.0, 0.0, 0.0};
+  separation_vector(ndim_, nperiodic_, rx0, sx0, rx1, sx1, space_->unit_cell, dr);
+  interactionmindist idm;
+  std::copy(dr, dr+3, idm.dr);
+
+  // Calculate the rcontacts for us, ugh (based on absolute vs relative positions)
+  for (int i = 0; i < ndim_; ++i) {
+    idm.contact1[i] = rx0[i] - part1->GetRigidPosition()[i];
+    idm.contact2[i] = rx1[i] - part2->GetRigidPosition()[i];
+  }
+
+  // Fire off the potential calculation
+  double fepot[4] = {0.0};
+  PotentialBase *pot = (*pix)->pot_;
+  pot->CalcPotential(&idm, part1, part2, fepot);
+
+  #ifdef DEBUG
+  if (debug_trace) {
+    std::cout << "\tPOT TETHER Interacting[" << idx << "," << part1->GetOID()
+      << ":" << jdx << "," << part2->GetOID() << "] u: " << std::setprecision(16)
+      << fepot[ndim_] << ", f: (" << fepot[0] << ", " << fepot[1];
+    if (ndim_ == 3) {
+      std::cout << ", " << fepot[2];
+    }
+    std::cout << ")\n";
+  }
+  #endif
+
+  // Potential Energies
+  pe[idx] += fepot[ndim_];
+  pe[jdx] += fepot[ndim_];
+
+  // Do the forces
+  for (int i = 0; i < ndim_; ++i) {
+      fr[i][idx] += fepot[i];
+      fr[i][jdx] -= fepot[i];
+      //Calculate virial only on particle two
+      //FIXME This shouldn't be by species but by potential
+      for(int j = i; j < ndim_; ++j)
+        virial[3*i+j][sid2x] = virial[3*j+i][sid2x] += fr[i][jdx]*idm.dr[j];
   }
 
   // Calculate the torques
   double tau[3];
   cross_product(idm.contact1, fepot, tau, ndim_);
-  //for (int i = 0; i < ndim_; ++i) {
   for (int i = 0; i < 3; ++i) {
-      tr[i][oid1x] += tau[i];
+      tr[i][idx] += tau[i];
+  }
+  cross_product(idm.contact2, fepot, tau, ndim_);
+  for (int i = 0; i < 3; ++i) {
+      tr[i][jdx] -= tau[i];
   }
 }
 
-// Reduce the particles back to their main versions
+
+// Reduce the particles and load the forces back onto them
 void InteractionEngine::ReduceParticlesMP() {
   for (int i = 0; i < nsimples_; ++i) {
     auto part = (*simples_)[i];
+    #ifdef DEBUG
     int oidx = (*oid_position_map_)[part->GetOID()];
+    assert(i == oidx);
+    #endif
+    //if (i != oidx) {
+    //  std::cout << "Isn't " << i << " = " << oidx << std::endl;
+    //}
     double subforce[3] = {0.0, 0.0, 0.0};
     double subtorque[3] = {0.0, 0.0, 0.0};
-    //for (int idim = 0; idim < ndim_; ++idim) {
     for (int idim = 0; idim < 3; ++idim) {
-      subforce[idim] = frc_[idim*nsimples_+oidx];
-      subtorque[idim] = trqc_[idim*nsimples_+oidx]; 
+      subforce[idim] = frc_[idim*nsimples_+i];
+      subtorque[idim] = trqc_[idim*nsimples_+i];
     }
-    /*if (debug_trace) {
-      printf("INTERACT[%d] -> f(%2.8f, %2.8f, %2.8f)\n", part->GetOID(), subforce[0], subforce[1], subforce[2]);
-      printf("               t(%2.8f, %2.8f, %2.8f)\n", subtorque[0], subtorque[1], subtorque[2]);
-    }*/
-    part->AddForceTorqueEnergyKMC(subforce, subtorque, prc_energy_[oidx], kmc_energy_[oidx]);
+    part->AddForceTorqueEnergy(subforce, subtorque, prc_energy_[i]);
   }
 
   //Add virial components to species
@@ -516,25 +512,44 @@ void InteractionEngine::ReduceParticlesMP() {
   }
 }
 
-// Print out information
-void InteractionEngine::Print() {
-  printf("********\n");
-  printf("InteractionEngine ->\n");
-  printf("\t{nthreads:%d}, {ndim:%d}, {nperiodic:%d}, {n:%d}\n", nthreads_, ndim_, nperiodic_, nsimples_);
-  printf("\t{box:%2.2f}, {max_rcut:%2.2f}, {skin:%2.2f}\n", box_[0], max_rcut_, skin_);
-}
-
-// Dump all the glorious information
-// from the species level
+// Dump functionality
 void InteractionEngine::Dump() {
   #ifdef DEBUG
+  std::cout << "----------------\n";
+  std::cout << "InteractionEngine::Dump\n";
+  DumpSpecies();
+  DumpInteractions();
+  #endif
+}
+
+// Dump Species information
+void InteractionEngine::DumpSpecies() {
+  #ifdef DEBUG
   if (debug_trace) {
-    printf("--------\n");
-    printf("InteractionEngine -> dump\n");
+    std::cout << "----------------\n";
+    std::cout << "DumpSpecies\n";
     for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-      printf("Species[%hhu] ->\n", (*spec)->GetSID());
+      std::cout << "Species[" << (int)(*spec)->GetSID() << "] ->\n";
       (*spec)->Dump();
     }
+  }
+  #endif
+}
+
+// Dump interaction information
+void InteractionEngine::DumpInteractions() {
+  #ifdef DEBUG
+  std::cout << "----------------\n";
+  std::cout << "DumpInteractions\n";
+  for (int ixs = 0; ixs < interactions_->size(); ++ixs) {
+    auto mixs = (*interactions_)[ixs];
+    std::cout << "[" << ixs << "] {" << mixs.idx_ << " -> " << mixs.jdx_ << "}, type: "
+      << PtypeToString(mixs.type_);
+    if (mixs.kmc_target_ != SID::none) {
+      std::cout << ", kmc_target: " << SIDToString(mixs.kmc_target_)
+        << std::setprecision(16) << ", kmc: " << mixs.neighbor_->kmc_;
+    }
+    std::cout << std::endl;
   }
   #endif
 }

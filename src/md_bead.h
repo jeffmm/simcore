@@ -19,7 +19,6 @@ class MDBead : public Simple {
     }
     virtual void Init();
     virtual void UpdatePosition();
-    virtual void UpdatePositionMP();
     virtual void Integrate();
     virtual void UpdateKineticEnergy();
     virtual double const GetKineticEnergy();
