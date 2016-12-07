@@ -1,12 +1,12 @@
 # params.yaml
 ---
-seed : 315932758530486
+seed : 208702420129337
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-delta: 0.0001
+delta: 0.001
 n_steps: 500000
-system_radius: 100
+system_radius: 50
 graph_flag: 1
 graph_diameter: 1
 n_graph: 100
@@ -15,12 +15,12 @@ n_update_cells: 20
 diffusion_validation_flag: 0
 n_validate: 250
 time_flag: 1
-driving_factor: 3
+driving_factor: 40
 tracking_type: 1 # 0 none, 1 ap, 2 mcells, 3 cells, 4 nl ap, 5 nl cells
-potfile: params/hard_rods.pot.yaml
-kmcfile: params/hard_rods.kmc.yaml
-config_file: params/dy_rods.config.yaml
-datafile: params/hard_rods.dat.yaml
+potfile: params/filament_int.pot.yaml
+kmcfile: params/filament_int.kmc.yaml
+config_file: params/filament_int.config.yaml
+datafile: params/filament_int.dat.yaml
 posit_flag: 1
 n_posit: 10
 avg_posits: 1

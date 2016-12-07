@@ -68,7 +68,7 @@ void DyRod::ApplyForcesTorques() {
   AddForce(f_dr);
 }
 
-void DyRod::UpdatePositionMP() {
+void DyRod::UpdatePosition() {
   ApplyForcesTorques();
   Integrate();
   UpdateSitePositions();

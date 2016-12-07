@@ -1,15 +1,15 @@
-#ifndef _SIMCORE_XLINK_KMC_V2_H_
-#define _SIMCORE_XLINK_KMC_V2_H_
+#ifndef _SIMCORE_XLINK_KMC_H_
+#define _SIMCORE_XLINK_KMC_H_
 
 #include "auxiliary.h"
-#include "kmc_base_v2.h"
+#include "kmc_base.h"
 #include "lookup_table.h"
 #include "xlink_harmonic.h"
 
 class Xlink;
 class XlinkHead;
 
-class XlinkKMCV2 : public KMCBaseV2 {
+class XlinkKMC : public KMCBase {
   protected:
     double eps_eff_0_1_[2];
     double eps_eff_1_2_[2];

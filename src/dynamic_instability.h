@@ -32,10 +32,12 @@ class DynamicInstabilityKMC : public KMCBase {
 
   public:
 
-    virtual void Init(space_struct *pSpace, ParticleTracking *pTracking,
-        PotentialManager *pPotentials,
-        SpeciesBase *spec1, SpeciesBase *spec2, int ikmc, YAML::Node &node,
-        long seed);
+    virtual void Init(space_struct *pSpace,
+                      ParticleEngine *pTrackEngine,
+                      SpeciesBase *spec1,
+                      SpeciesBase *spec2,
+                      YAML::Node *subnode,
+                      long seed);
     virtual void Print();
     virtual void Dump();
     virtual double GetMaxRcut() {return 0.0;}

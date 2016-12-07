@@ -8,16 +8,6 @@ void BrBead::KickBead() {
 }
 
 void BrBead::UpdatePosition() {
-  KickBead();
-  ApplyInteractions();
-  for (int i=0; i<n_dim_; ++i)
-    position_[i] = position_[i] + force_[i] * delta_ / diameter_;
-  UpdatePeriodic();
-  ClearInteractions();
-  ZeroForce();
-}
-
-void BrBead::UpdatePositionMP() {
     KickBead();
     std::copy(position_, position_+n_dim_, prev_position_);
     for (int i = 0; i < n_dim_; ++i) {

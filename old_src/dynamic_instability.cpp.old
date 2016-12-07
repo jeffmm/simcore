@@ -1,23 +1,25 @@
-#include "dynamic_instability_v2.h"
+#include "dynamic_instability.h"
 
-void DynamicInstabilityKMCV2::Init(space_struct *pSpace,
-                                   ParticleEngine *pTrackEngine,
-                                   SpeciesBase *spec1,
-                                   SpeciesBase *spec2,
-                                   YAML::Node *subnode,
-                                   long seed) {
-  KMCBaseV2::Init(pSpace, pTrackEngine, spec1, spec2, subnode, seed);
-  YAML::Node node = *subnode;
+
+void DynamicInstabilityKMC::Init(space_struct *pSpace,
+                                 ParticleTracking *pTracking,
+                                 PotentialManager *pPotentials,
+                                 SpeciesBase *spec1,
+                                 SpeciesBase *spec2,
+                                 int ikmc,
+                                 YAML::Node &node,
+                                 long seed) {
+  KMCBase::Init(pSpace, pTracking, pPotentials, spec1, spec2, ikmc, node, seed);
 
   delta_ = spec1_->GetDelta();
 
   // Grab our specific claims
-  f_shrink_to_grow_   = node["f_shrink_to_grow"].as<double>();
-  f_shrink_to_pause_  = node["f_shrink_to_pause"].as<double>();
-  f_pause_to_shrink_  = node["f_pause_to_shrink"].as<double>();
-  f_pause_to_grow_    = node["f_pause_to_grow"].as<double>();
-  f_grow_to_shrink_   = node["f_grow_to_shrink"].as<double>();
-  f_grow_to_pause_    = node["f_grow_to_pause"].as<double>();
+  f_shrink_to_grow_   = node["kmc"][ikmc]["f_shrink_to_grow"].as<double>();
+  f_shrink_to_pause_  = node["kmc"][ikmc]["f_shrink_to_pause"].as<double>();
+  f_pause_to_shrink_  = node["kmc"][ikmc]["f_pause_to_shrink"].as<double>();
+  f_pause_to_grow_    = node["kmc"][ikmc]["f_pause_to_grow"].as<double>();
+  f_grow_to_shrink_   = node["kmc"][ikmc]["f_grow_to_shrink"].as<double>();
+  f_grow_to_pause_    = node["kmc"][ikmc]["f_grow_to_pause"].as<double>();
   // Convert to probabilities
   p_stg_ = f_shrink_to_grow_ * delta_;
   p_stp_ = f_shrink_to_pause_ * delta_;
@@ -25,17 +27,17 @@ void DynamicInstabilityKMCV2::Init(space_struct *pSpace,
   p_gtp_ = f_grow_to_pause_ * delta_;
   p_ptg_ = f_pause_to_grow_ * delta_;
   p_pts_ = f_pause_to_shrink_ * delta_;
-  v_poly_             = node["v_poly"].as<double>();
-  v_depoly_           = node["v_depoly"].as<double>();
+  v_poly_             = node["kmc"][ikmc]["v_poly"].as<double>();
+  v_depoly_           = node["kmc"][ikmc]["v_depoly"].as<double>();
 
   BrRodSpecies* prspec = dynamic_cast<BrRodSpecies*>(spec1_);
   max_length_ = prspec->GetMaxLength();
   min_length_ = prspec->GetMinLength();
 }
 
-void DynamicInstabilityKMCV2::Print() {
+void DynamicInstabilityKMC::Print() {
   std::cout << "BrRod Dynamic Instability KMC Module\n";
-  KMCBaseV2::Print();
+  KMCBase::Print();
   std::cout << std::setprecision(16) << "\tdelta:             " << delta_ << std::endl;
   std::cout << std::setprecision(16) << "\tf_shrink_to_grow:  " << f_shrink_to_grow_ << std::endl;
   std::cout << std::setprecision(16) << "\tf_shrink_to_pause: " << f_shrink_to_pause_ << std::endl;
@@ -49,18 +51,18 @@ void DynamicInstabilityKMCV2::Print() {
   std::cout << std::setprecision(16) << "\tmin_length:        " << min_length_ << std::endl;
 }
 
-void DynamicInstabilityKMCV2::Dump() {
+void DynamicInstabilityKMC::Dump() {
   if (debug_trace) {
-    std::cout << "DynamicInstabilityKMCV2 -> dump\n";
+    std::cout << "DynamicInstabilityKMC -> dump\n";
   }
 }
 
-void DynamicInstabilityKMCV2::StepKMC() {
+void DynamicInstabilityKMC::StepKMC() {
   UpdatePolymerizationState();
   GrowBonds();
 }
 
-void DynamicInstabilityKMCV2::UpdatePolymerizationState() {
+void DynamicInstabilityKMC::UpdatePolymerizationState() {
   BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec1_);
   //std::cout << "UpdatePolymerizationState\n";
   auto rod_members = prspec->GetMembers();
@@ -188,7 +190,7 @@ void DynamicInstabilityKMCV2::UpdatePolymerizationState() {
 
 }
 
-void DynamicInstabilityKMCV2::GrowBonds() {
+void DynamicInstabilityKMC::GrowBonds() {
   BrRodSpecies *prspec = dynamic_cast<BrRodSpecies*>(spec1_);
   //std::cout << "GrowBonds\n";
   auto rod_members = prspec->GetMembers();

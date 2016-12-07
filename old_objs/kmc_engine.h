@@ -1,10 +1,10 @@
-#ifndef _SIMCORE_KMC_ENGINE_V2_H_
-#define _SIMCORE_KMC_ENGINE_V2_H_
+#ifndef _SIMCORE_KMC_ENGINE_H_
+#define _SIMCORE_KMC_ENGINE_H_
 
 #include "auxiliary.h"
 #include "helpers.h"
 #include "interaction.h"
-#include "kmc_base_v2.h"
+#include "kmc_base.h"
 #include "particle_engine.h"
 #include "species.h"
 
@@ -12,10 +12,10 @@
 #include <omp.h>
 #endif
 
-class kmcEngineV2 {
+class kmcEngine {
   public:
-    kmcEngineV2() {}
-    ~kmcEngineV2() {}
+    kmcEngine() {}
+    ~kmcEngine() {}
 
     void Dump();
     void PreGenerateNeighbors();
@@ -47,7 +47,7 @@ class kmcEngineV2 {
       rng_properties rng_;
 
       rfh::factory kmc_factory_;
-      std::vector<KMCBaseV2*> kmc_modules_;
+      std::vector<KMCBase*> kmc_modules_;
 
       void AttachParticleEngine();
       void ParseKMC();

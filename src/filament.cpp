@@ -21,6 +21,7 @@ void Filament::SetParameters(system_parameters *params) {
   p_p2g_ = params->f_pause_to_grow*delta_;
   v_depoly_ = params->v_depoly;
   v_poly_ = params->v_poly;
+  driving_factor_ = params->driving_factor;
   gamma_ratio_ = params->gamma_ratio;
   metric_forces_ = params->metric_forces;
   theta_validation_flag_ = params->theta_validation_flag;
@@ -170,10 +171,6 @@ void Filament::GenerateProbableOrientation() {
 }
 
 void Filament::UpdatePosition(bool midstep) {
-  UpdatePositionMP(midstep);
-}
-
-void Filament::UpdatePositionMP(bool midstep) {
   ZeroForce();
   ApplyForcesTorques();
   Integrate(midstep);
@@ -542,7 +539,42 @@ void Filament::UpdatePrevPositions() {
 
 double const * const Filament::GetDrTot() {return nullptr;}
 
-void Filament::ApplyForcesTorques() {}
+void Filament::ApplyForcesTorques() {
+  double pure_torque[3] = {0,0,0};
+  double site_force[3] = {0,0,0};
+  double linv=1.0/child_length_;
+  for (int i=0; i<n_bonds_; ++i) {
+    double const * const f = v_elements_[i].GetForce();
+    double const * const t = v_elements_[i].GetTorque();
+    double const * const u = elements_[i].GetOrientation();
+    AddPotential(v_elements_[i].GetPotentialEnergy());
+    // Convert torques into forces at bond ends
+    // u x t / bond_length = pure torque force at tail of bond
+    cross_product(u, t, pure_torque, 3);
+    for (int i=0; i<n_dim_; ++i) {
+      pure_torque[i]*=linv;
+      site_force[i] = 0.5*f[i];
+    }
+    if (debug_trace) {
+      printf("potential %d: %2.8f\n",v_elements_[i].GetPotentialEnergy());
+      printf("pure torque %d: {%2.8f %2.8f %2.8f}\n",i,pure_torque[0],pure_torque[1],pure_torque[2]);
+      printf("site force %d: {%2.8f %2.8f %2.8f}\n",i,site_force[0],site_force[1],site_force[2]);
+    }
+    // Add translational forces and pure torque forces at bond ends
+    elements_[i].AddForce(site_force);
+    elements_[i].AddForce(pure_torque);
+    for (int j=0; j<n_dim_; ++j)
+      pure_torque[j] *= -1;
+    elements_[i+1].AddForce(site_force);
+    elements_[i+1].AddForce(pure_torque);
+    // Add driving 
+    double f_dr[3];
+    for (int j=0; j<n_dim_; ++j)
+      f_dr[j] = u[j]*driving_factor_;
+    elements_[i].AddForce(f_dr);  
+
+  }
+}
 
 void Filament::Draw(std::vector<graph_struct*> * graph_array) {
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {

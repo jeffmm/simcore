@@ -64,7 +64,7 @@ class DyRod : public Composite<Site,Bond> {
     virtual void Init();
     virtual void Integrate();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
-    virtual void UpdatePositionMP();
+    virtual void UpdatePosition();
     virtual void Dump();
 
     // Specific functions for configurations
@@ -93,9 +93,9 @@ class DyRodSpecies : public Species<DyRod> {
     double const GetMaxLength() {return max_length_;}
     double const GetMinLength() {return min_length_;}
 
-    void UpdatePositionsMP() {
+    void UpdatePositions() {
       for (auto it=members_.begin(); it != members_.end(); ++it) {
-        (*it)->UpdatePositionMP();
+        (*it)->UpdatePosition();
       }
     }
     // Special insertion routine

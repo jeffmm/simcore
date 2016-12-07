@@ -3,60 +3,60 @@
 
 #include "anchor_list_generic.h"
 #include "auxiliary.h"
+#include "interaction.h"
 #include "interaction_engine.h"
-#include "kmc_engine.h"
-#include "minimum_distance.h"
-#include "potential_manager.h"
-#include "particle_tracking.h"
+//#include "kmc_engine.h"
+#include "particle_engine.h"
 #include "species.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 
+#include <chrono>
+
 class UberEngine {
   private:
-    int n_dim_,
-        n_periodic_,
-        max_overlap_,
-        draw_flag_,
+    int ndim_,
+        nperiodic_,
         nthreads_;
-    bool draw_;
-    double dr_[3],
-           contact1_[3],
-           contact2_[3],
-           dr_mag_,
-           dr_mag2_,
-           buffer_mag_,
-           buffer_mag2_,
-           skin_;
     system_parameters *params_;
-    FTYPE force_type_;
     space_struct *space_;
     std::vector<SpeciesBase*> *species_;
     al_set *anchors_;
-    PotentialManager potentials_;
-    ParticleTracking ptrack_;
-    InteractionEngine fengine_; //fengine = force engine.  get it?
-    kmcEngine kengine_;
     rng_properties rng_;
+
+    ParticleEngine pengine_;
+    InteractionEngine fengine_;
+    //kmcEngine kengine_;
+
+    std::vector<interaction_t> interactions_;
+
+    // Statistics and timing
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_time_;
+    std::chrono::time_point<std::chrono::high_resolution_clock> this_time_;
+    int ndatapoints_;
+    int ninteractions_;
+
 
   public:
     UberEngine() {}
-    ~UberEngine() {}
+    ~UberEngine() {
+      PrintStatistics();
+    }
 
-    std::vector<graph_struct> draw_array_;
   public:
+    void DumpAll();
+    void GenerateStatistics(int istep);
     void Init(system_parameters *pParams,
               space_struct *pSpace,
               std::vector<SpeciesBase*> *pSpecies,
               al_set *pAnchors,
               long seed);
-    void InteractMP();
-    void StepKMC();
-    void DumpAll();
-    void Draw(std::vector<graph_struct*> * graph_array);
+    void Interact();
     void PrepOutputs();
+    void PrintStatistics();
+    //void StepKMC();
     void WriteOutputs(int istep);
 };
 

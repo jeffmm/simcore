@@ -9,16 +9,9 @@ void MDBead::Init() {
   }
   orientation_[0] = 0; // Set default color to red
 }
-void MDBead::UpdatePosition() {
-  ZeroForce();
-  ApplyInteractions();
-  Integrate();
-  UpdatePeriodic();
-  ClearInteractions();
-}
 
-// Update the position based on MP
-void MDBead::UpdatePositionMP() {
+// Update the position based 
+void MDBead::UpdatePosition() {
     Integrate();
     UpdatePeriodic();
 }

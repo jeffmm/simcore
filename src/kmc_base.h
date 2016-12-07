@@ -2,8 +2,9 @@
 #define _SIMCORE_KMC_BASE_H_
 
 #include "auxiliary.h"
-#include "particle_tracking.h"
-#include "potential_manager.h"
+#include "interaction.h"
+#include "neighbor_list.h"
+#include "particle_engine.h"
 #include "species.h"
 
 // KMC base for all the kmc routines that we can use
@@ -14,41 +15,56 @@ class KMCBase {
 
     rng_properties rng_;
     space_struct *space_;
-    ParticleTracking *tracking_;
-    PotentialManager *potentials_;
+    ParticleEngine *ptrack_;
     SID sid1_;
     SID sid2_;
     SpeciesBase *spec1_;
     SpeciesBase *spec2_;
+
+    nl_kmc_list *nl_kmc_;
+    std::vector<Simple*> *simples_;
+    std::vector<SpeciesBase*> *species_;
+    std::vector<interaction_t> *interactions_;
+    std::unordered_map<int, int> *oid_position_map_;
 
   public:
     KMCBase() {}
     virtual ~KMCBase() {}
 
     virtual void Init(space_struct *pSpace,
-                      ParticleTracking *pTracking,
-                      PotentialManager *pPotentials,
+                      ParticleEngine *pTrackEngine,
                       SpeciesBase *spec1,
                       SpeciesBase *spec2,
-                      int ikmc, YAML::Node &node, long seed) {
+                      YAML::Node *subnode,
+                      long seed) {
+      YAML::Node node = *subnode;
       space_ = pSpace;
       ndim_ = space_->n_dim;
       nperiodic_ = space_->n_periodic;
       rng_.init(seed);
-      tracking_ = pTracking;
-      std::string sid1s   = node["kmc"][ikmc]["sid1"].as<std::string>();
-      std::string sid2s   = node["kmc"][ikmc]["sid2"].as<std::string>();
+      ptrack_ = pTrackEngine;
+      std::string sid1s = node["sid1"].as<std::string>();
+      std::string sid2s = node["sid2"].as<std::string>();
       sid1_ = StringToSID(sid1s);
       sid2_ = StringToSID(sid2s);
       spec1_ = spec1;
       spec2_ = spec2;
-      potentials_ = pPotentials;
+
+      // Attach to the particle tracking
+      simples_ = ptrack_->GetSimples();
+      species_ = ptrack_->GetSpecies();
+      oid_position_map_ = ptrack_->GetOIDPositionMap();
+      interactions_ = ptrack_->GetInteractions();
     }
     virtual double GetMaxRcut() {return 0.0;}
+    virtual void GenerateKMCNeighborList() {}
     virtual void PrepKMC() {}
     virtual void StepKMC() {}
     virtual void UpdateKMC() {}
     virtual void TransferForces() {}
+    virtual void GenerateTrackingScheme(YAML::Node *subnode) {
+      std::cout << "Should be overridden\n";
+    }
 
     virtual void PrepOutputs() {}
     virtual void WriteOutputs(int istep) {}
@@ -71,7 +87,5 @@ class KMCBase {
       }
     }
 };
-
-typedef std::map<sid_pair, KMCBase*> kmc_map;
 
 #endif // _SIMCORE_KMC_BASE_H_
