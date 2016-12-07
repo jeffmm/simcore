@@ -58,7 +58,7 @@ void Filament::InitElements(system_parameters *params, space_struct *space) {
   for (int i=0; i<n_bonds_; ++i) {
     Bond b(params, space, gsl_rng_get(rng_.r), GetSID());
     b.SetCID(GetCID());
-    b.SetRID(GetRID());
+    b.SetRID(GetCID());
     v_elements_.push_back(b);
   }
   //Allocate control structures
@@ -171,7 +171,7 @@ void Filament::GenerateProbableOrientation() {
 }
 
 void Filament::UpdatePosition(bool midstep) {
-  ZeroForce();
+  //ZeroForce();
   ApplyForcesTorques();
   Integrate(midstep);
   UpdateAvgPosition();

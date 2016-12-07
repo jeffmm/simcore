@@ -61,7 +61,7 @@ void UberEngine::Init(system_parameters *pParams,
 }
 
 void UberEngine::Interact() {
-  pengine_.UpdateInteractions();
+  pengine_.UpdateInteractions(true);
   fengine_.Interact();
 }
 
