@@ -3,7 +3,7 @@ filament:
     insertion_type: random
     overlap: true
   fil:
-    num: 20
+    num: 10
     length: 30
     persistence_length: 30
     max_length: 100

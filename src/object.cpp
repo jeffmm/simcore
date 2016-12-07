@@ -226,7 +226,7 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
   std::fill(imd.contact2, imd.contact2+3, 0.0);
   imd.buffer_mag = 0.5*(d1+d2);
   imd.buffer_mag2 = imd.buffer_mag*imd.buffer_mag;
-  if (l1 == 0 && l2 == 0)
+  if (l1 == 0 && l2 == 0) 
     min_distance_point_point(ndim, nperiodic, space->unit_cell,
                  r1, s1, r2, s2, imd.dr, &imd.dr_mag2);
   else if (l1 == 0 && l2 > 0)
@@ -237,7 +237,7 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
     min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
                    r2, s2, r1, s1, u1, l1,
                    imd.dr, &imd.dr_mag2, imd.contact1);
-  else if (l1 > 0 && l2 > 0)
+  else if (l1 > 0 && l2 > 0) 
     min_distance_sphero(ndim, nperiodic, space->unit_cell,
               r1, s1, u1, l1, r2, s2, u2, l2,
               imd.dr, &imd.dr_mag2, imd.contact1, imd.contact2);

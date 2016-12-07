@@ -556,9 +556,9 @@ void Filament::ApplyForcesTorques() {
       site_force[i] = 0.5*f[i];
     }
     if (debug_trace) {
-      printf("potential %d: %2.8f\n",v_elements_[i].GetPotentialEnergy());
-      printf("pure torque %d: {%2.8f %2.8f %2.8f}\n",i,pure_torque[0],pure_torque[1],pure_torque[2]);
-      printf("site force %d: {%2.8f %2.8f %2.8f}\n",i,site_force[0],site_force[1],site_force[2]);
+      //printf("potential %d: %2.8f\n",v_elements_[i].GetPotentialEnergy());
+      //printf("pure torque %d: {%2.8f %2.8f %2.8f}\n",i,pure_torque[0],pure_torque[1],pure_torque[2]);
+      //printf("site force %d: {%2.8f %2.8f %2.8f}\n",i,site_force[0],site_force[1],site_force[2]);
     }
     // Add translational forces and pure torque forces at bond ends
     elements_[i].AddForce(site_force);
@@ -597,6 +597,11 @@ void Filament::UpdateBondPositions() {
     bond->SetOrientation(u);
     bond->SetLength(child_length_);
     bond->UpdatePeriodic();
+    bond->SetRigidPosition(bond->GetPosition());
+    bond->SetRigidScaledPosition(bond->GetScaledPosition());
+    bond->SetRigidOrientation(u);
+    bond->SetRigidLength(child_length_);
+    bond->SetRigidDiameter(diameter_);
     i_site++;
   }
 }
