@@ -1,12 +1,12 @@
 potentials:
   - name : WCA
     type : external
-    scheme : allpairs
+    scheme : neighborlistallpairs
     skin : 1
     sid1 : filament
     sid2 : filament
     rcut: 1.5
-    fcut: 10
+    fcut: 100
     eps: 1
     sigma: 1
     overlap: true

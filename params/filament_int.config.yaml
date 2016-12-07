@@ -4,10 +4,10 @@ filament:
     overlap: true
   fil:
     num: 10
-    length: 30
-    persistence_length: 30
+    length: 20
+    persistence_length: 20
     max_length: 100
     min_length: 1
-    max_child_length: 2
+    max_child_length: 4
     diameter: 1
 
