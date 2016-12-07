@@ -48,7 +48,6 @@ class SpeciesBase {
       kmc_update_ = false;
     }
     virtual void UpdatePositions() {}
-    virtual void UpdatePositionsMP() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
     virtual void InitConfig(system_parameters *params, space_struct *space, al_set *pAnchors, long seed) {
       n_members_ = 0;
@@ -205,11 +204,6 @@ class Species : public SpeciesBase {
     virtual void UpdatePositions() {
       for (auto it=members_.begin(); it!=members_.end(); ++it)
         (*it)->UpdatePosition();
-    }
-    virtual void UpdatePositionsMP() {
-      for (auto it=members_.begin(); it!=members_.end(); ++it) {
-        (*it)->UpdatePositionMP();
-      }
     }
     virtual std::vector<Simple*> GetSimples() {
       std::vector<Simple*> simples;

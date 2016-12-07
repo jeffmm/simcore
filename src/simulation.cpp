@@ -3,9 +3,7 @@
 
 #define REGISTER_SPECIES(n,m) species_factory_.register_class<n>(#m);
 
-Simulation::Simulation() {
-  utype_ = 1;
-}
+Simulation::Simulation() {}
 Simulation::~Simulation() {}
 
 void Simulation::Run(system_parameters params, std::string name) {
@@ -13,62 +11,35 @@ void Simulation::Run(system_parameters params, std::string name) {
   run_name_ = name;
   rng_.init(params_.seed);
   InitSimulation();
-  //RunSimulation();
-  RunSimulation2();
+  RunSimulation();
   ClearSimulation();
 }
 
 void Simulation::RunSimulation() {
-  std::cout << "Running simulation: " << run_name_ << "\n";
-  std::cout << "    steps: " << params_.n_steps << std::endl;
-  for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
+  std::cout << "Running simulation: " << run_name_ << std::endl;
+  std::cout << "   steps: " << params_.n_steps << std::endl;
+  for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
-    //if (i_step_ % (params_.n_steps / 100) == 0) {
-    if ((100*i_step_) % (params_.n_steps) == 0) {
-      printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
-      fflush(stdout);
-    }
-    if (debug_trace)
-      printf("********\nStep %d\n********\n", i_step_);
+    PrintComplete();
     ZeroForces();
-    //KineticMonteCarloMP();
-    InteractMP();
-    KineticMonteCarloMP();
-    IntegrateMP();
-    // Only will run if DEBUG is enabled
-    #ifdef DEBUG
+    Interact();
+    //KineticMonteCarlo();
+    Integrate();
+    GenerateStatistics(i_step_);
     if (debug_trace)
       DumpAll(i_step_);
-    #endif
     Draw();
     WriteOutputs();
   }
 }
 
-void Simulation::RunSimulation2() {
-  std::cout << "Running simulation: " << run_name_ << std::endl;
-  std::cout << "   steps: " << params_.n_steps << std::endl;
-  for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
-    time_ = (i_step_+1) * params_.delta; 
-    if ((100*i_step_) % (params_.n_steps) == 0) {
-      printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
-      fflush(stdout);
-    }
-    if (debug_trace)
-      printf("********\nStep %d\n********\n", i_step_);
-    ZeroForces();
-    InteractMP2();
-    KineticMonteCarloMP2();
-    IntegrateMP();
-    GenerateStatistics(i_step_);
-    // Only will run if DEBUG is enabled
-    #ifdef DEBUG
-    if (debug_trace)
-      DumpAll2(i_step_);
-    #endif
-    Draw();
-    WriteOutputs();
+void Simulation::PrintComplete() {
+  if ((100*i_step_) % (params_.n_steps) == 0) {
+    printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
+    fflush(stdout);
   }
+  if (debug_trace)
+    printf("********\nStep %d\n********\n", i_step_);
 }
 
 void Simulation::RunMovie(){
@@ -76,30 +47,17 @@ void Simulation::RunMovie(){
   std::cout << "    steps: " << params_.n_steps << std::endl;
   for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
-    //if (i_step_ % (params_.n_steps / 100) == 0) {
-    if ((100*i_step_) % (params_.n_steps) == 0) {
-      printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
-      fflush(stdout);
-    }
-    //std::cout<<" CHECK 1 "<< (i_step_) % (params_.n_steps/100)<<std::endl;
-    if (debug_trace)
-      printf("********\nStep %d\n********\n", i_step_);
+    PrintComplete();
     if (i_step_%params_.n_posit == 0){
       output_mgr_.ReadSpeciesPositions(); 
     }
-    //std::cout<<" CHECK 1 "<< (i_step_) % (params_.n_steps/100)<<std::endl;
     Draw();
-    //WriteOutputs();
   }
 }
 
 void Simulation::DumpAll(int i_step) {
-    // Very yucky dump of all the particles and their positions and forces
-    uengine_.DumpAll();
-}
-
-void Simulation::DumpAll2(int i_step) {
-  uenginev2_.DumpAll();
+  // Very yucky dump of all the particles and their positions and forces
+  uengine_.DumpAll();
 }
 
 void Simulation::Integrate() {
@@ -107,25 +65,12 @@ void Simulation::Integrate() {
     (*it)->UpdatePositions();
 }
 
-void Simulation::IntegrateMP() {
-  for (auto it=species_.begin(); it!=species_.end(); ++it)
-    (*it)->UpdatePositionsMP();
+void Simulation::Interact() {
+  uengine_.Interact();
 }
 
-void Simulation::InteractMP() {
-  uengine_.InteractMP();
-}
-
-void Simulation::InteractMP2() {
-  uenginev2_.InteractMP();
-}
-
-void Simulation::KineticMonteCarloMP() {
-  uengine_.StepKMC();
-}
-
-void Simulation::KineticMonteCarloMP2() {
-  uenginev2_.StepKMC();
+void Simulation::KineticMonteCarlo() {
+  //uengine_.StepKMC();
 }
 
 void Simulation::ZeroForces() {
@@ -135,19 +80,14 @@ void Simulation::ZeroForces() {
 }
 
 void Simulation::GenerateStatistics(int istep) {
-  uenginev2_.GenerateStatistics(istep);
+  uengine_.GenerateStatistics(istep);
 }
 
 void Simulation::InitSimulation() {
-
   space_.Init(&params_, gsl_rng_get(rng_.r));
   output_mgr_.Init(&params_, &graph_array, &i_step_, run_name_);
   InitSpecies();
-  if (utype_ == 0) {
-    uengine_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
-  } else {
-    uenginev2_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
-  }
+  uengine_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
   if (params_.graph_flag) {
     //When making a movie graphics are handled by output_mgr_
     if ( output_mgr_.IsMovie() ) output_mgr_.GetGraphicsStructure();
@@ -174,23 +114,20 @@ void Simulation::InitSpecies() {
 
   // We have to search for the various types of species that we have
   // Maybe hijack init_species.h for this
-  REGISTER_SPECIES(ArgonSpecies,argon);
   REGISTER_SPECIES(MDBeadSpecies,md_bead);
   REGISTER_SPECIES(BrRodSpecies,br_rod);
   REGISTER_SPECIES(DyRodSpecies,dy_rod);
-  REGISTER_SPECIES(XlinkSpecies,xlink);
+  //REGISTER_SPECIES(XlinkSpecies,xlink);
   REGISTER_SPECIES(FilamentSpecies,filament);
-  REGISTER_SPECIES(MDBeadOptSpecies,md_bead_opt);
+  //REGISTER_SPECIES(MDBeadOptSpecies,md_bead_opt);
   REGISTER_SPECIES(BrBeadSpecies,br_bead);
-  REGISTER_SPECIES(SpindlePoleBodySpecies,spb);
+  //REGISTER_SPECIES(SpindlePoleBodySpecies,spb);
 
   std::string config_type = "separate";
   if (node["configuration_type"]) {
     config_type = node["configuration_type"].as<std::string>();
   }
-
   anchors_.clear();
-
   // Search the species_factory_ for any registered species, and find them in the
   // yaml file
   if (config_type.compare("separate") == 0) {
@@ -204,71 +141,61 @@ void Simulation::InitSpecies() {
       }
     }
     output_mgr_.AddSpecies(&species_);
-  } else if (config_type.compare("spindle") == 0) {
-    ConfigureSpindle();
+  //} else if (config_type.compare("spindle") == 0) {
+    //ConfigureSpindle();
   } else {
     std::cout << "Unknown configuration type " << config_type << std::endl;
     exit(1);
   }
 }
 
-void Simulation::ConfigureSpindle() {
-  YAML::Node node = YAML::LoadFile(params_.config_file);
-  std::cout << "Configurator (Spindle) started using file " << params_.config_file << std::endl;
+//void Simulation::ConfigureSpindle() {
+  //YAML::Node node = YAML::LoadFile(params_.config_file);
+  //std::cout << "Configurator (Spindle) started using file " << params_.config_file << std::endl;
+  //int nspbs = (int)node["spb"].size();
+  //int nkcs = (int)node["kc"].size();
+  //// Create the species that we know about for sure
+  //SpindlePoleBodySpecies *pspbspec = (SpindlePoleBodySpecies*)species_factory_.construct("spb");
+  //SpeciesBase *pspbspec_base = (SpeciesBase*)pspbspec;
+  //// FIXME XXX change to microtubule species
+  //BrRodSpecies *prspec = (BrRodSpecies*)species_factory_.construct("br_rod");
+  //SpeciesBase *prspec_base = (SpeciesBase*)prspec;
+  //assert(pspbspec != nullptr);
+  //assert(prspec != nullptr);
+  //pspbspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
+  //prspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
+  //int nmts = 0;
+  //for (int i = 0; i < nspbs; ++i) {
+    //nmts += (int)node["spb"][i]["mt"].size();
+  //}
+  //nmts += (int)node["mt"].size();
+  //std::cout << "\nBasic Parameters:\n";
+  //std::cout << "   n spbs: " << nspbs << std::endl;
+  //std::cout << "   n mts : " << nmts << std::endl;
+  //params_.n_rod = nmts;
+  //// initialize the spbs
+  //anchors_.clear();
+  //for (int ispb = 0; ispb < nspbs; ++ispb) {
+    //pspbspec->ConfiguratorSpindle(ispb, &anchors_);
+    //std::vector<SpindlePoleBody*>* spindle_pole_bodies = pspbspec->GetMembers();
+    //prspec->ConfiguratorSpindle(ispb, (*spindle_pole_bodies)[ispb]->GetOID(),
+        //(*spindle_pole_bodies)[ispb]->GetPosition(),
+        //(*spindle_pole_bodies)[ispb]->GetUAnchor(),
+        //(*spindle_pole_bodies)[ispb]->GetVAnchor(),
+        //(*spindle_pole_bodies)[ispb]->GetWAnchor(),
+        //&anchors_);
+  //}
 
-  int nspbs = (int)node["spb"].size();
-  int nkcs = (int)node["kc"].size();
-
-  // Create the species that we know about for sure
-  SpindlePoleBodySpecies *pspbspec = (SpindlePoleBodySpecies*)species_factory_.construct("spb");
-  SpeciesBase *pspbspec_base = (SpeciesBase*)pspbspec;
-  // FIXME XXX change to microtubule species
-  BrRodSpecies *prspec = (BrRodSpecies*)species_factory_.construct("br_rod");
-  SpeciesBase *prspec_base = (SpeciesBase*)prspec;
-
-  assert(pspbspec != nullptr);
-  assert(prspec != nullptr);
-
-  pspbspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
-  prspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
-
-  int nmts = 0;
-  for (int i = 0; i < nspbs; ++i) {
-    nmts += (int)node["spb"][i]["mt"].size();
-  }
-  nmts += (int)node["mt"].size();
-
-  std::cout << "\nBasic Parameters:\n";
-  std::cout << "   n spbs: " << nspbs << std::endl;
-  std::cout << "   n mts : " << nmts << std::endl;
-
-  params_.n_rod = nmts;
-
-  // initialize the spbs
-  anchors_.clear();
-  for (int ispb = 0; ispb < nspbs; ++ispb) {
-    pspbspec->ConfiguratorSpindle(ispb, &anchors_);
-    std::vector<SpindlePoleBody*>* spindle_pole_bodies = pspbspec->GetMembers();
-    prspec->ConfiguratorSpindle(ispb, (*spindle_pole_bodies)[ispb]->GetOID(),
-        (*spindle_pole_bodies)[ispb]->GetPosition(),
-        (*spindle_pole_bodies)[ispb]->GetUAnchor(),
-        (*spindle_pole_bodies)[ispb]->GetVAnchor(),
-        (*spindle_pole_bodies)[ispb]->GetWAnchor(),
-        &anchors_);
-  }
-
-  // Now the crosslinks
-  // XXX FIXME hardcoded for now
-  XlinkSpecies *pxspec = (XlinkSpecies*)species_factory_.construct("xlink");
-  SpeciesBase *pxspec_base = (SpeciesBase*)pxspec;
-  pxspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
-  pxspec_base->Configurator();
-
-  species_.push_back(pspbspec_base);
-  species_.push_back(prspec_base);
-  species_.push_back(pxspec_base);
-
-}
+  //// Now the crosslinks
+  //// XXX FIXME hardcoded for now
+  //XlinkSpecies *pxspec = (XlinkSpecies*)species_factory_.construct("xlink");
+  //SpeciesBase *pxspec_base = (SpeciesBase*)pxspec;
+  //pxspec_base->InitConfig(&params_, space_.GetStruct(), &anchors_, gsl_rng_get(rng_.r));
+  //pxspec_base->Configurator();
+  //species_.push_back(pspbspec_base);
+  //species_.push_back(prspec_base);
+  //species_.push_back(pxspec_base);
+//}
 
 void Simulation::ClearSpecies() {
   for (auto it=species_.begin(); it!=species_.end(); ++it)
@@ -305,15 +232,11 @@ void Simulation::GetGraphicsStructure() {
   graph_array.clear();
   for (auto it=species_.begin(); it!=species_.end(); ++it)
     (*it)->Draw(&graph_array);
-  if (params_.draw_interactions)
-    uengine_.Draw(&graph_array);
+  //if (params_.draw_interactions)
+    //uengine_.Draw(&graph_array);
 }
 
 void Simulation::InitOutputs() {
-  //double tot_en=0;
-  //for (auto it=species_.begin(); it!=species_.end(); ++it)
-    //tot_en += (*it)->GetTotalEnergy();
-  //std::cout << "Initial system energy: " << tot_en << std::endl;
   if (params_.time_flag) {
     cpu_init_time_ = cpu();
   }
@@ -324,10 +247,8 @@ void Simulation::InitOutputs() {
     en_file << "#kinetic  #potential  #total\n";
     en_file.close();
   }
-
   {
     uengine_.PrepOutputs();
-    uenginev2_.PrepOutputs();
   }
   output_mgr_.MakeHeaders();
 }
@@ -348,7 +269,6 @@ void Simulation::WriteOutputs() {
       //tot_en += (*it)->GetTotalEnergy();
     //std::cout << "Final system energy: " << tot_en << std::endl;
   }
-
   if (i_step_%1000==0 && params_.energy_analysis_flag) {
     std::ostringstream file_name;
     file_name << run_name_ << "-energy.log";
@@ -366,32 +286,24 @@ void Simulation::WriteOutputs() {
     en_file << k_en << " " << p_en << " " << tot_en << "\n";
     en_file.close();
   }
-
-
   if (i_step_ == params_.n_steps-1) {
     for (auto it=species_.begin(); it!=species_.end(); ++it)
       (*it)->WriteOutputs(run_name_);
   }
-
   // XXX CJE FIXME write outputs more clearly
   if (i_step_%1000==0) {
     uengine_.WriteOutputs(i_step_);
-    uenginev2_.WriteOutputs(i_step_);
   }
-
 }
 
 //TODO Make sure only species that are put through with m posit are initialized
 void Simulation::CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files){
   params_ = params;
   run_name_ = name;
-
   //Graph and don't make new posit files
   params_.graph_flag = 1;
   params_.posit_flag = 0;
-
   output_mgr_.SetMovie(posit_files);
-
   rng_.init(params_.seed);
   InitSimulation();
   RunMovie();

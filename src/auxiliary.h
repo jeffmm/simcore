@@ -202,7 +202,7 @@ double dot_product(int n_dim, double const * const a, double const * const b);
 double determinant(int n, double **mat);
 //double *separation_vector(int n_dim, int n_periodic, double *r1, double *s1, double *r2, double *s2, double **unit_cell);
 void separation_vector(int n_dim, int n_periodic, double const * const r1, double const * const s1, double const * const r2, double const * const s2, double **unit_cell, double *dr);
-void cross_product(double *a, double *b, double *c, int n_dim);
+void cross_product(double const * const a, double const * const b, double *c, int n_dim);
 void normalize_vector(double *a, int n_dim);
 void error_exit(const char *error_msg, ...);
 void warning(const char *warning_msg);

@@ -1,11 +1,15 @@
 potentials:
-  #- type : WCA
-    #sid1 : br_rod
-    #sid2 : br_rod
-    #rcut: 2.5
-    #fcut: 10000
-    #eps: 1
-    #sigma: 1
+  - name : WCA
+    type : external
+    scheme : neighborlistallpairs
+    skin : 1
+    sid1 : filament
+    sid2 : filament
+    rcut: 1.5
+    fcut: 10
+    eps: 1
+    sigma: 1
+    overlap: false
 
   #- type : WCA
     #sid1: md_bead

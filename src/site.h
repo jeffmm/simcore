@@ -12,11 +12,6 @@ class Site : public Simple {
   public:
     Site(system_parameters *params, space_struct *space, 
         long seed, SID sid) : Simple(params, space, seed, sid) {}
-    ~Site() {}
-    Site(const Site& that) : Simple(that) {}
-    Site& operator=(Site const& that) {
-      Simple::operator=(that); return *this;
-    }
     void Init();
     void Draw(std::vector<graph_struct*> * graph_array);
     double const * const GetTangent() {return tangent_;}

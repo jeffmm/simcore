@@ -9,7 +9,6 @@
 #include "species.h"
 #include "objects.h"
 #include "uberengine.h"
-#include "uberengine_v2.h"
 #include "helpers.h"
 #include "output_manager.h"
 
@@ -18,7 +17,6 @@ class Simulation {
   private:
     int i_step_,
         n_steps_;
-    int utype_;
     double time_,
            cpu_init_time_;
     std::string run_name_;
@@ -34,7 +32,6 @@ class Simulation {
     #endif
     SpaceProperties space_;
     UberEngine uengine_;
-    UberEngineV2 uenginev2_;
     std::vector<SpeciesBase*> species_;
     rfh::factory species_factory_;
     al_set anchors_;
@@ -44,28 +41,24 @@ class Simulation {
     void ClearSpecies();
     void InitOutputs();
     void RunSimulation();
-    void RunSimulation2();
     void RunMovie();
     void ClearSimulation();
     void Draw();
     void WriteOutputs();
     void GetGraphicsStructure();
     void Integrate();
-    void IntegrateMP();
-    void InteractMP();
-    void InteractMP2();
+    void Interact();
     void ReadSpeciesPositions();
-    void KineticMonteCarloMP();
-    void KineticMonteCarloMP2();
+    void KineticMonteCarlo();
     void ZeroForces();
     void DumpAll(int i_step);
-    void DumpAll2(int i_step);
     void GenerateStatistics(int istep);
     std::vector<graph_struct*> graph_array;
     Simulation(const Simulation&){};
     void operator= (Simulation&);
 
-    void ConfigureSpindle();
+    void PrintComplete();
+    //void ConfigureSpindle();
 
   public:
     Simulation();

@@ -35,6 +35,7 @@ class Filament : public Composite<Site,Bond> {
            p_p2g_,
            p_g2s_,
            p_g2p_,
+           driving_factor_,
            tip_force_;
     std::vector<double> gamma_inverse_,
                         tensions_, //n_sites-1
@@ -82,9 +83,7 @@ class Filament : public Composite<Site,Bond> {
     virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePosition() {}
-    virtual void UpdatePositionMP() {}
     virtual void UpdatePosition(bool midstep);
-    virtual void UpdatePositionMP(bool midstep);
     void GetAvgOrientation(double * au);
     void GetAvgPosition(double * ap);
     std::vector<double> const * const GetThetas() {
@@ -146,15 +145,10 @@ class FilamentSpecies : public Species<Filament> {
       Species::Init();
     }
     void UpdatePositions() {
-      for (auto it=members_.begin(); it!=members_.end(); ++it) {
-        (*it)->UpdatePosition(midstep_);
-      }
-    }
-    void UpdatePositionsMP() {
       if (diffusion_validation_ && ivalidate_%nvalidate_ == 0)
         ValidateDiffusion();
       for (auto it=members_.begin(); it!=members_.end(); ++it) {
-        (*it)->UpdatePositionMP(midstep_);
+        (*it)->UpdatePosition(midstep_);
       }
       if (theta_validation_ && midstep_)
         ValidateThetaDistributions();

@@ -74,7 +74,7 @@ class BrRod : public Composite<Site,Bond> {
     virtual void Integrate();
     //virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
-    virtual void UpdatePositionMP();
+    virtual void UpdatePosition();
     virtual void Dump();
 
     // Specific functions for configurations

@@ -112,7 +112,7 @@ void BrRod::ApplyForcesTorques() {
   }
 }
 
-void BrRod::UpdatePositionMP() {
+void BrRod::UpdatePosition() {
   ApplyForcesTorques();
   Integrate();
   //UpdatePeriodic();
@@ -274,7 +274,7 @@ void BrRod::AddRandomDisplacement() {
 void BrRod::UpdateOrientation() {
   // First handle reorientation due to external torques
   double du[3];
-  cross_product(torque_, orientation_, du, 3); // ndim=3 since torques
+  cross_product(torque_, orientation_, du,3);  //must use n_dim=3 since torques
   for (int i=0; i<n_dim_; ++i)
     orientation_[i] += du[i]*delta_/gamma_rot_;
   // Now handle the random orientation update
@@ -299,11 +299,11 @@ void BrRod::GetBodyFrame() {
     double vect1[3] = {1.0, 0.0, 0.0};
     double vect2[3] = {0.0, 1.0, 0.0};
     if (1.0 - ABS(orientation_[0]) > 1e-2)
-      cross_product(orientation_, vect1, &(body_frame_[0]), n_dim_);
+      cross_product(orientation_, vect1, &(body_frame_[0]),3);
     else
-      cross_product(orientation_, vect2, &(body_frame_[0]), n_dim_);
+      cross_product(orientation_, vect2, &(body_frame_[0]),3);
     normalize_vector(&(body_frame_[0]),n_dim_);
-    cross_product(orientation_, &(body_frame_[0]), &(body_frame_[3]), n_dim_);
+    cross_product(orientation_, &(body_frame_[0]), &(body_frame_[3]),3);
   }
 }
 

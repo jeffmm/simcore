@@ -19,15 +19,6 @@ class Bond : public Rigid {
         long seed, SID sid) : Rigid(params, space, seed, sid) {
       graph_diameter_ = params->graph_diameter;
     }
-    ~Bond() {}
-    Bond(const Bond& that) : Rigid(that) {
-      graph_diameter_ = that.graph_diameter_;
-    }
-    Bond& operator=(Bond const& that) {
-      Rigid::operator=(that); 
-      graph_diameter_ = that.graph_diameter_;
-      return *this;
-    }
     void Init();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
 };
