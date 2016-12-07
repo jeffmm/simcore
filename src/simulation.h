@@ -16,8 +16,16 @@ class Simulation {
 
   private:
     int i_step_,
+        n_dim_, //XXX
         n_steps_;
     double time_,
+           fcut_, //XXX
+           eps_, //XXX
+           sigma_, //XXX
+           rcut_, //XXX
+           rcut2_, //XXX
+           c12_, //XXX
+           c6_, //XXX
            cpu_init_time_;
     std::string run_name_;
     std::vector<std::string> posit_files_;
@@ -56,7 +64,8 @@ class Simulation {
     std::vector<graph_struct*> graph_array;
     Simulation(const Simulation&){};
     void operator= (Simulation&);
-
+    void WCAInit();
+    void WCA(double dr_mag2, double *dr,double *f);
     void PrintComplete();
     //void ConfigureSpindle();
 
