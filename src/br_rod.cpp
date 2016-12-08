@@ -640,11 +640,11 @@ void BrRodSpecies::Configurator() {
           numoverlaps++;
           isoverlap = false;
           for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
-            interactionmindist idm;
+            Interaction idm;
             // Just check the 0th element of each
             auto part1 = member->GetSimples()[0];
             auto part2 = (*rodit)->GetSimples()[0];
-            MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+            MinimumDistance(part1, part2, &idm, space_->n_dim, space_->n_periodic, space_);
             double diameter2 = diameter*diameter;
 
             if (idm.dr_mag2 < diameter2) {
@@ -732,11 +732,11 @@ void BrRodSpecies::Configurator() {
         numoverlaps++;
         isoverlap = false;
         for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
-          interactionmindist idm;
+          Interaction idm;
           // Just check the 0th element of each
           auto part1 = member->GetSimples()[0];
           auto part2 = (*rodit)->GetSimples()[0];
-          MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+          MinimumDistance(part1, part2, &idm, space_->n_dim, space_->n_periodic, space_);
           double diameter2 = diameter*diameter;
 
           if (idm.dr_mag2 < diameter2) {
@@ -805,11 +805,11 @@ void BrRodSpecies::Configurator() {
           numoverlaps++;
           isoverlap = false;
           for (auto rodit = members_.begin(); rodit != members_.end() && !isoverlap; ++rodit) {
-            interactionmindist idm;
+            Interaction idm;
             // Just check the 0th element of each
             auto part1 = member->GetSimples()[0];
             auto part2 = (*rodit)->GetSimples()[0];
-            MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+            MinimumDistance(part1, part2, &idm, space_->n_dim, space_->n_periodic, space_);
             double diameter2 = diameter*diameter;
 
             if (idm.dr_mag2 < diameter2) {
@@ -958,8 +958,8 @@ void BrRodSpecies::ConfiguratorSpindle(int ispb, int spb_oid,
         for (auto rodit = members_.begin(); rodit != members_.end(); ++rodit) {
           auto part1 = member->GetSimples()[0];
           auto part2 = (*rodit)->GetSimples()[0];
-          interactionmindist idm;
-          MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+          Interaction idm;
+          MinimumDistance(part1, part2, &idm, space_->n_dim, space_->n_periodic, space_);
           double diameter2 = diameter*diameter;
           if (idm.dr_mag2 < diameter2) {
             overlap++;

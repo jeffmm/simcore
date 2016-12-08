@@ -85,10 +85,10 @@ void MDBeadSpecies::Configurator() {
           numoverlaps++;
           isoverlap = false;
           for (auto mdit = members_.begin(); mdit != members_.end() && !isoverlap; ++mdit) {
-            interactionmindist idm;
+            Interaction idm;
             auto part1 = member;
             auto part2 = (*mdit);
-            MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+            MinimumDistance(part1, part2, &idm, space_->n_dim, space_->n_periodic, space_);
             double diameter2 = diameter*diameter;
 
             if (idm.dr_mag2 < diameter2) {
