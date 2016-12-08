@@ -8,9 +8,10 @@
 #include "graphics.h"
 #include "species.h"
 #include "objects.h"
-#include "uberengine.h"
+//#include "uberengine.h"
 #include "helpers.h"
 #include "output_manager.h"
+#include "interaction_engine.h"
 
 class Simulation {
 
@@ -34,12 +35,14 @@ class Simulation {
     OutputManager output_mgr_;
     system_parameters params_;
     rng_properties rng_;
-   
+
+    InteractionEngine iengine_;
+
     #ifndef NOGRAPH
     Graphics graphics_;
     #endif
     SpaceProperties space_;
-    UberEngine uengine_;
+    //UberEngine uengine_;
     std::vector<SpeciesBase*> species_;
     rfh::factory species_factory_;
     al_set anchors_;

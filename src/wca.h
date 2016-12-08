@@ -2,86 +2,54 @@
 #define _SIMCORE_WCA_H_
 
 #include "auxiliary.h"
-#include "potential_base.h"
+#include "interaction.h"
+//#include "potential_base.h"
 
-class WCA : public PotentialBase {
+class WCA {
   protected:
-    double eps_, sigma_;
-    double c12_, c6_;
-    double shift_;
+    int n_dim_;
+    double eps_,
+           sigma_,
+           fcut_,
+           c12_,
+           c6_,
+           rcut_,
+           rcut2_,
+           shift_;
   public:
-    WCA() : PotentialBase(nullptr, 0.0, 0.0), eps_(0.0), sigma_(0.0) {
-      pot_name_ = "WCA";
-    }
-    WCA(double pEps, double pSigma, space_struct* pSpace, double pRcut, double pFcut) : PotentialBase(pSpace, pRcut, pFcut), eps_(pEps), sigma_(pSigma) {
-      pot_name_ = "WCA";
-      c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
-      c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
-    }
-    virtual void Print() {
-        PotentialBase::Print();
-        std::cout << "\t{eps:" << eps_ << "}, {sigma:" << sigma_ << "}, {c6:" << c6_ << "}, {c12:" << c12_ << "}\n";
-    }
-
-    virtual void CalcPotential(interactionmindist *idm,
-                               Simple *part1,
-                               Simple *part2,
-                               double *fpote) {
-      std::fill(fpote, fpote + n_dim_ + 1, 0.0);
-      double rmag = sqrt(idm->dr_mag2);
-      double ffac, r6, rinv;
-      double *dr = idm->dr;
-
-      rinv = 1.0/(rmag*rmag);
-      r6 = rinv*rinv*rinv;
-
-      ffac = -(12.0*c12_*r6 - 6.0*c6_)*r6*rinv;
+    WCA() {}
+    double GetRCut2() {return rcut2_;}
+    void CalcPotential(Interaction *ix) {
+      double rmag = sqrt(ix->dr_mag2);
+      double *dr = ix->dr;
+      double rinv = 1.0/(rmag);
+      double rinv2 = rinv*rinv;
+      double r6 = rinv2*rinv2*rinv2;
+      double ffac = -(12.0*c12_*r6 - 6.0*c6_)*r6*rinv;
       // Cut off the force at fcut
       if (ABS(ffac) > fcut_) {
         ffac = SIGNOF(ffac) * fcut_;
       }
       for (int i = 0; i < n_dim_; ++i) 
-        fpote[i] = ffac*dr[i]/rmag;
-      fpote[n_dim_] = r6*(c12_*r6 - c6_) + eps_;
+        ix->force[i] = ffac*dr[i]/rmag;
+      ix->pote = r6*(c12_*r6 - c6_) + eps_;
     }
 
-    virtual void Init(space_struct *pSpace, int ipot, YAML::Node &node) {
-        PotentialBase::Init(pSpace, ipot, node);
+    void Init(system_parameters *params) {
+      // Initialize potential params
+      n_dim_ = params->n_dim;
+      eps_    = params->wca_eps;
+      sigma_  = params->wca_sig;
+      fcut_ = params->f_cutoff;
 
-        // Now, let's look at the particular yaml node we are supposed to be interested in
-        eps_    = node["potentials"][ipot]["eps"].as<double>();
-        sigma_  = node["potentials"][ipot]["sigma"].as<double>();
-        fcut_ = node["potentials"][ipot]["fcut"].as<double>();
-
-        // For WCA potentials, the rcutoff is actually important, as it must be
-        // restricted to be at 2^(1/6)sigma
-
-        rcut_ = pow(2.0, 1.0/6.0)*sigma_;
-
-        rcut2_ = rcut_*rcut_;
-        c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
-        c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
-    }
-
-    virtual void Init(space_struct *pSpace, YAML::Node *subnode) {
-      YAML::Node node = *subnode;
-      PotentialBase::Init(pSpace, &node);
-
-      // Now, let's look at the particular yaml node we are supposed to be interested in
-      eps_    = node["eps"].as<double>();
-      sigma_  = node["sigma"].as<double>();
-      fcut_   = node["fcut"].as<double>();
-
-      // For WCA potentials, the rcutoff is actually important, as it must be
+      // For WCA potentials, the rcutoff is
       // restricted to be at 2^(1/6)sigma
 
       rcut_ = pow(2.0, 1.0/6.0)*sigma_;
-
       rcut2_ = rcut_*rcut_;
       c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
       c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
     }
-
 };
 
 #endif
