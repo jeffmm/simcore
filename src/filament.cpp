@@ -685,8 +685,24 @@ void FilamentSpecies::Configurator() {
         n_members_++;
       } else {
         // XXX Check for overlaps
-        std::cout << "Overlap not yet implemented for filaments, exiting\n";
-        exit(1);
+        bool insert = true;
+        auto new_simps = member->GetSimples();
+        auto old_simps = GetSimples();
+        for (auto ns : new_simps) {
+          for (auto os : old_simps) {
+            Interaction imd;
+            MinimumDistance(ns, os, &imd, params_->n_dim, params_->n_periodic, space_);
+            if (imd.dr_mag2 < imd.buffer_mag2)
+              insert = false;
+          }
+        }
+        if (insert) {
+          members_.push_back(member);
+          n_members_++;
+        }
+        else {
+          i--;
+        }
       }
     }
 

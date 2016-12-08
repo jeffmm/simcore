@@ -9,7 +9,7 @@ potentials:
     fcut: 100
     eps: 1
     sigma: 1
-    overlap: true
+    overlap: false
 
   #- type : WCA
     #sid1: md_bead

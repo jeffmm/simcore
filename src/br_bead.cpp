@@ -83,10 +83,10 @@ void BrBeadSpecies::Configurator() {
           numoverlaps++;
           isoverlap = false;
           for (auto brit = members_.begin(); brit != members_.end() && !isoverlap; ++brit) {
-            interactionmindist idm;
+            Interaction idm;
             auto part1 = member;
             auto part2 = (*brit);
-            MinimumDistance(part1, part2, idm, space_->n_dim, space_->n_periodic, space_);
+            MinimumDistance(part1, part2, &idm, space_->n_dim, space_->n_periodic, space_);
             double diameter2 = diameter*diameter;
 
             if (idm.dr_mag2 < diameter2) {

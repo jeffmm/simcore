@@ -4,6 +4,7 @@
 #include "anchor_list_generic.h"
 #include "auxiliary.h"
 #include "neighbor_list_generic.h"
+#include "interaction.h"
 
 class Object {
 
@@ -91,6 +92,10 @@ class Object {
       for (int i=0; i<3; ++i)
         force_[i]+=f[i];
     }
+    void SubForce(double const * const f) {
+      for (int i=0; i<3; ++i)
+        force_[i]-=f[i];
+    }
     void SetForce(double const * const f) {
       for (int i=0; i<3; ++i)
         force_[i]=f[i];
@@ -98,6 +103,10 @@ class Object {
     void AddTorque(double const * const t) {
       for (int i=0; i<3; ++i)
         torque_[i]+=t[i];
+    }
+    void SubTorque(double const * const t) {
+      for (int i=0; i<3; ++i)
+        torque_[i]-=t[i];
     }
     //void AddVirial(double const * const f, double const * const dr);
     //void AddVirial(double *f, double *dr);
@@ -472,7 +481,7 @@ class Composite<T,V> : public Object {
 // *********
 
 // Find the minimum distance beween two particles
-void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim, int& nperiodic, space_struct *space);
+void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, int& ndim, int& nperiodic, space_struct *space);
 
 
 #endif // _SIMCORE_OBJECT_H_

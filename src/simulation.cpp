@@ -57,7 +57,7 @@ void Simulation::RunMovie(){
 
 void Simulation::DumpAll(int i_step) {
   // Very yucky dump of all the particles and their positions and forces
-  uengine_.DumpAll();
+  //uengine_.DumpAll();
 }
 
 void Simulation::Integrate() {
@@ -66,40 +66,7 @@ void Simulation::Integrate() {
 }
 
 void Simulation::Interact() {
-  std::vector<Simple*> objs;
-  std::vector<interactionmindist> imds;
-  for (auto spec_it : species_) {
-    std::vector<Simple*> simples = spec_it->GetSimples();
-    objs.insert(objs.end(),simples.begin(),simples.end());
-  }
-  int n_obj = (int) objs.size();
-  for (int i=0; i<n_obj; ++i) {
-    for (int j=i+1; j<n_obj; ++j) {
-      if (objs[i]->GetRID() == objs[j]->GetRID())  continue;
-      if (objs[i]->GetCID() == objs[j]->GetCID())  continue;
-      if (objs[i]->GetOID() == objs[j]->GetOID()) error_exit("WHAT\n");
-      interactionmindist imd;
-      MinimumDistance(objs[i],objs[j],imd,params_.n_dim,params_.n_periodic,space_.GetStruct());
-      if (imd.dr_mag2 > rcut_) {
-      //if (sqrt(imd.dr_mag2)-imd.buffer_mag > rcut_) {
-        //printf("drmag2, rcut2: %2.2f, %2.2f\n",imd.dr_mag2,rcut2_);
-        continue;
-      }
-      //printf("INTERACTING\n");
-      double force[3];
-      double torque[3];
-      WCA(sqrt(imd.dr_mag2), imd.dr, force);
-      objs[i]->AddForce(force);
-      cross_product(imd.contact1,force,torque,3);
-      //printf("oid: %d, f: {%2.8f %2.8f}, t: {%2.8f}\n", objs[i]->GetOID(),force[0],force[1],torque[2]);
-      for (int i=0;i<params_.n_dim; ++i)
-        force[i] = -force[i];
-      objs[j]->AddForce(force);
-      cross_product(imd.contact2,force,torque,3);
-      objs[j]->AddTorque(torque);
-    }
-  }
-  //uengine_.Interact();
+  iengine_.Interact();
 }
 
 void Simulation::KineticMonteCarlo() {
@@ -113,14 +80,14 @@ void Simulation::ZeroForces() {
 }
 
 void Simulation::GenerateStatistics(int istep) {
-  uengine_.GenerateStatistics(istep);
+  //uengine_.GenerateStatistics(istep);
 }
 
 void Simulation::InitSimulation() {
   space_.Init(&params_, gsl_rng_get(rng_.r));
   output_mgr_.Init(&params_, &graph_array, &i_step_, run_name_);
   InitSpecies();
-  WCAInit();
+  iengine_.Init(&params_, &species_, space_.GetStruct());
   //uengine_.Init(&params_, space_.GetStruct(), &species_, &anchors_, gsl_rng_get(rng_.r));
   if (params_.graph_flag) {
     //When making a movie graphics are handled by output_mgr_
@@ -134,38 +101,6 @@ void Simulation::InitSimulation() {
     #endif
   }
   InitOutputs();
-}
-
-//XXX
-void Simulation::WCA(double dr_mag,double *dr,double *f) {
-  std::fill(f, f + n_dim_ + 1, 0.0);
-  double rmag = dr_mag;
-  double ffac, r6, rinv, rinv2;
-  rinv = 1.0/(rmag);
-  rinv2 = rinv*rinv;
-  r6 = rinv2*rinv2*rinv2;
-  ffac = -(12.0*c12_*r6 - 6.0*c6_)*r6*rinv;
-  // Cut off the force at fcut
-  if (ABS(ffac) > fcut_) {
-    ffac = SIGNOF(ffac) * fcut_;
-  }
-  for (int i = 0; i < n_dim_; ++i) 
-    f[i] = ffac*dr[i]/rmag;
-  //fpote[n_dim_] = r6*(c12_*r6 - c6_) + eps_;
-}
-
-//XXX
-void Simulation::WCAInit() {
-  eps_    = params_.wca_eps;
-  sigma_  = params_.wca_sig;
-  fcut_ = params_.f_cutoff;
-  n_dim_ = params_.n_dim;
-  // For WCA potentials, the rcutoff is actually important, as it must be
-  // restricted to be at 2^(1/6)sigma
-  rcut_ = pow(2.0, 1.0/6.0)*sigma_;
-  rcut2_ = rcut_*rcut_;
-  c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
-  c6_  = 4.0 * eps_ * pow(sigma_,  6.0);
 }
 
 void Simulation::InitSpecies() {
@@ -313,7 +248,7 @@ void Simulation::InitOutputs() {
     en_file.close();
   }
   {
-    uengine_.PrepOutputs();
+    //uengine_.PrepOutputs();
   }
   output_mgr_.MakeHeaders();
 }
@@ -357,7 +292,7 @@ void Simulation::WriteOutputs() {
   }
   // XXX CJE FIXME write outputs more clearly
   if (i_step_%1000==0) {
-    uengine_.WriteOutputs(i_step_);
+    //uengine_.WriteOutputs(i_step_);
   }
 }
 

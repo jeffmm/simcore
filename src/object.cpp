@@ -1,6 +1,5 @@
 #include "object.h"
 #include "output_manager.h"
-
 #include "minimum_distance.h"
 
 unsigned int Object::next_oid_ = 0;
@@ -206,7 +205,7 @@ void Object::AddForceTorqueEnergy(double const * const F, double const * const T
 }
 
 // Find the minimum distance beween two particles
-void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim, int& nperiodic, space_struct *space) {
+void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, int& ndim, int& nperiodic, space_struct *space) {
   double const * const r1 = o1->GetRigidPosition();
   double const * const s1 = o1->GetRigidScaledPosition();
   double const * const u1 = o1->GetRigidOrientation();
@@ -220,28 +219,27 @@ void MinimumDistance(Simple* o1, Simple* o2, interactionmindist& imd, int& ndim,
   /* TODO: Think about how best to do this for general shapes, like 2d
      polygons that can represent the local surface of more complex 3d
      shapes. Perhaps assume all local surface to be triangular polygons.*/
-  imd.dr_mag2 = 0;
-  std::fill(imd.dr, imd.dr+3, 0.0);
-  std::fill(imd.contact1, imd.contact1+3, 0.0);
-  std::fill(imd.contact2, imd.contact2+3, 0.0);
-  imd.buffer_mag = 0.5*(d1+d2);
-  imd.buffer_mag2 = imd.buffer_mag*imd.buffer_mag;
+  ix->dr_mag2 = 0;
+  std::fill(ix->dr, ix->dr+3, 0.0);
+  std::fill(ix->contact1, ix->contact1+3, 0.0);
+  std::fill(ix->contact2, ix->contact2+3, 0.0);
+  ix->buffer_mag = 0.5*(d1+d2);
+  ix->buffer_mag2 = ix->buffer_mag*ix->buffer_mag;
   if (l1 == 0 && l2 == 0) 
     min_distance_point_point(ndim, nperiodic, space->unit_cell,
-                 r1, s1, r2, s2, imd.dr, &imd.dr_mag2);
+                 r1, s1, r2, s2, ix->dr, &ix->dr_mag2);
   else if (l1 == 0 && l2 > 0)
     min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
                    r1, s1, r2, s2, u2, l2,
-                   imd.dr, &imd.dr_mag2, imd.contact2);
+                   ix->dr, &ix->dr_mag2, ix->contact2);
   else if (l1 > 0 && l2 == 0)
     min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
                    r2, s2, r1, s1, u1, l1,
-                   imd.dr, &imd.dr_mag2, imd.contact1);
+                   ix->dr, &ix->dr_mag2, ix->contact1);
   else if (l1 > 0 && l2 > 0) 
     min_distance_sphero(ndim, nperiodic, space->unit_cell,
               r1, s1, u1, l1, r2, s2, u2, l2,
-              imd.dr, &imd.dr_mag2, imd.contact1, imd.contact2);
-  //imd.dr_mag = sqrt(imd.dr_mag2); // XXX FIXME should take out and only compute if necessary
+              ix->dr, &ix->dr_mag2, ix->contact1, ix->contact2);
 }
 
 void Object::WritePosit(std::fstream &op){
