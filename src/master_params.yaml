@@ -4,7 +4,7 @@
 seed : [7859459105545,long] # seed for random number generator
 n_dim : [3,int]
 n_periodic : [0,int]
-boundary_type : [1,int]
+boundary_type : [0,int]
 system_radius : [400,double] # radius of system
 insert_type : [0,int] 
 n_filaments_free : [1,int]
@@ -33,8 +33,8 @@ n_buckle_off : [1000000,int]
 metric_forces : [1,int]
 delta : [0.001,double] # time duration between each simulation step
 friction_ratio : [2,double]
-mother_daughter_dist : [680,double] # distance between mother-daughter cell centers
-daughter_radius : [300,double] # radius of daughter cell
+bud_height : [680,double] # distance between mother-daughter cell centers
+bud_radius : [300,double] # radius of daughter cell
 sphere_radius : [50,double] # radius of spindle blob
 filament_diameter : [1,double] # diameter of microtubule
 min_rod_length : [2,double]
@@ -101,3 +101,6 @@ avg_posits: [0, int]
 diffusion_interval: [1000,int]
 filament_analysis: [0, int]
 driving_factor: [0, double]
+virial_time_avg: [100, int]
+constant_pressure: [0, int]
+target_pressure: [100, double]

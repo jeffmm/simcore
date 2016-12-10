@@ -3,9 +3,6 @@
 
 #define REGISTER_SPECIES(n,m) species_factory_.register_class<n>(#m);
 
-Simulation::Simulation() {}
-Simulation::~Simulation() {}
-
 void Simulation::Run(system_parameters params, std::string name) {
   params_ = params;
   run_name_ = name;
@@ -23,11 +20,8 @@ void Simulation::RunSimulation() {
     PrintComplete();
     ZeroForces();
     Interact();
-    //KineticMonteCarlo();
     Integrate();
-    GenerateStatistics(i_step_);
-    if (debug_trace)
-      DumpAll(i_step_);
+    Statistics();
     Draw();
     WriteOutputs();
   }
@@ -55,11 +49,6 @@ void Simulation::RunMovie(){
   }
 }
 
-void Simulation::DumpAll(int i_step) {
-  // Very yucky dump of all the particles and their positions and forces
-  //uengine_.DumpAll();
-}
-
 void Simulation::Integrate() {
   for (auto it=species_.begin(); it!=species_.end(); ++it)
     (*it)->UpdatePositions();
@@ -69,22 +58,23 @@ void Simulation::Interact() {
   iengine_.Interact();
 }
 
-void Simulation::KineticMonteCarlo() {
-  //uengine_.StepKMC();
-}
-
 void Simulation::ZeroForces() {
   for (auto it=species_.begin(); it != species_.end(); ++it) {
     (*it)->ZeroForces();
   }
 }
 
-void Simulation::GenerateStatistics(int istep) {
-  //uengine_.GenerateStatistics(istep);
+void Simulation::Statistics() {
+  if (params_.constant_pressure && i_step_ > 0) {
+    if (i_step_ % params_.virial_time_avg == 0) {
+      iengine_.CalculatePressure();
+    }
+    space_.UpdateSpace();
+  }
 }
 
 void Simulation::InitSimulation() {
-  space_.Init(&params_, gsl_rng_get(rng_.r));
+  space_.Init(&params_);
   output_mgr_.Init(&params_, &graph_array, &i_step_, run_name_);
   InitSpecies();
   iengine_.Init(&params_, &species_, space_.GetStruct());
@@ -203,7 +193,6 @@ void Simulation::ClearSpecies() {
 }
 
 void Simulation::ClearSimulation() {
-  space_.Clear();
   output_mgr_.Close();
   ClearSpecies();
   #ifndef NOGRAPH
