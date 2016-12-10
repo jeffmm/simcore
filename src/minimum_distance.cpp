@@ -5,7 +5,7 @@
 // Returns minimum distance between two points in any given space.
 // Along with vector pointing from r1 to r2
 // Look around here for additional explanation of variables...
-void min_distance_point_point(int n_dim, int n_periodic, double **unit_cell, 
+void min_distance_point_point(int n_dim, int n_periodic, double *unit_cell, 
                               double const * const r1, double const * const s1, 
                               double const * const r2, double const * const s2, 
                               double *dr, double *dr_mag2) {
@@ -18,7 +18,7 @@ void min_distance_point_point(int n_dim, int n_periodic, double **unit_cell,
   for (int i = 0; i < n_periodic; ++i) {
     dr[i] = 0.0;
     for (int j = 0; j < n_periodic; ++j)
-      dr[i] += unit_cell[i][j] * ds[j];
+      dr[i] += unit_cell[n_dim*i+j] * ds[j];
   }
   // Then handle free subspace
   for (int i = n_periodic; i < n_dim; ++i) 
@@ -36,7 +36,7 @@ output: vector that points from point to line along minimum distance between
         distance from r_line along u_line that indicates point of minimum
         distance (mu) */
 
-void min_distance_point_carrier_line(int n_dim, int n_periodic, double **h,
+void min_distance_point_carrier_line(int n_dim, int n_periodic, double *h,
                                      double *r_point, double *s_point,
                                      double *r_line, double *s_line, double *u_line,
                                      double length, double *dr, double *r_contact, double *mu_ret) {
@@ -52,7 +52,7 @@ void min_distance_point_carrier_line(int n_dim, int n_periodic, double **h,
     for (i = 0; i < n_periodic; ++i) {
         dr[i] = 0.0;
         for (j = 0; j < n_periodic; ++j)
-            dr[i] += h[i][j] * ds[j];
+            dr[i] += h[n_dim*i+j] * ds[j];
     }
     for (i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
         dr[i] = r_line[i] - r_point[i];
@@ -77,7 +77,7 @@ output: vector that points from point to line along minimum distance between
         point and line (dr)
         distance from r_line along u_line that indicates point of minimum
          distance (mu) */
-void min_distance_point_carrier_line_inf(int n_dim, int n_periodic, double **h,
+void min_distance_point_carrier_line_inf(int n_dim, int n_periodic, double *h,
                                          double *r_point, double *s_point,
                                          double *r_line, double *s_line, double *u_line,
                                          double length, double *dr, double *mu) {
@@ -93,7 +93,7 @@ void min_distance_point_carrier_line_inf(int n_dim, int n_periodic, double **h,
     for (i = 0; i < n_periodic; ++i) {
         dr[i] = 0.0;
         for (j = 0; j < n_periodic; ++j)
-            dr[i] += h[i][j] * ds[j];
+            dr[i] += h[n_dim*i+j] * ds[j];
     }
     for (i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
         dr[i] = r_line[i] - r_point[i];
@@ -121,7 +121,7 @@ output: minimimum separation vector (r_min)
         vector separating r_1 to point of contact on first sphero (contact1)
         vector separating r_2 to point of contact on second sphero (contact2) */
 
-void min_distance_sphero(int n_dim, int n_periodic, double **h,
+void min_distance_sphero(int n_dim, int n_periodic, double *h,
                          double const * const r_1, 
                          double const * const s_1, 
                          double const * const u_1, 
@@ -149,7 +149,7 @@ void min_distance_sphero(int n_dim, int n_periodic, double **h,
     for (i = 0; i < n_periodic; ++i) {
         dr[i] = 0.0;
         for (j = 0; j < n_periodic; ++j)
-            dr[i] += h[i][j] * ds[j];
+            dr[i] += h[n_dim*i+j] * ds[j];
     }
     for (i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
         dr[i] = r_2[i] - r_1[i];
@@ -429,7 +429,7 @@ output: center to center separation vector (dr)
         pointer to intersection of r_min with axis of first spherocylinder (lambda)
         pointer to intersection of r_min with axis of second spherocylinder (mu). */
 
-void min_distance_sphero_dr(int n_dim, int n_periodic, double **h,
+void min_distance_sphero_dr(int n_dim, int n_periodic, double *h,
                             double *r_1, double *s_1, double *u_1, double length_1,
                             double *r_2, double *s_2, double *u_2, double length_2,
                             double *dr, double *r_min, double *r_min_mag2, 
@@ -452,7 +452,7 @@ void min_distance_sphero_dr(int n_dim, int n_periodic, double **h,
     for (i = 0; i < n_periodic; ++i) {
         dr[i] = 0.0;
         for (j = 0; j < n_periodic; ++j)
-            dr[i] += h[i][j] * ds[j];
+            dr[i] += h[n_dim*i+j] * ds[j];
     }
     for (i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
         dr[i] = r_2[i] - r_1[i];
@@ -581,7 +581,7 @@ void min_distance_sphero_dr(int n_dim, int n_periodic, double **h,
  pointer to squared minimum separation (r_min_mag2)
  pointer to intersection of r_min with axis of spherocylinder (mu). */
 
-void min_distance_sphere_sphero(int n_dim, int n_periodic, double **h,
+void min_distance_sphere_sphero(int n_dim, int n_periodic, double *h,
                                 double const * const r_1, double const * const s_1,
                                 double const * const r_2, double const * const s_2, 
                                 double const * const u_2, double const length_2,
@@ -602,7 +602,7 @@ void min_distance_sphere_sphero(int n_dim, int n_periodic, double **h,
     for (i = 0; i < n_periodic; ++i) {
         dr[i] = 0.0;
         for (j = 0; j < n_periodic; ++j)
-            dr[i] += h[i][j] * ds[j];
+            dr[i] += h[n_dim*i+j] * ds[j];
     }
     for (i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
         dr[i] = r_2[i] - r_1[i];
@@ -683,7 +683,7 @@ output: minimimum separation vector (r_min)
         pointer to intersection of r_min with axis of first spherocylinder (lambda)
         pointer to intersection of r_min with axis of second spherocylinder (mu). */
 
-void min_distance_carrier_lines(int n_dim, int n_periodic, double **h,
+void min_distance_carrier_lines(int n_dim, int n_periodic, double *h,
                                 double *r_1, double *s_1, double *u_1, 
                                 double *r_2, double *s_2, double *u_2, 
                                 double *r_min, double *r_min_mag2, 
@@ -700,7 +700,7 @@ void min_distance_carrier_lines(int n_dim, int n_periodic, double **h,
     for (i = 0; i < n_periodic; ++i) {
         dr[i] = 0.0;
         for (j = 0; j < n_periodic; ++j)
-            dr[i] += h[i][j] * ds[j];
+            dr[i] += h[n_dim*i+j] * ds[j];
     }
     for (i = n_periodic; i < n_dim; ++i)        /* Then handle free subspace. */
         dr[i] = r_2[i] - r_1[i];

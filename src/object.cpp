@@ -65,11 +65,11 @@ void Object::InsertRandom(double buffer) {
       position_[i] *= mag;
     }
   }
-  else if (space_->type.compare("cube")==0) {
+  else if (space_->type.compare("box")==0) {
     for (int i=0; i<n_dim_; ++i)
       position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer);
   }
-  else if (space_->type.compare("snowman")==0) {
+  else if (space_->type.compare("budding")==0) {
     double r = space_->bud_radius;
     double roll = gsl_rng_uniform_pos(rng_.r);
     double v_ratio;
@@ -114,7 +114,7 @@ void Object::InsertOriented(double* buffer, const double* const u){
       position_[i] *= mag;
     }
   }
-  else if (space_->type.compare("cube")==0) {
+  else if (space_->type.compare("box")==0) {
     for (int i=0; i<n_dim_; ++i)
       position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer[i]);
   }
@@ -167,7 +167,7 @@ void Object::UpdatePeriodic() {
   std::copy(prev_position_, prev_position_+3, rp);
   for (int i=0; i<n_dim_; ++i)
     drp[i] = r[i]-rp[i];
-  periodic_boundary_conditions(space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, r, s);
+  periodic_boundary_conditions(space_->n_dim, space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, r, s);
   SetPosition(r);
   SetScaledPosition(s);
   for (int i=0; i<n_dim_; ++i)
@@ -205,7 +205,7 @@ void Object::AddForceTorqueEnergy(double const * const F, double const * const T
 }
 
 // Find the minimum distance beween two particles
-void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, int& ndim, int& nperiodic, space_struct *space) {
+void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, space_struct *space) {
   double const * const r1 = o1->GetRigidPosition();
   double const * const s1 = o1->GetRigidScaledPosition();
   double const * const u1 = o1->GetRigidOrientation();
@@ -226,18 +226,18 @@ void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, int& ndim, int& np
   ix->buffer_mag = 0.5*(d1+d2);
   ix->buffer_mag2 = ix->buffer_mag*ix->buffer_mag;
   if (l1 == 0 && l2 == 0) 
-    min_distance_point_point(ndim, nperiodic, space->unit_cell,
+    min_distance_point_point(space->n_dim, space->n_periodic, space->unit_cell,
                  r1, s1, r2, s2, ix->dr, &ix->dr_mag2);
   else if (l1 == 0 && l2 > 0)
-    min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
+    min_distance_sphere_sphero(space->n_dim, space->n_periodic, space->unit_cell,
                    r1, s1, r2, s2, u2, l2,
                    ix->dr, &ix->dr_mag2, ix->contact2);
   else if (l1 > 0 && l2 == 0)
-    min_distance_sphere_sphero(ndim, nperiodic, space->unit_cell,
+    min_distance_sphere_sphero(space->n_dim, space->n_periodic, space->unit_cell,
                    r2, s2, r1, s1, u1, l1,
                    ix->dr, &ix->dr_mag2, ix->contact1);
   else if (l1 > 0 && l2 > 0) 
-    min_distance_sphero(ndim, nperiodic, space->unit_cell,
+    min_distance_sphero(space->n_dim, space->n_periodic, space->unit_cell,
               r1, s1, u1, l1, r2, s2, u2, l2,
               ix->dr, &ix->dr_mag2, ix->contact1, ix->contact2);
 }

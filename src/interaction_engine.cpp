@@ -13,11 +13,31 @@ void InteractionEngine::Init(system_parameters *params,
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
   n_update_ = params_->n_update_cells;
+  virial_time_avg_ = params_->virial_time_avg;
   i_update_ = 0;
+  n_objs_ = CountSpecies();
   clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
   wca_.Init(params_);
   UpdateSimples();
   UpdateInteractions();
+}
+
+/****************************************
+  INTERACT: Loop through interactions and
+    apply WCA potential (for now)
+*****************************************/
+
+void InteractionEngine::Interact() {
+  // Check if we need to update cell list
+  CheckUpdate();
+  // Loop through and calculate interactions
+#ifdef ENABLE_OPENMP
+  CalculateInteractionsMP();
+#else
+  CalculateInteractions();
+#endif
+  // Apply forces, torques, and potentials in serial
+  ApplyInteractions();
 }
 
 void InteractionEngine::UpdateSimples() {
@@ -33,24 +53,28 @@ void InteractionEngine::UpdateInteractions() {
   pair_interactions_ = clist_.GetPairInteractions();
 }
 
+int InteractionEngine::CountSpecies() {
+  int obj_count = 0;
+  for (auto spec=species_->begin(); spec!=species_->end(); ++spec)
+    obj_count += (*spec)->GetCount();
+  return obj_count;
+}
+
 void InteractionEngine::CheckUpdate() {
-  if ((++i_update_) % n_update_ == 0)
+  bool update = false;
+  int obj_count = CountSpecies();
+  if (obj_count != n_objs_) {
+    n_objs_ = obj_count;
+    update = true;
+    i_update_ = 0;
+  }
+  if (!update && (++i_update_) % n_update_ == 0) {
+    update = true;
+  }
+  if (update)
     UpdateInteractions();
 }
 
-
-/****************************************
-  INTERACT: Loop through interactions and
-    apply WCA potential (for now)
-*****************************************/
-
-void InteractionEngine::Interact() {
-  // Check if we need to update cell list
-  CheckUpdate();
-  // Loop through interactions
-  for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix)
-    ProcessInteraction(pix);
-}
 
 void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterator pix) {
   // Avoid certain types of interactions
@@ -60,29 +84,73 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   if (obj1->GetRID() == obj2->GetRID())  return;
   if (obj1->GetCID() == obj2->GetCID())  return;
   if (obj1->GetOID() == obj2->GetOID()) 
-    error_exit("ERROR! Object %d attempted self-interaction!\n",
-        obj1->GetOID());
+    error_exit("ERROR! Object %d attempted self-interaction!\n", obj1->GetOID());
 
   //interactionmindist imd;
-  MinimumDistance(obj1,obj2,ix,n_dim_,n_periodic_,space_);
+  MinimumDistance(obj1,obj2,ix,space_);
 
   // XXX Only calculate WCA potential for now
   if (ix->dr_mag2 > wca_.GetRCut2())  return;
-  double force[3];
-  double torque[3];
-  double pot_en;
   wca_.CalcPotential(ix);
-  // Apply forces
-  obj1->AddForce(ix->force);
-  obj2->SubForce(ix->force);
-  // XXX Assume object is extended, add torques
-  cross_product(ix->contact1,ix->force,ix->t1,3);
-  obj1->AddTorque(ix->t1);
-  cross_product(ix->contact2,ix->force,ix->t2,3);
-  obj2->SubTorque(ix->t2);
-  // Add potential
-  obj1->AddPotential(ix->pote);
-  obj2->AddPotential(ix->pote);
 }
 
+void InteractionEngine::CalculateInteractionsMP() {
+#ifdef ENABLE_OPENMP
+  int max_threads = omp_get_max_threads();
+  std::vector<std::pair<std::vector<pair_interaction>::iterator, std::vector<pair_interaction>::iterator> > chunks;
+  chunks.reserve(max_threads); 
+  size_t chunk_size= pair_interactions_.size() / max_threads;
+  auto cur_iter = pair_interactions_.begin();
+  for(int i = 0; i < max_threads - 1; ++i) {
+    auto last_iter = cur_iter;
+    std::advance(cur_iter, chunk_size);
+    chunks.push_back(std::make_pair(last_iter, cur_iter));
+  }
+  chunks.push_back(std::make_pair(cur_iter, pair_interactions_.end()));
+
+#pragma omp parallel shared(chunks)
+  {
+#pragma omp for 
+    for(int i = 0; i < max_threads; ++i) {
+      for(auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
+        ProcessInteraction(pix);
+        // Do torque crossproducts
+        cross_product(pix->second.contact1,pix->second.force,pix->second.t1,3);
+        cross_product(pix->second.contact2,pix->second.force,pix->second.t2,3);
+      }
+    }
+  }
+#endif
+}
+
+void InteractionEngine::CalculateInteractions() {
+  for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
+    ProcessInteraction(pix);
+    // Do torque crossproducts
+    cross_product(pix->second.contact1,pix->second.force,pix->second.t1,3);
+    cross_product(pix->second.contact2,pix->second.force,pix->second.t2,3);
+  }
+}
+
+void InteractionEngine::ApplyInteractions() {
+  for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
+    auto obj1 = pix->first.first;
+    auto obj2 = pix->first.second;
+    Interaction *ix = &(pix->second);
+    obj1->AddForce(ix->force);
+    obj2->SubForce(ix->force);
+    obj1->AddTorque(ix->t1);
+    obj2->SubTorque(ix->t2);
+    obj1->AddPotential(ix->pote);
+    obj2->AddPotential(ix->pote);
+    virial_ += ix->virial;
+  }
+}
+
+void InteractionEngine::CalculatePressure() {
+  double inv_V = 1.0/space_->volume;
+  virial_ = virial_ / virial_time_avg_;
+  space_->pressure = n_objs_*inv_V + inv_V/n_dim_*virial_;
+  virial_ = 0;
+}
 

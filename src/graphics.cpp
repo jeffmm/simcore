@@ -219,12 +219,12 @@ void Graphics::Init2dWindow() {
     alpha_ = 1.0; // transparency
 
     /* Compute size of the window respecting the aspect ratio. */
-    if (unit_cell_[0][0] > unit_cell_[1][1]) {
+    if (unit_cell_[0] > unit_cell_[3]) {
         windx_ = 800;
-        windy_ = (int) (windx_ * unit_cell_[1][1] / unit_cell_[0][0]);
+        windy_ = (int) (windx_ * unit_cell_[3] / unit_cell_[0]);
     } else {
         windy_ = 800;
-        windx_ = (int) (windy_ * unit_cell_[0][0] / unit_cell_[1][1]);
+        windx_ = (int) (windy_ * unit_cell_[0] / unit_cell_[3]);
     }
 
     { // Make dummy window so we can get GL extensions 
@@ -270,16 +270,16 @@ void Graphics::Init2dWindow() {
     glClearColor(background_color_[0], background_color_[1], background_color_[2], 1.0);
 
     /* set up projection transform */
-    double xmin = -unit_cell_[0][0] / 2.;
-    double xmax = unit_cell_[0][0] / 2.;
-    double ymin = -unit_cell_[1][1] / 2.;
-    double ymax = unit_cell_[1][1] / 2.;
+    double xmin = -unit_cell_[0] / 2.;
+    double xmax = unit_cell_[0] / 2.;
+    double ymin = -unit_cell_[3] / 2.;
+    double ymax = unit_cell_[3] / 2.;
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D((GLdouble) (xmin - 0.05 * unit_cell_[0][0]),
-               (GLdouble) (xmax + 0.05 * unit_cell_[0][0]),
-               (GLdouble) (ymin - 0.05 * unit_cell_[1][1]),
-               (GLdouble) (ymax + 0.05 * unit_cell_[1][1])); //deprecated, but annoying
+    gluOrtho2D((GLdouble) (xmin - 0.05 * unit_cell_[0]),
+               (GLdouble) (xmax + 0.05 * unit_cell_[0]),
+               (GLdouble) (ymin - 0.05 * unit_cell_[3]),
+               (GLdouble) (ymax + 0.05 * unit_cell_[3])); //deprecated, but annoying
                                                     //to implement
 
     /* establish initial viewport */
@@ -298,7 +298,7 @@ void Graphics::Init3dWindow() {
     // typically use square boxes for now
     double a_perp_max = 0.0;
     for (int i = 0; i < 3; ++i)
-        a_perp_max = MAX(unit_cell_[i][i], a_perp_max);
+        a_perp_max = MAX(unit_cell_[3*i+i], a_perp_max);
 
     cNear_ = -2.0 * a_perp_max; // clipping plane near
     cFar_ = 2.0 * a_perp_max; // clipping plane far
@@ -372,7 +372,7 @@ void Graphics::Init3dWindow() {
     glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     glEnable(GL_MULTISAMPLE);
 
-    zTrans_ = -1.5 * unit_cell_[2][2];
+    zTrans_ = -1.5 * unit_cell_[8];
     glEnable(GL_DEPTH_TEST);    /* enable depth buffering */
     glDepthFunc(GL_LESS);       /* pedantic, GL_LESS is the default */
     glClearDepth(1.0);          /* pedantic, 1.0 is the default */
@@ -384,7 +384,7 @@ void Graphics::Init3dWindow() {
     /* set up projection transform */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(-60.0, 1.0, 1.5 * unit_cell_[2][2] / 2.0, 10.0 * 1.5 * unit_cell_[2][2] / 2.0); // deprecated
+    gluPerspective(-60.0, 1.0, 1.5 * unit_cell_[8] / 2.0, 10.0 * 1.5 * unit_cell_[8] / 2.0); // deprecated
 
     /* establish initial viewport */
     glViewport(0, 0, windx_, windy_);
@@ -884,7 +884,7 @@ void Graphics::DrawBoundary() {
 
       /* Fixme: I'm not drawing anything */
       // Turn on wireframe mode
-      DrawWireSphere(0.5*unit_cell_[0][0], 16, 16);
+      DrawWireSphere(0.5*unit_cell_[0], 16, 16);
 
     }
     else if (boundary_type_.compare("cube") == 0) {
@@ -1002,20 +1002,20 @@ void Graphics::DrawSquare() {
     glLineWidth(w);
     glColor4fv(box_color);
     glBegin(GL_LINE_LOOP);
-    v0 = -unit_cell_[0][0] / 2 - unit_cell_[0][1] / 2;
-    v1 = -unit_cell_[1][1] / 2 - unit_cell_[1][0] / 2;
+    v0 = -unit_cell_[0] / 2 - unit_cell_[1] / 2;
+    v1 = -unit_cell_[3] / 2 - unit_cell_[2] / 2;
     glVertex2f(v0, v1);
-    v0 = -unit_cell_[0][0] / 2 + unit_cell_[0][1] / 2;
-    v1 = unit_cell_[1][1] / 2 - unit_cell_[1][0] / 2;
+    v0 = -unit_cell_[0] / 2 + unit_cell_[1] / 2;
+    v1 = unit_cell_[3] / 2 - unit_cell_[2] / 2;
     glVertex2f(v0, v1);
-    v0 = unit_cell_[0][0] / 2 + unit_cell_[0][1] / 2;
-    v1 = unit_cell_[1][1] / 2 + unit_cell_[1][0] / 2;
+    v0 = unit_cell_[0] / 2 + unit_cell_[1] / 2;
+    v1 = unit_cell_[3] / 2 + unit_cell_[2] / 2;
     glVertex2f(v0, v1);
-    v0 = unit_cell_[0][0] / 2 - unit_cell_[0][1] / 2;
-    v1 = -unit_cell_[1][1] / 2 + unit_cell_[1][0] / 2;
+    v0 = unit_cell_[0] / 2 - unit_cell_[1] / 2;
+    v1 = -unit_cell_[3] / 2 + unit_cell_[2] / 2;
     glVertex2f(v0, v1);
-    v0 = -unit_cell_[0][0] / 2 - unit_cell_[0][1] / 2;
-    v1 = -unit_cell_[1][1] / 2 - unit_cell_[1][0] / 2;
+    v0 = -unit_cell_[0] / 2 - unit_cell_[1] / 2;
+    v1 = -unit_cell_[3] / 2 - unit_cell_[2] / 2;
     glVertex2f(v0, v1);
     glEnd();
 }
@@ -1034,75 +1034,75 @@ void Graphics::DrawCube() {
     /* Draw the bounding box. */
     /* front face */
     glBegin(GL_LINE_LOOP);
-    v0 = 0.5 * (-unit_cell_[0][0] - unit_cell_[0][1] - unit_cell_[0][2]);
-    v1 = 0.5 * (-unit_cell_[1][0] - unit_cell_[1][1] - unit_cell_[1][2]);
-    v2 = 0.5 * (-unit_cell_[2][0] - unit_cell_[2][1] - unit_cell_[2][2]);
+    v0 = 0.5 * (-unit_cell_[0] - unit_cell_[1] - unit_cell_[2]);
+    v1 = 0.5 * (-unit_cell_[3] - unit_cell_[4] - unit_cell_[5]);
+    v2 = 0.5 * (-unit_cell_[6] - unit_cell_[7] - unit_cell_[8]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (unit_cell_[0][0] - unit_cell_[0][1] - unit_cell_[0][2]);
-    v1 = 0.5 * (unit_cell_[1][0] - unit_cell_[1][1] - unit_cell_[1][2]);
-    v2 = 0.5 * (unit_cell_[2][0] - unit_cell_[2][1] - unit_cell_[2][2]);
+    v0 = 0.5 * (unit_cell_[0] - unit_cell_[1] - unit_cell_[2]);
+    v1 = 0.5 * (unit_cell_[3] - unit_cell_[4] - unit_cell_[5]);
+    v2 = 0.5 * (unit_cell_[6] - unit_cell_[7] - unit_cell_[8]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (unit_cell_[0][0] + unit_cell_[0][1] - unit_cell_[0][2]);
-    v1 = 0.5 * (unit_cell_[1][0] + unit_cell_[1][1] - unit_cell_[1][2]);
-    v2 = 0.5 * (unit_cell_[2][0] + unit_cell_[2][1] - unit_cell_[2][2]);
+    v0 = 0.5 * (unit_cell_[0] + unit_cell_[1] - unit_cell_[2]);
+    v1 = 0.5 * (unit_cell_[3] + unit_cell_[4] - unit_cell_[5]);
+    v2 = 0.5 * (unit_cell_[6] + unit_cell_[7] - unit_cell_[8]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-unit_cell_[0][0] + unit_cell_[0][1] - unit_cell_[0][2]);
-    v1 = 0.5 * (-unit_cell_[1][0] + unit_cell_[1][1] - unit_cell_[1][2]);
-    v2 = 0.5 * (-unit_cell_[2][0] + unit_cell_[2][1] - unit_cell_[2][2]);
+    v0 = 0.5 * (-unit_cell_[0] + unit_cell_[1] - unit_cell_[2]);
+    v1 = 0.5 * (-unit_cell_[3] + unit_cell_[4] - unit_cell_[5]);
+    v2 = 0.5 * (-unit_cell_[6] + unit_cell_[7] - unit_cell_[8]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-unit_cell_[0][0] - unit_cell_[0][1] - unit_cell_[0][2]);
-    v1 = 0.5 * (-unit_cell_[1][0] - unit_cell_[1][1] - unit_cell_[1][2]);
-    v2 = 0.5 * (-unit_cell_[2][0] - unit_cell_[2][1] - unit_cell_[2][2]);
+    v0 = 0.5 * (-unit_cell_[0] - unit_cell_[1] - unit_cell_[2]);
+    v1 = 0.5 * (-unit_cell_[3] - unit_cell_[4] - unit_cell_[5]);
+    v2 = 0.5 * (-unit_cell_[6] - unit_cell_[7] - unit_cell_[8]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-unit_cell_[0][0] - unit_cell_[0][1] + unit_cell_[0][2]);
-    v1 = 0.5 * (-unit_cell_[1][0] - unit_cell_[1][1] + unit_cell_[1][2]);
-    v2 = 0.5 * (-unit_cell_[2][0] - unit_cell_[2][1] + unit_cell_[2][2]);
+    v0 = 0.5 * (-unit_cell_[0] - unit_cell_[1] + unit_cell_[2]);
+    v1 = 0.5 * (-unit_cell_[3] - unit_cell_[4] + unit_cell_[5]);
+    v2 = 0.5 * (-unit_cell_[6] - unit_cell_[7] + unit_cell_[8]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (unit_cell_[0][0] - unit_cell_[0][1] + unit_cell_[0][2]);
-    v1 = 0.5 * (unit_cell_[1][0] - unit_cell_[1][1] + unit_cell_[1][2]);
-    v2 = 0.5 * (unit_cell_[2][0] - unit_cell_[2][1] + unit_cell_[2][2]);
+    v0 = 0.5 * (unit_cell_[0] - unit_cell_[1] + unit_cell_[2]);
+    v1 = 0.5 * (unit_cell_[3] - unit_cell_[4] + unit_cell_[5]);
+    v2 = 0.5 * (unit_cell_[6] - unit_cell_[7] + unit_cell_[8]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (unit_cell_[0][0] - unit_cell_[0][1] - unit_cell_[0][2]);
-    v1 = 0.5 * (unit_cell_[1][0] - unit_cell_[1][1] - unit_cell_[1][2]);
-    v2 = 0.5 * (unit_cell_[2][0] - unit_cell_[2][1] - unit_cell_[2][2]);
-    glVertex3f(v0, v1, v2);
-    glEnd();
-    glBegin(GL_LINE_LOOP);
-    v0 = 0.5 * (-unit_cell_[0][0] + unit_cell_[0][1] - unit_cell_[0][2]);
-    v1 = 0.5 * (-unit_cell_[1][0] + unit_cell_[1][1] - unit_cell_[1][2]);
-    v2 = 0.5 * (-unit_cell_[2][0] + unit_cell_[2][1] - unit_cell_[2][2]);
-    glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-unit_cell_[0][0] + unit_cell_[0][1] + unit_cell_[0][2]);
-    v1 = 0.5 * (-unit_cell_[1][0] + unit_cell_[1][1] + unit_cell_[1][2]);
-    v2 = 0.5 * (-unit_cell_[2][0] + unit_cell_[2][1] + unit_cell_[2][2]);
-    glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (unit_cell_[0][0] + unit_cell_[0][1] + unit_cell_[0][2]);
-    v1 = 0.5 * (unit_cell_[1][0] + unit_cell_[1][1] + unit_cell_[1][2]);
-    v2 = 0.5 * (unit_cell_[2][0] + unit_cell_[2][1] + unit_cell_[2][2]);
-    glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (unit_cell_[0][0] + unit_cell_[0][1] - unit_cell_[0][2]);
-    v1 = 0.5 * (unit_cell_[1][0] + unit_cell_[1][1] - unit_cell_[1][2]);
-    v2 = 0.5 * (unit_cell_[2][0] + unit_cell_[2][1] - unit_cell_[2][2]);
+    v0 = 0.5 * (unit_cell_[0] - unit_cell_[1] - unit_cell_[2]);
+    v1 = 0.5 * (unit_cell_[3] - unit_cell_[4] - unit_cell_[5]);
+    v2 = 0.5 * (unit_cell_[6] - unit_cell_[7] - unit_cell_[8]);
     glVertex3f(v0, v1, v2);
     glEnd();
     glBegin(GL_LINE_LOOP);
-    v0 = 0.5 * (-unit_cell_[0][0] - unit_cell_[0][1] + unit_cell_[0][2]);
-    v1 = 0.5 * (-unit_cell_[1][0] - unit_cell_[1][1] + unit_cell_[1][2]);
-    v2 = 0.5 * (-unit_cell_[2][0] - unit_cell_[2][1] + unit_cell_[2][2]);
+    v0 = 0.5 * (-unit_cell_[0] + unit_cell_[1] - unit_cell_[2]);
+    v1 = 0.5 * (-unit_cell_[3] + unit_cell_[4] - unit_cell_[5]);
+    v2 = 0.5 * (-unit_cell_[6] + unit_cell_[7] - unit_cell_[8]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (-unit_cell_[0][0] + unit_cell_[0][1] + unit_cell_[0][2]);
-    v1 = 0.5 * (-unit_cell_[1][0] + unit_cell_[1][1] + unit_cell_[1][2]);
-    v2 = 0.5 * (-unit_cell_[2][0] + unit_cell_[2][1] + unit_cell_[2][2]);
+    v0 = 0.5 * (-unit_cell_[0] + unit_cell_[1] + unit_cell_[2]);
+    v1 = 0.5 * (-unit_cell_[3] + unit_cell_[4] + unit_cell_[5]);
+    v2 = 0.5 * (-unit_cell_[6] + unit_cell_[7] + unit_cell_[8]);
+    glVertex3f(v0, v1, v2);
+    v0 = 0.5 * (unit_cell_[0] + unit_cell_[1] + unit_cell_[2]);
+    v1 = 0.5 * (unit_cell_[3] + unit_cell_[4] + unit_cell_[5]);
+    v2 = 0.5 * (unit_cell_[6] + unit_cell_[7] + unit_cell_[8]);
+    glVertex3f(v0, v1, v2);
+    v0 = 0.5 * (unit_cell_[0] + unit_cell_[1] - unit_cell_[2]);
+    v1 = 0.5 * (unit_cell_[3] + unit_cell_[4] - unit_cell_[5]);
+    v2 = 0.5 * (unit_cell_[6] + unit_cell_[7] - unit_cell_[8]);
     glVertex3f(v0, v1, v2);
     glEnd();
     glBegin(GL_LINE_LOOP);
-    v0 = 0.5 * (unit_cell_[0][0] - unit_cell_[0][1] + unit_cell_[0][2]);
-    v1 = 0.5 * (unit_cell_[1][0] - unit_cell_[1][1] + unit_cell_[1][2]);
-    v2 = 0.5 * (unit_cell_[2][0] - unit_cell_[2][1] + unit_cell_[2][2]);
+    v0 = 0.5 * (-unit_cell_[0] - unit_cell_[1] + unit_cell_[2]);
+    v1 = 0.5 * (-unit_cell_[3] - unit_cell_[4] + unit_cell_[5]);
+    v2 = 0.5 * (-unit_cell_[6] - unit_cell_[7] + unit_cell_[8]);
     glVertex3f(v0, v1, v2);
-    v0 = 0.5 * (unit_cell_[0][0] + unit_cell_[0][1] + unit_cell_[0][2]);
-    v1 = 0.5 * (unit_cell_[1][0] + unit_cell_[1][1] + unit_cell_[1][2]);
-    v2 = 0.5 * (unit_cell_[2][0] + unit_cell_[2][1] + unit_cell_[2][2]);
+    v0 = 0.5 * (-unit_cell_[0] + unit_cell_[1] + unit_cell_[2]);
+    v1 = 0.5 * (-unit_cell_[3] + unit_cell_[4] + unit_cell_[5]);
+    v2 = 0.5 * (-unit_cell_[6] + unit_cell_[7] + unit_cell_[8]);
+    glVertex3f(v0, v1, v2);
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+    v0 = 0.5 * (unit_cell_[0] - unit_cell_[1] + unit_cell_[2]);
+    v1 = 0.5 * (unit_cell_[3] - unit_cell_[4] + unit_cell_[5]);
+    v2 = 0.5 * (unit_cell_[6] - unit_cell_[7] + unit_cell_[8]);
+    glVertex3f(v0, v1, v2);
+    v0 = 0.5 * (unit_cell_[0] + unit_cell_[1] + unit_cell_[2]);
+    v1 = 0.5 * (unit_cell_[3] + unit_cell_[4] + unit_cell_[5]);
+    v2 = 0.5 * (unit_cell_[6] + unit_cell_[7] + unit_cell_[8]);
     glVertex3f(v0, v1, v2);
     glEnd();
 

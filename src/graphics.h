@@ -45,7 +45,7 @@ class Graphics {
     int windy_; // window y dimension in pixels
 
     int n_dim_; // number of physical dimensions we're drawing
-    double **unit_cell_;
+    double *unit_cell_;
     double z_correct_; // Used to recenter graphics
     space_struct * space_;
     std::vector<graph_struct*> * graph_array_;

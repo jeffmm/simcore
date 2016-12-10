@@ -6,6 +6,9 @@
 #include "species.h"
 #include "auxiliary.h"
 #include "wca.h"
+#ifdef ENABLE_OPENMP
+#include "omp.h"
+#endif
 
 class Filament : public Composite<Site,Bond> {
 
@@ -145,15 +148,38 @@ class FilamentSpecies : public Species<Filament> {
       Species::Init();
     }
     void UpdatePositions() {
-      if (diffusion_validation_ && ivalidate_%nvalidate_ == 0)
-        ValidateDiffusion();
-      for (auto it=members_.begin(); it!=members_.end(); ++it) {
-        (*it)->UpdatePosition(midstep_);
+      //if (diffusion_validation_ && ivalidate_%nvalidate_ == 0)
+        //ValidateDiffusion();
+
+#ifdef ENABLE_OPENMP
+      int max_threads = omp_get_max_threads();
+      std::vector<std::pair<std::vector<Filament*>::iterator, std::vector<Filament*>::iterator> > chunks;
+      chunks.reserve(max_threads); 
+      size_t chunk_size= members_.size() / max_threads;
+      auto cur_iter = members_.begin();
+      for(int i = 0; i < max_threads - 1; ++i) {
+        auto last_iter = cur_iter;
+        std::advance(cur_iter, chunk_size);
+        chunks.push_back(std::make_pair(last_iter, cur_iter));
       }
-      if (theta_validation_ && midstep_)
-        ValidateThetaDistributions();
+      chunks.push_back(std::make_pair(cur_iter, members_.end()));
+
+#pragma omp parallel shared(chunks)
+      {
+#pragma omp for 
+        for(int i = 0; i < max_threads; ++i)
+          for(auto it = chunks[i].first; it != chunks[i].second; ++it)
+            (*it)->UpdatePosition(midstep_);
+      }
+#else
+      for (auto it=members_.begin(); it!=members_.end(); ++it) 
+        (*it)->UpdatePosition(midstep_);
+#endif
+
+      //if (theta_validation_ && midstep_)
+        //ValidateThetaDistributions();
       midstep_ = !midstep_;
-      ivalidate_++;
+      //ivalidate_++;
     }
     void WriteOutputs(std::string run_name);
     void Configurator();

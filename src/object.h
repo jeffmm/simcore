@@ -481,7 +481,7 @@ class Composite<T,V> : public Object {
 // *********
 
 // Find the minimum distance beween two particles
-void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, int& ndim, int& nperiodic, space_struct *space);
+void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, space_struct *space);
 
 
 #endif // _SIMCORE_OBJECT_H_
