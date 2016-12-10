@@ -1,69 +1,63 @@
 #ifndef _SIMCORE_SPACE_PROPERTIES_H_
 #define _SIMCORE_SPACE_PROPERTIES_H_
 
-#include <gsl/gsl_rng.h>
 #include <math.h>
 #include "auxiliary.h"
 #include "macros.h"
 
 typedef enum {
-  SPHERE = 0,
-  BOX = 1,
-  SNOWMAN = 2,
+  BOX = 0,
+  SPHERE = 1,
+  BUDDING = 2,
 } boundary_type_t;
 
-class SpaceProperties {
+class Space {
   private:
-    boundary_type_t boundary_type_;
+    // geometric data
     int n_dim_,
         n_periodic_;
+    boundary_type_t boundary_type_;
+    std::string boundary_type_string_;
     double radius_,
-           d_radius_, // radius of daughter cell, if applicable
-           m_d_dist_, // mother-daughter cell separation
-           intersect_height_, // height of plane at mother-daughter cell intersection
-           intersect_radius_, // radius of circle defined at mother-daughter cell intersection
-           r_cutoff_, // WCA potential cutoff at boundary
            volume_,
-           uc_volume_,
-           v_ratio_,
-           **a_, // direct lattice vector
-           **b_, // reciprocal lattice vector
-           *a_perp_, // perp dist between opposite unit cell faces
-           **uc_,
-           **uc_inv_; // inverse unit cell matrix
-    rng_properties rng_;
+           unit_cell_volume_,
+           a_[9], // direct lattice vector
+           b_[9], // reciprocal lattice vector
+           a_perp_[3], // perp dist between opposite unit cell faces
+           unit_cell_[9],
+           unit_cell_inv_[9]; // inverse unit cell matrix
+
+    // bud data
+    double bud_radius_, // radius of budding cell
+           bud_height_, // center-center separation of parent and daughter cells
+           neck_height_, // height of plane at parent-daughter cell intersection
+           neck_radius_, // radius of circle defined at parent-daughter cell intersection
+           v_ratio_; // volume ratio of daughter cell to total system volume
+
+    // statistical data
+    bool constant_pressure_,
+         update_;
+    double pressure_,
+           target_volume_,
+           target_pressure_,
+           target_radius_;
+
     system_parameters *params_;
     space_struct s_struct;
+    void ConstantPressure();
+    void InitUnitCell();
+    void InitSpaceStruct();
+    void CalculateVolume();
+    void CalculateTargetRadius();
+    void UpdateVolume();
+    void UpdateSpaceStruct();
+
 
   public:
-    SpaceProperties();
-    void Init(system_parameters *params, long seed);
-    void InitUnitCell();
-    void ClearUnitCell();
-    void Clear();
-    void CalculateVolume();
-    void RandomCoordinate(double *vec);
-    void RandomCoordinate(double *vec, double buffer);
-    int const GetDim();
-    int const GetPeriodic();
-    double const GetIntersectHeight();
-    double const GetIntersectRadius();
-    double const GetRadius();
-    double const GetDRadius();
-    double const GetMDDist();
-    double const GetVolume();
-    double const * const * const GetA();
-    double const * const * const GetB();
-    double const * const GetAPerp();
-    double const * const * const GetUnitCell();
-    double const * const * const GetUnitCellInv();
-    boundary_type_t GetType();
-    std::string GetTypeString();
-    bool CheckInBounds(double *vec, double buffer);
-    bool CheckSegmentInBounds(double *vec1, double *vec2, double buffer);
+    Space();
+    void Init(system_parameters *params);
+    void UpdateSpace();
     space_struct * GetStruct();
-    void UpdateSpaceStruct();
-    //static void InsertRandom(double pos[3], double buffer);
 };
 
 #endif // _SIMCORE_SPACE_PROPERTIES_H_

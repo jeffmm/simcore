@@ -57,10 +57,23 @@ void Filament::InitElements(system_parameters *params, space_struct *space) {
   // Initialize bonds
   for (int i=0; i<n_bonds_; ++i) {
     Bond b(params, space, gsl_rng_get(rng_.r), GetSID());
-    b.SetCID(GetCID());
-    b.SetRID(GetCID());
+    b.InitRID();
+    b.SetCID(b.GetRID());
+    //b.SetCID(GetCID());
+    //b.SetRID(GetCID());
     v_elements_.push_back(b);
   }
+  // Hack CIDs and RIDs to Set up interaction zones
+  for (int i=1; i<n_bonds_-1; ++i) {
+    if (i%2==0) 
+      v_elements_[i].SetRID(v_elements_[i-1].GetRID());
+    else
+      v_elements_[i].SetCID(v_elements_[i-1].GetCID());
+  }
+  v_elements_[n_bonds_-1].SetCID(v_elements_[n_bonds_-2].GetCID());
+  v_elements_[n_bonds_-1].SetRID(v_elements_[n_bonds_-2].GetRID());
+
+  
   //Allocate control structures
   tensions_.resize(n_sites_-1); //max_sites -1
   g_mat_lower_.resize(n_sites_-2); //max_sites-2
@@ -691,9 +704,10 @@ void FilamentSpecies::Configurator() {
         for (auto ns : new_simps) {
           for (auto os : old_simps) {
             Interaction imd;
-            MinimumDistance(ns, os, &imd, params_->n_dim, params_->n_periodic, space_);
-            if (imd.dr_mag2 < imd.buffer_mag2)
+            MinimumDistance(ns, os, &imd, space_);
+            if (imd.dr_mag2 < imd.buffer_mag2) {
               insert = false;
+            }
           }
         }
         if (insert) {
@@ -744,9 +758,6 @@ void FilamentSpecies::Configurator() {
   ibin_ = 0;
   ivalidate_ = 0;
 
-  std::cout << "****************\n";
-  std::cout << "Filament insertion not done yet, BE CAREFUL!!!!!!\n";
-  std::cout << "****************\n";
 }
 
 void FilamentSpecies::WriteThetaValidation(std::string run_name) {

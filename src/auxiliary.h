@@ -183,12 +183,14 @@ struct space_struct {
   int n_periodic;
   bool bud;
   double radius;
+  double pressure;
+  double volume;
   double bud_radius;
   double bud_height;
-  double **unit_cell;
-  double **unit_cell_inv;
-  double **a;
-  double **b;
+  double *unit_cell;
+  double *unit_cell_inv;
+  double *a;
+  double *b;
   double *a_perp;
   std::string type;
 };
@@ -208,9 +210,9 @@ void error_exit(const char *error_msg, ...);
 void warning(const char *warning_msg);
 void tridiagonal_solver(std::vector<double> *a, std::vector<double> *b, std::vector<double> *c, std::vector<double> *d, int n);
 void rotate_3d_vector(double theta, double *a, double *b);
-void invert_sym_2d_matrix(double **a, double **b); 
-void invert_sym_3d_matrix(double **a, double **b); 
-void periodic_boundary_conditions(int n_periodic, double **h, double **h_inv,
+void invert_sym_2d_matrix(double *a, double *b); 
+void invert_sym_3d_matrix(double *a, double *b); 
+void periodic_boundary_conditions(int n_dim, int n_periodic, double *h, double *h_inv,
                                          double *r, double *s);
 
 class PotentialBase;

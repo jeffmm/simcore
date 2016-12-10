@@ -364,7 +364,7 @@ void DyRodSpecies::Configurator() {
             // Just check the 0th element of each
             auto part1 = member->GetSimples()[0];
             auto part2 = (*rodit)->GetSimples()[0];
-            MinimumDistance(part1, part2, &idm, space_->n_dim, space_->n_periodic, space_);
+            MinimumDistance(part1, part2, &idm, space_);
             double diameter2 = diameter*diameter;
 
             if (idm.dr_mag2 < diameter2) {
