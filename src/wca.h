@@ -30,11 +30,12 @@ class WCA {
       if (ABS(ffac) > fcut_) {
         ffac = SIGNOF(ffac) * fcut_;
       }
-      ix->virial = 0;
       for (int i = 0; i < n_dim_; ++i) {
         ix->force[i] = ffac*dr[i]/rmag;
-        ix->virial += ix->force[i]*dr[i];
       }
+      for (int i=0; i<n_dim_; ++i)
+        for (int j=0; j<n_dim_; ++j)
+          ix->stress[n_dim_*i+j] = -dr[i]*ix->force[j];
       ix->pote = r6*(c12_*r6 - c6_) + eps_;
     }
 

@@ -108,21 +108,6 @@ class Object {
       for (int i=0; i<3; ++i)
         torque_[i]-=t[i];
     }
-    //void AddVirial(double const * const f, double const * const dr);
-    //void AddVirial(double *f, double *dr);
-      //for (int i=0; i<n_dim_; ++i)
-        //for (int j=i; j<n_dim_; ++j){
-          //std::cout<<spec_virial_[0]<<std::endl;
-          //spec_virial_[3*i+j] = spec_virial_[3*j+i] += f[i] * dr[j];
-        //}
-    //}
-
-    //void GetVirial( double spec_virial[3][3] ){
-      //for (int i=0; i<n_dim_; ++i)
-        //for (int j=i; j<n_dim_; ++j)
-          //spec_virial_[i][j] = spec_virial_[j][i] += f[i]*dr[j];
-    //}
-
     void SetTorque(double const * const t) {
       for (int i=0; i<3; ++i)
         torque_[i]=t[i];
@@ -155,6 +140,13 @@ class Object {
       for (int i=0; i < 4; ++i)
         color_[i] = c[i];
       draw_type_ = dtype;
+    }
+    virtual void ScalePosition() {
+      for (int i=0; i<n_dim_; ++i) {
+        position_[i] = 0;
+        for (int j=0;j<n_dim_; ++j)
+          position_[i]+=space_->unit_cell[n_dim_*i+j]*scaled_position_[j];
+      }
     }
     virtual void ApplyInteractions() {}
     virtual double const GetKineticEnergy() {return k_energy_;}
@@ -373,6 +365,11 @@ class Composite<T> : public Object {
       for (auto& elem : elements_)
         elem.ReadPosit(ip);
     }
+
+    virtual void ScalePosition() {
+      for (auto elem : elements_)
+        elem.ScalePosition();
+    }
 };
 
 template <typename T, typename V>
@@ -466,6 +463,13 @@ class Composite<T,V> : public Object {
         elem.ReadPosit(ip);
       for (auto& velem : v_elements_)
         velem.ReadPosit(ip);
+    }
+
+    virtual void ScalePosition() {
+      for (auto elem : elements_)
+        elem.ScalePosition();
+      for (auto v_elem : v_elements_)
+        v_elem.ScalePosition();
     }
 
     //virtual void InitVirial(double *spec_virial){ 

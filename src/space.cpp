@@ -8,6 +8,9 @@ void Space::Init(system_parameters *params) {
   params_ = params;
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
+  delta_ = params_->delta;
+  compressibility_ = params_->compressibility;
+  pressure_time_ = params_->pressure_time;
   // Make sure that n_periodic <= n_dim
   if (n_periodic_ > n_dim_) 
     n_periodic_ = params_->n_periodic = n_dim_;
@@ -17,8 +20,11 @@ void Space::Init(system_parameters *params) {
   bud_radius_ = 0;
   bud_height_ = 0;
   //r_cutoff_ = params_->r_cutoff_boundary;
-  constant_pressure_ = (params_->constant_pressure ? true : false);
+  constant_pressure_ = (params_->constant_pressure == 1 ? true : false);
+  constant_volume_ = (params_->constant_volume == 1 ? true : false);
   target_pressure_ = params_->target_pressure;
+  target_radius_ = params_->target_radius;
+  update_ = false;
 
   // Make sure space_type is recognized
   switch (params_->boundary_type) {
@@ -48,7 +54,6 @@ void Space::Init(system_parameters *params) {
   }
   InitUnitCell();
   CalculateVolume();
-  target_volume_ = volume_;
   InitSpaceStruct();
 }
 
@@ -68,13 +73,13 @@ void Space::InitUnitCell() {
     }
   }
   unit_cell_[n_dim_*n_dim_-1] = h_major;
+  // Compute unit cell quantities
+  CalculateUnitCellQuantities();
 
-  /* Compute inverse unit cell matrix. */
-  if (n_dim_==2)
-    invert_sym_2d_matrix(unit_cell_, unit_cell_inv_);
-  if (n_dim_==3)
-    invert_sym_3d_matrix(unit_cell_, unit_cell_inv_);
-  /* Compute unit cell volume, which is determinant of uc matrix */
+}
+
+void Space::CalculateUnitCellQuantities() {
+  // Calculate unit cell volume, which is determinant of unit cell
   double determinant;
   if (n_dim_==2) {
     determinant = unit_cell_[0]*unit_cell_[3] - unit_cell_[2]*unit_cell_[1];
@@ -83,6 +88,12 @@ void Space::InitUnitCell() {
     determinant = unit_cell_[0]*((unit_cell_[4]*unit_cell_[8]) - (unit_cell_[7]*unit_cell_[5])) -unit_cell_[1]*(unit_cell_[3]*unit_cell_[8] - unit_cell_[6]*unit_cell_[5]) + unit_cell_[2]*(unit_cell_[3]*unit_cell_[7] - unit_cell_[6]*unit_cell_[4]);
   }
   unit_cell_volume_ = determinant;
+  /* Compute inverse unit cell matrix. */
+  if (n_dim_==2)
+    invert_sym_2d_matrix(unit_cell_, unit_cell_inv_);
+  if (n_dim_==3)
+    invert_sym_3d_matrix(unit_cell_, unit_cell_inv_);
+  /* Compute unit cell volume, which is determinant of uc matrix */
 
   /* Set up direct and reciprocal lattice vectors. */
   for (int i = 0; i < n_dim_; ++i)
@@ -101,56 +112,84 @@ void Space::InitUnitCell() {
   }
 }
 
+
 void Space::UpdateSpace() {
   // No space update for budding yeast yet
   if (boundary_type_ == BUDDING)
     return;
-  update_ = false;
-  if (constant_pressure_) 
-    ConstantPressure();
-  if (update_) {
-    UpdateVolume();
-    InitUnitCell();
-    UpdateSpaceStruct();
-  }
+  UpdateUnitCell();
+  UpdateVolume();
+  UpdateSpaceStruct();
 }
 
+/* XXX Only works for periodic boundary conditions so far, need to add volume
+       updating for fixed boundaries (like enclosed boxes or spheres) */
 void Space::ConstantPressure() {
-  // If change in pressure is small enough, don't bother updating
-  if (ABS(pressure_ - s_struct.pressure) > 1e-6) {
-    pressure_ = s_struct.pressure;
-    // If target pressure is zero, let first pressure calculation set target pressure
-    if (target_pressure_ == 0)
-      target_pressure_ = pressure_; 
-    double delta_p = pressure_ - target_pressure_;
-    double delta_v = volume_ * delta_p / (target_pressure_ + delta_p);
-    target_volume_ = volume_ + delta_v;
-    CalculateTargetRadius();
-  }
-  // Update if we are not at our target volume
-  if (ABS(target_volume_ - volume_) > 1e-6) 
-    update_ = true;
+  update_ = true;
+  pressure_ = s_struct.pressure;
+  // If target pressure is zero, let first pressure calculation set target pressure
+  if (target_pressure_ == 0)
+    target_pressure_ = pressure_; 
+  // If target pressure is vastly different from current pressure, update scaling matrix
+  if (ABS(pressure_ - target_pressure_) > 1e-4) 
+    CalculateScalingMatrix();
+  else
+    update_ = false;
+  printf("pressure: %2.8f\ntarget_pressure: %2.8f\nradius: %2.8f\n",pressure_,target_pressure_,radius_);
 }
 
-void Space::CalculateTargetRadius() {
+// Use scaling matrix to scale unit cell
+void Space::UpdateUnitCell() {
+  std::copy(unit_cell_, unit_cell_+9, prev_unit_cell_);
+  std::fill(unit_cell_, unit_cell_+9, 0);
+  for (int i=0; i<n_dim_; ++i)
+    for (int j=0; j<n_dim_; ++j)
+      for (int k=0; k<n_dim_; ++k)
+        unit_cell_[n_dim_*i+j] += mu_[n_dim_*i+k] * prev_unit_cell_[n_dim_*k+j];
+  CalculateUnitCellQuantities();
+}
+
+/* Warning: Only does orthogonal scaling 
+   (doesn't work for unit cells with non-zero off-diagonal elements) */
+void Space::CalculateScalingMatrix() {
+  double time_const = compressibility_*delta_/(n_dim_*pressure_time_);
+  std::copy(s_struct.pressure_tensor,s_struct.pressure_tensor+9,pressure_tensor_);
+  for (int i=0; i<n_dim_; ++i) {
+    for (int j=0; j<n_dim_; ++j) {
+      if (i==j) 
+        mu_[n_dim_*i+j] = 1.0 - time_const*(target_pressure_ - pressure_tensor_[n_dim_*i+j]);
+      else 
+        mu_[n_dim_*i+j] = 0.0;
+    }
+  }
+}
+
+void Space::CalculateRadius() {
   if (boundary_type_ == BOX) {
     if (n_dim_ == 3)
-      target_radius_ = pow(target_volume_, 1.0/3.0);
+      radius_ = 0.5*pow(volume_, 1.0/3.0);
     else if (n_dim_ == 2)
-      target_radius_ = sqrt(target_volume_);
+      radius_ = 0.5*sqrt(volume_);
   }
   else if (boundary_type_ == SPHERE) {
     if (n_dim_ == 3)
-      target_radius_ = pow(3.0*target_volume_/(4.0*M_PI), 1.0/3.0);
+      radius_ = pow(3.0*volume_/(4.0*M_PI), 1.0/3.0);
     else if (n_dim_ == 2)
-      target_radius_ = sqrt(target_volume_/M_PI);
+      radius_ = sqrt(volume_/M_PI);
   }
 }
 
 void Space::UpdateVolume() {
-  double delta_radius = target_radius_- radius_;
-  radius_ += delta_radius*params_->delta;
-  CalculateVolume();
+  if (boundary_type_ == BOX) {
+    volume_ = unit_cell_volume_;
+    CalculateRadius();
+  }
+  else if (boundary_type_ == SPHERE) {
+    error_exit("ERROR: Updating volume for spherical boundary types not implemented.\n");
+  }
+  else if (boundary_type_ == BUDDING) {
+    error_exit("ERROR: Updating volume for budding yeast boundary types not implemented.\n");
+  }
 }
 
 void Space::CalculateVolume() {
@@ -208,17 +247,19 @@ void Space::InitSpaceStruct() {
   else {
     s_struct.bud = false;
   }
-  UpdateSpaceStruct();
-}
-
-void Space::UpdateSpaceStruct() {
-  s_struct.radius = radius_;
-  s_struct.volume = volume_;
   s_struct.unit_cell = unit_cell_;
   s_struct.unit_cell_inv = unit_cell_inv_;
   s_struct.a = a_;
   s_struct.b = b_;
   s_struct.a_perp = a_perp_;
+  s_struct.mu = mu_;
+  UpdateSpaceStruct();
+}
+
+// Only need to update changing variables (but not pointers)
+void Space::UpdateSpaceStruct() {
+  s_struct.radius = radius_;
+  s_struct.volume = volume_;
 }
 
 space_struct * Space::GetStruct() {

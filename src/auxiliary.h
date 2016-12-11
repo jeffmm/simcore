@@ -183,15 +183,17 @@ struct space_struct {
   int n_periodic;
   bool bud;
   double radius;
-  double pressure;
+  double pressure_tensor[9]; // pressure tensor
+  double pressure; // isometric pressure
   double volume;
   double bud_radius;
   double bud_height;
   double *unit_cell;
-  double *unit_cell_inv;
-  double *a;
-  double *b;
-  double *a_perp;
+  double *unit_cell_inv; // inverse unit cell
+  double *a; // direct lattice vector
+  double *b; // reciprocal lattice vector
+  double *a_perp; // perpendicular distance between opposite unit cell faces
+  double *mu; // scaling matrix for constant pressure
   std::string type;
 };
 
