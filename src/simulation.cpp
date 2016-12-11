@@ -68,9 +68,18 @@ void Simulation::Statistics() {
   if (params_.constant_pressure && i_step_ > 0) {
     if (i_step_ % params_.virial_time_avg == 0) {
       iengine_.CalculatePressure();
+      space_.ConstantPressure();
     }
-    space_.UpdateSpace();
+    if (space_.GetUpdate()) {
+      space_.UpdateSpace();
+      ScaleSpeciesPositions();
+    }
   }
+}
+
+void Simulation::ScaleSpeciesPositions() {
+  for (auto spec : species_)
+    spec->ScalePositions();
 }
 
 void Simulation::InitSimulation() {

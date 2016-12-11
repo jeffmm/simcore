@@ -143,14 +143,32 @@ void InteractionEngine::ApplyInteractions() {
     obj2->SubTorque(ix->t2);
     obj1->AddPotential(ix->pote);
     obj2->AddPotential(ix->pote);
-    virial_ += ix->virial;
+    for (int i=0; i<n_dim_; ++i)
+      for (int j=0; j<n_dim_; ++j)
+        stress_[n_dim_*i+j] += ix->stress[n_dim_*i+j];
   }
 }
 
+// Compute pressure tensor after virial_time_avg_ steps
 void InteractionEngine::CalculatePressure() {
   double inv_V = 1.0/space_->volume;
-  virial_ = virial_ / virial_time_avg_;
-  space_->pressure = n_objs_*inv_V + inv_V/n_dim_*virial_;
-  virial_ = 0;
+  std::fill(space_->pressure_tensor, space_->pressure_tensor+9, 0);
+  // Calculate pressure tensor from stress tensor (only physical for periodic subspace)
+  for (int i=0; i<n_dim_; ++i) {
+    for (int j=0; j<n_dim_; ++j) {
+      // Add particle density along principle axes
+      if (i==j)
+        space_->pressure_tensor[n_dim_*i+j] += n_objs_*inv_V;
+      // Add time-averaged virial component
+      space_->pressure_tensor[n_dim_*i+j] += stress_[n_dim_*i+j]*inv_V/virial_time_avg_;
+    }
+  }
+  // Calculate isometric pressure
+  space_->pressure = 0;
+  for (int i=0; i<n_dim_; ++i)
+    space_->pressure += space_->pressure_tensor[n_dim_*i+i];
+  space_->pressure /= n_dim_;
+  // Reset local stress tensor
+  std::fill(stress_,stress_+9,0);
 }
 

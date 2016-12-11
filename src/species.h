@@ -81,7 +81,7 @@ class SpeciesBase {
           tot_virial[3*j+i] = virial_[3*i+j];
         }
     }
-
+    virtual void ScalePositions() {}
     virtual void SetVirial(double* vl) {std::copy(vl, vl+9, virial_);}
     SID const GetSID() {return sid_;}
     bool IsKMC() {return is_kmc_;}
@@ -347,6 +347,12 @@ class Species : public SpeciesBase {
         pol_direct_[i] /= members_.size();
       //normalize_vector(pol_direct_, n_dim);
       return pol_direct_;
+    }
+
+    virtual void ScalePositions() {
+      for (auto mem_it : members_) {
+        mem_it->ScalePosition();
+      }
     }
 
     //virtual void InitVirial() {

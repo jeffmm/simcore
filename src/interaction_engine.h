@@ -16,7 +16,7 @@
 class InteractionEngine {
 
   private:
-    double virial_;
+    double stress_[9];
     int n_dim_,
         n_periodic_,
         i_update_,
