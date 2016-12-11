@@ -36,28 +36,38 @@ class Space {
 
     // statistical data
     bool constant_pressure_,
+         constant_volume_,
          update_;
     double pressure_,
-           target_volume_,
+           pressure_tensor_[9],
            target_pressure_,
-           target_radius_;
+           target_radius_,
+           delta_,
+           compressibility_, // set to unity (see Berendsen et al. 1984)
+           pressure_time_, // time to reach target pressure
+           prev_unit_cell_[9], // previous unit cell
+           mu_[9]; // scaling matrix for constant pressure
 
     system_parameters *params_;
     space_struct s_struct;
-    void ConstantPressure();
     void InitUnitCell();
     void InitSpaceStruct();
     void CalculateVolume();
-    void CalculateTargetRadius();
+    void CalculateRadius();
     void UpdateVolume();
     void UpdateSpaceStruct();
-
+    void CalculateScalingMatrix();
+    void CalculateUnitCellQuantities();
+    void UpdateUnitCell();
 
   public:
     Space();
     void Init(system_parameters *params);
     void UpdateSpace();
+    void ConstantPressure();
     space_struct * GetStruct();
+    bool GetUpdate() { return update_; }
+
 };
 
 #endif // _SIMCORE_SPACE_PROPERTIES_H_

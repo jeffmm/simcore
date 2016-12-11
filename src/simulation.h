@@ -51,6 +51,7 @@ class Simulation {
     void ReadSpeciesPositions();
     void ZeroForces();
     void Statistics();
+    void ScaleSpeciesPositions();
     std::vector<graph_struct*> graph_array;
     void PrintComplete();
 

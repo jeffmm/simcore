@@ -13,7 +13,7 @@ class Interaction {
            buffer_mag = 0, // sum of object radii
            buffer_mag2 = 0, // " " " " squared
            dr_mag2 = 0, // magnitude of dr vector squared
-           virial = 0, // virial for calculating pressure
+           stress[9] = {0}, // stress tensor for calculating pressure
            pote = 0; // potential energy
 };
 

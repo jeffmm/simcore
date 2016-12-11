@@ -184,7 +184,6 @@ void Filament::GenerateProbableOrientation() {
 }
 
 void Filament::UpdatePosition(bool midstep) {
-  //ZeroForce();
   ApplyForcesTorques();
   Integrate(midstep);
   UpdateAvgPosition();
@@ -617,6 +616,30 @@ void Filament::UpdateBondPositions() {
     bond->SetRigidDiameter(diameter_);
     i_site++;
   }
+}
+
+// Scale bond and site positions from new unit cell
+void Filament::ScalePosition() {
+  // scale first bond position using new unit cell
+  v_elements_[0].ScalePosition();
+  // then reposition sites based on first bond position
+  // handle first site
+  double r[3];
+  double const * const bond_r = v_elements_[0].GetPosition();
+  double const * const bond_u = v_elements_[0].GetOrientation();
+  for (int i=0; i<n_dim_; ++i)
+    r[i] = bond_r[i] - 0.5*child_length_*bond_u[i];
+  elements_[0].SetPosition(r);
+  // then handle remaining sites
+  for (int i_site=1; i_site<n_sites_; ++i_site) {
+    double const * const prev_r = elements_[i_site-1].GetPosition();
+    double const * const prev_u = elements_[i_site-1].GetOrientation();
+    for (int i=0; i<n_dim_; ++i)
+      r[i] = prev_r[i] + child_length_*prev_u[i];
+    elements_[i_site].SetPosition(r);
+  }
+  // update remaining bond positions
+  UpdateBondPositions();
 }
 
 // Species specifics, including insertion routines
