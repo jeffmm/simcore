@@ -9,6 +9,15 @@
 #include <GLFW/glfw3.h>
 #include <string>
 #include "auxiliary.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+struct point {
+	GLfloat x;
+	GLfloat y;
+	GLfloat s;
+	GLfloat t;
+};
 
 class GraphicsPrimitive {
  public:
@@ -37,6 +46,19 @@ class GraphicsPrimitive {
                      PFNGLGETSHADERINFOLOGPROC glGet__InfoLog);
 };
 
+class GraphicsText {
+  public:
+    FT_Library ft_;
+    FT_Face face_;
+    GLuint program_,buffer_,vertex_shader_,fragment_shader_;
+    GLint attribute_coord_,uniform_tex_,uniform_color_;
+    void MakeProgram();
+    void ShowInfoLog(GLuint object, PFNGLGETSHADERIVPROC glGet__iv,
+                     PFNGLGETSHADERINFOLOGPROC glGet__InfoLog);
+    void RenderText(const char *text, float x, float y, int sx, int sy);
+
+};
+
 /* The <graphics_parameters> structure contains a variety of graphics parameters. */
 class Graphics {
  public:
@@ -52,6 +74,7 @@ class Graphics {
 
     GraphicsPrimitive discorectangle_; // 2d spherocylinder
     GraphicsPrimitive spherocylinder_; // actual spherocylinder
+    GraphicsText text_;
 
     GLfloat xAngle_, yAngle_, zAngle_; // system rotation
     GLfloat xyzScale_; // zoom
@@ -68,51 +91,14 @@ class Graphics {
     int color_switch_; // which coloring algorithm to use
     int keep_going_; // Allow to draw same configuration in loop
     std::string boundary_type_; // boundary type to draw. currently supports
-                                // "cube" and "sphere"
+                                // "box" and "sphere"
 
  public:
     void Init(std::vector<graph_struct*> * const graph_array, space_struct * s_struct, double background); // Init. Must always be called.
-    // n_dim: number of dimensions (2 or 3 currently supported)
-    // h: n_dim x n_dim unit cell matrix 
     void Clear();
 
     void DrawLoop();
-    //void DrawLoop(graph_struct g_struct);
-    //void DrawLoop(int n_bonds,
-                  //double **r, double **u, double *length,
-                  //int n_sites, double **r_site,
-                  //double *sphero_diameter,
-                  //double sphere_diameter); // Same as draw, but loop indefinitely
-    //void DrawLoop(int n_bonds,
-                  //double **r, double **u, double *length, double *sphero_diameter);
-    //void DrawLoop(int n_bonds,
-                        //double **r, double **u, double *length, double *sphero_diameter,
-                        //double m_rad, double d_rad, double m_d_dist);
     void Draw();
-    //void Draw(graph_struct g_struct);
-    //void Draw(int n_bonds,
-              //double **r, double **u, double *length, double *sphero_diameter); // Draw current simulation frame
-    // n_bonds: number of spherocylinders
-    // h: unit cell matrix
-    // r: center of mass positions of spherocylinders
-    // u: orientation vectors for spherocylinders
-    // length: length of spherocylinders
-    //void Draw(int n_bonds,
-              //double **r, double **u, double *length,
-              //int n_sites, double **r_site,
-              //double *sphero_diameter,
-              //double sphere_diameter); // Draw current simulation frame with spheres too!
-    // n_bonds: number of spherocylinders
-    // h: unit cell matrix
-    // r: center of mass positions of spherocylinders
-    // u: orientation vectors for spherocylinders
-    // length: length of spherocylinders
-    // n_sites: actual number of sites (2 * n_bonds + n_spheres) FIXME
-    // r_site: site positions matrix
-    // sphere_diameter: diameter of spheres! //fixme, could be carried along 
-    //void Draw(int n_bonds,
-                    //double **r, double **u, double *length, double *sphero_diameter,
-                    //double m_rad, double d_rad, double m_d_dist); 
     void SetBoundaryType(std::string boundary_type); //Set the boundary type to draw
     
  private:
@@ -122,31 +108,22 @@ class Graphics {
     void InitWindow();
     void Init2dWindow();
     void Init3dWindow();
+    void InitText();
     void KeyInteraction();
     void DrawBox(); // Wrapper for rectangular boundaries
     void DrawSquare(); //boundary square
     void DrawCube(); // boundary cube
     void DrawWireSphere(double r, int lats, int longs); // Slow, not for mass drawing, just for boundary
     void DrawBoundary(); 
-    //void DrawBoundary(, double m_rad, double d_rad, double m_d_dist); // used for snowman
-    //void DrawSnowman(double m_rad, double d_rad, double m_d_dist); // Draws snowman boundary
-    void DrawSnowman();
-    void Draw2dSnowman(); // Draws snowman boundary
-    void Draw3dSnowman(); // Draws snowman boundary
+    void DrawBudding();
+    void Draw2dBudding(); // Draws budding boundary
+    void Draw3dBudding(); // Draws budding boundary
     void DrawSpheros(); // draw spherocylinders (3d)
     void DrawDiscorectangles(); // draw solid discorectangles (2d spherocylinders)
-    //void DrawSpheres(int n_spheres, double **r, double sphere_diameter); // Draw solid spheres
     void UpdateWindow(); // update window parameters in case of resize
     void Draw2d();
     void Draw3d();
-    //void Draw2d(int n_bonds, double **r, double **u, double *length, double *sphero_diameter);
-    //void Draw2d(int n_bonds, double **r, double **u, double *length, 
-                      //double *sphero_diameter, double m_rad, double d_rad, double m_d_dist);
-    //void Draw3d(int n_bonds, double **r, double **u, double *length, double *sphero_diameter, double m_rad,
-                //double d_rad, double m_d_dist);
-    //void Draw3d(int n_bonds, double **r, double **u, double *length,
-                //int n_sites, double **r_site, double *sphero_diameter, double sphere_diameter);
-    //void Draw3d(int n_bonds, double **r, double **u, double *length, double *sphero_diameter);
+    void DrawText();
 };
 
 #endif

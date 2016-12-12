@@ -181,7 +181,7 @@ void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_s
   for (int i=0;i<3;++i)
     background_color_[i] = background;
   z_correct_ = 0;
-  if (boundary_type_.compare("snowman")==0) {
+  if (boundary_type_.compare("budding")==0) {
     double m_rad = space_->radius;
     double d_rad = space_->bud_radius;
     double m_d_dist = space_->bud_height;
@@ -192,6 +192,7 @@ void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_s
   InitWindow();
   InitDiscoRectangle();
   InitSpheroCylinder();
+  InitText();
 }
 
 void Graphics::Clear() {
@@ -493,33 +494,6 @@ void Graphics::DrawDiscorectangles() {
         glColor4fv(color);
       }
      
-      //if (color_switch_ == 1) { // basic theta dependent colorwheel
-      //    double theta_color = theta + 1.5 * M_PI;
-      //    if (theta_color > 2.0 * M_PI)
-      //        theta_color -= 2.0 * M_PI;
-      //    
-      //    /* Color based only on orientation */
-      //    int color_index = (int) (((theta_color) / (2.0 * M_PI)) * n_rgb_);
-      //    if (color_index < 0)
-      //        color_index = 0;
-      //    else if (color_index >= n_rgb_)
-      //        color_index = n_rgb_ - 1;
-      //    
-      //    glColor4fv(&colormap_[color_index * 4]);
-      //}
-      //else if (color_switch_ == 2) { 
-      //  /* Custom colors externally defined... */
-      //  glColor4f((*it)->color[0],
-      //            (*it)->color[1],
-      //            (*it)->color[2],
-      //            (*it)->color[3]);
-      //  glColor4fv(color);
-      //}
-      //else {
-      //    /* Flat color */
-      //    glColor4fv(color);
-      //}
-
       glPushMatrix(); // Duplicate current modelview
       {
           glTranslatef((*it)->r[0], (*it)->r[1]-z_correct_, 0.0); // Translate rod
@@ -545,18 +519,69 @@ void Graphics::Draw2d() {
     UpdateWindow(); // Recalculate window parameters (in case of resize)
     DrawDiscorectangles(); 
     DrawBoundary();
+    DrawText();
     glfwSwapBuffers(window_); // Print frame to screen
 }
 
-//void Graphics::Draw2d(int n_bonds, double **r, double **u, double *length, 
-                      //double *sphero_diameter, double m_rad, double d_rad, double m_d_dist)
-//{
-    //KeyInteraction();
-    //UpdateWindow(); // Recalculate window parameters (in case of resize)
-    //DrawDiscorectangles(n_bonds, r, u, length, sphero_diameter); 
-    //DrawBoundary(h, m_rad, d_rad, m_d_dist);
-    //glfwSwapBuffers(window_); // Print frame to screen
-//}
+void Graphics::DrawText() {
+
+  glMatrixMode(GL_MODELVIEW); // Make sure we're using the model transform
+	glUseProgram(text_.program_);
+
+	/* White background */
+	//glClearColor(1, 1, 1, 1);
+  //glClear(GL_COLOR_BUFFER_BIT);
+
+	/* Enable blending, necessary for our alpha texture */
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  //glEnableVertexAttribArray(text_.attribute_coord_);
+  //glBindBuffer(GL_ARRAY_BUFFER, text_.vertex_buffer_);
+  //glVertexAttribPointer(text_.attribute_coord_, // attribute
+                          //2,                 // number of elements per vertex, here (x,y,z)
+                          //GL_FLOAT,          // the type of each element
+                          //GL_FALSE,          // take our values as-is
+                          //0,                 // no extra data between each position
+                          //(void*)0                  // offset of first element
+                          //);
+
+    // Use the element buffer (numerical pointer to each set of vertices that make a triangle)
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, text_.element_buffer_);
+
+	GLfloat black[4] = { 0, 0, 0, 1 };
+	GLfloat red[4] = { 1, 0, 0, 1 };
+	GLfloat transparent_green[4] = { 0, 1, 0, 0.5 };
+
+	/* Set font size to 48 pixels, color to black */
+	FT_Set_Pixel_Sizes(text_.face_, 0, 48);
+	glUniform4fv(text_.uniform_color_, 1, black);
+
+	/* Effects of alignment */
+	text_.RenderText("The Quick Brown Fox Jumps Over The Lazy Dog", 0,0, 0, 0);
+	text_.RenderText("The Quick Brown Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 50 * windy_, windx_, windy_);
+	text_.RenderText("The Misaligned Fox Jumps Over The Lazy Dog", -1 + 8.5 * windx_, 1 - 100.5 * windy_, windx_, windy_);
+
+	/* Scaling the texture versus changing the font size */
+	text_.RenderText("The Small Texture Scaled Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 175 * windy_, windx_ * 0.5, windy_ * 0.5);
+	FT_Set_Pixel_Sizes(text_.face_, 0, 24);
+	text_.RenderText("The Small Font Sized Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 200 * windy_, windx_, windy_);
+	FT_Set_Pixel_Sizes(text_.face_, 0, 48);
+	text_.RenderText("The Tiny Texture Scaled Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 235 * windy_, windx_ * 0.25, windy_ * 0.25);
+	FT_Set_Pixel_Sizes(text_.face_, 0, 12);
+	text_.RenderText("The Tiny Font Sized Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 250 * windy_, windx_, windy_);
+	FT_Set_Pixel_Sizes(text_.face_, 0, 48);
+
+	/* Colors and transparency */
+	text_.RenderText("The Solid Black Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 430 * windy_, windx_, windy_);
+
+	glUniform4fv(text_.uniform_color_, 1, red);
+	text_.RenderText("The Solid Red Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 330 * windy_, windx_, windy_);
+	text_.RenderText("The Solid Red Fox Jumps Over The Lazy Dog", -1 + 28 * windx_, 1 - 450 * windy_, windx_, windy_);
+
+	glUniform4fv(text_.uniform_color_, 1, transparent_green);
+	text_.RenderText("The Transparent Green Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 380 * windy_, windx_, windy_);
+	text_.RenderText("The Transparent Green Fox Jumps Over The Lazy Dog", -1 + 18 * windx_, 1 - 440 * windy_, windx_, windy_);
+}
 
 void Graphics::DrawSpheros() {
     glMatrixMode(GL_MODELVIEW); // Use modelview matrix
@@ -661,71 +686,6 @@ void Graphics::DrawSpheros() {
           glColor4fv(color);
         }
 
-        ///* Select cylinder color. */
-        //if (color_switch_ == 1) {
-        //    /* Convert from HSL to RGB coloring scheme, unique orientation coloring scheme */
-        //    double L = 0.3 * (*it)->u[2] + 0.5;
-        //    double C = (1 - ABS(2*L - 1));
-        //    double H_prime = 3.0 * theta / M_PI;
-        //    double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
-
-        //    if (H_prime < 0.0) {
-        //        color[0] = 0.0;
-        //        color[1] = 0.0;
-        //        color[2] = 0.0;
-        //    }
-        //    else if (H_prime < 1.0) {
-        //        color[0] = C;
-        //        color[1] = X;
-        //        color[2] = 0;
-        //    }
-        //    else if (H_prime < 2.0) {
-        //        color[0] = X;
-        //        color[1] = C;
-        //        color[2] = 0;
-        //    }
-        //    else if (H_prime < 3.0) {
-        //        color[0] = 0;
-        //        color[1] = C;
-        //        color[2] = X;
-        //    }
-        //    else if (H_prime < 4.0) {
-        //        color[0] = 0;
-        //        color[1] = X;
-        //        color[2] = C;
-        //    }
-        //    else if (H_prime < 5.0) {
-        //        color[0] = X;
-        //        color[1] = 0;
-        //        color[2] = C;
-        //    }
-        //    else if (H_prime < 6.0) {
-        //        color[0] = C;
-        //        color[1] = 0;
-        //        color[2] = X;
-        //    }
-        //    color[3] = alpha_;
-
-        //    double m = L - 0.5 * C;
-        //    color[0] = color[0] + m;
-        //    color[1] = color[1] + m;
-        //    color[2] = color[2] + m;
-
-        //    glColor4fv(color);
-        //}
-        //else if (color_switch_ == 2) {
-        //    double cos_phi = cos(phi);
-        //    int color_index = (int) (ABS(cos_phi) * (n_rgb_ - shift_));
-        //    if (color_index < 0)
-        //        glColor4fv(&colormap_[0]);
-        //    else if (color_index >= n_rgb_ - shift_)
-        //        glColor4fv(&colormap_[4*(n_rgb_ - shift_ - 1)]);
-        //    else
-        //        glColor4fv(&colormap_[4*color_index]);
-        //}
-        //else
-        //    glColor4fv(color);
-
         /* Get position of spherocylinder center. */
         GLfloat v0 = (*it)->r[0];
         GLfloat v1 = (*it)->r[1];
@@ -754,124 +714,14 @@ void Graphics::DrawSpheros() {
     glDisableVertexAttribArray(spherocylinder_.attributes_.position);
 }
 
-//void Graphics::DrawSpheres(int n_spheres, double **r, double sphere_diameter) { 
-    //glMatrixMode(GL_MODELVIEW);
-
-    //[> Don't draw back facing triangles (as they would be occluded anyway <]
-    //glEnable(GL_CULL_FACE);
-    //[> Use vertex/fragment custom shader for spherocylinder <]
-    //glUseProgram(spherocylinder_.program_);
-    //[> Get location of half_l parameter, this shouldn't need to be done everytime
-       //but for whatever reason it wasn't grabbing the correct location at initialization */
-    //spherocylinder_.uniforms_.half_l
-        //= glGetUniformLocation(spherocylinder_.program_, "half_l");
-    //spherocylinder_.uniforms_.diameter
-        //= glGetUniformLocation(spherocylinder_.program_, "diameter");
-    //[> Prep to send vertex data to shader <]
-    //glEnableVertexAttribArray(spherocylinder_.attributes_.position);
-    //glBindBuffer(GL_ARRAY_BUFFER, spherocylinder_.vertex_buffer_);
-    //glVertexAttribPointer(spherocylinder_.attributes_.position, // attribute
-                          //3,                 // number of elements per vertex, here (x,y,z)
-                          //GL_FLOAT,          // the type of each element
-                          //GL_FALSE,          // take our values as-is
-                          //0,                 // no extra data between each position
-                          //(void*)0                  // offset of first element
-                          //);
-
-    //[> Use the element buffer (numerical pointer to each set of vertices that make a triangle) <]
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, spherocylinder_.element_buffer_);
-    
-    //[> A sphere is just a zero length spherocylinder! <]
-    //glUniform1f(spherocylinder_.uniforms_.half_l, 0.0);
-    //glUniform1f(spherocylinder_.uniforms_.diameter,
-                //sphere_diameter);
-
-    //GLfloat color[4] = { 0.25, 0.0, 0.5, 1.0 };
-    //glColor4fv(color);
-
-    //for (int i_sphere = 0; i_sphere < n_spheres; ++i_sphere) {
-        //[> Get site coordinates <]
-        //GLfloat v0 = r[i_sphere][0];
-        //GLfloat v1 = r[i_sphere][1];
-        //GLfloat v2 = r[i_sphere][2];
-
-        //[> Make copy of modelview matrix to work on <]
-        //glPushMatrix();
-
-        //[> Move sphere origin to new position <]
-        //glTranslatef(v0, v1, v2);
-
-        //glDrawElements(GL_TRIANGLES,
-                       //spherocylinder_.n_triangles_*3,
-                       //GL_UNSIGNED_SHORT,
-                       //(void*) 0);
-
-        //[> Reset modelview matrix <]
-        //glPopMatrix();
-    //}
-    //glDisableVertexAttribArray(spherocylinder_.attributes_.position);
-//}
-
-//void Graphics::Draw3d(int n_bonds,
-                      //double **r, double **u, double *length,
-                      //int n_sites, double **r_site,
-                      //double *sphero_diameter,
-                      //double sphere_diameter) {
-    //KeyInteraction();
-    //UpdateWindow();
-    //DrawSpheros(n_bonds, r, u, length, sphero_diameter);
-    //if (n_sites > n_bonds * 2) {
-        //DrawSpheres(n_sites - 2*n_bonds, &r_site[n_bonds*2], sphere_diameter);
-    //}
-    //DrawBoundary(h);
-    //glfwSwapBuffers(window_);
-//}
-
 void Graphics::Draw3d() {
     KeyInteraction();
     UpdateWindow();
     DrawSpheros();
     DrawBoundary();
+    DrawText();
     glfwSwapBuffers(window_);
 }
-
-//void Graphics::Draw3d(int n_bonds,
-                      //double **r, double **u, double *length,
-                      //double *sphero_diameter, double m_rad,
-                      //double d_rad, double m_d_dist) {
-    //KeyInteraction();
-    //UpdateWindow();
-    //DrawSpheros(n_bonds, r, u, length, sphero_diameter);
-    //DrawBoundary(h, m_rad, d_rad, m_d_dist);
-    //glfwSwapBuffers(window_);
-//}
-
-//void Graphics::SetBoundaryType() {
-    //if (boundary_type_.compare("none") == 0) {
-        //std::cerr << "Error setting graphics boundary type of '" << boundary_type << "'\n";
-        //std::cerr << "Defaulting to no boundary\n";
-    //}
-//}
-
-//void Graphics::DrawBoundary() {
-    //glUseProgram(0);
-
-    //GLfloat color[4] = {0.5, 0.5, 0.5, 1.0};
-    //glColor4fv(color);
-    //if (boundary_type_.compare("sphere") == 0) {
-        //glDisable(GL_LIGHTING);
-        //glDisable(GL_CULL_FACE);
-
-        //[> Fixme: I'm not drawing anything <]
-        //// Turn on wireframe mode
-        //DrawWireSphere(0.5*unit_cell_[0][0], 16, 16);
-
-    //}
-    //else if (boundary_type_.compare("cube") == 0) {
-        //DrawBox();
-    //}
-    
-//}
 
 void Graphics::DrawBoundary() {
     glUseProgram(0);
@@ -887,11 +737,11 @@ void Graphics::DrawBoundary() {
       DrawWireSphere(0.5*unit_cell_[0], 16, 16);
 
     }
-    else if (boundary_type_.compare("cube") == 0) {
+    else if (boundary_type_.compare("box") == 0) {
       DrawBox();
     }
-    else if (boundary_type_.compare("snowman") == 0) {
-      DrawSnowman();
+    else if (boundary_type_.compare("budding") == 0) {
+      DrawBudding();
     }
     
 }
@@ -925,48 +775,11 @@ void Graphics::DrawWireSphere(double r, int lats, int longs) {
     glEnable(GL_CULL_FACE);
 }
 
-//void Graphics::DrawLoop(graph_struct g_struct) {
-  //if (boundary_type_.compare("snowman") == 0)
-    //DrawLoop(g_struct.n_spheros, g_struct.h, g_struct.r, g_struct.u,
-             //g_struct.l, g_struct.diam, g_struct.m_rad,
-             //g_struct.d_rad, g_struct.m_d_dist);
-  //else
-    //DrawLoop(g_struct.n_spheros, g_struct.h, g_struct.r,
-             //g_struct.u, g_struct.l, g_struct.diam);
-//}
-
-//void Graphics::DrawLoop(int n_bonds,
-                        //double **r, double **u, double *length,
-                        //int n_sites, double **r_site,
-                        //double *sphero_diameter,
-                        //double sphere_diameter) {
-    //do { Draw(n_bonds, h, r, u, length, n_sites, r_site, sphero_diameter, sphere_diameter); }
-    //while (!keep_going_);
-    //return;
-//}
-
-//void Graphics::DrawLoop(int n_bonds,
-                        //double **r, double **u, double *length, double *sphero_diameter) {
-    //do { Draw(n_bonds, h, r, u, length, sphero_diameter); }
-    //while (!keep_going_);
-    //return;
-//}
-
 void Graphics::DrawLoop() {
     do { Draw(); }
     while (!keep_going_);
     return;
 }
-
-//void Graphics::Draw(graph_struct g_struct) {
-  //if (boundary_type_.compare("snowman") == 0)
-    //Draw(g_struct.n_spheros, g_struct.h, g_struct.r, g_struct.u,
-         //g_struct.l, g_struct.diam, g_struct.m_rad,
-         //g_struct.d_rad, g_struct.m_d_dist);
-  //else 
-    //Draw(g_struct.n_spheros, g_struct.h, g_struct.r, g_struct.u,
-         //g_struct.l, g_struct.diam); 
-//}
 
 void Graphics::Draw() {
     if (n_dim_ == 2)
@@ -974,23 +787,6 @@ void Graphics::Draw() {
     else if (n_dim_ == 3)
         Draw3d();
 }
-
-//void Graphics::Draw(int n_bonds,
-                    //double **r, double **u, double *length, double *sphero_diameter) {
-    //if (n_dim_ == 2)
-        //Draw2d(n_bonds, h, r, u, length, sphero_diameter);
-    //else if (n_dim_ == 3)
-        //Draw3d(n_bonds, h, r, u, length, sphero_diameter);
-//}
-
-//void Graphics::Draw(int n_bonds,
-                    //double **r, double **u, double *length, double *sphero_diameter,
-                    //double m_rad, double d_rad, double m_d_dist) {
-    //if (n_dim_ == 2)
-        //Draw2d(n_bonds, h, r, u, length, sphero_diameter, m_rad, d_rad, m_d_dist);
-    //else if (n_dim_ == 3)
-        //Draw3d(n_bonds, h, r, u, length, sphero_diameter, m_rad, d_rad, m_d_dist);
-//}
 
 void Graphics::DrawSquare() {
     glUseProgram(0);
@@ -1117,14 +913,14 @@ void Graphics::DrawBox() {
         DrawCube();
 }
 
-void Graphics::DrawSnowman() {
+void Graphics::DrawBudding() {
   if (n_dim_ == 2)
-    Draw2dSnowman();
+    Draw2dBudding();
   else if (n_dim_==3)
-    Draw3dSnowman();
+    Draw3dBudding();
 }
 
-void Graphics::Draw3dSnowman() {
+void Graphics::Draw3dBudding() {
   double m_rad = space_->radius;
   double d_rad = space_->bud_radius;
   double m_d_dist = space_->bud_height;
@@ -1183,7 +979,7 @@ void Graphics::Draw3dSnowman() {
   glEnable(GL_CULL_FACE);
 }
 
-void Graphics::Draw2dSnowman() {
+void Graphics::Draw2dBudding() {
   double m_rad = space_->radius;
   double d_rad = space_->bud_radius;
   double m_d_dist = space_->bud_height;
@@ -1237,7 +1033,7 @@ void Graphics::UpdateWindow() {
     glScalef(xyzScale_, xyzScale_, xyzScale_);
 
     /* Set square aspect ratio from current window size */
-    // COMMENTED OUT TO GET RID OF UGLY 2D SNOWMAN - JEFFREY M MOORE
+    // COMMENTED OUT TO GET RID OF UGLY 2D SNOWMAN - JMM
     //int width, height;
     //glfwGetFramebufferSize(window_, &width, &height);
     
@@ -1641,6 +1437,172 @@ void GraphicsPrimitive::MakeProgram() {
         glDeleteProgram(program_);
         exit(1);
     }
+}
+
+void GraphicsText::MakeProgram() {
+  program_ = glCreateProgram();
+    //vertex_shader = create_shader(vertexfile, GL_VERTEX_SHADER);
+  glAttachShader(program_, vertex_shader_);
+    //fragment_shader = create_shader(fragmentfile, GL_FRAGMENT_SHADER);
+  glAttachShader(program_, fragment_shader_);
+  glLinkProgram(program_);
+  GLint link_ok = GL_FALSE;
+  glGetProgramiv(program_, GL_LINK_STATUS, &link_ok);
+  if (!link_ok) {
+    fprintf(stderr, "Failed to link text shader program:\n");
+    ShowInfoLog(program_, glGetProgramiv, glGetProgramInfoLog);
+    glDeleteProgram(program_);
+    exit(1);
+  }
+  if (program_ == 0) {
+    fprintf(stderr, "Failed to create text program\n");
+  }
+}
+
+void Graphics::InitText() {
+	if (FT_Init_FreeType(&(text_.ft_))) {
+		fprintf(stderr, "Could not init freetype library\n");
+    exit(1);
+	}
+	/* Load a font */
+	if (FT_New_Face(text_.ft_,"FreeSans.ttf", 0, &(text_.face_))) {
+		fprintf(stderr, "Could not open font FreeSans.ttf\n");
+    exit(1);
+	}
+
+    /* Vertex shader source code */
+  const char *vs =
+    "#version 120\n"
+    "attribute vec4 coord;"
+    "varying vec2 texpos;"
+    "void main(void) {"
+    "gl_Position = vec4(coord.xy, 0, 1);"
+    "texpos = coord.zw;"
+    "}";
+    /* Build vertex shader from source specified in vs string */
+    GLint shader_ok;
+    text_.vertex_shader_ = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(text_.vertex_shader_, 1, &vs, NULL);
+    glCompileShader(text_.vertex_shader_);
+    glGetShaderiv(text_.vertex_shader_, GL_COMPILE_STATUS, &shader_ok);
+    if (!shader_ok) {
+      fprintf(stderr, "Failed to compile text vertex shader:\n");
+      text_.ShowInfoLog(text_.vertex_shader_, glGetShaderiv, glGetShaderInfoLog);
+      glDeleteShader(text_.vertex_shader_);
+      exit(1);
+    }
+    if (text_.vertex_shader_ == 0)
+        exit(1);
+
+  const char *fs =
+    "#version 120\n" 
+    "varying vec2 texpos;"
+    "uniform sampler2D tex;"
+    "uniform vec4 color;"
+    "void main() {"
+    "gl_FragColor = vec4(1, 1, 1, texture2D(tex, texpos).a) * color;"
+    "}";
+
+  /* Build Fragment Shader from source specified in fs string */
+  text_.fragment_shader_ = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(text_.fragment_shader_, 1, &fs, NULL);
+  glCompileShader(text_.fragment_shader_);
+  glGetShaderiv(text_.fragment_shader_, GL_COMPILE_STATUS, &shader_ok);
+  if (!shader_ok) {
+    fprintf(stderr, "Failed to compile text fragment shader:\n");
+    text_.ShowInfoLog(text_.fragment_shader_, glGetShaderiv, glGetShaderInfoLog);
+    glDeleteShader(text_.fragment_shader_);
+    exit(1);
+  }
+
+  text_.MakeProgram();
+
+	text_.attribute_coord_ = glGetAttribLocation(text_.program_, "coord");
+  text_.uniform_tex_ = glGetUniformLocation(text_.program_, "tex");
+	text_.uniform_color_ = glGetUniformLocation(text_.program_, "color");
+	if(text_.attribute_coord_ == -1 || text_.uniform_tex_ == -1 || text_.uniform_color_ == -1) {
+    fprintf(stderr, "Could not bind text uniform {%d %d %d}\n",text_.attribute_coord_, text_.uniform_tex_, text_.uniform_color_);
+    exit(1);
+  }
+	// Create the vertex buffer object
+	glGenBuffers(1, &(text_.buffer_));
+
+}
+
+void GraphicsText::ShowInfoLog(GLuint object,
+                               PFNGLGETSHADERIVPROC glGet__iv,
+                               PFNGLGETSHADERINFOLOGPROC glGet__InfoLog) {
+  GLint log_length;
+  char *log;
+
+  glGet__iv(object, GL_INFO_LOG_LENGTH, &log_length);
+  log = new char[log_length];
+  glGet__InfoLog(object, log_length, NULL, log);
+  fprintf(stderr, "%s", log);
+  delete log;
+}
+
+void GraphicsText::RenderText(const char *text, float x, float y, int sx, int sy) {
+	const char *p;
+	FT_GlyphSlot g = face_->glyph;
+
+	/* Create a texture that will be used to hold one "glyph" */
+	GLuint tex;
+
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glUniform1i(uniform_tex_, 0);
+
+	/* We require 1 byte alignment when uploading texture data */
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	/* Clamping to edges is important to prevent artifacts when scaling */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	/* Linear filtering usually looks best for text */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	/* Set up the VBO for our vertex data */
+	glEnableVertexAttribArray(attribute_coord_);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer_);
+	glVertexAttribPointer(attribute_coord_, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+	/* Loop through all characters */
+	for (p = text; *p; p++) {
+		/* Try to load and render the character */
+		if (FT_Load_Char(face_, *p, FT_LOAD_RENDER))
+			continue;
+
+		/* Upload the "bitmap", which contains an 8-bit grayscale image, as an alpha texture */
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, g->bitmap.width, g->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, g->bitmap.buffer);
+
+		/* Calculate the vertex and texture coordinates */
+		float x2 = x + g->bitmap_left * sx;
+		float y2 = -y - g->bitmap_top * sy;
+		float w = g->bitmap.width * sx;
+		float h = g->bitmap.rows * sy;
+
+		point box[4] = {
+			{x2, -y2, 0, 0},
+			{x2 + w, -y2, 1, 0},
+			{x2, -y2 - h, 0, 1},
+			{x2 + w, -y2 - h, 1, 1},
+		};
+
+		/* Draw the character on the screen */
+		glBufferData(GL_ARRAY_BUFFER, sizeof box, box, GL_DYNAMIC_DRAW);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+		/* Advance the cursor to the start of the next character */
+		x += (g->advance.x >> 6) * sx;
+		y += (g->advance.y >> 6) * sy;
+	}
+
+	glDisableVertexAttribArray(attribute_coord_);
+	glDeleteTextures(1, &tex);
 }
 
 
