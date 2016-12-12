@@ -30,6 +30,14 @@ void DyRod::Init() {
     bond->UpdatePeriodic();
 }
 
+void DyRod::ScalePosition() {
+  Object::ScalePosition();
+  UpdateBondPositions();
+  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
+    bond->UpdatePeriodic();
+  UpdateSitePositions();
+}
+
 void DyRod::InitConfigurator(const double* const x, const double* const u, const double l) {
   length_ = l;
   SetPosition(x);
