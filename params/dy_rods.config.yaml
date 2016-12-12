@@ -4,7 +4,7 @@ dy_rod:
     overlap: false
     color: [1.0, 0.0, 0.0, 1.0]
   rod:
-    num: 600
+    num: 100
     length: 15
     min_length: 15
     max_length: 100

@@ -6,8 +6,9 @@
 #include "species.h"
 #include "auxiliary.h"
 #include "wca.h"
-
-#include <unordered_map>
+#ifdef ENABLE_OPENMP
+#include "omp.h"
+#endif
 
 class DyRod : public Composite<Site,Bond> {
 
@@ -66,6 +67,7 @@ class DyRod : public Composite<Site,Bond> {
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePosition();
     virtual void Dump();
+    void ScalePosition();
 
     // Specific functions for configurations
     void InitConfigurator(const double* const x, const double* const u, const double l);
@@ -94,9 +96,30 @@ class DyRodSpecies : public Species<DyRod> {
     double const GetMinLength() {return min_length_;}
 
     void UpdatePositions() {
-      for (auto it=members_.begin(); it != members_.end(); ++it) {
-        (*it)->UpdatePosition();
+#ifdef ENABLE_OPENMP
+      int max_threads = omp_get_max_threads();
+      std::vector<std::pair<std::vector<DyRod*>::iterator, std::vector<DyRod*>::iterator> > chunks;
+      chunks.reserve(max_threads); 
+      size_t chunk_size= members_.size() / max_threads;
+      auto cur_iter = members_.begin();
+      for(int i = 0; i < max_threads - 1; ++i) {
+        auto last_iter = cur_iter;
+        std::advance(cur_iter, chunk_size);
+        chunks.push_back(std::make_pair(last_iter, cur_iter));
       }
+      chunks.push_back(std::make_pair(cur_iter, members_.end()));
+
+#pragma omp parallel shared(chunks)
+      {
+#pragma omp for 
+        for(int i = 0; i < max_threads; ++i)
+          for(auto it = chunks[i].first; it != chunks[i].second; ++it)
+            (*it)->UpdatePosition();
+      }
+#else
+      for (auto it=members_.begin(); it != members_.end(); ++it) 
+        (*it)->UpdatePosition();
+#endif
     }
     // Special insertion routine
     void Configurator();
