@@ -26,15 +26,15 @@ endif
 UNAME_S:=$(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
-	INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl
-	GLXLIBS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew 
+	INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl -I/usr/local/include/freetype2
+	GLXLIBS = -L/opt/X11/lib -L/usr/local/lib -lglfw3 -framework OpenGL -lglew -lfreetype
 	GSLLIBS = -lgsl -lgslcblas
 	FFTLIBS = -L/usr/lib64 -lfftw3
 	YAMLLIBS = -L/Users/$(USER)/Projects/Lib/yaml-cpp-gcc5/yaml-cpp/build -lyaml-cpp
 	LIBS = $(GLXLIBS) $(GSLLIBS) $(FFTLIBS) $(YAMLLIBS) -L/usr/local/lib
 else
 	GSLINCS = -I/usr/local/include
-	GSLLIBS = -L/usr/local/libs -lgsl -lgslcblas -lm
+	GSLLIBS = -L/usr/local/lib -lgsl -lgslcblas -lm
 	GLFW3INCS = -I/home/cedelmaier/common/glfw/include
 	GLFW3LIBS = -L/home/cedelmaier/common/glfw/build/src -lglfw3 -lGLEW -lGLU -lGL -lX11 -lXxf86vm -lpthread -ldl -lXrandr -lXi -lXcursor -lXinerama
 	YAMLINCS = -I/home/cedelmaier/common/yaml-cpp/include
