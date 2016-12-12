@@ -65,6 +65,7 @@ class Space {
     void Init(system_parameters *params);
     void UpdateSpace();
     void ConstantPressure();
+    void ConstantVolume();
     space_struct * GetStruct();
     bool GetUpdate() { return update_; }
 

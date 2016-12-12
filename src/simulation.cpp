@@ -70,10 +70,12 @@ void Simulation::Statistics() {
       iengine_.CalculatePressure();
       space_.ConstantPressure();
     }
-    if (space_.GetUpdate()) {
-      space_.UpdateSpace();
-      ScaleSpeciesPositions();
-    }
+  }
+  else if (params_.constant_volume)
+    space_.ConstantVolume();
+  if (space_.GetUpdate()) {
+    space_.UpdateSpace();
+    ScaleSpeciesPositions();
   }
 }
 

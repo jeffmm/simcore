@@ -138,6 +138,20 @@ void Space::ConstantPressure() {
   printf("pressure: %2.8f\ntarget_pressure: %2.8f\nradius: %2.8f\n",pressure_,target_pressure_,radius_);
 }
 
+void Space::ConstantVolume() {
+  // If target radius is <= zero, disable change of system
+  if (target_radius_ <= 0)
+    target_radius_ = radius_;
+  // If target pressure is vastly different from current pressure, update scaling matrix
+  if (ABS(target_radius_ - radius_) > 2*delta_) {
+    update_ = true;
+    CalculateScalingMatrix();
+  }
+  else
+    update_ = false;
+  printf("target_radius: %2.8f\nradius: %2.8f\n",target_radius_,radius_);
+}
+
 // Use scaling matrix to scale unit cell
 void Space::UpdateUnitCell() {
   std::copy(unit_cell_, unit_cell_+9, prev_unit_cell_);
@@ -156,10 +170,14 @@ void Space::CalculateScalingMatrix() {
   std::copy(s_struct.pressure_tensor,s_struct.pressure_tensor+9,pressure_tensor_);
   for (int i=0; i<n_dim_; ++i) {
     for (int j=0; j<n_dim_; ++j) {
-      if (i==j) 
-        mu_[n_dim_*i+j] = 1.0 - time_const*(target_pressure_ - pressure_tensor_[n_dim_*i+j]);
+      if (i==j) {
+        if (constant_pressure_)
+          mu_[n_dim_*i+j] = 1.0 - time_const*(target_pressure_ - pressure_tensor_[n_dim_*i+j]);
+        else if (constant_volume_)
+          mu_[n_dim_*i+j] = 1.0 - time_const*(0.5*unit_cell_[n_dim_*i+j] - target_radius_);
+      }
       else 
-        mu_[n_dim_*i+j] = 0.0;
+        mu_[n_dim_*i+j] = 0.0; // no non-ortho scaling
     }
   }
 }
