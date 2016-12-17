@@ -519,7 +519,7 @@ void Graphics::Draw2d() {
     UpdateWindow(); // Recalculate window parameters (in case of resize)
     DrawDiscorectangles(); 
     DrawBoundary();
-    DrawText();
+    //DrawText();
     glfwSwapBuffers(window_); // Print frame to screen
 }
 
@@ -527,23 +527,19 @@ void Graphics::DrawText() {
 
   glMatrixMode(GL_MODELVIEW); // Make sure we're using the model transform
 	glUseProgram(text_.program_);
+  
+  // In case things are not working right
+	text_.attribute_coord_ = glGetAttribLocation(text_.program_, "coord");
+  text_.uniform_tex_ = glGetUniformLocation(text_.program_, "tex");
+	text_.uniform_color_ = glGetUniformLocation(text_.program_, "color");
 
-	/* White background */
-	//glClearColor(1, 1, 1, 1);
-  //glClear(GL_COLOR_BUFFER_BIT);
-
-	/* Enable blending, necessary for our alpha texture */
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  //glEnableVertexAttribArray(text_.attribute_coord_);
-  //glBindBuffer(GL_ARRAY_BUFFER, text_.vertex_buffer_);
-  //glVertexAttribPointer(text_.attribute_coord_, // attribute
-                          //2,                 // number of elements per vertex, here (x,y,z)
-                          //GL_FLOAT,          // the type of each element
-                          //GL_FALSE,          // take our values as-is
-                          //0,                 // no extra data between each position
-                          //(void*)0                  // offset of first element
-                          //);
+  glVertexAttribPointer(text_.attribute_coord_, // attribute
+                          2,                 // number of elements per vertex, here (x,y,z)
+                          GL_FLOAT,          // the type of each element
+                          GL_FALSE,          // take our values as-is
+                          0,                 // no extra data between each position
+                          (void*)0                  // offset of first element
+                          );
 
     // Use the element buffer (numerical pointer to each set of vertices that make a triangle)
   //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, text_.element_buffer_);
@@ -719,7 +715,7 @@ void Graphics::Draw3d() {
     UpdateWindow();
     DrawSpheros();
     DrawBoundary();
-    DrawText();
+    //DrawText();
     glfwSwapBuffers(window_);
 }
 

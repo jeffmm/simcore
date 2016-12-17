@@ -1,24 +1,19 @@
-#ifndef _SIMCORE_WCA_H_
-#define _SIMCORE_WCA_H_
+#ifndef _SIMCORE_WCA_POTENTIAL_H_
+#define _SIMCORE_WCA_POTENTIAL_H_
 
 #include "auxiliary.h"
 #include "interaction.h"
-//#include "potential_base.h"
+#include "potential_base.h"
 
-class WCA {
+class WCAPotential : public PotentialBase {
   protected:
-    int n_dim_;
     double eps_,
            sigma_,
-           fcut_,
            c12_,
            c6_,
-           rcut_,
-           rcut2_,
            shift_;
   public:
-    WCA() {}
-    double GetRCut2() {return rcut2_;}
+    WCAPotential() {}
     void CalcPotential(Interaction *ix) {
       double rmag = sqrt(ix->dr_mag2);
       double *dr = ix->dr;
@@ -46,7 +41,7 @@ class WCA {
       sigma_  = params->wca_sig;
       fcut_ = params->f_cutoff;
 
-      // For WCA potentials, the rcutoff is
+      // For WCAPotential potentials, the rcutoff is
       // restricted to be at 2^(1/6)sigma
 
       rcut_ = pow(2.0, 1.0/6.0)*sigma_;

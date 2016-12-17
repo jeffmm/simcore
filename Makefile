@@ -126,7 +126,7 @@ simcore: dirs $(BINDIR)/simcore;cp $(BINDIR)/simcore simcore
 configure_simcore: dirs $(BINDIR)/configure_simcore;cp $(BINDIR)/configure_simcore configure_simcore
 
 $(BINDIR)/simcore: $(OBJECTS) $(SIMCORE_MAIN_OBJ)
-	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS) 
 
 $(BINDIR)/configure_simcore: $(OBJECTS) $(CONFIGURE_SIMCORE_OBJ)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@
@@ -134,6 +134,7 @@ $(BINDIR)/configure_simcore: $(OBJECTS) $(CONFIGURE_SIMCORE_OBJ)
 # add dependencies
 -include $(DEPS)
 
+
 # source file rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@ 

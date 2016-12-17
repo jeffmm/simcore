@@ -1,16 +1,16 @@
-#ifndef _SIMCORE_DY_ROD_H_
-#define _SIMCORE_DY_ROD_H_
+#ifndef _SIMCORE_HARD_ROD_H_
+#define _SIMCORE_HARD_ROD_H_
 
 #include "site.h"
 #include "bond.h"
 #include "species.h"
 #include "auxiliary.h"
-#include "wca.h"
+#include <yaml-cpp/yaml.h>
 #ifdef ENABLE_OPENMP
 #include "omp.h"
 #endif
 
-class DyRod : public Composite<Site,Bond> {
+class HardRod : public Composite<Site,Bond> {
 
   private:
     int n_bonds_,
@@ -37,7 +37,7 @@ class DyRod : public Composite<Site,Bond> {
     void ApplyForcesTorques();
 
   public:
-    DyRod(system_parameters *params, space_struct * space, long seed, SID sid) 
+    HardRod(system_parameters *params, space_struct * space, long seed, SID sid) 
       : Composite(params, space, seed, sid) {
         length_ = params->rod_length;
         diameter_ = params->rod_diameter;
@@ -73,19 +73,19 @@ class DyRod : public Composite<Site,Bond> {
     void InitConfigurator(const double* const x, const double* const u, const double l);
 };
 
-class DyRodSpecies : public Species<DyRod> {
+class HardRodSpecies : public Species<HardRod> {
   protected:
     //void InitPotentials(system_parameters *params);
     double max_length_;
     double min_length_;
   public:
-    DyRodSpecies() : Species() {
-      SetSID(SID::dy_rod);
+    HardRodSpecies() : Species() {
+      SetSID(SID::hard_rod);
     }
-    DyRodSpecies(int n_members, system_parameters *params, 
+    HardRodSpecies(int n_members, system_parameters *params, 
         space_struct *space, long seed) 
       : Species(n_members, params, space, seed) {
-      SetSID(SID::dy_rod);
+      SetSID(SID::hard_rod);
       //InitPotentials(params);
       max_length_ = params_->max_rod_length;
     }
@@ -98,7 +98,7 @@ class DyRodSpecies : public Species<DyRod> {
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();
-      std::vector<std::pair<std::vector<DyRod*>::iterator, std::vector<DyRod*>::iterator> > chunks;
+      std::vector<std::pair<std::vector<HardRod*>::iterator, std::vector<HardRod*>::iterator> > chunks;
       chunks.reserve(max_threads); 
       size_t chunk_size= members_.size() / max_threads;
       auto cur_iter = members_.begin();
@@ -125,4 +125,4 @@ class DyRodSpecies : public Species<DyRod> {
     void Configurator();
 };
 
-#endif // _SIMCORE_DY_ROD_H_
+#endif // _SIMCORE_HARD_ROD_H_
