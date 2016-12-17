@@ -4,8 +4,7 @@
 #include "species.h"
 #include "object.h"
 #include "auxiliary.h"
-#include "lennard_jones_12_6.h"
-#include "wca.h"
+#include <yaml-cpp/yaml.h>
 
 class MDBead : public Simple {
   protected:
