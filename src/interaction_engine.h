@@ -5,9 +5,7 @@
 #include "cell_list.h"
 #include "species.h"
 #include "auxiliary.h"
-
-#include "wca.h"
-#include "interaction.h"
+#include "potential_manager.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -30,7 +28,7 @@ class InteractionEngine {
     std::vector<pair_interaction> pair_interactions_;
     std::vector<Simple*> simples_;
     CellList clist_;
-    WCA wca_;
+    PotentialManager potentials_;
 
     void CheckUpdate();
     void UpdateSimples();

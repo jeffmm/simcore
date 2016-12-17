@@ -17,7 +17,7 @@ void InteractionEngine::Init(system_parameters *params,
   i_update_ = 0;
   n_objs_ = CountSpecies();
   clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
-  wca_.Init(params_);
+  potentials_.InitPotentials(params_);
   UpdateSimples();
   UpdateInteractions();
 }
@@ -90,8 +90,12 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   MinimumDistance(obj1,obj2,ix,space_);
 
   // XXX Only calculate WCA potential for now
-  if (ix->dr_mag2 > wca_.GetRCut2())  return;
-  wca_.CalcPotential(ix);
+  if (ix->dr_mag2 > potentials_.wca_.GetRCut2())  return;
+  potentials_.wca_.CalcPotential(ix);
+  //if (ix->dr_mag2 > potentials_.r2pot_.GetRCut2()) return;
+  //potentials_.r2pot_.CalcPotential(ix);
+  //if (ix->dr_mag2 > potentials_.sspot_.GetRCut2()) return;
+  //potentials_.sspot_.CalcPotential(ix);
 }
 
 void InteractionEngine::CalculateInteractionsMP() {
@@ -171,4 +175,3 @@ void InteractionEngine::CalculatePressure() {
   // Reset local stress tensor
   std::fill(stress_,stress_+9,0);
 }
-
