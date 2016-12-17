@@ -1,10 +1,10 @@
 br_bead:
   properties:
     insertion_type: random
-    overlap: true
-    color: [0.0, 1.0, 0.0, 1.0]
-    draw_type: flat
+    overlap: false
+    #color: [0.0, 1.0, 0.0, 1.0]
+    #draw_type: flat
   brbead:
     num: 100
-    diameter: 1
+    diameter: 4
 

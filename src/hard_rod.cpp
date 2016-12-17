@@ -1,7 +1,6 @@
-#include "dy_rod.h"
-#include <yaml-cpp/yaml.h>
+#include "hard_rod.h"
 
-void DyRod::Init() {
+void HardRod::Init() {
   if (diffusion_validation_flag_) {
     for (int i=0; i<n_dim_; ++i)
       position_[i] = orientation_[i] = 0.0;
@@ -9,7 +8,7 @@ void DyRod::Init() {
     UpdatePeriodic();
   }
   else {
-    InsertRandom(0.5*length_+diameter_);
+    InsertRandom();
   }
   SetDiffusion();
   std::fill(body_frame_, body_frame_+6, 0.0);
@@ -30,7 +29,7 @@ void DyRod::Init() {
     bond->UpdatePeriodic();
 }
 
-void DyRod::ScalePosition() {
+void HardRod::ScalePosition() {
   Object::ScalePosition();
   UpdateBondPositions();
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
@@ -38,7 +37,7 @@ void DyRod::ScalePosition() {
   UpdateSitePositions();
 }
 
-void DyRod::InitConfigurator(const double* const x, const double* const u, const double l) {
+void HardRod::InitConfigurator(const double* const x, const double* const u, const double l) {
   length_ = l;
   SetPosition(x);
   SetOrientation(u);
@@ -63,7 +62,7 @@ void DyRod::InitConfigurator(const double* const x, const double* const u, const
   UpdateSitePositions();
 }
 
-void DyRod::ApplyForcesTorques() {
+void HardRod::ApplyForcesTorques() {
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
     AddForce(bond->GetForce());
     AddTorque(bond->GetTorque());
@@ -76,7 +75,7 @@ void DyRod::ApplyForcesTorques() {
   AddForce(f_dr);
 }
 
-void DyRod::UpdatePosition() {
+void HardRod::UpdatePosition() {
   ApplyForcesTorques();
   Integrate();
   UpdateSitePositions();
@@ -86,7 +85,7 @@ void DyRod::UpdatePosition() {
     bond->UpdatePeriodic();
 }
 
-void DyRod::UpdateSitePositions() {
+void HardRod::UpdateSitePositions() {
   // First set prev positions for sites
   elements_[0].SetPrevPosition(elements_[0].GetPosition());
   elements_[1].SetPrevPosition(elements_[1].GetPosition());
@@ -112,7 +111,7 @@ void DyRod::UpdateSitePositions() {
   elements_[1].SetPosition(pos);
 }
 
-void DyRod::UpdateBondPositions() {
+void HardRod::UpdateBondPositions() {
   // Set site of first bond COM and update remaining COMs
   double pos[3];
   for (int i=0; i<n_dim_; ++i)
@@ -146,7 +145,7 @@ void DyRod::UpdateBondPositions() {
    which is treated separately as a random displacement with std dev
    sqrt(2*kT*dt/gamma_(par/perp)) along par/perp unit vectors
    relative to rod. */
-void DyRod::Integrate() {
+void HardRod::Integrate() {
   //Explicit calculation of Xi.F_s
   for (int i=0; i<n_dim_; ++i) {
     for (int j=0; j<n_dim_; ++j) {
@@ -166,7 +165,7 @@ void DyRod::Integrate() {
    orthogonal vector and along u(t) pulled from a distribution
    with std dev sqrt(2*kT*dt/gamma) where gamma is the friction
    coefficient along that direction */
-void DyRod::AddRandomDisplacement() {
+void HardRod::AddRandomDisplacement() {
   // Get vector(s) orthogonal to orientation
   GetBodyFrame();
   // First handle the parallel component
@@ -190,14 +189,13 @@ void DyRod::AddRandomDisplacement() {
    where similar to above, du(t) is the reorientation due to
    random forces, and is treated as random displacement vector(s)
    orthogonal to u(t) with std dev sqrt(2*kT*dt/gamma_rot) */
-void DyRod::UpdateOrientation() {
+void HardRod::UpdateOrientation() {
   // First handle reorientation due to external torques
   double du[3];
   cross_product(torque_, orientation_, du, 3); // ndim=3 since torques
   for (int i=0; i<n_dim_; ++i)
     orientation_[i] += du[i]*delta_/gamma_rot_;
   // Now handle the random orientation update
-  // If we aren't supposed to diffuse, just return
     for (int j=0; j<n_dim_-1; ++j) {
       double mag = gsl_ran_gaussian_ziggurat(rng_.r, rand_sigma_rot_);
       for (int i=0; i<n_dim_; ++i)
@@ -207,7 +205,7 @@ void DyRod::UpdateOrientation() {
 }
 
 /* calculates vector(s) orthogonal to orientation of rod */
-void DyRod::GetBodyFrame() {
+void HardRod::GetBodyFrame() {
   if (n_dim_==2) {
     body_frame_[0] = orientation_[1];
     body_frame_[1] = -orientation_[0];
@@ -225,7 +223,7 @@ void DyRod::GetBodyFrame() {
 }
 
 /* Initialize diffusion coefficients and std dev for random numbers */
-void DyRod::SetDiffusion() {
+void HardRod::SetDiffusion() {
   double logLD = log(length_/diameter_);
   gamma_par_ = 2.0*length_ / (3.0*logLD);
   gamma_perp_ = 2.0*gamma_par_;
@@ -235,14 +233,14 @@ void DyRod::SetDiffusion() {
   rand_sigma_rot_ = sqrt(2.0*delta_/gamma_rot_);
 }
 
-void DyRod::Draw(std::vector<graph_struct*> * graph_array) {
+void HardRod::Draw(std::vector<graph_struct*> * graph_array) {
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)  {
     bond->SetColor(color_, draw_type_);
     bond->Draw(graph_array);
   }
 }
 
-void DyRod::Dump() {
+void HardRod::Dump() {
   printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
   printf("x(%2.2f, %2.2f, %2.2f), ", GetPosition()[0], GetPosition()[1], GetPosition()[2]);
   printf("u(%2.2f, %2.2f, %2.2f), ", orientation_[0], orientation_[1], orientation_[2]);
@@ -262,25 +260,25 @@ void DyRod::Dump() {
 }
 
 // Species specifics
-void DyRodSpecies::Configurator() {
+void HardRodSpecies::Configurator() {
   char *filename = params_->config_file;
-  std::cout << "DyRod species\n";
+  std::cout << "HardRod species\n";
 
   YAML::Node node = YAML::LoadFile(filename);
 
   std::cout << " Generic Properties:\n";
   std::string insertion_type;
-  insertion_type = node["dy_rod"]["properties"]["insertion_type"].as<std::string>();
+  insertion_type = node["hard_rod"]["properties"]["insertion_type"].as<std::string>();
 
-  bool can_overlap = node["dy_rod"]["properties"]["overlap"].as<bool>();
+  bool can_overlap = node["hard_rod"]["properties"]["overlap"].as<bool>();
   std::cout << "   overlap:        " << (can_overlap ? "true" : "false") << std::endl;
 
   // Coloring
   double color[4] = {1.0, 0.0, 0.0, 1.0};
   int draw_type = 1; // default to orientation
-  if (node["dy_rod"]["properties"]["color"]) {
+  if (node["hard_rod"]["properties"]["color"]) {
     for (int i = 0; i < 4; ++i) {
-      color[i] = node["dy_rod"]["properties"]["color"][i].as<double>();
+      color[i] = node["hard_rod"]["properties"]["color"][i].as<double>();
     }
     std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
       << color[3] << "]\n";
@@ -291,11 +289,11 @@ void DyRodSpecies::Configurator() {
       std::cout << "Warning, location insertion overrides overlap\n";
       can_overlap = true;
     }
-    max_length_ = node["dy_rod"]["properties"]["max_length"].as<double>();
+    max_length_ = node["hard_rod"]["properties"]["max_length"].as<double>();
     std::cout << "   max length:     " << max_length_ << std::endl;
-    min_length_ = node["dy_rod"]["properties"]["min_length"].as<double>();
+    min_length_ = node["hard_rod"]["properties"]["min_length"].as<double>();
     std::cout << "   min length:     " << min_length_ << std::endl;
-    int nrods = (int)node["dy_rod"]["rod"].size();
+    int nrods = (int)node["hard_rod"]["rod"].size();
     std::cout << "   nrods: " << nrods << std::endl;
     params_->n_rod = nrods;
     params_->max_rod_length = max_length_;
@@ -304,19 +302,19 @@ void DyRodSpecies::Configurator() {
       double x[3] = {0.0, 0.0, 0.0};
       double u[3] = {0.0, 0.0, 0.0};
       double rlength = 0.0;
-      x[0] = node["dy_rod"]["rod"][irod]["x"][0].as<double>();
-      x[1] = node["dy_rod"]["rod"][irod]["x"][1].as<double>();
-      x[2] = node["dy_rod"]["rod"][irod]["x"][2].as<double>();
+      x[0] = node["hard_rod"]["rod"][irod]["x"][0].as<double>();
+      x[1] = node["hard_rod"]["rod"][irod]["x"][1].as<double>();
+      x[2] = node["hard_rod"]["rod"][irod]["x"][2].as<double>();
       std::cout << "   x(" << x[0] << ", " << x[1] << ", " << x[2] << ")\n";
-      u[0] = node["dy_rod"]["rod"][irod]["u"][0].as<double>();
-      u[1] = node["dy_rod"]["rod"][irod]["u"][1].as<double>();
-      u[2] = node["dy_rod"]["rod"][irod]["u"][2].as<double>();
+      u[0] = node["hard_rod"]["rod"][irod]["u"][0].as<double>();
+      u[1] = node["hard_rod"]["rod"][irod]["u"][1].as<double>();
+      u[2] = node["hard_rod"]["rod"][irod]["u"][2].as<double>();
       normalize_vector(u, space_->n_dim);
       std::cout << "   u(" << u[0] << ", " << u[1] << ", " << u[2] << ")\n";
-      rlength = node["dy_rod"]["rod"][irod]["length"].as<double>();
+      rlength = node["hard_rod"]["rod"][irod]["length"].as<double>();
       std::cout << "   length[" << rlength << "]\n";
 
-      DyRod *member = new DyRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      HardRod *member = new HardRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->InitConfigurator(x, u, rlength);
       member->SetColor(color, draw_type);
       //member->SetAnchors(anchors_);
@@ -324,11 +322,11 @@ void DyRodSpecies::Configurator() {
       members_.push_back(member);
     }
   } else if (insertion_type.compare("random") == 0) {
-    int nrods         = node["dy_rod"]["rod"]["num"].as<int>();
-    double rlength    = node["dy_rod"]["rod"]["length"].as<double>();
-    double max_length = node["dy_rod"]["rod"]["max_length"].as<double>();
-    double min_length = node["dy_rod"]["rod"]["min_length"].as<double>();
-    double diameter   = node["dy_rod"]["rod"]["diameter"].as<double>();
+    int nrods         = node["hard_rod"]["rod"]["num"].as<int>();
+    double rlength    = node["hard_rod"]["rod"]["length"].as<double>();
+    double max_length = node["hard_rod"]["rod"]["max_length"].as<double>();
+    double min_length = node["hard_rod"]["rod"]["min_length"].as<double>();
+    double diameter   = node["hard_rod"]["rod"]["diameter"].as<double>();
 
     //Set fill type for neumatics and other kinds of forms
     std::cout << std::setw(25) << std::left << "   n rods:" << std::setw(10)
@@ -352,7 +350,7 @@ void DyRodSpecies::Configurator() {
    
 
     for (int i_mem = 0; i_mem < nrods; ++i_mem) {
-      DyRod *member = new DyRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      HardRod *member = new HardRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->SetColor(color, draw_type);
       member->Init();
 

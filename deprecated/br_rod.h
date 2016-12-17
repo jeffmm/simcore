@@ -6,7 +6,6 @@
 #include "bond.h"
 #include "species.h"
 #include "auxiliary.h"
-#include "wca.h"
 
 #include <unordered_map>
 
