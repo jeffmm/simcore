@@ -5,7 +5,7 @@
 #include "bond.h"
 #include "species.h"
 #include "auxiliary.h"
-#include "wca.h"
+#include <yaml-cpp/yaml.h>
 #ifdef ENABLE_OPENMP
 #include "omp.h"
 #endif
@@ -71,7 +71,6 @@ class Filament : public Composite<Site,Bond> {
     void SetParameters(system_parameters *params);
     void InitElements(system_parameters *params, space_struct *space);
     void UpdateAvgPosition();
-    //void DynamicInstability();
     void DumpAll();
 
   public:
@@ -98,10 +97,7 @@ class Filament : public Composite<Site,Bond> {
 
 class FilamentSpecies : public Species<Filament> {
   protected:
-    //void InitPotentials(system_parameters *params);
-    //DiffusionProperties diffusion_properties_;
     bool theta_validation_,
-         diffusion_validation_,
          midstep_;
     int ***theta_distribution_;
     int nbins_,
@@ -149,9 +145,6 @@ class FilamentSpecies : public Species<Filament> {
       Species::Init();
     }
     void UpdatePositions() {
-      //if (diffusion_validation_ && ivalidate_%nvalidate_ == 0)
-        //ValidateDiffusion();
-
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();
       std::vector<std::pair<std::vector<Filament*>::iterator, std::vector<Filament*>::iterator> > chunks;

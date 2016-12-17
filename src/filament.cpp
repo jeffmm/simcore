@@ -95,7 +95,7 @@ void Filament::Init() {
     DiffusionValidationInit();
     return;
   }
-  InsertRandom(0.5*length_+diameter_);
+  InsertRandom();
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
     site->SetDiameter(diameter_);
@@ -472,7 +472,6 @@ void Filament::UpdateSitePositions(bool midstep) {
   elements_[n_sites_-1].AddForce(f_site);
   // and then the rest
   for (int i_site=1; i_site<n_sites_-1; ++i_site) {
-    //f_site = elements_[i_site].GetForce();
     double const * const u_site1 = elements_[i_site-1].GetOrientation();
     double const * const u_site2 = elements_[i_site].GetOrientation();
     for (int i=0; i<n_dim_; ++i) {
@@ -508,10 +507,6 @@ void Filament::UpdateSitePositions(bool midstep) {
       u_mag += SQR(r_diff[i]);
     }
     u_mag = sqrt(u_mag);
-    //if (error_analysis_flag_) {
-      //ctrl_->pos_error[ctrl_->pos_error_ind] = ABS(child_length_ - u_mag)/child_length_;
-      //ctrl_->pos_error_ind++;
-    //}
     for (int i=0; i<n_dim_; ++i)
       r_diff[i]/=u_mag;
     elements_[i_site].SetOrientation(r_diff);
@@ -749,11 +744,6 @@ void FilamentSpecies::Configurator() {
     exit(1);
   }
   theta_validation_ = params_->theta_validation_flag ? true : false;
-  diffusion_validation_ = params_->diffusion_validation_flag ? true : false;
-  if (theta_validation_ && diffusion_validation_) {
-    warning("Diffusion validation and theta validation are incompatible! Disabling diffusion validation!");
-    diffusion_validation_ = false;
-  }
   n_dim_ = params_->n_dim;
   if (theta_validation_) {
     nbins_ = params_->n_bins;
@@ -765,17 +755,6 @@ void FilamentSpecies::Configurator() {
         std::fill(theta_distribution_[i][j],theta_distribution_[i][j]+nbins_,0.0);
       }
     }
-  }
-  else if (diffusion_validation_) {
-    nbins_ =  (int) floor(params_->n_steps/params_->n_validate);
-    nvalidate_ = params_->n_validate;
-    //orientations_ = new double**[n_members_];
-    //for (int i=0; i<n_members_; ++i) {
-      //orientations_[i] = new double*[2];
-      //for (int j=0; j<2; ++j) {
-        //orientations_[i][j] = new double[nbins_];
-      //}
-    //}
   }
   midstep_ = true;
   ibin_ = 0;
@@ -808,39 +787,10 @@ void FilamentSpecies::WriteThetaValidation(std::string run_name) {
   }
 }
 
-
-void FilamentSpecies::WriteDiffusionValidation(std::string run_name) {
-  //std::ostringstream file_name;
-  //file_name << run_name << ".diffusion";
-  //std::ofstream diffusion_file(file_name.str().c_str(), std::ios_base::out);
-  //diffusion_file << "timestep ";
-  //for (int i_member=0; i_member<n_members_; ++i_member) {
-    //diffusion_file << "fil_" << i_member+1 << "_theta" << " ";
-    //if (n_dim_ == 3)
-      //diffusion_file << "fil_" << i_member+1 << "_phi" << " ";
-  //}
-  //diffusion_file << "\n";
-  //for (int i_bin=0; i_bin<nbins_; ++i_bin) {
-    //int time = i_bin*nvalidate_;
-    //diffusion_file << time << " ";
-    //for (int i_member=0; i_member<n_members_; ++i_member) {
-      //diffusion_file << orientations_[i_member][0][i_bin] << " ";
-      //if (n_dim_ == 3)
-        //diffusion_file << orientations_[i_member][1][i_bin] << " ";
-    //}
-    //diffusion_file << "\n";
-  //}
-}
-
-
-
 void FilamentSpecies::WriteOutputs(std::string run_name) {
   if (theta_validation_) {
     WriteThetaValidation(run_name);
   }
-  //else if (diffusion_validation_) {
-    //WriteDiffusionValidation(run_name);
-  //}
 }
 
 void FilamentSpecies::ValidateThetaDistributions() {
@@ -860,24 +810,6 @@ void FilamentSpecies::ValidateThetaDistributions() {
     }
     i++;
   }
-}
-
-void FilamentSpecies::ValidateDiffusion() {
-  //int i_member = 0;
-  //double u[3];
-  //for (auto it=members_.begin(); it!=members_.end(); ++it) {
-    //(*it)->GetAvgOrientation(u);
-    //if (n_dim_ == 2) {
-      //orientations_[i_member][0][ibin_] = acos(u[1]);
-      //orientations_[i_member][1][ibin_] = 0;
-    //}
-    //if (n_dim_ == 3) {
-      //orientations_[i_member][0][ibin_] = acos(u[2]);
-      //orientations_[i_member][1][ibin_] = atan2(u[1],u[0]);
-    //}
-    //i_member++;
-  //}
-  //ibin_++;
 }
 
 void Filament::GetAvgOrientation(double * au) {

@@ -1,9 +1,7 @@
 #ifndef _SIMCORE_OBJECT_H_
 #define _SIMCORE_OBJECT_H_
 
-#include "anchor_list_generic.h"
 #include "auxiliary.h"
-#include "neighbor_list_generic.h"
 #include "interaction.h"
 
 class Object {
@@ -42,11 +40,8 @@ class Object {
     space_struct *space_;
     graph_struct g_;
     rng_properties rng_;
-    std::vector<interaction> interactions_;
-    std::vector<neighbor_t>* neighbors_;
-    al_set *anchors_ = nullptr;
-    virtual void InsertRandom(double buffer);
-    virtual void InsertOriented( double* buffer, const double* const u);
+    virtual void InsertRandom();
+    virtual void InsertRandomOriented(double *u);
   public:
     Object(system_parameters *params, space_struct *space, long seed, SID sid);
     bool IsRigid() {return is_rigid_;}
@@ -54,26 +49,24 @@ class Object {
     void InitOID() { oid_ = ++next_oid_;}
     void InitCID() { cid_ = oid_;}
     void InitRID() { rid_ = ++next_rid_;}
-    void SetPosition(const double *const pos) {
+    void SetPosition(double const *const pos) {
       std::copy(pos, pos+n_dim_, position_);
     }
-    void SetScaledPosition(const double *const scaled_pos) {
+    void SetScaledPosition(double const *const scaled_pos) {
       std::copy(scaled_pos, scaled_pos+n_dim_, scaled_position_);
     }
-    void SetDrTot(const double * const dr_tot) {
+    void SetDrTot(double const * const dr_tot) {
       std::copy(dr_tot, dr_tot+n_dim_, dr_tot_);
     }
-    void SetOrientation(const double *const u) {
+    void SetOrientation(double const * const u) {
       std::copy(u, u+n_dim_, orientation_);
     }
-    void SetVelocity(const double *const v) {
+    void SetVelocity(double const *const v) {
       std::copy(v, v+n_dim_, velocity_);
     }
-    void SetPrevPosition(const double * const ppos) {
+    void SetPrevPosition(double const * const ppos) {
       std::copy(ppos, ppos+n_dim_, prev_position_);
     }
-    void GiveInteraction(interaction i) {interactions_.push_back(i);}
-    void ClearInteractions() {interactions_.clear();}
     void SetDiameter(double new_diameter) {diameter_ = new_diameter;}
     void SetLength(double new_length) {length_ = new_length;}
     void SetSpace(space_struct * space) {space_ = space;}
@@ -129,7 +122,7 @@ class Object {
     double const GetDiameter() {return diameter_;}
     double const GetLength() {return length_;}
     double const GetDelta() {return delta_;}
-    virtual void Init() {InsertRandom(length_+diameter_);}
+    virtual void Init() {InsertRandom();}
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePeriodic();
     virtual void UpdatePosition() {}
@@ -148,7 +141,6 @@ class Object {
           position_[i]+=space_->unit_cell[n_dim_*i+j]*scaled_position_[j];
       }
     }
-    virtual void ApplyInteractions() {}
     virtual double const GetKineticEnergy() {return k_energy_;}
     virtual double const GetPotentialEnergy() {return p_energy_;}
     virtual double const GetKMCEnergy() {return kmc_energy_;}
@@ -166,25 +158,11 @@ class Object {
     }
     virtual int GetCount() {return 0;}
 
-    // Internal force calculations
-    // Get the internal pairs of particles for things like internal forces
-    virtual std::vector<std::pair<unsigned int, unsigned int>> GetInternalPairs() {
-      std::vector<std::pair<unsigned int, unsigned int>> retval;
-      return retval;
-    }
-
-    virtual bool ApplyInternalForce() {
-      return false;
-    }
-
     virtual bool ApplyKMCInteraction() {
       return false;
     }
 
     // KMC specific stuff
-    virtual void PrepKMC(std::vector<neighbor_t>* neighbors) {}
-    virtual void StepKMC() {}
-    virtual void DumpKMC() {}
     rng_properties* GetRNG() {return &rng_;}
 
     virtual void WritePosit(std::fstream &op);
@@ -199,7 +177,6 @@ class Object {
       }
     }
 
-    void SetAnchors(al_set *pAnchors) {anchors_=pAnchors;}
 };
 
 class Simple : public Object {
@@ -211,7 +188,6 @@ class Simple : public Object {
       sim_vec.push_back(this);
       return sim_vec;
     }
-    virtual void ApplyInteractions();
     virtual void AddDr() {
       for (int i=0; i<n_dim_; ++i)
         dr_tot_[i] += position_[i] - prev_position_[i];
@@ -471,21 +447,8 @@ class Composite<T,V> : public Object {
       for (auto v_elem : v_elements_)
         v_elem.ScalePosition();
     }
-
-    //virtual void InitVirial(double *spec_virial){ 
-      //for (auto& elem : elements_)
-        //elem.InitVirial(spec_virial);
-      //for (auto& velem : v_elements_)
-        //velem.InitVirial(spec_virial);
-    //}
 };
 
-// *********
-// Helper functions
-// *********
-
-// Find the minimum distance beween two particles
-void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, space_struct *space);
-
+void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, space_struct *space); 
 
 #endif // _SIMCORE_OBJECT_H_

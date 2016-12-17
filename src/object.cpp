@@ -1,5 +1,4 @@
 #include "object.h"
-#include "output_manager.h"
 #include "minimum_distance.h"
 
 unsigned int Object::next_oid_ = 0;
@@ -23,7 +22,6 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   std::fill(force_,force_+3,0.0);
   std::fill(torque_, torque_+3, 0.0);
   std::fill(dr_tot_, dr_tot_+3, 0.0);
-  interactions_.clear();
   // Set some defaults
   diameter_ = 1;
   length_ = 0;
@@ -38,24 +36,13 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   color_[3] = 1.0;
 }
 
-//void Object::Dump() {
-  //printf("  oid %d:\n",oid_);
-  //printf("    sid %d\n    cid %d\n    rid %d\n",sid_,cid_,rid_);
-  //printf("    r : {%f, %f, %f}\n", position_[0], position_[1], position_[2]);
-  //printf("    s : {%f, %f, %f}\n", scaled_position_[0], scaled_position_[1], scaled_position_[2]);
-  //printf("    u : {%f, %f, %f}\n", orientation_[0], orientation_[1], orientation_[2]);
-  //printf("    vel : {%f, %f, %f}\n", velocity_[0], velocity_[1], velocity_[2]);
-  //printf("    prev r : {%f, %f, %f}\n", prev_position_[0], prev_position_[1], prev_position_[2]);
-  //printf("    f : {%f, %f, %f}\n", force_[0], force_[1], force_[2]);
-  //printf("    t : {%f, %f, %f}\n", torque_[0], torque_[1], torque_[2]);
-  //printf("    d: %f\n    l: %f\n    ke: %f\n    pe: %f\n",diameter_,length_,k_energy_,p_energy_);
-//}
-
-void Object::InsertRandom(double buffer) {
+void Object::InsertRandom() {
   double mag;
+  double buffer = 0.5*diameter_;
   if (space_->n_periodic == n_dim_)
     buffer = 0;
   double R = space_->radius;
+  // XXX Check to make sure object fits inside unit cell if non-periodic
   if (R - buffer < 0)
     error_exit("ERROR: Object #%d is too large to place in system.\n system radius: %2.2f, buffer: %2.2f\n",GetOID(), R, buffer);
   if (space_->type.compare("sphere")==0) {
@@ -82,9 +69,8 @@ void Object::InsertRandom(double buffer) {
     if (roll < v_ratio) {
       // Place coordinate in daughter cell
       mag *= (r - buffer);
-      for (int i=0; i<n_dim_; ++i) {
+      for (int i=0; i<n_dim_; ++i) 
         position_[i] *= mag;
-      }
       position_[n_dim_-1] += space_->bud_height;
     }
     else {
@@ -98,60 +84,16 @@ void Object::InsertRandom(double buffer) {
   UpdatePeriodic();
 }
 
-void Object::InsertOriented(double* buffer, const double* const u){
+void Object::InsertRandomOriented(double *u){
+  InsertRandom();
+  normalize_vector(u,n_dim_);
   SetOrientation(u);
-  double mag;
-  if (space_->n_periodic == n_dim_)
-    std::fill(buffer, buffer+3 , 0);
-  double R = space_->radius;
-  double buffer_mag = sqrt(dot_product(n_dim_, buffer, buffer));
-  if (R - buffer_mag < 0) 
-    error_exit("ERROR: Object #%d is too large to place in system.\n",GetOID());
-  if (space_->type.compare("sphere")==0) {
-    generate_random_unit_vector(n_dim_, position_, rng_.r);
-    mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer_mag);
-    for (int i=0; i<n_dim_; ++i) {
-      position_[i] *= mag;
-    }
-  }
-  else if (space_->type.compare("box")==0) {
-    for (int i=0; i<n_dim_; ++i)
-      position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer[i]);
-  }
-  else if (space_->type.compare("snowman")==0) {
-    double r = space_->bud_radius;
-    double roll = gsl_rng_uniform_pos(rng_.r);
-    double v_ratio;
-    if (n_dim_ == 2)
-      v_ratio = SQR(r) / (SQR(r)+SQR(R));
-    if (n_dim_ == 3)
-      v_ratio = CUBE(r) / (CUBE(r)+CUBE(R));
-    mag = gsl_rng_uniform_pos(rng_.r);
-    generate_random_unit_vector(n_dim_, position_, rng_.r);
-    if (roll < v_ratio) {
-      // Place coordinate in daughter cell
-      mag *= (r - buffer_mag);
-      for (int i=0; i<n_dim_; ++i) {
-        position_[i] *= mag;
-      }
-      position_[n_dim_-1] += space_->bud_height;
-    }
-    else {
-      mag *= (R - buffer_mag);
-      for (int i=0; i<n_dim_; ++i) {
-        position_[i] *= mag;
-      }
-    }
-  }
-  UpdatePeriodic();
 }
 
 void Object::Draw(std::vector<graph_struct*> * graph_array) {
   std::copy(position_, position_+3, g_.r);
   std::copy(orientation_, orientation_+3, g_.u);
   std::copy(color_, color_+4, g_.color);
-  //g_.length = (length_-diameter_ > 0 ? length_-diameter_ : 0);
-  g_.length = length_;
   g_.diameter = diameter_;
   g_.draw_type = draw_type_;
   graph_array->push_back(&g_);
@@ -175,20 +117,8 @@ void Object::UpdatePeriodic() {
   SetPrevPosition(rp);
 }
 
-void Simple::ApplyInteractions() {
-  for (auto it=interactions_.begin(); it!= interactions_.end(); ++it) {
-    auto ix=(*it);
-    double f[4];
-    //ix.potential->CalcPotential(ix.dr, ix.dr_mag, ix.buffer, f);
-    AddForce(f);
-    AddPotential(f[n_dim_]);
-  }
-}
-
 // Apply the force/torque/energy to this particle, override if necessary
 void Object::AddForceTorqueEnergyKMC(double const * const F, double const * const T, double const p, double const k) {
-    // XXX: CJE assume that we need to zero out the force and energy first
-    //ZeroForce();
     AddForce(F);
     AddTorque(T);
     AddPotential(p);
@@ -197,11 +127,32 @@ void Object::AddForceTorqueEnergyKMC(double const * const F, double const * cons
 
 // Apply the force/torque/energy to this particle, override if necessary
 void Object::AddForceTorqueEnergy(double const * const F, double const * const T, double const p) {
-    // XXX: CJE assume that we need to zero out the force and energy first
-    //ZeroForce();
     AddForce(F);
     AddTorque(T);
     AddPotential(p);
+}
+
+void Object::WritePosit(std::fstream &op){
+  for(auto& pos : position_)
+    op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
+  for(auto& spos : scaled_position_)
+    op.write(reinterpret_cast<char*>(&spos), sizeof(spos));
+  for(auto& u : orientation_)
+    op.write(reinterpret_cast<char*>(&u), sizeof(u));
+  op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
+}
+
+void Object::ReadPosit(std::fstream &ip){
+  if (ip.eof()) return;
+  for(auto& pos : position_)
+    ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
+  for(auto& spos : scaled_position_)
+    ip.read(reinterpret_cast<char*>(&spos), sizeof(spos));
+  for(auto& u : orientation_)
+    ip.read(reinterpret_cast<char*>(&u), sizeof(u));
+  ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
 }
 
 // Find the minimum distance beween two particles
@@ -241,38 +192,4 @@ void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, space_struct *spac
               r1, s1, u1, l1, r2, s2, u2, l2,
               ix->dr, &ix->dr_mag2, ix->contact1, ix->contact2);
 }
-
-void Object::WritePosit(std::fstream &op){
-  for(auto& pos : position_)
-    op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
-  for(auto& spos : scaled_position_)
-    op.write(reinterpret_cast<char*>(&spos), sizeof(spos));
-  for(auto& u : orientation_)
-    op.write(reinterpret_cast<char*>(&u), sizeof(u));
-  op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
-  op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
-}
-
-void Object::ReadPosit(std::fstream &ip){
-  if (ip.eof()) return;
-  for(auto& pos : position_)
-    ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
-  for(auto& spos : scaled_position_)
-    ip.read(reinterpret_cast<char*>(&spos), sizeof(spos));
-  for(auto& u : orientation_)
-    ip.read(reinterpret_cast<char*>(&u), sizeof(u));
-  ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
-  ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
-}
-
-//void Object::AddVirial(double const * const f, double const * const dr) {
-//void Object::AddVirial(double *f, double *dr) {
-  //for (int i=0; i<n_dim_; ++i)
-    //for (int j=i; j<n_dim_; ++j){
-      //printf("    fr%d=%f, dr%d=%f\n",i,f[i],j,dr[j]);
-      //spec_virial_[3*i+j] = spec_virial_[3*j+i] += f[i] * dr[j];
-    //}
-//}
-
-
 
