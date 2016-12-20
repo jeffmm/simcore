@@ -27,8 +27,9 @@ int main(int argc, char *argv[]) {
   if (run_opts.test) {
     // Run the test mode operation
     debug_trace = true;
+  } 
 
-  } else {
+  else {
     // Initialize param_file, rng, run_name, n_runs (if in param_file)
     sim.InitManager(run_opts.param_file);
     // Prefer command-line options over param values for n_runs, run_name
@@ -36,14 +37,14 @@ int main(int argc, char *argv[]) {
       sim.SetNRuns(run_opts.n_runs);
     if (run_opts.r_flag)
       sim.SetRunName(run_opts.run_name);
-    // Recreate Movie of past simulations using posit file
     if (run_opts.m_flag)
+      // Recreate Movie of past simulations using posit file
       sim.RunMovieManager(run_opts.posit_files);
-    // Analyze existing posit files
-    if (run_opts.a_flag)
+    else if (run_opts.a_flag)
+      // Analyze existing posit files
       sim.RunAnalyses(run_opts.posit_files);
-    // Main control function
     else
+      // Main control function
       sim.RunManager();
   }
 

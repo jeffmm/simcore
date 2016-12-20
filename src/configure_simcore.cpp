@@ -13,12 +13,10 @@ std::string parse_params_snippet(std::string param_name, std::string param_type)
 std::string parameters_snippet(std::string param_name, std::string param_value, std::string param_type);
 void write_print_params_body_h(std::string param_name);
 void cleanup_files();
-//void write_objects(std::string *object_list,unsigned int size);
 
 int main(int argc, char *argv[]) {
 
   std::string param_file, param_name, param_value, param_type;
-  //std::string *object_list;
   unsigned int size;
   if (argc==1) 
     param_file = "src/master_params.yaml";
@@ -163,21 +161,4 @@ std::string parse_params_snippet(std::string param_name, std::string param_type)
   "}\n";
   return code.str();
 }
-
-//void write_objects(std::string *object_list, unsigned int size) {
-  //std::ostringstream code;
-  //code << "CC = g++-5\nCXX = g++-5\nCFLAGS = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -g -DDEBUG -std=c++11\nLNKFLAGS = -lyaml-cpp -gnu\n\nifeq ($(CC),icpc)\n\tOMPFLAGS = -openmp -DBOB_OMP -Wno-deprecated\nelse\n\tCFLAGS += -Wno-deprecated-declarations -Wno-deprecated\n\tOMPFLAGS =	-fopenmp -DBOB_OMP\nendif\n\nGLXFLAGS = -L/opt/X11/lib -lglfw3 -framework OpenGL -lglew -lpthread\nGSLFLAGS = -L/usr/local/lib/ -I/usr/local/include/gsl/ -lgsl -lgslcblas\nFFTFLAGS = -L/usr/lib64 -lfftw3\nCXX = $(CC)\nCXXFLAGS = $(CFLAGS)\n\nSIMCORE_OBJS = simcore_main.o simulation_manager.o simulation.o object.o forces.o cell_list.o space.o allocate.o vector_algebra.o cpu.o error_exit.o generate_random_unit_vector.o graphics.o grabber.o writebmp.o minimum_distance.o\n\nCONFIGURE_OBJS = configure_simcore.o\n\nSIMCORE_OBJECT_OBJS =";
-  //for (unsigned int i=0; i<size; ++i)
-    //code << " " << object_list[i] << ".o";
-  //code << "\n\n../simcore:	$(SIMCORE_OBJS) $(SIMCORE_OBJECT_OBJS)\n\t$(CC)  -o ../simcore $(SIMCORE_OBJS) $(SIMCORE_OBJECT_OBJS) $(GLXFLAGS) $(GSLFLAGS) -lm $(LNKFLAGS) \n\n../configure_simcore: $(CONFIGURE_OBJS)\n\t$(CC) -o ../configure_simcore $(CONFIGURE_OBJS) $(GLXFLAGS) $(GSLFLAGS) -lm $(LNKFLAGS)\n";
-  //std::ofstream makefile("src/Makefile", std::ios_base::out);
-  //makefile << code.str();
-  //makefile.close();
-  //std::ostringstream header_code;
-  //for (unsigned int i=0; i<size; ++i)
-    //header_code << "#include \"" << object_list[i] << ".h\"\n";
-  //std::ofstream obj_header_file("src/objects.h", std::ios_base::out);
-  //obj_header_file << header_code.str();
-  //obj_header_file.close();
-//}
 

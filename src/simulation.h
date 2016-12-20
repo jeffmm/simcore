@@ -4,7 +4,7 @@
 #include "space.h"
 #include "graphics.h"
 #include "species.h"
-//#include "output_manager.h"
+#include "output_manager.h"
 #include "interaction_engine.h"
 #include "auxiliary.h"
 #include "helpers.h"
@@ -13,14 +13,14 @@
 class Simulation {
 
   private:
-    int i_step_,
+    int i_step_ = 0,
         n_steps_;
     double time_,
            cpu_init_time_;
     std::string run_name_;
     std::vector<std::string> posit_files_;
 
-    //OutputManager output_mgr_;
+    OutputManager output_mgr_;
     system_parameters params_;
     rng_properties rng_;
 

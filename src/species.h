@@ -9,7 +9,9 @@ class SpeciesBase {
   private:
     SID sid_;
   protected:
-    int n_members_;
+    bool posit_flag_;
+    int n_members_,
+        n_posit_;
     double delta_;
     system_parameters *params_;
     std::fstream oposit_file_;
@@ -37,6 +39,10 @@ class SpeciesBase {
     virtual void Dump() {}
     double const GetDelta() {return delta_;}
     int const GetNMembers() {return n_members_;}
+    int const GetNPosit() {return n_posit_;}
+    bool const GetPositFlag() {return posit_flag_;}
+    void SetPositFlag(bool p_flag) {posit_flag_ = p_flag;}
+    void SetNPosit(int n_pos) {n_posit_ = n_pos;}
     virtual int GetCount() {return 0;}
     virtual void Configurator() {}
     virtual void WriteOutputs(std::string run_name) {}
@@ -46,7 +52,7 @@ class SpeciesBase {
     virtual void InitInputFile(std::string in_file, std::ios::streampos beg);
     virtual int OutputIsOpen(){ return oposit_file_.is_open(); }
     virtual int InputIsOpen(){ return iposit_file_.is_open(); }
-    virtual void Close(); 
+    virtual void ClosePosit(); 
 };
 
 template <typename T>
@@ -210,14 +216,22 @@ void Species<T>::WritePosits() {
 
 template <typename T> 
 void Species<T>::ReadPosits() {
-  T * member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
+  if (iposit_file_.eof()) return;
   int size;
+  bool del;
+  T *member;
   iposit_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
-  members_.resize(size, member);
+
+  if (size != members_.size()) {
+    member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
+    members_.resize(size, member);
+    del = true;
+  }
   for( auto& mem_it : members_){
     mem_it->ReadPosit(iposit_file_);
   }
-  delete member;
+  if (del)
+    delete member;
 }
 
 template <typename T> 
