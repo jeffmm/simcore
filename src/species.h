@@ -218,7 +218,7 @@ template <typename T>
 void Species<T>::ReadPosits() {
   if (iposit_file_.eof()) return;
   int size;
-  bool del;
+  bool del = false;
   T *member;
   iposit_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
 
