@@ -43,7 +43,7 @@ void Simulation::RunMovie(){
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
     if (i_step_%params_.n_posit == 0){
-      //output_mgr_.ReadPosits(); 
+      output_mgr_.ReadPosits(); 
     }
     Draw();
   }
@@ -87,11 +87,10 @@ void Simulation::ScaleSpeciesPositions() {
 void Simulation::InitSimulation() {
   space_.Init(&params_);
   InitSpecies();
-  //output_mgr_.Init(&params_, &species_, &i_step_, run_name_);
+  output_mgr_.Init(&params_, &species_, &i_step_, run_name_);
   iengine_.Init(&params_, &species_, space_.GetStruct());
   if (params_.graph_flag) {
     GetGraphicsStructure();
-      
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);
     #ifndef NOGRAPH
     graphics_.Init(&graph_array, space_.GetStruct(), background_color);
@@ -115,26 +114,16 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(BrBeadSpecies,br_bead);
 
-  std::string config_type = "separate";
-  if (node["configuration_type"]) {
-    config_type = node["configuration_type"].as<std::string>();
-  }
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
-  if (config_type.compare("separate") == 0) {
-    for (auto possibles = species_factory_.m_classes.begin(); 
-        possibles != species_factory_.m_classes.end(); ++possibles) {
-      if (node[possibles->first]) {
-        SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(possibles->first);
-        spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-        spec->Configurator();
-        species_.push_back(spec);
-      }
+  for (auto registered = species_factory_.m_classes.begin(); 
+      registered != species_factory_.m_classes.end(); ++registered) {
+    if (node[registered->first]) {
+      SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(registered->first);
+      spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+      spec->Configurator();
+      species_.push_back(spec);
     }
-  }
-  else {
-    std::cout << "Unknown configuration type " << config_type << std::endl;
-    exit(1);
   }
 }
 
@@ -144,7 +133,7 @@ void Simulation::ClearSpecies() {
 }
 
 void Simulation::ClearSimulation() {
-  //output_mgr_.Close();
+  output_mgr_.Close();
   ClearSpecies();
   #ifndef NOGRAPH
   if (params_.graph_flag)
@@ -179,7 +168,7 @@ void Simulation::InitOutputs() {
 }
 
 void Simulation::WriteOutputs() {
-  //output_mgr_.WriteOutputs();
+  output_mgr_.WriteOutputs();
   if (i_step_ == 0) {
     return; // skip first step
   }
@@ -199,7 +188,7 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::ve
   //Graph and don't make new posit files
   params_.graph_flag = 1;
   params_.posit_flag = 0;
-  //output_mgr_.SetMovie(posit_files);
+  output_mgr_.SetPosits(posit_files);
   rng_.init(params_.seed);
   InitSimulation();
   RunMovie();

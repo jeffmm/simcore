@@ -14,8 +14,10 @@ void SpeciesBase::InitOutputFile(std::string run_name) {
   std::string file_name = run_name + "_" + sid_str + ".posit";
   std::cout<<"Posit file name is "<< run_name <<"_"<< sid_str <<" \n";
   oposit_file_.open(file_name, std::ios::out | std::ios::binary ); 
-  if (!oposit_file_.is_open())
+  if (!oposit_file_.is_open()) {
     std::cout<<"Output "<< file_name <<" file did not open\n";
+    exit(1);
+  }
   else{
     int size = sid_str.size();
     oposit_file_.write(reinterpret_cast<char*>(&size), sizeof(int));
@@ -30,7 +32,7 @@ void SpeciesBase::InitInputFile(std::string in_file, std::ios::streampos beg){
   iposit_file_.seekg(beg);
 }
 
-void SpeciesBase::Close() { 
+void SpeciesBase::ClosePosit() { 
   if (oposit_file_.is_open())
     oposit_file_.close(); 
   if (iposit_file_.is_open())
@@ -39,6 +41,8 @@ void SpeciesBase::Close() {
 
 void SpeciesBase::InitConfig(system_parameters *params, space_struct *space, long seed) {
   n_members_ = 0;
+  n_posit_ = params->n_posit;
+  posit_flag_ = (params->posit_flag == 1 ? true : false);
   params_ = params;
   space_ = space;
   rng_.init(seed);

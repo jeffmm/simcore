@@ -1,12 +1,12 @@
 # params.yaml
 ---
-seed : 301412562728362
+seed : 1593211789583
 n_runs: 1
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 2000000
-system_radius: 250
+n_steps: 20000
+system_radius: 100
 graph_flag: 1
 graph_diameter: 1
 n_graph: 50
@@ -22,13 +22,10 @@ wca_sig: 1
 ss_eps: 100
 ss_rs: 2.2
 ss_a: 10
-f_cutoff: 800
-potfile: params/filament_int.pot.yaml
-kmcfile: params/filament_int.kmc.yaml
+f_cutoff: 600
 config_file: params/filament_int.config.yaml
-datafile: params/filament_int.dat.yaml
-posit_flag: 0
-n_posit: 100
+posit_flag: 1
+n_posit: 10
 avg_posits: 1
 diffusion_analysis: 1
 diffusion_interval: 300

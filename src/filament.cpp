@@ -891,39 +891,67 @@ void Filament::DumpAll() {
   printf("}\n\n\n");
 }
 
+/* The posit output for one filament is:
+    diameter
+    length
+    bond_length
+    n_bonds,
+    position of first site
+    position of last site
+    all bond orientations
+    */
 void Filament::WritePosit(std::fstream &op){
-  // Calculate squared end to end distance
-  // useful for calculating persistence length
-  double end_to_end = 0;
+  op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
+  op.write(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
+  op.write(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
+  double temp[3];
   double const * const r0 = elements_[0].GetPosition();
-  double const * const rL = elements_[n_sites_-1].GetPosition();
-  for (int i=0; i<n_dim_; ++i) {
-    double diff = (rL[i]-r0[i]);
-    end_to_end += diff*diff;
-  }
-  if (params_->avg_posits) {
-    for(auto& pos : position_)
-      op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
-    for(auto& spos : scaled_position_)
-      op.write(reinterpret_cast<char*>(&spos), sizeof(spos));
-    for(auto& u : orientation_)
+  std::copy(r0, r0+3, temp);
+  for (auto& pos : temp)
+    op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
+  double const * const rf = elements_[n_bonds_].GetPosition();
+  std::copy(rf, rf+3, temp);
+  for (auto& pos : temp)
+    op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
+  for (int i=0; i<n_bonds_; ++i) {
+    double const * const orientation = v_elements_[i].GetOrientation();
+    std::copy(orientation, orientation+3, temp);
+    for (auto& u : temp) 
       op.write(reinterpret_cast<char*>(&u), sizeof(u));
-    op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
-    op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
-    op.write(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
-    op.write(reinterpret_cast<char*>(&end_to_end), sizeof(end_to_end));
-    op.write(reinterpret_cast<char*>(&(cos_thetas_[0])), sizeof(cos_thetas_[0]));
-    return;
   }
-  int size;
-  size = elements_.size();
-  op.write(reinterpret_cast<char*>(&size), sizeof(size));
-  size = v_elements_.size();
-  op.write(reinterpret_cast<char*>(&size), sizeof(size));
+  return;
+}
 
-  for (auto& elem : elements_)
-    elem.WritePosit(op);
-  for (auto& velem : v_elements_)
-    velem.WritePosit(op);
+void Filament::ReadPosit(std::fstream &ip) {
+  if (ip.eof()) return;
+  double r0[3], rf[3], u_bond[3];
+  Bond bond(params_, space_, params_->seed, sid_);
+  ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
+  ip.read(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
+  ip.read(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
+  v_elements_.resize(n_bonds_, bond);
+  // Get initial site position
+  for (auto& pos : r0)
+    ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
+  for (auto& pos : rf)
+    ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
+  // Initialize bonds from relative orientations
+  for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
+    for (auto& u : u_bond)
+      ip.read(reinterpret_cast<char*>(&u), sizeof(u));
+    for (int i=0; i<n_dim_; ++i) {
+      // Set bond position
+      rf[i] = r0[i] + 0.5 * child_length_ * u_bond[i];
+      // Set next site position
+      r0[i] += child_length_ * u_bond[i];
+    }
+    v_elements_[i_bond].SetPosition(rf);
+    v_elements_[i_bond].SetOrientation(u_bond);
+    v_elements_[i_bond].SetDiameter(diameter_);
+    v_elements_[i_bond].SetLength(child_length_);
+    v_elements_[i_bond].UpdatePeriodic();
+  }
 }
 

@@ -92,6 +92,7 @@ class Filament : public Composite<Site,Bond> {
       return &cos_thetas_;
     }
     void WritePosit(std::fstream &op);
+    void ReadPosit(std::fstream &ip);
     void ScalePosition();
 };
 
