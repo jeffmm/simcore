@@ -703,7 +703,7 @@ void FilamentSpecies::Configurator() {
     params_->persistence_length = plength;
     params_->max_rod_length = max_length;
     params_->min_rod_length = min_length;
-    params_->max_child_length = max_child_length; //XXX right now uses the cell size...
+    params_->max_child_length = max_child_length; // Should depend on cell size
     params_->rod_diameter = diameter;
 
     n_members_ = 0;
@@ -715,7 +715,7 @@ void FilamentSpecies::Configurator() {
         members_.push_back(member);
         n_members_++;
       } else {
-        // XXX Check for overlaps
+        // Check for overlaps
         bool insert = true;
         auto new_simps = member->GetSimples();
         auto old_simps = GetSimples();
@@ -759,7 +759,6 @@ void FilamentSpecies::Configurator() {
   midstep_ = true;
   ibin_ = 0;
   ivalidate_ = 0;
-
 }
 
 void FilamentSpecies::WriteThetaValidation(std::string run_name) {

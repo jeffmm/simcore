@@ -1,11 +1,11 @@
 filament:
   properties:
     insertion_type: random
-    overlap: false
+    overlap: true
   fil:
-    num: 50
+    num: 80
     length: 50
-    persistence_length: 50
+    persistence_length: 5000
     max_length: 200
     min_length: 1
     max_child_length: 2
