@@ -33,7 +33,7 @@ void OutputManager::WriteOutputs(){
 
 void OutputManager::WritePosits(){
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-    if ( (*spec)->GetPositFlag() && *i_step_ % (*spec)->GetNPosit() == 0 )
+    if ( (*spec)->GetPositFlag() && *i_step_ % (*spec)->GetNPosit() == 0 ) 
       (*spec)->WritePosits();
   }
 }
