@@ -3,11 +3,11 @@ filament:
     insertion_type: random
     overlap: false
   fil:
-    num: 120
-    length: 100
-    persistence_length: 5000
+    num: 50
+    length: 50
+    persistence_length: 50
     max_length: 200
     min_length: 1
-    max_child_length: 3
+    max_child_length: 2
     diameter: 1
 
