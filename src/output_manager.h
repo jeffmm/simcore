@@ -8,7 +8,7 @@
 class OutputManager{
   private:
     bool posit_flag_,
-         make_movie_;
+         make_movie_ = false;
     int *i_step_,
         n_posit_;
     std::string run_name_;

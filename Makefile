@@ -35,11 +35,14 @@ ifeq ($(UNAME_S),Darwin)
 else
 	GSLINCS = -I/usr/local/include
 	GSLLIBS = -L/usr/local/lib -lgsl -lgslcblas -lm
-	GLFW3INCS = -I/home/cedelmaier/common/glfw/include
-	GLFW3LIBS = -L/home/cedelmaier/common/glfw/build/src -lglfw3 -lGLEW -lGLU -lGL -lX11 -lXxf86vm -lpthread -ldl -lXrandr -lXi -lXcursor -lXinerama
-	YAMLINCS = -I/home/cedelmaier/common/yaml-cpp/include
+	#GLFW3INCS = -I/home/cedelmaier/common/glfw/include
+	#GLFW3LIBS = -L/home/cedelmaier/common/glfw/build/src -lglfw3 -lGLEW -lGLU -lGL -lX11 -lXxf86vm -lpthread -ldl -lXrandr -lXi -lXcursor -lXinerama
+	#YAMLINCS = -I/home/cedelmaier/common/yaml-cpp/include
 	#YAMLLIBS = -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
-	YAMLLIBS = -Wl,-rpath,/home/cedelmaier/common/yaml-cpp/build -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
+	#YAMLLIBS = -Wl,-rpath,/home/cedelmaier/common/yaml-cpp/build -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
+	#YAMLINCS = -I/home/jeffmm/build/yaml-cpp-release-0.5.2/include/yaml-cpp 
+	YAMLINCS = -I/home/jeffmm/build/yaml-cpp-release-0.5.2/include
+	YAMLLIBS = -Wl,-rpath,/home/jeffmm/build/yaml-cpp-release-0.5.2/build/ -L/home/jeffmm/build/yaml-cpp-release-0.5.2/build/ -lyaml-cpp
 	INCLUDES = $(GLFW3INCS) $(YAMLINCS) $(GSLINCS)
 	LIBS = $(GLFW3LIBS) $(YAMLLIBS) $(GSLLIBS)
 	#export LD_LIBRARY_PATH=/home/cedelmaier/common/glfw/build/src:/home/cedelmaier/common/yaml-cpp/build:$LD_LIBRARY_PATH
