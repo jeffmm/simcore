@@ -218,20 +218,14 @@ template <typename T>
 void Species<T>::ReadPosits() {
   if (iposit_file_.eof()) return;
   int size;
-  bool del = false;
   T *member;
   iposit_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
 
-  if (size != members_.size()) {
-    member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
-    members_.resize(size, member);
-    del = true;
-  }
+  member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
+  members_.resize(size, member);
   for( auto& mem_it : members_){
     mem_it->ReadPosit(iposit_file_);
   }
-  if (del)
-    delete member;
 }
 
 template <typename T> 
