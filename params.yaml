@@ -6,7 +6,7 @@ n_dim: 2
 n_periodic: 2
 delta: 0.00001
 n_steps: 20000000
-system_radius: 100
+system_radius: 180
 graph_flag: 1
 graph_diameter: 1
 n_graph: 500
@@ -31,7 +31,7 @@ diffusion_analysis: 1
 diffusion_interval: 300
 filament_analysis: 1
 grab_flag: 1
-grab_file: frames2/frame
+grab_file: frames/frame
 constant_pressure : 0
 constant_volume: 0
 target_pressure: 5
