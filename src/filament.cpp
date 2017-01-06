@@ -525,9 +525,9 @@ void Filament::UpdateSitePositions(bool midstep) {
 void Filament::UpdateAvgPosition() {
   std::fill(position_, position_+3, 0.0);
   std::fill(orientation_, orientation_+3, 0.0);
-  for (auto site_it : elements_) {
-    double const * const site_pos = site_it.GetPosition();
-    double const * const site_u = site_it.GetOrientation();
+  for (auto site_it=elements_.begin(); site_it!=elements_.end(); ++site_it) {
+    double const * const site_pos = site_it->GetPosition();
+    double const * const site_u = site_it->GetOrientation();
     for (int i=0; i<n_dim_; ++i) {
       position_[i] += site_pos[i];
       orientation_[i] += site_u[i];
@@ -574,12 +574,12 @@ void Filament::ApplyForcesTorques() {
       pure_torque[j] *= -1;
     elements_[i+1].AddForce(site_force);
     elements_[i+1].AddForce(pure_torque);
-    // Add driving 
+    // Add driving (originating from the com of the bond)
     double f_dr[3];
     for (int j=0; j<n_dim_; ++j)
-      f_dr[j] = u[j]*driving_factor_;
-    elements_[i].AddForce(f_dr);  
-
+      f_dr[j] = 0.5*u[j]*driving_factor_;
+    elements_[i].AddForce(f_dr);
+    elements_[i+1].AddForce(f_dr);
   }
 }
 
