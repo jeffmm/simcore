@@ -12,6 +12,7 @@ void Filament::SetParameters(system_parameters *params) {
   min_length_ = params->min_rod_length;
   max_child_length_ = params->max_child_length;
   dynamic_instability_flag_ = params->dynamic_instability_flag;
+  spiral_flag_ = params->filament_spiral_flag;
   force_induced_catastrophe_flag_ = params->force_induced_catastrophe_flag;
   p_g2s_ = params->f_grow_to_shrink*delta_;
   p_g2p_ = params->f_grow_to_pause*delta_;
@@ -95,6 +96,10 @@ void Filament::Init() {
     DiffusionValidationInit();
     return;
   }
+  if (spiral_flag_) {
+    InitSpiral2D();
+    return;
+  }
   InsertRandom();
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
@@ -128,6 +133,41 @@ void Filament::DiffusionValidationInit() {
     for (int i=0; i<n_dim_; ++i)
       position_[i] = position_[i] + orientation_[i] * child_length_;
   }
+  UpdatePrevPositions();
+  CalculateAngles();
+  UpdateBondPositions();
+  SetDiffusion();
+  poly_state_ = GROW;
+}
+
+// Place a spool centered at the origin
+void Filament::InitSpiral2D() {
+  double prev_pos[3] = {0, 0, 0};
+  std::fill(position_, position_+3, 0);
+  elements_[n_sites_-1].SetPosition(prev_pos);
+  for (auto site=elements_.begin(); site!= elements_.end(); ++site) {
+    site->SetDiameter(diameter_);
+    site->SetLength(child_length_);
+  }
+  double step = diameter_ / M_PI;
+  double theta = child_length_ / step;
+  for (int i=2; i<n_sites_+1; ++i) {
+    double move = step*theta;
+    double angle = theta + 2*M_PI;
+    position_[0] = move * cos(angle);
+    position_[1] = move * sin(angle);
+    theta += child_length_ / move;
+    // Set current site position and orientation
+    elements_[n_sites_-i].SetPosition(position_);
+    for (int j=0; j<3; ++j) {
+      orientation_[j] = (prev_pos[j] - position_[j])/child_length_;
+      prev_pos[j] = position_[j];
+    }
+    elements_[n_sites_-i].SetOrientation(orientation_);
+  }
+  // Set last site orientation
+  elements_[n_sites_-1].SetOrientation(elements_[n_sites_-2].GetOrientation());
+  // Init usual suspects
   UpdatePrevPositions();
   CalculateAngles();
   UpdateBondPositions();
@@ -562,11 +602,6 @@ void Filament::ApplyForcesTorques() {
       pure_torque[i]*=linv;
       site_force[i] = 0.5*f[i];
     }
-    if (debug_trace) {
-      //printf("potential %d: %2.8f\n",v_elements_[i].GetPotentialEnergy());
-      //printf("pure torque %d: {%2.8f %2.8f %2.8f}\n",i,pure_torque[0],pure_torque[1],pure_torque[2]);
-      //printf("site force %d: {%2.8f %2.8f %2.8f}\n",i,site_force[0],site_force[1],site_force[2]);
-    }
     // Add translational forces and pure torque forces at bond ends
     elements_[i].AddForce(site_force);
     elements_[i].AddForce(pure_torque);
@@ -576,8 +611,10 @@ void Filament::ApplyForcesTorques() {
     elements_[i+1].AddForce(pure_torque);
     // Add driving (originating from the com of the bond)
     double f_dr[3];
+    // The driving factor is a force per unit length,
+    // so need to multiply by bond length to get f_dr on bond
     for (int j=0; j<n_dim_; ++j)
-      f_dr[j] = 0.5*u[j]*driving_factor_;
+      f_dr[j] = 0.5*u[j]*driving_factor_ * child_length_;
     elements_[i].AddForce(f_dr);
     elements_[i+1].AddForce(f_dr);
   }

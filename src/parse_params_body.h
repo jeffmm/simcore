@@ -1,6 +1,121 @@
 // parse_params_body.h, generated automatically using make_params
 
 if (param_name.compare("n_runs") == 0 || param_name.compare("run_name") == 0) {}
+else if (param_name.compare("energy_analysis_flag") == 0){
+  params_[i_var].energy_analysis_flag = atoi(param_value.c_str());
+}
+else if (param_name.compare("lj_epsilon") == 0){
+  params_[i_var].lj_epsilon = atof(param_value.c_str());
+}
+else if (param_name.compare("wca_eps") == 0){
+  params_[i_var].wca_eps = atof(param_value.c_str());
+}
+else if (param_name.compare("wca_sig") == 0){
+  params_[i_var].wca_sig = atof(param_value.c_str());
+}
+else if (param_name.compare("f_cutoff") == 0){
+  params_[i_var].f_cutoff = atof(param_value.c_str());
+}
+else if (param_name.compare("n_rod") == 0){
+  params_[i_var].n_rod = atoi(param_value.c_str());
+}
+else if (param_name.compare("rod_length") == 0){
+  params_[i_var].rod_length = atof(param_value.c_str());
+}
+else if (param_name.compare("rod_diameter") == 0){
+  params_[i_var].rod_diameter = atof(param_value.c_str());
+}
+else if (param_name.compare("rod_diffusion") == 0){
+  params_[i_var].rod_diffusion = atoi(param_value.c_str());
+}
+else if (param_name.compare("rod_fixed") == 0){
+  params_[i_var].rod_fixed = atoi(param_value.c_str());
+}
+else if (param_name.compare("draw_interactions") == 0){
+  params_[i_var].draw_interactions = atoi(param_value.c_str());
+}
+else if (param_name.compare("masterskin") == 0){
+  params_[i_var].masterskin = atof(param_value.c_str());
+}
+else if (param_name.compare("tracking_type") == 0){
+  params_[i_var].tracking_type = atoi(param_value.c_str());
+}
+else if (param_name.compare("max_overlap") == 0){
+  params_[i_var].max_overlap = atoi(param_value.c_str());
+}
+else if ( param_name.compare("config_file") == 0 ) {
+  params_[i_var].config_file = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
+  strcpy(params_[i_var].config_file, param_value.c_str());
+}
+else if (param_name.compare("gamma_ratio") == 0){
+  params_[i_var].gamma_ratio = atof(param_value.c_str());
+}
+else if (param_name.compare("n_filament") == 0){
+  params_[i_var].n_filament = atoi(param_value.c_str());
+}
+else if (param_name.compare("posit_flag") == 0){
+  params_[i_var].posit_flag = atoi(param_value.c_str());
+}
+else if (param_name.compare("n_posit") == 0){
+  params_[i_var].n_posit = atoi(param_value.c_str());
+}
+else if (param_name.compare("n_md_bead_opt") == 0){
+  params_[i_var].n_md_bead_opt = atoi(param_value.c_str());
+}
+else if (param_name.compare("diffusion_validation_flag") == 0){
+  params_[i_var].diffusion_validation_flag = atoi(param_value.c_str());
+}
+else if (param_name.compare("diffusion_analysis") == 0){
+  params_[i_var].diffusion_analysis = atoi(param_value.c_str());
+}
+else if (param_name.compare("virial_time_avg") == 0){
+  params_[i_var].virial_time_avg = atoi(param_value.c_str());
+}
+else if (param_name.compare("avg_posits") == 0){
+  params_[i_var].avg_posits = atoi(param_value.c_str());
+}
+else if (param_name.compare("max_child_length") == 0){
+  params_[i_var].max_child_length = atof(param_value.c_str());
+}
+else if (param_name.compare("diffusion_interval") == 0){
+  params_[i_var].diffusion_interval = atoi(param_value.c_str());
+}
+else if (param_name.compare("filament_analysis") == 0){
+  params_[i_var].filament_analysis = atoi(param_value.c_str());
+}
+else if (param_name.compare("driving_factor") == 0){
+  params_[i_var].driving_factor = atof(param_value.c_str());
+}
+else if (param_name.compare("constant_volume") == 0){
+  params_[i_var].constant_volume = atoi(param_value.c_str());
+}
+else if (param_name.compare("constant_pressure") == 0){
+  params_[i_var].constant_pressure = atoi(param_value.c_str());
+}
+else if (param_name.compare("pressure_time") == 0){
+  params_[i_var].pressure_time = atoi(param_value.c_str());
+}
+else if (param_name.compare("target_pressure") == 0){
+  params_[i_var].target_pressure = atof(param_value.c_str());
+}
+else if (param_name.compare("target_radius") == 0){
+  params_[i_var].target_radius = atof(param_value.c_str());
+}
+else if (param_name.compare("compressibility") == 0){
+  params_[i_var].compressibility = atof(param_value.c_str());
+}
+else if (param_name.compare("ss_a") == 0){
+  params_[i_var].ss_a = atof(param_value.c_str());
+}
+else if (param_name.compare("ss_rs") == 0){
+  params_[i_var].ss_rs = atof(param_value.c_str());
+}
+else if (param_name.compare("ss_eps") == 0){
+  params_[i_var].ss_eps = atof(param_value.c_str());
+}
+else if (param_name.compare("filament_spiral_flag") == 0){
+  params_[i_var].filament_spiral_flag = atoi(param_value.c_str());
+}
 else if (param_name.compare("force_induced_catastrophe_flag") == 0){
   params_[i_var].force_induced_catastrophe_flag = atoi(param_value.c_str());
 }
@@ -176,9 +291,6 @@ else if ( param_name.compare("grab_file") == 0 ) {
 else if (param_name.compare("cell_list_flag") == 0){
   params_[i_var].cell_list_flag = atoi(param_value.c_str());
 }
-else if (param_name.compare("rod_diffusion") == 0){
-  params_[i_var].rod_diffusion = atoi(param_value.c_str());
-}
 else if (param_name.compare("position_correlation_flag") == 0){
   params_[i_var].position_correlation_flag = atoi(param_value.c_str());
 }
@@ -214,115 +326,6 @@ else if (param_name.compare("md_bead_mass") == 0){
 }
 else if (param_name.compare("n_update_cells") == 0){
   params_[i_var].n_update_cells = atoi(param_value.c_str());
-}
-else if (param_name.compare("energy_analysis_flag") == 0){
-  params_[i_var].energy_analysis_flag = atoi(param_value.c_str());
-}
-else if (param_name.compare("lj_epsilon") == 0){
-  params_[i_var].lj_epsilon = atof(param_value.c_str());
-}
-else if (param_name.compare("wca_eps") == 0){
-  params_[i_var].wca_eps = atof(param_value.c_str());
-}
-else if (param_name.compare("wca_sig") == 0){
-  params_[i_var].wca_sig = atof(param_value.c_str());
-}
-else if (param_name.compare("f_cutoff") == 0){
-  params_[i_var].f_cutoff = atof(param_value.c_str());
-}
-else if (param_name.compare("n_rod") == 0){
-  params_[i_var].n_rod = atoi(param_value.c_str());
-}
-else if (param_name.compare("rod_length") == 0){
-  params_[i_var].rod_length = atof(param_value.c_str());
-}
-else if (param_name.compare("rod_diameter") == 0){
-  params_[i_var].rod_diameter = atof(param_value.c_str());
-}
-else if (param_name.compare("rod_fixed") == 0){
-  params_[i_var].rod_fixed = atoi(param_value.c_str());
-}
-else if (param_name.compare("draw_interactions") == 0){
-  params_[i_var].draw_interactions = atoi(param_value.c_str());
-}
-else if (param_name.compare("tracking_type") == 0){
-  params_[i_var].tracking_type = atoi(param_value.c_str());
-}
-else if (param_name.compare("masterskin") == 0){
-  params_[i_var].masterskin = atof(param_value.c_str());
-}
-else if (param_name.compare("max_overlap") == 0){
-  params_[i_var].max_overlap = atoi(param_value.c_str());
-}
-else if ( param_name.compare("config_file") == 0 ) {
-  params_[i_var].config_file = (char *) gmalloc((strlen(param_value.c_str()) + 1) * sizeof(char));
-  strcpy(params_[i_var].config_file, param_value.c_str());
-}
-else if (param_name.compare("gamma_ratio") == 0){
-  params_[i_var].gamma_ratio = atof(param_value.c_str());
-}
-else if (param_name.compare("virial_time_avg") == 0){
-  params_[i_var].virial_time_avg = atoi(param_value.c_str());
-}
-else if (param_name.compare("n_filament") == 0){
-  params_[i_var].n_filament = atoi(param_value.c_str());
-}
-else if (param_name.compare("posit_flag") == 0){
-  params_[i_var].posit_flag = atoi(param_value.c_str());
-}
-else if (param_name.compare("n_posit") == 0){
-  params_[i_var].n_posit = atoi(param_value.c_str());
-}
-else if (param_name.compare("n_md_bead_opt") == 0){
-  params_[i_var].n_md_bead_opt = atoi(param_value.c_str());
-}
-else if (param_name.compare("diffusion_validation_flag") == 0){
-  params_[i_var].diffusion_validation_flag = atoi(param_value.c_str());
-}
-else if (param_name.compare("diffusion_analysis") == 0){
-  params_[i_var].diffusion_analysis = atoi(param_value.c_str());
-}
-else if (param_name.compare("max_child_length") == 0){
-  params_[i_var].max_child_length = atof(param_value.c_str());
-}
-else if (param_name.compare("avg_posits") == 0){
-  params_[i_var].avg_posits = atoi(param_value.c_str());
-}
-else if (param_name.compare("filament_analysis") == 0){
-  params_[i_var].filament_analysis = atoi(param_value.c_str());
-}
-else if (param_name.compare("diffusion_interval") == 0){
-  params_[i_var].diffusion_interval = atoi(param_value.c_str());
-}
-else if (param_name.compare("driving_factor") == 0){
-  params_[i_var].driving_factor = atof(param_value.c_str());
-}
-else if (param_name.compare("constant_pressure") == 0){
-  params_[i_var].constant_pressure = atoi(param_value.c_str());
-}
-else if (param_name.compare("target_pressure") == 0){
-  params_[i_var].target_pressure = atof(param_value.c_str());
-}
-else if (param_name.compare("constant_volume") == 0){
-  params_[i_var].constant_volume = atoi(param_value.c_str());
-}
-else if (param_name.compare("pressure_time") == 0){
-  params_[i_var].pressure_time = atoi(param_value.c_str());
-}
-else if (param_name.compare("target_radius") == 0){
-  params_[i_var].target_radius = atof(param_value.c_str());
-}
-else if (param_name.compare("compressibility") == 0){
-  params_[i_var].compressibility = atof(param_value.c_str());
-}
-else if (param_name.compare("ss_a") == 0){
-  params_[i_var].ss_a = atof(param_value.c_str());
-}
-else if (param_name.compare("ss_rs") == 0){
-  params_[i_var].ss_rs = atof(param_value.c_str());
-}
-else if (param_name.compare("ss_eps") == 0){
-  params_[i_var].ss_eps = atof(param_value.c_str());
 }
 else {
   std::cout << "  WARNING: Parameter " << param_name << " not recognized!\n";

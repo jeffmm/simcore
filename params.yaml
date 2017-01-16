@@ -5,8 +5,8 @@ n_runs: 1
 n_dim: 2
 n_periodic: 2
 delta: 0.00001
-n_steps: 20000000
-system_radius: 180
+n_steps: 5000000
+system_radius: 20
 graph_flag: 1
 graph_diameter: 1
 n_graph: 500
@@ -15,7 +15,7 @@ n_update_cells: 10
 diffusion_validation_flag: 0
 n_validate: 250
 time_flag: 1
-driving_factor: 100
+driving_factor: 50
 tracking_type: 1 # 0 none, 1 ap, 2 mcells, 3 cells, 4 nl ap, 5 nl cells
 wca_eps: 1
 wca_sig: 1
@@ -38,3 +38,4 @@ target_pressure: 5
 target_radius: 50
 virial_time_avg: 100
 pressure_time: 4
+filament_spiral_flag: 1
