@@ -1,13 +1,13 @@
 filament:
   properties:
     insertion_type: random
-    overlap: true
+    overlap: false
   fil:
-    num: 120
+    num: 1
     length: 80
-    persistence_length: 8000
+    persistence_length: 80
     max_length: 200
     min_length: 1
-    max_child_length: 3
+    max_child_length: 2
     diameter: 1
 
