@@ -19,6 +19,7 @@ class Filament : public Composite<Site,Bond> {
         force_induced_catastrophe_flag_,
         theta_validation_flag_,
         diffusion_validation_flag_,
+        spiral_flag_,
         metric_forces_;
     double max_length_,
            min_length_,
@@ -71,6 +72,7 @@ class Filament : public Composite<Site,Bond> {
     void SetParameters(system_parameters *params);
     void InitElements(system_parameters *params, space_struct *space);
     void UpdateAvgPosition();
+    void InitSpiral2D();
     void DumpAll();
 
   public:
