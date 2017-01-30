@@ -7,4 +7,4 @@ filament:
   length: 80
   persistence_length: 800
   max_child_length: 3
-  driving_factor: [1,2,4,8,16]
+  driving_factor: 16

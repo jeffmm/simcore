@@ -25,6 +25,8 @@ class SimulationManager {
     void AppendParams(YAML::Node app_node);
     void LoadDefaultParams();
     void CountVariations();
+    void CheckRandomParams();
+    double GetRandomParam(std::string rtype, int min, int max);
     void GenerateParameters();
     void WriteParams();
     void RunSimulations();
