@@ -1,5 +1,5 @@
-CC = gcc-5
-CXX = g++-5
+CC = gcc-6
+CXX = g++-6
 
 SRCDIR = src
 OBJDIR = obj
@@ -96,8 +96,8 @@ endif
 # Now we have to figure out which we are building of the program list, since that matters
 # for things like not compiling more than one main
 SIMCORE_SOURCE = $(SRCDIR)/simcore_main.cpp
-CONFIGURE_SIMCORE_SOURCE = $(SRCDIR)/configure_simcore.cpp
-EXCLUDE_SOURCES = $(SRCDIR)/integrator_manager.cpp $(SRCDIR)/make_params.cpp 
+CONFIGURE_SIMCORE_SOURCE = $(SRCDIR)/simcore_config.cpp
+EXCLUDE_SOURCES = 
 
 MAIN_SOURCES = $(SIMCORE_SOURCE) $(CONFIGURE_SIMCORE_SOURCE)
 
@@ -126,12 +126,13 @@ clean-output :
 
 simcore: dirs $(BINDIR)/simcore;cp $(BINDIR)/simcore simcore
 
-configure_simcore: dirs $(BINDIR)/configure_simcore;cp $(BINDIR)/configure_simcore configure_simcore
+simcore_config: dirs $(BINDIR)/simcore_config;cp $(BINDIR)/simcore_config simcore_config
 
 $(BINDIR)/simcore: $(OBJECTS) $(SIMCORE_MAIN_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS) 
 
-$(BINDIR)/configure_simcore: $(OBJECTS) $(CONFIGURE_SIMCORE_OBJ)
+#$(BINDIR)/simcore_config: $(OBJECTS) $(CONFIGURE_SIMCORE_OBJ)
+$(BINDIR)/simcore_config: $(CONFIGURE_SIMCORE_OBJ)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@
 
 # add dependencies

@@ -1,239 +1,276 @@
 #include "simulation_manager.h"
-#include <iomanip>
 
 bool debug_trace;
 
-SimulationManager::SimulationManager() {
-  debug_trace = false;
-}
-SimulationManager::~SimulationManager() {
-  // Delete system_parameters structure, initialized in InitVariations
-  delete[] params_;
-}
-
 /****************************************
-   ::RunManager::
-   Runs (n_var_*n_runs_) simulations where n_var_ is the number of parameter
-   variations given from combinatorics of lists of parameter values from the
-   input parameter file (n_var_ = 1 if there are no lists of parameter values),
-   and n_runs_ is the number of runs given at the command line by the -n flag
-   or n_runs parameter value (1 by default)
-   *************************************/
-void SimulationManager::RunManager() {
-  InitVariations();
-  ParseParams();
-  RunSimulations();
-}
-
-/****************************************
-   ::DebugMode::
-   TODO Create a series of simulation runs that captures validation data
-   *************************************/
-void SimulationManager::DebugMode() {
-  //warning("Debug mode incomplete! Exiting!"); //FIXME
-  //exit(1);
-  debug_trace = true;
-}
-
-
-/****************************************
-   ::InitManager::
-   Initialize n_runs_ and run_name_ from parameter values and initialize RNG
-   with seed from input file. 
+   ::InitManaager::
+   Initialize SimulationManager RNG and variables
    *************************************/
 void SimulationManager::InitManager(std::string param_file) {
-  n_runs_=1;  // default number of runs
-  run_name_="sc"; // default run name
-  param_file_ = param_file;
-  YAML::Node node = YAML::LoadFile(param_file_);
-  long seed = 71348958934175; // default seed... should be overwritten
-  for(YAML::iterator it=node.begin(); it!=node.end(); ++it) {
-    if (it->first.size()==0) {
-      std::string param_name = it->first.as<std::string>();
-      if ( param_name.compare("seed") == 0 ) {
-        std::string param_value = it->second.as<std::string>();
-        seed = atol(param_value.c_str()); 
-      }
-      else if (param_name.compare("n_runs") == 0) {
-        std::string param_value = it->second.as<std::string>();
-        n_runs_ = atoi(param_value.c_str());
-      }
-      else if (param_name.compare("run_name") == 0) {
-        run_name_ = it->second.as<std::string>();
-      }
-    }
-  }
+  pnode_ = YAML::LoadFile(param_file);
+  if (pnode_["n_runs"] && pnode_["n_runs"].size()==0)
+    n_runs_ = pnode_["n_runs"].as<int>();
+  if (pnode_["run_name"] && pnode_["run_name"].size()==0)
+    run_name_ = pnode_["run_name"].as<std::string>();
+  long seed = 7143961348914;
+  if (pnode_["seed"] && pnode_["seed"].size() == 0)
+    seed = pnode_["seed"].as<long>();
+  else
+    std::cout << "  WARNING: Default seed not overwritten!\n";
   rng_.init(seed);
 }
 
 /****************************************
-   ::InitVariations::
-   Counts the number of variations in the parameter file, in case some
-   parameters are given a list of values. This is simply a multiplication
-   series of the size of each list of values, with single values having size
-   one. Also initializes the system_parameters array with n_var_ params
-   structures.
+   ::RunManaager::
+   Main control sequence for SimulationManager
    *************************************/
-void SimulationManager::InitVariations() {
-  std::cout << "Reading parameters from " << param_file_ << std::endl;
-  YAML::Node node = YAML::LoadFile(param_file_);
-  n_var_ = 1;
-  for(YAML::iterator it=node.begin(); it!=node.end(); ++it) {
-    if (it->first.size() == 1) {
-      for (YAML::iterator jt=it->second.begin(); jt!=it->second.end(); ++jt) {
-        if (jt->second.size() > 1) {
-          n_var_ *= jt->second.size();
-        }
-      }
-    }
-    else {
-      if (it->second.size() > 1) {
-        n_var_ *= it->second.size();
-      }
-    }
-  }
-  if (n_var_ > 1) {
-    std::cout << "Found " << n_var_ << " variations in " << param_file_ << ". Initializing " << n_var_ << " temporary parameter files of " << n_runs_ << " runs each for a total of " << n_runs_*n_var_ << " unique simulations." << std::endl;
-  }
-  // Initialize each set of parameters with default values
-  params_ = new system_parameters[n_var_];
+void SimulationManager::RunManager() {
+  // Check for appendable parameter files
+  CheckAppendParams();
+  // Load default parameters
+  LoadDefaultParams();
+  // Count number of variations from parameter sequences 
+  CountVariations();
+  // Generate n_var_ parameter nodes of unique parameter combinations
+  GenerateParameters();
+  // Write parameters to individual files
+  WriteParams();
+  // Run simulations from parameter files
+  RunSimulations();
 }
 
 /****************************************
-   ::ParseParams::
-   This function will parse the input parameter file and, if necessary,
-   create n_var parameter files with single parameter values if the
-   input parameter file included a list of values for any number of
-   parameters. The algorithm is of my own design, but effectively
-   creates all the combinatorics of unique parameter files from
-   any lists of parameter values.
+   ::CheckAppendParams::
+   Check for existing "append_file" parameter in the main parameter node and if so
+   treat values as file names to addition parameter sets and append corresponding
+   parameter sets to the main parameter node.
    *************************************/
-void SimulationManager::ParseParams() {
-  YAML::Node node = YAML::LoadFile(param_file_);
-  unsigned int increment, i_var, j_var;
-  unsigned int k_var = n_var_;
-  std::string param_value, param_name;
-  for(YAML::iterator it=node.begin(); it!=node.end(); ++it) {
-    param_name = it->first.as<std::string>();
-    if (it->second.size() > 1) {
-      k_var /= it->second.size();
-      j_var = n_var_/(k_var*it->second.size());
+void SimulationManager::CheckAppendParams() {
+  if (YAML::Node app_params = pnode_["append_file"]) {
+    // Add single file
+    if (!app_params.IsSequence()) {
+      YAML::Node app = YAML::LoadFile(app_params.as<std::string>());
+      AppendParams(app);
+    }
+    // Add multiple files
+    else {
+      for (YAML::const_iterator it=app_params.begin(); it!=app_params.end(); ++it) {
+        YAML::Node app = YAML::LoadFile(it->as<std::string>());
+        AppendParams(app);
+      }
+    }
+    pnode_.remove("append_file");
+  }
+}
+
+/****************************************
+   ::AppendParams::
+   Append parameters from file that generated YAML::Node app_node to the main
+   parameter node pnode_
+   *************************************/
+void SimulationManager::AppendParams(YAML::Node app_node) {
+  for (YAML::const_iterator it=app_node.begin(); it!= app_node.end(); ++it) {
+    std::string param_name = it->first.as<std::string>();
+    if (!pnode_[param_name])
+      if (it->second.IsMap())
+        for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+          pnode_[param_name][jt->first.as<std::string>()] = jt->second;
+      else
+        pnode_[param_name] = it->second;
+  }
+}
+
+/****************************************
+   ::LoadDefaultParams::
+   Open new YAML::Node from master parameter file (same one used in simcore_config)
+   and load defaults into main parameter node if that node has not already
+   initialized a value.
+   *************************************/
+void SimulationManager::LoadDefaultParams() {
+  YAML::Node defaults = YAML::LoadFile(default_param_file_);
+  for (YAML::const_iterator it=defaults.begin(); it!=defaults.end(); ++it) {
+    std::string param_name = it->first.as<std::string>();
+    if (!pnode_[param_name] && it->second.IsSequence())
+        pnode_[param_name] = it->second[0];
+    else if (it->second.IsMap())
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+        if (!pnode_[param_name][jt->first.as<std::string>()] && jt->second.IsSequence())
+          pnode_[param_name][jt->first.as<std::string>()] = jt->second[0];
+  }
+}
+
+/****************************************
+   ::CountVariations::
+   Given a main parameter file with a parameter value that is a sequence, count
+   the total possible combinations of unique single parameter values
+   *************************************/
+void SimulationManager::CountVariations() {
+  for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it) {
+    if (it->second.IsSequence())
+      n_var_*=it->second.size();
+    else if (it->second.IsMap())
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+        if (jt->second.IsSequence())
+          n_var_*=jt->second.size();
+  }
+  if (n_var_ > 1)
+    std::cout << "Initializing batch " << run_name_ << " of " << n_var_*n_runs_ << " simulations with " << n_var_ << "variations of " << n_runs_ << " runs each.\n";
+  else if (n_runs_ > 1)
+    std::cout << "Initializing batch of %d runs of simulation " << run_name_ <<".\n";
+  else
+    std::cout << "Initializing simulation " << run_name_ << ".\n";
+}
+
+/****************************************
+   ::GenerateParameters::
+   Generates n_var_ YAML::Nodes of parameter values each with a unique
+   combination of single parameter values. This algorithm is of my own
+   design and effectively disperses the parameter values over the range
+   of parameter nodes that it shoud be applied in such a way as to make
+   sure each parameter node has a unique combination, e.g. a parameter
+   that is a sequence of 3 parameters will have each parameter
+   dispersed over a third of the n_var_ parameter nodes, etc
+    *************************************/
+void SimulationManager::GenerateParameters() {
+  pvector_.resize(n_var_);
+  int i_var,j_var,k_var = n_var_;
+  for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it)
+    if (it->second.IsSequence()) {
+      unsigned int s = it->second.size();
+      k_var /= s;
+      j_var = n_var_ / (k_var * s) ;
       i_var = 0;
-      for (int j=0; j<j_var; ++j) {
-        for (int i_param=0; i_param<it->second.size(); ++i_param) {
-          for (int k=0; k<k_var; ++k) {
-            param_value = it->second[i_param].as<std::string>();
-            ParseParameter(param_name, param_value, i_var);
-            i_var++;
-          }
+      for (int j=0; j<j_var; ++j)
+        for (int i_param=0; i_param<s; ++i_param)
+          for (int k=0; k<k_var; ++k)
+            pvector_[i_var++][it->first] = it->second[i_param];
+    }
+    else if (it->second.IsMap())
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+        if (jt->second.IsSequence()) {
+          unsigned int s = jt->second.size();
+          k_var /= s;
+          j_var = n_var_ / (k_var * s) ;
+          i_var = 0;
+          for (int j=0; j<j_var; ++j)
+            for (int i_param=0; i_param<s; ++i_param)
+              for (int k=0; k<k_var; ++k)
+                pvector_[i_var++][it->first][jt->first] = jt->second[i_param];
         }
-      }
-    }
-    else {
-      param_value = it->second.as<std::string>();
+        else 
+          for (i_var=0; i_var<n_var_; ++i_var) 
+            pvector_[i_var][it->first][jt->first] = jt->second;
+    else 
       for (i_var=0; i_var<n_var_; ++i_var)
-        ParseParameter(param_name, param_value, i_var);
+        pvector_[i_var][it->first] = it->second;
+}
+
+/****************************************
+   ::WriteParams::
+   Uses YAML::Emitter to write each of the parameter nodes to a YAML
+   file, labeled by run name, variants, and runs, each with a unique
+   simulation seed. Also stores each parameter file as a string in a
+   vector to loop over in RunSimulations
+   *************************************/
+void SimulationManager::WriteParams() {
+  for (int i_var=0; i_var<n_var_; ++i_var)
+    for (int i_run=0; i_run<n_runs_; ++i_run) {
+      pvector_[i_var]["seed"]=gsl_rng_get(rng_.r);
+      std::ostringstream var;
+      std::ostringstream run;
+      std::ostringstream file_name;
+      // setting zero padding to 2 digits
+      var << std::setw(2) << std::setfill('0') << i_var;
+      run << std::setw(2) << std::setfill('0') << i_run;
+      file_name << run_name_;
+      if (n_var_ > 1)
+        file_name << "_v" << var.str();
+      if (n_runs_ > 1) 
+        file_name << "_r" << run.str();
+      pvector_[i_var]["run_name"] = file_name.str();
+      file_name << "_params.yaml";
+      pfiles_.push_back(file_name.str());
+      std::ofstream pfile(file_name.str(), std::ios_base::out);
+      YAML::Emitter out;
+      pfile << (out<<pvector_[i_var]).c_str();
+      pfile.close();
     }
-  }
-}
-
-/****************************************
-   ::ParseParameter::
-   Checks single parameter value from YAML Node and initializes the parameter
-   param_name with value for the i_var'th param structure
-   *************************************/
-void SimulationManager::ParseParameter(std::string param_name, std::string param_value, unsigned int i_var) {
-#include "parse_params_body.h"
-}
-
-/****************************************
-   ::PrintParams::
-   Create new parameter file from params structure with prefix 'name'
-   *************************************/
-void SimulationManager::PrintParams(system_parameters params, std::string name) {
-  std::ostringstream file_name;
-  file_name << name << "_params.yaml";
-  std::ofstream param_file((file_name.str()).c_str(), std::ios_base::out);
-#include "print_params_body.h"
-  param_file.close();
 }
 
 /****************************************
    ::RunSimulations::
-   Run n_runs_ simulations for each unique parameter file, each with a unique
-   seed ( though still determined from the SimulationManager RNG seed)
-   TODO In the future we can do a simple parallelization to submit all runs to
-   available processors
+   Loop over the vector of parameter file strings and load it as
+   a YAML::Node. Parse the parameters of that node using the
+   parse_params function (that is generated automatically using
+   simcore_config) and create (and delete) a new simulation using
+   those parameters. 
    *************************************/
 void SimulationManager::RunSimulations() {
-  Simulation *sim;
-  std::ostringstream title;
-  for (int i_var=0; i_var<n_var_; ++i_var) {
-    for (int i_run=0; i_run<n_runs_; ++i_run) {
-      // Set each run with a unique seed
-      title << run_name_;
-      if (n_var_ > 1)
-        title << "_v" << i_var+1;
-      if (n_runs_ > 1) 
-        title << "_r" << i_run+1;
-      params_[i_var].seed = gsl_rng_get(rng_.r);
-      PrintParams(params_[i_var], title.str());
-      sim = new Simulation;
-      sim->Run(params_[i_var], title.str());
-      delete sim;
-      title.str("");
-      title.clear();
-    }
+  int n_sims = n_var_*n_runs_;
+  int i_sim = 1;
+  for (std::vector<std::string>::iterator it=pfiles_.begin(); it!=pfiles_.end(); ++it) {
+    ParseParams(*it);
+    sim_ = new Simulation;
+    std::cout << "\nRunning simulation " << params_.run_name<< " ("<<i_sim <<"/"<<n_sims<<")\n";
+    sim_->Run(params_);
+    delete sim_;
+    i_sim++;
   }
 }
 
-void SimulationManager::SetNRuns(int n_runs) {
-  n_runs_ = n_runs;
+/****************************************
+   ::ParseParams::
+   Load parameter file into a YAML::Node and parse the node for
+   parameters in the system_parameters structure to initialize
+   simulation parameters. Uses parse_params.h which is generated
+   automatically using simcore_config.
+   *************************************/
+#include "parse_params.h"
+void SimulationManager::ParseParams(std::string file_name) {
+  YAML::Node node = YAML::LoadFile(file_name);
+  YAML::Emitter out;
+  std::cout << "Initializing simulation with parameters:\n" << (out<<node).c_str() << "\n";
+  parse_params(node, &params_);
 }
 
-void SimulationManager::SetRunName(std::string run_name) {
-  run_name_ = run_name;
-}
+//void SimulationManager::RunMovieManager(std::vector<std::string> posit_files) {
+  //Simulation *sim;
+  //std::ostringstream title;
 
-void SimulationManager::RunMovieManager(std::vector<std::string> posit_files) {
-  Simulation *sim;
-  std::ostringstream title;
+  ////FIXME will eventually have posit file read in this value
+  //int i_var = 0; 
+  //int i_run = 0;
 
-  //FIXME will eventually have posit file read in this value
-  int i_var = 0; 
-  int i_run = 0;
+  //InitVariations();
+  //ParseParams(); //FIXME cannot take variations yet
 
-  InitVariations();
-  ParseParams(); //FIXME cannot take variations yet
+  //title << run_name_;
 
-  title << run_name_;
+  //if (n_var_ > 1)
+    //title << "_v" << i_var+1;
+  //if (n_runs_ > 1) 
+    //title << "_r" << i_run+1;
+  //params_[i_var].seed = gsl_rng_get(rng_.r);
+  //PrintParams(params_[i_var], title.str());
+  //sim = new Simulation;
+  //sim->CreateMovie(params_[i_var], title.str(), posit_files);
+  //delete sim;
+  //title.str("");
+  //title.clear();
+//}
 
-  if (n_var_ > 1)
-    title << "_v" << i_var+1;
-  if (n_runs_ > 1) 
-    title << "_r" << i_run+1;
-  params_[i_var].seed = gsl_rng_get(rng_.r);
-  PrintParams(params_[i_var], title.str());
-  sim = new Simulation;
-  sim->CreateMovie(params_[i_var], title.str(), posit_files);
-  delete sim;
-  title.str("");
-  title.clear();
-}
+//void SimulationManager::RunAnalyses(std::vector<std::string> pfiles) {
+  //// FIXME Decide how to use parameter variations with analysis arguments
+  //// We'll just be using the first variation for now.
+  //InitVariations();
+  //ParseParams();
+  //AnalysisManager aman;
+  //std::ostringstream title;
+  //// use first variation
+  //int i_var = 0; 
+  //// Set the run with a unique seed, in case we need random numbers in analysis.
+  //params_[i_var].seed = gsl_rng_get(rng_.r);
+  //analyzer_.RunAnalyses(params_[i_var], pfiles);
+//}
 
-void SimulationManager::RunAnalyses(std::vector<std::string> pfiles) {
-  // FIXME Decide how to use parameter variations with analysis arguments
-  // We'll just be using the first variation for now.
-  InitVariations();
-  ParseParams();
-  AnalysisManager aman;
-  std::ostringstream title;
-  // use first variation
-  int i_var = 0; 
-  // Set the run with a unique seed, in case we need random numbers in analysis.
-  params_[i_var].seed = gsl_rng_get(rng_.r);
-  analyzer_.RunAnalyses(params_[i_var], pfiles);
-}
-
-  
 

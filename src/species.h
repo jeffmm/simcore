@@ -178,31 +178,27 @@ double Species<T>::GetDrMax() {
 
 template <typename T> 
 void Species<T>::ZeroDr() {
-  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
     (*it)->ZeroDrTot();
-  }
 }
 
 template <typename T> 
 void Species<T>::ZeroForces() {
-  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
     (*it)->ZeroForce();
-  }
 }
 
 template <typename T> 
 void Species<T>::Dump() {
-  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
     (*it)->Dump();
-  }
 }
 
 template <typename T> 
 int Species<T>::GetCount() {
   int count = 0;
-  for (auto it =members_.begin(); it!=members_.end(); ++it) {
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
     count += (*it)->GetCount();
-  }
   return count;
 }
 
@@ -210,8 +206,8 @@ template <typename T>
 void Species<T>::WritePosits() {
   int size = members_.size();
   oposit_file_.write(reinterpret_cast<char*>(&size), sizeof(size));
-  for( auto& mem_it : members_)
-    mem_it->WritePosit(oposit_file_);
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+    (*it)->WritePosit(oposit_file_);
 }
 
 template <typename T> 
@@ -223,16 +219,14 @@ void Species<T>::ReadPosits() {
 
   member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
   members_.resize(size, member);
-  for( auto& mem_it : members_){
-    mem_it->ReadPosit(iposit_file_);
-  }
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+    (*it)->ReadPosit(iposit_file_);
 }
 
 template <typename T> 
 void Species<T>::ScalePositions() {
-  for (auto mem_it : members_) {
-    mem_it->ScalePosition();
-  }
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+    (*it)->ScalePosition();
 }
 
 #endif // _SIMCORE_SPECIES_H_

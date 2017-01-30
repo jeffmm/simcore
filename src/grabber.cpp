@@ -14,7 +14,7 @@ int getelem2d(int i, int j, int k, int width, int height, int depth, GLubyte * b
 void putelem2d(int fwdvalue, int i, int j, int k, int width, int height, int depth,
                GLubyte * array3d);
 
-void grabber(int width, int height, char *fname, int framenum)
+void grabber(int width, int height, std::string fname, int framenum)
 {
     int pixelsqty;
     int i, j, k;
@@ -70,7 +70,7 @@ void grabber(int width, int height, char *fname, int framenum)
     strcpy(szero, "");
     for (i = 0; i < zeronum; ++i)
         strcat(szero, "0");
-    sprintf(bmpfname, "%s_%s%s.bmp", fname, szero, sframenum);
+    sprintf(bmpfname, "%s_%s%s.bmp", fname.c_str(), szero, sframenum);
     //printf("%s\n", bmpfname);
 
     /* Open file */

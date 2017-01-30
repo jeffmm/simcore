@@ -4,8 +4,8 @@ filament:
     overlap: false
   fil:
     num: 1
-    length: 80
-    persistence_length: 80
+    length: 40
+    persistence_length: 40
     max_length: 200
     min_length: 1
     max_child_length: 2

@@ -1,6 +1,6 @@
 *.swp
 /simcore
-/configure_simcore
+/simcore_config
 /src/*.o
 *.dSYM/*
 tags

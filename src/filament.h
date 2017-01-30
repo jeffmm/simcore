@@ -26,9 +26,9 @@ class Filament : public Composite<Site,Bond> {
            max_child_length_,
            child_length_,
            persistence_length_,
-           gamma_ratio_, // gamma_par/gamma_perp
-           gamma_par_,
-           gamma_perp_,
+           friction_ratio_, // friction_par/friction_perp
+           friction_par_,
+           friction_perp_,
            rand_sigma_par_,
            rand_sigma_perp_,
            v_poly_,
@@ -100,48 +100,18 @@ class Filament : public Composite<Site,Bond> {
 
 class FilamentSpecies : public Species<Filament> {
   protected:
-    bool theta_validation_,
-         midstep_;
-    int ***theta_distribution_;
-    int nbins_,
-        ibin_,
-        n_dim_,
-        nvalidate_,
-        ivalidate_;
-    void ValidateDiffusion();
-    void ValidateThetaDistributions();
-    void WriteThetaValidation(std::string run_name);
-    void WriteDiffusionValidation(std::string run_name);
+    bool midstep_;
+    int n_dim_;
   public:
     FilamentSpecies() : Species() {
       SetSID(SID::filament);
       midstep_ = true;
-      ibin_ = 0;
-    }
-    ~FilamentSpecies() {
-      if (theta_validation_) {
-        for (int i=0; i<n_members_; ++i) {
-          for (int j=0; j<7; ++j) {
-            delete[] theta_distribution_[i][j];
-          }
-          delete[] theta_distribution_[i];
-        }
-        delete[] theta_distribution_;
-      }
     }
     FilamentSpecies(const FilamentSpecies& that) {
-      theta_distribution_ = that.theta_distribution_;
-      theta_validation_ = that.theta_validation_;
       midstep_ = that.midstep_;
-      ibin_ = that.ibin_;
-      nbins_ = that.nbins_;
     }
     FilamentSpecies& operator=(FilamentSpecies const& that) {
-      theta_distribution_ = that.theta_distribution_;
-      theta_validation_ = that.theta_validation_;
       midstep_ = that.midstep_;
-      ibin_ = that.ibin_;
-      nbins_ = that.nbins_;
       return *this;
     }
     void Init() {
@@ -173,12 +143,8 @@ class FilamentSpecies : public Species<Filament> {
         (*it)->UpdatePosition(midstep_);
 #endif
 
-      //if (theta_validation_ && midstep_)
-        //ValidateThetaDistributions();
       midstep_ = !midstep_;
-      //ivalidate_++;
     }
-    void WriteOutputs(std::string run_name);
     void Configurator();
 
 };

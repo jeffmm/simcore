@@ -17,8 +17,8 @@ static struct option long_options[] = {
   {"run-name", required_argument, 0, 'r'},
   {"n-runs", required_argument, 0, 'n'},
   {"test", no_argument, 0, 't'},
-  {"movie", required_argument, 0, 'm'},
-  {"analysis",required_argument, 0, 'a'},
+  {"movie", no_argument, 0, 'm'},
+  {"analysis", no_argument, 0, 'a'},
   {0, 0, 0, 0}
 };
 
@@ -87,7 +87,7 @@ run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdtr:f:n:m:a:", long_options, &option_index);
+    tmp = getopt_long(argc, argv, "hdtmar:f:n:", long_options, &option_index);
     if (tmp == -1)
       break;
     
@@ -118,17 +118,36 @@ run_options parse_opts(int argc, char *argv[]) {
         run_opts.n_runs = atoi(optarg);
         break;
       case 'm':
+        std::cout << "  Making movies\n";
         run_opts.m_flag = 1;
-        run_opts.posit_files.push_back(optarg);
         break;
       case 'a':
+        std::cout << "  Running analyses\n";
         run_opts.a_flag = 1;
-        run_opts.posit_files.push_back(optarg);
+        break;
       case '?':
         break;
       default:
-        std::cout << "  ERROR: Unrecognized option!\n";
+        std::cout << "  ERROR: Unrecognized option: " << tmp << "\n";
         exit(1);
+    }
+  }
+  if (optind < argc) {
+    if (run_opts.a_flag!=1 && run_opts.m_flag!=1) {
+      printf("ERROR: Unrecognized context for non-option arguments: ");
+      while (optind < argc)
+        printf ("%s ", argv[optind++]);
+      putchar ('\n');
+      exit(1);
+    }
+    else {
+      printf("Posit files: ");
+      while (optind < argc) {
+        run_opts.posit_files.push_back(argv[optind++]);
+      }
+      for (int i=0; i<run_opts.posit_files.size(); ++i)
+        std::cout << run_opts.posit_files[i] << " ";
+      putchar('\n');
     }
   }
   return run_opts;
