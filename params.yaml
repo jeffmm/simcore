@@ -6,7 +6,7 @@ n_runs: 1
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 100000
+n_steps: 10000
 system_radius: 40
 graph_flag: 1
 n_graph: 500
@@ -15,4 +15,12 @@ movie_directory: frames
 cell_length: 5
 n_update_cells: 10
 f_cutoff: 9000
-append_file: filament.yaml
+filament:
+  num: 1
+  diameter: 1
+  spiral_flag: 1
+  min_length: 1
+  max_length: 80
+  length: 80
+  persistence_length: 80
+  max_child_length: 3
