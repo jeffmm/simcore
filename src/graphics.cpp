@@ -192,7 +192,7 @@ void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_s
   InitWindow();
   InitDiscoRectangle();
   InitSpheroCylinder();
-  InitText();
+  //InitText();
 }
 
 void Graphics::Clear() {
@@ -523,61 +523,61 @@ void Graphics::Draw2d() {
     glfwSwapBuffers(window_); // Print frame to screen
 }
 
-void Graphics::DrawText() {
+//void Graphics::DrawText() {
 
-  glMatrixMode(GL_MODELVIEW); // Make sure we're using the model transform
-	glUseProgram(text_.program_);
+  //glMatrixMode(GL_MODELVIEW); // Make sure we're using the model transform
+	//glUseProgram(text_.program_);
   
-  // In case things are not working right
-	text_.attribute_coord_ = glGetAttribLocation(text_.program_, "coord");
-  text_.uniform_tex_ = glGetUniformLocation(text_.program_, "tex");
-	text_.uniform_color_ = glGetUniformLocation(text_.program_, "color");
+  //// In case things are not working right
+	//text_.attribute_coord_ = glGetAttribLocation(text_.program_, "coord");
+  //text_.uniform_tex_ = glGetUniformLocation(text_.program_, "tex");
+	//text_.uniform_color_ = glGetUniformLocation(text_.program_, "color");
 
-  glVertexAttribPointer(text_.attribute_coord_, // attribute
-                          2,                 // number of elements per vertex, here (x,y,z)
-                          GL_FLOAT,          // the type of each element
-                          GL_FALSE,          // take our values as-is
-                          0,                 // no extra data between each position
-                          (void*)0                  // offset of first element
-                          );
+  //glVertexAttribPointer(text_.attribute_coord_, // attribute
+                          //2,                 // number of elements per vertex, here (x,y,z)
+                          //GL_FLOAT,          // the type of each element
+                          //GL_FALSE,          // take our values as-is
+                          //0,                 // no extra data between each position
+                          //(void*)0                  // offset of first element
+                          //);
 
-    // Use the element buffer (numerical pointer to each set of vertices that make a triangle)
-  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, text_.element_buffer_);
+    //// Use the element buffer (numerical pointer to each set of vertices that make a triangle)
+  ////glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, text_.element_buffer_);
 
-	GLfloat black[4] = { 0, 0, 0, 1 };
-	GLfloat red[4] = { 1, 0, 0, 1 };
-	GLfloat transparent_green[4] = { 0, 1, 0, 0.5 };
+	//GLfloat black[4] = { 0, 0, 0, 1 };
+	//GLfloat red[4] = { 1, 0, 0, 1 };
+	//GLfloat transparent_green[4] = { 0, 1, 0, 0.5 };
 
-	/* Set font size to 48 pixels, color to black */
-	FT_Set_Pixel_Sizes(text_.face_, 0, 48);
-	glUniform4fv(text_.uniform_color_, 1, black);
+	//[> Set font size to 48 pixels, color to black <]
+	//FT_Set_Pixel_Sizes(text_.face_, 0, 48);
+	//glUniform4fv(text_.uniform_color_, 1, black);
 
-	/* Effects of alignment */
-	text_.RenderText("The Quick Brown Fox Jumps Over The Lazy Dog", 0,0, 0, 0);
-	text_.RenderText("The Quick Brown Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 50 * windy_, windx_, windy_);
-	text_.RenderText("The Misaligned Fox Jumps Over The Lazy Dog", -1 + 8.5 * windx_, 1 - 100.5 * windy_, windx_, windy_);
+	//[> Effects of alignment <]
+	//text_.RenderText("The Quick Brown Fox Jumps Over The Lazy Dog", 0,0, 0, 0);
+	//text_.RenderText("The Quick Brown Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 50 * windy_, windx_, windy_);
+	//text_.RenderText("The Misaligned Fox Jumps Over The Lazy Dog", -1 + 8.5 * windx_, 1 - 100.5 * windy_, windx_, windy_);
 
-	/* Scaling the texture versus changing the font size */
-	text_.RenderText("The Small Texture Scaled Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 175 * windy_, windx_ * 0.5, windy_ * 0.5);
-	FT_Set_Pixel_Sizes(text_.face_, 0, 24);
-	text_.RenderText("The Small Font Sized Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 200 * windy_, windx_, windy_);
-	FT_Set_Pixel_Sizes(text_.face_, 0, 48);
-	text_.RenderText("The Tiny Texture Scaled Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 235 * windy_, windx_ * 0.25, windy_ * 0.25);
-	FT_Set_Pixel_Sizes(text_.face_, 0, 12);
-	text_.RenderText("The Tiny Font Sized Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 250 * windy_, windx_, windy_);
-	FT_Set_Pixel_Sizes(text_.face_, 0, 48);
+	//[> Scaling the texture versus changing the font size <]
+	//text_.RenderText("The Small Texture Scaled Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 175 * windy_, windx_ * 0.5, windy_ * 0.5);
+	//FT_Set_Pixel_Sizes(text_.face_, 0, 24);
+	//text_.RenderText("The Small Font Sized Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 200 * windy_, windx_, windy_);
+	//FT_Set_Pixel_Sizes(text_.face_, 0, 48);
+	//text_.RenderText("The Tiny Texture Scaled Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 235 * windy_, windx_ * 0.25, windy_ * 0.25);
+	//FT_Set_Pixel_Sizes(text_.face_, 0, 12);
+	//text_.RenderText("The Tiny Font Sized Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 250 * windy_, windx_, windy_);
+	//FT_Set_Pixel_Sizes(text_.face_, 0, 48);
 
-	/* Colors and transparency */
-	text_.RenderText("The Solid Black Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 430 * windy_, windx_, windy_);
+	//[> Colors and transparency <]
+	//text_.RenderText("The Solid Black Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 430 * windy_, windx_, windy_);
 
-	glUniform4fv(text_.uniform_color_, 1, red);
-	text_.RenderText("The Solid Red Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 330 * windy_, windx_, windy_);
-	text_.RenderText("The Solid Red Fox Jumps Over The Lazy Dog", -1 + 28 * windx_, 1 - 450 * windy_, windx_, windy_);
+	//glUniform4fv(text_.uniform_color_, 1, red);
+	//text_.RenderText("The Solid Red Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 330 * windy_, windx_, windy_);
+	//text_.RenderText("The Solid Red Fox Jumps Over The Lazy Dog", -1 + 28 * windx_, 1 - 450 * windy_, windx_, windy_);
 
-	glUniform4fv(text_.uniform_color_, 1, transparent_green);
-	text_.RenderText("The Transparent Green Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 380 * windy_, windx_, windy_);
-	text_.RenderText("The Transparent Green Fox Jumps Over The Lazy Dog", -1 + 18 * windx_, 1 - 440 * windy_, windx_, windy_);
-}
+	//glUniform4fv(text_.uniform_color_, 1, transparent_green);
+	//text_.RenderText("The Transparent Green Fox Jumps Over The Lazy Dog", -1 + 8 * windx_, 1 - 380 * windy_, windx_, windy_);
+	//text_.RenderText("The Transparent Green Fox Jumps Over The Lazy Dog", -1 + 18 * windx_, 1 - 440 * windy_, windx_, windy_);
+//}
 
 void Graphics::DrawSpheros() {
     glMatrixMode(GL_MODELVIEW); // Use modelview matrix
@@ -1435,171 +1435,171 @@ void GraphicsPrimitive::MakeProgram() {
     }
 }
 
-void GraphicsText::MakeProgram() {
-  program_ = glCreateProgram();
-    //vertex_shader = create_shader(vertexfile, GL_VERTEX_SHADER);
-  glAttachShader(program_, vertex_shader_);
-    //fragment_shader = create_shader(fragmentfile, GL_FRAGMENT_SHADER);
-  glAttachShader(program_, fragment_shader_);
-  glLinkProgram(program_);
-  GLint link_ok = GL_FALSE;
-  glGetProgramiv(program_, GL_LINK_STATUS, &link_ok);
-  if (!link_ok) {
-    fprintf(stderr, "Failed to link text shader program:\n");
-    ShowInfoLog(program_, glGetProgramiv, glGetProgramInfoLog);
-    glDeleteProgram(program_);
-    exit(1);
-  }
-  if (program_ == 0) {
-    fprintf(stderr, "Failed to create text program\n");
-  }
-}
+//void GraphicsText::MakeProgram() {
+  //program_ = glCreateProgram();
+    ////vertex_shader = create_shader(vertexfile, GL_VERTEX_SHADER);
+  //glAttachShader(program_, vertex_shader_);
+    ////fragment_shader = create_shader(fragmentfile, GL_FRAGMENT_SHADER);
+  //glAttachShader(program_, fragment_shader_);
+  //glLinkProgram(program_);
+  //GLint link_ok = GL_FALSE;
+  //glGetProgramiv(program_, GL_LINK_STATUS, &link_ok);
+  //if (!link_ok) {
+    //fprintf(stderr, "Failed to link text shader program:\n");
+    //ShowInfoLog(program_, glGetProgramiv, glGetProgramInfoLog);
+    //glDeleteProgram(program_);
+    //exit(1);
+  //}
+  //if (program_ == 0) {
+    //fprintf(stderr, "Failed to create text program\n");
+  //}
+//}
 
-void Graphics::InitText() {
-	if (FT_Init_FreeType(&(text_.ft_))) {
-		fprintf(stderr, "Could not init freetype library\n");
-    exit(1);
-	}
-	/* Load a font */
-	if (FT_New_Face(text_.ft_,"FreeSans.ttf", 0, &(text_.face_))) {
-		fprintf(stderr, "Could not open font FreeSans.ttf\n");
-    exit(1);
-	}
+//void Graphics::InitText() {
+	//if (FT_Init_FreeType(&(text_.ft_))) {
+		//fprintf(stderr, "Could not init freetype library\n");
+    //exit(1);
+	//}
+	//[> Load a font <]
+	//if (FT_New_Face(text_.ft_,"FreeSans.ttf", 0, &(text_.face_))) {
+		//fprintf(stderr, "Could not open font FreeSans.ttf\n");
+    //exit(1);
+	//}
 
-    /* Vertex shader source code */
-  const char *vs =
-    "#version 120\n"
-    "attribute vec4 coord;"
-    "varying vec2 texpos;"
-    "void main(void) {"
-    "gl_Position = vec4(coord.xy, 0, 1);"
-    "texpos = coord.zw;"
-    "}";
-    /* Build vertex shader from source specified in vs string */
-    GLint shader_ok;
-    text_.vertex_shader_ = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(text_.vertex_shader_, 1, &vs, NULL);
-    glCompileShader(text_.vertex_shader_);
-    glGetShaderiv(text_.vertex_shader_, GL_COMPILE_STATUS, &shader_ok);
-    if (!shader_ok) {
-      fprintf(stderr, "Failed to compile text vertex shader:\n");
-      text_.ShowInfoLog(text_.vertex_shader_, glGetShaderiv, glGetShaderInfoLog);
-      glDeleteShader(text_.vertex_shader_);
-      exit(1);
-    }
-    if (text_.vertex_shader_ == 0)
-        exit(1);
+    //[> Vertex shader source code <]
+  //const char *vs =
+    //"#version 120\n"
+    //"attribute vec4 coord;"
+    //"varying vec2 texpos;"
+    //"void main(void) {"
+    //"gl_Position = vec4(coord.xy, 0, 1);"
+    //"texpos = coord.zw;"
+    //"}";
+    //[> Build vertex shader from source specified in vs string <]
+    //GLint shader_ok;
+    //text_.vertex_shader_ = glCreateShader(GL_VERTEX_SHADER);
+    //glShaderSource(text_.vertex_shader_, 1, &vs, NULL);
+    //glCompileShader(text_.vertex_shader_);
+    //glGetShaderiv(text_.vertex_shader_, GL_COMPILE_STATUS, &shader_ok);
+    //if (!shader_ok) {
+      //fprintf(stderr, "Failed to compile text vertex shader:\n");
+      //text_.ShowInfoLog(text_.vertex_shader_, glGetShaderiv, glGetShaderInfoLog);
+      //glDeleteShader(text_.vertex_shader_);
+      //exit(1);
+    //}
+    //if (text_.vertex_shader_ == 0)
+        //exit(1);
 
-  const char *fs =
-    "#version 120\n" 
-    "varying vec2 texpos;"
-    "uniform sampler2D tex;"
-    "uniform vec4 color;"
-    "void main() {"
-    "gl_FragColor = vec4(1, 1, 1, texture2D(tex, texpos).a) * color;"
-    "}";
+  //const char *fs =
+    //"#version 120\n" 
+    //"varying vec2 texpos;"
+    //"uniform sampler2D tex;"
+    //"uniform vec4 color;"
+    //"void main() {"
+    //"gl_FragColor = vec4(1, 1, 1, texture2D(tex, texpos).a) * color;"
+    //"}";
 
-  /* Build Fragment Shader from source specified in fs string */
-  text_.fragment_shader_ = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(text_.fragment_shader_, 1, &fs, NULL);
-  glCompileShader(text_.fragment_shader_);
-  glGetShaderiv(text_.fragment_shader_, GL_COMPILE_STATUS, &shader_ok);
-  if (!shader_ok) {
-    fprintf(stderr, "Failed to compile text fragment shader:\n");
-    text_.ShowInfoLog(text_.fragment_shader_, glGetShaderiv, glGetShaderInfoLog);
-    glDeleteShader(text_.fragment_shader_);
-    exit(1);
-  }
+  //[> Build Fragment Shader from source specified in fs string <]
+  //text_.fragment_shader_ = glCreateShader(GL_FRAGMENT_SHADER);
+  //glShaderSource(text_.fragment_shader_, 1, &fs, NULL);
+  //glCompileShader(text_.fragment_shader_);
+  //glGetShaderiv(text_.fragment_shader_, GL_COMPILE_STATUS, &shader_ok);
+  //if (!shader_ok) {
+    //fprintf(stderr, "Failed to compile text fragment shader:\n");
+    //text_.ShowInfoLog(text_.fragment_shader_, glGetShaderiv, glGetShaderInfoLog);
+    //glDeleteShader(text_.fragment_shader_);
+    //exit(1);
+  //}
 
-  text_.MakeProgram();
+  //text_.MakeProgram();
 
-	text_.attribute_coord_ = glGetAttribLocation(text_.program_, "coord");
-  text_.uniform_tex_ = glGetUniformLocation(text_.program_, "tex");
-	text_.uniform_color_ = glGetUniformLocation(text_.program_, "color");
-	if(text_.attribute_coord_ == -1 || text_.uniform_tex_ == -1 || text_.uniform_color_ == -1) {
-    fprintf(stderr, "Could not bind text uniform {%d %d %d}\n",text_.attribute_coord_, text_.uniform_tex_, text_.uniform_color_);
-    exit(1);
-  }
-	// Create the vertex buffer object
-	glGenBuffers(1, &(text_.buffer_));
+	//text_.attribute_coord_ = glGetAttribLocation(text_.program_, "coord");
+  //text_.uniform_tex_ = glGetUniformLocation(text_.program_, "tex");
+	//text_.uniform_color_ = glGetUniformLocation(text_.program_, "color");
+	//if(text_.attribute_coord_ == -1 || text_.uniform_tex_ == -1 || text_.uniform_color_ == -1) {
+    //fprintf(stderr, "Could not bind text uniform {%d %d %d}\n",text_.attribute_coord_, text_.uniform_tex_, text_.uniform_color_);
+    //exit(1);
+  //}
+	//// Create the vertex buffer object
+	//glGenBuffers(1, &(text_.buffer_));
 
-}
+//}
 
-void GraphicsText::ShowInfoLog(GLuint object,
-                               PFNGLGETSHADERIVPROC glGet__iv,
-                               PFNGLGETSHADERINFOLOGPROC glGet__InfoLog) {
-  GLint log_length;
-  char *log;
+//void GraphicsText::ShowInfoLog(GLuint object,
+                               //PFNGLGETSHADERIVPROC glGet__iv,
+                               //PFNGLGETSHADERINFOLOGPROC glGet__InfoLog) {
+  //GLint log_length;
+  //char *log;
 
-  glGet__iv(object, GL_INFO_LOG_LENGTH, &log_length);
-  log = new char[log_length];
-  glGet__InfoLog(object, log_length, NULL, log);
-  fprintf(stderr, "%s", log);
-  delete log;
-}
+  //glGet__iv(object, GL_INFO_LOG_LENGTH, &log_length);
+  //log = new char[log_length];
+  //glGet__InfoLog(object, log_length, NULL, log);
+  //fprintf(stderr, "%s", log);
+  //delete log;
+//}
 
-void GraphicsText::RenderText(const char *text, float x, float y, int sx, int sy) {
-	const char *p;
-	FT_GlyphSlot g = face_->glyph;
+//void GraphicsText::RenderText(const char *text, float x, float y, int sx, int sy) {
+	//const char *p;
+	//FT_GlyphSlot g = face_->glyph;
 
-	/* Create a texture that will be used to hold one "glyph" */
-	GLuint tex;
+	//[> Create a texture that will be used to hold one "glyph" <]
+	//GLuint tex;
 
-	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glUniform1i(uniform_tex_, 0);
+	//glActiveTexture(GL_TEXTURE0);
+	//glGenTextures(1, &tex);
+	//glBindTexture(GL_TEXTURE_2D, tex);
+	//glUniform1i(uniform_tex_, 0);
 
-	/* We require 1 byte alignment when uploading texture data */
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	//[> We require 1 byte alignment when uploading texture data <]
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	/* Clamping to edges is important to prevent artifacts when scaling */
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//[> Clamping to edges is important to prevent artifacts when scaling <]
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	/* Linear filtering usually looks best for text */
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//[> Linear filtering usually looks best for text <]
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	/* Set up the VBO for our vertex data */
-	glEnableVertexAttribArray(attribute_coord_);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer_);
-	glVertexAttribPointer(attribute_coord_, 4, GL_FLOAT, GL_FALSE, 0, 0);
+	//[> Set up the VBO for our vertex data <]
+	//glEnableVertexAttribArray(attribute_coord_);
+	//glBindBuffer(GL_ARRAY_BUFFER, buffer_);
+	//glVertexAttribPointer(attribute_coord_, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
-	/* Loop through all characters */
-	for (p = text; *p; p++) {
-		/* Try to load and render the character */
-		if (FT_Load_Char(face_, *p, FT_LOAD_RENDER))
-			continue;
+	//[> Loop through all characters <]
+	//for (p = text; *p; p++) {
+		//[> Try to load and render the character <]
+		//if (FT_Load_Char(face_, *p, FT_LOAD_RENDER))
+			//continue;
 
-		/* Upload the "bitmap", which contains an 8-bit grayscale image, as an alpha texture */
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, g->bitmap.width, g->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, g->bitmap.buffer);
+		//[> Upload the "bitmap", which contains an 8-bit grayscale image, as an alpha texture <]
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, g->bitmap.width, g->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, g->bitmap.buffer);
 
-		/* Calculate the vertex and texture coordinates */
-		float x2 = x + g->bitmap_left * sx;
-		float y2 = -y - g->bitmap_top * sy;
-		float w = g->bitmap.width * sx;
-		float h = g->bitmap.rows * sy;
+		//[> Calculate the vertex and texture coordinates <]
+		//float x2 = x + g->bitmap_left * sx;
+		//float y2 = -y - g->bitmap_top * sy;
+		//float w = g->bitmap.width * sx;
+		//float h = g->bitmap.rows * sy;
 
-		point box[4] = {
-			{x2, -y2, 0, 0},
-			{x2 + w, -y2, 1, 0},
-			{x2, -y2 - h, 0, 1},
-			{x2 + w, -y2 - h, 1, 1},
-		};
+		//point box[4] = {
+			//{x2, -y2, 0, 0},
+			//{x2 + w, -y2, 1, 0},
+			//{x2, -y2 - h, 0, 1},
+			//{x2 + w, -y2 - h, 1, 1},
+		//};
 
-		/* Draw the character on the screen */
-		glBufferData(GL_ARRAY_BUFFER, sizeof box, box, GL_DYNAMIC_DRAW);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		//[> Draw the character on the screen <]
+		//glBufferData(GL_ARRAY_BUFFER, sizeof box, box, GL_DYNAMIC_DRAW);
+		//glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-		/* Advance the cursor to the start of the next character */
-		x += (g->advance.x >> 6) * sx;
-		y += (g->advance.y >> 6) * sy;
-	}
+		//[> Advance the cursor to the start of the next character <]
+		//x += (g->advance.x >> 6) * sx;
+		//y += (g->advance.y >> 6) * sy;
+	//}
 
-	glDisableVertexAttribArray(attribute_coord_);
-	glDeleteTextures(1, &tex);
-}
+	//glDisableVertexAttribArray(attribute_coord_);
+	//glDeleteTextures(1, &tex);
+//}
 
 
 #endif
