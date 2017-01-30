@@ -29,9 +29,9 @@ class DiffusionAnalysis {
     double * vcf_; // vector correlation function
     double * msd_err_;
     double * vcf_err_;
-    double gamma_par_;
-    double gamma_perp_;
-    double gamma_rot_;
+    double friction_par_;
+    double friction_perp_;
+    double friction_rot_;
 
     void SetInitPos() {
       preader_.GetNObjs(&n_objs_);

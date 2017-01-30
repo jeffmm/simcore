@@ -12,13 +12,13 @@ class BrBead : public Simple {
   private:
     double diffusion_,
            rand_sigma_rot_,
-           gamma_rot_,
+           friction_rot_,
            driving_factor_,
            body_frame_[6];
   public:
     BrBead(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {
-      diameter_=params->br_bead_diameter;
-      driving_factor_ = params->driving_factor;
+      diameter_=params->br_bead.diameter;
+      driving_factor_ = params->br_bead.driving_factor;
       SetDiffusion();
     }
     void SetDiffusion();

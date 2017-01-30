@@ -1,15 +1,7 @@
 #include "hard_rod.h"
 
 void HardRod::Init() {
-  if (diffusion_validation_flag_) {
-    for (int i=0; i<n_dim_; ++i)
-      position_[i] = orientation_[i] = 0.0;
-    orientation_[n_dim_-1] = 1.0;
-    UpdatePeriodic();
-  }
-  else {
-    InsertRandom();
-  }
+  InsertRandom();
   SetDiffusion();
   std::fill(body_frame_, body_frame_+6, 0.0);
   // Init bond lengths and diameter
@@ -136,7 +128,7 @@ void HardRod::UpdateBondPositions() {
 
    r(t+dt) = r(t) + (Xi^-1 . F_s(t)) * dt + dr(t),
 
-   where friction tensor Xi = gamma_par * |u><u| + gamma_perp * (I - |u><u|),
+   where friction tensor Xi = friction_par * |u><u| + friction_perp * (I - |u><u|),
    u is the orientation, F_s is the force from interactions, and dr(t) is the
    random displacement due to random force,
 
@@ -150,9 +142,9 @@ void HardRod::Integrate() {
   for (int i=0; i<n_dim_; ++i) {
     for (int j=0; j<n_dim_; ++j) {
       position_[i] +=
-        gamma_par_*orientation_[i]*orientation_[j]*force_[j]*delta_;
+        friction_par_*orientation_[i]*orientation_[j]*force_[j]*delta_;
     }
-    position_[i] += force_[i]*gamma_perp_*delta_;
+    position_[i] += force_[i]*friction_perp_*delta_;
   }
   //Add the random displacement dr(t)
   AddRandomDisplacement();
@@ -184,17 +176,17 @@ void HardRod::AddRandomDisplacement() {
 
 /* The orientation update is also from Yu-Guo Tao,
 
-   u(t+dt) = u(t) + gamma_rot^-1 * T_s(t) x u(t) * dt + du(t)
+   u(t+dt) = u(t) + friction_rot^-1 * T_s(t) x u(t) * dt + du(t)
 
    where similar to above, du(t) is the reorientation due to
    random forces, and is treated as random displacement vector(s)
-   orthogonal to u(t) with std dev sqrt(2*kT*dt/gamma_rot) */
+   orthogonal to u(t) with std dev sqrt(2*kT*dt/friction_rot) */
 void HardRod::UpdateOrientation() {
   // First handle reorientation due to external torques
   double du[3];
   cross_product(torque_, orientation_, du, 3); // ndim=3 since torques
   for (int i=0; i<n_dim_; ++i)
-    orientation_[i] += du[i]*delta_/gamma_rot_;
+    orientation_[i] += du[i]*delta_/friction_rot_;
   // Now handle the random orientation update
     for (int j=0; j<n_dim_-1; ++j) {
       double mag = gsl_ran_gaussian_ziggurat(rng_.r, rand_sigma_rot_);
@@ -225,12 +217,12 @@ void HardRod::GetBodyFrame() {
 /* Initialize diffusion coefficients and std dev for random numbers */
 void HardRod::SetDiffusion() {
   double logLD = log(length_/diameter_);
-  gamma_par_ = 2.0*length_ / (3.0*logLD);
-  gamma_perp_ = 2.0*gamma_par_;
-  gamma_rot_ = length_*length_*length_ / (9.0*logLD);
-  rand_sigma_par_ = sqrt(2.0*delta_/gamma_par_);
-  rand_sigma_perp_ = sqrt(2.0*delta_/gamma_perp_);
-  rand_sigma_rot_ = sqrt(2.0*delta_/gamma_rot_);
+  friction_par_ = 2.0*length_ / (3.0*logLD);
+  friction_perp_ = 2.0*friction_par_;
+  friction_rot_ = length_*length_*length_ / (9.0*logLD);
+  rand_sigma_par_ = sqrt(2.0*delta_/friction_par_);
+  rand_sigma_perp_ = sqrt(2.0*delta_/friction_perp_);
+  rand_sigma_rot_ = sqrt(2.0*delta_/friction_rot_);
 }
 
 void HardRod::Draw(std::vector<graph_struct*> * graph_array) {
@@ -261,76 +253,70 @@ void HardRod::Dump() {
 
 // Species specifics
 void HardRodSpecies::Configurator() {
-  char *filename = params_->config_file;
   std::cout << "HardRod species\n";
-
-  YAML::Node node = YAML::LoadFile(filename);
-
   std::cout << " Generic Properties:\n";
-  std::string insertion_type;
-  insertion_type = node["hard_rod"]["properties"]["insertion_type"].as<std::string>();
-
-  bool can_overlap = node["hard_rod"]["properties"]["overlap"].as<bool>();
+  std::string insertion_type = params_->hard_rod.insertion_type;
+  bool can_overlap = params_->hard_rod.overlap;
   std::cout << "   overlap:        " << (can_overlap ? "true" : "false") << std::endl;
-
   // Coloring
   double color[4] = {1.0, 0.0, 0.0, 1.0};
   int draw_type = 1; // default to orientation
-  if (node["hard_rod"]["properties"]["color"]) {
-    for (int i = 0; i < 4; ++i) {
-      color[i] = node["hard_rod"]["properties"]["color"][i].as<double>();
-    }
-    std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
-      << color[3] << "]\n";
+  std::string draw_type_s = params_->hard_rod.draw_type; 
+  if (draw_type_s.compare("flat") == 0)
+    draw_type = 0;
+  else if (draw_type_s.compare("orientation") == 0)
+    draw_type = 1;
+  else
+    draw_type = 2;
+  for (int i = 0; i < 4; ++i) {
+    color[i] = params_->hard_rod.color;
   }
+  std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
+    << color[3] << "]\n";
 
-  if (insertion_type.compare("xyz") == 0) {
-    if (!can_overlap) {
-      std::cout << "Warning, location insertion overrides overlap\n";
-      can_overlap = true;
-    }
-    max_length_ = node["hard_rod"]["properties"]["max_length"].as<double>();
-    std::cout << "   max length:     " << max_length_ << std::endl;
-    min_length_ = node["hard_rod"]["properties"]["min_length"].as<double>();
-    std::cout << "   min length:     " << min_length_ << std::endl;
-    int nrods = (int)node["hard_rod"]["rod"].size();
-    std::cout << "   nrods: " << nrods << std::endl;
-    params_->n_rod = nrods;
-    params_->max_rod_length = max_length_;
-    params_->min_rod_length = min_length_;
-    for (int irod = 0; irod < nrods; ++irod) {
-      double x[3] = {0.0, 0.0, 0.0};
-      double u[3] = {0.0, 0.0, 0.0};
-      double rlength = 0.0;
-      x[0] = node["hard_rod"]["rod"][irod]["x"][0].as<double>();
-      x[1] = node["hard_rod"]["rod"][irod]["x"][1].as<double>();
-      x[2] = node["hard_rod"]["rod"][irod]["x"][2].as<double>();
-      std::cout << "   x(" << x[0] << ", " << x[1] << ", " << x[2] << ")\n";
-      u[0] = node["hard_rod"]["rod"][irod]["u"][0].as<double>();
-      u[1] = node["hard_rod"]["rod"][irod]["u"][1].as<double>();
-      u[2] = node["hard_rod"]["rod"][irod]["u"][2].as<double>();
-      normalize_vector(u, space_->n_dim);
-      std::cout << "   u(" << u[0] << ", " << u[1] << ", " << u[2] << ")\n";
-      rlength = node["hard_rod"]["rod"][irod]["length"].as<double>();
-      std::cout << "   length[" << rlength << "]\n";
+  if (false) {
+  //if (insertion_type.compare("xyz") == 0) {
+    //if (!can_overlap) {
+      //std::cout << "Warning, location insertion overrides overlap\n";
+      //can_overlap = true;
+    //}
+    //std::cout << "   max length:     " << max_length_ << std::endl;
+    //std::cout << "   min length:     " << min_length_ << std::endl;
+    //int n_rods = params_->hard_rod.num;
+    //std::cout << "   n_rods: " << n_rods << std::endl;
+    //for (int irod = 0; irod < n_rods; ++irod) {
+      //double x[3] = {0.0, 0.0, 0.0};
+      //double u[3] = {0.0, 0.0, 0.0};
+      //double rlength = 0.0;
+      //x[0] = node["hard_rod"]["rod"][irod]["x"][0].as<double>();
+      //x[1] = node["hard_rod"]["rod"][irod]["x"][1].as<double>();
+      //x[2] = node["hard_rod"]["rod"][irod]["x"][2].as<double>();
+      //std::cout << "   x(" << x[0] << ", " << x[1] << ", " << x[2] << ")\n";
+      //u[0] = node["hard_rod"]["rod"][irod]["u"][0].as<double>();
+      //u[1] = node["hard_rod"]["rod"][irod]["u"][1].as<double>();
+      //u[2] = node["hard_rod"]["rod"][irod]["u"][2].as<double>();
+      //normalize_vector(u, space_->n_dim);
+      //std::cout << "   u(" << u[0] << ", " << u[1] << ", " << u[2] << ")\n";
+      //rlength = node["hard_rod"]["rod"][irod]["length"].as<double>();
+      //std::cout << "   length[" << rlength << "]\n";
 
-      HardRod *member = new HardRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
-      member->InitConfigurator(x, u, rlength);
-      member->SetColor(color, draw_type);
-      //member->SetAnchors(anchors_);
-      member->Dump();
-      members_.push_back(member);
-    }
+      //HardRod *member = new HardRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
+      //member->InitConfigurator(x, u, rlength);
+      //member->SetColor(color, draw_type);
+      ////member->SetAnchors(anchors_);
+      //member->Dump();
+      //members_.push_back(member);
+    //}
   } else if (insertion_type.compare("random") == 0) {
-    int nrods         = node["hard_rod"]["rod"]["num"].as<int>();
-    double rlength    = node["hard_rod"]["rod"]["length"].as<double>();
-    double max_length = node["hard_rod"]["rod"]["max_length"].as<double>();
-    double min_length = node["hard_rod"]["rod"]["min_length"].as<double>();
-    double diameter   = node["hard_rod"]["rod"]["diameter"].as<double>();
+    int n_rods = params_->hard_rod.num;
+    double rlength    = params_->hard_rod.num;
+    double max_length = params_->hard_rod.max_length;
+    double min_length = params_->hard_rod.min_length;
+    double diameter   = params_->hard_rod.diameter;
 
     //Set fill type for neumatics and other kinds of forms
     std::cout << std::setw(25) << std::left << "   n rods:" << std::setw(10)
-      << std::left << nrods << std::endl;
+      << std::left << n_rods << std::endl;
     std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
       << std::left << rlength << std::endl;
     std::cout << std::setw(25) << std::left << "   max length:" << std::setw(10)
@@ -340,16 +326,7 @@ void HardRodSpecies::Configurator() {
     std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
       << std::left << diameter << std::endl;
 
-    params_->n_rod = nrods;
-    params_->rod_length = rlength;
-    params_->max_rod_length = max_length;
-    params_->min_rod_length = min_length;
-    max_length_ = max_length;
-    min_length_ = min_length;
-    params_->rod_diameter = diameter;
-   
-
-    for (int i_mem = 0; i_mem < nrods; ++i_mem) {
+    for (int i_mem = 0; i_mem < n_rods; ++i_mem) {
       HardRod *member = new HardRod(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->SetColor(color, draw_type);
       member->Init();
@@ -379,7 +356,7 @@ void HardRodSpecies::Configurator() {
             }
           } // check against current members
           if (numoverlaps > params_->max_overlap) {
-            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i_mem << " of " << nrods;
+            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i_mem << " of " << n_rods;
             std::cout << ".  Check packing ratio for objects.\n";
             exit(1);
           }

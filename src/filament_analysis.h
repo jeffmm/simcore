@@ -20,6 +20,9 @@ class FilamentAnalysis {
     double plength_;
     double * diameters_ = nullptr;
     double * lengths_;
+    double * persistence_lengths_;
+    double * friction_pars_;
+    double * friction_perps_;
     double * child_lengths_;
     double * sqr_end_to_end_;
     double * cos_thetas_;
@@ -27,9 +30,9 @@ class FilamentAnalysis {
     int * theta_distribution_;
     double ms_end_to_end_;
     double ms_end_to_end_err_;
-    double gamma_par_;
-    double gamma_perp_;
-    double gamma_rot_;
+    double friction_par_;
+    double friction_perp_;
+    double friction_rot_;
 
     void CleanUp() {
       preader_.CloseFile();
@@ -46,8 +49,8 @@ class FilamentAnalysis {
     void FilamentInit() {
       n_steps_ = preader_.NSteps();
       n_posit_ = preader_.NPosit();
-      n_time_ = n_steps_/n_posit_;
       // Make use of integer division here
+      n_time_ = n_steps_/n_posit_;
       preader_.GetNObjs(&n_objs_);
       if (diameters_ == nullptr) {
         diameters_ = new double[n_objs_];

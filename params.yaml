@@ -1,41 +1,18 @@
 # params.yaml
 ---
-seed : 282933055316205
+seed : 17140302686691
+run_name: test
 n_runs: 1
 n_dim: 2
 n_periodic: 2
-delta: 0.00001
-n_steps: 5000000
-system_radius: 20
+delta: 0.0001
+n_steps: 100000
+system_radius: 40
 graph_flag: 1
-graph_diameter: 1
 n_graph: 500
-cell_length: 10
+movie_flag: 0
+movie_directory: frames
+cell_length: 5
 n_update_cells: 10
-diffusion_validation_flag: 0
-n_validate: 250
-time_flag: 1
-driving_factor: 50
-tracking_type: 1 # 0 none, 1 ap, 2 mcells, 3 cells, 4 nl ap, 5 nl cells
-wca_eps: 1
-wca_sig: 1
-ss_eps: 100
-ss_rs: 2.2
-ss_a: 10
-f_cutoff: 1200
-config_file: params/filament_int.config.yaml
-posit_flag: 1
-n_posit: 100
-avg_posits: 1
-diffusion_analysis: 1
-diffusion_interval: 300
-filament_analysis: 1
-grab_flag: 1
-grab_file: frames/frame
-constant_pressure : 0
-constant_volume: 0
-target_pressure: 5
-target_radius: 50
-virial_time_avg: 100
-pressure_time: 4
-filament_spiral_flag: 1
+f_cutoff: 9000
+append_file: filament.yaml

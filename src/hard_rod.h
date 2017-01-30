@@ -13,15 +13,14 @@
 class HardRod : public Composite<Site,Bond> {
 
   private:
-    int n_bonds_,
-        diffusion_validation_flag_;
+    int n_bonds_;
     double max_length_,
            min_length_,
            max_child_length_,
            child_length_,
-           gamma_par_,
-           gamma_perp_,
-           gamma_rot_,
+           friction_par_,
+           friction_perp_,
+           friction_rot_,
            rand_sigma_par_,
            rand_sigma_perp_,
            rand_sigma_rot_,
@@ -39,13 +38,12 @@ class HardRod : public Composite<Site,Bond> {
   public:
     HardRod(system_parameters *params, space_struct * space, long seed, SID sid) 
       : Composite(params, space, seed, sid) {
-        length_ = params->rod_length;
-        diameter_ = params->rod_diameter;
-        max_length_ = params->max_rod_length;
-        min_length_ = params->min_rod_length;
-        max_child_length_ = 0.5*params->cell_length;
-        driving_factor_ = params->driving_factor;
-        diffusion_validation_flag_ = params->diffusion_validation_flag;
+        length_ = params->hard_rod.length;
+        diameter_ = params->hard_rod.diameter;
+        max_length_ = params->hard_rod.max_length;
+        min_length_ = params->hard_rod.min_length;
+        max_child_length_ = params->hard_rod.max_child_length;
+        driving_factor_ = params->hard_rod.driving_factor;
         // Initialize end sites
         for (int i=0; i<2; ++i) {
           Site s(params, space, gsl_rng_get(rng_.r), GetSID());
@@ -87,7 +85,8 @@ class HardRodSpecies : public Species<HardRod> {
       : Species(n_members, params, space, seed) {
       SetSID(SID::hard_rod);
       //InitPotentials(params);
-      max_length_ = params_->max_rod_length;
+      max_length_ = params_->hard_rod.max_length;
+      min_length_ = params_->hard_rod.min_length;
     }
     void Init() {
       Species::Init();
