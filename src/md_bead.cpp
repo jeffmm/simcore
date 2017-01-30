@@ -44,31 +44,25 @@ double const MDBead::GetKineticEnergy() {
 
 // Species Specific
 void MDBeadSpecies::Configurator() {
-  char *filename = params_->config_file;
   std::cout << "MDBead species\n";
-
-  YAML::Node node = YAML::LoadFile(filename);
 
   // See what kind of insertion we are doing
   std::string insertion_type;
-  insertion_type = node["md_bead"]["properties"]["insertion_type"].as<std::string>();
+  insertion_type = params_->md_bead.insertion_type;
   std::cout << "   insertion type: " << insertion_type << std::endl;
-  bool can_overlap = node["md_bead"]["properties"]["overlap"].as<bool>();
+  bool can_overlap = params_->md_bead.overlap;
   std::cout << "   overlap: " << (can_overlap ? "true" : "false") << std::endl;
 
   if (insertion_type.compare("xyz") == 0) {
     std::cout << "Nope, not yet!\n";
     exit(1);
   } else if (insertion_type.compare("random") == 0) {
-    int nmdbeads    = node["md_bead"]["mdbead"]["num"].as<int>();
-    double diameter = node["md_bead"]["mdbead"]["diameter"].as<double>();
-    double mass     = node["md_bead"]["mdbead"]["mass"].as<double>();
+    int nmdbeads    = params_->md_bead.num;
+    double diameter = params_->md_bead.diameter;
+    double mass     = params_->md_bead.mass;
     std::cout << "   n_md_beads: " << nmdbeads << std::endl;
     std::cout << "   diameter:   " << diameter << std::endl;
     std::cout << "   mass:       " << mass << std::endl;
-    params_->n_md_bead = nmdbeads;
-    params_->md_bead_diameter = diameter;
-    params_->md_bead_mass = mass;
 
     for (int i = 0; i < nmdbeads; ++i) {
       MDBead *member = new MDBead(params_, space_, gsl_rng_get(rng_.r), GetSID());

@@ -3,9 +3,9 @@
 
 #define REGISTER_SPECIES(n,m) species_factory_.register_class<n>(#m);
 
-void Simulation::Run(system_parameters params, std::string name) {
+void Simulation::Run(system_parameters params) {
   params_ = params;
-  run_name_ = name;
+  run_name_ = params.run_name;
   rng_.init(params_.seed);
   InitSimulation();
   RunSimulation();
@@ -96,17 +96,13 @@ void Simulation::InitSimulation() {
     graphics_.Init(&graph_array, space_.GetStruct(), background_color);
     graphics_.DrawLoop();
     #endif
+    params_.movie_directory.append("/");
+    params_.movie_directory.append(params_.run_name);
   }
   InitOutputs();
 }
 
 void Simulation::InitSpecies() {
-  // Check out the configuration file
-  std::cout << "********\n";
-  std::cout << "Species Load ->\n";
-  std::cout << "  file: " << params_.config_file << std::endl;
-
-  YAML::Node node = YAML::LoadFile(params_.config_file);
 
   // We have to search for the various types of species that we have
   REGISTER_SPECIES(MDBeadSpecies,md_bead);
@@ -118,12 +114,10 @@ void Simulation::InitSpecies() {
    and find them in the yaml file */
   for (auto registered = species_factory_.m_classes.begin(); 
       registered != species_factory_.m_classes.end(); ++registered) {
-    if (node[registered->first]) {
-      SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(registered->first);
-      spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-      spec->Configurator();
-      species_.push_back(spec);
-    }
+    SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(registered->first);
+    spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+    spec->Configurator();
+    species_.push_back(spec);
   }
 }
 
@@ -146,10 +140,10 @@ void Simulation::Draw() {
   if (params_.graph_flag && i_step_%params_.n_graph==0) {
     GetGraphicsStructure();
     graphics_.Draw();
-    if (params_.grab_flag) {
+    if (params_.movie_flag) {
       // Record bmp image of frame 
       grabber(graphics_.windx_, graphics_.windy_,
-              params_.grab_file, (int) i_step_/params_.n_graph);
+              params_.movie_directory, (int) i_step_/params_.n_graph);
     }
   }
   #endif
@@ -186,12 +180,18 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::ve
   params_ = params;
   run_name_ = name;
   //Graph and don't make new posit files
-  params_.graph_flag = 1;
-  params_.posit_flag = 0;
+  params_.graph_flag = true;
+  params_.posit_flag = false;
   output_mgr_.SetPosits(posit_files);
   rng_.init(params_.seed);
   InitSimulation();
   RunMovie();
   ClearSimulation();
 }
+
+//void Simulation::Analysis(system_parameters params, std::string name, std::vector<std::string> posit_files) {
+  //params_ = params;
+  //run_name_ = name;
+  //params_.graph_flag = 0;
+  //params_
 

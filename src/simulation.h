@@ -54,7 +54,7 @@ class Simulation {
 
   public:
     Simulation() {}
-    void Run(system_parameters params, std::string name);
+    void Run(system_parameters params);
     void CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files);
 };
 

@@ -142,7 +142,7 @@ struct space_struct {
 
 
 double cpu();
-void grabber(int width, int height, char *fname, int framenum);
+void grabber(int width, int height, std::string fname, int framenum);
 void generate_random_unit_vector(int n_dim, double *vect, gsl_rng *r);
 void rotate_orientation_vector(int n_dim, double *vect1, double *vect2);
 double dot_product(int n_dim, double const * const a, double const * const b);

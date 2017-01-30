@@ -37,8 +37,8 @@ void BrBead::Driving() {
 }
 
 void BrBead::SetDiffusion() {
-  gamma_rot_ = 3.0*diameter_*diameter_*diameter_;
-  rand_sigma_rot_ = sqrt(2.0*delta_/gamma_rot_);
+  friction_rot_ = 3.0*diameter_*diameter_*diameter_;
+  rand_sigma_rot_ = sqrt(2.0*delta_/friction_rot_);
   diffusion_ = sqrt(24.0*diameter_/delta_);
 }
 
@@ -72,50 +72,42 @@ void BrBead::GetBodyFrame() {
 }
 
 void BrBeadSpecies::Configurator() {
-  char *filename = params_->config_file;
   std::cout << "BRBead species\n";
-
-  YAML::Node node = YAML::LoadFile(filename);
 
   // See what kind of insertion we are doing
   std::string insertion_type;
   double color[4] = {1.0, 0.0, 0.0, 1.0};
-  insertion_type = node["br_bead"]["properties"]["insertion_type"].as<std::string>();
+  insertion_type = params_->br_bead.insertion_type;
   std::cout << "   insertion type: " << insertion_type << std::endl;
-  bool can_overlap = node["br_bead"]["properties"]["overlap"].as<bool>();
+  bool can_overlap = params_->br_bead.overlap;
   std::cout << "   overlap: " << (can_overlap ? "true" : "false") << std::endl;
-  if (node["br_bead"]["properties"]["color"]) {
-    for (int i = 0; i < 4; ++i) {
-      color[i] = node["br_bead"]["properties"]["color"][i].as<double>();
-    }
+  for (int i = 0; i < 4; ++i) {
+    color[i] = params_->br_bead.color;
   }
   std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
     << color[3] << "]\n";
   int draw_type = 0;
-  if (node["br_bead"]["properties"]["draw_type"]) {
-    std::string draw_type_s = node["br_bead"]["properties"]["draw_type"].as<std::string>();
-    std::cout << "   draw_type: " << draw_type_s << std::endl;
-    if (draw_type_s.compare("flat") == 0) {
-      draw_type = 0;
-    } else if (draw_type_s.compare("orientation") == 0) {
-      draw_type = 1;
-    } else {
-      draw_type = 2;
-    }
+  std::string draw_type_s = params_->br_bead.draw_type;
+  std::cout << "   draw_type: " << draw_type_s << std::endl;
+  if (draw_type_s.compare("flat") == 0) {
+    draw_type = 0;
+  } else if (draw_type_s.compare("orientation") == 0) {
+    draw_type = 1;
+  } else {
+    draw_type = 2;
   }
 
   if (insertion_type.compare("xyz") == 0) {
     std::cout << "Nope, not yet!\n";
     exit(1);
   } else if (insertion_type.compare("random") == 0) {
-    int nbrbeads    = node["br_bead"]["brbead"]["num"].as<int>();
-    double diameter = node["br_bead"]["brbead"]["diameter"].as<double>();
-    std::cout << "   n_br_beads: " << nbrbeads << std::endl;
-    std::cout << "   diameter:   " << diameter << std::endl;
-    params_->n_br_bead = nbrbeads;
-    params_->br_bead_diameter = diameter;
 
-    for (int i = 0; i < nbrbeads; ++i) {
+    int n_beads = params_->br_bead.num;
+    double diameter = params_->br_bead.diameter;
+    std::cout << "   n_br_beads: " << n_beads << std::endl;
+    std::cout << "   diameter:   " << diameter << std::endl;
+
+    for (int i = 0; i < n_beads; ++i) {
       BrBead *member = new BrBead(params_, space_, gsl_rng_get(rng_.r), GetSID());
       member->Init();
       //member->SetColor(color, draw_type);
@@ -143,7 +135,7 @@ void BrBeadSpecies::Configurator() {
             }
           }
           if (numoverlaps > params_->max_overlap) {
-            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i << " of " << nbrbeads;
+            std::cout << "ERROR: Too many overlaps detected.  Inserted " << i << " of " << n_beads;
             std::cout << ".  Check packing ratio for objects.\n";
             exit(1);
           }

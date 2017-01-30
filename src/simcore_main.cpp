@@ -1,4 +1,4 @@
-
+ 
 #include <iostream>
 #include <stdlib.h>
 #include "parse_flags.h"
@@ -24,29 +24,22 @@ int main(int argc, char *argv[]) {
     sim.DebugMode();
   }
 
-  if (run_opts.test) {
-    // Run the test mode operation
-    debug_trace = true;
-  } 
-
-  else {
-    // Initialize param_file, rng, run_name, n_runs (if in param_file)
-    sim.InitManager(run_opts.param_file);
-    // Prefer command-line options over param values for n_runs, run_name
-    if (run_opts.n_flag)
-      sim.SetNRuns(run_opts.n_runs);
-    if (run_opts.r_flag)
-      sim.SetRunName(run_opts.run_name);
-    if (run_opts.m_flag)
-      // Recreate Movie of past simulations using posit file
-      sim.RunMovieManager(run_opts.posit_files);
-    else if (run_opts.a_flag)
-      // Analyze existing posit files
-      sim.RunAnalyses(run_opts.posit_files);
-    else
-      // Main control function
-      sim.RunManager();
-  }
+  // Initialize manager assets
+  sim.InitManager(run_opts.param_file);
+  // Prefer command-line options over param values for n_runs, run_name
+  if (run_opts.n_flag)
+    sim.SetNRuns(run_opts.n_runs);
+  if (run_opts.r_flag)
+    sim.SetRunName(run_opts.run_name);
+   //Recreate Movie of past simulations using posit file
+  //if (run_opts.m_flag)
+    //sim.MakeMovie();
+  // Analyze existing posit files
+  //if (run_opts.a_flag)
+    //sim.RunAnalysis();
+  // Main control function
+  //sim.RunManager(run_opts.posit_files);
+  sim.RunManager();
 
   return 0;
 }

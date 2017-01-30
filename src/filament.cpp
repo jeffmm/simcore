@@ -3,30 +3,28 @@
 #include "filament.h"
 
 void Filament::SetParameters(system_parameters *params) {
-  length_ = params->rod_length;
-  persistence_length_ = params->persistence_length;
-  diameter_ = params->rod_diameter;
+  length_ = params->filament.length;
+  persistence_length_ = params->filament.persistence_length;
+  diameter_ = params->filament.diameter;
   // TODO JMM: add subdivisions of bonds for interactions, 
   //           should depend on cell length
-  max_length_ = params->max_rod_length;
-  min_length_ = params->min_rod_length;
-  max_child_length_ = params->max_child_length;
-  dynamic_instability_flag_ = params->dynamic_instability_flag;
-  spiral_flag_ = params->filament_spiral_flag;
-  force_induced_catastrophe_flag_ = params->force_induced_catastrophe_flag;
-  p_g2s_ = params->f_grow_to_shrink*delta_;
-  p_g2p_ = params->f_grow_to_pause*delta_;
-  p_s2p_ = params->f_shrink_to_pause*delta_;
-  p_s2g_ = params->f_shrink_to_grow*delta_;
-  p_p2s_ = params->f_pause_to_shrink*delta_;
-  p_p2g_ = params->f_pause_to_grow*delta_;
-  v_depoly_ = params->v_depoly;
-  v_poly_ = params->v_poly;
-  driving_factor_ = params->driving_factor;
-  gamma_ratio_ = params->gamma_ratio;
-  metric_forces_ = params->metric_forces;
-  theta_validation_flag_ = params->theta_validation_flag;
-  diffusion_validation_flag_ = params->diffusion_validation_flag;
+  max_length_ = params->filament.max_length;
+  min_length_ = params->filament.min_length;
+  max_child_length_ = params->filament.max_child_length;
+  dynamic_instability_flag_ = params->filament.dynamic_instability_flag;
+  spiral_flag_ = params->filament.spiral_flag;
+  force_induced_catastrophe_flag_ = params->filament.force_induced_catastrophe_flag;
+  p_g2s_ = params->filament.f_grow_to_shrink*delta_;
+  p_g2p_ = params->filament.f_grow_to_pause*delta_;
+  p_s2p_ = params->filament.f_shrink_to_pause*delta_;
+  p_s2g_ = params->filament.f_shrink_to_grow*delta_;
+  p_p2s_ = params->filament.f_pause_to_shrink*delta_;
+  p_p2g_ = params->filament.f_pause_to_grow*delta_;
+  v_depoly_ = params->filament.v_depoly;
+  v_poly_ = params->filament.v_poly;
+  driving_factor_ = params->filament.driving_factor;
+  friction_ratio_ = params->filament.friction_ratio;
+  metric_forces_ = params->filament.metric_forces;
 }
 
 void Filament::InitElements(system_parameters *params, space_struct *space) {
@@ -35,17 +33,6 @@ void Filament::InitElements(system_parameters *params, space_struct *space) {
     n_bonds_++;
   n_sites_ = n_bonds_+1;
   child_length_ = length_/n_bonds_;
-  // If validating conformation of filament, create
-  // the usual test filament
-  if (theta_validation_flag_) {
-    length_ = 8.0;
-    max_child_length_ = 1.0;
-    child_length_  = 1.0;
-    min_length_ = 1.0;
-    n_bonds_ = 8;
-    dynamic_instability_flag_ = 0;
-    force_induced_catastrophe_flag_ = 0;
-  }
   if (length_/n_bonds_ < min_length_) {
     error_exit("ERROR: min_length_ of flexible filament segments too large for filament length.\n");
   }
@@ -92,10 +79,6 @@ void Filament::InitElements(system_parameters *params, space_struct *space) {
 }
 
 void Filament::Init() {
-  if (diffusion_validation_flag_) {
-    DiffusionValidationInit();
-    return;
-  }
   if (spiral_flag_) {
     InitSpiral2D();
     return;
@@ -178,11 +161,11 @@ void Filament::InitSpiral2D() {
 void Filament::SetDiffusion() {
   double logLD = log(length_/diameter_);
   //double gamma_0 = 4.0/3.0*eps*((1+0.64*eps)/(1-1.15*eps) + 1.659 * SQR(eps));
-  //gamma_perp_ = child_length_ * gamma_0;
-  gamma_perp_ = 4.0*length_/(3.0*n_sites_*logLD);
-  gamma_par_ = gamma_perp_ / gamma_ratio_;
-  rand_sigma_perp_ = sqrt(24.0*gamma_perp_/delta_);
-  rand_sigma_par_ = sqrt(24.0*gamma_par_/delta_);
+  //friction_perp_ = child_length_ * gamma_0;
+  friction_perp_ = 4.0*length_/(3.0*n_sites_*logLD);
+  friction_par_ = friction_perp_ / friction_ratio_;
+  rand_sigma_perp_ = sqrt(24.0*friction_perp_/delta_);
+  rand_sigma_par_ = sqrt(24.0*friction_par_/delta_);
 }
 
 void Filament::GenerateProbableOrientation() {
@@ -377,10 +360,10 @@ void Filament::CalculateBendingForces() {
     for(int i=0; i<n_sites_-2; ++i) {
       g_mat_inverse_[i] = 0;
     }
-  }
-  // Now calculate the effective rigidities
-  for (int i=0; i<n_sites_-2; ++i) {
-    k_eff_[i] = (persistence_length_ * (theta_validation_flag_ ? child_length_ : 1) + child_length_ * g_mat_inverse_[i])/SQR(child_length_);
+  }                                        
+  // Now calculate the effective rigidities  .-> ?
+  for (int i=0; i<n_sites_-2; ++i) { //      |
+    k_eff_[i] = (persistence_length_ *(child_length_)+ child_length_ * g_mat_inverse_[i])/SQR(child_length_);
   }
   // Using these, we can calculate the forces on each of the sites
   // These calculations were done by hand and are not particularly readable,
@@ -456,8 +439,8 @@ void Filament::CalculateTensions() {
     double const * const utan = elements_[i_site].GetTangent();
     for (int i=0; i<n_dim_; ++i) {
       for (int j=0; j<n_dim_; ++j) {
-        gamma_inverse_[site_index+gamma_index] = 1.0/gamma_par_ * (utan[i]*utan[j])
-                                     + 1.0/gamma_perp_ * ((i==j ? 1 : 0) - utan[i]*utan[j]);
+        gamma_inverse_[site_index+gamma_index] = 1.0/friction_par_ * (utan[i]*utan[j])
+                                     + 1.0/friction_perp_ * ((i==j ? 1 : 0) - utan[i]*utan[j]);
         gamma_index++;
       }
     }
@@ -485,12 +468,12 @@ void Filament::CalculateTensions() {
     tensions_[i_site] = dot_product(n_dim_, u2, f_diff);
     utan1_dot_u2 = dot_product(n_dim_, utan1, u2);
     utan2_dot_u2 = dot_product(n_dim_, utan2, u2);
-    h_mat_diag_[i_site] = 2.0/gamma_perp_ + (1.0/gamma_par_ - 1.0/gamma_perp_) *
+    h_mat_diag_[i_site] = 2.0/friction_perp_ + (1.0/friction_par_ - 1.0/friction_perp_) *
       (SQR(utan1_dot_u2) + SQR(utan2_dot_u2));
     if (i_site>0) {
       double const * const u1 = elements_[i_site-1].GetOrientation();
-      h_mat_upper_[i_site-1] = -1.0/gamma_perp_ * dot_product(n_dim_, u2, u1)
-        - (1.0/gamma_par_ - 1.0/gamma_perp_) * (dot_product(n_dim_, utan1, u1) *
+      h_mat_upper_[i_site-1] = -1.0/friction_perp_ * dot_product(n_dim_, u2, u1)
+        - (1.0/friction_par_ - 1.0/friction_perp_) * (dot_product(n_dim_, utan1, u1) *
             dot_product(n_dim_, utan1, u2));
       h_mat_lower_[i_site-1] = h_mat_upper_[i_site-1];
     }
@@ -676,49 +659,41 @@ void Filament::ScalePosition() {
 
 // Species specifics, including insertion routines
 void FilamentSpecies::Configurator() {
-  char *filename = params_->config_file;
 
   std::cout << "Filament species\n";
-
-  YAML::Node node = YAML::LoadFile(filename);
-
   std::cout << " Generic Properties:\n";
-
   // Check insertion type
   std::string insertion_type;
-  insertion_type = node["filament"]["properties"]["insertion_type"].as<std::string>();
+  insertion_type = params_->filament.insertion_type;
   std::cout << "   insertion type: " << insertion_type << std::endl;
-  bool can_overlap = node["filament"]["properties"]["overlap"].as<bool>();
+  bool can_overlap = params_->filament.overlap;
   std::cout << "   overlap:        " << (can_overlap ? "true" : "false") << std::endl;
 
   // Coloring
   double color[4] = {1.0, 0.0, 0.0, 1.0};
   int draw_type = 1; // default to orientation
-  if (node["filament"]["properties"]["color"]) {
-    for (int i = 0; i < 4; ++i) {
-      color[i] = node["filament"]["properties"]["color"][i].as<double>();
-    }
-    std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
-      << color[3] << "]\n";
+  for (int i = 0; i < 4; ++i) {
+    color[i] = params_->filament.color;
   }
-  if (node["filament"]["properties"]["draw_type"]) {
-    std::string draw_type_s = node["filament"]["properties"]["draw_type"].as<std::string>();
-    std::cout << "   draw_type: " << draw_type_s << std::endl;
-    if (draw_type_s.compare("flat") == 0) {
-      draw_type = 0;
-    } else if (draw_type_s.compare("orientation") == 0) {
-      draw_type = 1;
-    }
+  std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
+    << color[3] << "]\n";
+  std::string draw_type_s = params_->filament.draw_type;
+  std::cout << "   draw_type: " << draw_type_s << std::endl;
+  if (draw_type_s.compare("flat") == 0) {
+    draw_type = 0;
+  } else if (draw_type_s.compare("orientation") == 0) {
+    draw_type = 1;
   }
 
   if (insertion_type.compare("random") == 0) {
-    int nfilaments          = node["filament"]["fil"]["num"].as<int>();
-    double flength          = node["filament"]["fil"]["length"].as<double>();
-    double plength          = node["filament"]["fil"]["persistence_length"].as<double>();
-    double max_length       = node["filament"]["fil"]["max_length"].as<double>();
-    double min_length       = node["filament"]["fil"]["min_length"].as<double>();
-    double max_child_length = node["filament"]["fil"]["max_child_length"].as<double>();
-    double diameter         = node["filament"]["fil"]["diameter"].as<double>();
+    int nfilaments          = params_->filament.num;
+    double flength          = params_->filament.length;
+    double plength          = params_->filament.persistence_length;
+    double max_length       = params_->filament.max_length;
+    double min_length       = params_->filament.min_length;
+    double max_child_length = params_->filament.max_child_length;
+    double diameter         = params_->filament.diameter;
+
 
     std::cout << std::setw(25) << std::left << "   n filaments:" << std::setw(10)
       << std::left << nfilaments << std::endl;
@@ -734,14 +709,6 @@ void FilamentSpecies::Configurator() {
       << std::left << max_child_length << std::endl;
     std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
       << std::left << diameter << std::endl;
-
-    params_->n_filament = nfilaments;
-    params_->rod_length = flength;
-    params_->persistence_length = plength;
-    params_->max_rod_length = max_length;
-    params_->min_rod_length = min_length;
-    params_->max_child_length = max_child_length; // Should depend on cell size
-    params_->rod_diameter = diameter;
 
     n_members_ = 0;
     for (int i = 0; i < nfilaments; ++i) {
@@ -780,72 +747,8 @@ void FilamentSpecies::Configurator() {
     std::cout << "Nope, not yet for filaments!\n";
     exit(1);
   }
-  theta_validation_ = params_->theta_validation_flag ? true : false;
   n_dim_ = params_->n_dim;
-  if (theta_validation_) {
-    nbins_ = params_->n_bins;
-    theta_distribution_ = new int**[n_members_];
-    for (int i=0; i<n_members_; ++i) {
-      theta_distribution_[i] = new int*[7]; // 7 angles to record for 8 bonds
-      for (int j=0; j<7; ++j) {
-        theta_distribution_[i][j] = new int[nbins_];
-        std::fill(theta_distribution_[i][j],theta_distribution_[i][j]+nbins_,0.0);
-      }
-    }
-  }
   midstep_ = true;
-  ibin_ = 0;
-  ivalidate_ = 0;
-}
-
-void FilamentSpecies::WriteThetaValidation(std::string run_name) {
-  std::ostringstream file_name;
-  file_name << run_name << "-thetas.log";
-  std::ofstream thetas_file(file_name.str().c_str(), std::ios_base::out);
-  thetas_file << "cos_theta" << " ";
-  int n_theta = 1;
-  for (int j_member=0; j_member<n_members_; ++j_member) {
-    for (int k_angle=0; k_angle<7; ++k_angle) {
-      thetas_file << "fil_" << j_member+1 << "_theta_" << n_theta++ << n_theta << " ";
-    }
-    n_theta = 1;
-  }
-  thetas_file << "\n";
-  for (int i_bin=0; i_bin<nbins_; ++i_bin) {
-    double angle = 2.0*i_bin/ (double) nbins_ - 1.0;
-    thetas_file << angle << " ";
-    for (int j_member=0; j_member<n_members_; ++j_member) {
-      for (int k_angle=0; k_angle<7; ++k_angle) {
-        thetas_file << theta_distribution_[j_member][k_angle][i_bin] << " ";
-      }
-    }
-    thetas_file << "\n";
-  }
-}
-
-void FilamentSpecies::WriteOutputs(std::string run_name) {
-  if (theta_validation_) {
-    WriteThetaValidation(run_name);
-  }
-}
-
-void FilamentSpecies::ValidateThetaDistributions() {
-  int i = 0;
-  for (auto it=members_.begin(); it!=members_.end(); ++it) {
-    std::vector<double> const * const thetas = (*it)->GetThetas();
-    for (int j=0; j<7; ++j) {
-      int bin_number = (int) floor( (1 + (*thetas)[j]) * (nbins_/2) );
-      // Check boundaries
-      if (bin_number == nbins_)
-        bin_number = nbins_-1;
-      else if (bin_number == -1)
-        bin_number = 0;
-      // Check for nonsensical values
-      else if (bin_number > nbins_ || bin_number < 0) error_exit("Something went wrong in ValidateThetaDistributions!\n");
-      theta_distribution_[i][j][bin_number]++;
-    }
-    i++;
-  }
 }
 
 void Filament::GetAvgOrientation(double * au) {
@@ -930,15 +833,22 @@ void Filament::DumpAll() {
 /* The posit output for one filament is:
     diameter
     length
+    persistence_length (added 1/17/2017)
+    friction_par (added 1/17/2017)
+    friction_perp (added 1/17/2017)
     bond_length
     n_bonds,
     position of first site
     position of last site
     all bond orientations
     */
+
 void Filament::WritePosit(std::fstream &op){
   op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
   op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
+  //op.write(reinterpret_cast<char*>(&persistence_length_), sizeof(persistence_length_));
+  //op.write(reinterpret_cast<char*>(&friction_par_), sizeof(friction_par_));
+  //op.write(reinterpret_cast<char*>(&friction_perp_), sizeof(friction_perp_));
   op.write(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
   op.write(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
   double temp[3];
@@ -962,21 +872,23 @@ void Filament::WritePosit(std::fstream &op){
 void Filament::ReadPosit(std::fstream &ip) {
   if (ip.eof()) return;
   double r0[3], rf[3], u_bond[3];
-  Bond bond(params_, space_, params_->seed, sid_);
   ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
   ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
+  //ip.read(reinterpret_cast<char*>(&persistence_length_), sizeof(persistence_length_));
+  //ip.read(reinterpret_cast<char*>(&friction_par_), sizeof(friction_par_));
+  //ip.read(reinterpret_cast<char*>(&friction_perp_), sizeof(friction_perp_));
   ip.read(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
   ip.read(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
-  v_elements_.resize(n_bonds_, bond);
+  v_elements_.resize(n_bonds_, v_elements_[0]);
   // Get initial site position
-  for (auto& pos : r0)
-    ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
-  for (auto& pos : rf)
-    ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
+  for (int i=0; i<3; ++i)
+    ip.read(reinterpret_cast<char*>(&r0[i]), sizeof(double));
+  for (int i=0; i<3; ++i)
+    ip.read(reinterpret_cast<char*>(&rf[i]), sizeof(double));
   // Initialize bonds from relative orientations
   for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
-    for (auto& u : u_bond)
-      ip.read(reinterpret_cast<char*>(&u), sizeof(u));
+    for (int i=0; i<3; ++i)
+      ip.read(reinterpret_cast<char*>(&u_bond[i]), sizeof(double));
     for (int i=0; i<n_dim_; ++i) {
       // Set bond position
       rf[i] = r0[i] + 0.5 * child_length_ * u_bond[i];
@@ -991,3 +903,9 @@ void Filament::ReadPosit(std::fstream &ip) {
   }
 }
 
+//void Filament::AnalyzeConformation() {
+  //CalculateAngles();
+  //for (int i=0; i<n_bonds_-1; ++i) {
+
+
+//}

@@ -1,0 +1,10 @@
+filament:
+  num: 1
+  diameter: 1
+  spiral_flag: 1
+  min_length: 1
+  max_length: 80
+  length: 80
+  persistence_length: 800
+  max_child_length: 3
+  driving_factor: [1,2,4,8,16]

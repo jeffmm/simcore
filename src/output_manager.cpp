@@ -52,14 +52,14 @@ void OutputManager::Close() {
 }
 
 void OutputManager::InitPositInput() {
-  for (auto pos_it : posit_files_){
+  for (auto pos_it=posit_files_.begin(); pos_it!=posit_files_.end(); ++pos_it){
     int nchar, n_steps, n_pos;
     std::fstream ip;
 
     //Open binary file of all the positions
-    ip.open(pos_it, std::ios::binary | std::ios::in );
+    ip.open(*pos_it, std::ios::binary | std::ios::in );
     if (!ip.is_open())
-      error_exit("ERROR: Input file %s did not open.\n",pos_it.c_str());
+      error_exit("ERROR: Input file %s did not open.\n",pos_it->c_str());
     //Get Sim data from posit file
     ip.read(reinterpret_cast<char*>(&nchar), sizeof(int));
     std::string sid_str(nchar, ' ');
@@ -85,7 +85,7 @@ void OutputManager::InitPositInput() {
       if (sid_posit == (*spec)->GetSID()){
         (*spec)->SetPositFlag(true);
         (*spec)->SetNPosit(n_pos);
-        (*spec)->InitInputFile(pos_it, beg);
+        (*spec)->InitInputFile(*pos_it, beg);
         break;
       }
     }
