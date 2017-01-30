@@ -29,6 +29,8 @@ void SimulationManager::RunManager() {
   CheckAppendParams();
   // Load default parameters
   LoadDefaultParams();
+  // Check for parameters that require randomized sequences for polynomial chaos theory
+  CheckRandomParams();
   // Count number of variations from parameter sequences 
   CountVariations();
   // Generate n_var_ parameter nodes of unique parameter combinations
@@ -100,6 +102,58 @@ void SimulationManager::LoadDefaultParams() {
 }
 
 /****************************************
+   ::CheckRandomParam::
+   Generates a random number N (either real or int) in the range (min,max) exclusive
+   and returns N or 10^N, all depending on the random parameter generation type
+   rtype, which can be R, RINT, or RLOG.
+   *************************************/
+void SimulationManager::CheckRandomParams() {
+  std::string rtype;
+  int n_params;
+  double min,max;
+  for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it) {
+    std::string param_name = it->first.as<std::string>();
+    if (it->second.IsSequence() && it->second.size()==4 && (rtype=it->second[0].as<std::string>()).at(0) == 'R') {
+      min = it->second[1].as<double>();
+      max = it->second[2].as<double>();
+      n_params = it->second[3].as<int>();
+      pnode_[it->first] = YAML::Load("[]");
+      for (int i=0; i<n_params; ++i)
+        pnode_[it->first].push_back(GetRandomParam(rtype,min,max));
+    }
+    else if (it->second.IsMap())
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+        if (jt->second.IsSequence() && jt->second.size()==4 && (rtype=jt->second[0].as<std::string>()).at(0) == 'R') {
+          min = jt->second[1].as<double>();
+          max = jt->second[2].as<double>();
+          n_params = jt->second[3].as<int>();
+          pnode_[it->first][jt->first] = YAML::Load("[]");
+          for (int i=0; i<n_params; ++i)
+            pnode_[it->first][jt->first].push_back(GetRandomParam(rtype,min,max));
+        }
+  }
+}
+
+/****************************************
+   ::GetRandomParam::
+   Generates a random number N (either real or int) in the range (min,max) exclusive
+   and returns N or 10^N, all depending on the random parameter generation type
+   rtype, which can be R, RINT, or RLOG.
+   *************************************/
+double SimulationManager::GetRandomParam(std::string rtype, int min, int max) {
+  if (max == min) 
+    error_exit("ERROR: Min and max value of parameter randomization sequence are equal.\n");
+  if (rtype.compare("R") == 0) 
+    return (min+(max-min)*gsl_rng_uniform_pos(rng_.r));
+  else if (rtype.compare("RINT")==0) 
+    return (min + gsl_rng_uniform_int(rng_.r,max-min));
+  else if (rtype.compare("RLOG")==0) 
+    return pow(10.0, min+(max-min)*gsl_rng_uniform_pos(rng_.r));
+  else 
+    error_exit("ERROR: Parameter randomization type not recognized.\n");
+}
+
+/****************************************
    ::CountVariations::
    Given a main parameter file with a parameter value that is a sequence, count
    the total possible combinations of unique single parameter values
@@ -114,7 +168,7 @@ void SimulationManager::CountVariations() {
           n_var_*=jt->second.size();
   }
   if (n_var_ > 1)
-    std::cout << "Initializing batch " << run_name_ << " of " << n_var_*n_runs_ << " simulations with " << n_var_ << "variations of " << n_runs_ << " runs each.\n";
+    std::cout << "Initializing batch " << run_name_ << " of " << n_var_*n_runs_ << " simulations with " << n_var_ << " variations of " << n_runs_ << " runs each.\n";
   else if (n_runs_ > 1)
     std::cout << "Initializing batch of %d runs of simulation " << run_name_ <<".\n";
   else
