@@ -9,8 +9,8 @@
 #include <GLFW/glfw3.h>
 #include <string>
 #include "auxiliary.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
+//#include <ft2build.h>
+//#include FT_FREETYPE_H
 
 struct point {
 	GLfloat x;
@@ -46,18 +46,18 @@ class GraphicsPrimitive {
                      PFNGLGETSHADERINFOLOGPROC glGet__InfoLog);
 };
 
-class GraphicsText {
-  public:
-    FT_Library ft_;
-    FT_Face face_;
-    GLuint program_,buffer_,vertex_shader_,fragment_shader_;
-    GLint attribute_coord_,uniform_tex_,uniform_color_;
-    void MakeProgram();
-    void ShowInfoLog(GLuint object, PFNGLGETSHADERIVPROC glGet__iv,
-                     PFNGLGETSHADERINFOLOGPROC glGet__InfoLog);
-    void RenderText(const char *text, float x, float y, int sx, int sy);
+//class GraphicsText {
+  //public:
+    //FT_Library ft_;
+    //FT_Face face_;
+    //GLuint program_,buffer_,vertex_shader_,fragment_shader_;
+    //GLint attribute_coord_,uniform_tex_,uniform_color_;
+    //void MakeProgram();
+    //void ShowInfoLog(GLuint object, PFNGLGETSHADERIVPROC glGet__iv,
+                     //PFNGLGETSHADERINFOLOGPROC glGet__InfoLog);
+    //void RenderText(const char *text, float x, float y, int sx, int sy);
 
-};
+//};
 
 /* The <graphics_parameters> structure contains a variety of graphics parameters. */
 class Graphics {
@@ -74,7 +74,7 @@ class Graphics {
 
     GraphicsPrimitive discorectangle_; // 2d spherocylinder
     GraphicsPrimitive spherocylinder_; // actual spherocylinder
-    GraphicsText text_;
+    //GraphicsText text_;
 
     GLfloat xAngle_, yAngle_, zAngle_; // system rotation
     GLfloat xyzScale_; // zoom

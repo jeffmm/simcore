@@ -26,8 +26,8 @@ endif
 UNAME_S:=$(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
-	INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl -I/usr/local/include/freetype2
-	GLXLIBS = -L/opt/X11/lib -L/usr/local/lib -lglfw3 -framework OpenGL -lglew -lfreetype
+	INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl
+	GLXLIBS = -L/opt/X11/lib -L/usr/local/lib -lglfw3 -framework OpenGL -lglew 
 	GSLLIBS = -lgsl -lgslcblas
 	FFTLIBS = -L/usr/lib64 -lfftw3
 	YAMLLIBS = -L/Users/$(USER)/Projects/Lib/yaml-cpp-gcc5/yaml-cpp/build -lyaml-cpp
