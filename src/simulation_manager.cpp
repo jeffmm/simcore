@@ -6,10 +6,13 @@ bool debug_trace;
    ::InitManaager::
    Initialize SimulationManager RNG and variables
    *************************************/
-void SimulationManager::InitManager(std::string param_file) {
-  pnode_ = YAML::LoadFile(param_file);
+void SimulationManager::InitManager(run_options run_opts) {
+  run_opts_ = run_opts;
+  pnode_ = YAML::LoadFile(run_opts_.param_file);
   if (pnode_["n_runs"] && pnode_["n_runs"].size()==0)
     n_runs_ = pnode_["n_runs"].as<int>();
+  if (pnode_["n_random"] && pnode_["n_random"].size()==0)
+    n_random_ = pnode_["n_random"].as<int>();
   if (pnode_["run_name"] && pnode_["run_name"].size()==0)
     run_name_ = pnode_["run_name"].as<std::string>();
   long seed = 7143961348914;
@@ -17,6 +20,14 @@ void SimulationManager::InitManager(std::string param_file) {
     seed = pnode_["seed"].as<long>();
   else
     std::cout << "  WARNING: Default seed not overwritten!\n";
+
+  // Prefer command-line options over param values for n_runs, run_name
+  if (run_opts_.debug)
+    debug_trace = true;
+  if (run_opts_.n_flag)
+    n_runs_ = run_opts_.n_runs;
+  if (run_opts_.r_flag)
+    run_name_ = run_opts_.run_name;
   rng_.init(seed);
 }
 
@@ -113,22 +124,20 @@ void SimulationManager::CheckRandomParams() {
   double min,max;
   for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it) {
     std::string param_name = it->first.as<std::string>();
-    if (it->second.IsSequence() && it->second.size()==4 && (rtype=it->second[0].as<std::string>()).at(0) == 'R') {
+    if (it->second.IsSequence() && it->second.size()==3 && (rtype=it->second[0].as<std::string>()).at(0) == 'R') {
       min = it->second[1].as<double>();
       max = it->second[2].as<double>();
-      n_params = it->second[3].as<int>();
-      pnode_[it->first] = YAML::Load("[]");
-      for (int i=0; i<n_params; ++i)
+      pnode_[it->first] = YAML::Load("[R]");
+      for (int i=0; i<n_random_; ++i)
         pnode_[it->first].push_back(GetRandomParam(rtype,min,max));
     }
     else if (it->second.IsMap())
       for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
-        if (jt->second.IsSequence() && jt->second.size()==4 && (rtype=jt->second[0].as<std::string>()).at(0) == 'R') {
+        if (jt->second.IsSequence() && jt->second.size()==3 && (rtype=jt->second[0].as<std::string>()).at(0) == 'R') {
           min = jt->second[1].as<double>();
           max = jt->second[2].as<double>();
-          n_params = jt->second[3].as<int>();
-          pnode_[it->first][jt->first] = YAML::Load("[]");
-          for (int i=0; i<n_params; ++i)
+          pnode_[it->first][jt->first] = YAML::Load("[R]");
+          for (int i=0; i<n_random_; ++i)
             pnode_[it->first][jt->first].push_back(GetRandomParam(rtype,min,max));
         }
   }
@@ -160,13 +169,14 @@ double SimulationManager::GetRandomParam(std::string rtype, int min, int max) {
    *************************************/
 void SimulationManager::CountVariations() {
   for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it) {
-    if (it->second.IsSequence())
+    if (it->second.IsSequence() && (it->second[0].as<std::string>()).at(0) != 'R')
       n_var_*=it->second.size();
     else if (it->second.IsMap())
       for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
-        if (jt->second.IsSequence())
+        if (jt->second.IsSequence() && (jt->second[0].as<std::string>()).at(0) != 'R')
           n_var_*=jt->second.size();
   }
+  n_var_*=n_random_;
   if (n_var_ > 1)
     std::cout << "Initializing batch " << run_name_ << " of " << n_var_*n_runs_ << " simulations with " << n_var_ << " variations of " << n_runs_ << " runs each.\n";
   else if (n_runs_ > 1)
@@ -189,7 +199,7 @@ void SimulationManager::GenerateParameters() {
   pvector_.resize(n_var_);
   int i_var,j_var,k_var = n_var_;
   for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it)
-    if (it->second.IsSequence()) {
+    if (it->second.IsSequence() && (it->second[0].as<std::string>()).at(0) != 'R') {
       unsigned int s = it->second.size();
       k_var /= s;
       j_var = n_var_ / (k_var * s) ;
@@ -201,7 +211,7 @@ void SimulationManager::GenerateParameters() {
     }
     else if (it->second.IsMap())
       for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
-        if (jt->second.IsSequence()) {
+        if (jt->second.IsSequence() && (jt->second[0].as<std::string>()).at(0) != 'R') {
           unsigned int s = jt->second.size();
           k_var /= s;
           j_var = n_var_ / (k_var * s) ;
@@ -217,6 +227,24 @@ void SimulationManager::GenerateParameters() {
     else 
       for (i_var=0; i_var<n_var_; ++i_var)
         pvector_[i_var][it->first] = it->second;
+
+  // Now handle random parameters
+  k_var = n_var_/n_random_;
+  for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it)
+    if (it->second.IsSequence() && (it->second[0].as<std::string>()).at(0) == 'R') {
+      i_var=0;
+      for (int k=0; k<k_var; ++k)
+        for (int i=0; i<n_random_; ++i)
+          pvector_[i_var++][it->first] = it->second[i+1];
+    }
+    else if (it->second.IsMap())
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+        if (jt->second.IsSequence() && (jt->second[0].as<std::string>()).at(0) == 'R') {
+          i_var=0;
+          for (int k=0; k<k_var; ++k)
+            for (int i=0; i<n_random_; ++i)
+              pvector_[i_var++][it->first][jt->first] = jt->second[i+1];
+        }
 }
 
 /****************************************
@@ -229,7 +257,12 @@ void SimulationManager::GenerateParameters() {
 void SimulationManager::WriteParams() {
   for (int i_var=0; i_var<n_var_; ++i_var)
     for (int i_run=0; i_run<n_runs_; ++i_run) {
-      pvector_[i_var]["seed"]=gsl_rng_get(rng_.r);
+      /* Only write new seed if we have more than one run/variation as
+         this will ensure that parameters generated using WriteParams
+         can be rerun individually with the expected result, ie not
+         generating a different seed than the one generated here */
+      if (n_runs_ > 1 || n_var_ > 1)
+        pvector_[i_var]["seed"]=gsl_rng_get(rng_.r);
       std::ostringstream var;
       std::ostringstream run;
       std::ostringstream file_name;
@@ -237,6 +270,7 @@ void SimulationManager::WriteParams() {
       var << std::setw(2) << std::setfill('0') << i_var;
       run << std::setw(2) << std::setfill('0') << i_run;
       file_name << run_name_;
+      // append variation and run numbers to run_name if greater than 1
       if (n_var_ > 1)
         file_name << "_v" << var.str();
       if (n_runs_ > 1) 

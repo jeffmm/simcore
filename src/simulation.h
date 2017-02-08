@@ -51,6 +51,7 @@ class Simulation {
     void ScaleSpeciesPositions();
     std::vector<graph_struct*> graph_array;
     void PrintComplete();
+    void InsertSpecies();
 
   public:
     Simulation() {}

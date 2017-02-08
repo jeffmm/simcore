@@ -25,8 +25,7 @@ class SpeciesBase {
     SpeciesBase(int n_members, system_parameters *params, space_struct *space, long seed);
     virtual void UpdatePositions() {}
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed);
-    virtual void Init() {}
+    virtual void Init(system_parameters *params, space_struct *space, long seed);
     virtual double GetDrMax() {return 0.0;}
     virtual void ZeroDr() {}
     virtual void ZeroForces() {}
@@ -35,6 +34,9 @@ class SpeciesBase {
     virtual double GetPotentialEnergy() {return 0;}
     virtual double GetTotalEnergy() {return 0;}
     virtual void ScalePositions() {}
+    virtual void AddMember() {}
+    virtual void PopMember() {}
+    virtual int GetNum() {return 0;}
     SID const GetSID() {return sid_;}
     virtual void Dump() {}
     double const GetDelta() {return delta_;}
@@ -44,7 +46,7 @@ class SpeciesBase {
     void SetPositFlag(bool p_flag) {posit_flag_ = p_flag;}
     void SetNPosit(int n_pos) {n_posit_ = n_pos;}
     virtual int GetCount() {return 0;}
-    virtual void Configurator() {}
+    //virtual void Configurator() {}
     virtual void WriteOutputs(std::string run_name) {}
     virtual void WritePosits() {}
     virtual void ReadPosits() {}
@@ -62,18 +64,18 @@ class Species : public SpeciesBase {
   public:
     Species() {}
     // Initialize function for setting it up on the first pass
-    virtual void InitConfig(system_parameters *params, space_struct *space, long seed) {
-      SpeciesBase::InitConfig(params, space, seed);
+    virtual void Init(system_parameters *params, space_struct *space, long seed) {
+      SpeciesBase::Init(params, space, seed);
     }
     // Configurator function must be overridden
-    virtual void Configurator() {
-      error_exit("ERROR, species needs to override configurator!\n");
-    }
+    //virtual void Configurator() {
+      //error_exit("ERROR, species needs to override configurator!\n");
+    //}
     Species(int n_members, system_parameters *params, space_struct *space, long seed) : SpeciesBase(n_members, params, space, seed) {}
     //Virtual functions
-    virtual void Init();
     virtual void AddMember();
     virtual void AddMember(T* newmem);
+    virtual void PopMember();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePositions();
     virtual std::vector<Simple*> GetSimples();
@@ -88,18 +90,12 @@ class Species : public SpeciesBase {
     virtual void WritePosits();
     virtual void ReadPosits();
     virtual void ScalePositions();
+    virtual int GetNum() {
+      std::cout << "WARNING: GetNum not set in species.\n";
+      return 0;
+    }
     virtual std::vector<T*>* GetMembers() {return &members_;}
 };
-
-template <typename T> 
-void Species<T>::Init() {
-  for (int i=0; i<n_members_; ++i) {
-    T * member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
-    member->Init();
-    members_.push_back(member);
-    delete member;
-  }
-}
 
 template <typename T> 
 void Species<T>::AddMember() {
@@ -107,13 +103,20 @@ void Species<T>::AddMember() {
   newmember->Init();
   members_.push_back(newmember);
   n_members_++;
-  delete newmember;
+  //delete newmember;
 }
 
 template <typename T> 
 void Species<T>::AddMember(T* newmem) {
   members_.push_back(newmem);
   n_members_++;
+}
+
+template <typename T> 
+void Species<T>::PopMember() {
+  delete members_[n_members_-1];
+  members_.pop_back();
+  n_members_--;
 }
 
 template <typename T> 

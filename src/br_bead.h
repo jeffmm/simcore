@@ -40,7 +40,6 @@ class BrBeadSpecies : public Species<BrBead> {
     BrBeadSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
       SetSID(SID::br_bead);
     }
-    void Init() {Species::Init();}
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();

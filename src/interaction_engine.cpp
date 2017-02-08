@@ -18,8 +18,6 @@ void InteractionEngine::Init(system_parameters *params,
   n_objs_ = CountSpecies();
   clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
   potentials_.InitPotentials(params_);
-  UpdateSimples();
-  UpdateInteractions();
 }
 
 /****************************************
@@ -38,6 +36,8 @@ void InteractionEngine::Interact() {
 #endif
   // Apply forces, torques, and potentials in serial
   ApplyInteractions();
+  if (overlap_)
+    error_exit("ERROR: Overlap of elements detected.\n");
 }
 
 void InteractionEngine::UpdateSimples() {
@@ -61,17 +61,17 @@ int InteractionEngine::CountSpecies() {
 }
 
 void InteractionEngine::CheckUpdate() {
-  bool update = false;
+  // First check to see if any objects were added to the system
   int obj_count = CountSpecies();
   if (obj_count != n_objs_) {
+    // reset periodic update count and update number of objects we're tracking
+    i_update_ = 0; 
     n_objs_ = obj_count;
-    update = true;
-    i_update_ = 0;
+    UpdateSimples();
+    UpdateInteractions();
   }
-  if (!update && (++i_update_) % n_update_ == 0) {
-    update = true;
-  }
-  if (update)
+  // Otherwise check periodic update count
+  else if ((++i_update_) % n_update_ == 0)
     UpdateInteractions();
 }
 
@@ -89,6 +89,11 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   //interactionmindist imd;
   MinimumDistance(obj1,obj2,ix,space_);
 
+  // XXX Don't interact if we have an overlap. This should eventually go to a max force routine
+  if (ix->dr_mag2 < 0.125*SQR(obj1->GetDiameter() + obj2->GetDiameter())) {
+    overlap_ = true;
+    return;
+  }
   // XXX Only calculate WCA potential for now
   if (ix->dr_mag2 > potentials_.wca_.GetRCut2())  return;
   potentials_.wca_.CalcPotential(ix);
@@ -130,9 +135,11 @@ void InteractionEngine::CalculateInteractionsMP() {
 void InteractionEngine::CalculateInteractions() {
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
     ProcessInteraction(pix);
+    if (!overlap_) {
     // Do torque crossproducts
-    cross_product(pix->second.contact1,pix->second.force,pix->second.t1,3);
-    cross_product(pix->second.contact2,pix->second.force,pix->second.t2,3);
+      cross_product(pix->second.contact1,pix->second.force,pix->second.t1,3);
+      cross_product(pix->second.contact2,pix->second.force,pix->second.t2,3);
+    }
   }
 }
 
@@ -174,4 +181,12 @@ void InteractionEngine::CalculatePressure() {
   space_->pressure /= n_dim_;
   // Reset local stress tensor
   std::fill(stress_,stress_+9,0);
+}
+
+bool InteractionEngine::CheckOverlap() {
+  overlap_ = false;
+  UpdateSimples();
+  UpdateInteractions();
+  CalculateInteractions();
+  return overlap_;
 }

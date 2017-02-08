@@ -29,31 +29,6 @@ void HardRod::ScalePosition() {
   UpdateSitePositions();
 }
 
-void HardRod::InitConfigurator(const double* const x, const double* const u, const double l) {
-  length_ = l;
-  SetPosition(x);
-  SetOrientation(u);
-  UpdatePeriodic();
-  SetDiffusion();
-  std::fill(body_frame_, body_frame_+6, 0.0);
-  // Init bond lengths and diameter
-  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
-    bond->SetRigidPosition(position_);
-    bond->SetRigidScaledPosition(scaled_position_);
-    bond->SetRigidOrientation(orientation_);
-    bond->SetRigidLength(length_);
-    bond->SetRigidDiameter(diameter_);
-    bond->SetLength(child_length_);
-    bond->SetDiameter(diameter_);
-  }
-  // Set positions for sites and bonds
-  UpdatePeriodic();
-  UpdateBondPositions();
-  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond)
-    bond->UpdatePeriodic();
-  UpdateSitePositions();
-}
-
 void HardRod::ApplyForcesTorques() {
   for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
     AddForce(bond->GetForce());
