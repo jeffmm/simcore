@@ -39,10 +39,10 @@ void SpeciesBase::ClosePosit() {
     iposit_file_.close(); 
 }
 
-void SpeciesBase::InitConfig(system_parameters *params, space_struct *space, long seed) {
+void SpeciesBase::Init(system_parameters *params, space_struct *space, long seed) {
   n_members_ = 0;
-  n_posit_ = params->n_posit;
-  posit_flag_ = (params->posit_flag == 1 ? true : false);
+  n_posit_ = params->n_posit; // set to params as default, species may change
+  posit_flag_ = false; // set false unless species params changes it
   params_ = params;
   space_ = space;
   rng_.init(seed);
@@ -53,5 +53,4 @@ std::vector<Simple*> SpeciesBase::GetSimples() {
   std::vector<Simple*> sim;
   return sim;
 }
-
 

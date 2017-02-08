@@ -101,7 +101,6 @@ class Filament : public Composite<Site,Bond> {
 class FilamentSpecies : public Species<Filament> {
   protected:
     bool midstep_;
-    int n_dim_;
   public:
     FilamentSpecies() : Species() {
       SetSID(SID::filament);
@@ -114,9 +113,12 @@ class FilamentSpecies : public Species<Filament> {
       midstep_ = that.midstep_;
       return *this;
     }
-    void Init() {
-      Species::Init();
+    void Init(system_parameters *params, space_struct *space, long seed) {
+      Species::Init(params, space, seed);
+      n_members_ = 0;
+      midstep_ = true;
     }
+    int GetNum() {return params_->filament.num;}
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();

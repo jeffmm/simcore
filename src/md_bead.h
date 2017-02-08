@@ -36,10 +36,6 @@ class MDBeadSpecies : public Species<MDBead> {
       : Species(n_members, params, space, seed) {
       SetSID(SID::md_bead);
     }
-    void Init() {
-      Species::Init();
-    }
-
     // Configurations
     void Configurator();
 };

@@ -67,8 +67,6 @@ class HardRod : public Composite<Site,Bond> {
     virtual void Dump();
     void ScalePosition();
 
-    // Specific functions for configurations
-    void InitConfigurator(const double* const x, const double* const u, const double l);
 };
 
 class HardRodSpecies : public Species<HardRod> {
@@ -87,9 +85,6 @@ class HardRodSpecies : public Species<HardRod> {
       //InitPotentials(params);
       max_length_ = params_->hard_rod.max_length;
       min_length_ = params_->hard_rod.min_length;
-    }
-    void Init() {
-      Species::Init();
     }
     double const GetMaxLength() {return max_length_;}
     double const GetMinLength() {return min_length_;}

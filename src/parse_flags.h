@@ -4,6 +4,20 @@
 #include <string>
 #include <vector>
 
+// Run parameters that needs to be carried forward should be stored here.
+struct run_options {
+  int n_runs = 1;
+  int debug = 0;
+  int r_flag = 0;
+  int n_flag = 0;
+  int m_flag = 0;
+  int a_flag = 0;
+  int p_flag = 0;
+  int l_flag = 0;
+  std::string param_file;
+  std::string run_name = "sc";
+};
+
 // Define flags here
 // NOTE: Need to update n_flags, PARSE_OPTS function case-switches, 
 //       as well as any flag descriptions in the static string array below
@@ -13,12 +27,12 @@ static const int n_flags = 8;
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
-  {"file", required_argument, 0, 'f'},
   {"run-name", required_argument, 0, 'r'},
   {"n-runs", required_argument, 0, 'n'},
-  {"test", no_argument, 0, 't'},
   {"movie", no_argument, 0, 'm'},
   {"analysis", no_argument, 0, 'a'},
+  {"posit", no_argument, 0, 'p'},
+  {"load",no_argument, 0, 'l'},
   {0, 0, 0, 0}
 };
 
@@ -26,38 +40,23 @@ static struct option long_options[] = {
 static const std::string desc[n_flags][2] = {
   {"show this menu\n", "none"},
   {"run program in debug mode\n", "none"},
-  {"where fname is the input parameter file (REQUIRED)\n", "fname"},
   {"where rname is the name of a run session (for organizing batch jobs)\n", "rname"},
   {"where num is the number of independent runs to perform with the given parameters\n", "num"},
-  {"run program in test mode\n", "none"},
-  {"where movie is the posit file name to recreate previous simulation. You can use this option more than once\n", "movie"},
-  {"where pname is the name of the posit file used for analysis\n", "pname"}
+  {"run simulation to make movie using spec files with same run-name\n", "none"},
+  {"run analysis on spec files with same run-name for parameter species", "none"},
+  {"use posit files for movies/analysis rather than spec files\n", "none"},
+  {"run simulation starting from snapshot files with same run-name for parameter species\n", "none"}
 };
 
-// Run parameters that needs to be carried forward should be stored here.
-struct run_options {
-  run_options() {n_runs = 1; debug = 0; test = 0; f_flag = 0; r_flag = 0; n_flag = 0; a_flag = 0; m_flag = 0; run_name = "sc";}
-  int n_runs;
-  int debug;
-  int test;
-  int f_flag;
-  int r_flag;
-  int n_flag;
-  int m_flag;
-  int a_flag;
-  std::string param_file;
-  std::string run_name;
-  std::vector<std::string> posit_files;
-};
 
 /*************************
    SHOW_HELP_INFO
     Prints help info when an invalid command is given or when the
     help flag is given.
 **************************/
-void show_help_info(std::string progname) {
-  std::cout << "\n" << "  CytoSCORe usage: " << std::endl;
-  std::cout << "    " << progname << " --flag1 option1 --flag2 option2 ..." << std::endl;
+static void show_help_info(std::string progname) {
+  std::cout << "\n" << "  SimCORE usage: " << std::endl;
+  std::cout << "    " << progname << " params_file --flag1 option1 --flag2 option2 ..." << std::endl;
   std::cout << "\n" << "  where flags are one of the following: " << std::endl;
   for (int i=0; i<n_flags; ++i) {
     std::cout << "    --" << long_options[i].name;
@@ -76,7 +75,7 @@ void show_help_info(std::string progname) {
     as well as any information that needs to be carried forward
     in the run_options structure defined above.
 **************************/
-run_options parse_opts(int argc, char *argv[]) {
+static run_options parse_opts(int argc, char *argv[]) {
   
   if (argc == 1) {
     show_help_info(argv[0]);
@@ -87,10 +86,9 @@ run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdtmar:f:n:", long_options, &option_index);
+    tmp = getopt_long(argc, argv, "hdmaplr:n:", long_options, &option_index);
     if (tmp == -1)
       break;
-    
     switch (tmp) {
       case 0:
         break;
@@ -98,16 +96,8 @@ run_options parse_opts(int argc, char *argv[]) {
         show_help_info(argv[0]);
         exit(0);
       case 'd':
-        std::cout << "  Running with Debug Mode\n";
+        std::cout << "  Running in debug mode\n";
         run_opts.debug = 1;
-        break;
-      case 't':
-        std::cout << "  Running Test Mode\n";
-        run_opts.test = 1;
-        break;
-      case 'f':
-        run_opts.f_flag = 1;
-        run_opts.param_file = optarg;
         break;
       case 'r':
         run_opts.r_flag = 1;
@@ -118,38 +108,68 @@ run_options parse_opts(int argc, char *argv[]) {
         run_opts.n_runs = atoi(optarg);
         break;
       case 'm':
-        std::cout << "  Making movies\n";
         run_opts.m_flag = 1;
         break;
       case 'a':
-        std::cout << "  Running analyses\n";
+        run_opts.a_flag = 1;
+        break;
+      case 'p':
+        run_opts.a_flag = 1;
+        break;
+      case 'l':
         run_opts.a_flag = 1;
         break;
       case '?':
-        break;
+        exit(1);
       default:
         std::cout << "  ERROR: Unrecognized option: " << tmp << "\n";
         exit(1);
     }
   }
   if (optind < argc) {
-    if (run_opts.a_flag!=1 && run_opts.m_flag!=1) {
-      printf("ERROR: Unrecognized context for non-option arguments: ");
-      while (optind < argc)
-        printf ("%s ", argv[optind++]);
-      putchar ('\n');
-      exit(1);
-    }
-    else {
-      printf("Posit files: ");
-      while (optind < argc) {
-        run_opts.posit_files.push_back(argv[optind++]);
-      }
-      for (int i=0; i<run_opts.posit_files.size(); ++i)
-        std::cout << run_opts.posit_files[i] << " ";
-      putchar('\n');
-    }
+    run_opts.param_file = argv[optind];
+    printf("  Using parameter file: %s\n",argv[optind++]);
   }
+  else {
+    printf("ERROR! No parameter file given! Exiting.\n");
+    exit(1);
+  }
+  if (optind < argc) {
+    printf("ERROR: Unrecognized context for non-option arguments: ");
+    while (optind<argc) 
+      printf("%s ",argv[optind++]);
+    putchar('\n');
+    exit(1);
+  }
+  if (run_opts.m_flag) {
+    printf("  Making movies");
+    if (run_opts.p_flag)
+      printf(" using posit files.");
+  }
+  putchar('\n');
+  if (run_opts.a_flag) {
+    printf("  Running analyses");
+    if (run_opts.p_flag)
+      printf(" using posit files.");
+  }
+  putchar('\n');
+    //if (run_opts.a_flag!=1 && run_opts.m_flag!=1) {
+      //printf("ERROR: Unrecognized context for non-option arguments: ");
+      //while (optind < argc)
+        //printf ("%s ", argv[optind++]);
+      //putchar ('\n');
+      //exit(1);
+    //}
+    //else {
+      //printf("Posit files: ");
+      //while (optind < argc) {
+        //run_opts.posit_files.push_back(argv[optind++]);
+      //}
+      //for (int i=0; i<run_opts.posit_files.size(); ++i)
+        //std::cout << run_opts.posit_files[i] << " ";
+      //putchar('\n');
+    //}
+  //}
   return run_opts;
 }
 

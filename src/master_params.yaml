@@ -2,6 +2,7 @@
 
 seed : [7859459105545,long] # seed for random number generator
 n_runs: [1, int]
+n_random: [1, int]
 run_name: [sc,string]
 n_dim : [3,int]
 n_periodic : [0,int]
@@ -65,7 +66,7 @@ filament:
   v_depoly : [0.793,double]
   posit_flag: [0, int]
   n_posit: [100, int]
-  posit_file: [0,string]
+  posit_file: [filament.posit,string]
 hard_rod:
   insertion_type: [random,string]
   overlap: [0,int]
@@ -80,7 +81,7 @@ hard_rod:
   driving_factor: [0, double]
   posit_flag: [0, int]
   n_posit: [100, int]
-  posit_file: [0,string]
+  posit_file: [hard_rod.posit,string]
 br_bead:
   insertion_type: [random,string]
   overlap: [0,int]
@@ -91,7 +92,7 @@ br_bead:
   posit_flag: [0, int]
   driving_factor: [0, double]
   n_posit: [100, int]
-  posit_file: [0,string]
+  posit_file: [br_bead.posit,string]
 md_bead:
   insertion_type: [random,string]
   overlap: [0,int]
@@ -102,4 +103,4 @@ md_bead:
   mass: [1, double]
   posit_flag: [0, int]
   n_posit: [100, int]
-  posit_file: [0,string]
+  posit_file: [md_bead.posit,string]

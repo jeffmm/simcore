@@ -83,7 +83,10 @@ void Filament::Init() {
     InitSpiral2D();
     return;
   }
-  InsertRandom();
+  if (params_->filament.insertion_type.compare("random")==0)
+    InsertRandom();
+  else
+    error_exit(" Insertion type not recognized for filaments. Exiting.\n");
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
     site->SetDiameter(diameter_);
@@ -657,99 +660,6 @@ void Filament::ScalePosition() {
   UpdateBondPositions();
 }
 
-// Species specifics, including insertion routines
-void FilamentSpecies::Configurator() {
-
-  std::cout << "Filament species\n";
-  std::cout << " Generic Properties:\n";
-  // Check insertion type
-  std::string insertion_type;
-  insertion_type = params_->filament.insertion_type;
-  std::cout << "   insertion type: " << insertion_type << std::endl;
-  bool can_overlap = params_->filament.overlap;
-  std::cout << "   overlap:        " << (can_overlap ? "true" : "false") << std::endl;
-
-  // Coloring
-  double color[4] = {1.0, 0.0, 0.0, 1.0};
-  int draw_type = 1; // default to orientation
-  for (int i = 0; i < 4; ++i) {
-    color[i] = params_->filament.color;
-  }
-  std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
-    << color[3] << "]\n";
-  std::string draw_type_s = params_->filament.draw_type;
-  std::cout << "   draw_type: " << draw_type_s << std::endl;
-  if (draw_type_s.compare("flat") == 0) {
-    draw_type = 0;
-  } else if (draw_type_s.compare("orientation") == 0) {
-    draw_type = 1;
-  }
-
-  if (insertion_type.compare("random") == 0) {
-    int nfilaments          = params_->filament.num;
-    double flength          = params_->filament.length;
-    double plength          = params_->filament.persistence_length;
-    double max_length       = params_->filament.max_length;
-    double min_length       = params_->filament.min_length;
-    double max_child_length = params_->filament.max_child_length;
-    double diameter         = params_->filament.diameter;
-
-
-    std::cout << std::setw(25) << std::left << "   n filaments:" << std::setw(10)
-      << std::left << nfilaments << std::endl;
-    std::cout << std::setw(25) << std::left << "   length:" << std::setw(10)
-      << std::left << flength << std::endl;
-    std::cout << std::setw(25) << std::left << "   persistence length:" << std::setw(10)
-      << std::left << plength << std::endl;
-    std::cout << std::setw(25) << std::left << "   max length:" << std::setw(10)
-      << std::left << max_length << std::endl;
-    std::cout << std::setw(25) << std::left << "   min length:" << std::setw(10)
-      << std::left << min_length << std::endl;
-    std::cout << std::setw(25) << std::left << "   max child length:" << std::setw(10)
-      << std::left << max_child_length << std::endl;
-    std::cout << std::setw(25) << std::left << "   diameter:" << std::setw(10)
-      << std::left << diameter << std::endl;
-
-    n_members_ = 0;
-    for (int i = 0; i < nfilaments; ++i) {
-      Filament *member = new Filament(params_, space_, gsl_rng_get(rng_.r), GetSID());
-      member->Init(); 
-
-      if (can_overlap) {
-        members_.push_back(member);
-        n_members_++;
-      } else {
-        // Check for overlaps
-        bool insert = true;
-        auto new_simps = member->GetSimples();
-        auto old_simps = GetSimples();
-        for (auto ns : new_simps) {
-          for (auto os : old_simps) {
-            Interaction imd;
-            MinimumDistance(ns, os, &imd, space_);
-            if (imd.dr_mag2 < imd.buffer_mag2) {
-              insert = false;
-            }
-          }
-        }
-        if (insert) {
-          members_.push_back(member);
-          n_members_++;
-        }
-        else {
-          i--;
-        }
-      }
-    }
-
-  } else {
-    // XXX Check for exact insertion of filaments
-    std::cout << "Nope, not yet for filaments!\n";
-    exit(1);
-  }
-  n_dim_ = params_->n_dim;
-  midstep_ = true;
-}
 
 void Filament::GetAvgOrientation(double * au) {
   double avg_u[3] = {0.0, 0.0, 0.0};
@@ -903,9 +813,39 @@ void Filament::ReadPosit(std::fstream &ip) {
   }
 }
 
-//void Filament::AnalyzeConformation() {
-  //CalculateAngles();
-  //for (int i=0; i<n_bonds_-1; ++i) {
-
-
+//void Filament::WritePosit(std::fstream &op) {
+  //double avg_pos[3], avg_u[3];
+  //GetAvgPosition(avg_pos);
+  //GetAvgOrientation(avg_u);
+  //for (auto& pos : avg_pos)
+    //op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
+  //for (auto& u : avg_u) 
+    //op.write(reinterpret_cast<char*>(&u), sizeof(u));
+  //op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  //op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
 //}
+
+//// Not very useful for flexible filaments, but whatever
+//void Filament::ReadPosit(std::fstream &ip) {
+  //if (ip.eof()) return;
+  //double avg_pos[3], avg_u[3];
+  //for (int i=0; i<3; ++i)
+    //ip.read(reinterpret_cast<char*>(&avg_pos[i]), sizeof(double));
+  //for (int i=0; i<3; ++i)
+    //ip.read(reinterpret_cast<char*>(&avg_u[i]), sizeof(double));
+  //ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  //ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
+  //// Initialize first bond position
+  //for (int i=0; i<n_dim_; ++i) 
+    //avg_pos[i] = avg_pos[i] - 0.5*(length_ - child_length_)*avg_u[i];
+  //for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
+    //v_elements_[i_bond].SetPosition(avg_pos);
+    //v_elements_[i_bond].SetOrientation(avg_u);
+    //v_elements_[i_bond].SetDiameter(diameter_);
+    //v_elements_[i_bond].UpdatePeriodic();
+    //// Set next bond position
+    //for (int i=0; i<n_dim_; ++i) 
+      //avg_pos[i] += 0.5*child_length_*avg_u[i];
+  //}
+//}
+
