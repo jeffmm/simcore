@@ -89,6 +89,7 @@ void Simulation::InitSimulation() {
   InitSpecies();
   output_mgr_.Init(&params_, &species_, &i_step_, run_name_);
   iengine_.Init(&params_, &species_, space_.GetStruct());
+  InsertSpecies();
   if (params_.graph_flag) {
     GetGraphicsStructure();
     double background_color = (params_.graph_background == 0 ? 0.1 : 1);
@@ -115,9 +116,9 @@ void Simulation::InitSpecies() {
   for (auto registered = species_factory_.m_classes.begin(); 
       registered != species_factory_.m_classes.end(); ++registered) {
     SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(registered->first);
-    spec->InitConfig(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-    spec->Configurator();
-    species_.push_back(spec);
+    spec->Init(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
+    if (spec->GetNum() > 0)
+      species_.push_back(spec);
   }
 }
 
@@ -187,6 +188,27 @@ void Simulation::CreateMovie(system_parameters params, std::string name, std::ve
   InitSimulation();
   RunMovie();
   ClearSimulation();
+}
+
+void Simulation::InsertSpecies() {
+  // Assuming Random insertion for now
+  for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
+    int num = (*spec)->GetNum();
+    int inserted = 0;
+    while(num != inserted) {
+      (*spec)->AddMember();
+      inserted++;
+      if (iengine_.CheckOverlap()) {
+        (*spec)->PopMember();
+        inserted--;
+      }
+      else {
+        printf("\rInserting species: %d complete", (int)(100 * (float)inserted / (float)num));
+        fflush(stdout);
+      }
+    }
+    printf("\n");
+  }
 }
 
 //void Simulation::Analysis(system_parameters params, std::string name, std::vector<std::string> posit_files) {

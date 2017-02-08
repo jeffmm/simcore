@@ -20,11 +20,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("overlap")==0) {
             params->filament.overlap = jt->second.as<int>();
           }
-          else if (param_name.compare("dynamic_instability_flag")==0) {
-            params->filament.dynamic_instability_flag = jt->second.as<int>();
-          }
           else if (param_name.compare("insertion_type")==0) {
             params->filament.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("max_child_length")==0) {
+            params->filament.max_child_length = jt->second.as<double>();
           }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
@@ -50,9 +50,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("min_length")==0) {
             params->filament.min_length = jt->second.as<double>();
           }
-          else if (param_name.compare("max_child_length")==0) {
-            params->filament.max_child_length = jt->second.as<double>();
-          }
           else if (param_name.compare("spiral_flag")==0) {
             params->filament.spiral_flag = jt->second.as<int>();
           }
@@ -61,6 +58,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("friction_ratio")==0) {
             params->filament.friction_ratio = jt->second.as<double>();
+          }
+          else if (param_name.compare("dynamic_instability_flag")==0) {
+            params->filament.dynamic_instability_flag = jt->second.as<int>();
           }
           else if (param_name.compare("force_induced_catastrophe_flag")==0) {
             params->filament.force_induced_catastrophe_flag = jt->second.as<int>();
@@ -242,14 +242,14 @@ void parse_params(YAML::Node node, system_parameters *params) {
     else {
       param_name = it->first.as<std::string>();
       if (false) {}
-      else if (param_name.compare("movie_flag")==0) {
-        params->movie_flag = it->second.as<int>();
-      }
       else if (param_name.compare("seed")==0) {
         params->seed = it->second.as<long>();
       }
       else if (param_name.compare("n_runs")==0) {
         params->n_runs = it->second.as<int>();
+      }
+      else if (param_name.compare("n_random")==0) {
+        params->n_random = it->second.as<int>();
       }
       else if (param_name.compare("run_name")==0) {
         params->run_name = it->second.as<std::string>();
@@ -269,17 +269,14 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("n_steps")==0) {
         params->n_steps = it->second.as<int>();
       }
-      else if (param_name.compare("cell_length")==0) {
-        params->cell_length = it->second.as<double>();
-      }
       else if (param_name.compare("delta")==0) {
         params->delta = it->second.as<double>();
       }
+      else if (param_name.compare("cell_length")==0) {
+        params->cell_length = it->second.as<double>();
+      }
       else if (param_name.compare("n_update_cells")==0) {
         params->n_update_cells = it->second.as<int>();
-      }
-      else if (param_name.compare("time_flag")==0) {
-        params->time_flag = it->second.as<int>();
       }
       else if (param_name.compare("graph_flag")==0) {
         params->graph_flag = it->second.as<int>();
@@ -290,20 +287,23 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("graph_diameter")==0) {
         params->graph_diameter = it->second.as<double>();
       }
-      else if (param_name.compare("compressibility")==0) {
-        params->compressibility = it->second.as<double>();
-      }
       else if (param_name.compare("graph_background")==0) {
         params->graph_background = it->second.as<int>();
+      }
+      else if (param_name.compare("movie_flag")==0) {
+        params->movie_flag = it->second.as<int>();
       }
       else if (param_name.compare("movie_directory")==0) {
         params->movie_directory = it->second.as<std::string>();
       }
-      else if (param_name.compare("bud_radius")==0) {
-        params->bud_radius = it->second.as<double>();
+      else if (param_name.compare("time_flag")==0) {
+        params->time_flag = it->second.as<int>();
       }
       else if (param_name.compare("bud_height")==0) {
         params->bud_height = it->second.as<double>();
+      }
+      else if (param_name.compare("bud_radius")==0) {
+        params->bud_radius = it->second.as<double>();
       }
       else if (param_name.compare("lj_epsilon")==0) {
         params->lj_epsilon = it->second.as<double>();
@@ -323,9 +323,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("ss_eps")==0) {
         params->ss_eps = it->second.as<double>();
       }
-      else if (param_name.compare("target_pressure")==0) {
-        params->target_pressure = it->second.as<double>();
-      }
       else if (param_name.compare("f_cutoff")==0) {
         params->f_cutoff = it->second.as<double>();
       }
@@ -335,17 +332,23 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("virial_time_avg")==0) {
         params->virial_time_avg = it->second.as<int>();
       }
+      else if (param_name.compare("constant_pressure")==0) {
+        params->constant_pressure = it->second.as<int>();
+      }
       else if (param_name.compare("constant_volume")==0) {
         params->constant_volume = it->second.as<int>();
       }
-      else if (param_name.compare("constant_pressure")==0) {
-        params->constant_pressure = it->second.as<int>();
+      else if (param_name.compare("target_pressure")==0) {
+        params->target_pressure = it->second.as<double>();
       }
       else if (param_name.compare("target_radius")==0) {
         params->target_radius = it->second.as<double>();
       }
       else if (param_name.compare("pressure_time")==0) {
         params->pressure_time = it->second.as<int>();
+      }
+      else if (param_name.compare("compressibility")==0) {
+        params->compressibility = it->second.as<double>();
       }
       else if (param_name.compare("posit_flag")==0) {
         params->posit_flag = it->second.as<int>();

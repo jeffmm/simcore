@@ -1,26 +1,34 @@
 # params.yaml
 ---
-seed : 17140302686691
+seed : 268081403913736
 run_name: test
 n_runs: 1
+n_random: 1
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
 n_steps: 10000
-system_radius: 40
+system_radius: 60
 graph_flag: 1
 n_graph: 500
 movie_flag: 0
 movie_directory: frames
 cell_length: 5
 n_update_cells: 10
-f_cutoff: 9000
+f_cutoff: 4000
+posit_flag: 1
 filament:
-  num: 1
+  insertion_type: random
+  num: 40
   diameter: 1
-  spiral_flag: 1
+  spiral_flag: 0
   min_length: 1
-  max_length: 80
-  length: 80
-  persistence_length: 80
+  max_length: 100
+  length: 40
+  persistence_length: 400
+  #length: [R,20,100]
+  #persistence_length: [RLOG,2,4]
   max_child_length: 3
+  driving_factor: 10
+  #driving_factor: [R,0,50]
+  posit_flag: 1

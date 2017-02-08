@@ -15,6 +15,7 @@ class InteractionEngine {
 
   private:
     double stress_[9];
+    bool overlap_;
     int n_dim_,
         n_periodic_,
         i_update_,
@@ -46,6 +47,7 @@ class InteractionEngine {
               space_struct *space);
     void Interact();
     void CalculatePressure();
+    bool CheckOverlap();
 };
 
 #endif

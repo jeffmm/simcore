@@ -1,7 +1,6 @@
  
 #include <iostream>
 #include <stdlib.h>
-#include "parse_flags.h"
 #include "simulation_manager.h"
 
 /*************************
@@ -12,33 +11,12 @@ int main(int argc, char *argv[]) {
 
   // Parse input flags, see parse_flags.h for documentation
   run_options run_opts = parse_opts(argc, argv);
-  if (!run_opts.f_flag && !run_opts.debug) {
-    std::cout << "  ERROR: No parameter file given!\n";
-    show_help_info(argv[0]);
-    exit(1);
-  }
-  SimulationManager sim;
-
-  if (run_opts.debug) {
-    // Debug mode should be very hands-off
-    sim.DebugMode();
-  }
 
   // Initialize manager assets
-  sim.InitManager(run_opts.param_file);
-  // Prefer command-line options over param values for n_runs, run_name
-  if (run_opts.n_flag)
-    sim.SetNRuns(run_opts.n_runs);
-  if (run_opts.r_flag)
-    sim.SetRunName(run_opts.run_name);
-   //Recreate Movie of past simulations using posit file
-  //if (run_opts.m_flag)
-    //sim.MakeMovie();
-  // Analyze existing posit files
-  //if (run_opts.a_flag)
-    //sim.RunAnalysis();
+  SimulationManager sim;
+  sim.InitManager(run_opts);
+
   // Main control function
-  //sim.RunManager(run_opts.posit_files);
   sim.RunManager();
 
   return 0;
