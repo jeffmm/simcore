@@ -13,9 +13,9 @@ void InteractionEngine::Init(system_parameters *params,
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
   n_update_ = params_->n_update_cells;
-  virial_time_avg_ = params_->virial_time_avg;
-  i_update_ = 0;
-  n_objs_ = CountSpecies();
+  n_thermo_ = n_thermo_;
+  i_update_ = -1;
+  n_objs_ = 0;
   clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
   potentials_.InitPotentials(params_);
 }
@@ -36,8 +36,8 @@ void InteractionEngine::Interact() {
 #endif
   // Apply forces, torques, and potentials in serial
   ApplyInteractions();
-  if (overlap_)
-    error_exit("ERROR: Overlap of elements detected.\n");
+  //if (overlap_)
+    //error_exit("ERROR: Overlap of elements detected.\n");
 }
 
 void InteractionEngine::UpdateSimples() {
@@ -90,9 +90,8 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   MinimumDistance(obj1,obj2,ix,space_);
 
   // XXX Don't interact if we have an overlap. This should eventually go to a max force routine
-  if (ix->dr_mag2 < 0.125*SQR(obj1->GetDiameter() + obj2->GetDiameter())) {
+  if (ix->dr_mag2 < 0.25*SQR(obj1->GetDiameter() + obj2->GetDiameter())) {
     overlap_ = true;
-    return;
   }
   // XXX Only calculate WCA potential for now
   if (ix->dr_mag2 > potentials_.wca_.GetRCut2())  return;
@@ -135,11 +134,9 @@ void InteractionEngine::CalculateInteractionsMP() {
 void InteractionEngine::CalculateInteractions() {
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
     ProcessInteraction(pix);
-    if (!overlap_) {
     // Do torque crossproducts
-      cross_product(pix->second.contact1,pix->second.force,pix->second.t1,3);
-      cross_product(pix->second.contact2,pix->second.force,pix->second.t2,3);
-    }
+    cross_product(pix->second.contact1,pix->second.force,pix->second.t1,3);
+    cross_product(pix->second.contact2,pix->second.force,pix->second.t2,3);
   }
 }
 
@@ -160,7 +157,7 @@ void InteractionEngine::ApplyInteractions() {
   }
 }
 
-// Compute pressure tensor after virial_time_avg_ steps
+// Compute pressure tensor after n_thermo_ steps
 void InteractionEngine::CalculatePressure() {
   double inv_V = 1.0/space_->volume;
   std::fill(space_->pressure_tensor, space_->pressure_tensor+9, 0);
@@ -171,7 +168,7 @@ void InteractionEngine::CalculatePressure() {
       if (i==j)
         space_->pressure_tensor[n_dim_*i+j] += n_objs_*inv_V;
       // Add time-averaged virial component
-      space_->pressure_tensor[n_dim_*i+j] += stress_[n_dim_*i+j]*inv_V/virial_time_avg_;
+      space_->pressure_tensor[n_dim_*i+j] += stress_[n_dim_*i+j]*inv_V/n_thermo_;
     }
   }
   // Calculate isometric pressure
@@ -190,3 +187,4 @@ bool InteractionEngine::CheckOverlap() {
   CalculateInteractions();
   return overlap_;
 }
+

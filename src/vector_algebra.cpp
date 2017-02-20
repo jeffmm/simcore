@@ -125,11 +125,11 @@ void periodic_boundary_conditions(int n_dim, int n_periodic, double *h, double *
   }
 
   /* Recompute real coordinates accounting for periodic boundary conditions. */
-  for (int i = 0; i < n_periodic; ++i) {
-    r[i] = 0.0;
-    for (int j = 0; j < n_periodic; ++j) 
-      r[i] += h[n_dim*i+j] * s[j];
-  }
+  //for (int i = 0; i < n_periodic; ++i) {
+    //r[i] = 0.0;
+    //for (int j = 0; j < n_periodic; ++j) 
+      //r[i] += h[n_dim*i+j] * s[j];
+  //}
 }
 
 /* Computes determinant of square matrix mat of size n using recursion (and

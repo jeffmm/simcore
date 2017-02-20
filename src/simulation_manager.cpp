@@ -28,6 +28,8 @@ void SimulationManager::InitManager(run_options run_opts) {
     n_runs_ = run_opts_.n_runs;
   if (run_opts_.r_flag)
     run_name_ = run_opts_.run_name;
+  if ((run_opts_.m_flag || run_opts_.a_flag) && n_runs_ > 1)
+    error_exit("ERROR: Attempted to run movies/analysis on multiple files.\n");
   rng_.init(seed);
 }
 
@@ -48,8 +50,12 @@ void SimulationManager::RunManager() {
   GenerateParameters();
   // Write parameters to individual files
   WriteParams();
-  // Run simulations from parameter files
-  RunSimulations();
+  if (run_opts_.a_flag || run_opts_.m_flag)
+    // Process the output files associated with the param file
+    ProcessOutputs();
+  else
+    // Run simulations from parameter files
+    RunSimulations();
 }
 
 /****************************************
@@ -177,6 +183,8 @@ void SimulationManager::CountVariations() {
           n_var_*=jt->second.size();
   }
   n_var_*=n_random_;
+  if ((run_opts_.m_flag || run_opts_.a_flag) && n_var_ > 1)
+    error_exit("ERROR: Attempted to run movies/analysis on multiple files.\n");
   if (n_var_ > 1)
     std::cout << "Initializing batch " << run_name_ << " of " << n_var_*n_runs_ << " simulations with " << n_var_ << " variations of " << n_runs_ << " runs each.\n";
   else if (n_runs_ > 1)
@@ -319,46 +327,14 @@ void SimulationManager::ParseParams(std::string file_name) {
   YAML::Emitter out;
   std::cout << "Initializing simulation with parameters:\n" << (out<<node).c_str() << "\n";
   parse_params(node, &params_);
+  if (run_opts_.l_flag)
+    params_.load_checkpoint = 1;
 }
 
-//void SimulationManager::RunMovieManager(std::vector<std::string> posit_files) {
-  //Simulation *sim;
-  //std::ostringstream title;
-
-  ////FIXME will eventually have posit file read in this value
-  //int i_var = 0; 
-  //int i_run = 0;
-
-  //InitVariations();
-  //ParseParams(); //FIXME cannot take variations yet
-
-  //title << run_name_;
-
-  //if (n_var_ > 1)
-    //title << "_v" << i_var+1;
-  //if (n_runs_ > 1) 
-    //title << "_r" << i_run+1;
-  //params_[i_var].seed = gsl_rng_get(rng_.r);
-  //PrintParams(params_[i_var], title.str());
-  //sim = new Simulation;
-  //sim->CreateMovie(params_[i_var], title.str(), posit_files);
-  //delete sim;
-  //title.str("");
-  //title.clear();
-//}
-
-//void SimulationManager::RunAnalyses(std::vector<std::string> pfiles) {
-  //// FIXME Decide how to use parameter variations with analysis arguments
-  //// We'll just be using the first variation for now.
-  //InitVariations();
-  //ParseParams();
-  //AnalysisManager aman;
-  //std::ostringstream title;
-  //// use first variation
-  //int i_var = 0; 
-  //// Set the run with a unique seed, in case we need random numbers in analysis.
-  //params_[i_var].seed = gsl_rng_get(rng_.r);
-  //analyzer_.RunAnalyses(params_[i_var], pfiles);
-//}
-
+void SimulationManager::ProcessOutputs() {
+  ParseParams(pfiles_[0]);
+  sim_ = new Simulation;
+  sim_->ProcessOutputs(params_, run_opts_.m_flag, run_opts_.a_flag, run_opts_.p_flag);
+  delete sim_;
+}
 

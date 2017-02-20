@@ -6,7 +6,6 @@
 void Simulation::Run(system_parameters params) {
   params_ = params;
   run_name_ = params.run_name;
-  rng_.init(params_.seed);
   InitSimulation();
   RunSimulation();
   ClearSimulation();
@@ -32,26 +31,16 @@ void Simulation::PrintComplete() {
     printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
     fflush(stdout);
   }
-  if (debug_trace)
+  if (debug_trace) {
     printf("********\nStep %d\n********\n", i_step_);
-}
-
-void Simulation::RunMovie(){
-  std::cout << "Running movie: " << run_name_ << "\n";
-  std::cout << "    steps: " << params_.n_steps << std::endl;
-  for (i_step_=0; i_step_<params_.n_steps; ++i_step_) {
-    time_ = (i_step_+1) * params_.delta; 
-    PrintComplete();
-    if (i_step_%params_.n_posit == 0){
-      output_mgr_.ReadPosits(); 
-    }
-    Draw();
   }
 }
 
+
 void Simulation::Integrate() {
-  for (auto it=species_.begin(); it!=species_.end(); ++it)
+  for (auto it=species_.begin(); it!=species_.end(); ++it) {
     (*it)->UpdatePositions();
+  }
 }
 
 void Simulation::Interact() {
@@ -65,14 +54,15 @@ void Simulation::ZeroForces() {
 }
 
 void Simulation::Statistics() {
-  if (params_.constant_pressure && i_step_ > 0) {
-    if (i_step_ % params_.virial_time_avg == 0) {
-      iengine_.CalculatePressure();
+  if (i_step_ % params_.n_thermo == 0 && i_step_ > 0) {
+    iengine_.CalculatePressure();
+    if (params_.constant_pressure) {
       space_.ConstantPressure();
     }
+    else if (params_.constant_volume) {
+      space_.ConstantVolume();
+    }
   }
-  else if (params_.constant_volume)
-    space_.ConstantVolume();
   if (space_.GetUpdate()) {
     space_.UpdateSpace();
     ScaleSpeciesPositions();
@@ -80,27 +70,32 @@ void Simulation::Statistics() {
 }
 
 void Simulation::ScaleSpeciesPositions() {
-  for (auto spec : species_)
+  for (auto spec : species_) {
     spec->ScalePositions();
+  }
 }
 
 void Simulation::InitSimulation() {
+  rng_.init(params_.seed);
   space_.Init(&params_);
   InitSpecies();
-  output_mgr_.Init(&params_, &species_, &i_step_, run_name_);
   iengine_.Init(&params_, &species_, space_.GetStruct());
-  InsertSpecies();
-  if (params_.graph_flag) {
-    GetGraphicsStructure();
-    double background_color = (params_.graph_background == 0 ? 0.1 : 1);
-    #ifndef NOGRAPH
-    graphics_.Init(&graph_array, space_.GetStruct(), background_color);
-    graphics_.DrawLoop();
-    #endif
-    params_.movie_directory.append("/");
-    params_.movie_directory.append(params_.run_name);
-  }
+  InsertSpecies(params_.load_checkpoint);
   InitOutputs();
+  if (params_.graph_flag) {
+    InitGraphics();
+  }
+}
+
+void Simulation::InitGraphics() {
+  GetGraphicsStructure();
+  double background_color = (params_.graph_background == 0 ? 0.1 : 1);
+  #ifndef NOGRAPH
+  graphics_.Init(&graph_array, space_.GetStruct(), background_color);
+  graphics_.DrawLoop();
+  #endif
+  params_.movie_directory.append("/");
+  params_.movie_directory.append(params_.run_name);
 }
 
 void Simulation::InitSpecies() {
@@ -113,26 +108,50 @@ void Simulation::InitSpecies() {
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
-  for (auto registered = species_factory_.m_classes.begin(); 
+  for (auto registered = species_factory_.m_classes.begin();
       registered != species_factory_.m_classes.end(); ++registered) {
     SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(registered->first);
     spec->Init(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-    if (spec->GetNum() > 0)
+    if (spec->GetNInsert() > 0) {
       species_.push_back(spec);
+    }
+  }
+}
+
+void Simulation::InsertSpecies(bool force_overlap) {
+  // Assuming Random insertion for now
+  for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
+    int num = (*spec)->GetNInsert();
+    int inserted = 0;
+    while(num != inserted) {
+      (*spec)->AddMember();
+      inserted++;
+      if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+        (*spec)->PopMember();
+        inserted--;
+      }
+      else {
+        printf("\rInserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
+        fflush(stdout);
+      }
+    }
+    printf("\n");
   }
 }
 
 void Simulation::ClearSpecies() {
-  for (auto it=species_.begin(); it!=species_.end(); ++it)
+  for (auto it=species_.begin(); it!=species_.end(); ++it) {
     delete (*it);
+  }
 }
 
 void Simulation::ClearSimulation() {
   output_mgr_.Close();
   ClearSpecies();
   #ifndef NOGRAPH
-  if (params_.graph_flag)
+  if (params_.graph_flag) {
     graphics_.Clear();
+  }
   #endif
 }
 
@@ -152,14 +171,20 @@ void Simulation::Draw() {
 
 void Simulation::GetGraphicsStructure() {
   graph_array.clear();
-  for (auto it=species_.begin(); it!=species_.end(); ++it)
+  for (auto it=species_.begin(); it!=species_.end(); ++it) {
     (*it)->Draw(&graph_array);
+  }
 }
 
 void Simulation::InitOutputs() {
+  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_);
   if (params_.time_flag) {
     cpu_init_time_ = cpu();
   }
+}
+
+void Simulation::InitInputs(bool posits_only) {
+  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_, true, posits_only);
 }
 
 void Simulation::WriteOutputs() {
@@ -176,44 +201,52 @@ void Simulation::WriteOutputs() {
   }
 }
 
-//TODO Make sure only species that are put through with m posit are initialized
-void Simulation::CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files){
+void Simulation::ProcessOutputs(system_parameters params, int make_movie, int run_analyses, int use_posits) {
   params_ = params;
-  run_name_ = name;
-  //Graph and don't make new posit files
-  params_.graph_flag = true;
-  params_.posit_flag = false;
-  output_mgr_.SetPosits(posit_files);
-  rng_.init(params_.seed);
-  InitSimulation();
-  RunMovie();
+  run_name_ = params.run_name;
+  InitProcessing(make_movie, run_analyses, use_posits);
+  RunProcessing(run_analyses);
   ClearSimulation();
 }
 
-void Simulation::InsertSpecies() {
-  // Assuming Random insertion for now
-  for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
-    int num = (*spec)->GetNum();
-    int inserted = 0;
-    while(num != inserted) {
-      (*spec)->AddMember();
-      inserted++;
-      if (iengine_.CheckOverlap()) {
-        (*spec)->PopMember();
-        inserted--;
-      }
-      else {
-        printf("\rInserting species: %d complete", (int)(100 * (float)inserted / (float)num));
-        fflush(stdout);
-      }
+// Initialize everything we need for processing
+void Simulation::InitProcessing(int make_movie, int run_analyses, int use_posits) {
+  rng_.init(params_.seed);
+  space_.Init(&params_);
+  InitSpecies();
+  InsertSpecies(true);
+  InitInputs(use_posits);
+  if (make_movie) {
+    params_.graph_flag = 1;
+    params_.movie_flag = 1;
+    if (use_posits && params_.n_graph < output_mgr_.GetNPosit()) {
+      params_.n_graph = output_mgr_.GetNPosit();
     }
-    printf("\n");
+    else if (!use_posits && params_.n_graph < output_mgr_.GetNSpec()) {
+      params_.n_graph = output_mgr_.GetNSpec();
+    }
+    InitGraphics();
+  }
+  else {
+    params_.graph_flag = 0;
+  }
+  if (run_analyses) {
+    //TODO Init analyses structures here
+    std::cout << "  No analyses to perform yet.\n";
   }
 }
 
-//void Simulation::Analysis(system_parameters params, std::string name, std::vector<std::string> posit_files) {
-  //params_ = params;
-  //run_name_ = name;
-  //params_.graph_flag = 0;
-  //params_
+void Simulation::RunProcessing(int run_analyses) {
+  std::cout << "Processing outputs for: " << run_name_ << std::endl;
+  std::cout << "   steps: " << params_.n_steps << std::endl;
+  for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
+    time_ = (i_step_+1) * params_.delta; 
+    PrintComplete();
+    output_mgr_.ReadInputs(); 
+    Draw();
+    if (run_analyses) {
+      // TODO run analyses!
+    }
+  }
+}
 

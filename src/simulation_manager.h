@@ -35,6 +35,7 @@ class SimulationManager {
     void WriteParams();
     void RunSimulations();
     void ParseParams(std::string file_name);
+    void ProcessOutputs();
     //AnalysisManager analyzer_;
 
   public:

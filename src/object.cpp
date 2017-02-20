@@ -91,30 +91,24 @@ void Object::InsertRandomOriented(double *u){
 }
 
 void Object::Draw(std::vector<graph_struct*> * graph_array) {
-  std::copy(position_, position_+3, g_.r);
+  for (int i=0;i<space_->n_periodic; ++i)
+    g_.r[i] = scaled_position_[i];
+  for (int i=space_->n_periodic; i<n_dim_; ++i)
+    g_.r[i] = position_[i];
   std::copy(orientation_, orientation_+3, g_.u);
   std::copy(color_, color_+4, g_.color);
   g_.diameter = diameter_;
+  g_.length = length_;
   g_.draw_type = draw_type_;
   graph_array->push_back(&g_);
 }
 
+// JMM - Updated to exclude updating real (global) position, since it appears not useful to do so
 void Object::UpdatePeriodic() {
-  if (space_->n_periodic == 0)
-    return;
-  double r[3], s[3], rp[3], drp[3];
-  std::copy(orientation_, orientation_+3, g_.u);
-  std::copy(position_, position_+3, r);
+  double s[3], r[3];
   std::copy(scaled_position_, scaled_position_+3, s);
-  std::copy(prev_position_, prev_position_+3, rp);
-  for (int i=0; i<n_dim_; ++i)
-    drp[i] = r[i]-rp[i];
-  periodic_boundary_conditions(space_->n_dim, space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, r, s);
-  SetPosition(r);
+  periodic_boundary_conditions(space_->n_dim, space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, position_, s);
   SetScaledPosition(s);
-  for (int i=0; i<n_dim_; ++i)
-    rp[i] = r[i]-drp[i];
-  SetPrevPosition(rp);
 }
 
 // Apply the force/torque/energy to this particle, override if necessary
@@ -132,27 +126,44 @@ void Object::AddForceTorqueEnergy(double const * const F, double const * const T
     AddPotential(p);
 }
 
-void Object::WritePosit(std::fstream &op){
-  for(auto& pos : position_)
-    op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
-  for(auto& spos : scaled_position_)
-    op.write(reinterpret_cast<char*>(&spos), sizeof(spos));
-  for(auto& u : orientation_)
-    op.write(reinterpret_cast<char*>(&u), sizeof(u));
-  op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
-  op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
+void Object::WriteCheckpoint(std::fstream &ocheck) {
+  void * rng_state = gsl_rng_state(rng_.r);
+  size_t rng_size = gsl_rng_size(rng_.r);
+  ocheck.write(reinterpret_cast<char*>(&rng_size), sizeof(size_t));
+  ocheck.write(reinterpret_cast<char*>(rng_state), rng_size);
+  WritePosit(ocheck);
 }
 
-void Object::ReadPosit(std::fstream &ip){
-  if (ip.eof()) return;
+void Object::ReadCheckpoint(std::fstream &icheck) {
+  if (icheck.eof()) return;
+  void * rng_state = gsl_rng_state(rng_.r);
+  size_t rng_size;
+  icheck.read(reinterpret_cast<char*>(&rng_size), sizeof(size_t));
+  icheck.read(reinterpret_cast<char*>(rng_state), rng_size);
+  ReadPosit(icheck);
+}
+
+void Object::WritePosit(std::fstream &oposit){
   for(auto& pos : position_)
-    ip.read(reinterpret_cast<char*>(&pos), sizeof(pos));
+    oposit.write(reinterpret_cast<char*>(&pos), sizeof(pos));
   for(auto& spos : scaled_position_)
-    ip.read(reinterpret_cast<char*>(&spos), sizeof(spos));
+    oposit.write(reinterpret_cast<char*>(&spos), sizeof(spos));
   for(auto& u : orientation_)
-    ip.read(reinterpret_cast<char*>(&u), sizeof(u));
-  ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
-  ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
+    oposit.write(reinterpret_cast<char*>(&u), sizeof(u));
+  oposit.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  oposit.write(reinterpret_cast<char*>(&length_), sizeof(length_));
+}
+
+void Object::ReadPosit(std::fstream &iposit){
+  if (iposit.eof()) return;
+  for(auto& pos : position_)
+    iposit.read(reinterpret_cast<char*>(&pos), sizeof(pos));
+  for(auto& spos : scaled_position_)
+    iposit.read(reinterpret_cast<char*>(&spos), sizeof(spos));
+  for(auto& u : orientation_)
+    iposit.read(reinterpret_cast<char*>(&u), sizeof(u));
+  iposit.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  iposit.read(reinterpret_cast<char*>(&length_), sizeof(length_));
 }
 
 // Find the minimum distance beween two particles
@@ -183,10 +194,14 @@ void MinimumDistance(Simple* o1, Simple* o2, Interaction *ix, space_struct *spac
     min_distance_sphere_sphero(space->n_dim, space->n_periodic, space->unit_cell,
                    r1, s1, r2, s2, u2, l2,
                    ix->dr, &ix->dr_mag2, ix->contact2);
-  else if (l1 > 0 && l2 == 0)
+  else if (l1 > 0 && l2 == 0) {
     min_distance_sphere_sphero(space->n_dim, space->n_periodic, space->unit_cell,
                    r2, s2, r1, s1, u1, l1,
                    ix->dr, &ix->dr_mag2, ix->contact1);
+    for (int i=0;i<3;++i) {
+      ix->dr[i] = -ix->dr[i];
+    }
+  }
   else if (l1 > 0 && l2 > 0) 
     min_distance_sphero(space->n_dim, space->n_periodic, space->unit_cell,
               r1, s1, u1, l1, r2, s2, u2, l2,
