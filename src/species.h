@@ -3,19 +3,19 @@
 
 #include "auxiliary.h"
 #include "object.h"
-#include <iterator>
 
 class SpeciesBase {
   private:
     SID sid_;
   protected:
-    bool posit_flag_;
-    int n_members_,
-        n_posit_;
-    double delta_;
+    int n_members_ = 0;
     system_parameters *params_;
+    species_parameters *sparams_;
     std::fstream oposit_file_;
     std::fstream iposit_file_;
+    std::fstream ospec_file_;
+    std::fstream ispec_file_;
+    std::string checkpoint_file_;
     space_struct *space_;
     rng_properties rng_;
     void SetSID(SID sid) {sid_=sid;}
@@ -36,25 +36,35 @@ class SpeciesBase {
     virtual void ScalePositions() {}
     virtual void AddMember() {}
     virtual void PopMember() {}
-    virtual int GetNum() {return 0;}
+    virtual int CanOverlap() {return sparams_->overlap;}
     SID const GetSID() {return sid_;}
     virtual void Dump() {}
-    double const GetDelta() {return delta_;}
     int const GetNMembers() {return n_members_;}
-    int const GetNPosit() {return n_posit_;}
-    bool const GetPositFlag() {return posit_flag_;}
-    void SetPositFlag(bool p_flag) {posit_flag_ = p_flag;}
-    void SetNPosit(int n_pos) {n_posit_ = n_pos;}
+    int const GetNInsert() {return sparams_->num;}
+    int const GetNPosit() {return sparams_->n_posit;}
+    int const GetNSpec() {return sparams_->n_spec;}
+    int const GetNCheckpoint() {return sparams_->n_checkpoint;}
+    bool const GetPositFlag() {return sparams_->posit_flag;}
+    bool const GetSpecFlag() {return sparams_->spec_flag;}
+    bool const GetCheckpointFlag() {return sparams_->checkpoint_flag;}
     virtual int GetCount() {return 0;}
-    //virtual void Configurator() {}
     virtual void WriteOutputs(std::string run_name) {}
     virtual void WritePosits() {}
+    virtual void WriteSpecs() {}
+    virtual void WriteCheckpoints() {}
+    virtual void ReadSpecs() {}
+    virtual void ReadCheckpoints() {}
     virtual void ReadPosits() {}
-    virtual void InitOutputFile(std::string run_name);
-    virtual void InitInputFile(std::string in_file, std::ios::streampos beg);
+    virtual void InitOutputFiles(std::string run_name);
+    virtual void InitPositFile(std::string run_name);
+    virtual void InitSpecFile(std::string run_name);
+    virtual void InitPositFileInput(std::string run_name);
+    virtual void InitSpecFileInput(std::string run_name);
+    virtual void InitInputFiles(std::string run_name, bool posits_only);
+    virtual void InitCheckpoints(std::string run_name);
     virtual int OutputIsOpen(){ return oposit_file_.is_open(); }
     virtual int InputIsOpen(){ return iposit_file_.is_open(); }
-    virtual void ClosePosit(); 
+    virtual void CloseFiles(); 
 };
 
 template <typename T>
@@ -67,10 +77,6 @@ class Species : public SpeciesBase {
     virtual void Init(system_parameters *params, space_struct *space, long seed) {
       SpeciesBase::Init(params, space, seed);
     }
-    // Configurator function must be overridden
-    //virtual void Configurator() {
-      //error_exit("ERROR, species needs to override configurator!\n");
-    //}
     Species(int n_members, system_parameters *params, space_struct *space, long seed) : SpeciesBase(n_members, params, space, seed) {}
     //Virtual functions
     virtual void AddMember();
@@ -88,12 +94,12 @@ class Species : public SpeciesBase {
     virtual void Dump();
     virtual int GetCount();
     virtual void WritePosits();
+    virtual void WriteSpecs();
+    virtual void WriteCheckpoints();
     virtual void ReadPosits();
+    virtual void ReadSpecs();
+    virtual void ReadCheckpoints();
     virtual void ScalePositions();
-    virtual int GetNum() {
-      std::cout << "WARNING: GetNum not set in species.\n";
-      return 0;
-    }
     virtual std::vector<T*>* GetMembers() {return &members_;}
 };
 
@@ -103,7 +109,6 @@ void Species<T>::AddMember() {
   newmember->Init();
   members_.push_back(newmember);
   n_members_++;
-  //delete newmember;
 }
 
 template <typename T> 
@@ -214,16 +219,75 @@ void Species<T>::WritePosits() {
 }
 
 template <typename T> 
+void Species<T>::WriteSpecs() {
+  int size = members_.size();
+  ospec_file_.write(reinterpret_cast<char*>(&size), sizeof(size));
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+    (*it)->WriteSpec(ospec_file_);
+}
+
+template <typename T> 
+void Species<T>::WriteCheckpoints() {
+  int size = members_.size();
+  std::fstream ocheck_file(checkpoint_file_,std::ios::out | std::ios::binary);
+  if (!ocheck_file.is_open()) {
+    std::cout<<"ERROR: Output "<< checkpoint_file_ <<" file did not open\n";
+    exit(1);
+  }
+  ocheck_file.write(reinterpret_cast<char*>(&size), sizeof(size));
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+    (*it)->WriteCheckpoint(ocheck_file);
+  ocheck_file.close();
+}
+
+template <typename T> 
 void Species<T>::ReadPosits() {
   if (iposit_file_.eof()) return;
   int size;
   T *member;
   iposit_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
+  if (size != n_members_) {
+    member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
+    members_.resize(size, member);
+    delete member;
+    n_members_ = size;
+  }
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+    (*it)->ReadPosit(iposit_file_);
+}
+
+template <typename T> 
+void Species<T>::ReadCheckpoints() {
+  std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
+  if (!icheck_file.is_open()) {
+    std::cout<<"ERROR: Output "<< checkpoint_file_ <<" file did not open\n";
+    exit(1);
+  }
+  int size;
+  T *member;
+  icheck_file.read(reinterpret_cast<char*>(&size), sizeof(size));
 
   member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
   members_.resize(size, member);
   for (auto it=members_.begin(); it!=members_.end(); ++it) 
-    (*it)->ReadPosit(iposit_file_);
+    (*it)->ReadCheckpoint(icheck_file);
+  icheck_file.close();
+}
+
+template <typename T> 
+void Species<T>::ReadSpecs() {
+  if (ispec_file_.eof()) return;
+  int size;
+  T *member;
+  ispec_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
+  if (size != n_members_) {
+    member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
+    members_.resize(size, member);
+    delete member;
+    n_members_ = size;
+  }
+  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+    (*it)->ReadSpec(ispec_file_);
 }
 
 template <typename T> 

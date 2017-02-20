@@ -93,8 +93,12 @@ class Filament : public Composite<Site,Bond> {
     std::vector<double> const * const GetThetas() {
       return &cos_thetas_;
     }
-    void WritePosit(std::fstream &op);
-    void ReadPosit(std::fstream &ip);
+    void WritePosit(std::fstream &oposit);
+    void ReadPosit(std::fstream &iposit);
+    void WriteSpec(std::fstream &ospec);
+    void ReadSpec(std::fstream &ispec);
+    void WriteCheckpoint(std::fstream &ocheck);
+    void ReadCheckpoint(std::fstream &icheck);
     void ScalePosition();
 };
 
@@ -106,19 +110,10 @@ class FilamentSpecies : public Species<Filament> {
       SetSID(SID::filament);
       midstep_ = true;
     }
-    FilamentSpecies(const FilamentSpecies& that) {
-      midstep_ = that.midstep_;
-    }
-    FilamentSpecies& operator=(FilamentSpecies const& that) {
-      midstep_ = that.midstep_;
-      return *this;
-    }
     void Init(system_parameters *params, space_struct *space, long seed) {
       Species::Init(params, space, seed);
-      n_members_ = 0;
-      midstep_ = true;
+      sparams_ = &(params_->filament);
     }
-    int GetNum() {return params_->filament.num;}
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();
@@ -147,8 +142,6 @@ class FilamentSpecies : public Species<Filament> {
 
       midstep_ = !midstep_;
     }
-    void Configurator();
-
 };
 
 #endif // _SIMCORE_FILAMENT_H_

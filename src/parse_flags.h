@@ -45,7 +45,7 @@ static const std::string desc[n_flags][2] = {
   {"run simulation to make movie using spec files with same run-name\n", "none"},
   {"run analysis on spec files with same run-name for parameter species", "none"},
   {"use posit files for movies/analysis rather than spec files\n", "none"},
-  {"run simulation starting from snapshot files with same run-name for parameter species\n", "none"}
+  {"run simulation starting from checkpoint files with same run-name for parameter species\n", "none"}
 };
 
 
@@ -114,10 +114,10 @@ static run_options parse_opts(int argc, char *argv[]) {
         run_opts.a_flag = 1;
         break;
       case 'p':
-        run_opts.a_flag = 1;
+        run_opts.p_flag = 1;
         break;
       case 'l':
-        run_opts.a_flag = 1;
+        run_opts.l_flag = 1;
         break;
       case '?':
         exit(1);

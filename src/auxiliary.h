@@ -62,7 +62,7 @@ inline SID StringToSID(std::string &s) {
   return SID::none;
 }
 
-inline std::string SIDToString(SID &s) {
+inline std::string SIDToString(SID const s) {
   if (s == SID::none)
     return "none";
   else if (s == SID::md_bead)

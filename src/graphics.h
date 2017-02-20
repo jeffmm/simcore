@@ -124,6 +124,7 @@ class Graphics {
     void Draw2d();
     void Draw3d();
     void DrawText();
+    void ScalePositions();
 };
 
 #endif

@@ -37,8 +37,17 @@ class BrBeadSpecies : public Species<BrBead> {
     BrBeadSpecies() : Species() {
       SetSID(SID::br_bead);
     }
-    BrBeadSpecies(int n_members, system_parameters *params, space_struct *space, long seed) : Species(n_members, params, space, seed) {
-      SetSID(SID::br_bead);
+    void Init(system_parameters *params, space_struct *space, long seed) {
+      Species::Init(params, space, seed);
+      sparams_ = &(params_->br_bead);
+      if (params_->br_bead.packing_fraction>0) {
+        if (params_->n_dim == 2) {
+          sparams_->num = params_->br_bead.packing_fraction*4.0*space_->volume/(M_PI*pow(params_->br_bead.diameter,2));
+        }
+        else {
+          sparams_->num = params_->br_bead.packing_fraction*6.0*space_->volume/(M_PI*pow(params_->br_bead.diameter,3));
+        }
+      }
     }
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
@@ -66,8 +75,6 @@ class BrBeadSpecies : public Species<BrBead> {
         (*it)->UpdatePosition();
 #endif
     }
-
-    void Configurator();
 };
 
 #endif // _SIMCORE_BR_BEAD_H_
