@@ -21,7 +21,7 @@ class InteractionEngine {
         i_update_,
         n_update_,
         n_objs_,
-        virial_time_avg_;
+        n_thermo_;
     system_parameters *params_;
     space_struct *space_;
     std::vector<SpeciesBase*> *species_;

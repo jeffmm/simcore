@@ -37,6 +37,7 @@ class Simulation {
     void InitPositInput();
     void ClearSpecies();
     void InitOutputs();
+    void InitInputs(bool posits_only);
     void RunSimulation();
     void RunMovie();
     void ClearSimulation();
@@ -51,12 +52,15 @@ class Simulation {
     void ScaleSpeciesPositions();
     std::vector<graph_struct*> graph_array;
     void PrintComplete();
-    void InsertSpecies();
+    void InsertSpecies(bool force_overlap = false);
+    void RunProcessing(int run_analyses);
+    void InitGraphics();
+    void InitProcessing(int make_movie, int run_analyses, int use_posits);
 
   public:
     Simulation() {}
     void Run(system_parameters params);
-    void CreateMovie(system_parameters params, std::string name, std::vector<std::string> posit_files);
+    void ProcessOutputs(system_parameters params, int make_movie, int run_analyses, int use_posits);
 };
 
 #endif // _SIMCORE_SIMULATION_H_  

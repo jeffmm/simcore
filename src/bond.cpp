@@ -2,7 +2,10 @@
 void Bond::Init() {}
 
 void Bond::Draw(std::vector<graph_struct*> * graph_array) {
-  std::copy(position_, position_+3, g_.r);
+  for (int i=0; i<space_->n_periodic; ++i)
+    g_.r[i] = scaled_position_[i];
+  for (int i=space_->n_periodic; i<n_dim_; ++i)
+    g_.r[i] = position_[i];
   std::copy(orientation_, orientation_+3, g_.u);
   std::copy(color_, color_+4, g_.color);
   //g_.length = (length_-diameter_ > 0 ? length_-diameter_ : 0);

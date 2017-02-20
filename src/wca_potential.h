@@ -26,7 +26,7 @@ class WCAPotential : public PotentialBase {
         ffac = SIGNOF(ffac) * fcut_;
       }
       for (int i = 0; i < n_dim_; ++i) {
-        ix->force[i] = ffac*dr[i]/rmag;
+        ix->force[i] = ffac*dr[i]*rinv;
       }
       for (int i=0; i<n_dim_; ++i)
         for (int j=0; j<n_dim_; ++j)

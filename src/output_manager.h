@@ -7,30 +7,44 @@
 
 class OutputManager{
   private:
-    bool posit_flag_,
-         make_movie_ = false;
+    bool posit_flag_ =  false,
+         spec_flag_ =  false,
+         checkpoint_flag_ = false,
+         thermo_flag_ = false,
+         posits_only_ = false;
     int *i_step_,
-        n_posit_;
+        n_posit_,
+        n_spec_,
+        n_checkpoint_,
+        n_thermo_;
     std::string run_name_;
     system_parameters *params_;
-    std::vector<std::string> posit_files_;
     std::vector<SpeciesBase*> *species_;
-    void InitPositInput();
+    space_struct *space_;
     void WritePosits();
+    void WriteSpecs();
+    void WriteCheckpoints();
+    void WriteThermo();
+    void InitThermo();
+    std::fstream thermo_file_;
 
   public:
-    OutputManager();
-    ~OutputManager() {}
+    OutputManager() {}
     void Init(system_parameters *params, 
               std::vector<SpeciesBase*> *species,
-              int *i_step, std::string run_name);
-    void SetPosits(std::vector<std::string> posit_files) {
-      make_movie_ = true;
-      posit_files_ = posit_files; 
-    }
+              space_struct *space,
+              int *i_step, std::string run_name,
+              bool reading_inputs = false,
+              bool posits_only = false);
+    //void SetPosits(std::vector<std::string> posit_files) {
+      //posit_files_ = posit_files; 
+    //}
+    int GetNPosit() {return n_posit_;}
+    int GetNSpec() {return n_spec_;}
+    int GetNCheckpoint() {return n_checkpoint_;}
     void WriteOutputs();
-    bool IsMovie() {return make_movie_;}
-    void ReadPosits();
+    void InitInputs();
+    void ReadInputs();
     void Close();
 };
 

@@ -130,15 +130,17 @@ class Object {
       error_exit("ERROR: UpdatePositionMP() needs to be overwritten. Exiting!\n");
     }
     virtual void SetColor(double const * const c, int dtype) {
-      for (int i=0; i < 4; ++i)
+      for (int i=0; i < 4; ++i) {
         color_[i] = c[i];
+      }
       draw_type_ = dtype;
     }
     virtual void ScalePosition() {
       for (int i=0; i<n_dim_; ++i) {
         position_[i] = 0;
-        for (int j=0;j<n_dim_; ++j)
+        for (int j=0;j<n_dim_; ++j) {
           position_[i]+=space_->unit_cell[n_dim_*i+j]*scaled_position_[j];
+        }
       }
     }
     virtual double const GetKineticEnergy() {return k_energy_;}
@@ -158,15 +160,12 @@ class Object {
     }
     virtual int GetCount() {return 0;}
 
-    virtual bool ApplyKMCInteraction() {
-      return false;
-    }
-
-    // KMC specific stuff
-    rng_properties* GetRNG() {return &rng_;}
-
-    virtual void WritePosit(std::fstream &op);
-    virtual void ReadPosit(std::fstream &ip);
+    virtual void WritePosit(std::fstream &oposit);
+    virtual void ReadPosit(std::fstream &iposit);
+    virtual void WriteSpec(std::fstream &ospec) {}
+    virtual void ReadSpec(std::fstream &ispec) {}
+    virtual void WriteCheckpoint(std::fstream &ocheck);
+    virtual void ReadCheckpoint(std::fstream &icheck);
 
     void SetRNGState(const std::string& filename) {
       // Load the rng state from binary file
@@ -189,13 +188,15 @@ class Simple : public Object {
       return sim_vec;
     }
     virtual void AddDr() {
-      for (int i=0; i<n_dim_; ++i)
+      for (int i=0; i<n_dim_; ++i) {
         dr_tot_[i] += position_[i] - prev_position_[i];
+      }
     }
     virtual double GetDr() {
       double dr =0;
-      for (int i=0; i<n_dim_; ++i)
+      for (int i=0; i<n_dim_; ++i) {
         dr += dr_tot_[i]*dr_tot_[i];
+      }
       //printf("[%d] dr2: %2.8f\n", GetOID(), dr);
       return dr;
     }
@@ -334,6 +335,46 @@ class Composite<T> : public Object {
         elem.ReadPosit(ip);
     }
 
+    virtual void WriteSpec(std::fstream &os){
+      int size;
+      size = elements_.size();
+      os.write(reinterpret_cast<char*>(&size), sizeof(int));
+
+      for (auto& elem : elements_)
+        elem.WriteSpec(os);
+    }
+
+    virtual void ReadSpec(std::fstream &ip){
+      if (ip.eof()) return;
+      int size;
+      T elmt(params_, space_, params_->seed, sid_);
+      ip.read(reinterpret_cast<char*>(&size), sizeof(int));
+      elements_.resize(size, elmt);
+
+      for (auto& elem : elements_)
+        elem.ReadSpec(ip);
+    }
+
+    virtual void WriteCheckpoint(std::fstream &oss){
+      int size;
+      size = elements_.size();
+      oss.write(reinterpret_cast<char*>(&size), sizeof(int));
+
+      for (auto& elem : elements_)
+        elem.WriteCheckpoint(oss);
+    }
+
+    virtual void ReadCheckpoint(std::fstream &iss){
+      if (iss.eof()) return;
+      int size;
+      T elmt(params_, space_, params_->seed, sid_);
+      iss.read(reinterpret_cast<char*>(&size), sizeof(int));
+      elements_.resize(size, elmt);
+
+      for (auto& elem : elements_)
+        elem.ReadCheckpoint(iss);
+    }
+
     virtual void ScalePosition() {
       for (auto elem : elements_)
         elem.ScalePosition();
@@ -395,19 +436,6 @@ class Composite<T,V> : public Object {
       return dr_max;
     }
 
-    virtual void WritePosit(std::fstream &op){
-      int size;
-      size = elements_.size();
-      op.write(reinterpret_cast<char*>(&size), sizeof(size));
-      size = v_elements_.size();
-      op.write(reinterpret_cast<char*>(&size), sizeof(size));
-
-      for (auto& elem : elements_)
-        elem.WritePosit(op);
-      for (auto& velem : v_elements_)
-        velem.WritePosit(op);
-    }
-
     virtual void ReadPosit(std::fstream &ip){
       int size;
       T elmt(params_, space_, params_->seed, sid_);
@@ -423,6 +451,79 @@ class Composite<T,V> : public Object {
         elem.ReadPosit(ip);
       for (auto& velem : v_elements_)
         velem.ReadPosit(ip);
+    }
+
+    virtual void WritePosit(std::fstream &op){
+      int size;
+      size = elements_.size();
+      op.write(reinterpret_cast<char*>(&size), sizeof(size));
+      size = v_elements_.size();
+      op.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+      for (auto& elem : elements_)
+        elem.WritePosit(op);
+      for (auto& velem : v_elements_)
+        velem.WritePosit(op);
+    }
+
+    virtual void ReadSpec(std::fstream &ip){
+      int size;
+      T elmt(params_, space_, params_->seed, sid_);
+      V v_elmt(params_, space_, params_->seed, sid_);
+
+      ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+      elements_.resize(size, elmt);
+      ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+      v_elements_.resize(size, v_elmt);
+
+
+      for (auto& elem : elements_)
+        elem.ReadSpec(ip);
+      for (auto& velem : v_elements_)
+        velem.ReadSpec(ip);
+    }
+
+    virtual void WriteSpec(std::fstream &op){
+      int size;
+      size = elements_.size();
+      op.write(reinterpret_cast<char*>(&size), sizeof(size));
+      size = v_elements_.size();
+      op.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+      for (auto& elem : elements_)
+        elem.WriteSpec(op);
+      for (auto& velem : v_elements_)
+        velem.WriteSpec(op);
+    }
+
+    virtual void ReadCheckpoint(std::fstream &ip){
+      int size;
+      T elmt(params_, space_, params_->seed, sid_);
+      V v_elmt(params_, space_, params_->seed, sid_);
+
+      ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+      elements_.resize(size, elmt);
+      ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+      v_elements_.resize(size, v_elmt);
+
+
+      for (auto& elem : elements_)
+        elem.ReadCheckpoint(ip);
+      for (auto& velem : v_elements_)
+        velem.ReadCheckpoint(ip);
+    }
+
+    virtual void WriteCheckpoint(std::fstream &op){
+      int size;
+      size = elements_.size();
+      op.write(reinterpret_cast<char*>(&size), sizeof(size));
+      size = v_elements_.size();
+      op.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+      for (auto& elem : elements_)
+        elem.WriteCheckpoint(op);
+      for (auto& velem : v_elements_)
+        velem.WriteCheckpoint(op);
     }
 
     virtual void ScalePosition() {

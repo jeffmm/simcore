@@ -83,11 +83,18 @@ void Filament::Init() {
     InitSpiral2D();
     return;
   }
-  if (params_->filament.insertion_type.compare("random")==0)
+  if (params_->filament.insertion_type.compare("random")==0) {
     InsertRandom();
-  else
+  }
+  else if(params_->filament.insertion_type.compare("oriented")==0) {
+    InsertRandom();
+    std::fill(orientation_,orientation_+3,0.0);
+    orientation_[n_dim_-1]=1.0;
+  }
+  else {
     error_exit(" Insertion type not recognized for filaments. Exiting.\n");
-  generate_random_unit_vector(n_dim_, orientation_, rng_.r);
+  }
+  //generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
     site->SetDiameter(diameter_);
     site->SetLength(child_length_);
@@ -626,6 +633,7 @@ void Filament::UpdateBondPositions() {
     bond->SetPosition(pos);
     bond->SetOrientation(u);
     bond->SetLength(child_length_);
+    bond->SetDiameter(diameter_);
     bond->UpdatePeriodic();
     bond->SetRigidPosition(bond->GetPosition());
     bond->SetRigidScaledPosition(bond->GetScaledPosition());
@@ -740,7 +748,7 @@ void Filament::DumpAll() {
   printf("}\n\n\n");
 }
 
-/* The posit output for one filament is:
+/* The spec output for one filament is:
     diameter
     length
     persistence_length (added 1/17/2017)
@@ -753,52 +761,52 @@ void Filament::DumpAll() {
     all bond orientations
     */
 
-void Filament::WritePosit(std::fstream &op){
-  op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
-  op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
-  //op.write(reinterpret_cast<char*>(&persistence_length_), sizeof(persistence_length_));
-  //op.write(reinterpret_cast<char*>(&friction_par_), sizeof(friction_par_));
-  //op.write(reinterpret_cast<char*>(&friction_perp_), sizeof(friction_perp_));
-  op.write(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
-  op.write(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
+void Filament::WriteSpec(std::fstream &ospec){
+  ospec.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  ospec.write(reinterpret_cast<char*>(&length_), sizeof(length_));
+  ospec.write(reinterpret_cast<char*>(&persistence_length_), sizeof(persistence_length_));
+  ospec.write(reinterpret_cast<char*>(&friction_par_), sizeof(friction_par_));
+  ospec.write(reinterpret_cast<char*>(&friction_perp_), sizeof(friction_perp_));
+  ospec.write(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
+  ospec.write(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
   double temp[3];
   double const * const r0 = elements_[0].GetPosition();
   std::copy(r0, r0+3, temp);
   for (auto& pos : temp)
-    op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
+    ospec.write(reinterpret_cast<char*>(&pos), sizeof(pos));
   double const * const rf = elements_[n_bonds_].GetPosition();
   std::copy(rf, rf+3, temp);
   for (auto& pos : temp)
-    op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
+    ospec.write(reinterpret_cast<char*>(&pos), sizeof(pos));
   for (int i=0; i<n_bonds_; ++i) {
     double const * const orientation = v_elements_[i].GetOrientation();
     std::copy(orientation, orientation+3, temp);
     for (auto& u : temp) 
-      op.write(reinterpret_cast<char*>(&u), sizeof(u));
+      ospec.write(reinterpret_cast<char*>(&u), sizeof(u));
   }
   return;
 }
 
-void Filament::ReadPosit(std::fstream &ip) {
-  if (ip.eof()) return;
+void Filament::ReadSpec(std::fstream &ispec) {
+  if (ispec.eof()) return;
   double r0[3], rf[3], u_bond[3];
-  ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
-  ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
-  //ip.read(reinterpret_cast<char*>(&persistence_length_), sizeof(persistence_length_));
-  //ip.read(reinterpret_cast<char*>(&friction_par_), sizeof(friction_par_));
-  //ip.read(reinterpret_cast<char*>(&friction_perp_), sizeof(friction_perp_));
-  ip.read(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
-  ip.read(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
+  ispec.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  ispec.read(reinterpret_cast<char*>(&length_), sizeof(length_));
+  ispec.read(reinterpret_cast<char*>(&persistence_length_), sizeof(persistence_length_));
+  ispec.read(reinterpret_cast<char*>(&friction_par_), sizeof(friction_par_));
+  ispec.read(reinterpret_cast<char*>(&friction_perp_), sizeof(friction_perp_));
+  ispec.read(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
+  ispec.read(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
   v_elements_.resize(n_bonds_, v_elements_[0]);
   // Get initial site position
   for (int i=0; i<3; ++i)
-    ip.read(reinterpret_cast<char*>(&r0[i]), sizeof(double));
+    ispec.read(reinterpret_cast<char*>(&r0[i]), sizeof(double));
   for (int i=0; i<3; ++i)
-    ip.read(reinterpret_cast<char*>(&rf[i]), sizeof(double));
+    ispec.read(reinterpret_cast<char*>(&rf[i]), sizeof(double));
   // Initialize bonds from relative orientations
   for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
     for (int i=0; i<3; ++i)
-      ip.read(reinterpret_cast<char*>(&u_bond[i]), sizeof(double));
+      ispec.read(reinterpret_cast<char*>(&u_bond[i]), sizeof(double));
     for (int i=0; i<n_dim_; ++i) {
       // Set bond position
       rf[i] = r0[i] + 0.5 * child_length_ * u_bond[i];
@@ -813,39 +821,108 @@ void Filament::ReadPosit(std::fstream &ip) {
   }
 }
 
-//void Filament::WritePosit(std::fstream &op) {
-  //double avg_pos[3], avg_u[3];
-  //GetAvgPosition(avg_pos);
-  //GetAvgOrientation(avg_u);
-  //for (auto& pos : avg_pos)
-    //op.write(reinterpret_cast<char*>(&pos), sizeof(pos));
-  //for (auto& u : avg_u) 
-    //op.write(reinterpret_cast<char*>(&u), sizeof(u));
-  //op.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
-  //op.write(reinterpret_cast<char*>(&length_), sizeof(length_));
-//}
+void Filament::WritePosit(std::fstream &oposit) {
+  double avg_pos[3], avg_u[3];
+  GetAvgPosition(avg_pos);
+  GetAvgOrientation(avg_u);
+  std::copy(avg_pos,avg_pos+3,position_);
+  UpdatePeriodic();
+  for (auto& pos : position_)
+    oposit.write(reinterpret_cast<char*>(&pos), sizeof(pos));
+  for (auto& spos : scaled_position_)
+    oposit.write(reinterpret_cast<char*>(&spos), sizeof(spos));
+  for (auto& u : avg_u) 
+    oposit.write(reinterpret_cast<char*>(&u), sizeof(u));
+  oposit.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  oposit.write(reinterpret_cast<char*>(&length_), sizeof(length_));
+}
 
-//// Not very useful for flexible filaments, but whatever
-//void Filament::ReadPosit(std::fstream &ip) {
-  //if (ip.eof()) return;
-  //double avg_pos[3], avg_u[3];
-  //for (int i=0; i<3; ++i)
-    //ip.read(reinterpret_cast<char*>(&avg_pos[i]), sizeof(double));
-  //for (int i=0; i<3; ++i)
-    //ip.read(reinterpret_cast<char*>(&avg_u[i]), sizeof(double));
-  //ip.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
-  //ip.read(reinterpret_cast<char*>(&length_), sizeof(length_));
-  //// Initialize first bond position
-  //for (int i=0; i<n_dim_; ++i) 
-    //avg_pos[i] = avg_pos[i] - 0.5*(length_ - child_length_)*avg_u[i];
-  //for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
-    //v_elements_[i_bond].SetPosition(avg_pos);
-    //v_elements_[i_bond].SetOrientation(avg_u);
-    //v_elements_[i_bond].SetDiameter(diameter_);
-    //v_elements_[i_bond].UpdatePeriodic();
-    //// Set next bond position
-    //for (int i=0; i<n_dim_; ++i) 
-      //avg_pos[i] += 0.5*child_length_*avg_u[i];
-  //}
-//}
+void Filament::ReadPosit(std::fstream &iposit) {
+  if (iposit.eof()) return;
+  double avg_pos[3], avg_u[3], s_pos[3];
+  for (int i=0; i<3; ++i)
+    iposit.read(reinterpret_cast<char*>(&avg_pos[i]), sizeof(double));
+  for (int i=0; i<3; ++i)
+    iposit.read(reinterpret_cast<char*>(&s_pos[i]), sizeof(double));
+  for (int i=0; i<3; ++i)
+    iposit.read(reinterpret_cast<char*>(&avg_u[i]), sizeof(double));
+  iposit.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
+  iposit.read(reinterpret_cast<char*>(&length_), sizeof(length_));
+  // Initialize first bond position
+  for (int i=0; i<n_dim_; ++i) 
+    avg_pos[i] = avg_pos[i] - 0.5*(length_ - child_length_)*avg_u[i];
+  for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
+    v_elements_[i_bond].SetPosition(avg_pos);
+    v_elements_[i_bond].SetOrientation(avg_u);
+    v_elements_[i_bond].SetDiameter(diameter_);
+    v_elements_[i_bond].UpdatePeriodic();
+    // Set next bond position
+    for (int i=0; i<n_dim_; ++i) 
+      avg_pos[i] += child_length_*avg_u[i];
+  }
+}
+
+void Filament::WriteCheckpoint(std::fstream &ocheck) {
+  void * rng_state = gsl_rng_state(rng_.r);
+  size_t rng_size = gsl_rng_size(rng_.r);
+  ocheck.write(reinterpret_cast<char*>(&rng_size), sizeof(size_t));
+  ocheck.write(reinterpret_cast<char*>(rng_state), rng_size);
+  WriteSpec(ocheck);
+}
+
+void Filament::ReadCheckpoint(std::fstream &icheck) {
+  if (icheck.eof()) return;
+  void * rng_state = gsl_rng_state(rng_.r);
+  size_t rng_size;
+  icheck.read(reinterpret_cast<char*>(&rng_size), sizeof(size_t));
+  icheck.read(reinterpret_cast<char*>(rng_state), rng_size);
+  ReadSpec(icheck);
+  n_sites_ = n_bonds_+1;
+  double r[3];
+  for (int i=0; i<3; ++i)
+    r[i] = v_elements_[0].GetPosition()[i] - 0.5*child_length_*v_elements_[0].GetOrientation()[i];
+  elements_[0].SetPosition(r);
+  elements_[0].SetOrientation(v_elements_[0].GetOrientation());
+  for (int i_bond=1; i_bond<n_bonds_; ++i_bond) {
+    for (int i=0; i<3; ++i)
+      r[i] += child_length_*elements_[i_bond-1].GetOrientation()[i];
+    elements_[i_bond].SetPosition(r);
+    elements_[i_bond].SetOrientation(v_elements_[i_bond].GetOrientation());
+  }
+  for (int i=0; i<3; ++i)
+    r[i] += child_length_*elements_[n_sites_-2].GetOrientation()[i];
+  elements_[n_sites_-1].SetPosition(r); 
+  elements_[n_sites_-1].SetOrientation(v_elements_[n_bonds_-1].GetOrientation());
+  UpdateBondPositions();
+  // Hack CIDs and RIDs to Set up interaction zones
+  for (int i=0; i<n_bonds_; ++i) {
+    v_elements_[i].InitRID();
+    v_elements_[i].SetCID(v_elements_[i].GetRID());
+    v_elements_[i].UpdatePeriodic();
+  }
+  for (int i=1; i<n_bonds_-1; ++i) {
+    if (i%2==0) 
+      v_elements_[i].SetRID(v_elements_[i-1].GetRID());
+    else
+      v_elements_[i].SetCID(v_elements_[i-1].GetCID());
+  }
+  v_elements_[n_bonds_-1].SetCID(v_elements_[n_bonds_-2].GetCID());
+  v_elements_[n_bonds_-1].SetRID(v_elements_[n_bonds_-2].GetRID());
+
+  //Reallocate control structures
+  tensions_.resize(n_sites_-1); //max_sites -1
+  g_mat_lower_.resize(n_sites_-2); //max_sites-2
+  g_mat_upper_.resize(n_sites_-2); //max_sites-2
+  g_mat_diag_.resize(n_sites_-1); //max_sites-1
+  det_t_mat_.resize(n_sites_+1); //max_sites+1
+  det_b_mat_.resize(n_sites_+1); //max_sites+1
+  g_mat_inverse_.resize(n_sites_-2); //max_sites-2
+  k_eff_.resize(n_sites_-2); //max_sites-2
+  h_mat_diag_.resize(n_sites_-1); //max_sites-1
+  h_mat_upper_.resize(n_sites_-2); //max_sites-2
+  h_mat_lower_.resize(n_sites_-2); //max_sites-2
+  gamma_inverse_.resize(n_sites_*n_dim_*n_dim_); //max_sites*ndim*ndim
+  cos_thetas_.resize(n_sites_-2); //max_sites-2
+}
+
 
