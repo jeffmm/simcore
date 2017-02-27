@@ -113,6 +113,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("metric_forces")==0) {
             params->filament.metric_forces = jt->second.as<int>();
           }
+          else if (param_name.compare("new_parameter")==0) {
+            params->filament.new_parameter = jt->second.as<int>();
+          }
           else if (param_name.compare("v_poly")==0) {
             params->filament.v_poly = jt->second.as<double>();
           }

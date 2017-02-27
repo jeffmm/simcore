@@ -23,6 +23,11 @@ void Simulation::RunSimulation() {
     Statistics();
     Draw();
     WriteOutputs();
+    if (early_exit) {
+      early_exit = false;
+      std::cout << "  Early exit triggered. Ending simulation.\n";
+      return;
+    }
   }
 }
 

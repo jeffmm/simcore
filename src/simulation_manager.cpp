@@ -1,6 +1,7 @@
 #include "simulation_manager.h"
 
 bool debug_trace;
+bool early_exit;
 
 /****************************************
    ::InitManaager::

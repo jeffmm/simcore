@@ -6,45 +6,34 @@ n_runs: 1
 n_random: 1
 n_dim: 2
 n_periodic: 2
-delta: 0.00001
-n_steps: 100000
-system_radius: 10
+delta: 0.0001
+n_steps: 200000
+system_radius: 20
 graph_flag: 1
 n_graph: 100
 movie_flag: 0
 movie_directory: frames
-cell_length: 6
+cell_length: 3
 n_update_cells: 10
 f_cutoff: 1000
 thermo_flag: 1
 n_thermo: 100
 filament:
-  insertion_type: random
-  num: 5
+  insertion_type: oriented
+  num: 1
   overlap: 0
   diameter: 1
-  spiral_flag: 0
-  min_length: 1
-  max_length: 100
-  length: 10
-  persistence_length: 400
+  spiral_flag: 1
   max_child_length: 3
-  driving_factor: 0
   posit_flag: 1
   spec_flag: 1
-  n_posit: 100
   checkpoint_flag: 1
+  n_posit: 100
   n_spec: 100
   n_checkpoint: 100
-br_bead:
-  num: 40
-  packing_fraction: 0
-  insertion_type: random
-  overlap: 0
-  diameter: 1
-  driving_factor: 0
-  checkpoint_flag: 1
-  n_checkpoint: 100
+  driving_factor: [20,22.5,25,27.5,30]
+  length: 40
+  persistence_length: 400
   #driving_factor: [R,0,50]
   #length: [R,20,100]
   #persistence_length: [RLOG,2,4]

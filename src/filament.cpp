@@ -243,12 +243,20 @@ void Filament::Integrate(bool midstep) {
 
 void Filament::CalculateAngles() {
   double cos_angle;
+  //std::cout << " { ";
   for (int i_site=0; i_site<n_sites_-2; ++i_site) {
     double const * const u1 = elements_[i_site].GetOrientation();
     double const * const u2 = elements_[i_site+1].GetOrientation();
     cos_angle = dot_product(n_dim_, u1, u2);
     cos_thetas_[i_site] = cos_angle;
+    //std::cout << cos_angle << " ";
+    if (spiral_flag_ && 1-cos_angle < 0.00000001) {
+      std::cout << "  Spiral terminated\n";
+      early_exit = true; // exit the simulation early
+      spiral_flag_ = false; // to prevent this message more than once
+    }
   }
+  //std::cout << " }\n";
 }
 
 void Filament::CalculateTangents() {
