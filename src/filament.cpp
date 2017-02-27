@@ -135,6 +135,8 @@ void Filament::DiffusionValidationInit() {
 
 // Place a spool centered at the origin
 void Filament::InitSpiral2D() {
+  if (n_dim_ > 2)
+    error_exit("  3D Spirals not coded yet\n.");
   double prev_pos[3] = {0, 0, 0};
   std::fill(position_, position_+3, 0);
   elements_[n_sites_-1].SetPosition(prev_pos);
@@ -242,21 +244,23 @@ void Filament::Integrate(bool midstep) {
 }
 
 void Filament::CalculateAngles() {
-  double cos_angle;
-  //std::cout << " { ";
+  double cos_angle, angle_sum = 0;
+  double u3[3];
   for (int i_site=0; i_site<n_sites_-2; ++i_site) {
     double const * const u1 = elements_[i_site].GetOrientation();
     double const * const u2 = elements_[i_site+1].GetOrientation();
     cos_angle = dot_product(n_dim_, u1, u2);
     cos_thetas_[i_site] = cos_angle;
-    //std::cout << cos_angle << " ";
-    if (spiral_flag_ && 1-cos_angle < 0.00000001) {
-      std::cout << "  Spiral terminated\n";
-      early_exit = true; // exit the simulation early
-      spiral_flag_ = false; // to prevent this message more than once
+    if (spiral_flag_) {
+      cross_product(u1,u2,u3,2);
+      angle_sum += u3[2];
     }
   }
-  //std::cout << " }\n";
+  if (spiral_flag_ && angle_sum / (n_sites_-2) > 0) { // check if sign of angle between u1,u2 has changed
+    std::cout << "  Spiral terminated\n";
+    early_exit = true; // exit the simulation early
+    spiral_flag_ = false; // to prevent this message more than once
+  }
 }
 
 void Filament::CalculateTangents() {
