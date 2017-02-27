@@ -23,9 +23,9 @@ class filament_parameters : public species_parameters {
     double persistence_length = 400;
     double diameter = 1;
     double length = 40;
-    double max_length = 300;
+    double max_length = 500;
     int force_induced_catastrophe_flag = 0;
-    double min_length = 5;
+    double min_length = 1;
     double max_child_length = 3;
     int spiral_flag = 0;
     double driving_factor = 0;
@@ -38,6 +38,7 @@ class filament_parameters : public species_parameters {
     double f_grow_to_pause = 0.0;
     double f_grow_to_shrink = 0.00554;
     int metric_forces = 1;
+    int new_parameter = 1;
     double v_poly = 0.44;
     double v_depoly = 0.793;
 };

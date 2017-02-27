@@ -39,7 +39,7 @@ class SimulationManager {
     //AnalysisManager analyzer_;
 
   public:
-    SimulationManager() { debug_trace = false; }
+    SimulationManager() { debug_trace = false; early_exit = false;}
     void InitManager(run_options run_opts);
     void RunManager();
     //void RunManager(std::vector<std::string> posit_files);

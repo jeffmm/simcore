@@ -25,6 +25,7 @@
 #endif
 
 extern bool debug_trace;
+extern bool early_exit;
 
 struct graph_struct {
   double r[3];
