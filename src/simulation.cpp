@@ -244,7 +244,7 @@ void Simulation::InitProcessing(int make_movie, int run_analyses, int use_posits
 void Simulation::RunProcessing(int run_analyses) {
   std::cout << "Processing outputs for: " << run_name_ << std::endl;
   std::cout << "   steps: " << params_.n_steps << std::endl;
-  for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
+  for (i_step_ = 1; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
     output_mgr_.ReadInputs(); 
