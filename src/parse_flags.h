@@ -10,10 +10,12 @@ struct run_options {
   int debug = 0;
   int r_flag = 0;
   int n_flag = 0;
+  int g_flag = 0;
   int m_flag = 0;
   int a_flag = 0;
   int p_flag = 0;
   int l_flag = 0;
+  int n_graph = 100;
   std::string param_file;
   std::string run_name = "sc";
 };
@@ -23,12 +25,13 @@ struct run_options {
 //       as well as any flag descriptions in the static string array below
 //       when adding new flags.
 
-static const int n_flags = 8;
+static const int n_flags = 9;
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
   {"run-name", required_argument, 0, 'r'},
   {"n-runs", required_argument, 0, 'n'},
+  {"graphics", required_argument, 0, 'g'},
   {"movie", no_argument, 0, 'm'},
   {"analysis", no_argument, 0, 'a'},
   {"posit", no_argument, 0, 'p'},
@@ -42,6 +45,7 @@ static const std::string desc[n_flags][2] = {
   {"run program in debug mode\n", "none"},
   {"where rname is the name of a run session (for organizing batch jobs)\n", "rname"},
   {"where num is the number of independent runs to perform with the given parameters\n", "num"},
+  {"run graphics from posit/spec files without recording, with n_graph = ngraph\n", "ngraph"},
   {"run simulation to make movie using spec files with same run-name\n", "none"},
   {"run analysis on spec files with same run-name for parameter species", "none"},
   {"use posit files for movies/analysis rather than spec files\n", "none"},
@@ -86,7 +90,7 @@ static run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdmaplr:n:", long_options, &option_index);
+    tmp = getopt_long(argc, argv, "hdmaplg:r:n:", long_options, &option_index);
     if (tmp == -1)
       break;
     switch (tmp) {
@@ -106,6 +110,10 @@ static run_options parse_opts(int argc, char *argv[]) {
       case 'n':
         run_opts.n_flag = 1;
         run_opts.n_runs = atoi(optarg);
+        break;
+      case 'g':
+        run_opts.g_flag = 1;
+        run_opts.n_graph = atoi(optarg);
         break;
       case 'm':
         run_opts.m_flag = 1;
@@ -143,14 +151,16 @@ static run_options parse_opts(int argc, char *argv[]) {
   }
   if (run_opts.m_flag) {
     printf("  Making movies");
-    if (run_opts.p_flag)
+    if (run_opts.p_flag) {
       printf(" using posit files.");
+    }
   }
   putchar('\n');
   if (run_opts.a_flag) {
     printf("  Running analyses");
-    if (run_opts.p_flag)
+    if (run_opts.p_flag) {
       printf(" using posit files.");
+    }
   }
   putchar('\n');
     //if (run_opts.a_flag!=1 && run_opts.m_flag!=1) {

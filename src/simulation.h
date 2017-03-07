@@ -55,12 +55,12 @@ class Simulation {
     void InsertSpecies(bool force_overlap = false);
     void RunProcessing(int run_analyses);
     void InitGraphics();
-    void InitProcessing(int make_movie, int run_analyses, int use_posits);
+    void InitProcessing(int graphics, int make_movie, int run_analyses, int use_posits);
 
   public:
     Simulation() {}
     void Run(system_parameters params);
-    void ProcessOutputs(system_parameters params, int make_movie, int run_analyses, int use_posits);
+    void ProcessOutputs(system_parameters params, int graphics, int make_movie, int run_analyses, int use_posits);
 };
 
 #endif // _SIMCORE_SIMULATION_H_  

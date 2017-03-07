@@ -22,12 +22,12 @@ void Simulation::RunSimulation() {
     Integrate();
     Statistics();
     Draw();
-    WriteOutputs();
     if (early_exit) {
       early_exit = false;
       std::cout << "  Early exit triggered. Ending simulation.\n";
       return;
     }
+    WriteOutputs();
   }
 }
 
@@ -206,24 +206,23 @@ void Simulation::WriteOutputs() {
   }
 }
 
-void Simulation::ProcessOutputs(system_parameters params, int make_movie, int run_analyses, int use_posits) {
+void Simulation::ProcessOutputs(system_parameters params, int graphics, int make_movie, int run_analyses, int use_posits) {
   params_ = params;
   run_name_ = params.run_name;
-  InitProcessing(make_movie, run_analyses, use_posits);
+  InitProcessing(graphics, make_movie, run_analyses, use_posits);
   RunProcessing(run_analyses);
   ClearSimulation();
 }
 
 // Initialize everything we need for processing
-void Simulation::InitProcessing(int make_movie, int run_analyses, int use_posits) {
+void Simulation::InitProcessing(int graphics, int make_movie, int run_analyses, int use_posits) {
   rng_.init(params_.seed);
   space_.Init(&params_);
   InitSpecies();
   InsertSpecies(true);
   InitInputs(use_posits);
-  if (make_movie) {
+  if (graphics || make_movie) {
     params_.graph_flag = 1;
-    params_.movie_flag = 1;
     if (use_posits && params_.n_graph < output_mgr_.GetNPosit()) {
       params_.n_graph = output_mgr_.GetNPosit();
     }
@@ -231,13 +230,17 @@ void Simulation::InitProcessing(int make_movie, int run_analyses, int use_posits
       params_.n_graph = output_mgr_.GetNSpec();
     }
     InitGraphics();
+    if (make_movie) {
+      params_.movie_flag = 1;
+    }
   }
   else {
     params_.graph_flag = 0;
   }
   if (run_analyses) {
-    //TODO Init analyses structures here
-    std::cout << "  No analyses to perform yet.\n";
+    for (auto it=species_.begin(); it!=species_.end(); ++it) {
+      (*it)->InitAnalysis();
+    }
   }
 }
 
@@ -248,10 +251,22 @@ void Simulation::RunProcessing(int run_analyses) {
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
     output_mgr_.ReadInputs(); 
+    if (early_exit) {
+      early_exit = false;
+      std::cout << "  Early exit triggered. Ending simulation.\n";
+      return;
+    }
     Draw();
     if (run_analyses) {
-      // TODO run analyses!
+      for (auto it=species_.begin(); it!=species_.end(); ++it) {
+        if ( ((*it)->GetPositFlag() && i_step_%(*it)->GetNPosit()==0) 
+            || ((*it)->GetSpecFlag() && i_step_%(*it)->GetNSpec()==0) ) {
+          (*it)->RunAnalysis();
+        }
+      }
     }
   }
+  // ClearSimulation will run CloseFiles which runs
+  // FinalizeAnalysis for each species
 }
 

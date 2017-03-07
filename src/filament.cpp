@@ -825,12 +825,15 @@ void Filament::ReadSpec(std::fstream &ispec) {
       // Set next site position
       r0[i] += child_length_ * u_bond[i];
     }
+    elements_[i_bond].SetOrientation(u_bond);
     v_elements_[i_bond].SetPosition(rf);
     v_elements_[i_bond].SetOrientation(u_bond);
     v_elements_[i_bond].SetDiameter(diameter_);
     v_elements_[i_bond].SetLength(child_length_);
     v_elements_[i_bond].UpdatePeriodic();
   }
+  elements_[n_bonds_].SetOrientation(elements_[n_bonds_-1].GetOrientation());
+  CalculateAngles();
 }
 
 void Filament::WritePosit(std::fstream &oposit) {
@@ -937,4 +940,62 @@ void Filament::ReadCheckpoint(std::fstream &icheck) {
   cos_thetas_.resize(n_sites_-2); //max_sites-2
 }
 
+void FilamentSpecies::InitAnalysis() {
+  time_ = 0;
+  if (params_->filament.spiral_flag) {
+    std::string fname = params_->run_name;
+    fname.append("_filament.spiral");
+    spiral_file_.open(fname, std::ios::out);
+    spiral_file_ << "spiral_analysis_file\n";
+    spiral_file_ << "length child_length persistence_length driving\n";
+    for (auto it=members_.begin(); it!=members_.end(); ++it) {
+      double l = (*it)->GetLength();
+      double cl = (*it)->GetChildLength();
+      double pl = (*it)->GetPersistenceLength();
+      double dr = (*it)->GetDriving();
+      spiral_file_ << l << " " << cl << " " << pl << " " << dr << "\n";
+    }
+    spiral_file_ << "time angle_sum E_bend\n";
+  }
+  RunAnalysis();
+}
+
+void FilamentSpecies::RunAnalysis() {
+  if (params_->filament.spiral_flag) {
+    RunSpiralAnalysis();
+  // TODO Analyze conformation and ms end-to-end
+  }
+  time_++;
+}
+
+void FilamentSpecies::RunSpiralAnalysis() {
+  // Treat as though we have many spirals for now
+  for (auto it=members_.begin(); it!= members_.end(); ++it) {
+    e_bend_ = tot_angle_ = 0;
+    double length = (*it)->GetLength();
+    double plength = (*it)->GetPersistenceLength();
+    double clength = (*it)->GetChildLength();
+    double e_zero = length * plength / (clength * clength);
+    std::vector<double> const * const thetas = (*it)->GetThetas();
+    for (int i=0; i<thetas->size(); ++i) {
+      tot_angle_ += acos((*thetas)[i]);
+      e_bend_ += (*thetas)[i];
+    }
+    // record energy relative to the bending "zero energy" (straight rod)
+    e_bend_ = e_zero - e_bend_ * plength / clength;
+  }
+  if (spiral_file_.is_open()) {
+    spiral_file_ << time_ << " " << tot_angle_ << " " << e_bend_ << "\n";
+  }
+  else {
+    early_exit = true;
+    std::cout << " Error! Problem opening file in RunSpiralAnalysis! Exiting.\n";
+  }
+}
+
+void FilamentSpecies::FinalizeAnalysis() {
+  if (spiral_file_.is_open()) {
+    spiral_file_.close();
+  }
+}
 

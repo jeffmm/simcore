@@ -13,7 +13,7 @@ INSTALLATION:
   For successful installation, make sure you have the following
   libraries/binaries installed:
     - g++-6 
-    - yaml-cpp
+    - yaml-cpp (https://github.com/jbeder/yaml-cpp)
     - openGL
     - gsl
     - glew
@@ -262,4 +262,47 @@ POTENTIALS:
 
   If you are confused about this, let me know.
 
+OUTPUTS:
+  
+  Simcore has four output types. Three are species specific (posit, spec,
+  checkpoint), and the fourth is the statistical information file (thermo). All
+  files are binary.
+
+  The posit file has the following header format:
+
+  int n_steps, int n_posit, double delta 
+
+  Followed by n_steps/n_posit lines of data with the format:
+
+  double position[3]
+  double scaled_position[3]
+  double orientation[3]
+  double diameter
+  double length
+
+  Where the scaled position is position mapped into the periodic coordinate
+  space. The position itself gives the particle trajectory over time independent
+  of periodicity.
+
+  The spec file is a custom output file for each species, and can have the same
+  information as the posit file or additional information if needed.
+
+  The checkpoint file is almost a copy of the spec file, except it also contains
+  the random number generator information and is overwritten every n_checkpoint
+  steps in the simulation. It can therefore be used to resume a simulation that
+  ended prematurely.
+
+  The thermo file contains the following header information:
+
+  int n_steps, int n_thermo, double delta, int n_dim
+
+  followed by n_steps/n_thermo lines of data in the following format:
+
+  double unit_cell[9]
+  double pressure_tensor[9]
+  double pressure
+  double volume
+
+  Where the pressure is the isometric pressure, and the pressure tensor is
+  calculated from the time-averaged stress tensor.
 
