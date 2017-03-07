@@ -29,6 +29,10 @@ void SimulationManager::InitManager(run_options run_opts) {
     n_runs_ = run_opts_.n_runs;
   if (run_opts_.r_flag)
     run_name_ = run_opts_.run_name;
+  if (run_opts_.g_flag) {
+    pnode_["graph_flag"] = 1;
+    pnode_["n_graph"] = run_opts_.n_graph;
+  }
   if ((run_opts_.m_flag || run_opts_.a_flag) && n_runs_ > 1)
     error_exit("ERROR: Attempted to run movies/analysis on multiple files.\n");
   rng_.init(seed);
@@ -275,15 +279,17 @@ void SimulationManager::WriteParams() {
       std::ostringstream var;
       std::ostringstream run;
       std::ostringstream file_name;
-      // setting zero padding to 2 digits
-      var << std::setw(2) << std::setfill('0') << i_var;
-      run << std::setw(2) << std::setfill('0') << i_run;
+      // setting zero padding to 3 digits
+      var << std::setw(3) << std::setfill('0') << i_var;
+      run << std::setw(3) << std::setfill('0') << i_run;
       file_name << run_name_;
       // append variation and run numbers to run_name if greater than 1
       if (n_var_ > 1)
         file_name << "_v" << var.str();
-      if (n_runs_ > 1) 
+      if (n_runs_ > 1) {
         file_name << "_r" << run.str();
+        pvector_[i_var]["n_runs"] = 1;
+      }
       pvector_[i_var]["run_name"] = file_name.str();
       file_name << "_params.yaml";
       pfiles_.push_back(file_name.str());
@@ -335,7 +341,7 @@ void SimulationManager::ParseParams(std::string file_name) {
 void SimulationManager::ProcessOutputs() {
   ParseParams(pfiles_[0]);
   sim_ = new Simulation;
-  sim_->ProcessOutputs(params_, run_opts_.m_flag, run_opts_.a_flag, run_opts_.p_flag);
+  sim_->ProcessOutputs(params_, run_opts_.g_flag, run_opts_.m_flag, run_opts_.a_flag, run_opts_.p_flag);
   delete sim_;
 }
 
