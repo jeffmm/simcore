@@ -140,6 +140,7 @@ void SpeciesBase::CloseFiles() {
     ospec_file_.close(); 
   if (ispec_file_.is_open())
     ispec_file_.close(); 
+  FinalizeAnalysis();
 }
 
 std::vector<Simple*> SpeciesBase::GetSimples() {

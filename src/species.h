@@ -55,6 +55,9 @@ class SpeciesBase {
     virtual void ReadSpecs() {}
     virtual void ReadCheckpoints() {}
     virtual void ReadPosits() {}
+    virtual void InitAnalysis() {}
+    virtual void RunAnalysis() {}
+    virtual void FinalizeAnalysis() {}
     virtual void InitOutputFiles(std::string run_name);
     virtual void InitPositFile(std::string run_name);
     virtual void InitSpecFile(std::string run_name);
@@ -100,6 +103,9 @@ class Species : public SpeciesBase {
     virtual void ReadSpecs();
     virtual void ReadCheckpoints();
     virtual void ScalePositions();
+    virtual void InitAnalysis() {}
+    virtual void RunAnalysis() {}
+    virtual void FinalizeAnalysis() {}
     virtual std::vector<T*>* GetMembers() {return &members_;}
 };
 
@@ -242,7 +248,10 @@ void Species<T>::WriteCheckpoints() {
 
 template <typename T> 
 void Species<T>::ReadPosits() {
-  if (iposit_file_.eof()) return;
+  if (iposit_file_.eof()) {
+    printf("  EOF reached\n");
+    early_exit = true;
+  }
   int size;
   T *member;
   iposit_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
@@ -260,7 +269,7 @@ template <typename T>
 void Species<T>::ReadCheckpoints() {
   std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
   if (!icheck_file.is_open()) {
-    std::cout<<"ERROR: Output "<< checkpoint_file_ <<" file did not open\n";
+    std::cout<<"  ERROR: Output "<< checkpoint_file_ <<" file did not open\n";
     exit(1);
   }
   int size;
@@ -276,7 +285,11 @@ void Species<T>::ReadCheckpoints() {
 
 template <typename T> 
 void Species<T>::ReadSpecs() {
-  if (ispec_file_.eof()) return;
+  if (ispec_file_.eof()) {
+    CloseFiles();
+    printf("  EOF reached\n");
+    early_exit = true;
+  }
   int size;
   T *member;
   ispec_file_.read(reinterpret_cast<char*>(&size), sizeof(size));

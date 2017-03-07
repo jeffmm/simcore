@@ -88,6 +88,10 @@ class Filament : public Composite<Site,Bond> {
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePosition() {}
     virtual void UpdatePosition(bool midstep);
+    double const GetLength() { return length_;}
+    double const GetDriving() {return driving_factor_;}
+    double const GetPersistenceLength() {return persistence_length_;}
+    double const GetChildLength() {return child_length_;}
     void GetAvgOrientation(double * au);
     void GetAvgPosition(double * ap);
     std::vector<double> const * const GetThetas() {
@@ -105,6 +109,11 @@ class Filament : public Composite<Site,Bond> {
 class FilamentSpecies : public Species<Filament> {
   protected:
     bool midstep_;
+    // Analysis structures
+    double e_bend_,
+           tot_angle_;
+    int time_;
+    std::fstream spiral_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(SID::filament);
@@ -114,6 +123,10 @@ class FilamentSpecies : public Species<Filament> {
       Species::Init(params, space, seed);
       sparams_ = &(params_->filament);
     }
+    void InitAnalysis();
+    void RunAnalysis();
+    void RunSpiralAnalysis();
+    void FinalizeAnalysis();
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();
