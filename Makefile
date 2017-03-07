@@ -10,8 +10,6 @@ COMPILE_FLAGS = -std=c++11
 RCOMPILE_FLAGS = -D NDEBUG -O2 -march=native -g
 DCOMPILE_FLAGS = -D DEBUG -O0 -g
 LINK_FLAGS = -gnu 
-RLINK_FLAGS = 
-DLINK_FLAGS =
 
 ifeq ($(THREADING),eomp)
 	COMPILE_FLAGS += -fopenmp
@@ -29,23 +27,17 @@ ifeq ($(UNAME_S),Darwin)
 	INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl
 	GLXLIBS = -L/opt/X11/lib -L/usr/local/lib -lglfw3 -framework OpenGL -lglew 
 	GSLLIBS = -lgsl -lgslcblas
-	FFTLIBS = -L/usr/lib64 -lfftw3
-	YAMLLIBS = -L/Users/$(USER)/Projects/Lib/yaml-cpp-gcc5/yaml-cpp/build -lyaml-cpp
-	LIBS = $(GLXLIBS) $(GSLLIBS) $(FFTLIBS) $(YAMLLIBS) -L/usr/local/lib
+	FFTLIBS = -lfftw3
+	YAMLINCS = -I/usr/local/include
+	YAMLLIBS = -L/usr/local/lib -lyaml-cpp
+	LIBS = $(GLXLIBS) $(GSLLIBS) $(FFTLIBS) $(YAMLLIBS)
 else
 	GSLINCS = -I/usr/local/include
 	GSLLIBS = -L/usr/local/lib -lgsl -lgslcblas -lm
-	#GLFW3INCS = -I/home/cedelmaier/common/glfw/include
-	#GLFW3LIBS = -L/home/cedelmaier/common/glfw/build/src -lglfw3 -lGLEW -lGLU -lGL -lX11 -lXxf86vm -lpthread -ldl -lXrandr -lXi -lXcursor -lXinerama
-	#YAMLINCS = -I/home/cedelmaier/common/yaml-cpp/include
-	#YAMLLIBS = -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
-	#YAMLLIBS = -Wl,-rpath,/home/cedelmaier/common/yaml-cpp/build -L/home/cedelmaier/common/yaml-cpp/build -lyaml-cpp
-	#YAMLINCS = -I/home/jeffmm/build/yaml-cpp-release-0.5.2/include/yaml-cpp 
-	YAMLINCS = -I/home/jeffmm/build/yaml-cpp-release-0.5.2/include
-	YAMLLIBS = -Wl,-rpath,/home/jeffmm/build/yaml-cpp-release-0.5.2/build/ -L/home/jeffmm/build/yaml-cpp-release-0.5.2/build/ -lyaml-cpp
+	YAMLINCS = -I/usr/local/include
+	YAMLLIBS = -L/usr/local/lib -lyaml-cpp
 	INCLUDES = $(GLFW3INCS) $(YAMLINCS) $(GSLINCS)
 	LIBS = $(GLFW3LIBS) $(YAMLLIBS) $(GSLLIBS)
-	#export LD_LIBRARY_PATH=/home/cedelmaier/common/glfw/build/src:/home/cedelmaier/common/yaml-cpp/build:$LD_LIBRARY_PATH
 endif
 
 print-%: ; @echo $*=$($*)
@@ -63,19 +55,17 @@ endif
 CC=$(CXX)
 ifeq ($(CC),icpc)
 	COMPILE_FLAGS += -Wno-deprecated
-	#RCOMPILE_FLAGS += -openmp -DBOB_OMP
 else
 	COMPILE_FLAGS += -Wno-deprecated-declarations -Wno-deprecated
-	#RCOMPILE_FLAGS += -fopenmp -DBOB_OMP
 endif
 
 # Combine compiler and linker flags
 ifeq ($(CFG),release)
 	export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) $(RCOMPILE_FLAGS)
-	export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) $(RLINK_FLAGS)
+	export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) 
 else
 	export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) $(DCOMPILE_FLAGS)
-	export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) $(DLINK_FLAGS)
+	export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) 
 endif
 
 # build information on all sources
@@ -131,7 +121,6 @@ simcore_config: dirs $(BINDIR)/simcore_config;cp $(BINDIR)/simcore_config simcor
 $(BINDIR)/simcore: $(OBJECTS) $(SIMCORE_MAIN_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS) 
 
-#$(BINDIR)/simcore_config: $(OBJECTS) $(CONFIGURE_SIMCORE_OBJ)
 $(BINDIR)/simcore_config: $(CONFIGURE_SIMCORE_OBJ)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@
 
