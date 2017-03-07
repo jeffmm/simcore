@@ -34,6 +34,3 @@ filament:
   driving_factor: [20,22.5,25,27.5,30]
   length: 40
   persistence_length: 400
-  #driving_factor: [R,0,50]
-  #length: [R,20,100]
-  #persistence_length: [RLOG,2,4]
