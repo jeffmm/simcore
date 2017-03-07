@@ -245,18 +245,16 @@ void Filament::Integrate(bool midstep) {
 
 void Filament::CalculateAngles() {
   double cos_angle, angle_sum = 0;
-  double u3[3];
   for (int i_site=0; i_site<n_sites_-2; ++i_site) {
     double const * const u1 = elements_[i_site].GetOrientation();
     double const * const u2 = elements_[i_site+1].GetOrientation();
     cos_angle = dot_product(n_dim_, u1, u2);
     cos_thetas_[i_site] = cos_angle;
     if (spiral_flag_) {
-      cross_product(u1,u2,u3,2);
-      angle_sum += u3[2];
+      angle_sum += acos(cos_angle);
     }
   }
-  if (spiral_flag_ && angle_sum / (n_sites_-2) > 0) { // check if sign of angle between u1,u2 has changed
+  if (spiral_flag_ && angle_sum < 3) { // check if sum of angles is much less than 2*pi
     std::cout << "  Spiral terminated\n";
     early_exit = true; // exit the simulation early
     spiral_flag_ = false; // to prevent this message more than once
@@ -947,13 +945,14 @@ void FilamentSpecies::InitAnalysis() {
     fname.append("_filament.spiral");
     spiral_file_.open(fname, std::ios::out);
     spiral_file_ << "spiral_analysis_file\n";
-    spiral_file_ << "length child_length persistence_length driving\n";
+    spiral_file_ << "length child_length persistence_length driving nspec delta\n";
     for (auto it=members_.begin(); it!=members_.end(); ++it) {
       double l = (*it)->GetLength();
       double cl = (*it)->GetChildLength();
       double pl = (*it)->GetPersistenceLength();
       double dr = (*it)->GetDriving();
-      spiral_file_ << l << " " << cl << " " << pl << " " << dr << "\n";
+      double nspec = GetNSpec();
+      spiral_file_ << l << " " << cl << " " << pl << " " << dr << " " << nspec << " " << params_->delta << "\n";
     }
     spiral_file_ << "time angle_sum E_bend\n";
   }
