@@ -25,6 +25,7 @@ void Filament::SetParameters(system_parameters *params) {
   driving_factor_ = params->filament.driving_factor;
   friction_ratio_ = params->filament.friction_ratio;
   metric_forces_ = params->filament.metric_forces;
+  stoch_flag_ = params->stoch_flag; // determines whether we are using stochastic forces
 }
 
 void Filament::InitElements(system_parameters *params, space_struct *space) {
@@ -286,6 +287,7 @@ void Filament::ConstructUnprojectedRandomForces() {
   // xi is the random force vector with elements that are uncorrelated and randomly
   // distributed uniformly between -0.5 and 0.5, xi_term is the outer product of the
   // tangent vector u_tan_i u_tan_i acting on the vector xi
+  if (!stoch_flag_) return;
   double xi[3], xi_term[3], f_rand[3];
   for (int i_site=0; i_site<n_sites_; ++i_site) {
     double const * const utan = elements_[i_site].GetTangent();
@@ -312,6 +314,7 @@ void Filament::ConstructUnprojectedRandomForces() {
 }
 
 void Filament::GeometricallyProjectRandomForces() {
+  if (!stoch_flag_) return;
   double f_rand_temp[3];
   for (int i_site=0; i_site<n_sites_-1; ++i_site) {
     // Use the tensions vector to calculate the hard components of the random forces
@@ -357,6 +360,7 @@ void Filament::GeometricallyProjectRandomForces() {
 }
 
 void Filament::AddRandomForces() {
+  if (!stoch_flag_) return;
   for (auto site=elements_.begin(); site!=elements_.end(); ++site)
     site->AddRandomForce();
 }
@@ -954,7 +958,7 @@ void FilamentSpecies::InitAnalysis() {
       double nspec = GetNSpec();
       spiral_file_ << l << " " << cl << " " << pl << " " << dr << " " << nspec << " " << params_->delta << "\n";
     }
-    spiral_file_ << "time angle_sum E_bend\n";
+    spiral_file_ << "time angle_sum E_bend tip_z_proj\n";
   }
   RunAnalysis();
 }
@@ -969,6 +973,7 @@ void FilamentSpecies::RunAnalysis() {
 
 void FilamentSpecies::RunSpiralAnalysis() {
   // Treat as though we have many spirals for now
+  double tip_z;
   for (auto it=members_.begin(); it!= members_.end(); ++it) {
     e_bend_ = tot_angle_ = 0;
     double length = (*it)->GetLength();
@@ -982,9 +987,10 @@ void FilamentSpecies::RunSpiralAnalysis() {
     }
     // record energy relative to the bending "zero energy" (straight rod)
     e_bend_ = e_zero - e_bend_ * plength / clength;
+    tip_z = (*it)->GetTipZ();
   }
   if (spiral_file_.is_open()) {
-    spiral_file_ << time_ << " " << tot_angle_ << " " << e_bend_ << "\n";
+    spiral_file_ << time_ << " " << tot_angle_ << " " << e_bend_ << " " << tip_z << "\n";
   }
   else {
     early_exit = true;

@@ -20,6 +20,7 @@ class Filament : public Composite<Site,Bond> {
         theta_validation_flag_,
         diffusion_validation_flag_,
         spiral_flag_,
+        stoch_flag_,
         metric_forces_;
     double max_length_,
            min_length_,
@@ -96,6 +97,9 @@ class Filament : public Composite<Site,Bond> {
     void GetAvgPosition(double * ap);
     std::vector<double> const * const GetThetas() {
       return &cos_thetas_;
+    }
+    double GetTipZ() {
+      return elements_[n_sites_-1].GetOrientation()[n_dim_-1];
     }
     void WritePosit(std::fstream &oposit);
     void ReadPosit(std::fstream &iposit);
