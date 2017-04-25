@@ -17,11 +17,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
-          else if (param_name.compare("insertion_type")==0) {
-            params->species.insertion_type = jt->second.as<std::string>();
-          }
           else if (param_name.compare("num")==0) {
             params->species.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->species.insertion_type = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->species.overlap = jt->second.as<int>();
@@ -59,20 +59,17 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
-          else if (param_name.compare("persistence_length")==0) {
-            params->filament.persistence_length = jt->second.as<double>();
-          }
           else if (param_name.compare("diameter")==0) {
             params->filament.diameter = jt->second.as<double>();
           }
           else if (param_name.compare("length")==0) {
             params->filament.length = jt->second.as<double>();
           }
+          else if (param_name.compare("persistence_length")==0) {
+            params->filament.persistence_length = jt->second.as<double>();
+          }
           else if (param_name.compare("max_length")==0) {
             params->filament.max_length = jt->second.as<double>();
-          }
-          else if (param_name.compare("force_induced_catastrophe_flag")==0) {
-            params->filament.force_induced_catastrophe_flag = jt->second.as<int>();
           }
           else if (param_name.compare("min_length")==0) {
             params->filament.min_length = jt->second.as<double>();
@@ -91,6 +88,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("dynamic_instability_flag")==0) {
             params->filament.dynamic_instability_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("force_induced_catastrophe_flag")==0) {
+            params->filament.force_induced_catastrophe_flag = jt->second.as<int>();
           }
           else if (param_name.compare("f_shrink_to_grow")==0) {
             params->filament.f_shrink_to_grow = jt->second.as<double>();
@@ -113,20 +113,20 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("metric_forces")==0) {
             params->filament.metric_forces = jt->second.as<int>();
           }
-          else if (param_name.compare("new_parameter")==0) {
-            params->filament.new_parameter = jt->second.as<int>();
-          }
           else if (param_name.compare("v_poly")==0) {
             params->filament.v_poly = jt->second.as<double>();
           }
           else if (param_name.compare("v_depoly")==0) {
             params->filament.v_depoly = jt->second.as<double>();
           }
-          else if (param_name.compare("insertion_type")==0) {
-            params->filament.insertion_type = jt->second.as<std::string>();
+          else if (param_name.compare("theta_analysis")==0) {
+            params->filament.theta_analysis = jt->second.as<int>();
           }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->filament.insertion_type = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->filament.overlap = jt->second.as<int>();
@@ -182,11 +182,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("driving_factor")==0) {
             params->hard_rod.driving_factor = jt->second.as<double>();
           }
-          else if (param_name.compare("insertion_type")==0) {
-            params->hard_rod.insertion_type = jt->second.as<std::string>();
-          }
           else if (param_name.compare("num")==0) {
             params->hard_rod.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->hard_rod.insertion_type = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->hard_rod.overlap = jt->second.as<int>();
@@ -233,11 +233,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("packing_fraction")==0) {
             params->br_bead.packing_fraction = jt->second.as<double>();
           }
-          else if (param_name.compare("insertion_type")==0) {
-            params->br_bead.insertion_type = jt->second.as<std::string>();
-          }
           else if (param_name.compare("num")==0) {
             params->br_bead.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->br_bead.insertion_type = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->br_bead.overlap = jt->second.as<int>();
@@ -284,11 +284,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("driving_factor")==0) {
             params->md_bead.driving_factor = jt->second.as<double>();
           }
-          else if (param_name.compare("insertion_type")==0) {
-            params->md_bead.insertion_type = jt->second.as<std::string>();
-          }
           else if (param_name.compare("num")==0) {
             params->md_bead.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->md_bead.insertion_type = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->md_bead.overlap = jt->second.as<int>();
@@ -440,11 +440,17 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("compressibility")==0) {
         params->compressibility = it->second.as<double>();
       }
+      else if (param_name.compare("stoch_flag")==0) {
+        params->stoch_flag = it->second.as<int>();
+      }
       else if (param_name.compare("thermo_flag")==0) {
         params->thermo_flag = it->second.as<int>();
       }
       else if (param_name.compare("n_thermo")==0) {
         params->n_thermo = it->second.as<int>();
+      }
+      else if (param_name.compare("interaction_flag")==0) {
+        params->interaction_flag = it->second.as<int>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";

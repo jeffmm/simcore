@@ -945,28 +945,76 @@ void Filament::ReadCheckpoint(std::fstream &icheck) {
 void FilamentSpecies::InitAnalysis() {
   time_ = 0;
   if (params_->filament.spiral_flag) {
-    std::string fname = params_->run_name;
-    fname.append("_filament.spiral");
-    spiral_file_.open(fname, std::ios::out);
-    spiral_file_ << "spiral_analysis_file\n";
-    spiral_file_ << "length child_length persistence_length driving nspec delta\n";
-    for (auto it=members_.begin(); it!=members_.end(); ++it) {
-      double l = (*it)->GetLength();
-      double cl = (*it)->GetChildLength();
-      double pl = (*it)->GetPersistenceLength();
-      double dr = (*it)->GetDriving();
-      double nspec = GetNSpec();
-      spiral_file_ << l << " " << cl << " " << pl << " " << dr << " " << nspec << " " << params_->delta << "\n";
-    }
-    spiral_file_ << "time angle_sum E_bend tip_z_proj\n";
+    InitSpiralAnalysis();
+  }
+  if (params_->filament.theta_analysis) {
+    InitThetaAnalysis();
   }
   RunAnalysis();
+}
+
+void FilamentSpecies::InitSpiralAnalysis() {
+  std::string fname = params_->run_name;
+  fname.append("_filament.spiral");
+  spiral_file_.open(fname, std::ios::out);
+  spiral_file_ << "spiral_analysis_file\n";
+  spiral_file_ << "length child_length persistence_length driving nspec delta\n";
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    double l = (*it)->GetLength();
+    double cl = (*it)->GetChildLength();
+    double pl = (*it)->GetPersistenceLength();
+    double dr = (*it)->GetDriving();
+    double nspec = GetNSpec();
+    spiral_file_ << l << " " << cl << " " << pl << " " << dr << " " << nspec << " " << params_->delta << "\n";
+  }
+  spiral_file_ << "time angle_sum E_bend tip_z_proj\n";
+}
+
+void FilamentSpecies::InitThetaAnalysis() {
+  // TODO Should check to make sure the same lengths, child lengths, persistence lengths, etc are used for each filament in system.
+  std::string fname = params_->run_name;
+  fname.append("_filament.theta");
+  theta_file_.open(fname, std::ios::out);
+  theta_file_ << "theta_analysis_file\n";
+  theta_file_ << "length child_length persistence_length n_filaments n_bonds n_steps n_spec delta\n";
+  double l, cl, pl, dr;
+  int nbonds;
+  int nmembers = members_.size();
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    l = (*it)->GetLength();
+    cl = (*it)->GetChildLength();
+    pl = (*it)->GetPersistenceLength();
+    dr = (*it)->GetDriving();
+    nbonds = (*it)->GetNBonds();
+  }
+  int nspec = GetNSpec();
+  theta_file_ << l << " " << cl << " " << pl << " " << nmembers << " " << nbonds << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
+  theta_file_ << "cos_theta";
+  for (int i=0; i<nbonds-1; ++i) {
+    theta_file_ << " theta_" << i+1 << i+2;
+  }
+  theta_file_ << "\n";
+  int n_bins_ = 10000;
+  int nfil = members_.size();
+  theta_histogram_ = new int *[nbonds-1];
+  for (int ibond=0; ibond<nbonds-1; ++ibond) {
+    theta_histogram_[ibond] = new int[n_bins_];
+    for (int ibin=0;ibin<n_bins_;++ibin) {
+      theta_histogram_[ibond][ibin] = 0;
+    }
+  }
 }
 
 void FilamentSpecies::RunAnalysis() {
   if (params_->filament.spiral_flag) {
     RunSpiralAnalysis();
+  }
   // TODO Analyze conformation and ms end-to-end
+  if (params_->filament.theta_analysis) {
+    if (params_->interaction_flag) {
+      std::cout << "WARNING! Theta analysis running on interacting filaments!\n";
+    }
+    RunThetaAnalysis();
   }
   time_++;
 }
@@ -998,9 +1046,50 @@ void FilamentSpecies::RunSpiralAnalysis() {
   }
 }
 
+void FilamentSpecies::RunThetaAnalysis() {
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    std::vector<double> const * const thetas = (*it)->GetThetas();
+    for (int i=0; i<((*it)->GetNBonds()-1); ++i) {
+      int bin_number = (int) floor( (1 + (*thetas)[i]) * (n_bins_/2) );
+      if (bin_number == n_bins_) {
+        bin_number = n_bins_-1;
+      }
+      else if (bin_number == -1) {
+        bin_number = 0;
+      }
+      else if (bin_number > n_bins_ && bin_number < 0) {
+        error_exit("Something went wrong in RunThetaAnalysis!\n");
+      }
+      theta_histogram_[i][bin_number]++;
+    }
+  }
+}
+
 void FilamentSpecies::FinalizeAnalysis() {
   if (spiral_file_.is_open()) {
     spiral_file_.close();
   }
+  if (theta_file_.is_open()) {
+    FinalizeThetaAnalysis();
+    theta_file_.close();
+  }
+}
+
+void FilamentSpecies::FinalizeThetaAnalysis() {
+  int nfil = members_.size();
+  int nbonds = members_[nfil-1]->GetNBonds();
+  for (int i=0; i<n_bins_; ++i) {
+    double axis = (2.0/n_bins_)*i - 1;
+    theta_file_ << " " << axis;
+    for (int ibond=0; ibond<nbonds-1; ++ibond) {
+      theta_file_ << " " << theta_histogram_[ibond][i];
+    }
+    theta_file_ << "\n";
+  }
+
+  for (int ibond=0; ibond<nbonds-1; ++ibond) {
+    delete[] theta_histogram_[ibond];
+  }
+  delete[] theta_histogram_;
 }
 

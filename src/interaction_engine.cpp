@@ -13,7 +13,8 @@ void InteractionEngine::Init(system_parameters *params,
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
   n_update_ = params_->n_update_cells;
-  n_thermo_ = n_thermo_;
+  n_thermo_ = params_->n_thermo;
+  no_interactions_ = !(params_->interaction_flag);
   i_update_ = -1;
   n_objs_ = 0;
   clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
@@ -26,6 +27,8 @@ void InteractionEngine::Init(system_parameters *params,
 *****************************************/
 
 void InteractionEngine::Interact() {
+  // First check if we need to interact
+  if (no_interactions_) return;
   // Check if we need to update cell list
   CheckUpdate();
   // Loop through and calculate interactions

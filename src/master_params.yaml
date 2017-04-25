@@ -40,6 +40,7 @@ compressibility: [1, double]
 stoch_flag: [1, int]
 thermo_flag: [0, int]
 n_thermo: [1000, int]
+interaction_flag: [1, int]
 species:
   num: [0, int]
   insertion_type: [random, string]
@@ -72,9 +73,9 @@ filament:
   f_grow_to_pause : [0.0,double]
   f_grow_to_shrink : [0.00554,double]
   metric_forces : [1,int]
-  new_parameter: [1, int]
   v_poly : [0.44,double]
   v_depoly : [0.793,double]
+  theta_analysis: [0, int]
   #posit_file: [filament.posit,string]
 hard_rod:
   diameter: [1, double]
