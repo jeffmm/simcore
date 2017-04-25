@@ -15,7 +15,8 @@ class InteractionEngine {
 
   private:
     double stress_[9];
-    bool overlap_;
+    bool overlap_,
+         no_interactions_;
     int n_dim_,
         n_periodic_,
         i_update_,

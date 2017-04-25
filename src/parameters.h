@@ -5,8 +5,8 @@ class species_parameters;
 
 class species_parameters {
   public:
-    std::string insertion_type = "random";
     int num = 0;
+    std::string insertion_type = "random";
     int overlap = 0;
     std::string draw_type = "orientation";
     double color = 0;
@@ -20,17 +20,17 @@ class species_parameters {
 
 class filament_parameters : public species_parameters {
   public:
-    double persistence_length = 400;
     double diameter = 1;
     double length = 40;
+    double persistence_length = 400;
     double max_length = 500;
-    int force_induced_catastrophe_flag = 0;
     double min_length = 1;
     double max_child_length = 3;
     int spiral_flag = 0;
     double driving_factor = 0;
     double friction_ratio = 2;
     int dynamic_instability_flag = 0;
+    int force_induced_catastrophe_flag = 0;
     double f_shrink_to_grow = 0.017;
     double f_shrink_to_pause = 0.0;
     double f_pause_to_grow = 0.0;
@@ -38,9 +38,9 @@ class filament_parameters : public species_parameters {
     double f_grow_to_pause = 0.0;
     double f_grow_to_shrink = 0.00554;
     int metric_forces = 1;
-    int new_parameter = 1;
     double v_poly = 0.44;
     double v_depoly = 0.793;
+    int theta_analysis = 0;
 };
 
 class hard_rod_parameters : public species_parameters {
@@ -106,8 +106,10 @@ class system_parameters {
     int pressure_time = 100;
     double target_radius = 100;
     double compressibility = 1;
+    int stoch_flag = 1;
     int thermo_flag = 0;
     int n_thermo = 1000;
+    int interaction_flag = 1;
     species_parameters species;
     filament_parameters filament;
     hard_rod_parameters hard_rod;

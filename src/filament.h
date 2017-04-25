@@ -93,6 +93,7 @@ class Filament : public Composite<Site,Bond> {
     double const GetDriving() {return driving_factor_;}
     double const GetPersistenceLength() {return persistence_length_;}
     double const GetChildLength() {return child_length_;}
+    int const GetNBonds() {return n_bonds_;}
     void GetAvgOrientation(double * au);
     void GetAvgPosition(double * ap);
     std::vector<double> const * const GetThetas() {
@@ -116,8 +117,11 @@ class FilamentSpecies : public Species<Filament> {
     // Analysis structures
     double e_bend_,
            tot_angle_;
-    int time_;
-    std::fstream spiral_file_;
+    int **theta_histogram_;
+    int time_,
+        n_bins_;
+    std::fstream spiral_file_,
+                 theta_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(SID::filament);
@@ -128,9 +132,13 @@ class FilamentSpecies : public Species<Filament> {
       sparams_ = &(params_->filament);
     }
     void InitAnalysis();
+    void InitSpiralAnalysis();
+    void InitThetaAnalysis();
     void RunAnalysis();
     void RunSpiralAnalysis();
+    void RunThetaAnalysis();
     void FinalizeAnalysis();
+    void FinalizeThetaAnalysis();
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();
