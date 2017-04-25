@@ -976,7 +976,7 @@ void FilamentSpecies::InitThetaAnalysis() {
   fname.append("_filament.theta");
   theta_file_.open(fname, std::ios::out);
   theta_file_ << "theta_analysis_file\n";
-  theta_file_ << "length child_length persistence_length n_filaments n_bonds n_steps n_spec delta\n";
+  theta_file_ << "length child_length persistence_length n_filaments n_bonds n_steps n_spec delta n_dim metric_forces\n";
   double l, cl, pl, dr;
   int nbonds;
   int nmembers = members_.size();
@@ -988,13 +988,13 @@ void FilamentSpecies::InitThetaAnalysis() {
     nbonds = (*it)->GetNBonds();
   }
   int nspec = GetNSpec();
-  theta_file_ << l << " " << cl << " " << pl << " " << nmembers << " " << nbonds << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
+  theta_file_ << l << " " << cl << " " << pl << " " << nmembers << " " << nbonds << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << params_->n_dim << " " << params_->filament.metric_forces << "\n";
   theta_file_ << "cos_theta";
   for (int i=0; i<nbonds-1; ++i) {
     theta_file_ << " theta_" << i+1 << i+2;
   }
   theta_file_ << "\n";
-  int n_bins_ = 10000;
+  n_bins_ = 10000;
   int nfil = members_.size();
   theta_histogram_ = new int *[nbonds-1];
   for (int ibond=0; ibond<nbonds-1; ++ibond) {
@@ -1076,8 +1076,7 @@ void FilamentSpecies::FinalizeAnalysis() {
 }
 
 void FilamentSpecies::FinalizeThetaAnalysis() {
-  int nfil = members_.size();
-  int nbonds = members_[nfil-1]->GetNBonds();
+  int nbonds = members_[members_.size()-1]->GetNBonds();
   for (int i=0; i<n_bins_; ++i) {
     double axis = (2.0/n_bins_)*i - 1;
     theta_file_ << " " << axis;
