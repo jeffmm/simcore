@@ -385,9 +385,9 @@ void Filament::CalculateBendingForces() {
       g_mat_inverse_[i] = 0;
     }
   }                                        
-  // Now calculate the effective rigidities  .-> ?
-  for (int i=0; i<n_sites_-2; ++i) { //      |
-    k_eff_[i] = (persistence_length_ *(child_length_)+ child_length_ * g_mat_inverse_[i])/SQR(child_length_);
+  // Now calculate the effective rigidities 
+  for (int i=0; i<n_sites_-2; ++i) {
+    k_eff_[i] = (persistence_length_ + child_length_ * g_mat_inverse_[i])/SQR(child_length_);
   }
   // Using these, we can calculate the forces on each of the sites
   // These calculations were done by hand and are not particularly readable,
