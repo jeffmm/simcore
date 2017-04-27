@@ -958,14 +958,14 @@ void FilamentSpecies::InitSpiralAnalysis() {
   fname.append("_filament.spiral");
   spiral_file_.open(fname, std::ios::out);
   spiral_file_ << "spiral_analysis_file\n";
-  spiral_file_ << "length child_length persistence_length driving nspec delta\n";
+  spiral_file_ << "length child_length persistence_length driving nsteps nspec delta\n";
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
     double l = (*it)->GetLength();
     double cl = (*it)->GetChildLength();
     double pl = (*it)->GetPersistenceLength();
     double dr = (*it)->GetDriving();
     double nspec = GetNSpec();
-    spiral_file_ << l << " " << cl << " " << pl << " " << dr << " " << nspec << " " << params_->delta << "\n";
+    spiral_file_ << l << " " << cl << " " << pl << " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
   }
   spiral_file_ << "time angle_sum E_bend tip_z_proj\n";
 }
