@@ -7,8 +7,8 @@ BINDIR = bin
 SRCEXT = cpp
 
 COMPILE_FLAGS = -std=c++11
-RCOMPILE_FLAGS = -D NDEBUG -O2 -march=native -g
-DCOMPILE_FLAGS = -D DEBUG -O0 -g
+RCOMPILE_FLAGS = -D NDEBUG -O2 -march=native
+DCOMPILE_FLAGS = -D DEBUG -O0
 LINK_FLAGS = -gnu 
 
 ifeq ($(THREADING),eomp)
@@ -25,7 +25,7 @@ UNAME_S:=$(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
 	INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl
-	GLXLIBS = -L/opt/X11/lib -L/usr/local/lib -lglfw3 -framework OpenGL -lglew 
+	GLXLIBS = -L/opt/X11/lib -L/usr/local/lib -lglfw3 -framework OpenGL -lglew -framework Cocoa -framework IOKit -framework CoreVideo
 	GSLLIBS = -lgsl -lgslcblas
 	FFTLIBS = -lfftw3
 	YAMLINCS = -I/usr/local/include
