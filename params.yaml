@@ -1,14 +1,14 @@
 # params.yaml
 ---
-seed : 229802773419769
+seed : 172612137112061
 run_name: test3
 n_runs: 1
 n_random: 1
-n_dim: 3
-n_periodic: 3
-delta: 0.001
+n_dim: 2
+n_periodic: 2
+delta: 0.000001
 n_steps: 2000000
-system_radius: 100
+system_radius: 120
 graph_flag: 1
 n_graph: 300
 movie_flag: 0
@@ -19,22 +19,22 @@ f_cutoff: 1000
 thermo_flag: 1
 n_thermo: 100
 stoch_flag: 1
-interaction_flag: 0
+interaction_flag: 1
 filament:
-  insertion_type: random
-  num: 10
-  overlap: 1
+  insertion_type: oriented
+  num: 1
+  overlap: 0
   diameter: 1
-  spiral_flag: 0
-  max_child_length: 1
+  spiral_flag: 1
+  max_child_length: 2
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 1
   n_posit: 100
   n_spec: 100
   n_checkpoint: 100
-  driving_factor: 0
-  length: 10
-  persistence_length: 0
+  driving_factor: 100
+  length: 20
+  persistence_length: 10000
   metric_forces: 1
-  theta_analysis: 1
+  theta_analysis: 0
