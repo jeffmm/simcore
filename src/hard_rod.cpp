@@ -234,7 +234,8 @@ void HardRodSpecies::Configurator() {
   bool can_overlap = params_->hard_rod.overlap;
   std::cout << "   overlap:        " << (can_overlap ? "true" : "false") << std::endl;
   // Coloring
-  double color[4] = {1.0, 0.0, 0.0, 1.0};
+  //double color[4] = {1.0, 0.0, 0.0, 1.0};
+  double color = 0.0;
   int draw_type = 1; // default to orientation
   std::string draw_type_s = params_->hard_rod.draw_type; 
   if (draw_type_s.compare("flat") == 0)
@@ -243,11 +244,7 @@ void HardRodSpecies::Configurator() {
     draw_type = 1;
   else
     draw_type = 2;
-  for (int i = 0; i < 4; ++i) {
-    color[i] = params_->hard_rod.color;
-  }
-  std::cout << "   color: [" << color[0] << ", " << color[1] << ", " << color[2] << ", "
-    << color[3] << "]\n";
+  color = params_->hard_rod.color;
 
   if (false) {
   //if (insertion_type.compare("xyz") == 0) {

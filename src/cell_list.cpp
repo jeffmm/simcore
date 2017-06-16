@@ -115,6 +115,7 @@ void CellList::InitCells() {
       }
     }
   }
+  //exit(0);
 }
 
 void CellList::LoadSimples(std::vector<Simple*> sim_vec) {

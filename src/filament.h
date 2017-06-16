@@ -102,6 +102,12 @@ class Filament : public Composite<Site,Bond> {
     double GetTipZ() {
       return elements_[n_sites_-1].GetOrientation()[n_dim_-1];
     }
+    double const * const GetHeadPos() {
+      return elements_[n_sites_-1].GetPosition();
+    }
+    double const * const GetTailPos() {
+      return elements_[0].GetPosition();
+    }
     void WritePosit(std::fstream &oposit);
     void ReadPosit(std::fstream &iposit);
     void WriteSpec(std::fstream &ospec);
@@ -121,7 +127,8 @@ class FilamentSpecies : public Species<Filament> {
     int time_,
         n_bins_;
     std::fstream spiral_file_,
-                 theta_file_;
+                 theta_file_,
+                 lp_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(SID::filament);
@@ -134,9 +141,11 @@ class FilamentSpecies : public Species<Filament> {
     void InitAnalysis();
     void InitSpiralAnalysis();
     void InitThetaAnalysis();
+    void InitLpAnalysis();
     void RunAnalysis();
     void RunSpiralAnalysis();
     void RunThetaAnalysis();
+    void RunLpAnalysis();
     void FinalizeAnalysis();
     void FinalizeThetaAnalysis();
     void UpdatePositions() {

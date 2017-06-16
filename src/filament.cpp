@@ -3,6 +3,8 @@
 #include "filament.h"
 
 void Filament::SetParameters(system_parameters *params) {
+  color_ = params->filament.color;
+  draw_type_ = DrawTypeInt(params->filament.draw_type);
   length_ = params->filament.length;
   persistence_length_ = params->filament.persistence_length;
   diameter_ = params->filament.diameter;
@@ -835,6 +837,15 @@ void Filament::ReadSpec(std::fstream &ispec) {
     v_elements_[i_bond].UpdatePeriodic();
   }
   elements_[n_bonds_].SetOrientation(elements_[n_bonds_-1].GetOrientation());
+  double pos[3];
+  for (int i=0; i < params_->n_dim; ++i) {
+    pos[i] = v_elements_[0].GetPosition()[i] - 0.5*v_elements_[0].GetOrientation()[i] * child_length_;
+  }
+  elements_[0].SetPosition(pos);
+  for (int i=0; i < params_->n_dim; ++i) {
+    pos[i] = v_elements_[n_bonds_-1].GetPosition()[i] + 0.5*v_elements_[n_bonds_-1].GetOrientation()[i] * child_length_;
+  }
+  elements_[n_bonds_].SetPosition(pos);
   CalculateAngles();
 }
 
@@ -950,7 +961,27 @@ void FilamentSpecies::InitAnalysis() {
   if (params_->filament.theta_analysis) {
     InitThetaAnalysis();
   }
+  if (params_->filament.lp_analysis) {
+    InitLpAnalysis();
+  }
   RunAnalysis();
+}
+
+void FilamentSpecies::InitLpAnalysis() {
+  std::string fname = params_->run_name;
+  fname.append("_filament.lp");
+  lp_file_.open(fname, std::ios::out);
+  lp_file_ << "lp_analysis_file\n";
+  lp_file_ << "length child_length persistence_length driving nsteps nspec delta theory\n";
+  auto it=members_.begin();
+  double l = (*it)->GetLength();
+  double cl = (*it)->GetChildLength();
+  double pl = (*it)->GetPersistenceLength();
+  double dr = (*it)->GetDriving();
+  double nspec = GetNSpec();
+  double theory = l * pl * 2.0 - 2.0 * pl * pl * (1-exp(-l/pl));
+  lp_file_ << l << " " << cl << " " << pl << " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << theory << "\n";
+  lp_file_ << "time mse2e\n";
 }
 
 void FilamentSpecies::InitSpiralAnalysis() {
@@ -967,7 +998,7 @@ void FilamentSpecies::InitSpiralAnalysis() {
     double nspec = GetNSpec();
     spiral_file_ << l << " " << cl << " " << pl << " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
   }
-  spiral_file_ << "time angle_sum E_bend tip_z_proj\n";
+  spiral_file_ << "time angle_sum E_bend tip_z_proj head_pos_x head_pos_y tail_pos_x tail_pos_y\n";
 }
 
 void FilamentSpecies::InitThetaAnalysis() {
@@ -1016,35 +1047,60 @@ void FilamentSpecies::RunAnalysis() {
     }
     RunThetaAnalysis();
   }
+  if (params_->filament.lp_analysis) {
+    RunLpAnalysis();
+  }
   time_++;
 }
 
 void FilamentSpecies::RunSpiralAnalysis() {
   // Treat as though we have many spirals for now
   double tip_z;
-  for (auto it=members_.begin(); it!= members_.end(); ++it) {
-    e_bend_ = tot_angle_ = 0;
-    double length = (*it)->GetLength();
-    double plength = (*it)->GetPersistenceLength();
-    double clength = (*it)->GetChildLength();
-    double e_zero = length * plength / (clength * clength);
-    std::vector<double> const * const thetas = (*it)->GetThetas();
-    for (int i=0; i<thetas->size(); ++i) {
-      tot_angle_ += acos((*thetas)[i]);
-      e_bend_ += (*thetas)[i];
-    }
-    // record energy relative to the bending "zero energy" (straight rod)
-    e_bend_ = e_zero - e_bend_ * plength / clength;
-    tip_z = (*it)->GetTipZ();
+  auto it=members_.begin();
+  e_bend_ = tot_angle_ = 0;
+  double length = (*it)->GetLength();
+  double plength = (*it)->GetPersistenceLength();
+  double clength = (*it)->GetChildLength();
+  double e_zero = length * plength / (clength * clength);
+  std::vector<double> const * const thetas = (*it)->GetThetas();
+  for (int i=0; i<thetas->size(); ++i) {
+    tot_angle_ += acos((*thetas)[i]);
+    e_bend_ += (*thetas)[i];
   }
+  // record energy relative to the bending "zero energy" (straight rod)
+  e_bend_ = e_zero - e_bend_ * plength / clength;
+  tip_z = (*it)->GetTipZ();
+  double const * const head_pos = (*it)->GetHeadPos();
+  double const * const tail_pos = (*it)->GetTailPos();
   if (spiral_file_.is_open()) {
-    spiral_file_ << time_ << " " << tot_angle_ << " " << e_bend_ << " " << tip_z << "\n";
+    spiral_file_ << time_ << " " << tot_angle_ << " " << e_bend_ << " " << tip_z << " " << head_pos[0] << " " << head_pos[1] << " " << tail_pos[0] << " " << tail_pos[1] << "\n";
   }
   else {
     early_exit = true;
     std::cout << " Error! Problem opening file in RunSpiralAnalysis! Exiting.\n";
   }
 }
+
+void FilamentSpecies::RunLpAnalysis() {
+  // Treat as though we have many spirals for now
+  if ( ! lp_file_.is_open()) {
+    early_exit = true;
+    std::cout << " Error! Problem opening file in RunLpAnalysis! Exiting.\n";
+  }
+  lp_file_ << time_;
+  for (auto it=members_.begin(); it!= members_.end(); ++it) {
+    double const * const head_pos = (*it)->GetHeadPos();
+    double const * const tail_pos = (*it)->GetTailPos();
+    double mse2e = 0.0;
+    for (int i=0; i<params_->n_dim; ++i) {
+      double temp = (head_pos[i] - tail_pos[i]);
+      mse2e += temp*temp;
+    }
+    lp_file_ << " " << mse2e ;
+  }
+  lp_file_ << "\n";
+}
+
 
 void FilamentSpecies::RunThetaAnalysis() {
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
@@ -1072,6 +1128,9 @@ void FilamentSpecies::FinalizeAnalysis() {
   if (theta_file_.is_open()) {
     FinalizeThetaAnalysis();
     theta_file_.close();
+  }
+  if (lp_file_.is_open()) {
+    lp_file_.close();
   }
 }
 

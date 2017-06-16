@@ -7,7 +7,7 @@ void Bond::Draw(std::vector<graph_struct*> * graph_array) {
   for (int i=space_->n_periodic; i<n_dim_; ++i)
     g_.r[i] = position_[i];
   std::copy(orientation_, orientation_+3, g_.u);
-  std::copy(color_, color_+4, g_.color);
+  g_.color = color_;
   //g_.length = (length_-diameter_ > 0 ? length_-diameter_ : 0);
   g_.length = length_;
   if (graph_diameter_ == 0) 
