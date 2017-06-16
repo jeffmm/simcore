@@ -41,6 +41,7 @@ class filament_parameters : public species_parameters {
     double v_poly = 0.44;
     double v_depoly = 0.793;
     int theta_analysis = 0;
+    int lp_analysis = 0;
 };
 
 class hard_rod_parameters : public species_parameters {

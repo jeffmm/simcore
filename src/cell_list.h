@@ -4,6 +4,7 @@
 #include "auxiliary.h"
 #include "object.h"
 #include "interaction.h"
+//#include <unordered_map>
 
 typedef std::array<int,3> cell_index;
 typedef std::pair<Simple*,Simple*> simple_pair;
@@ -28,6 +29,8 @@ class Cell {
     std::vector<simple_pair> PairInteractions();
 };
 
+//typedef std::unordered_map<cell_index, Cell> cell_map;
+//typedef std::unordered_map<cell_index, Cell>::iterator cell_map_it;
 typedef std::map<cell_index, Cell> cell_map;
 typedef std::map<cell_index, Cell>::iterator cell_map_it;
 

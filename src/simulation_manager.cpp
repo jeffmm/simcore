@@ -284,11 +284,15 @@ void SimulationManager::WriteParams() {
       run << std::setw(3) << std::setfill('0') << i_run;
       file_name << run_name_;
       // append variation and run numbers to run_name if greater than 1
-      if (n_var_ > 1)
+      if (n_var_ > 1) {
         file_name << "_v" << var.str();
+      }
       if (n_runs_ > 1) {
         file_name << "_r" << run.str();
         pvector_[i_var]["n_runs"] = 1;
+      }
+      if (n_random_ > 1) {
+        pvector_[i_var]["n_random"] = 1;
       }
       pvector_[i_var]["run_name"] = file_name.str();
       file_name << "_params.yaml";
