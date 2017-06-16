@@ -30,7 +30,7 @@ extern bool early_exit;
 struct graph_struct {
   double r[3];
   double u[3];
-  double color[4];
+  double color;
   double length;
   double diameter;
   int draw_type;

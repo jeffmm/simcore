@@ -30,10 +30,16 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   is_rigid_=false;
   is_kmc_=false;
   draw_type_ = 1;
-  color_[0] = 1.0;
-  color_[1] = 0.0;
-  color_[2] = 0.0;
-  color_[3] = 1.0;
+  color_ = 0;
+}
+
+int Object::DrawTypeInt(std::string dt_str) {
+  if (dt_str.compare("flat") == 0)
+    return 0;
+  else if (dt_str.compare("orientation") == 0)
+    return 1;
+  else
+    return 2;
 }
 
 void Object::InsertRandom() {
@@ -96,7 +102,7 @@ void Object::Draw(std::vector<graph_struct*> * graph_array) {
   for (int i=space_->n_periodic; i<n_dim_; ++i)
     g_.r[i] = position_[i];
   std::copy(orientation_, orientation_+3, g_.u);
-  std::copy(color_, color_+4, g_.color);
+  g_.color = color_;
   g_.diameter = diameter_;
   g_.length = length_;
   g_.draw_type = draw_type_;

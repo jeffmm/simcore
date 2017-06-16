@@ -471,37 +471,30 @@ void Graphics::DrawDiscorectangles() {
   GLfloat color[4] = {0.0, 0.0, 1.0, 1.0};
   for (auto it=graph_array_->begin(); it!=graph_array_->end(); ++it) {
     double theta = atan2((*it)->u[1], (*it)->u[0]); // rotation angle
-
-    // Check the combinations of draw_type and color_switch_
-    // color_switch_ is overridden by draw_type
+    double theta_color = 0;
+    // Check draw type
     if ((*it)->draw_type == 0) {
       // draw_type is set to flat
-      color[0] = (*it)->color[0];
-      color[1] = (*it)->color[1];
-      color[2] = (*it)->color[2];
-      color[3] = (*it)->color[3];
-      glColor4fv(color);
+      theta_color = (*it)->color;
     }
     else if ((*it)->draw_type == 1) {
       // orientation draw
-      double theta_color = theta + 1.5 * M_PI;
-      if (theta_color > 2.0 * M_PI) {
-        theta_color -= 2.0 * M_PI;
-      }
-
-      // Color based on orientation
-      int color_index = (int) (((theta_color) / (2.0 * M_PI)) * n_rgb_);
-      if (color_index < 0)
-        color_index = 0;
-      else if (color_index >= n_rgb_)
-        color_index = n_rgb_ - 1;
-
-      glColor4fv(&colormap_[color_index * 4]);
+      theta_color = theta;
     }
-    else {
-     // Flat, boring color
-      glColor4fv(color);
+
+    theta_color = theta_color + 1.5 * M_PI;
+    while (theta_color > 2.0 * M_PI) {
+      theta_color -= 2.0 * M_PI;
     }
+
+    // Color based on orientation
+    int color_index = (int) (((theta_color) / (2.0 * M_PI)) * n_rgb_);
+    if (color_index < 0)
+      color_index = 0;
+    else if (color_index >= n_rgb_)
+      color_index = n_rgb_ - 1;
+
+    glColor4fv(&colormap_[color_index * 4]);
    
     glPushMatrix(); // Duplicate current modelview
     {
@@ -619,10 +612,10 @@ void Graphics::DrawSpheros() {
   for (auto it=graph_array_->begin(); it!=graph_array_->end(); ++it) {
     /* Determine phi rotation angle, amount to rotate about y. */
     double phi = acos((*it)->u[2]);
-
+    double theta = 0.0;
+    double theta_color = 0.0;
     /* Determine theta rotation, amount to rotate about z. */
     double length_xy = sqrt(SQR((*it)->u[0]) + SQR((*it)->u[1]));
-    double theta = 0.0;
     if (length_xy > 0.0) {
       theta = acos((*it)->u[0] / length_xy);
       if ((*it)->u[1] < 0.0)
@@ -630,65 +623,62 @@ void Graphics::DrawSpheros() {
     }
 
     // Color is now based on draw_type for the object
-    //std::cout << "Draw type: " << (*it)->draw_type << std::endl;
     if ((*it)->draw_type == 0) {
      // flat color
-     color[0] = (*it)->color[0];
-     color[1] = (*it)->color[1];
-     color[2] = (*it)->color[2];
-     color[3] = (*it)->color[3];
-     glColor4fv(color);
-    } else if ((*it)->draw_type == 1) {
-     /* Convert from HSL to RGB coloring scheme, unique orientation coloring scheme */
-     double L = 0.3 * (*it)->u[2] + 0.5;
-     double C = (1 - ABS(2*L - 1));
-     double H_prime = 3.0 * theta / M_PI;
-     double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
+      theta_color = (*it)->color;
+    } 
+    else if ((*it)->draw_type == 1) {
+      theta_color = theta;
+    }
+    /* Convert from HSL to RGB coloring scheme, unique orientation coloring scheme */
+    double L = 0.3 * (*it)->u[2] + 0.5;
+    double C = (1 - ABS(2*L - 1));
+    double H_prime = 3.0 * theta_color / M_PI;
+    double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
 
-     if (H_prime < 0.0) {
+    if (H_prime < 0.0) {
       color[0] = 0.0;
       color[1] = 0.0;
       color[2] = 0.0;
-     }
-     else if (H_prime < 1.0) {
-      color[0] = C;
-      color[1] = X;
-      color[2] = 0;
-     }
-     else if (H_prime < 2.0) {
-      color[0] = X;
-      color[1] = C;
-      color[2] = 0;
-     }
-     else if (H_prime < 3.0) {
-      color[0] = 0;
-      color[1] = C;
-      color[2] = X;
-     }
-     else if (H_prime < 4.0) {
-      color[0] = 0;
-      color[1] = X;
-      color[2] = C;
-     }
-     else if (H_prime < 5.0) {
-      color[0] = X;
-      color[1] = 0;
-      color[2] = C;
-     }
-     else if (H_prime < 6.0) {
-      color[0] = C;
-      color[1] = 0;
-      color[2] = X;
-     }
-     color[3] = alpha_;
-
-     double m = L - 0.5 * C;
-     color[0] = color[0] + m;
-     color[1] = color[1] + m;
-     color[2] = color[2] + m;
-
-     glColor4fv(color);
     }
+    else if (H_prime < 1.0) {
+      color[0] = C;
+      color[1] = X;
+      color[2] = 0;
+    }
+    else if (H_prime < 2.0) {
+      color[0] = X;
+      color[1] = C;
+      color[2] = 0;
+    }
+    else if (H_prime < 3.0) {
+      color[0] = 0;
+      color[1] = C;
+      color[2] = X;
+    }
+    else if (H_prime < 4.0) {
+      color[0] = 0;
+      color[1] = X;
+      color[2] = C;
+    }
+    else if (H_prime < 5.0) {
+      color[0] = X;
+      color[1] = 0;
+      color[2] = C;
+    }
+    else if (H_prime < 6.0) {
+      color[0] = C;
+      color[1] = 0;
+      color[2] = X;
+    }
+    color[3] = alpha_;
+
+    double m = L - 0.5 * C;
+    color[0] = color[0] + m;
+    color[1] = color[1] + m;
+    color[2] = color[2] + m;
+
+    glColor4fv(color);
 
     /* Get position of spherocylinder center. */
     GLfloat v0 = (*it)->r[0];

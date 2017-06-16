@@ -26,7 +26,7 @@ class Object {
            torque_[3],
            velocity_[3],
            anglevel_[3],
-           color_[4],
+           color_,
            delta_,
            diameter_,
            length_,
@@ -129,12 +129,11 @@ class Object {
     virtual void UpdatePositionMP() {
       error_exit("ERROR: UpdatePositionMP() needs to be overwritten. Exiting!\n");
     }
-    virtual void SetColor(double const * const c, int dtype) {
-      for (int i=0; i < 4; ++i) {
-        color_[i] = c[i];
-      }
+    virtual void SetColor(double const c, int dtype) {
+      color_ = c;
       draw_type_ = dtype;
     }
+    int DrawTypeInt(std::string dt_str);
     virtual void ScalePosition() {
       for (int i=0; i<n_dim_; ++i) {
         position_[i] = 0;

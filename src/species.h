@@ -113,6 +113,7 @@ template <typename T>
 void Species<T>::AddMember() {
   T* newmember = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
   newmember->Init();
+  //newmember->SetColor(sparams_->color, sparams_->draw_type);
   members_.push_back(newmember);
   n_members_++;
 }

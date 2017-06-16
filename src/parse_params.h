@@ -122,6 +122,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("theta_analysis")==0) {
             params->filament.theta_analysis = jt->second.as<int>();
           }
+          else if (param_name.compare("lp_analysis")==0) {
+            params->filament.lp_analysis = jt->second.as<int>();
+          }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
           }
