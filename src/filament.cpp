@@ -962,26 +962,35 @@ void FilamentSpecies::InitAnalysis() {
     InitThetaAnalysis();
   }
   if (params_->filament.lp_analysis) {
-    InitLpAnalysis();
+    InitMse2eAnalysis();
   }
   RunAnalysis();
 }
 
-void FilamentSpecies::InitLpAnalysis() {
+void FilamentSpecies::InitMse2eAnalysis() {
   std::string fname = params_->run_name;
-  fname.append("_filament.lp");
-  lp_file_.open(fname, std::ios::out);
-  lp_file_ << "lp_analysis_file\n";
-  lp_file_ << "length child_length persistence_length driving nsteps nspec delta theory\n";
+  fname.append("_filament.mse2e");
+  mse2e_file_.open(fname, std::ios::out);
+  mse2e_file_ << "mse2e_analysis_file\n";
+  mse2e_file_ << "length child_length persistence_length driving ndim nsteps nspec delta theory\n";
   auto it=members_.begin();
   double l = (*it)->GetLength();
   double cl = (*it)->GetChildLength();
   double pl = (*it)->GetPersistenceLength();
   double dr = (*it)->GetDriving();
   double nspec = GetNSpec();
-  double theory = l * pl * 2.0 - 2.0 * pl * pl * (1-exp(-l/pl));
-  lp_file_ << l << " " << cl << " " << pl << " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << theory << "\n";
-  lp_file_ << "time mse2e\n";
+  double theory;
+  if (params_->n_dim == 2) {
+    theory = l * pl * 4.0 - 8.0 * pl * pl * (1-exp(-0.5*l/pl));
+  }
+  else {
+    theory = l * pl * 2.0 - 2.0 * pl * pl * (1-exp(-l/pl));
+  }
+  mse2e_file_ << l << " " << cl << " " << pl << " " << dr << " " << params_->n_dim << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << theory << "\n";
+  mse2e_file_ << "num_filaments_averaged mse2e_mean mse2e_std_err\n";
+  mse2e_ = 0.0;
+  mse2e2_ = 0.0;
+  n_samples_ = 0;
 }
 
 void FilamentSpecies::InitSpiralAnalysis() {
@@ -1048,7 +1057,7 @@ void FilamentSpecies::RunAnalysis() {
     RunThetaAnalysis();
   }
   if (params_->filament.lp_analysis) {
-    RunLpAnalysis();
+    RunMse2eAnalysis();
   }
   time_++;
 }
@@ -1081,24 +1090,29 @@ void FilamentSpecies::RunSpiralAnalysis() {
   }
 }
 
-void FilamentSpecies::RunLpAnalysis() {
+void FilamentSpecies::RunMse2eAnalysis() {
   // Treat as though we have many spirals for now
-  if ( ! lp_file_.is_open()) {
-    early_exit = true;
-    std::cout << " Error! Problem opening file in RunLpAnalysis! Exiting.\n";
-  }
-  lp_file_ << time_;
+  //if ( ! mse2e_file_.is_open()) {
+    //early_exit = true;
+    //std::cout << " Error! Problem opening file in RunMse2eAnalysis! Exiting.\n";
+  //}
+  //mse2e_file_ << time_;
   for (auto it=members_.begin(); it!= members_.end(); ++it) {
     double const * const head_pos = (*it)->GetHeadPos();
     double const * const tail_pos = (*it)->GetTailPos();
-    double mse2e = 0.0;
+    double mse2e_temp = 0.0;
     for (int i=0; i<params_->n_dim; ++i) {
       double temp = (head_pos[i] - tail_pos[i]);
-      mse2e += temp*temp;
+      mse2e_temp += temp*temp;
     }
-    lp_file_ << " " << mse2e ;
+    mse2e_ += mse2e_temp;
+    mse2e2_ += mse2e_temp*mse2e_temp;
+    //mse2e_file_ << " " << mse2e ;
   }
-  lp_file_ << "\n";
+  //mse2e_ /= members_.size();
+  //mse2e2_ /= members_.size();
+  //mse2e_file_ << "\n";
+  n_samples_++;
 }
 
 
@@ -1129,9 +1143,19 @@ void FilamentSpecies::FinalizeAnalysis() {
     FinalizeThetaAnalysis();
     theta_file_.close();
   }
-  if (lp_file_.is_open()) {
-    lp_file_.close();
+  if (mse2e_file_.is_open()) {
+    FinalizeMse2eAnalysis();
+    mse2e_file_.close();
   }
+}
+
+void FilamentSpecies::FinalizeMse2eAnalysis() {
+  int num = members_.size();
+  mse2e_file_ << num << " ";
+  mse2e_ /= n_samples_*num;
+  mse2e2_ /= n_samples_*num;
+  mse2e_file_ << mse2e_ << " ";
+  mse2e_file_ << sqrt((mse2e2_ - mse2e_*mse2e_)/num) << "\n";
 }
 
 void FilamentSpecies::FinalizeThetaAnalysis() {
