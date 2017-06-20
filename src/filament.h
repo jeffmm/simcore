@@ -122,13 +122,16 @@ class FilamentSpecies : public Species<Filament> {
     bool midstep_;
     // Analysis structures
     double e_bend_,
-           tot_angle_;
+           tot_angle_,
+           mse2e_,
+           mse2e2_;
     int **theta_histogram_;
     int time_,
-        n_bins_;
+        n_bins_,
+        n_samples_;
     std::fstream spiral_file_,
                  theta_file_,
-                 lp_file_;
+                 mse2e_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(SID::filament);
@@ -141,12 +144,13 @@ class FilamentSpecies : public Species<Filament> {
     void InitAnalysis();
     void InitSpiralAnalysis();
     void InitThetaAnalysis();
-    void InitLpAnalysis();
+    void InitMse2eAnalysis();
     void RunAnalysis();
     void RunSpiralAnalysis();
     void RunThetaAnalysis();
-    void RunLpAnalysis();
+    void RunMse2eAnalysis();
     void FinalizeAnalysis();
+    void FinalizeMse2eAnalysis();
     void FinalizeThetaAnalysis();
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
