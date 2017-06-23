@@ -96,11 +96,19 @@ void Simulation::InitGraphics() {
   GetGraphicsStructure();
   double background_color = (params_.graph_background == 0 ? 0.1 : 1);
   #ifndef NOGRAPH
-  graphics_.Init(&graph_array, space_.GetStruct(), background_color);
+  graphics_.Init(&graph_array, space_.GetStruct(), background_color, params_.draw_boundary);
   graphics_.DrawLoop();
   #endif
   params_.movie_directory.append("/");
   params_.movie_directory.append(params_.run_name);
+  // Grab first frame
+  #ifndef NOGRAPH
+  if (params_.movie_flag) {
+    // Record bmp image of frame 
+    grabber(graphics_.windx_, graphics_.windy_,
+            params_.movie_directory, (int) i_step_/params_.n_graph);
+  }
+  #endif
 }
 
 void Simulation::InitSpecies() {
@@ -146,8 +154,10 @@ void Simulation::InsertSpecies(bool force_overlap) {
 
 void Simulation::ClearSpecies() {
   for (auto it=species_.begin(); it!=species_.end(); ++it) {
+    (*it)->CleanUp();
     delete (*it);
   }
+  species_factory_.clear();
 }
 
 void Simulation::ClearSimulation() {
@@ -229,10 +239,10 @@ void Simulation::InitProcessing(int graphics, int make_movie, int run_analyses, 
     else if (!use_posits && params_.n_graph < output_mgr_.GetNSpec()) {
       params_.n_graph = output_mgr_.GetNSpec();
     }
-    InitGraphics();
     if (make_movie) {
       params_.movie_flag = 1;
     }
+    InitGraphics();
   }
   else {
     params_.graph_flag = 0;

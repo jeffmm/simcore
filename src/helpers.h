@@ -77,6 +77,10 @@ namespace rfh {
             if (i == m_classes.end()) return 0;
             return i->second();
         }
+
+        void clear() {
+          m_classes.clear();
+        }
     };
 }
 

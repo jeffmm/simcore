@@ -68,6 +68,7 @@ class SpeciesBase {
     virtual int OutputIsOpen(){ return oposit_file_.is_open(); }
     virtual int InputIsOpen(){ return iposit_file_.is_open(); }
     virtual void CloseFiles(); 
+    virtual void CleanUp() {}
 };
 
 template <typename T>
@@ -107,6 +108,7 @@ class Species : public SpeciesBase {
     virtual void RunAnalysis() {}
     virtual void FinalizeAnalysis() {}
     virtual std::vector<T*>* GetMembers() {return &members_;}
+    virtual void CleanUp();
 };
 
 template <typename T> 
@@ -284,10 +286,9 @@ void Species<T>::ReadCheckpoints() {
     std::cout<<"  ERROR: Output "<< checkpoint_file_ <<" file did not open\n";
     exit(1);
   }
-  int size;
+  int size = 0;
   T *member;
   icheck_file.read(reinterpret_cast<char*>(&size), sizeof(size));
-
   member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
   members_.resize(size, member);
   for (auto it=members_.begin(); it!=members_.end(); ++it) 
@@ -298,13 +299,13 @@ void Species<T>::ReadCheckpoints() {
 template <typename T> 
 void Species<T>::ReadSpecs() {
   if (ispec_file_.eof()) {
-    CloseFiles();
     printf("  EOF reached\n");
     early_exit = true;
+    return;
   }
-  if (! iposit_file_.is_open()) {
-    printf(" ERROR: Posit file unexpectedly not open! Exiting.\n");
-    early_exit=true;
+  if (! ispec_file_.is_open()) {
+    printf(" ERROR: Spec file unexpectedly not open! Exiting.\n");
+    early_exit = true;
     return;
   }
   int size = -1;
@@ -329,6 +330,12 @@ template <typename T>
 void Species<T>::ScalePositions() {
   for (auto it=members_.begin(); it!=members_.end(); ++it) 
     (*it)->ScalePosition();
+}
+
+template <typename T>
+void Species<T>::CleanUp() {
+  for (auto it=members_.begin(); it!=members_.end(); ++it)
+    delete (*it);
 }
 
 #endif // _SIMCORE_SPECIES_H_
