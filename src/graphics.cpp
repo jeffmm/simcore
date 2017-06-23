@@ -178,13 +178,18 @@ void Graphics::ScalePositions() {
       (*it)->r[i] = unit_cell_[n_dim_*i+i]*(*it)->r[i];
 }
 
-void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_struct, double background) {
+void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_struct, double background, int draw_boundary) {
   space_ = s_struct;
   graph_array_ = graph_array;
   n_dim_ = space_->n_dim;
   unit_cell_ = space_->unit_cell;
   //ScalePositions();
-  boundary_type_ = space_->type;
+  if (draw_boundary == 0) {
+    boundary_type_ = "none";
+  }
+  else {
+    boundary_type_ = space_->type;
+  }
   for (int i=0;i<3;++i)
     background_color_[i] = background;
   z_correct_ = 0;
@@ -718,6 +723,8 @@ void Graphics::Draw3d() {
 }
 
 void Graphics::DrawBoundary() {
+  if (boundary_type_.compare("none") == 0)
+    return;
   glUseProgram(0);
 
   GLfloat color[4] = {0.5, 0.5, 0.5, 1.0};

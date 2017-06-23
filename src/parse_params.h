@@ -356,11 +356,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("system_radius")==0) {
         params->system_radius = it->second.as<double>();
       }
-      else if (param_name.compare("n_steps")==0) {
-        params->n_steps = it->second.as<int>();
-      }
       else if (param_name.compare("delta")==0) {
         params->delta = it->second.as<double>();
+      }
+      else if (param_name.compare("n_steps")==0) {
+        params->n_steps = it->second.as<int>();
       }
       else if (param_name.compare("cell_length")==0) {
         params->cell_length = it->second.as<double>();
@@ -380,14 +380,17 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("graph_background")==0) {
         params->graph_background = it->second.as<int>();
       }
+      else if (param_name.compare("constant_volume")==0) {
+        params->constant_volume = it->second.as<int>();
+      }
+      else if (param_name.compare("draw_boundary")==0) {
+        params->draw_boundary = it->second.as<int>();
+      }
       else if (param_name.compare("load_checkpoint")==0) {
         params->load_checkpoint = it->second.as<int>();
       }
       else if (param_name.compare("insertion_type")==0) {
         params->insertion_type = it->second.as<std::string>();
-      }
-      else if (param_name.compare("target_pressure")==0) {
-        params->target_pressure = it->second.as<double>();
       }
       else if (param_name.compare("movie_flag")==0) {
         params->movie_flag = it->second.as<int>();
@@ -428,17 +431,17 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("max_overlap")==0) {
         params->max_overlap = it->second.as<int>();
       }
-      else if (param_name.compare("constant_volume")==0) {
-        params->constant_volume = it->second.as<int>();
-      }
       else if (param_name.compare("constant_pressure")==0) {
         params->constant_pressure = it->second.as<int>();
       }
-      else if (param_name.compare("pressure_time")==0) {
-        params->pressure_time = it->second.as<int>();
+      else if (param_name.compare("target_pressure")==0) {
+        params->target_pressure = it->second.as<double>();
       }
       else if (param_name.compare("target_radius")==0) {
         params->target_radius = it->second.as<double>();
+      }
+      else if (param_name.compare("pressure_time")==0) {
+        params->pressure_time = it->second.as<int>();
       }
       else if (param_name.compare("compressibility")==0) {
         params->compressibility = it->second.as<double>();
