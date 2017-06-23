@@ -94,7 +94,7 @@ class Graphics {
                                 // "box" and "sphere"
 
  public:
-    void Init(std::vector<graph_struct*> * const graph_array, space_struct * s_struct, double background); // Init. Must always be called.
+    void Init(std::vector<graph_struct*> * const graph_array, space_struct * s_struct, double background, int draw_boundary); // Init. Must always be called.
     void Clear();
 
     void DrawLoop();
