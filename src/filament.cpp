@@ -972,9 +972,10 @@ void FilamentSpecies::InitMse2eAnalysis() {
   fname.append("_filament.mse2e");
   mse2e_file_.open(fname, std::ios::out);
   mse2e_file_ << "mse2e_analysis_file\n";
-  mse2e_file_ << "length child_length persistence_length driving ndim nsteps nspec delta theory\n";
+  mse2e_file_ << "length diameter child_length persistence_length driving ndim nsteps nspec delta theory\n";
   auto it=members_.begin();
   double l = (*it)->GetLength();
+  double d = (*it)->GetDiameter();
   double cl = (*it)->GetChildLength();
   double pl = (*it)->GetPersistenceLength();
   double dr = (*it)->GetDriving();
@@ -986,7 +987,7 @@ void FilamentSpecies::InitMse2eAnalysis() {
   else {
     theory = l * pl * 2.0 - 2.0 * pl * pl * (1-exp(-l/pl));
   }
-  mse2e_file_ << l << " " << cl << " " << pl << " " << dr << " " << params_->n_dim << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << theory << "\n";
+  mse2e_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " " << params_->n_dim << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << theory << "\n";
   mse2e_file_ << "num_filaments_averaged mse2e_mean mse2e_std_err\n";
   mse2e_ = 0.0;
   mse2e2_ = 0.0;
@@ -998,14 +999,15 @@ void FilamentSpecies::InitSpiralAnalysis() {
   fname.append("_filament.spiral");
   spiral_file_.open(fname, std::ios::out);
   spiral_file_ << "spiral_analysis_file\n";
-  spiral_file_ << "length child_length persistence_length driving nsteps nspec delta\n";
+  spiral_file_ << "length diameter child_length persistence_length driving nsteps nspec delta\n";
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
     double l = (*it)->GetLength();
+    double d = (*it)->GetDiameter();
     double cl = (*it)->GetChildLength();
     double pl = (*it)->GetPersistenceLength();
     double dr = (*it)->GetDriving();
     double nspec = GetNSpec();
-    spiral_file_ << l << " " << cl << " " << pl << " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
+    spiral_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
   }
   spiral_file_ << "time angle_sum E_bend tip_z_proj head_pos_x head_pos_y tail_pos_x tail_pos_y\n";
 }
@@ -1016,19 +1018,20 @@ void FilamentSpecies::InitThetaAnalysis() {
   fname.append("_filament.theta");
   theta_file_.open(fname, std::ios::out);
   theta_file_ << "theta_analysis_file\n";
-  theta_file_ << "length child_length persistence_length n_filaments n_bonds n_steps n_spec delta n_dim metric_forces\n";
+  theta_file_ << "length diameter child_length persistence_length n_filaments n_bonds n_steps n_spec delta n_dim metric_forces\n";
   double l, cl, pl, dr;
   int nbonds;
   int nmembers = members_.size();
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
     l = (*it)->GetLength();
+    d = (*it)->GetDiameter();
     cl = (*it)->GetChildLength();
     pl = (*it)->GetPersistenceLength();
     dr = (*it)->GetDriving();
     nbonds = (*it)->GetNBonds();
   }
   int nspec = GetNSpec();
-  theta_file_ << l << " " << cl << " " << pl << " " << nmembers << " " << nbonds << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << params_->n_dim << " " << params_->filament.metric_forces << "\n";
+  theta_file_ << l << " " << d << " " << cl << " " << pl << " " << nmembers << " " << nbonds << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << params_->n_dim << " " << params_->filament.metric_forces << "\n";
   theta_file_ << "cos_theta";
   for (int i=0; i<nbonds-1; ++i) {
     theta_file_ << " theta_" << i+1 << i+2;
