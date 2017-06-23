@@ -252,10 +252,21 @@ void Species<T>::ReadPosits() {
   if (iposit_file_.eof()) {
     printf("  EOF reached\n");
     early_exit = true;
+    return;
   }
-  int size;
+  if (! iposit_file_.is_open()) {
+    printf(" ERROR: Posit file unexpectedly not open! Exiting.\n");
+    early_exit=true;
+    return;
+  }
+  int size = -1;
   T *member;
   iposit_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
+  // Hacky workaround FIXME
+  if (size == -1) {
+    early_exit = true;
+    return;
+  }
   if (size != n_members_) {
     member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
     members_.resize(size, member);
@@ -291,9 +302,19 @@ void Species<T>::ReadSpecs() {
     printf("  EOF reached\n");
     early_exit = true;
   }
-  int size;
+  if (! iposit_file_.is_open()) {
+    printf(" ERROR: Posit file unexpectedly not open! Exiting.\n");
+    early_exit=true;
+    return;
+  }
+  int size = -1;
   T *member;
   ispec_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
+  // Hacky workaround FIXME
+  if (size == -1) {
+    early_exit = true;
+    return;
+  }
   if (size != n_members_) {
     member = new T(params_, space_, gsl_rng_get(rng_.r), GetSID());
     members_.resize(size, member);
