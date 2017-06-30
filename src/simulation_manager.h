@@ -29,7 +29,7 @@ class SimulationManager {
     void LoadDefaultParams();
     void CountVariations();
     void SetRandomParams();
-    double GetRandomParam(std::string rtype, int min, int max);
+    double GetRandomParam(std::string rtype, double min, double max);
     void CheckRandomParams();
     void GenerateParameters();
     void WriteParams();

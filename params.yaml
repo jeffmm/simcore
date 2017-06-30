@@ -1,16 +1,16 @@
 # params.yaml
 ---
-seed : 15921117213137
+seed : 24659315408670
 run_name: test
 n_runs: 1
-n_random: 1
+n_random: 100
 n_dim: 2
 n_periodic: 2
 boundary_type: 0
 delta: 0.00003
-n_steps: 100
+n_steps: 10
 system_radius: 100
-graph_flag: 1
+graph_flag: 0
 n_graph: 500
 movie_flag: 0
 movie_directory: frames
@@ -31,14 +31,14 @@ filament:
   diameter: 1
   spiral_flag: 0
   max_child_length: 1.5
-  posit_flag: 1
-  spec_flag: 1
-  checkpoint_flag: 1
+  posit_flag: 0
+  spec_flag: 0
+  checkpoint_flag: 0
   n_posit: 10
   n_spec: 10
   n_checkpoint: 10
   driving_factor: 50
   length: 50
-  persistence_length: 400
+  persistence_length: [RLOG,1.699,4.699]
   theta_analysis: 0
   lp_analysis: 0

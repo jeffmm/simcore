@@ -160,7 +160,7 @@ void SimulationManager::CheckRandomParams() {
    and returns N or 10^N, all depending on the random parameter generation type
    rtype, which can be R, RINT, or RLOG.
    *************************************/
-double SimulationManager::GetRandomParam(std::string rtype, int min, int max) {
+double SimulationManager::GetRandomParam(std::string rtype, double min, double max) {
   if (max == min) 
     error_exit("ERROR: Min and max value of parameter randomization sequence are equal.\n");
   if (rtype.compare("R") == 0) 
