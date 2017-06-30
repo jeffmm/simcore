@@ -17,6 +17,10 @@ obj
 *.posit
 *.diffusion
 *.filament
+*.thermo
+*.spec
+*.checkpoint
+*.spiral
 *_params.yaml
 *.log
 sc-*

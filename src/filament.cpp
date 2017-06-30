@@ -1019,7 +1019,7 @@ void FilamentSpecies::InitThetaAnalysis() {
   theta_file_.open(fname, std::ios::out);
   theta_file_ << "theta_analysis_file\n";
   theta_file_ << "length diameter child_length persistence_length n_filaments n_bonds n_steps n_spec delta n_dim metric_forces\n";
-  double l, cl, pl, dr;
+  double l, cl, pl, dr, d;
   int nbonds;
   int nmembers = members_.size();
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
