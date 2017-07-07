@@ -12,8 +12,7 @@ void Simulation::Run(system_parameters params) {
 }
 
 void Simulation::RunSimulation() {
-  std::cout << "Running simulation: " << run_name_ << std::endl;
-  std::cout << "   steps: " << params_.n_steps << std::endl;
+  std::cout << "  Running simulation" << std::endl;
   for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
@@ -32,8 +31,17 @@ void Simulation::RunSimulation() {
 }
 
 void Simulation::PrintComplete() {
-  if ((100*i_step_) % (params_.n_steps) == 0) {
-    printf("%d%% Complete\n", (int)(100 * (float)i_step_ / (float)params_.n_steps));
+  int it,steps;
+  if (params_.n_steps > 10000 && i_step_ >= 100) {
+    it = i_step_/100;
+    steps = params_.n_steps/10000;
+  }
+  else {
+    it = i_step_*100;
+    steps = params_.n_steps;
+  }
+  if (10*it % steps == 0) {
+    printf("    %2.1f%% complete\r", (double) ((double) it/ steps));
     fflush(stdout);
   }
   if (debug_trace) {
@@ -81,6 +89,7 @@ void Simulation::ScaleSpeciesPositions() {
 }
 
 void Simulation::InitSimulation() {
+  std::cout << "  Initializing simulation" << std::endl;
   rng_.init(params_.seed);
   space_.Init(&params_);
   InitSpecies();
@@ -144,7 +153,7 @@ void Simulation::InsertSpecies(bool force_overlap) {
         inserted--;
       }
       else {
-        printf("\rInserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
+        printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
         fflush(stdout);
       }
     }
@@ -168,6 +177,7 @@ void Simulation::ClearSimulation() {
     graphics_.Clear();
   }
   #endif
+  std::cout << "  Simulation complete" << std::endl;
 }
 
 void Simulation::Draw() {
@@ -256,7 +266,6 @@ void Simulation::InitProcessing(int graphics, int make_movie, int run_analyses, 
 
 void Simulation::RunProcessing(int run_analyses) {
   std::cout << "Processing outputs for: " << run_name_ << std::endl;
-  std::cout << "   steps: " << params_.n_steps << std::endl;
   for (i_step_ = 1; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
