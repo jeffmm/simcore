@@ -8,7 +8,7 @@ n_dim : [3,int]
 n_periodic : [0,int]
 boundary_type : [0,int]
 system_radius : [100,double] # radius of system
-n_steps : [1000000,int]
+n_steps : [1000000,long]
 delta : [0.001,double] # time duration between each simulation step
 cell_length: [10, double]
 n_update_cells: [10, int]

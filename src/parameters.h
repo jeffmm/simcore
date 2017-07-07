@@ -21,6 +21,7 @@ class species_parameters {
 class filament_parameters : public species_parameters {
   public:
     double diameter = 1;
+    double f_pause_to_shrink = 0.0;
     double length = 40;
     double persistence_length = 400;
     double max_length = 500;
@@ -34,7 +35,6 @@ class filament_parameters : public species_parameters {
     double f_shrink_to_grow = 0.017;
     double f_shrink_to_pause = 0.0;
     double f_pause_to_grow = 0.0;
-    double f_pause_to_shrink = 0.0;
     double f_grow_to_pause = 0.0;
     double f_grow_to_shrink = 0.00554;
     int metric_forces = 1;
@@ -70,6 +70,7 @@ class md_bead_parameters : public species_parameters {
 
 class system_parameters {
   public:
+    int draw_boundary = 1;
     long seed = 7859459105545;
     int n_runs = 1;
     int n_random = 1;
@@ -79,27 +80,26 @@ class system_parameters {
     int boundary_type = 0;
     double system_radius = 100;
     double delta = 0.001;
-    int n_steps = 1000000;
+    long n_steps = 1000000;
     double cell_length = 10;
+    int graph_background = 1;
     int n_update_cells = 10;
     int graph_flag = 0;
     int n_graph = 1000;
     double graph_diameter = 0;
-    int graph_background = 1;
-    int constant_volume = 0;
-    int draw_boundary = 1;
     int load_checkpoint = 0;
+    int time_flag = 0;
     std::string insertion_type = "species";
     int movie_flag = 0;
     std::string movie_directory = "frames";
-    int time_flag = 0;
-    double bud_height = 680;
     double bud_radius = 300;
+    double bud_height = 680;
     double lj_epsilon = 1;
     double wca_eps = 1;
     double wca_sig = 1;
     double ss_a = 1;
     double ss_rs = 1.5;
+    int constant_volume = 0;
     double ss_eps = 1;
     double f_cutoff = 100;
     int max_overlap = 100000;
