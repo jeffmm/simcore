@@ -318,7 +318,7 @@ void SimulationManager::RunSimulations() {
   for (std::vector<std::string>::iterator it=pfiles_.begin(); it!=pfiles_.end(); ++it) {
     ParseParams(*it);
     sim_ = new Simulation;
-    std::cout << "\nRunning simulation " << params_.run_name<< " ("<<i_sim <<"/"<<n_sims<<")\n";
+    std::cout << "\nStarting simulation: " << params_.run_name<< " ("<<i_sim <<"/"<<n_sims<<")\n";
     sim_->Run(params_);
     delete sim_;
     i_sim++;

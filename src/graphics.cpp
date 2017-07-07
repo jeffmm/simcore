@@ -487,20 +487,27 @@ void Graphics::DrawDiscorectangles() {
       theta_color = theta;
     }
 
-    theta_color = theta_color + 1.5 * M_PI;
-    while (theta_color > 2.0 * M_PI) {
-      theta_color -= 2.0 * M_PI;
+    if ((*it)->draw_type == 2) {
+      for (int i=0; i<3; ++i)
+        color[i] = 255;
+      glColor4fv(color);
     }
+    else {
 
-    // Color based on orientation
-    int color_index = (int) (((theta_color) / (2.0 * M_PI)) * n_rgb_);
-    if (color_index < 0)
-      color_index = 0;
-    else if (color_index >= n_rgb_)
-      color_index = n_rgb_ - 1;
+      theta_color = theta_color + 1.5 * M_PI;
+      while (theta_color > 2.0 * M_PI) {
+        theta_color -= 2.0 * M_PI;
+      }
 
-    glColor4fv(&colormap_[color_index * 4]);
-   
+      // Color based on orientation
+      int color_index = (int) (((theta_color) / (2.0 * M_PI)) * n_rgb_);
+      if (color_index < 0)
+        color_index = 0;
+      else if (color_index >= n_rgb_)
+        color_index = n_rgb_ - 1;
+
+      glColor4fv(&colormap_[color_index * 4]);
+    }
     glPushMatrix(); // Duplicate current modelview
     {
       glTranslatef((*it)->r[0], (*it)->r[1]-z_correct_, 0.0); // Translate rod
@@ -626,6 +633,7 @@ void Graphics::DrawSpheros() {
       if ((*it)->u[1] < 0.0)
         theta = (2.0 * M_PI) - theta;
     }
+    color[3] = alpha_;
 
     // Color is now based on draw_type for the object
     if ((*it)->draw_type == 0) {
@@ -635,56 +643,63 @@ void Graphics::DrawSpheros() {
     else if ((*it)->draw_type == 1) {
       theta_color = theta;
     }
-    /* Convert from HSL to RGB coloring scheme, unique orientation coloring scheme */
-    double L = 0.3 * (*it)->u[2] + 0.5;
-    double C = (1 - ABS(2*L - 1));
-    double H_prime = 3.0 * theta_color / M_PI;
-    double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
 
-    if (H_prime < 0.0) {
-      color[0] = 0.0;
-      color[1] = 0.0;
-      color[2] = 0.0;
+    if ((*it)->draw_type == 2) {
+      for (int i=0; i<3; ++i)
+        color[i] = 255;
+      glColor4fv(color);
     }
-    else if (H_prime < 1.0) {
-      color[0] = C;
-      color[1] = X;
-      color[2] = 0;
-    }
-    else if (H_prime < 2.0) {
-      color[0] = X;
-      color[1] = C;
-      color[2] = 0;
-    }
-    else if (H_prime < 3.0) {
-      color[0] = 0;
-      color[1] = C;
-      color[2] = X;
-    }
-    else if (H_prime < 4.0) {
-      color[0] = 0;
-      color[1] = X;
-      color[2] = C;
-    }
-    else if (H_prime < 5.0) {
-      color[0] = X;
-      color[1] = 0;
-      color[2] = C;
-    }
-    else if (H_prime < 6.0) {
-      color[0] = C;
-      color[1] = 0;
-      color[2] = X;
-    }
-    color[3] = alpha_;
+    else {
 
-    double m = L - 0.5 * C;
-    color[0] = color[0] + m;
-    color[1] = color[1] + m;
-    color[2] = color[2] + m;
+      /* Convert from HSL to RGB coloring scheme, unique orientation coloring scheme */
+      double L = 0.3 * (*it)->u[2] + 0.5;
+      double C = (1 - ABS(2*L - 1));
+      double H_prime = 3.0 * theta_color / M_PI;
+      double X = C * (1.0 - ABS(fmod(H_prime, 2.0) - 1));
 
-    glColor4fv(color);
+      if (H_prime < 0.0) {
+        color[0] = 0.0;
+        color[1] = 0.0;
+        color[2] = 0.0;
+      }
+      else if (H_prime < 1.0) {
+        color[0] = C;
+        color[1] = X;
+        color[2] = 0;
+      }
+      else if (H_prime < 2.0) {
+        color[0] = X;
+        color[1] = C;
+        color[2] = 0;
+      }
+      else if (H_prime < 3.0) {
+        color[0] = 0;
+        color[1] = C;
+        color[2] = X;
+      }
+      else if (H_prime < 4.0) {
+        color[0] = 0;
+        color[1] = X;
+        color[2] = C;
+      }
+      else if (H_prime < 5.0) {
+        color[0] = X;
+        color[1] = 0;
+        color[2] = C;
+      }
+      else if (H_prime < 6.0) {
+        color[0] = C;
+        color[1] = 0;
+        color[2] = X;
+      }
 
+      double m = L - 0.5 * C;
+      color[0] = color[0] + m;
+      color[1] = color[1] + m;
+      color[2] = color[2] + m;
+
+      glColor4fv(color);
+    }
     /* Get position of spherocylinder center. */
     GLfloat v0 = (*it)->r[0];
     GLfloat v1 = (*it)->r[1];
