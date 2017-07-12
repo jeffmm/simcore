@@ -32,7 +32,7 @@ void Simulation::RunSimulation() {
 
 void Simulation::PrintComplete() {
   int it,steps;
-  if (params_.n_steps > 10000 && i_step_ >= 100) {
+  if (params_.n_steps > 10000) {// && i_step_ >= 100) {
     it = i_step_/100;
     steps = params_.n_steps/10000;
   }
@@ -40,8 +40,8 @@ void Simulation::PrintComplete() {
     it = i_step_*100;
     steps = params_.n_steps;
   }
-  if (10*it % steps == 0) {
-    printf("    %2.1f%% complete\r", (double) ((double) it/ steps));
+  if (it % (steps/10) == 0) {
+    printf("    %2.1f%% complete\r", (double) it/ steps);
     fflush(stdout);
   }
   if (debug_trace) {
