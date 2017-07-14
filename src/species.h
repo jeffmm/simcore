@@ -36,6 +36,8 @@ class SpeciesBase {
     virtual void ScalePositions() {}
     virtual void AddMember() {}
     virtual void PopMember() {}
+    virtual void PopAll() {}
+    virtual void ArrangeMembers() {}
     virtual int CanOverlap() {return sparams_->overlap;}
     SID const GetSID() {return sid_;}
     virtual void Dump() {}
@@ -47,6 +49,7 @@ class SpeciesBase {
     bool const GetPositFlag() {return sparams_->posit_flag;}
     bool const GetSpecFlag() {return sparams_->spec_flag;}
     bool const GetCheckpointFlag() {return sparams_->checkpoint_flag;}
+    std::string GetInsertionType() {return sparams_->insertion_type;}
     virtual int GetCount() {return 0;}
     virtual void WriteOutputs(std::string run_name) {}
     virtual void WritePosits() {}
@@ -86,6 +89,9 @@ class Species : public SpeciesBase {
     virtual void AddMember();
     virtual void AddMember(T* newmem);
     virtual void PopMember();
+    virtual void PopAll();
+    virtual void ArrangeMembers();
+    virtual void SimpleCrystalArrangement();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePositions();
     virtual std::vector<Simple*> GetSimples();
@@ -131,6 +137,13 @@ void Species<T>::PopMember() {
   delete members_[n_members_-1];
   members_.pop_back();
   n_members_--;
+}
+
+template <typename T>
+void Species<T>::PopAll() {
+  while (n_members_ > 0) {
+    PopMember();
+  }
 }
 
 template <typename T> 
@@ -265,6 +278,7 @@ void Species<T>::ReadPosits() {
   T *member;
   iposit_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
   // Hacky workaround FIXME
+  // This prevents strange errors that occasionally crop up when reading inputs
   if (size == -1) {
     early_exit = true;
     return;
@@ -336,6 +350,101 @@ template <typename T>
 void Species<T>::CleanUp() {
   for (auto it=members_.begin(); it!=members_.end(); ++it)
     delete (*it);
+}
+
+template<typename T>
+void Species<T>::ArrangeMembers() {
+  if (GetInsertionType().compare("simple_crystal") == 0)
+    SimpleCrystalArrangement();
+  else
+    warning("WARNING! Arrangement not recognized and ArrangeMembers not overwritten by species!\n");
+}
+
+template<typename T>
+void Species<T>::SimpleCrystalArrangement() {
+  double d = members_[0]->GetDiameter();
+  double l = members_[0]->GetLength();
+  int n_dim = params_->n_dim;
+  double R = space_->radius;
+  double pos[3] = {0,0,0};
+  double u[3] = {0,0,0};
+  u[n_dim-1] = 1;
+  double nX_max = floor((2.0*R/d)-1);
+  double nY_max = floor((2.0*R-d)/(l+d));
+  double nZ_max = (n_dim == 3 ? nX_max : 1);
+  double N = nX_max*nY_max*nZ_max;
+  if (n_members_ > N) {
+    error_exit("ERROR: Number of members in species exceeds maximum possible for crystal in system radius! Max possible: %d\n", (int) N);
+  }
+  double fraction = N/n_members_;
+  if (fraction < 1) fraction = 1;
+  if (l == 0) {
+    if (n_dim == 2)
+      nY_max = floor(pow(n_members_, 1.0/n_dim));
+    else if (n_dim == 3)
+      nY_max = ceil(pow(n_members_, 1.0/n_dim));
+  }
+  if (n_dim == 2) {
+    nX_max = ceil(n_members_/nY_max);
+  }
+  else if (n_dim == 3) {
+    nX_max = floor(sqrt(n_members_/nY_max));
+    if (nX_max == 0) nX_max = 1;
+    nZ_max = ceil(n_members_/(nX_max*nY_max));
+  }
+  for (int i=0; i<n_dim; ++i) {
+    pos[i] = -R+0.5*d;
+  }
+  pos[n_dim-1] += 0.5*l;
+  int inserted = 0;
+  int insert_x = 0;
+  int insert_y = 0;
+  int insert_z = 0;
+  bool shift = false;
+  double diff_y = (2*R - nY_max*(l+d))/nY_max;
+  double diff_x = (2*R - nX_max*d)/nX_max;
+  double diff_z = (2*R - nZ_max*d)/nZ_max;
+  int u0 = 1;
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    // Check crystal orientation type
+    if (params_->uniform_crystal == 0) {
+      // Random orientations
+      u[n_dim-1] = (gsl_rng_uniform_int(rng_.r,2) == 0 ? 1 : -1);
+    }
+    else if (params_->uniform_crystal == 2) {
+      // Stagger orientations
+      u[n_dim-1] = -u[n_dim-1];
+    }
+    // Insert object
+    (*it)->InsertAt(pos,u);
+    inserted++;
+    // Update next position
+    pos[n_dim-1] += l+d+diff_y;
+    if (++insert_y == nY_max) {
+      if (params_->uniform_crystal == 2 && shift) {
+        // Stagger orientations row-wise
+        u[n_dim-1] = u0;
+        u0 = -u0;
+      }
+      // Stagger positions column-wise
+      shift = !shift;
+      insert_y = 0;
+      pos[n_dim-1] = -R+0.5*(l+d) + (shift ? 0.5*(l+d+diff_y) : 0);
+      pos[0] += d + diff_x;
+      if (++insert_x == nX_max) {
+        if (inserted < n_members_ && n_dim == 2) {
+          error_exit("ERROR! Ran out of room while arranging crystal in 2D! Arranged %d/%d\n",inserted,n_members_);
+        }
+        else if (n_dim == 2) continue;
+        insert_x = 0;
+        pos[0] = -R+0.5*d;
+        pos[1] += d + diff_z;
+        if (++insert_z == nZ_max && inserted < n_members_) {
+          error_exit("ERROR! Ran out of room while arranging crystal in 3D! Arranged %d/%d\n",inserted,n_members_);
+        }
+      }
+    }
+  }
 }
 
 #endif // _SIMCORE_SPECIES_H_

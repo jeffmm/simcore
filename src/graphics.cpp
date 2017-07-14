@@ -489,7 +489,7 @@ void Graphics::DrawDiscorectangles() {
 
     if ((*it)->draw_type == 2) {
       for (int i=0; i<3; ++i)
-        color[i] = 255;
+        color[i] = (background_color_[0] < 1 ? 1 : 0.1);
       glColor4fv(color);
     }
     else {
@@ -646,7 +646,7 @@ void Graphics::DrawSpheros() {
 
     if ((*it)->draw_type == 2) {
       for (int i=0; i<3; ++i)
-        color[i] = 255;
+        color[i] = (background_color_[0] < 1 ? 1 : 0.1);
       glColor4fv(color);
     }
     else {

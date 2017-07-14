@@ -59,11 +59,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
+          else if (param_name.compare("f_shrink_to_pause")==0) {
+            params->filament.f_shrink_to_pause = jt->second.as<double>();
+          }
           else if (param_name.compare("diameter")==0) {
             params->filament.diameter = jt->second.as<double>();
-          }
-          else if (param_name.compare("f_pause_to_shrink")==0) {
-            params->filament.f_pause_to_shrink = jt->second.as<double>();
           }
           else if (param_name.compare("length")==0) {
             params->filament.length = jt->second.as<double>();
@@ -98,11 +98,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("f_shrink_to_grow")==0) {
             params->filament.f_shrink_to_grow = jt->second.as<double>();
           }
-          else if (param_name.compare("f_shrink_to_pause")==0) {
-            params->filament.f_shrink_to_pause = jt->second.as<double>();
-          }
           else if (param_name.compare("f_pause_to_grow")==0) {
             params->filament.f_pause_to_grow = jt->second.as<double>();
+          }
+          else if (param_name.compare("f_pause_to_shrink")==0) {
+            params->filament.f_pause_to_shrink = jt->second.as<double>();
           }
           else if (param_name.compare("f_grow_to_pause")==0) {
             params->filament.f_grow_to_pause = jt->second.as<double>();
@@ -350,6 +350,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("n_dim")==0) {
         params->n_dim = it->second.as<int>();
       }
+      else if (param_name.compare("graph_background")==0) {
+        params->graph_background = it->second.as<int>();
+      }
       else if (param_name.compare("n_periodic")==0) {
         params->n_periodic = it->second.as<int>();
       }
@@ -359,17 +362,14 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("system_radius")==0) {
         params->system_radius = it->second.as<double>();
       }
-      else if (param_name.compare("delta")==0) {
-        params->delta = it->second.as<double>();
-      }
       else if (param_name.compare("n_steps")==0) {
         params->n_steps = it->second.as<long>();
       }
+      else if (param_name.compare("delta")==0) {
+        params->delta = it->second.as<double>();
+      }
       else if (param_name.compare("cell_length")==0) {
         params->cell_length = it->second.as<double>();
-      }
-      else if (param_name.compare("graph_background")==0) {
-        params->graph_background = it->second.as<int>();
       }
       else if (param_name.compare("n_update_cells")==0) {
         params->n_update_cells = it->second.as<int>();
@@ -448,6 +448,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("stoch_flag")==0) {
         params->stoch_flag = it->second.as<int>();
+      }
+      else if (param_name.compare("species_insertion_failure_threshold")==0) {
+        params->species_insertion_failure_threshold = it->second.as<int>();
+      }
+      else if (param_name.compare("uniform_crystal")==0) {
+        params->uniform_crystal = it->second.as<int>();
       }
       else if (param_name.compare("thermo_flag")==0) {
         params->thermo_flag = it->second.as<int>();

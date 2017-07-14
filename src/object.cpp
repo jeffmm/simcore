@@ -96,6 +96,41 @@ void Object::InsertRandomOriented(double *u){
   SetOrientation(u);
 }
 
+void Object::InsertAt(double *pos, double *u) {
+  // Check to make sure position is inside unit cell if non-periodic
+  double R = space_->radius;
+  bool out_of_bounds = false;
+  if (space_->type.compare("sphere")==0) {
+    double rsq = 0;
+    for (int i=0; i<n_dim_; ++i) {
+      rsq += pos[i]*pos[i];
+    }
+    // Check that r^2 <= R^2
+    if (rsq>R*R) {
+      out_of_bounds = true;
+    }
+  }
+  if (space_->type.compare("box")==0) {
+    // Make sure each dimension of position, x, y etc is within the box radius
+    for (int i=0; i<n_dim_; ++i) {
+      if (ABS(pos[i]) > R) {
+        out_of_bounds = true;
+      }
+    }
+  }
+  if (space_->type.compare("budding")==0) {
+    // TODO Add checks to make sure object is placed within budding boundary...
+    // right now, just trust user knows what they are doing.
+  }
+  if (out_of_bounds) {
+    error_exit("ERROR: Object %d placed outside of system unit cell! System radius: %2.2f, pos: {%2.2f %2.2f %2.2f}\n",GetOID(),R,pos[0],pos[1],pos[2]);
+  }
+  SetPosition(pos);
+  normalize_vector(u,n_dim_);
+  SetOrientation(u);
+  UpdatePeriodic();
+}
+
 void Object::Draw(std::vector<graph_struct*> * graph_array) {
   for (int i=0;i<space_->n_periodic; ++i)
     g_.r[i] = scaled_position_[i];
