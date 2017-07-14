@@ -42,6 +42,8 @@ stoch_flag: [1, int]
 thermo_flag: [0, int]
 n_thermo: [1000, int]
 interaction_flag: [1, int]
+species_insertion_failure_threshold: [10000,int]
+uniform_crystal: [0, int]
 species:
   num: [0, int]
   insertion_type: [random, string]

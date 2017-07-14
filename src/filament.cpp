@@ -86,13 +86,18 @@ void Filament::Init() {
     InitSpiral2D();
     return;
   }
+  bool random_insert = false;
   if (params_->filament.insertion_type.compare("random")==0) {
     InsertRandom();
+    random_insert = true;
   }
-  else if(params_->filament.insertion_type.compare("oriented")==0) {
+  else if(params_->filament.insertion_type.compare("random_oriented")==0) {
     InsertRandom();
     std::fill(orientation_,orientation_+3,0.0);
     orientation_[n_dim_-1]=1.0;
+    random_insert = true;
+  }
+  else if (params_->filament.insertion_type.compare("simple_crystal")==0) {
   }
   else {
     error_exit(" Insertion type not recognized for filaments. Exiting.\n");
@@ -105,13 +110,31 @@ void Filament::Init() {
     site->SetOrientation(orientation_);
     for (int i=0; i<n_dim_; ++i)
       position_[i] = position_[i] + orientation_[i] * child_length_;
-    GenerateProbableOrientation();
+    if (random_insert)
+      GenerateProbableOrientation();
   }
   UpdatePrevPositions();
   CalculateAngles();
   UpdateBondPositions();
   SetDiffusion();
   poly_state_ = GROW;
+}
+
+void Filament::InsertAt(double *pos, double *u) {
+  std::copy(pos, pos+3,position_);
+  std::copy(u,u+3,orientation_);
+  for (int i=0; i<n_dim_; ++i) {
+    position_[i] = position_[i] - 0.5*orientation_[i]*length_;
+  }
+  for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
+    site->SetPosition(position_);
+    site->SetOrientation(orientation_);
+    for (int i=0; i<n_dim_; ++i)
+      position_[i] = position_[i] + orientation_[i] * child_length_;
+  }
+  UpdatePrevPositions();
+  CalculateAngles();
+  UpdateBondPositions();
 }
 
 void Filament::DiffusionValidationInit() {

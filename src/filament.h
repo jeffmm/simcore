@@ -83,6 +83,7 @@ class Filament : public Composite<Site,Bond> {
       InitElements(params, space);
     }
     virtual void Init();
+    virtual void InsertAt(double *pos, double *u);
     void DiffusionValidationInit();
     virtual void Integrate(bool midstep);
     virtual double const * const GetDrTot();

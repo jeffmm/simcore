@@ -16,7 +16,7 @@ class Object {
     unsigned int rid_;
     SID sid_;
     int n_dim_;
-    int draw_type_ = 2; // 0 for single color, 1 for orientation color, 2 for don't care
+    int draw_type_ = 0; // 0 for single color, 1 for orientation color, 2 for don't care
     double position_[3],
            scaled_position_[3],
            prev_position_[3],
@@ -49,6 +49,7 @@ class Object {
     void InitOID() { oid_ = ++next_oid_;}
     void InitCID() { cid_ = oid_;}
     void InitRID() { rid_ = ++next_rid_;}
+    virtual void InsertAt(double *pos, double *u);
     void SetPosition(double const *const pos) {
       std::copy(pos, pos+n_dim_, position_);
     }

@@ -19,6 +19,7 @@ class BrBead : public Simple {
     BrBead(system_parameters *params, space_struct *space, long seed, SID sid) : Simple(params, space, seed, sid) {
       diameter_=params->br_bead.diameter;
       driving_factor_ = params->br_bead.driving_factor;
+      draw_type_ = DrawTypeInt(params->br_bead.draw_type);
       SetDiffusion();
     }
     void SetDiffusion();
