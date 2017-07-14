@@ -143,21 +143,45 @@ void Simulation::InitSpecies() {
 void Simulation::InsertSpecies(bool force_overlap) {
   // Assuming Random insertion for now
   for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
+    // Check for random insertion
+    if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
+      // Insertion not random, force overlap
+      force_overlap = true;
+    }
     int num = (*spec)->GetNInsert();
+    bool not_done = true;
     int inserted = 0;
     while(num != inserted) {
-      (*spec)->AddMember();
-      inserted++;
-      if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
-        (*spec)->PopMember();
-        inserted--;
+      inserted = 0;
+      int num_failures = 0;
+      while(num != inserted) {
+        (*spec)->AddMember();
+        inserted++;
+        if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+          (*spec)->PopMember();
+          inserted--;
+          num_failures++;
+        }
+        else {
+          printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
+          fflush(stdout);
+        }
+        if (num_failures>params_.species_insertion_failure_threshold) {
+          break;
+        }
       }
-      else {
-        printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
-        fflush(stdout);
+      if (num != inserted) {
+        printf("  Species insertion failure threshold reached. Reattempting insertion.\n");
+        (*spec)->PopAll();
       }
     }
     printf("\n");
+    if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
+      (*spec)->ArrangeMembers();
+      if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+        error_exit("ERROR! Species inserted with deterministic insertion type is overlapping!\n");
+      }
+    }
   }
 }
 

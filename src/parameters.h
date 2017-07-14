@@ -20,8 +20,8 @@ class species_parameters {
 
 class filament_parameters : public species_parameters {
   public:
+    double f_shrink_to_pause = 0.0;
     double diameter = 1;
-    double f_pause_to_shrink = 0.0;
     double length = 40;
     double persistence_length = 400;
     double max_length = 500;
@@ -33,8 +33,8 @@ class filament_parameters : public species_parameters {
     int dynamic_instability_flag = 0;
     int force_induced_catastrophe_flag = 0;
     double f_shrink_to_grow = 0.017;
-    double f_shrink_to_pause = 0.0;
     double f_pause_to_grow = 0.0;
+    double f_pause_to_shrink = 0.0;
     double f_grow_to_pause = 0.0;
     double f_grow_to_shrink = 0.00554;
     int metric_forces = 1;
@@ -76,13 +76,13 @@ class system_parameters {
     int n_random = 1;
     std::string run_name = "sc";
     int n_dim = 3;
+    int graph_background = 1;
     int n_periodic = 0;
     int boundary_type = 0;
     double system_radius = 100;
-    double delta = 0.001;
     long n_steps = 1000000;
+    double delta = 0.001;
     double cell_length = 10;
-    int graph_background = 1;
     int n_update_cells = 10;
     int graph_flag = 0;
     int n_graph = 1000;
@@ -109,6 +109,8 @@ class system_parameters {
     int pressure_time = 100;
     double compressibility = 1;
     int stoch_flag = 1;
+    int species_insertion_failure_threshold = 10000;
+    int uniform_crystal = 0;
     int thermo_flag = 0;
     int n_thermo = 1000;
     int interaction_flag = 1;
