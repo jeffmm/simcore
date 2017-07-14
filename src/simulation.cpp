@@ -151,6 +151,7 @@ void Simulation::InsertSpecies(bool force_overlap) {
     int num = (*spec)->GetNInsert();
     bool not_done = true;
     int inserted = 0;
+    int num_attempts = 0;
     while(num != inserted) {
       inserted = 0;
       int num_failures = 0;
@@ -174,11 +175,14 @@ void Simulation::InsertSpecies(bool force_overlap) {
         printf("  Species insertion failure threshold reached. Reattempting insertion.\n");
         (*spec)->PopAll();
       }
+      if (++num_attempts > 20) {
+        error_exit("ERROR! Unable to insert species randomly within the hard-coded attempt threshold of 20!\n");
+      }
     }
     printf("\n");
     if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
       (*spec)->ArrangeMembers();
-      if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+      if (!(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
         error_exit("ERROR! Species inserted with deterministic insertion type is overlapping!\n");
       }
     }
