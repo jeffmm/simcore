@@ -114,6 +114,7 @@ class system_parameters {
     int thermo_flag = 0;
     int n_thermo = 1000;
     int interaction_flag = 1;
+    int n_steps_equil = 0;
     species_parameters species;
     filament_parameters filament;
     hard_rod_parameters hard_rod;
