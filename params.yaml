@@ -9,6 +9,7 @@ n_periodic: 2
 boundary_type: 0
 delta: 0.00003
 n_steps: 10000000
+n_steps_equil: 10000
 system_radius: 100
 graph_flag: 1
 n_graph: 500
@@ -23,13 +24,13 @@ stoch_flag: 1
 interaction_flag: 1
 draw_boundary: 0
 graph_background: 1
-species_insertion_failure_threshold: 1000
+species_insertion_failure_threshold: 10000
 uniform_crystal: 0
 filament:
   color: 6
   draw_type: orientation
-  insertion_type: random
-  num: 100
+  insertion_type: simple_crystal
+  num: 200
   overlap: 0
   diameter: 1
   spiral_flag: 0

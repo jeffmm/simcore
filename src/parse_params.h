@@ -464,6 +464,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("interaction_flag")==0) {
         params->interaction_flag = it->second.as<int>();
       }
+      else if (param_name.compare("n_steps_equil")==0) {
+        params->n_steps_equil = it->second.as<int>();
+      }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";
       }
