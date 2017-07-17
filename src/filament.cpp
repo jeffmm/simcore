@@ -28,6 +28,8 @@ void Filament::SetParameters(system_parameters *params) {
   friction_ratio_ = params->filament.friction_ratio;
   metric_forces_ = params->filament.metric_forces;
   stoch_flag_ = params->stoch_flag; // determines whether we are using stochastic forces
+  eq_steps_ = params->n_steps_equil;
+  eq_steps_count_ = 0;
 }
 
 void Filament::InitElements(system_parameters *params, space_struct *space) {
@@ -248,6 +250,7 @@ void Filament::UpdatePosition(bool midstep) {
   ApplyForcesTorques();
   Integrate(midstep);
   UpdateAvgPosition();
+  eq_steps_count_++;
 }
 
 /*******************************************************************************
@@ -642,13 +645,15 @@ void Filament::ApplyForcesTorques() {
     elements_[i+1].AddForce(site_force);
     elements_[i+1].AddForce(pure_torque);
     // Add driving (originating from the com of the bond)
-    double f_dr[3];
     // The driving factor is a force per unit length,
     // so need to multiply by bond length to get f_dr on bond
-    for (int j=0; j<n_dim_; ++j)
-      f_dr[j] = 0.5*u[j]*driving_factor_ * child_length_;
-    elements_[i].AddForce(f_dr);
-    elements_[i+1].AddForce(f_dr);
+    if (eq_steps_count_ > eq_steps_) {
+      double f_dr[3];
+      for (int j=0; j<n_dim_; ++j)
+        f_dr[j] = 0.5*u[j]*driving_factor_ * child_length_;
+      elements_[i].AddForce(f_dr);
+      elements_[i+1].AddForce(f_dr);
+    }
   }
 }
 

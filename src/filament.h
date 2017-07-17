@@ -21,7 +21,9 @@ class Filament : public Composite<Site,Bond> {
         diffusion_validation_flag_,
         spiral_flag_,
         stoch_flag_,
-        metric_forces_;
+        metric_forces_,
+        eq_steps_,
+        eq_steps_count_ = 0;
     double max_length_,
            min_length_,
            max_child_length_,
