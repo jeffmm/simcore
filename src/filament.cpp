@@ -88,18 +88,38 @@ void Filament::Init() {
     InitSpiral2D();
     return;
   }
-  bool random_insert = false;
+  bool probable_conformation = false;
   if (params_->filament.insertion_type.compare("random")==0) {
     InsertRandom();
-    random_insert = true;
+    probable_conformation = true;
   }
   else if(params_->filament.insertion_type.compare("random_oriented")==0) {
     InsertRandom();
     std::fill(orientation_,orientation_+3,0.0);
     orientation_[n_dim_-1]=1.0;
-    random_insert = true;
+    probable_conformation = true;
+  }
+  else if(params_->filament.insertion_type.compare("centered_random")==0) {
+    InsertRandom();
+    std::fill(position_,position_+3,0.0);
+    for (int i=0;i<n_dim_; ++i) {
+      position_[i] = position_[i] - 0.5*length_*orientation_[i];
+    }
+    probable_conformation = true;
+  }
+  else if(params_->filament.insertion_type.compare("centered_oriented")==0) {
+    InsertRandom();
+    std::fill(position_,position_+3,0.0);
+    std::fill(orientation_,orientation_+3,0.0);
+    orientation_[n_dim_-1]=1.0;
+    for (int i=0;i<n_dim_; ++i) {
+      position_[i] = position_[i] - 0.5*length_*orientation_[i];
+    }
+    // We still want to sample probable conformations
+    probable_conformation = true; 
   }
   else if (params_->filament.insertion_type.compare("simple_crystal")==0) {
+    probable_conformation = false;
   }
   else {
     error_exit(" Insertion type not recognized for filaments. Exiting.\n");
@@ -112,7 +132,7 @@ void Filament::Init() {
     site->SetOrientation(orientation_);
     for (int i=0; i<n_dim_; ++i)
       position_[i] = position_[i] + orientation_[i] * child_length_;
-    if (random_insert)
+    if (probable_conformation)
       GenerateProbableOrientation();
   }
   UpdatePrevPositions();

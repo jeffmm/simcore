@@ -92,6 +92,7 @@ class Species : public SpeciesBase {
     virtual void PopAll();
     virtual void ArrangeMembers();
     virtual void SimpleCrystalArrangement();
+    virtual void CenteredOrientedArrangement();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePositions();
     virtual std::vector<Simple*> GetSimples();
@@ -356,8 +357,22 @@ template<typename T>
 void Species<T>::ArrangeMembers() {
   if (GetInsertionType().compare("simple_crystal") == 0)
     SimpleCrystalArrangement();
+  else if (GetInsertionType().compare("centered_oriented") == 0 )
+    CenteredOrientedArrangement();
   else
-    warning("WARNING! Arrangement not recognized and ArrangeMembers not overwritten by species!\n");
+    warning("Arrangement not recognized and ArrangeMembers not overwritten by species!\n");
+}
+
+template<typename T>
+void Species<T>::CenteredOrientedArrangement() {
+  // This is redundant for filaments, since they have already inserted themselves properly.
+  double pos[3] = {0,0,0};
+  double u[3] = {0,0,0};
+  u[params_->n_dim-1] = 1.0;
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    (*it)->SetPosition(pos);
+    (*it)->SetOrientation(u);
+  }
 }
 
 template<typename T>
