@@ -52,7 +52,7 @@ class Simulation {
     void ScaleSpeciesPositions();
     std::vector<graph_struct*> graph_array;
     void PrintComplete();
-    void InsertSpecies(bool force_overlap = false);
+    void InsertSpecies(bool force_overlap = false, bool processing = false);
     void RunProcessing(int run_analyses);
     void InitGraphics();
     void InitProcessing(int graphics, int make_movie, int run_analyses, int use_posits);
