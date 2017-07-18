@@ -94,7 +94,7 @@ void Simulation::InitSimulation() {
   space_.Init(&params_);
   InitSpecies();
   iengine_.Init(&params_, &species_, space_.GetStruct());
-  InsertSpecies(params_.load_checkpoint);
+  InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
   InitOutputs();
   if (params_.graph_flag) {
     InitGraphics();
@@ -140,11 +140,11 @@ void Simulation::InitSpecies() {
   }
 }
 
-void Simulation::InsertSpecies(bool force_overlap) {
+void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   // Assuming Random insertion for now
   for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
     // Check for random insertion
-    if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
+    if (processing || (*spec)->GetInsertionType().find("random") == std::string::npos) {
       // Insertion not random, force overlap
       force_overlap = true;
     }
@@ -179,11 +179,13 @@ void Simulation::InsertSpecies(bool force_overlap) {
         error_exit("ERROR! Unable to insert species randomly within the hard-coded attempt threshold of 20!\n");
       }
     }
-    printf("\n");
-    if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
-      (*spec)->ArrangeMembers();
-      if (!(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
-        error_exit("ERROR! Species inserted with deterministic insertion type is overlapping!\n");
+    if (!processing) {
+      printf("\n");
+      if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
+        (*spec)->ArrangeMembers();
+        if (!(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+          error_exit("ERROR! Species inserted with deterministic insertion type is overlapping!\n");
+        }
       }
     }
   }
@@ -267,7 +269,7 @@ void Simulation::InitProcessing(int graphics, int make_movie, int run_analyses, 
   rng_.init(params_.seed);
   space_.Init(&params_);
   InitSpecies();
-  InsertSpecies(true);
+  InsertSpecies(true, true);
   InitInputs(use_posits);
   if (graphics || make_movie) {
     params_.graph_flag = 1;
