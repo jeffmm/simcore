@@ -28,9 +28,9 @@ species_insertion_failure_threshold: 10000
 uniform_crystal: 0
 filament:
   color: 6
-  draw_type: orientation
-  insertion_type: simple_crystal
-  num: 200
+  draw_type: bw
+  insertion_type: centered_random
+  num: 1
   overlap: 0
   diameter: 1
   spiral_flag: 0
@@ -41,7 +41,7 @@ filament:
   n_posit: 100
   n_spec: 100
   n_checkpoint: 100
-  driving_factor: 100
+  driving_factor: 0
   length: 50
   persistence_length: 1000
   theta_analysis: 0
