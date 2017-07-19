@@ -50,7 +50,7 @@ void Object::InsertRandom() {
   double R = space_->radius;
   // XXX Check to make sure object fits inside unit cell if non-periodic
   if (R - buffer < 0)
-    error_exit("ERROR: Object #%d is too large to place in system.\n system radius: %2.2f, buffer: %2.2f\n",GetOID(), R, buffer);
+    error_exit("Object #%d is too large to place in system.\n system radius: %2.2f, buffer: %2.2f",GetOID(), R, buffer);
   if (space_->type.compare("sphere")==0) {
     generate_random_unit_vector(n_dim_, position_, rng_.r);
     mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer);
@@ -123,7 +123,7 @@ void Object::InsertAt(double *pos, double *u) {
     // right now, just trust user knows what they are doing.
   }
   if (out_of_bounds) {
-    error_exit("ERROR: Object %d placed outside of system unit cell! System radius: %2.2f, pos: {%2.2f %2.2f %2.2f}\n",GetOID(),R,pos[0],pos[1],pos[2]);
+    error_exit("Object %d placed outside of system unit cell! System radius: %2.2f, pos: {%2.2f %2.2f %2.2f}",GetOID(),R,pos[0],pos[1],pos[2]);
   }
   SetPosition(pos);
   normalize_vector(u,n_dim_);

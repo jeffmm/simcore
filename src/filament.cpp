@@ -33,13 +33,23 @@ void Filament::SetParameters(system_parameters *params) {
 }
 
 void Filament::InitElements(system_parameters *params, space_struct *space) {
-  n_bonds_ = (int) ceil(length_/max_child_length_);
-  if (n_bonds_ < 2) 
-    n_bonds_++;
-  n_sites_ = n_bonds_+1;
-  child_length_ = length_/n_bonds_;
+  child_length_ = 0;
+  do {
+    n_bonds_ = (int) ceil(length_/max_child_length_);
+    if (n_bonds_ < 2) 
+      n_bonds_++;
+    n_sites_ = n_bonds_+1;
+    child_length_ = length_/n_bonds_;
+    if (n_bonds_ == 2 && child_length_ <= diameter_) {
+      error_exit("child_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
+    }
+    if (child_length_ <= diameter_) {
+      max_child_length_ += 0.1*max_child_length_;
+      warning("child_length <= diameter, increasing max_child_length to %2.2f",max_child_length_);
+    }
+  } while (child_length_ <= diameter_);
   if (length_/n_bonds_ < min_length_) {
-    error_exit("ERROR: min_length_ of flexible filament segments too large for filament length.\n");
+    error_exit("min_length_ of flexible filament segments too large for filament length.");
   }
   // Initialize sites
   for (int i=0; i<n_sites_; ++i) {
@@ -122,7 +132,7 @@ void Filament::Init() {
     probable_conformation = false;
   }
   else {
-    error_exit(" Insertion type not recognized for filaments. Exiting.\n");
+    error_exit("Insertion type not recognized for filaments. Exiting.");
   }
   //generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
@@ -184,7 +194,7 @@ void Filament::DiffusionValidationInit() {
 // Place a spool centered at the origin
 void Filament::InitSpiral2D() {
   if (n_dim_ > 2)
-    error_exit("  3D Spirals not coded yet\n.");
+    error_exit("3D Spirals not coded yet.");
   double prev_pos[3] = {0, 0, 0};
   std::fill(position_, position_+3, 0);
   elements_[n_sites_-1].SetPosition(prev_pos);
@@ -688,7 +698,7 @@ void Filament::UpdateBondPositions() {
   double pos[3];
   int i_site = 0;
   if (elements_.size() != v_elements_.size() + 1)
-    error_exit("ERROR: n_bonds != n_sites - 1 in flexible filament!\n");
+    error_exit("n_bonds != n_sites - 1 in flexible filament!");
   for (auto bond=v_elements_.begin(); bond!=v_elements_.end(); ++bond) {
     double const * const r = elements_[i_site].GetPosition();
     double const * const u = elements_[i_site].GetOrientation();
@@ -743,7 +753,7 @@ void Filament::GetAvgOrientation(double * au) {
     size++;
   }
   if (size == 0)
-    error_exit("ERROR! Something went wrong in GetAvgOrientation!\n");
+    error_exit("Something went wrong in GetAvgOrientation!");
   for (int i=0; i<n_dim_; ++i)
     avg_u[i]/=size;
   std::copy(avg_u, avg_u+3, au);
@@ -759,7 +769,7 @@ void Filament::GetAvgPosition(double * ap) {
     size++;
   }
   if (size == 0)
-    error_exit("ERROR! Something went wrong in GetAvgPosition!\n");
+    error_exit("Something went wrong in GetAvgPosition!");
   for (int i=0; i<n_dim_; ++i)
     avg_p[i]/=size;
   std::copy(avg_p, avg_p+3, ap);
@@ -1137,7 +1147,7 @@ void FilamentSpecies::RunSpiralAnalysis() {
   }
   else {
     early_exit = true;
-    std::cout << " Error! Problem opening file in RunSpiralAnalysis! Exiting.\n";
+    std::cout << "ERROR: Problem opening file in RunSpiralAnalysis! Exiting.\n";
   }
 }
 
@@ -1179,7 +1189,7 @@ void FilamentSpecies::RunThetaAnalysis() {
         bin_number = 0;
       }
       else if (bin_number > n_bins_ && bin_number < 0) {
-        error_exit("Something went wrong in RunThetaAnalysis!\n");
+        error_exit("Something went wrong in RunThetaAnalysis!");
       }
       theta_histogram_[i][bin_number]++;
     }

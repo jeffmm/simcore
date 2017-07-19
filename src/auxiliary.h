@@ -152,7 +152,7 @@ void separation_vector(int n_dim, int n_periodic, double const * const r1, doubl
 void cross_product(double const * const a, double const * const b, double *c, int n_dim);
 void normalize_vector(double *a, int n_dim);
 void error_exit(const char *error_msg, ...);
-void warning(const char *warning_msg);
+void warning(const char *warning_msg, ...);
 void tridiagonal_solver(std::vector<double> *a, std::vector<double> *b, std::vector<double> *c, std::vector<double> *d, int n);
 void rotate_3d_vector(double theta, double *a, double *b);
 void invert_sym_2d_matrix(double *a, double *b); 
