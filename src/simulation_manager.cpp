@@ -34,7 +34,7 @@ void SimulationManager::InitManager(run_options run_opts) {
     pnode_["n_graph"] = run_opts_.n_graph;
   }
   if ((run_opts_.m_flag || run_opts_.a_flag) && n_runs_ > 1)
-    error_exit("ERROR: Attempted to run movies/analysis on multiple files.\n");
+    error_exit("Attempted to run movies/analysis on multiple files.");
   rng_.init(seed);
 }
 
@@ -162,7 +162,7 @@ void SimulationManager::CheckRandomParams() {
    *************************************/
 double SimulationManager::GetRandomParam(std::string rtype, double min, double max) {
   if (max == min) 
-    error_exit("ERROR: Min and max value of parameter randomization sequence are equal.\n");
+    error_exit("Min and max value of parameter randomization sequence are equal.");
   if (rtype.compare("R") == 0) 
     return (min+(max-min)*gsl_rng_uniform_pos(rng_.r));
   else if (rtype.compare("RINT")==0) 
@@ -170,7 +170,7 @@ double SimulationManager::GetRandomParam(std::string rtype, double min, double m
   else if (rtype.compare("RLOG")==0) 
     return pow(10.0, min+(max-min)*gsl_rng_uniform_pos(rng_.r));
   else 
-    error_exit("ERROR: Parameter randomization type not recognized.\n");
+    error_exit("Parameter randomization type not recognized.");
 }
 
 /****************************************
@@ -189,7 +189,7 @@ void SimulationManager::CountVariations() {
   }
   n_var_*=n_random_;
   if ((run_opts_.m_flag || run_opts_.a_flag) && n_var_ > 1)
-    error_exit("ERROR: Attempted to run movies/analysis on multiple files.\n");
+    error_exit("Attempted to run movies/analysis on multiple files.");
   if (n_var_ > 1)
     std::cout << "Initializing batch " << run_name_ << " of " << n_var_*n_runs_ << " simulations with " << n_var_ << " variations of " << n_runs_ << " runs each.\n";
   else if (n_runs_ > 1)

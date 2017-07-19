@@ -61,7 +61,7 @@ class PositReader {
     }
     void AllocateObjs() {
       if (max_objs_ < 0)
-        error_exit("ERROR: max_objs_ unallocated in posit reader!\n");
+        error_exit("max_objs_ unallocated in posit reader!");
       position_ = new double[max_objs_*3];
       scaled_position_ = new double[max_objs_*3];
       orientation_ = new double[max_objs_*3];

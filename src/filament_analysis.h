@@ -136,10 +136,10 @@ class FilamentAnalysis {
         preader_.GetNObjs(&nobj);
         if (nobj != n_objs_) {
           printf("n_objs_new: %d, n_objs_prev: %d\n",nobj, n_objs_);
-          error_exit("ERROR: Number of objects changed in diffusion analysis!\n");
+          error_exit("Number of objects changed in diffusion analysis!");
         }
         else if (time_ > n_time_)
-          error_exit("ERROR: Didn't hit EOF when expected in diffusion analysis.\n");
+          error_exit("Didn't hit EOF when expected in diffusion analysis.");
         else {
           preader_.GetDiameter(diameters_);
           preader_.GetLength(lengths_);

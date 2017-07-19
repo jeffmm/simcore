@@ -181,13 +181,13 @@ class DiffusionAnalysis {
              scaled_pos_, orientations_, diameters_, lengths_)) {
         if (nobj != n_objs_) {
           printf("n_objs_new: %d, n_objs_prev: %d\n",nobj, n_objs_);
-          error_exit("ERROR: Number of objects changed in diffusion analysis!\n");
+          error_exit("Number of objects changed in diffusion analysis!");
         }
         else if (time_ > n_time_ || time_ > time_avg_interval_)
-          error_exit("ERROR: Didn't hit EOF when expected in diffusion analysis.\n");
+          error_exit("Didn't hit EOF when expected in diffusion analysis.");
         if (time_ == time_avg_interval_) {
           if (n_interval_ == 1)
-            error_exit("Something went wrong in diffusion analysis\n");
+            error_exit("Something went wrong in diffusion analysis");
           start_calc=true;
           SetInitPos();
           time_=0;

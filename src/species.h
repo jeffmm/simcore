@@ -389,7 +389,7 @@ void Species<T>::SimpleCrystalArrangement() {
   double nZ_max = (n_dim == 3 ? nX_max : 1);
   double N = nX_max*nY_max*nZ_max;
   if (n_members_ > N) {
-    error_exit("ERROR: Number of members in species exceeds maximum possible for crystal in system radius! Max possible: %d\n", (int) N);
+    error_exit("Number of members in species exceeds maximum possible for crystal in system radius! Max possible: %d", (int) N);
   }
   double fraction = N/n_members_;
   if (fraction < 1) fraction = 1;
@@ -448,14 +448,14 @@ void Species<T>::SimpleCrystalArrangement() {
       pos[0] += d + diff_x;
       if (++insert_x == nX_max) {
         if (inserted < n_members_ && n_dim == 2) {
-          error_exit("ERROR! Ran out of room while arranging crystal in 2D! Arranged %d/%d\n",inserted,n_members_);
+          error_exit("Ran out of room while arranging crystal in 2D! Arranged %d/%d",inserted,n_members_);
         }
         else if (n_dim == 2) continue;
         insert_x = 0;
         pos[0] = -R+0.5*d;
         pos[1] += d + diff_z;
         if (++insert_z == nZ_max && inserted < n_members_) {
-          error_exit("ERROR! Ran out of room while arranging crystal in 3D! Arranged %d/%d\n",inserted,n_members_);
+          error_exit("Ran out of room while arranging crystal in 3D! Arranged %d/%d",inserted,n_members_);
         }
       }
     }

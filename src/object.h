@@ -128,7 +128,7 @@ class Object {
     virtual void UpdatePeriodic();
     virtual void UpdatePosition() {}
     virtual void UpdatePositionMP() {
-      error_exit("ERROR: UpdatePositionMP() needs to be overwritten. Exiting!\n");
+      error_exit("UpdatePositionMP() needs to be overwritten. Exiting!");
     }
     virtual void SetColor(double const c, int dtype) {
       color_ = c;
