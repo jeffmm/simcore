@@ -176,7 +176,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         (*spec)->PopAll();
       }
       if (++num_attempts > 20) {
-        error_exit("ERROR! Unable to insert species randomly within the hard-coded attempt threshold of 20!\n");
+        error_exit("Unable to insert species randomly within the hard-coded attempt threshold of 20!\n");
       }
     }
     if (!processing) {
@@ -184,7 +184,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
         (*spec)->ArrangeMembers();
         if (!(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
-          error_exit("ERROR! Species inserted with deterministic insertion type is overlapping!\n");
+          error_exit("Species inserted with deterministic insertion type is overlapping!");
         }
       }
     }

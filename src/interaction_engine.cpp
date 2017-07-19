@@ -39,8 +39,6 @@ void InteractionEngine::Interact() {
 #endif
   // Apply forces, torques, and potentials in serial
   ApplyInteractions();
-  //if (overlap_)
-    //error_exit("ERROR: Overlap of elements detected.\n");
 }
 
 void InteractionEngine::UpdateSimples() {
@@ -87,7 +85,7 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   if (obj1->GetRID() == obj2->GetRID())  return;
   if (obj1->GetCID() == obj2->GetCID())  return;
   if (obj1->GetOID() == obj2->GetOID()) 
-    error_exit("ERROR! Object %d attempted self-interaction!\n", obj1->GetOID());
+    error_exit("Object %d attempted self-interaction!", obj1->GetOID());
 
   //interactionmindist imd;
   MinimumDistance(obj1,obj2,ix,space_);
