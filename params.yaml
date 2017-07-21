@@ -1,6 +1,6 @@
 # params.yaml
 ---
-seed : 265171921029335
+seed : 19559643324640
 run_name: test
 n_runs: 1
 n_random: 1
@@ -28,9 +28,9 @@ species_insertion_failure_threshold: 10000
 uniform_crystal: 0
 filament:
   color: 6
-  draw_type: blah
+  draw_type: bw
   insertion_type: random
-  num: 1
+  num: 0
   overlap: 0
   diameter: 1
   spiral_flag: 0
@@ -46,3 +46,8 @@ filament:
   persistence_length: 500
   theta_analysis: 0
   lp_analysis: 0
+br_bead:
+  diameter: 10
+  draw_type: bw
+  num: 1
+  insertion_type: centered_oriented
