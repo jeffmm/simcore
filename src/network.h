@@ -1,13 +1,13 @@
-#ifndef _SIMCORE_NETWORK_H_
-#define _SIMCORE_NETWORK_H_
+#ifndef _SIMCORE_MESH_H_
+#define _SIMCORE_MESH_H_
 
-class Network {
+class Mesh {
   protected:
     std::vector<Site> sites_;
     std::vector<Bond> bonds_;
 
   public:
-    Network() {}
+    Mesh() {}
 
 };
 
@@ -30,4 +30,4 @@ class Site {
 
 };
 
-#endif // _SIMCORE_NETWORK_H_
+#endif // _SIMCORE_MESH_H_
