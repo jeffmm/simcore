@@ -7,12 +7,12 @@ n_random: 1
 n_dim: 2
 n_periodic: 2
 boundary_type: 0
-delta: 0.00003
+delta: 0.0003
 n_steps: 10000000
-n_steps_equil: 10000
+n_steps_equil: 0
 system_radius: 100
 graph_flag: 1
-n_graph: 500
+n_graph: 100
 movie_flag: 0
 movie_directory: frames
 cell_length: 3
@@ -30,10 +30,10 @@ filament:
   color: 6
   draw_type: bw
   insertion_type: random
-  num: 0
+  num: 1
   overlap: 0
   diameter: 1
-  spiral_flag: 0
+  spiral_flag: 1
   max_child_length: 2
   posit_flag: 0
   spec_flag: 0
@@ -41,13 +41,9 @@ filament:
   n_posit: 100
   n_spec: 100
   n_checkpoint: 100
-  driving_factor: 0
+  driving_factor: 10
   length: 50
   persistence_length: 500
   theta_analysis: 0
   lp_analysis: 0
-br_bead:
-  diameter: 10
-  draw_type: bw
-  num: 1
-  insertion_type: centered_oriented
+
