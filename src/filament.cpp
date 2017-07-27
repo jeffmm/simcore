@@ -60,21 +60,23 @@ void Filament::InitElements(system_parameters *params, space_struct *space) {
   // Initialize bonds
   for (int i=0; i<n_bonds_; ++i) {
     Bond b(params, space, gsl_rng_get(rng_.r), GetSID());
+    // Individual bonds are unique rigid objects
     b.InitRID();
-    b.SetCID(b.GetRID());
-    //b.SetCID(GetCID());
-    //b.SetRID(GetCID());
+    // But belong to the same composite object
+    b.SetCID(GetCID());
     v_elements_.push_back(b);
   }
-  // Hack CIDs and RIDs to Set up interaction zones
-  for (int i=1; i<n_bonds_-1; ++i) {
-    if (i%2==0) 
-      v_elements_[i].SetRID(v_elements_[i-1].GetRID());
-    else
-      v_elements_[i].SetCID(v_elements_[i-1].GetCID());
-  }
-  v_elements_[n_bonds_-1].SetCID(v_elements_[n_bonds_-2].GetCID());
-  v_elements_[n_bonds_-1].SetRID(v_elements_[n_bonds_-2].GetRID());
+
+  // Old hack using CIDs and RIDs to set up interaction zones for the filament,
+  // this was used before we had neighbor ids 
+  //for (int i=1; i<n_bonds_-1; ++i) {
+    //if (i%2==0) 
+      //v_elements_[i].SetRID(v_elements_[i-1].GetRID());
+    //else
+      //v_elements_[i].SetCID(v_elements_[i-1].GetCID());
+  //}
+  //v_elements_[n_bonds_-1].SetCID(v_elements_[n_bonds_-2].GetCID());
+  //v_elements_[n_bonds_-1].SetRID(v_elements_[n_bonds_-2].GetRID());
 
   
   //Allocate control structures
@@ -695,27 +697,28 @@ void Filament::Draw(std::vector<graph_struct*> * graph_array) {
 }
 
 void Filament::UpdateBondPositions() {
-  double pos[3];
+  //double pos[3];
   int i_site = 0;
   if (elements_.size() != v_elements_.size() + 1)
     error_exit("n_bonds != n_sites - 1 in flexible filament!");
   for (auto bond=v_elements_.begin(); bond!=v_elements_.end(); ++bond) {
-    double const * const r = elements_[i_site].GetPosition();
-    double const * const u = elements_[i_site].GetOrientation();
-    for (int i=0; i<n_dim_; ++i)
-      pos[i] = r[i] + 0.5 * child_length_ * u[i];
-    bond->SetPosition(pos);
-    bond->SetOrientation(u);
-    bond->SetLength(child_length_);
-    bond->SetDiameter(diameter_);
-    bond->UpdatePeriodic();
-    bond->SetRigidPosition(bond->GetPosition());
-    bond->SetRigidScaledPosition(bond->GetScaledPosition());
-    bond->SetRigidOrientation(u);
-    bond->SetRigidLength(child_length_);
-    bond->SetRigidDiameter(diameter_);
+    bond->Init(&(elements_[i_site]),&(elements_[i_site+1]));
     i_site++;
   }
+    //double const * const r = elements_[i_site].GetPosition();
+    //double const * const u = elements_[i_site].GetOrientation();
+    //for (int i=0; i<n_dim_; ++i)
+      //pos[i] = r[i] + 0.5 * child_length_ * u[i];
+    //bond->SetPosition(pos);
+    //bond->SetOrientation(u);
+    //bond->SetLength(child_length_);
+    //bond->SetDiameter(diameter_);
+    //bond->UpdatePeriodic();
+    //bond->SetRigidPosition(bond->GetPosition());
+    //bond->SetRigidScaledPosition(bond->GetScaledPosition());
+    //bond->SetRigidOrientation(u);
+    //bond->SetRigidLength(child_length_);
+    //bond->SetRigidDiameter(diameter_);
 }
 
 // Scale bond and site positions from new unit cell

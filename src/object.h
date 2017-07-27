@@ -14,6 +14,7 @@ class Object {
   protected:
     unsigned int cid_;
     unsigned int rid_;
+    unsigned int nids_[2];
     SID sid_;
     int n_dim_;
     int draw_type_ = 0; // 0 for single color, 1 for orientation color, 2 for don't care
@@ -148,9 +149,15 @@ class Object {
     virtual double const GetKMCEnergy() {return kmc_energy_;}
     void SetCID(unsigned int const cid) {cid_=cid;}
     void SetRID(unsigned int const rid) {rid_=rid;}
+    void SetNIDS(unsigned int const nid1, unsigned int nid2) {
+      nids_[0] = nid1;
+      nids_[1] = nid2;
+    }
     unsigned int const GetOID() const {return oid_;}
     unsigned int const GetCID() {return cid_;}
     unsigned int const GetRID() {return rid_;}
+    unsigned int const GetNID1() {return nids_[0];}
+    unsigned int const GetNID2() {return nids_[1];}
     SID const GetSID() {return sid_;}
     virtual void Dump() {
       printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
@@ -230,6 +237,8 @@ class Rigid : public Simple {
            rigid_orientation_[3],
            rigid_length_,
            rigid_diameter_;
+    Simple * neighbor1_;
+    Simple * neighbor2_;
   public:
     Rigid(system_parameters *params, space_struct *space, long seed, SID sid) :
       Simple(params, space, seed, sid) {
@@ -240,6 +249,9 @@ class Rigid : public Simple {
         rigid_diameter_=1;
         is_rigid_ = true;
     }
+    Simple * GetNeighbor1() {return neighbor1_;}
+    Simple * GetNeighbor2() {return neighbor2_;}
+    void SetNeighbors(Simple * n1, Simple * n2) { neighbor1_ = n1; neighbor2_ = n2; }
     void SetRigidLength(double const len) {rigid_length_=len;}
     void SetRigidDiameter(double const d) {rigid_diameter_=d;}
     void SetRigidPosition(double const * const pos) {std::copy(pos, pos+3,rigid_position_);}
@@ -289,11 +301,6 @@ class Composite<T> : public Object {
       }
       return dr_max;
     }
-
-    //virtual void InitVirial(double *spec_virial){ 
-      //for (auto& elem : elements_)
-        //elem.InitVirial(spec_virial);
-    //}
 
     virtual void ZeroDrTot() {
       std::fill(dr_tot_,dr_tot_+3,0.0);
