@@ -82,12 +82,18 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   auto obj1 = pix->first.first;
   auto obj2 = pix->first.second;
   Interaction *ix = &(pix->second);
+  // Rigid objects don't self interact
   if (obj1->GetRID() == obj2->GetRID())  return;
-  if (obj1->GetCID() == obj2->GetCID())  return;
+  // Composite objects do self interact if they want to
+  // "Neighboring" simples don't interact
+  if (obj1->GetNID1() == obj2->GetNID1()) return;
+  if (obj1->GetNID2() == obj2->GetNID2()) return;
+  if (obj1->GetNID1() == obj2->GetNID2()) return;
+  if (obj1->GetNID2() == obj2->GetNID1()) return;
+  // Check to make sure we aren't self-interacting
   if (obj1->GetOID() == obj2->GetOID()) 
     error_exit("Object %d attempted self-interaction!", obj1->GetOID());
 
-  //interactionmindist imd;
   MinimumDistance(obj1,obj2,ix,space_);
 
   // XXX Don't interact if we have an overlap. This should eventually go to a max force routine

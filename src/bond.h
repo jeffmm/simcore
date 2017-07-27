@@ -2,6 +2,7 @@
 #define _SIMCORE_BOND_H_
 
 #include "species.h"
+#include "site.h"
 #include "object.h"
 #include "auxiliary.h"
 
@@ -19,7 +20,8 @@ class Bond : public Rigid {
         long seed, SID sid) : Rigid(params, space, seed, sid) {
       graph_diameter_ = params->graph_diameter;
     }
-    void Init();
+    void Init() {};
+    void Init(Site *s1, Site *s2);
     virtual void Draw(std::vector<graph_struct*> * graph_array);
 };
 
