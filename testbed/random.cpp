@@ -1,6 +1,6 @@
 #include "rng.h"
 
-void generate_random_unit_vector(double * vec, unsigned int const n_dim, gsl_rng * r) {
+void generate_random_unit_vector(double * vec, int const n_dim, gsl_rng * r) {
     double w = 1.0;
     if (n_dim == 3) {
       double z = 2.0 * gsl_rng_uniform_pos(r) - 1.0;
@@ -14,7 +14,7 @@ void generate_random_unit_vector(double * vec, unsigned int const n_dim, gsl_rng
     vec[1] = y;
 }
 
-void get_random_coordinate(double * pos, unsigned int const n_dim, double radius, boundary_type btype, gsl_rng * r) {
+void get_random_coordinate(double * pos, int const n_dim, double radius, boundary_type btype, gsl_rng * r) {
   if (btype == BOX) {
     for (int i=0; i<n_dim; ++i) {
       pos[i] = radius * (2.0*gsl_rng_uniform_pos(r)-1);

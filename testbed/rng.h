@@ -36,4 +36,7 @@ class RNG {
     }
 };
 
+void generate_random_unit_vector(double * vec, int const n_dim, gsl_rng * r);
+void get_random_coordinate(double * pos, int const n_dim, double radius, boundary_type btype, gsl_rng * r);
+
 #endif

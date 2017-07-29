@@ -1,6 +1,6 @@
 #include "object.h"
-void generate_random_unit_vector(double * vec, unsigned int const n_dim, gsl_rng * r);
-void get_random_coordinate(double * pos, unsigned int const n_dim, double radius, boundary_type btype, gsl_rng * r);
+void generate_random_unit_vector(double * vec, int const n_dim, gsl_rng * r);
+void get_random_coordinate(double * pos, int const n_dim, double radius, boundary_type btype, gsl_rng * r);
 
 
 /****************************
@@ -8,6 +8,15 @@ void get_random_coordinate(double * pos, unsigned int const n_dim, double radius
 ****************************/
 Object::Object() {
   oid_ = _next_oid_++; 
+  if (_params_ == nullptr) {
+    std::cerr << "ERROR! Object parameters not set before instantiation!\n";
+    exit(1);
+  }
+  params_ = _params_;
+  if (_n_dim_ == 0) {
+    std::cerr << "ERROR! Object dimensions not set before instantiation!\n";
+    exit(1);
+  }
   n_dim_ = _n_dim_;
   std::fill(position_,position_+3,0.0);
   std::fill(orientation_,orientation_+3,0.0);
@@ -17,10 +26,11 @@ Object::Object() {
   _seed_ = gsl_rng_get(rng_.r);
 }
 
-unsigned int Object::_next_oid_ = 0;
-unsigned int Object::_n_dim_ = 0;
+int Object::_next_oid_ = 0;
+int Object::_n_dim_ = 0;
 long Object::_seed_ = 7777777;
-unsigned int Object::GetOID() {
+system_parameters const * Object::_params_ = nullptr;
+int Object::GetOID() {
   return oid_;
 }
 double const * const Object::GetPosition() {
@@ -54,6 +64,19 @@ void Object::Report() {
   fprintf(stderr, "      l: %2.2f\n",length_);
   fprintf(stderr, "      d: %2.2f\n",diameter_);
 }
+// Main draw function, return struct of graphics info
+void Object::Draw(std::vector<graph_struct*> * graph_array) {
+  // Record current position, etc in graph_struct
+  for (int i=0; i<3; ++i) {
+    g_struct.r[i] = position_[i];
+    g_struct.u[i] = orientation_[i];
+  }
+  g_struct.length = length_;
+  g_struct.diameter = diameter_;
+  g_struct.draw_type = 1;
+  // push graph_struct into array
+  graph_array->push_back(&g_struct);
+}
 
 /**************************
 ** Site member functions **
@@ -67,7 +90,7 @@ Bond * Site::GetBond(int i) {
   }
   return bonds_[i];
 }
-Bond * Site::GetOtherBond(unsigned int bond_oid) {
+Bond * Site::GetOtherBond(int bond_oid) {
   for (std::vector<Bond*>::iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
     if ((*it)->GetOID() != bond_oid) {
       return (*it);
@@ -141,7 +164,7 @@ void Mesh::InitSiteAt(double * pos, double d) {
   Site s;
   s.SetPosition(pos);
   s.SetDiameter(d);
-  sites_.push_back(s);
+  AddSite(s);
 }
 void Mesh::InitBondAt(double * pos, double * u, double l, double d) {
   Site s1,s2;
@@ -160,6 +183,11 @@ void Mesh::InitBondAt(double * pos, double * u, double l, double d) {
   Bond b(&sites_[n_sites_-2],&sites_[n_sites_-1]);
   AddBond(b);
 }
+void Mesh::InitRandomSite(double d) {
+  double pos[3];
+  get_random_coordinate(pos,params_->n_dim,params_->system_radius,params_->boundary,rng_.r);
+  InitSiteAt(pos,d);
+}
 // Default d=1
 void Mesh::AddRandomBondAnywhere(double l, double d) {
   if (n_sites_ < 1) {
@@ -169,19 +197,41 @@ void Mesh::AddRandomBondAnywhere(double l, double d) {
   AddRandomBondToSite(l, i_site);
 }
 void Mesh::AddRandomBondToSite(double l, int i_site) {
-  if (i_site > n_sites_) {
-    std::cerr << "Error!\n";
+  if (i_site > n_sites_ || i_site < 0) {
+    std::cerr << "ERROR! Site index out of range in AddRandomBondToSite!\n";
+    exit(1);
   }
   double const d = sites_[i_site].GetDiameter();
   double const * const pos0 = sites_[i_site].GetPosition();
   double pos[3];
   generate_random_unit_vector(pos, n_dim_, rng_.r);
   for (int i=0; i<n_dim_; ++i) {
-    pos[i] *= l;
-    pos[i] += pos0[i];
+    pos[i] = pos0[i] + l * pos[i];
   }
   InitSiteAt(pos,d);
-
+  Bond b(&sites_[i_site],&sites_[n_sites_-1]);
+  AddBond(b);
+}
+void Mesh::AddRandomBondToTip(double l) {
+  AddRandomBondToSite(l,n_sites_-1);
+}
+void Mesh::AddBondToTip(double *u, double l) {
+  AddBondToSite(u,l,n_sites_-1);
+}
+void Mesh::AddBondToSite(double *u, double l, int i_site) {
+  if (i_site > n_sites_ || i_site < 0) {
+    std::cerr << "ERROR! Site index out of range in AddBondToSite!\n";
+    exit(1);
+  }
+  double const d = sites_[i_site].GetDiameter();
+  double const * const pos0 = sites_[i_site].GetPosition();
+  double pos[3];
+  for (int i=0; i<n_dim_; ++i) {
+    pos[i] = pos0[i] + l * u[i];
+  }
+  InitSiteAt(pos,d);
+  Bond b(&sites_[i_site],&sites_[n_sites_-1]);
+  AddBond(b);
 }
 void Mesh::ReportSites() {
   for (std::vector<Site>::iterator it=sites_.begin(); it!=sites_.end(); ++it) {
@@ -196,12 +246,16 @@ void Mesh::ReportBonds() {
 void Mesh::Report() {
   fprintf(stderr,"Mesh: \n");
   fprintf(stderr,"  OID: %d\n",GetOID());
+  fprintf(stderr,"  n_sites: %d\n",n_sites_);
+  fprintf(stderr,"  n_bonds: %d\n",n_bonds_);
   ReportSites();
   ReportBonds();
 }
-// Default d=1
-void Mesh::InitRandomSite(double d) {
-  double pos[3];
-  get_random_coordinate(pos,params_->n_dim,params_->system_radius,params_->boundary,rng_.r);
-  InitSiteAt(pos,d);
+void Mesh::SetBondLength(double l) {
+  bond_length_ = l;
+}
+void Mesh::Draw(std::vector<graph_struct*> * graph_array) {
+  for (std::vector<Bond>::iterator it = bonds_.begin(); it!=bonds_.end(); ++it) {
+    it->Draw(graph_array);
+  }
 }
