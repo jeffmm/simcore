@@ -10,23 +10,26 @@
 
 class Object {
   private:
-    static unsigned int _next_oid_;
-    static unsigned int _n_dim_;
+    static int _next_oid_;
+    static int _n_dim_;
     static long _seed_;
+    static system_parameters const * _params_;
   protected:
+    system_parameters const * params_;
     RNG rng_;
-    unsigned int n_dim_;
-    unsigned int oid_;
+    int n_dim_;
+    int oid_;
     double position_[3],
            orientation_[3],
            length_,
            diameter_;
-    system_parameters const * params_;
+    graph_struct g_struct;
   public:
     Object();
-    static void SetNDim(unsigned int n_dim) {_n_dim_ = n_dim;}
+    static void SetNDim(int n_dim) {_n_dim_ = n_dim;}
     static void SetSeed(long seed) {_seed_ = seed;}
-    unsigned int GetOID();
+    static void SetParameters(system_parameters * params) {_params_=params;}
+    int GetOID();
     double const * const GetPosition();
     double const * const GetOrientation();
     double const GetLength();
@@ -36,6 +39,8 @@ class Object {
     void SetPosition(double * pos);
     void SetOrientation(double * u);
     virtual void Report();
+    // Main draw function, return struct of graphics info
+    virtual void Draw(std::vector<graph_struct*> * graph_array);
 };
 
 class Bond; // Forward declaration
@@ -48,7 +53,7 @@ class Site : public Object {
     void AddBond(Bond * bond);
     void Report();
     Bond * GetBond(int i);
-    Bond * GetOtherBond(unsigned int bond_oid);
+    Bond * GetOtherBond(int bond_oid);
 };
 
 // Bonds, ie graph edges
@@ -66,24 +71,28 @@ class Bond : public Object {
 
 class Mesh : public Object {
   protected:
-    unsigned int n_sites_;
-    unsigned int n_bonds_;
+    int n_sites_;
+    int n_bonds_;
     std::vector<Site> sites_;
     std::vector<Bond> bonds_;
+    double bond_length_=1;
   public:
     Mesh() {n_sites_ = n_bonds_ = 0;}
     void InitSiteAt(double * pos, double d);
     void InitBondAt(double * pos, double * u, double l, double d);
     void InitRandomSite(double d);
     void AddRandomBondToSite(double l, int i_site);
-    void AddRandomBondAnywhere(double l, double d);
-    void AddRandomBondAtTip(double l, double d);
-    void AddBondAtTip(double *u, double l, double d);
+    void AddRandomBondAnywhere(double l, double d=1);
+    void AddRandomBondToTip(double l);
+    void AddBondToTip(double *u, double l);
+    void AddBondToSite(double *u, double l, int i_site);
     void AddSite(Site s);
     void AddBond(Bond b);
+    void SetBondLength(double l);
     void ReportSites();
     void ReportBonds();
     void Report();
+    void Draw(std::vector<graph_struct*> * graph_array);
 };
 
 #endif
