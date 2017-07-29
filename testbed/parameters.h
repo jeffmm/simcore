@@ -6,6 +6,7 @@ struct system_parameters {
   unsigned int n_dim;
   double system_radius;
   boundary_type boundary;
+  int graph_background;
 };
 
 #endif
