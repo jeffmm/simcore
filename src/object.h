@@ -14,7 +14,6 @@ class Object {
   protected:
     unsigned int cid_;
     unsigned int rid_;
-    unsigned int nids_[2];
     SID sid_;
     int n_dim_;
     int draw_type_ = 0; // 0 for single color, 1 for orientation color, 2 for don't care
@@ -36,8 +35,6 @@ class Object {
            kmc_energy_;
 
     //double *spec_virial_;
-    bool is_rigid_ = false;
-    bool is_kmc_ = false;
     space_struct *space_;
     graph_struct g_;
     rng_properties rng_;
@@ -45,8 +42,6 @@ class Object {
     virtual void InsertRandomOriented(double *u);
   public:
     Object(system_parameters *params, space_struct *space, long seed, SID sid);
-    bool IsRigid() {return is_rigid_;}
-    bool IsKMC() { return is_kmc_; }
     void InitOID() { oid_ = ++next_oid_;}
     void InitCID() { cid_ = oid_;}
     void InitRID() { rid_ = ++next_rid_;}
@@ -149,15 +144,9 @@ class Object {
     virtual double const GetKMCEnergy() {return kmc_energy_;}
     void SetCID(unsigned int const cid) {cid_=cid;}
     void SetRID(unsigned int const rid) {rid_=rid;}
-    void SetNIDS(unsigned int const nid1, unsigned int nid2) {
-      nids_[0] = nid1;
-      nids_[1] = nid2;
-    }
     unsigned int const GetOID() const {return oid_;}
     unsigned int const GetCID() {return cid_;}
     unsigned int const GetRID() {return rid_;}
-    unsigned int const GetNID1() {return nids_[0];}
-    unsigned int const GetNID2() {return nids_[1];}
     SID const GetSID() {return sid_;}
     virtual void Dump() {
       printf("{%d,%d,%d} -> ", GetOID(), GetRID(), GetCID());
@@ -247,7 +236,6 @@ class Rigid : public Simple {
         std::fill(rigid_scaled_position_,rigid_scaled_position_+3,0.0);
         rigid_length_=0;
         rigid_diameter_=1;
-        is_rigid_ = true;
     }
     Simple * GetNeighbor1() {return neighbor1_;}
     Simple * GetNeighbor2() {return neighbor2_;}

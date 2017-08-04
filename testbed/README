@@ -1,2 +1,0 @@
-Use to compile:
-g++ --std=c++11 random.cpp graphics.cpp object.cpp main.cpp -L/usr/local/lib -lglfw -framework OpenGL -lglew -lgsl -Wno-deprecated-declarations

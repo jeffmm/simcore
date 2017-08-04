@@ -10,7 +10,6 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   rid_ = ++next_rid_;
   cid_ = oid_;
   sid_ = sid;
-  nids_[0] = nids_[1] = 65535;
   space_ = space;
   n_dim_ = space_->n_dim;
   delta_ = params->delta;
@@ -28,8 +27,6 @@ Object::Object(system_parameters *params, space_struct *space, long seed, SID si
   length_ = 0;
   k_energy_ = 0;
   p_energy_ = 0;
-  is_rigid_=false;
-  is_kmc_=false;
   draw_type_ = 1;
   color_ = 0;
 }
