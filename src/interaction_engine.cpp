@@ -85,11 +85,6 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   // Rigid objects don't self interact
   if (obj1->GetRID() == obj2->GetRID())  return;
   // Composite objects do self interact if they want to
-  // "Neighboring" simples don't interact
-  if (obj1->GetNID1() == obj2->GetNID1()) return;
-  if (obj1->GetNID2() == obj2->GetNID2()) return;
-  if (obj1->GetNID1() == obj2->GetNID2()) return;
-  if (obj1->GetNID2() == obj2->GetNID1()) return;
   // Check to make sure we aren't self-interacting
   if (obj1->GetOID() == obj2->GetOID()) 
     error_exit("Object %d attempted self-interaction!", obj1->GetOID());

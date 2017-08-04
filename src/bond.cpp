@@ -20,9 +20,6 @@ void Bond::Init(Site *s1, Site *s2) {
   SetRigidOrientation(orientation_);
   SetRigidLength(length_);
   SetRigidDiameter(diameter_);
-  // Set neighbor IDs
-  SetNIDS(s1->GetOID(), s2->GetOID());
-  SetNeighbors(s1, s2);
 }
 
 void Bond::Draw(std::vector<graph_struct*> * graph_array) {
