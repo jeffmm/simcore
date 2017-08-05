@@ -17,6 +17,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->species.checkpoint_flag = jt->second.as<int>();
+          }
           else if (param_name.compare("num")==0) {
             params->species.num = jt->second.as<int>();
           }
@@ -37,9 +40,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("spec_flag")==0) {
             params->species.spec_flag = jt->second.as<int>();
-          }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->species.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("n_posit")==0) {
             params->species.n_posit = jt->second.as<int>();
@@ -77,8 +77,8 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("min_length")==0) {
             params->filament.min_length = jt->second.as<double>();
           }
-          else if (param_name.compare("max_child_length")==0) {
-            params->filament.max_child_length = jt->second.as<double>();
+          else if (param_name.compare("max_bond_length")==0) {
+            params->filament.max_bond_length = jt->second.as<double>();
           }
           else if (param_name.compare("spiral_flag")==0) {
             params->filament.spiral_flag = jt->second.as<int>();
@@ -125,6 +125,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("lp_analysis")==0) {
             params->filament.lp_analysis = jt->second.as<int>();
           }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->filament.checkpoint_flag = jt->second.as<int>();
+          }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
           }
@@ -145,9 +148,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("spec_flag")==0) {
             params->filament.spec_flag = jt->second.as<int>();
-          }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->filament.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("n_posit")==0) {
             params->filament.n_posit = jt->second.as<int>();
@@ -179,11 +179,14 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("max_length")==0) {
             params->hard_rod.max_length = jt->second.as<double>();
           }
-          else if (param_name.compare("max_child_length")==0) {
-            params->hard_rod.max_child_length = jt->second.as<double>();
+          else if (param_name.compare("max_bond_length")==0) {
+            params->hard_rod.max_bond_length = jt->second.as<double>();
           }
           else if (param_name.compare("driving_factor")==0) {
             params->hard_rod.driving_factor = jt->second.as<double>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->hard_rod.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("num")==0) {
             params->hard_rod.num = jt->second.as<int>();
@@ -206,9 +209,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("spec_flag")==0) {
             params->hard_rod.spec_flag = jt->second.as<int>();
           }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->hard_rod.checkpoint_flag = jt->second.as<int>();
-          }
           else if (param_name.compare("n_posit")==0) {
             params->hard_rod.n_posit = jt->second.as<int>();
           }
@@ -227,14 +227,17 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
-          else if (param_name.compare("diameter")==0) {
-            params->br_bead.diameter = jt->second.as<double>();
-          }
           else if (param_name.compare("driving_factor")==0) {
             params->br_bead.driving_factor = jt->second.as<double>();
           }
+          else if (param_name.compare("diameter")==0) {
+            params->br_bead.diameter = jt->second.as<double>();
+          }
           else if (param_name.compare("packing_fraction")==0) {
             params->br_bead.packing_fraction = jt->second.as<double>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->br_bead.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("num")==0) {
             params->br_bead.num = jt->second.as<int>();
@@ -256,9 +259,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("spec_flag")==0) {
             params->br_bead.spec_flag = jt->second.as<int>();
-          }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->br_bead.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("n_posit")==0) {
             params->br_bead.n_posit = jt->second.as<int>();
@@ -287,6 +287,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("driving_factor")==0) {
             params->md_bead.driving_factor = jt->second.as<double>();
           }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->md_bead.checkpoint_flag = jt->second.as<int>();
+          }
           else if (param_name.compare("num")==0) {
             params->md_bead.num = jt->second.as<int>();
           }
@@ -307,9 +310,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("spec_flag")==0) {
             params->md_bead.spec_flag = jt->second.as<int>();
-          }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->md_bead.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("n_posit")==0) {
             params->md_bead.n_posit = jt->second.as<int>();
@@ -332,9 +332,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
     else {
       param_name = it->first.as<std::string>();
       if (false) {}
-      else if (param_name.compare("draw_boundary")==0) {
-        params->draw_boundary = it->second.as<int>();
-      }
       else if (param_name.compare("seed")==0) {
         params->seed = it->second.as<long>();
       }
@@ -350,14 +347,14 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("n_dim")==0) {
         params->n_dim = it->second.as<int>();
       }
-      else if (param_name.compare("graph_background")==0) {
-        params->graph_background = it->second.as<int>();
+      else if (param_name.compare("load_checkpoint")==0) {
+        params->load_checkpoint = it->second.as<int>();
       }
       else if (param_name.compare("n_periodic")==0) {
         params->n_periodic = it->second.as<int>();
       }
-      else if (param_name.compare("boundary_type")==0) {
-        params->boundary_type = it->second.as<int>();
+      else if (param_name.compare("boundary")==0) {
+        params->boundary = it->second.as<int>();
       }
       else if (param_name.compare("system_radius")==0) {
         params->system_radius = it->second.as<double>();
@@ -383,11 +380,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("graph_diameter")==0) {
         params->graph_diameter = it->second.as<double>();
       }
-      else if (param_name.compare("load_checkpoint")==0) {
-        params->load_checkpoint = it->second.as<int>();
+      else if (param_name.compare("graph_background")==0) {
+        params->graph_background = it->second.as<int>();
       }
-      else if (param_name.compare("time_flag")==0) {
-        params->time_flag = it->second.as<int>();
+      else if (param_name.compare("draw_boundary")==0) {
+        params->draw_boundary = it->second.as<int>();
       }
       else if (param_name.compare("insertion_type")==0) {
         params->insertion_type = it->second.as<std::string>();
@@ -398,11 +395,20 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("movie_directory")==0) {
         params->movie_directory = it->second.as<std::string>();
       }
-      else if (param_name.compare("bud_radius")==0) {
-        params->bud_radius = it->second.as<double>();
+      else if (param_name.compare("time_flag")==0) {
+        params->time_flag = it->second.as<int>();
+      }
+      else if (param_name.compare("species_insertion_failure_threshold")==0) {
+        params->species_insertion_failure_threshold = it->second.as<int>();
+      }
+      else if (param_name.compare("uniform_crystal")==0) {
+        params->uniform_crystal = it->second.as<int>();
       }
       else if (param_name.compare("bud_height")==0) {
         params->bud_height = it->second.as<double>();
+      }
+      else if (param_name.compare("bud_radius")==0) {
+        params->bud_radius = it->second.as<double>();
       }
       else if (param_name.compare("lj_epsilon")==0) {
         params->lj_epsilon = it->second.as<double>();
@@ -419,9 +425,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("ss_rs")==0) {
         params->ss_rs = it->second.as<double>();
       }
-      else if (param_name.compare("constant_volume")==0) {
-        params->constant_volume = it->second.as<int>();
-      }
       else if (param_name.compare("ss_eps")==0) {
         params->ss_eps = it->second.as<double>();
       }
@@ -433,6 +436,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("constant_pressure")==0) {
         params->constant_pressure = it->second.as<int>();
+      }
+      else if (param_name.compare("constant_volume")==0) {
+        params->constant_volume = it->second.as<int>();
       }
       else if (param_name.compare("target_pressure")==0) {
         params->target_pressure = it->second.as<double>();
@@ -448,12 +454,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("stoch_flag")==0) {
         params->stoch_flag = it->second.as<int>();
-      }
-      else if (param_name.compare("species_insertion_failure_threshold")==0) {
-        params->species_insertion_failure_threshold = it->second.as<int>();
-      }
-      else if (param_name.compare("uniform_crystal")==0) {
-        params->uniform_crystal = it->second.as<int>();
       }
       else if (param_name.compare("thermo_flag")==0) {
         params->thermo_flag = it->second.as<int>();

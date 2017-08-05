@@ -478,16 +478,16 @@ void Graphics::DrawDiscorectangles() {
     double theta = atan2((*it)->u[1], (*it)->u[0]); // rotation angle
     double theta_color = 0;
     // Check draw type
-    if ((*it)->draw_type == 0) {
-      // draw_type is set to flat
+    if ((*it)->draw._to_string() == "fixed" ) {
+      // draw is set to flat
       theta_color = (*it)->color;
     }
-    else if ((*it)->draw_type == 1) {
+    else if ((*it)->draw._to_string() == "orientation") {
       // orientation draw
       theta_color = theta;
     }
 
-    if ((*it)->draw_type == 2) {
+    if ((*it)->draw._to_string() == "bw") {
       for (int i=0; i<3; ++i)
         color[i] = (background_color_[0] < 1 ? 1 : 0.1);
       glColor4fv(color);
@@ -635,16 +635,16 @@ void Graphics::DrawSpheros() {
     }
     color[3] = alpha_;
 
-    // Color is now based on draw_type for the object
-    if ((*it)->draw_type == 0) {
+    // Color is now based on draw for the object
+    if ((*it)->draw._to_string() == "fixed") {
      // flat color
       theta_color = (*it)->color;
     } 
-    else if ((*it)->draw_type == 1) {
+    else if ((*it)->draw._to_string() == "orientation") {
       theta_color = theta;
     }
 
-    if ((*it)->draw_type == 2) {
+    if ((*it)->draw._to_string() == "bw") {
       for (int i=0; i<3; ++i)
         color[i] = (background_color_[0] < 1 ? 1 : 0.1);
       glColor4fv(color);

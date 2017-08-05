@@ -35,7 +35,7 @@ void SimulationManager::InitManager(run_options run_opts) {
   }
   if ((run_opts_.m_flag || run_opts_.a_flag) && n_runs_ > 1)
     error_exit("Attempted to run movies/analysis on multiple files.");
-  rng_.init(seed);
+  rng_.Init(seed);
 }
 
 /****************************************
@@ -213,7 +213,7 @@ void SimulationManager::GenerateParameters() {
   int i_var,j_var,k_var = n_var_;
   for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it)
     if (it->second.IsSequence() && (it->second[0].as<std::string>()).at(0) != 'R') {
-      unsigned int s = it->second.size();
+      int s = it->second.size();
       k_var /= s;
       j_var = n_var_ / (k_var * s) ;
       i_var = 0;
@@ -225,7 +225,7 @@ void SimulationManager::GenerateParameters() {
     else if (it->second.IsMap())
       for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
         if (jt->second.IsSequence() && (jt->second[0].as<std::string>()).at(0) != 'R') {
-          unsigned int s = jt->second.size();
+          int s = jt->second.size();
           k_var /= s;
           j_var = n_var_ / (k_var * s) ;
           i_var = 0;

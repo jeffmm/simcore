@@ -2,7 +2,7 @@
 #define _SIMCORE_INTERACTION_H_
 #include <tuple>
 
-typedef std::pair<unsigned int, unsigned int> oid_pair;
+typedef std::pair<int,int> oid_pair;
 
 class Interaction {
   public:

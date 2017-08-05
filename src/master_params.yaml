@@ -6,7 +6,7 @@ n_random: [1, int]
 run_name: [sc,string]
 n_dim : [3,int]
 n_periodic : [0,int]
-boundary_type : [0,int]
+boundary : [0,int]
 system_radius : [100,double] # radius of system
 n_steps : [1000000,long]
 delta : [0.001,double] # time duration between each simulation step
@@ -64,7 +64,7 @@ filament:
   persistence_length: [400, double]
   max_length: [500,double]
   min_length: [1, double]
-  max_child_length: [3, double]
+  max_bond_length: [3, double]
   spiral_flag: [0, int]
   driving_factor: [0, double]
   friction_ratio: [2, double]
@@ -86,7 +86,7 @@ hard_rod:
   length: [40, double]
   min_length: [3, double]
   max_length: [300, double]
-  max_child_length: [5, double]
+  max_bond_length: [5, double]
   driving_factor: [0, double]
 br_bead:
   diameter: [1, double]

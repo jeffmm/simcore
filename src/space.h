@@ -5,18 +5,12 @@
 #include "auxiliary.h"
 #include "macros.h"
 
-typedef enum {
-  BOX = 0,
-  SPHERE = 1,
-  BUDDING = 2,
-} boundary_type_t;
-
 class Space {
   private:
     // geometric data
     int n_dim_,
         n_periodic_;
-    boundary_type_t boundary_type_;
+    boundary_type boundary_;
     std::string boundary_type_string_;
     double radius_,
            volume_,

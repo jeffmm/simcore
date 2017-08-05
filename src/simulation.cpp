@@ -90,8 +90,13 @@ void Simulation::ScaleSpeciesPositions() {
 
 void Simulation::InitSimulation() {
   std::cout << "  Initializing simulation" << std::endl;
-  rng_.init(params_.seed);
+  rng_.Init(params_.seed);
   space_.Init(&params_);
+  Object::SetParams(&params_);
+  Object::SetNDim(params_.n_dim);
+  Object::SetDelta(params_.delta);
+  Object::SetSeed(gsl_rng_get(rng_.r));
+  Object::SetSpace(space_.GetStruct());
   InitSpecies();
   iengine_.Init(&params_, &species_, space_.GetStruct());
   InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
@@ -123,10 +128,10 @@ void Simulation::InitGraphics() {
 void Simulation::InitSpecies() {
 
   // We have to search for the various types of species that we have
-  REGISTER_SPECIES(MDBeadSpecies,md_bead);
-  REGISTER_SPECIES(HardRodSpecies,hard_rod);
+  //REGISTER_SPECIES(MDBeadSpecies,md_bead);
+  //REGISTER_SPECIES(HardRodSpecies,hard_rod);
+  //REGISTER_SPECIES(BrBeadSpecies,br_bead);
   REGISTER_SPECIES(FilamentSpecies,filament);
-  REGISTER_SPECIES(BrBeadSpecies,br_bead);
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
@@ -141,9 +146,11 @@ void Simulation::InitSpecies() {
 }
 
 void Simulation::InsertSpecies(bool force_overlap, bool processing) {
-  // Assuming Random insertion for now
-  for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
-    // Check for random insertion
+  printf("\r  Inserting species: 0%% complete");
+  fflush(stdout);
+// Assuming Random insertion for now
+for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
+// Check for random insertion
     if (processing || (*spec)->GetInsertionType().find("random") == std::string::npos) {
       // Insertion not random, force overlap
       force_overlap = true;
@@ -234,7 +241,7 @@ void Simulation::GetGraphicsStructure() {
 void Simulation::InitOutputs() {
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_);
   if (params_.time_flag) {
-    cpu_init_time_ = cpu();
+    cpu_init_time_ = cpu_time();
   }
 }
 
@@ -248,7 +255,8 @@ void Simulation::WriteOutputs() {
     return; // skip first step
   }
   if (params_.time_flag && i_step_ == params_.n_steps-1) {
-    double cpu_time = cpu() - cpu_init_time_;
+    double cpu_final_time = cpu_time();
+    double cpu_time = cpu_final_time - cpu_init_time_;
     std::cout << "CPU Time for Initialization: " <<  cpu_init_time_ << "\n";
     std::cout << "CPU Time: " << cpu_time << "\n";
     std::cout << "Sim Time: " << time_ << "\n";
@@ -266,7 +274,7 @@ void Simulation::ProcessOutputs(system_parameters params, int graphics, int make
 
 // Initialize everything we need for processing
 void Simulation::InitProcessing(int graphics, int make_movie, int run_analyses, int use_posits) {
-  rng_.init(params_.seed);
+  rng_.Init(params_.seed);
   space_.Init(&params_);
   InitSpecies();
   InsertSpecies(true, true);

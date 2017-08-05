@@ -10,7 +10,7 @@ class Motor : public Site {
            bond_lambda_,
            diffusion_;
   public:
-    Motor(long seed);
+    Motor();
     bool UpdatePriors();
     void UpdatePosition();
     void Diffuse();
