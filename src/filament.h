@@ -1,21 +1,17 @@
 #ifndef _SIMCORE_FILAMENT_H_
 #define _SIMCORE_FILAMENT_H_
 
-#include "site.h"
-#include "bond.h"
 #include "species.h"
-#include "auxiliary.h"
-#include <yaml-cpp/yaml.h>
+#include "mesh.h"
+
 #ifdef ENABLE_OPENMP
 #include "omp.h"
 #endif
 
-class Filament : public Composite<Site,Bond> {
+class Filament : public Mesh {
 
   private:
-    int n_bonds_,
-        n_sites_,
-        dynamic_instability_flag_,
+    int dynamic_instability_flag_,
         force_induced_catastrophe_flag_,
         theta_validation_flag_,
         diffusion_validation_flag_,
@@ -26,8 +22,7 @@ class Filament : public Composite<Site,Bond> {
         eq_steps_count_ = 0;
     double max_length_,
            min_length_,
-           max_child_length_,
-           child_length_,
+           max_bond_length_,
            persistence_length_,
            friction_ratio_, // friction_par/friction_perp
            friction_par_,
@@ -57,7 +52,7 @@ class Filament : public Composite<Site,Bond> {
                         h_mat_upper_, //n_sites-2
                         h_mat_lower_, //n_sites-2
                         cos_thetas_;
-    poly_state_t poly_state_;
+    //poly_state poly_;
     void UpdateSiteBondPositions();
     void SetDiffusion();
     void GenerateProbableOrientation();
@@ -70,23 +65,20 @@ class Filament : public Composite<Site,Bond> {
     void CalculateBendingForces();
     void CalculateTensions();
     void UpdateSitePositions(bool midstep);
-    void UpdateBondPositions();
+    void UpdateSiteOrientations();
     void ApplyForcesTorques();
-    void SetParameters(system_parameters *params);
-    void InitElements(system_parameters *params, space_struct *space);
+    void SetParameters();
+    void InitElements();
+    void InitRandom();
     void UpdateAvgPosition();
-    void InitSpiral2D();
-    void DumpAll();
+    //void InitSpiral2D();
+    void ReportAll();
 
   public:
-    Filament(system_parameters *params, space_struct * space, 
-        long seed, SID sid) : Composite(params, space, seed, sid) {
-      SetParameters(params);
-      InitElements(params, space);
-    }
+    Filament();
     virtual void Init();
     virtual void InsertAt(double *pos, double *u);
-    void DiffusionValidationInit();
+    //void DiffusionValidationInit();
     virtual void Integrate(bool midstep);
     virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
@@ -95,7 +87,7 @@ class Filament : public Composite<Site,Bond> {
     double const GetLength() { return length_;}
     double const GetDriving() {return driving_factor_;}
     double const GetPersistenceLength() {return persistence_length_;}
-    double const GetChildLength() {return child_length_;}
+    double const GetBondLength() {return bond_length_;}
     int const GetNBonds() {return n_bonds_;}
     void GetAvgOrientation(double * au);
     void GetAvgPosition(double * ap);
@@ -103,13 +95,13 @@ class Filament : public Composite<Site,Bond> {
       return &cos_thetas_;
     }
     double GetTipZ() {
-      return elements_[n_sites_-1].GetOrientation()[n_dim_-1];
+      return sites_[n_sites_-1].GetOrientation()[n_dim_-1];
     }
     double const * const GetHeadPos() {
-      return elements_[n_sites_-1].GetPosition();
+      return sites_[n_sites_-1].GetPosition();
     }
     double const * const GetTailPos() {
-      return elements_[0].GetPosition();
+      return sites_[0].GetPosition();
     }
     void WritePosit(std::fstream &oposit);
     void ReadPosit(std::fstream &iposit);
@@ -137,7 +129,7 @@ class FilamentSpecies : public Species<Filament> {
                  mse2e_file_;
   public:
     FilamentSpecies() : Species() {
-      SetSID(SID::filament);
+      SetSID(species_id::filament);
       midstep_ = true;
     }
     void Init(system_parameters *params, space_struct *space, long seed) {
@@ -174,11 +166,11 @@ class FilamentSpecies : public Species<Filament> {
 #pragma omp for 
         for(int i = 0; i < max_threads; ++i)
           for(auto it = chunks[i].first; it != chunks[i].second; ++it)
-            (*it)->UpdatePosition(midstep_);
+            it->UpdatePosition(midstep_);
       }
 #else
       for (auto it=members_.begin(); it!=members_.end(); ++it) 
-        (*it)->UpdatePosition(midstep_);
+        it->UpdatePosition(midstep_);
 #endif
 
       midstep_ = !midstep_;

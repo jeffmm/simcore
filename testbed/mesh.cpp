@@ -3,7 +3,7 @@
 /**************************
 ** Mesh member functions **
 **************************/
-Mesh::Mesh(long seed) : Object(seed) {
+Mesh::Mesh() : Object() {
   n_sites_ = n_bonds_ = 0;
 }
 
@@ -37,14 +37,14 @@ void Mesh::AddBond(Bond b) {
 }
 
 void Mesh::InitSiteAt(double * pos, double d) {
-  Site s(gsl_rng_get(rng_.r));
+  Site s;
   s.SetPosition(pos);
   s.SetDiameter(d);
   AddSite(s);
 }
 void Mesh::InitBondAt(double * pos, double * u, double l, double d) {
-  Site s1(gsl_rng_get(rng_.r));
-  Site s2(gsl_rng_get(rng_.r));
+  Site s1;
+  Site s2;
   s1.SetDiameter(d);
   s2.SetDiameter(d);
   for (int i=0; i<n_dim_; ++i) {
@@ -57,7 +57,7 @@ void Mesh::InitBondAt(double * pos, double * u, double l, double d) {
   s2.SetPosition(pos);
   AddSite(s1);
   AddSite(s2);
-  Bond b(gsl_rng_get(rng_.r));
+  Bond b;
   AddBond(b);
   bonds_[n_bonds_-1].Init(&sites_[n_sites_-2],&sites_[n_sites_-1]);
 }
@@ -87,7 +87,7 @@ void Mesh::AddRandomBondToSite(double l, int i_site) {
     pos[i] = pos0[i] + l * pos[i];
   }
   InitSiteAt(pos,d);
-  Bond b(gsl_rng_get(rng_.r));
+  Bond b;
   AddBond(b);
   bonds_[n_bonds_-1].Init(&sites_[i_site],&sites_[n_sites_-1]);
 }
@@ -112,7 +112,7 @@ void Mesh::AddBondToSite(double *u, double l, int i_site) {
     pos[i] = pos0[i] + l * u[i];
   }
   InitSiteAt(pos,d);
-  Bond b(gsl_rng_get(rng_.r));
+  Bond b;
   AddBond(b);
   bonds_[n_bonds_-1].Init(&sites_[i_site],&sites_[n_sites_-1]);
 }

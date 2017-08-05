@@ -13,7 +13,7 @@ class Site : public Object {
     std::vector<directed_bond> bonds_;
     int n_bonds_;
   public:
-    Site(long seed) : Object(seed) {n_bonds_ = 0;}
+    Site() : Object() {n_bonds_ = 0;}
     void AddBond(Bond * bond, directed_type dir);
     void Report();
     void ReportBonds();

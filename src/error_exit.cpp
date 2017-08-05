@@ -27,4 +27,3 @@ void warning(const char *warning_msg, ...) {
   va_end (args);
 }
 
-

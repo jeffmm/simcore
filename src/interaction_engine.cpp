@@ -41,16 +41,16 @@ void InteractionEngine::Interact() {
   ApplyInteractions();
 }
 
-void InteractionEngine::UpdateSimples() {
-  simples_.clear();
+void InteractionEngine::UpdateInteractors() {
+  interactors_.clear();
   for (auto spec_it= species_->begin(); spec_it!=species_->end(); ++spec_it) {
-    std::vector<Simple*> simps = (*spec_it)->GetSimples();
-    simples_.insert(simples_.end(),simps.begin(),simps.end());
+    std::vector<Object*> ixs = (*spec_it)->GetInteractors();
+    interactors_.insert(interactors_.end(),ixs.begin(),ixs.end());
   }
 }
 
 void InteractionEngine::UpdateInteractions() {
-  clist_.LoadSimples(simples_);
+  clist_.LoadInteractors(interactors_);
   pair_interactions_ = clist_.GetPairInteractions();
 }
 
@@ -68,7 +68,7 @@ void InteractionEngine::CheckUpdate() {
     // reset periodic update count and update number of objects we're tracking
     i_update_ = 0; 
     n_objs_ = obj_count;
-    UpdateSimples();
+    UpdateInteractors();
     UpdateInteractions();
   }
   // Otherwise check periodic update count
@@ -83,7 +83,7 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   auto obj2 = pix->first.second;
   Interaction *ix = &(pix->second);
   // Rigid objects don't self interact
-  if (obj1->GetRID() == obj2->GetRID())  return;
+  //if (obj1->GetRID() == obj2->GetRID())  return;
   // Composite objects do self interact if they want to
   // Check to make sure we aren't self-interacting
   if (obj1->GetOID() == obj2->GetOID()) 
@@ -184,7 +184,7 @@ void InteractionEngine::CalculatePressure() {
 
 bool InteractionEngine::CheckOverlap() {
   overlap_ = false;
-  UpdateSimples();
+  UpdateInteractors();
   UpdateInteractions();
   CalculateInteractions();
   return overlap_;

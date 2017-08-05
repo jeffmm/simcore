@@ -587,5 +587,4 @@ void min_distance_carrier_lines(int n_dim, int n_periodic, double *h,
 
     return;
 }
-
 #undef SMALL

@@ -12,7 +12,7 @@ class SimulationManager {
   private:
     bool make_movie_ = false,
          run_analysis_ = false;
-    unsigned int n_runs_ = 1, //Number of runs per parameters set
+    int n_runs_ = 1, //Number of runs per parameters set
                  n_var_ = 1, //Number of parameter variations
                  n_random_ = 1; //Number of random params
     std::string default_param_file_ = "src/master_params.yaml", 
@@ -23,7 +23,7 @@ class SimulationManager {
     std::vector<YAML::Node> pvector_;
     system_parameters params_; 
     run_options run_opts_;
-    rng_properties rng_;
+    RNG rng_;
     void CheckAppendParams();
     void AppendParams(YAML::Node app_node);
     void LoadDefaultParams();

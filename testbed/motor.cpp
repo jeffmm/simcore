@@ -1,6 +1,6 @@
 #include "motor.h"
 
-Motor::Motor(long seed) : Site(seed) {
+Motor::Motor() : Site() {
   length_ = 0;
   diameter_ = 1;
   bound_ = false;

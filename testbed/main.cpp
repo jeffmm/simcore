@@ -29,7 +29,7 @@ int main() {
 
   double pos[3] = {0,0,0};
   double u[3] = {1,0,0};
-  Mesh m(gsl_rng_get(rng.r));
+  Mesh m;
   m.Reserve(n_bonds);
   m.InitSiteAt(pos,1);
 
@@ -43,7 +43,7 @@ int main() {
   m.SubReport();
   std::vector<Motor> mots;
   for (int i=0; i<n_motors; ++i) {
-    Motor mot(gsl_rng_get(rng.r));
+    Motor mot;
     mot.SetDiameter(2);
     mot.SetDiffusion();
     mots.push_back(mot);

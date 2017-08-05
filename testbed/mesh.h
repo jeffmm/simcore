@@ -9,7 +9,7 @@ class Mesh : public Object {
     std::vector<Bond> bonds_;
     double bond_length_;
   public:
-    Mesh(long seed);
+    Mesh();
     void InitSiteAt(double * pos, double d);
     void InitBondAt(double * pos, double * u, double l, double d);
     void InitRandomSite(double d);
