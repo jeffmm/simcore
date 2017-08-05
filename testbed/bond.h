@@ -12,7 +12,7 @@ class Bond : public Object {
            k_spring_,
            body_frame_[6];
   public:
-    Bond(long seed) : Object(seed) {}
+    Bond() : Object() {}
     void Init(Site * s1, Site * s2);
     void ReInit();
     void Report();

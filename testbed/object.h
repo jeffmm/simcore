@@ -25,7 +25,7 @@ class Object {
            diameter_;
     graph_struct g_struct;
   public:
-    Object(long seed);
+    Object();
     static void SetNDim(int n_dim) {n_dim_ = n_dim;}
     static void SetDelta(double delta) {delta_ = delta;}
     static void SetParameters(system_parameters * params) {params_=params;}

@@ -28,12 +28,12 @@ class InteractionEngine {
     std::vector<SpeciesBase*> *species_;
 
     std::vector<pair_interaction> pair_interactions_;
-    std::vector<Simple*> simples_;
+    std::vector<Object*> interactors_;
     CellList clist_;
     PotentialManager potentials_;
 
     void CheckUpdate();
-    void UpdateSimples();
+    void UpdateInteractors();
     void UpdateInteractions();
     void ProcessInteraction(std::vector<pair_interaction>::iterator pix);
     void CalculateInteractionsMP();

@@ -3,7 +3,7 @@
 /****************************
 ** Object member functions **
 ****************************/
-Object::Object(long seed) : rng_(seed) {
+Object::Object() {
   oid_ = _next_oid_++; 
   if (params_ == nullptr) {
     std::cerr << "ERROR! Object parameters not set before instantiation!\n";
@@ -25,6 +25,8 @@ Object::Object(long seed) : rng_(seed) {
   std::fill(torque_,torque_+3,0.0);
   length_ = 0;
   diameter_ = 0;
+  rng_.Init(_seed_);
+  _seed_ = gsl_rng_get(rng_.r);
 }
 
 int Object::_next_oid_ = 0;
