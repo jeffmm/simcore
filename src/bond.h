@@ -17,6 +17,7 @@ class Bond : public Object {
     void ReInit();
     void Report();
     void ReportSites();
+    void Draw(std::vector<graph_struct*> * graph_array);
     //void GetBodyFrame();
     //void UpdateOrientation();
     //void AddRandomDisplacement();

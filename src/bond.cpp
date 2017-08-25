@@ -39,6 +39,7 @@ void Bond::ReInit() {
     position_[i] = r1[i] + 0.5*orientation_[i];
     orientation_[i]/=length_;
   }
+  UpdatePeriodic();
 }
 
 Site * Bond::GetSite(int i) {
@@ -71,6 +72,19 @@ void Bond::ReportSites() {
   for (int i=0;i<2;++i) {
     sites_[i]->Report();
   }
+}
+
+void Bond::Draw(std::vector<graph_struct*> * graph_array) {
+  std::copy(scaled_position_,scaled_position_+3, g_.r);
+  for (int i=space_->n_periodic; i<n_dim_; ++i) {
+    g_.r[i] = position_[i];
+  }
+  std::copy(orientation_, orientation_+3, g_.u);
+  g_.color = color_;
+  g_.diameter = diameter_;
+  g_.length = length_;
+  g_.draw = draw_;
+  graph_array->push_back(&g_);
 }
 
 //void Bond::UpdatePosition() {
