@@ -139,8 +139,11 @@ void Object::InsertRandom() {
   if (R - buffer < 0)
     error_exit("Object #%d is too large to place in system.\n system radius: %2.2f, buffer: %2.2f",GetOID(), R, buffer);
   switch (space_->type._to_integral()) {
-    // If no boundary, do nothing
+    // If no boundary, insert wherever
     case 0: // none
+      for (int i=0; i<n_dim_; ++i) {
+        position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer);
+      }
       break;
     // spherical boundary
     case 2: // sphere
@@ -249,9 +252,7 @@ void Object::ZeroForce() {
 }
 
 void Object::Draw(std::vector<graph_struct*> * graph_array) {
-  for (int i=0;i<space_->n_periodic; ++i) {
-    g_.r[i] = scaled_position_[i];
-  }
+  std::copy(scaled_position_,scaled_position_+3, g_.r);
   for (int i=space_->n_periodic; i<n_dim_; ++i) {
     g_.r[i] = position_[i];
   }

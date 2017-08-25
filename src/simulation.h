@@ -35,6 +35,7 @@ class Simulation {
     std::vector<SpeciesBase*> species_;
     rfh::factory species_factory_;
     void InitSimulation();
+    void InitObjects();
     void InitSpecies();
     void InitPositInput();
     void ClearSpecies();

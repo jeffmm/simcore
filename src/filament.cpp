@@ -78,17 +78,24 @@ void Filament::InitRandom() {
   do {
     out_of_bounds = false;
     Clear();
-    InsertRandom();
-    InitSiteAt(position_,diameter_);
+    InitRandomSite(diameter_);
+    Report();
+    SubReport();
     AddRandomBondToTip(bond_length_);
+    Report();
+    SubReport();
     //if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition())) continue;
     SetOrientation(bonds_[n_bonds_-1].GetOrientation());
     for (int i=0;i<n_bonds_max_-1;++i) {
       GenerateProbableOrientation();
       AddBondToTip(orientation_, bond_length_);
+      //Report();
+      //SubReport();
       // if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition())) break;
     }
   } while (out_of_bounds);
+  UpdateBondPositions();
+  UpdateSiteOrientations();
 }
 
 void Filament::Init() {
@@ -278,7 +285,7 @@ void Filament::GenerateProbableOrientation() {
 }
 
 void Filament::UpdatePosition(bool midstep) {
-  ApplyForcesTorques();
+  //ApplyForcesTorques();
   Integrate(midstep);
   UpdateAvgPosition();
   eq_steps_count_++;
