@@ -1,11 +1,11 @@
 # params.yaml
 ---
-seed : 19559643324640
+seed : 1876791936712
 run_name: test
 n_runs: 1
 n_random: 1
 n_dim: 2
-n_periodic: 2
+n_periodic: 0
 boundary: 0
 delta: 0.0003
 n_steps: 10000000

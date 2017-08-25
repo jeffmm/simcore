@@ -132,13 +132,13 @@ void Mesh::UpdateBondPositions() {
 void Mesh::ReportSites() {
   for (std::vector<Site>::iterator it=sites_.begin(); it!=sites_.end(); ++it) {
     it->Report();
-    std::cerr << &(*it) << "\n";
+    std::cerr << "      mem: " << &(*it) << "\n";
   }
 }
 void Mesh::ReportBonds() {
   for (std::vector<Bond>::iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
     it->Report();
-    std::cerr << &(*it) << "\n";
+    std::cerr << "      mem: " << &(*it) << "\n";
   }
 }
 void Mesh::Report() {
@@ -150,6 +150,7 @@ void Mesh::Report() {
   ReportBonds();
 }
 void Mesh::SubReport() {
+  fprintf(stderr,"Mesh SubReport: \n");
   for (std::vector<Bond>::iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
     it->ReportSites();
   }

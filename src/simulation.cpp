@@ -92,11 +92,7 @@ void Simulation::InitSimulation() {
   std::cout << "  Initializing simulation" << std::endl;
   rng_.Init(params_.seed);
   space_.Init(&params_);
-  Object::SetParams(&params_);
-  Object::SetNDim(params_.n_dim);
-  Object::SetDelta(params_.delta);
-  Object::SetSeed(gsl_rng_get(rng_.r));
-  Object::SetSpace(space_.GetStruct());
+  InitObjects();
   InitSpecies();
   iengine_.Init(&params_, &species_, space_.GetStruct());
   InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
@@ -104,6 +100,14 @@ void Simulation::InitSimulation() {
   if (params_.graph_flag) {
     InitGraphics();
   }
+}
+
+void Simulation::InitObjects() {
+  Object::SetParams(&params_);
+  Object::SetNDim(params_.n_dim);
+  Object::SetDelta(params_.delta);
+  Object::SetSeed(gsl_rng_get(rng_.r));
+  Object::SetSpace(space_.GetStruct());
 }
 
 void Simulation::InitGraphics() {
