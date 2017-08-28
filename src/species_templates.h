@@ -2,9 +2,9 @@
 template <typename T> 
 void Species<T>::AddMember() {
   T newmember;
-  newmember.Init();
-  //newmember->SetColor(sparams_->color, sparams_->draw_type);
   members_.push_back(newmember);
+  members_.back().Init();
+  //newmember->SetColor(sparams_->color, sparams_->draw_type);
   n_members_++;
 }
 

@@ -8,7 +8,7 @@ n_dim: 2
 n_periodic: 0
 boundary: 0
 delta: 0.0003
-n_steps: 10000000
+n_steps: 100000
 n_steps_equil: 0
 system_radius: 100
 graph_flag: 1
@@ -34,7 +34,7 @@ filament:
   overlap: 1
   diameter: 1
   spiral_flag: 0
-  max_bond_length: 2
+  max_bond_length: 3
   posit_flag: 0
   spec_flag: 0
   checkpoint_flag: 0
@@ -42,8 +42,8 @@ filament:
   n_spec: 100
   n_checkpoint: 100
   driving_factor: 10
-  length: 50
-  persistence_length: 500
+  length: 100
+  persistence_length: 1000
   theta_analysis: 0
   lp_analysis: 0
 

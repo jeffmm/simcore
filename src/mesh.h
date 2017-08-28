@@ -2,6 +2,10 @@
 #define _SIMCORE_MESH_H_
 
 #include "bond.h"
+
+typedef std::vector<Bond>::iterator bond_iterator;
+typedef std::vector<Site>::iterator site_iterator;
+
 class Mesh : public Object {
   protected:
     int n_sites_,
