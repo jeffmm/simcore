@@ -37,14 +37,13 @@ void Filament::SetParameters() {
 
 void Filament::InitElements() {
   bond_length_ = 0;
-  int n_sites,n_bonds;
   do {
-    n_bonds = (int) ceil(length_/max_bond_length_);
-    if (n_bonds < 2) 
-      n_bonds++;
-    n_sites = n_bonds+1;
-    bond_length_ = length_/n_bonds;
-    if (n_bonds == 2 && bond_length_ <= diameter_) {
+    n_bonds_ = (int) ceil(length_/max_bond_length_);
+    if (n_bonds_ < 2) 
+      n_bonds_++;
+    n_sites_ = n_bonds_+1;
+    bond_length_ = length_/n_bonds_;
+    if (n_bonds_ == 2 && bond_length_ <= diameter_) {
       error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
     }
     if (bond_length_ <= diameter_) {
@@ -52,45 +51,23 @@ void Filament::InitElements() {
       warning("bond_length <= diameter, increasing max_bond_length to %2.2f",max_bond_length_);
     }
   } while (bond_length_ <= diameter_);
-  if (length_/n_bonds < min_length_) {
+  if (length_/n_bonds_ < min_length_) {
     error_exit("min_length_ of flexible filament segments too large for filament length.");
   }
-  // Initialize mesh
-  Reserve(n_bonds);
-
-  //Allocate control structures
-  tensions_.resize(n_sites-1); //max_sites -1
-  g_mat_lower_.resize(n_sites-2); //max_sites-2
-  g_mat_upper_.resize(n_sites-2); //max_sites-2
-  g_mat_diag_.resize(n_sites-1); //max_sites-1
-  det_t_mat_.resize(n_sites+1); //max_sites+1
-  det_b_mat_.resize(n_sites+1); //max_sites+1
-  g_mat_inverse_.resize(n_sites-2); //max_sites-2
-  k_eff_.resize(n_sites-2); //max_sites-2
-  h_mat_diag_.resize(n_sites-1); //max_sites-1
-  h_mat_upper_.resize(n_sites-2); //max_sites-2
-  h_mat_lower_.resize(n_sites-2); //max_sites-2
-  gamma_inverse_.resize(n_sites*n_dim_*n_dim_); //max_sites*ndim*ndim
-  cos_thetas_.resize(n_sites-2); //max_sites-2
 }
+
 void Filament::InitRandom() {
   bool out_of_bounds = true;
   do {
     out_of_bounds = false;
     Clear();
     InitRandomSite(diameter_);
-    Report();
-    SubReport();
     AddRandomBondToTip(bond_length_);
-    Report();
-    SubReport();
     //if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition())) continue;
     SetOrientation(bonds_[n_bonds_-1].GetOrientation());
     for (int i=0;i<n_bonds_max_-1;++i) {
       GenerateProbableOrientation();
       AddBondToTip(orientation_, bond_length_);
-      //Report();
-      //SubReport();
       // if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition())) break;
     }
   } while (out_of_bounds);
@@ -99,6 +76,23 @@ void Filament::InitRandom() {
 }
 
 void Filament::Init() {
+  // Initialize mesh
+  Reserve(n_bonds_);
+  //Allocate control structures
+  tensions_.resize(n_sites_-1); //max_sites -1
+  g_mat_lower_.resize(n_sites_-2); //max_sites-2
+  g_mat_upper_.resize(n_sites_-2); //max_sites-2
+  g_mat_diag_.resize(n_sites_-1); //max_sites-1
+  det_t_mat_.resize(n_sites_+1); //max_sites+1
+  det_b_mat_.resize(n_sites_+1); //max_sites+1
+  g_mat_inverse_.resize(n_sites_-2); //max_sites-2
+  k_eff_.resize(n_sites_-2); //max_sites-2
+  h_mat_diag_.resize(n_sites_-1); //max_sites-1
+  h_mat_upper_.resize(n_sites_-2); //max_sites-2
+  h_mat_lower_.resize(n_sites_-2); //max_sites-2
+  gamma_inverse_.resize(n_sites_*n_dim_*n_dim_); //max_sites*ndim*ndim
+  cos_thetas_.resize(n_sites_-2); //max_sites-2
+
   //if (spiral_flag_) {
     //InitSpiral2D();
     //return;

@@ -125,18 +125,18 @@ void Mesh::AddBondToSite(double *u, double l, int i_site) {
   bonds_[n_bonds_-1].Init(&sites_[i_site],&sites_[n_sites_-1]);
 }
 void Mesh::UpdateBondPositions() {
-  for (std::vector<Bond>::iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
+  for (bond_iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
     it->ReInit();
   }
 }
 void Mesh::ReportSites() {
-  for (std::vector<Site>::iterator it=sites_.begin(); it!=sites_.end(); ++it) {
+  for (site_iterator it=sites_.begin(); it!=sites_.end(); ++it) {
     it->Report();
     std::cerr << "      mem: " << &(*it) << "\n";
   }
 }
 void Mesh::ReportBonds() {
-  for (std::vector<Bond>::iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
+  for (bond_iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
     it->Report();
     std::cerr << "      mem: " << &(*it) << "\n";
   }
@@ -151,10 +151,10 @@ void Mesh::Report() {
 }
 void Mesh::SubReport() {
   fprintf(stderr,"Mesh SubReport: \n");
-  for (std::vector<Bond>::iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
+  for (bond_iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
     it->ReportSites();
   }
-  for (std::vector<Site>::iterator it=sites_.begin(); it!=sites_.end(); ++it) {
+  for (site_iterator it=sites_.begin(); it!=sites_.end(); ++it) {
     it->ReportBonds();
   }
 }
@@ -162,7 +162,7 @@ void Mesh::SetBondLength(double l) {
   bond_length_ = l;
 }
 void Mesh::Draw(std::vector<graph_struct*> * graph_array) {
-  for (std::vector<Bond>::iterator it = bonds_.begin(); it!=bonds_.end(); ++it) {
+  for (bond_iterator it = bonds_.begin(); it!=bonds_.end(); ++it) {
     it->Draw(graph_array);
   }
 }
