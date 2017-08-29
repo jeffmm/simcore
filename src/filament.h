@@ -3,6 +3,7 @@
 
 #include "species.h"
 #include "mesh.h"
+#include "motor.h"
 
 #ifdef ENABLE_OPENMP
 #include "omp.h"
@@ -23,6 +24,7 @@ class Filament : public Mesh {
     double max_length_,
            min_length_,
            max_bond_length_,
+           min_bond_length_,
            persistence_length_,
            friction_ratio_, // friction_par/friction_perp
            friction_par_,
@@ -38,7 +40,11 @@ class Filament : public Mesh {
            p_g2s_,
            p_g2p_,
            driving_factor_,
-           tip_force_;
+           tip_force_,
+           // TEMPORARY FIXME
+           bc_rcut_,
+           wca_c6_,
+           wca_c12_;
     std::vector<double> gamma_inverse_,
                         tensions_, //n_sites-1
                         g_mat_lower_, //n_sites-2
@@ -67,12 +73,15 @@ class Filament : public Mesh {
     void UpdateSitePositions(bool midstep);
     void UpdateSiteOrientations();
     void ApplyForcesTorques();
+    void ApplyBoundaryForces(); // FIXME temporary
     void SetParameters();
     void InitElements();
     void InitRandom();
     void UpdateAvgPosition();
     //void InitSpiral2D();
     void ReportAll();
+    int n_motors_; //FIXME temporary
+    std::vector<Motor> motors_; //FIXME temporary
 
   public:
     Filament();
@@ -150,7 +159,7 @@ class FilamentSpecies : public Species<Filament> {
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();
-      std::vector<std::pair<std::vector<Filament*>::iterator, std::vector<Filament*>::iterator> > chunks;
+      std::vector<std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator> > chunks;
       chunks.reserve(max_threads); 
       size_t chunk_size= members_.size() / max_threads;
       auto cur_iter = members_.begin();

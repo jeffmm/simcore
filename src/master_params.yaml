@@ -65,6 +65,7 @@ filament:
   max_length: [500,double]
   min_length: [1, double]
   max_bond_length: [3, double]
+  min_bond_length: [1.5, double]
   spiral_flag: [0, int]
   driving_factor: [0, double]
   friction_ratio: [2, double]

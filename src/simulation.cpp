@@ -139,12 +139,14 @@ void Simulation::InitSpecies() {
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
+  species_.reserve(species_factory_.m_classes.size());
   for (auto registered = species_factory_.m_classes.begin();
       registered != species_factory_.m_classes.end(); ++registered) {
     SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(registered->first);
     spec->Init(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
     if (spec->GetNInsert() > 0) {
       species_.push_back(spec);
+      species_.back()->Reserve();
     }
   }
 }
@@ -280,6 +282,7 @@ void Simulation::ProcessOutputs(system_parameters params, int graphics, int make
 void Simulation::InitProcessing(int graphics, int make_movie, int run_analyses, int use_posits) {
   rng_.Init(params_.seed);
   space_.Init(&params_);
+  InitObjects();
   InitSpecies();
   InsertSpecies(true, true);
   InitInputs(use_posits);

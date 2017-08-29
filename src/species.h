@@ -69,6 +69,7 @@ class SpeciesBase {
     virtual int InputIsOpen(){ return iposit_file_.is_open(); }
     virtual void CloseFiles(); 
     virtual void CleanUp() {}
+    virtual void Reserve() {}
 };
 
 template<typename T>
@@ -109,6 +110,7 @@ class Species : public SpeciesBase {
     virtual void FinalizeAnalysis() {}
     virtual std::vector<T> * GetMembers() {return &members_;}
     virtual void CleanUp();
+    virtual void Reserve();
 };
 
 #include "species_templates.h"
