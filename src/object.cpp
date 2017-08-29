@@ -129,6 +129,46 @@ bool const Object::IsInteractor() {
 }
 
 // Virtual functions
+
+bool Object::CheckBounds(double const * pos, double buffer) {
+  if (space_->n_periodic == n_dim_)
+    buffer = 0;
+  double R = space_->radius;
+  bool out_of_bounds = false;
+  switch (space_->type._to_integral()) {
+    case 0: // none
+      break;
+    case 2: // sphere
+      {
+        double rmag = 0;
+        for (int i=0; i<n_dim_; ++i) {
+          rmag += pos[i]*pos[i];
+        }
+        // Check that r^2 <= R^2
+        rmag=sqrt(rmag);
+        if (rmag+buffer>R) {
+          out_of_bounds = true;
+        }
+        break;
+      }
+    case 1: // box
+      // Make sure each dimension of position, x, y etc is within the box radius
+      for (int i=0; i<n_dim_; ++i) {
+        if (ABS(pos[i]) + buffer > R) {
+          out_of_bounds = true;
+        }
+      }
+      break;
+    case 3: // budding
+      // FIXME Add checks to make sure object is placed within budding boundary...
+      // right now, just trust user knows what they are doing.
+      break;
+    default:
+      error_exit("ERROR: Boundary type not recognized.\n");
+  }
+  return out_of_bounds;
+}
+
 void Object::InsertRandom() {
   double mag;
   double buffer = 0.5*diameter_;

@@ -18,8 +18,16 @@ Bond * Site::GetBond(int i) {
   }
   return bonds_[i].first;
 }
+
 Bond * Site::GetOtherBond(int bond_oid) {
   return GetOtherDirectedBond(bond_oid).first;
+}
+
+directed_bond Site::GetDirectedBond(int i) {
+  if (i<0 || i >= bonds_.size()) {
+    std::cerr << "ERROR! Requested adjacent bond out of bounds!\n";
+  }
+  return bonds_[i];
 }
 
 directed_bond Site::GetOtherDirectedBond(int bond_oid) {

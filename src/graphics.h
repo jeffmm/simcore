@@ -90,7 +90,7 @@ class Graphics {
 
     int color_switch_; // which coloring algorithm to use
     int keep_going_; // Allow to draw same configuration in loop
-    std::string boundary_type_; // boundary type to draw. currently supports
+    boundary_type boundary_; // boundary type to draw. currently supports
                                 // "box" and "sphere"
 
  public:

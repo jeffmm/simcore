@@ -72,6 +72,7 @@ class Object {
     virtual void InsertRandom();
     virtual void InsertRandomOriented(double *u);
     virtual void InsertAt(double *pos, double *u);
+    virtual bool CheckBounds(double const *pos, double buffer);
     virtual void ZeroForce();
     virtual void UpdatePeriodic();
     virtual void UpdatePosition() {}

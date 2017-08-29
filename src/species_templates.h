@@ -1,5 +1,10 @@
 
 template <typename T> 
+void Species<T>::Reserve() {
+  members_.reserve(GetNInsert());
+}
+
+template <typename T> 
 void Species<T>::AddMember() {
   T newmember;
   members_.push_back(newmember);

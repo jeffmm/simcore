@@ -26,6 +26,7 @@ class Site : public Object {
     void AddRandomForce();
     double const * const GetRandomForce();
     double const * const GetTangent();
+    directed_bond GetDirectedBond(int i);
     directed_bond GetOtherDirectedBond(int bond_oid);
 
 };

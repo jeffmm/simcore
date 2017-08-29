@@ -2,7 +2,6 @@
 
 Filament::Filament() : Mesh() {
   SetParameters();
-  InitElements();
 } 
 
 void Filament::SetParameters() {
@@ -16,6 +15,7 @@ void Filament::SetParameters() {
   max_length_ = params_->filament.max_length;
   min_length_ = params_->filament.min_length;
   max_bond_length_ = params_->filament.max_bond_length;
+  min_bond_length_ = params_->filament.min_bond_length;
   dynamic_instability_flag_ = params_->filament.dynamic_instability_flag;
   spiral_flag_ = params_->filament.spiral_flag;
   force_induced_catastrophe_flag_ = params_->filament.force_induced_catastrophe_flag;
@@ -33,65 +33,14 @@ void Filament::SetParameters() {
   stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
   eq_steps_ = params_->n_steps_equil;
   eq_steps_count_ = 0;
+  bc_rcut_ = pow(2.0, 1.0/6.0)*params_->wca_sig;
+  wca_c12_ = 4.0 * params_->wca_eps * pow(params_->wca_sig, 12.0);
+  wca_c6_  = 4.0 * params_->wca_eps * pow(params_->wca_sig,  6.0);
 }
 
-void Filament::InitElements() {
-  bond_length_ = 0;
-  do {
-    n_bonds_ = (int) ceil(length_/max_bond_length_);
-    if (n_bonds_ < 2) 
-      n_bonds_++;
-    n_sites_ = n_bonds_+1;
-    bond_length_ = length_/n_bonds_;
-    if (n_bonds_ == 2 && bond_length_ <= diameter_) {
-      error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
-    }
-    if (bond_length_ <= diameter_) {
-      max_bond_length_ += 0.1*max_bond_length_;
-      warning("bond_length <= diameter, increasing max_bond_length to %2.2f",max_bond_length_);
-    }
-  } while (bond_length_ <= diameter_);
-  if (length_/n_bonds_ < min_length_) {
-    error_exit("min_length_ of flexible filament segments too large for filament length.");
-  }
-}
-
-void Filament::InitRandom() {
-  bool out_of_bounds = true;
-  do {
-    out_of_bounds = false;
-    Clear();
-    InitRandomSite(diameter_);
-    AddRandomBondToTip(bond_length_);
-    //if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition())) continue;
-    SetOrientation(bonds_[n_bonds_-1].GetOrientation());
-    for (int i=0;i<n_bonds_max_-1;++i) {
-      GenerateProbableOrientation();
-      AddBondToTip(orientation_, bond_length_);
-      // if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition())) break;
-    }
-  } while (out_of_bounds);
-  UpdateBondPositions();
-  UpdateSiteOrientations();
-}
 
 void Filament::Init() {
-  // Initialize mesh
-  Reserve(n_bonds_);
-  //Allocate control structures
-  tensions_.resize(n_sites_-1); //max_sites -1
-  g_mat_lower_.resize(n_sites_-2); //max_sites-2
-  g_mat_upper_.resize(n_sites_-2); //max_sites-2
-  g_mat_diag_.resize(n_sites_-1); //max_sites-1
-  det_t_mat_.resize(n_sites_+1); //max_sites+1
-  det_b_mat_.resize(n_sites_+1); //max_sites+1
-  g_mat_inverse_.resize(n_sites_-2); //max_sites-2
-  k_eff_.resize(n_sites_-2); //max_sites-2
-  h_mat_diag_.resize(n_sites_-1); //max_sites-1
-  h_mat_upper_.resize(n_sites_-2); //max_sites-2
-  h_mat_lower_.resize(n_sites_-2); //max_sites-2
-  gamma_inverse_.resize(n_sites_*n_dim_*n_dim_); //max_sites*ndim*ndim
-  cos_thetas_.resize(n_sites_-2); //max_sites-2
+  InitElements();
 
   //if (spiral_flag_) {
     //InitSpiral2D();
@@ -152,6 +101,93 @@ void Filament::Init() {
   //UpdateBondPositions();
   SetDiffusion();
   //poly_ = poly_state::grow;
+  //FIXME temporary
+  //n_motors_ = n_bonds_;
+  n_motors_ = 0;
+  for (int i=0; i<n_motors_; ++i) {
+    Motor mot;
+    motors_.push_back(mot);
+    motors_.back().Init();
+    motors_.back().AttachToBond(sites_[i].GetDirectedBond(0),0);
+    motors_.back().SetColor(1,draw_type::fixed);
+  }
+}
+
+void Filament::InitElements() {
+  int n_bonds;
+  if (max_length_ < min_length_) {
+    warning("Minimum filament length larger than max length -- setting min_length = max_length");
+    min_length_ = max_length_;
+  }
+  if (length_ > max_length_) {
+    warning("Filament length larger than max length -- setting length = max_length");
+    length_ = max_length_;
+  }
+  else if (length_ > 0 && length_ < min_length_) {
+    warning("Filament length less than min length -- setting length = min_length");
+    length_ = min_length_;
+  }
+  // Polydisperse filaments
+  if (length_ < 0) {
+    length_ = min_length_ + (max_length_-min_length_)*gsl_rng_uniform_pos(rng_.r);
+  }
+  bond_length_ = 0;
+  do {
+    n_bonds_max_ = (int) ceil(max_length_/max_bond_length_);
+    n_bonds = (int) ceil(length_/max_bond_length_);
+    if (n_bonds < 2) 
+      n_bonds++;
+    bond_length_ = length_/n_bonds;
+    if (n_bonds == 2 && bond_length_ <= diameter_) {
+      error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
+    }
+    if (bond_length_ <= diameter_) {
+      max_bond_length_ += 0.1*max_bond_length_;
+      warning("bond_length <= diameter, increasing max_bond_length to %2.2f",max_bond_length_);
+    }
+  } while (bond_length_ <= diameter_);
+  if (max_length_/n_bonds_max_ < min_bond_length_) {
+    error_exit("min_length_ of flexible filament segments too large for filament length.");
+  }
+  // Initialize mesh
+  Reserve(n_bonds_max_);
+  //Allocate control structures
+  int n_sites_max = n_bonds_max_+1;
+  tensions_.resize(n_sites_max-1); //max_sites -1
+  g_mat_lower_.resize(n_sites_max-2); //max_sites-2
+  g_mat_upper_.resize(n_sites_max-2); //max_sites-2
+  g_mat_diag_.resize(n_sites_max-1); //max_sites-1
+  det_t_mat_.resize(n_sites_max+1); //max_sites+1
+  det_b_mat_.resize(n_sites_max+1); //max_sites+1
+  g_mat_inverse_.resize(n_sites_max-2); //max_sites-2
+  k_eff_.resize(n_sites_max-2); //max_sites-2
+  h_mat_diag_.resize(n_sites_max-1); //max_sites-1
+  h_mat_upper_.resize(n_sites_max-2); //max_sites-2
+  h_mat_lower_.resize(n_sites_max-2); //max_sites-2
+  gamma_inverse_.resize(n_sites_max*n_dim_*n_dim_); //max_sites*ndim*ndim
+  cos_thetas_.resize(n_sites_max-2); //max_sites-2
+}
+
+void Filament::InitRandom() {
+  bool out_of_bounds = true;
+  do {
+    out_of_bounds = false;
+    Clear();
+    InitRandomSite(diameter_);
+    AddRandomBondToTip(bond_length_);
+    //if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition())) continue;
+    SetOrientation(bonds_[n_bonds_-1].GetOrientation());
+    for (int i=0;i<n_bonds_max_-1;++i) {
+      GenerateProbableOrientation();
+      AddBondToTip(orientation_, bond_length_);
+      if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition(),diameter_)) break;
+    }
+  } while (out_of_bounds);
+  for (bond_iterator bond=bonds_.begin(); bond!=bonds_.end(); ++bond) {
+    bond->SetColor(color_,draw_);
+  }
+  UpdateBondPositions();
+  UpdateSiteOrientations();
 }
 
 void Filament::InsertAt(double *pos, double *u) {
@@ -278,9 +314,40 @@ void Filament::GenerateProbableOrientation() {
   std::copy(new_orientation,new_orientation+3,orientation_);
 }
 
+void Filament::ApplyBoundaryForces() {
+  for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
+    double const * const pos = site->GetPosition();
+    double rmag = 0;
+    for (int i=0;i<n_dim_;++i) {
+      rmag += pos[i]*pos[i];
+    }
+    rmag = sqrt(rmag);
+    double dr = space_->radius - rmag;
+    if (dr < 0) dr = 1e-6;
+    if ( dr < bc_rcut_ ) {
+      double boundary_force[3] = {0,0,0};
+      double rinv = 1.0/(dr);
+      double rinv2 = rinv*rinv;
+      double r6 = rinv2*rinv2*rinv2;
+      double ffac = -(12.0*wca_c12_*r6 - 6.0*wca_c6_)*r6*rinv;
+      for (int i=0; i<n_dim_; ++i) {
+        boundary_force[i] = ffac*pos[i]/rmag;
+      }
+      site->AddForce(boundary_force);
+    }
+  }
+}
+
 void Filament::UpdatePosition(bool midstep) {
-  //ApplyForcesTorques();
+  ApplyForcesTorques();
+  ApplyBoundaryForces(); // FIXME temporary
   Integrate(midstep);
+  // FIXME temporary
+  if (!midstep) {
+    for (auto it=motors_.begin(); it!= motors_.end(); ++it) {
+      it->UpdatePosition();
+    }
+  }
   UpdateAvgPosition();
   eq_steps_count_++;
 }
@@ -686,6 +753,10 @@ void Filament::ApplyForcesTorques() {
 void Filament::Draw(std::vector<graph_struct*> * graph_array) {
   for (auto bond=bonds_.begin(); bond!= bonds_.end(); ++bond) {
     bond->Draw(graph_array);
+  }
+  // FIXME temporary
+  for (auto motor=motors_.begin(); motor!= motors_.end(); ++motor) {
+    motor->Draw(graph_array);
   }
 }
 

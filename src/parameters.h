@@ -27,6 +27,7 @@ class filament_parameters : public species_parameters {
     double max_length = 500;
     double min_length = 1;
     double max_bond_length = 3;
+    double min_bond_length = 1.5;
     int spiral_flag = 0;
     double driving_factor = 0;
     double friction_ratio = 2;
@@ -44,6 +45,13 @@ class filament_parameters : public species_parameters {
     int lp_analysis = 0;
 };
 
+class br_bead_parameters : public species_parameters {
+  public:
+    double diameter = 1;
+    double driving_factor = 0;
+    double packing_fraction = -1;
+};
+
 class hard_rod_parameters : public species_parameters {
   public:
     double diameter = 1;
@@ -52,13 +60,6 @@ class hard_rod_parameters : public species_parameters {
     double max_length = 300;
     double max_bond_length = 5;
     double driving_factor = 0;
-};
-
-class br_bead_parameters : public species_parameters {
-  public:
-    double driving_factor = 0;
-    double diameter = 1;
-    double packing_fraction = -1;
 };
 
 class md_bead_parameters : public species_parameters {
@@ -72,10 +73,9 @@ class system_parameters {
   public:
     long seed = 7859459105545;
     int n_runs = 1;
+    int n_dim = 3;
     int n_random = 1;
     std::string run_name = "sc";
-    int n_dim = 3;
-    int load_checkpoint = 0;
     int n_periodic = 0;
     int boundary = 0;
     double system_radius = 100;
@@ -87,13 +87,13 @@ class system_parameters {
     int n_graph = 1000;
     double graph_diameter = 0;
     int graph_background = 1;
+    int constant_volume = 0;
+    int load_checkpoint = 0;
     int draw_boundary = 1;
     std::string insertion_type = "species";
     int movie_flag = 0;
     std::string movie_directory = "frames";
     int time_flag = 0;
-    int species_insertion_failure_threshold = 10000;
-    int uniform_crystal = 0;
     double bud_height = 680;
     double bud_radius = 300;
     double lj_epsilon = 1;
@@ -105,20 +105,21 @@ class system_parameters {
     double f_cutoff = 100;
     int max_overlap = 100000;
     int constant_pressure = 0;
-    int constant_volume = 0;
+    int pressure_time = 100;
     double target_pressure = 0;
     double target_radius = 100;
-    int pressure_time = 100;
-    double compressibility = 1;
     int stoch_flag = 1;
+    double compressibility = 1;
     int thermo_flag = 0;
     int n_thermo = 1000;
     int interaction_flag = 1;
     int n_steps_equil = 0;
+    int species_insertion_failure_threshold = 10000;
+    int uniform_crystal = 0;
     species_parameters species;
     filament_parameters filament;
-    hard_rod_parameters hard_rod;
     br_bead_parameters br_bead;
+    hard_rod_parameters hard_rod;
     md_bead_parameters md_bead;
 };
 
