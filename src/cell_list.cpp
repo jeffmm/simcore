@@ -132,9 +132,9 @@ std::vector<pair_interaction> CellList::GetPairInteractions() {
   std::vector<pair_interaction> pair_interactions;
   for (cell_map_it it=cells_.begin(); it!= cells_.end(); ++it) {
     std::vector<interactor_pair> j = it->second.PairInteractions();
-    for (auto jx : j) {
+    for (auto jx=j.begin(); jx!=j.end(); ++jx) {
       Interaction ix;
-      pair_interaction pix(jx,ix);
+      pair_interaction pix(*jx,ix);
       pair_interactions.push_back(pix);
     }
     //pair_interactions.insert(interactions.end(), j.begin(), j.end());

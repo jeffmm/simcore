@@ -49,6 +49,7 @@ void Space::Init(system_parameters *params) {
         error_exit("Budding yeast boundary type selected but either bud radius\n\
             or bud height is not a positive number!");
       boundary_ = boundary_type::budding;
+      break;
     default:
       error_exit("Boundary type %d not recognized!",params_->boundary);
   }
@@ -271,7 +272,8 @@ void Space::InitSpaceStruct() {
   s_struct.n_dim = n_dim_;
   s_struct.n_periodic = n_periodic_;
   s_struct.type = boundary_;
-  if (boundary_._to_string() == "budding") {
+  std::string b_type(boundary_._to_string());
+  if (b_type.compare("budding")==0) {
     s_struct.bud = true;
     s_struct.bud_height = bud_height_;
     s_struct.bud_radius = bud_radius_;
