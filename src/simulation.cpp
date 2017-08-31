@@ -136,6 +136,7 @@ void Simulation::InitSpecies() {
   //REGISTER_SPECIES(HardRodSpecies,hard_rod);
   //REGISTER_SPECIES(BrBeadSpecies,br_bead);
   REGISTER_SPECIES(FilamentSpecies,filament);
+  REGISTER_SPECIES(CentrosomeSpecies,centrosome);
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
