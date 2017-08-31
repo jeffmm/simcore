@@ -10,7 +10,7 @@
 #define ENABLE_OPENMP
 #endif
 
-BETTER_ENUM(species_id, unsigned char, br_bead, filament)
+BETTER_ENUM(species_id, unsigned char, br_bead, filament, centrosome)
 BETTER_ENUM(draw_type, unsigned char, fixed, orientation, bw, none);
 BETTER_ENUM(boundary_type, unsigned char, none=0, box=1, sphere=2, budding=3);
 BETTER_ENUM(poly_state, unsigned char, grow, shrink, pause);
@@ -42,5 +42,30 @@ struct graph_struct {
   double color;
   draw_type draw;
 };
+
+// Harmonic anchor structure
+class Anchor {
+  public:
+    bool alignment_potential_;
+    double position_[3],
+           orientation_[3],
+           force_[3],
+           torque_[3],
+           k_spring_,
+           k_align_,
+           spring_length_;
+    Anchor() {
+      std::fill(position_,position_+3,0.0);
+      std::fill(orientation_,orientation_+3,0.0);
+      std::fill(force_,force_+3,0.0);
+      std::fill(torque_,torque_+3,0.0);
+      alignment_potential_ = false;
+      k_spring_ = 0;
+      k_align_ = 0;
+      spring_length_ = 0;
+    }
+};
+
+typedef std::vector<Anchor>::iterator anchor_iterator;
 
 #endif

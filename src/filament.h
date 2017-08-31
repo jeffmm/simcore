@@ -12,6 +12,7 @@
 class Filament : public Mesh {
 
   private:
+    bool anchored_;
     int dynamic_instability_flag_,
         force_induced_catastrophe_flag_,
         theta_validation_flag_,
@@ -74,19 +75,24 @@ class Filament : public Mesh {
     void UpdateSiteOrientations();
     void ApplyForcesTorques();
     void ApplyBoundaryForces(); // FIXME temporary
+    void ApplyAnchorForces(); // FIXME temporary
+    void ApplyInteractionForces();
     void SetParameters();
     void InitElements();
-    void InitRandom();
+    void InsertFilament();
+    void InsertFirstBond();
     void UpdateAvgPosition();
     //void InitSpiral2D();
     void ReportAll();
     int n_motors_; //FIXME temporary
     std::vector<Motor> motors_; //FIXME temporary
+    Anchor * anchor_; //FIXME temporary? 
 
   public:
     Filament();
     virtual void Init();
     virtual void InsertAt(double *pos, double *u);
+    virtual void SetAnchor(Anchor * a);
     //void DiffusionValidationInit();
     virtual void Integrate(bool midstep);
     virtual double const * const GetDrTot();
@@ -106,11 +112,20 @@ class Filament : public Mesh {
     double GetTipZ() {
       return sites_[n_sites_-1].GetOrientation()[n_dim_-1];
     }
-    double const * const GetHeadPos() {
+    double const * const GetHeadPosition() {
       return sites_[n_sites_-1].GetPosition();
     }
-    double const * const GetTailPos() {
+    double const * const GetTailPosition() {
       return sites_[0].GetPosition();
+    }
+    double const * const GetTailOrientation() {
+      return sites_[0].GetOrientation();
+    }
+    void AddTorqueTail(double * t) {
+      bonds_[0].AddTorque(t);
+    }
+    void AddForceTail(double *f) {
+      sites_[0].AddForce(f);
     }
     void WritePosit(std::fstream &oposit);
     void ReadPosit(std::fstream &iposit);
@@ -120,6 +135,9 @@ class Filament : public Mesh {
     void ReadCheckpoint(std::fstream &icheck);
     void ScalePosition();
 };
+
+typedef std::vector<Filament>::iterator filament_iterator;
+typedef std::vector<std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator> > filament_chunk_vector;
 
 class FilamentSpecies : public Species<Filament> {
   protected:
@@ -159,12 +177,12 @@ class FilamentSpecies : public Species<Filament> {
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();
-      std::vector<std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator> > chunks;
+      filament_chunk_vector chunks;
       chunks.reserve(max_threads); 
       size_t chunk_size= members_.size() / max_threads;
-      auto cur_iter = members_.begin();
+      filament_iterator cur_iter = members_.begin();
       for(int i = 0; i < max_threads - 1; ++i) {
-        auto last_iter = cur_iter;
+        filament_iterator last_iter = cur_iter;
         std::advance(cur_iter, chunk_size);
         chunks.push_back(std::make_pair(last_iter, cur_iter));
       }
@@ -178,7 +196,7 @@ class FilamentSpecies : public Species<Filament> {
             it->UpdatePosition(midstep_);
       }
 #else
-      for (auto it=members_.begin(); it!=members_.end(); ++it) 
+      for (filament_iterator it=members_.begin(); it!=members_.end(); ++it) 
         it->UpdatePosition(midstep_);
 #endif
 

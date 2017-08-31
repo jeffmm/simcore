@@ -97,3 +97,12 @@ md_bead:
   diameter: [1, double]
   mass: [1, double]
   driving_factor: [0, double]
+centrosome:
+  diameter: [10,double]
+  num_filaments_min: [0,int]
+  num_filaments_max: [10,int]
+  fixed_spacing: [0,int]
+  alignment_potential: [0,int]
+  k_spring: [0,double]
+  spring_length: [0,double]
+

@@ -36,69 +36,23 @@ void Filament::SetParameters() {
   bc_rcut_ = pow(2.0, 1.0/6.0)*params_->wca_sig;
   wca_c12_ = 4.0 * params_->wca_eps * pow(params_->wca_sig, 12.0);
   wca_c6_  = 4.0 * params_->wca_eps * pow(params_->wca_sig,  6.0);
+  anchored_ = false;
 }
 
+void Filament::SetAnchor(Anchor * a) {
+  anchor_ = a;
+  anchored_ = true;
+}
 
 void Filament::Init() {
   InitElements();
-
   //if (spiral_flag_) {
     //InitSpiral2D();
     //return;
   //}
-  //bool probable_conformation = false;
-  if (params_->filament.insertion_type.compare("random")==0) {
-    InitRandom();
-    //probable_conformation = true;
-  }
-  else {
-    error_exit("Not yet\n");
-  }
-  //else if(params_->filament.insertion_type.compare("random_oriented")==0) {
-    //InsertRandom();
-    //std::fill(orientation_,orientation_+3,0.0);
-    //orientation_[n_dim_-1]=1.0;
-    //probable_conformation = true;
-  //}
-  //else if(params_->filament.insertion_type.compare("centered_random")==0) {
-    //InsertRandom();
-    //std::fill(position_,position_+3,0.0);
-    //for (int i=0;i<n_dim_; ++i) {
-      //position_[i] = position_[i] - 0.5*length_*orientation_[i];
-    //}
-    //probable_conformation = true;
-  //}
-  //else if(params_->filament.insertion_type.compare("centered_oriented")==0) {
-    //InsertRandom();
-    //std::fill(position_,position_+3,0.0);
-    //std::fill(orientation_,orientation_+3,0.0);
-    //orientation_[n_dim_-1]=1.0;
-    //for (int i=0;i<n_dim_; ++i) {
-      //position_[i] = position_[i] - 0.5*length_*orientation_[i];
-    //}
-    //// We still want to sample probable conformations
-    //probable_conformation = true; 
-  //}
-  //else if (params_->filament.insertion_type.compare("simple_crystal")==0) {
-    //probable_conformation = false;
-  //}
-  //else {
-    //error_exit("Insertion type not recognized for filaments. Exiting.");
-  //}
-  //generate_random_unit_vector(n_dim_, orientation_, rng_.r);
-  //for (auto site=sites_.begin(); site!=sites_.end(); ++site) {
-    //site->SetDiameter(diameter_);
-    //site->SetLength(bond_length_);
-    //site->SetPosition(position_);
-    //site->SetOrientation(orientation_);
-    //for (int i=0; i<n_dim_; ++i)
-      //position_[i] = position_[i] + orientation_[i] * bond_length_;
-    //if (probable_conformation)
-      //GenerateProbableOrientation();
-  //}
+  InsertFilament();
   UpdatePrevPositions();
   CalculateAngles();
-  //UpdateBondPositions();
   SetDiffusion();
   //poly_ = poly_state::grow;
   //FIXME temporary
@@ -168,17 +122,53 @@ void Filament::InitElements() {
   cos_thetas_.resize(n_sites_max-2); //max_sites-2
 }
 
-void Filament::InitRandom() {
+void Filament::InsertFirstBond() {
+  if (anchored_) {
+    InitSiteAt(anchor_->position_,diameter_);
+    std::copy(anchor_->orientation_,anchor_->orientation_+3,orientation_);
+    GenerateProbableOrientation();
+    AddBondToTip(orientation_,bond_length_);
+  }
+  else if (params_->filament.insertion_type.compare("random") == 0) {
+    InitRandomSite(diameter_);
+    AddRandomBondToTip(bond_length_);
+  }
+  else if (params_->filament.insertion_type.compare("random_oriented") == 0) {
+    InitRandomSite(diameter_);
+    std::fill(orientation_,orientation_+3,0.0);
+    orientation_[n_dim_-1] = 1.0;
+    AddBondToTip(orientation_, bond_length_);
+  }
+  else if (params_->filament.insertion_type.compare("centered_oriented") == 0) {
+    std::fill(position_,position_+3,0.0);
+    position_[n_dim_-1] = -0.5*length_;
+    InitSiteAt(position_,diameter_);
+    std::fill(orientation_,orientation_+3,0.0);
+    orientation_[n_dim_-1] = 1.0;
+    AddBondToTip(orientation_, bond_length_);
+  }
+  else if (params_->filament.insertion_type.compare("centered_random") == 0) {
+    generate_random_unit_vector(n_dim_,orientation_,rng_.r);
+    for (int i=0;i<n_dim_;++i) {
+      position_[i] = - 0.5*length_*orientation_[i];
+    }
+    InitSiteAt(position_,diameter_);
+    AddBondToTip(orientation_, bond_length_);
+  }
+}
+
+void Filament::InsertFilament() {
   bool out_of_bounds = true;
   do {
     out_of_bounds = false;
     Clear();
-    InitRandomSite(diameter_);
-    AddRandomBondToTip(bond_length_);
-    //if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition())) continue;
+    InsertFirstBond();
+    if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition(),diameter_)) continue;
     SetOrientation(bonds_[n_bonds_-1].GetOrientation());
     for (int i=0;i<n_bonds_max_-1;++i) {
-      GenerateProbableOrientation();
+      if (params_->filament.insertion_type.compare("simple_crystal") != 0) {
+        GenerateProbableOrientation();
+      }
       AddBondToTip(orientation_, bond_length_);
       if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition(),diameter_)) break;
     }
@@ -315,6 +305,7 @@ void Filament::GenerateProbableOrientation() {
 }
 
 void Filament::ApplyBoundaryForces() {
+  if (params_->boundary != 2) return;
   for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
     double const * const pos = site->GetPosition();
     double rmag = 0;
@@ -340,7 +331,6 @@ void Filament::ApplyBoundaryForces() {
 
 void Filament::UpdatePosition(bool midstep) {
   ApplyForcesTorques();
-  ApplyBoundaryForces(); // FIXME temporary
   Integrate(midstep);
   // FIXME temporary
   if (!midstep) {
@@ -715,6 +705,12 @@ void Filament::UpdatePrevPositions() {
 double const * const Filament::GetDrTot() {return nullptr;}
 
 void Filament::ApplyForcesTorques() {
+  ApplyInteractionForces();
+  ApplyBoundaryForces(); // FIXME temporary
+  if (anchored_) ApplyAnchorForces();
+}
+
+void Filament::ApplyInteractionForces() {
   double pure_torque[3] = {0,0,0};
   double site_force[3] = {0,0,0};
   double linv=1.0/bond_length_;
@@ -747,6 +743,39 @@ void Filament::ApplyForcesTorques() {
       sites_[i].AddForce(f_dr);
       sites_[i+1].AddForce(f_dr);
     }
+  }
+}
+
+void Filament::ApplyAnchorForces() {
+  double const * const tail_pos = sites_[0].GetPosition();
+  double dr[3] = {0,0,0};
+  double dr_mag=0.0;
+  for (int i=0;i<n_dim_;++i) {
+    dr[i] = tail_pos[i] - anchor_->position_[i];
+    dr_mag += SQR(dr[i]);
+  }
+  dr_mag = sqrt(dr_mag);
+  if (dr_mag < 1e-12) {
+    std::fill(anchor_->force_,anchor_->force_+3,0.0);
+  }
+  else {
+    for (int i=0;i<n_dim_;++i) {
+      anchor_->force_[i] = anchor_->k_spring_*(dr_mag - anchor_->spring_length_)*dr[i]/dr_mag;
+    }
+  }
+  sites_[0].SubForce(anchor_->force_);
+
+  if (anchor_->alignment_potential_) {
+    double const * const tail_u = bonds_[0].GetOrientation();
+    double cos_theta = dot_product(n_dim_,tail_u,anchor_->orientation_);
+    double factor = sqrt( persistence_length_*(1-cos_theta) );
+    double temp[3] = {0,0,0};
+    cross_product(anchor_->orientation_, bonds_[0].GetOrientation(), temp, n_dim_);
+    normalize_vector(temp, 3);
+    for (int i=0;i<3;++i) {
+      anchor_->torque_[i] = factor * temp[i]; 
+    }
+    bonds_[0].SubTorque(anchor_->torque_);
   }
 }
 
@@ -1182,8 +1211,8 @@ void FilamentSpecies::RunSpiralAnalysis() {
   // record energy relative to the bending "zero energy" (straight rod)
   e_bend_ = e_zero - e_bend_ * plength / clength;
   tip_z = it->GetTipZ();
-  double const * const head_pos = it->GetHeadPos();
-  double const * const tail_pos = it->GetTailPos();
+  double const * const head_pos = it->GetHeadPosition();
+  double const * const tail_pos = it->GetTailPosition();
   if (spiral_file_.is_open()) {
     spiral_file_ << time_ << " " << tot_angle_ << " " << e_bend_ << " " << tip_z << " " << head_pos[0] << " " << head_pos[1] << " " << tail_pos[0] << " " << tail_pos[1] << "\n";
   }
@@ -1201,8 +1230,8 @@ void FilamentSpecies::RunMse2eAnalysis() {
   //}
   //mse2e_file_ << time_;
   for (auto it=members_.begin(); it!= members_.end(); ++it) {
-    double const * const head_pos = it->GetHeadPos();
-    double const * const tail_pos = it->GetTailPos();
+    double const * const head_pos = it->GetHeadPosition();
+    double const * const tail_pos = it->GetTailPosition();
     double mse2e_temp = 0.0;
     for (int i=0; i<params_->n_dim; ++i) {
       double temp = (head_pos[i] - tail_pos[i]);
