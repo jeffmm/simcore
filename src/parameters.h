@@ -77,6 +77,7 @@ class centrosome_parameters : public species_parameters {
     int fixed_spacing = 0;
     int alignment_potential = 0;
     double k_spring = 0;
+    double k_align = 0;
     double spring_length = 0;
 };
 
