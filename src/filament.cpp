@@ -33,10 +33,11 @@ void Filament::SetParameters() {
   stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
   eq_steps_ = params_->n_steps_equil;
   eq_steps_count_ = 0;
+  anchored_ = false;
+  //temporary
   bc_rcut_ = pow(2.0, 1.0/6.0)*params_->wca_sig;
   wca_c12_ = 4.0 * params_->wca_eps * pow(params_->wca_sig, 12.0);
   wca_c6_  = 4.0 * params_->wca_eps * pow(params_->wca_sig,  6.0);
-  anchored_ = false;
 }
 
 void Filament::SetAnchor(Anchor * a) {
@@ -81,12 +82,13 @@ void Filament::InitElements() {
     warning("Filament length less than min length -- setting length = min_length");
     length_ = min_length_;
   }
-  // Polydisperse filaments
-  if (length_ < 0) {
-    length_ = min_length_ + (max_length_-min_length_)*gsl_rng_uniform_pos(rng_.r);
-  }
   bond_length_ = 0;
+  bool polydisperse = (length_<0);
   do {
+    // Polydisperse filaments
+    if (polydisperse) {
+      length_ = min_length_ + (max_length_-min_length_)*gsl_rng_uniform_pos(rng_.r);
+    }
     n_bonds_max_ = (int) ceil(max_length_/max_bond_length_);
     n_bonds = (int) ceil(length_/max_bond_length_);
     if (n_bonds < 2) 
@@ -159,13 +161,14 @@ void Filament::InsertFirstBond() {
 
 void Filament::InsertFilament() {
   bool out_of_bounds = true;
+  int n_bonds = (int) ceil(length_/max_bond_length_);
   do {
     out_of_bounds = false;
     Clear();
     InsertFirstBond();
     if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition(),diameter_)) continue;
     SetOrientation(bonds_[n_bonds_-1].GetOrientation());
-    for (int i=0;i<n_bonds_max_-1;++i) {
+    for (int i=0;i<n_bonds-1;++i) {
       if (params_->filament.insertion_type.compare("simple_crystal") != 0) {
         GenerateProbableOrientation();
       }
@@ -313,8 +316,8 @@ void Filament::ApplyBoundaryForces() {
       rmag += pos[i]*pos[i];
     }
     rmag = sqrt(rmag);
-    double dr = space_->radius - rmag;
-    if (dr < 0) dr = 1e-6;
+    double dr = space_->radius - rmag - 0.5*diameter_;
+    if (dr <= 0) dr = 1e-6;
     if ( dr < bc_rcut_ ) {
       double boundary_force[3] = {0,0,0};
       double rinv = 1.0/(dr);
@@ -768,9 +771,13 @@ void Filament::ApplyAnchorForces() {
   if (anchor_->alignment_potential_) {
     double const * const tail_u = bonds_[0].GetOrientation();
     double cos_theta = dot_product(n_dim_,tail_u,anchor_->orientation_);
-    double factor = sqrt( persistence_length_*(1-cos_theta) );
+    double factor = anchor_->k_align_*sqrt( persistence_length_*ABS(1-cos_theta) );
+    if (factor != factor) {
+      printf ("%2.12f %2.12f\n",cos_theta, 1-cos_theta);
+      exit(1);
+    }
     double temp[3] = {0,0,0};
-    cross_product(anchor_->orientation_, bonds_[0].GetOrientation(), temp, n_dim_);
+    cross_product(anchor_->orientation_, tail_u, temp, n_dim_);
     normalize_vector(temp, 3);
     for (int i=0;i<3;++i) {
       anchor_->torque_[i] = factor * temp[i]; 

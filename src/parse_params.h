@@ -350,6 +350,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("k_spring")==0) {
             params->centrosome.k_spring = jt->second.as<double>();
           }
+          else if (param_name.compare("k_align")==0) {
+            params->centrosome.k_align = jt->second.as<double>();
+          }
           else if (param_name.compare("spring_length")==0) {
             params->centrosome.spring_length = jt->second.as<double>();
           }
