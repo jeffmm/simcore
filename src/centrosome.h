@@ -11,14 +11,20 @@ class Centrosome : public Object {
         n_filaments_min_,
         n_filaments_max_;
     double k_spring_,
+           k_align_,
            spring_length_,
            anchor_distance_,
            gamma_trans_,
            gamma_rot_,
-           diffusion_;
+           diffusion_,
+           //temporary
+           bc_rcut_,
+           wca_c12_,
+           wca_c6_;
     std::vector<Filament> filaments_;
     std::vector<Anchor> anchors_;
     void ApplyForcesTorques();
+    void ApplyBoundaryForces();
     void InsertCentrosome();
     void GenerateAnchorSites();
     void SetDiffusion();

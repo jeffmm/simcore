@@ -7,18 +7,24 @@ Centrosome::Centrosome() : Object() {
   n_filaments_min_ = params_->centrosome.num_filaments_min;
   n_filaments_max_ = params_->centrosome.num_filaments_max;
   k_spring_ = params_->centrosome.k_spring;
+  k_align_ = params_->centrosome.k_align;
   spring_length_ = params_->centrosome.spring_length;
   alignment_potential_ = (params_->centrosome.alignment_potential ? true : false);
   fixed_spacing_ = (params_->centrosome.fixed_spacing ? true : false);
   anchor_distance_ = 0.5*diameter_;
   n_filaments_ = 0;
   SetDiffusion();
+  // temporary
+  bc_rcut_ = pow(2.0, 1.0/6.0)*params_->wca_sig;
+  wca_c12_ = 4.0 * params_->wca_eps * pow(params_->wca_sig, 12.0);
+  wca_c6_  = 4.0 * params_->wca_eps * pow(params_->wca_sig,  6.0);
 }
 
 void Centrosome::Init() {
   InsertCentrosome();
   if (n_filaments_min_ > n_filaments_max_) {
     warning("Min n_filaments greater than max n_filaments in centrosome. Setting equal.");
+    n_filaments_min_ = n_filaments_max_;
   }
   n_filaments_ = n_filaments_min_ + gsl_rng_uniform_int(rng_.r,n_filaments_max_ - n_filaments_min_ + 1); 
   filaments_.reserve(n_filaments_);
@@ -35,6 +41,9 @@ void Centrosome::Init() {
 void Centrosome::ZeroForce() {
   Object::ZeroForce();
   for (filament_iterator it=filaments_.begin();it!=filaments_.end();++it) {
+    it->ZeroForce();
+  }
+  for (anchor_iterator it=anchors_.begin(); it!=anchors_.end(); ++it) {
     it->ZeroForce();
   }
 }
@@ -64,12 +73,26 @@ void Centrosome::InsertCentrosome() {
 
 void Centrosome::GenerateAnchorSites() {
   anchor_distance_ += (0.5 + 1e-3)*params_->filament.diameter;
+  double theta = 0.0;
+  double dtheta = 2.0*M_PI/(n_filaments_);
   for (int i_fil=0;i_fil<n_filaments_;++i_fil) {
-    generate_random_unit_vector(n_dim_,anchors_[i_fil].orientation_,rng_.r);
+    if (fixed_spacing_ && n_dim_ == 2) {
+      anchors_[i_fil].orientation_[0] = cos(theta);
+      anchors_[i_fil].orientation_[1] = sin(theta);
+      theta+=dtheta;
+    }
+    else if (fixed_spacing_ && n_dim_ == 3) {
+      warning("Fixed filament spacing not yet implemented for 3D in centrosome. Inserting randomly.");
+      generate_random_unit_vector(n_dim_,anchors_[i_fil].orientation_,rng_.r);
+    }
+    else {
+      generate_random_unit_vector(n_dim_,anchors_[i_fil].orientation_,rng_.r);
+    }
     for (int i=0;i<n_dim_;++i) {
       anchors_[i_fil].position_[i] = position_[i] + anchor_distance_*anchors_[i_fil].orientation_[i];
     }
     anchors_[i_fil].k_spring_ = k_spring_;
+    anchors_[i_fil].k_align_ = k_align_;
     anchors_[i_fil].spring_length_ = spring_length_;
     anchors_[i_fil].alignment_potential_ = alignment_potential_;
   }
@@ -101,8 +124,30 @@ void Centrosome::UpdatePosition(bool midstep) {
 #endif
   if (!midstep) {
     ApplyForcesTorques();
+    ApplyBoundaryForces();
     Integrate();
     UpdatePeriodic();
+  }
+}
+
+void Centrosome::ApplyBoundaryForces() {
+  if (params_->boundary != 2) return;
+  double rmag = 0;
+  for (int i=0;i<n_dim_;++i) {
+    rmag += position_[i]*position_[i];
+  }
+  rmag = sqrt(rmag);
+  double dr = space_->radius - rmag - 0.5*diameter_;
+  if (dr <= 0) dr = 1e-6;
+  if ( dr < bc_rcut_ ) {
+    double boundary_force[3] = {0,0,0};
+    double rinv = 1.0/(dr);
+    double rinv2 = rinv*rinv;
+    double r6 = rinv2*rinv2*rinv2;
+    double ffac = -(12.0*wca_c12_*r6 - 6.0*wca_c6_)*r6*rinv;
+    for (int i=0; i<n_dim_; ++i) {
+      force_[i] += ffac*position_[i]/rmag;
+    }
   }
 }
 
@@ -113,10 +158,11 @@ void Centrosome::ApplyForcesTorques() {
   }
   for (anchor_iterator it=anchors_.begin(); it!=anchors_.end(); ++it) {
     // First calculate translational forces
-    double f_mag = dot_product(n_dim_, it->orientation_, it->force_);
+    //double f_mag = dot_product(n_dim_, it->orientation_, it->force_);
     double dr[3] = {0,0,0};
     for (int i=0; i<n_dim_; ++i) {
-      force_[i] += f_mag * it->orientation_[i];
+      //force_[i] += f_mag * it->orientation_[i];
+      force_[i] += it->force_[i];
       dr[i] = it->orientation_[i]*anchor_distance_;
     }
     // Then calculate torques
@@ -126,8 +172,9 @@ void Centrosome::ApplyForcesTorques() {
     for (int i=0; i<3; ++i) {
       torque_[i] += i_torque[i];
       // And add torque from alignment potential
-      if (alignment_potential_)
+      if (alignment_potential_) {
         torque_[i] += it->torque_[i];
+      }
     }
   }
 }
