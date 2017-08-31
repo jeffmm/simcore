@@ -9,6 +9,7 @@
 #include "auxiliary.h"
 #include "helpers.h"
 #include "filament.h"
+#include "centrosome.h"
 //#include "br_bead.h"
 //#include "objects.h"
 
