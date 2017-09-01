@@ -39,6 +39,28 @@ directed_bond Site::GetOutgoingBond() {
   return std::make_pair(nullptr,NONE);
 }
 
+void Site::RemoveBond(int bond_oid) {
+  for (int i_bond=0; i_bond<n_bonds_;++i_bond) {
+    if (bonds_[i_bond].first->GetOID() == bond_oid) {
+      bonds_.erase(bonds_.begin()+i_bond);
+      n_bonds_--;
+      return;
+    }
+  }
+}
+
+void Site::RemoveOutgoingBonds() {
+  for (int i_bond=0; i_bond<n_bonds_;) {
+    if (bonds_[i_bond].second == OUTGOING) {
+      bonds_.erase(bonds_.begin()+i_bond);
+      n_bonds_--;
+    }
+    else {
+      ++i_bond;
+    }
+  }
+}
+
 directed_bond Site::GetOtherDirectedBond(int bond_oid) {
   if (n_bonds_ == 1) {
     // there are no other bonds

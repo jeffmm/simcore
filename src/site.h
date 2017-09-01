@@ -29,7 +29,8 @@ class Site : public Object {
     directed_bond GetDirectedBond(int i);
     directed_bond GetOutgoingBond();
     directed_bond GetOtherDirectedBond(int bond_oid);
-
+    void RemoveOutgoingBonds();
+    void RemoveBond(int bond_oid);
 };
 
 #endif // _SIMCORE_SITE_H_
