@@ -12,7 +12,8 @@
 class Filament : public Mesh {
 
   private:
-    bool anchored_;
+    bool anchored_,
+         midstep_;
     int dynamic_instability_flag_,
         force_induced_catastrophe_flag_,
         theta_validation_flag_,
@@ -59,11 +60,11 @@ class Filament : public Mesh {
                         h_mat_upper_, //n_sites-2
                         h_mat_lower_, //n_sites-2
                         cos_thetas_;
-    //poly_state poly_;
+    poly_state poly_;
     void UpdateSiteBondPositions();
     void SetDiffusion();
     void GenerateProbableOrientation();
-    void CalculateAngles();
+    void CalculateAngles(bool rescale=true);
     void CalculateTangents();
     void UpdatePrevPositions();
     void AddRandomForces();
@@ -71,7 +72,7 @@ class Filament : public Mesh {
     void GeometricallyProjectRandomForces();
     void CalculateBendingForces();
     void CalculateTensions();
-    void UpdateSitePositions(bool midstep);
+    void UpdateSitePositions();
     void UpdateSiteOrientations();
     void ApplyForcesTorques();
     void ApplyBoundaryForces(); // FIXME temporary
@@ -82,6 +83,10 @@ class Filament : public Mesh {
     void InsertFilament();
     void InsertFirstBond();
     void UpdateAvgPosition();
+    void DynamicInstability();
+    void UpdatePolyState();
+    void GrowFilament();
+    void RescaleBonds();
     //void InitSpiral2D();
     void ReportAll();
     int n_motors_; //FIXME temporary
@@ -94,7 +99,7 @@ class Filament : public Mesh {
     virtual void InsertAt(double *pos, double *u);
     virtual void SetAnchor(Anchor * a);
     //void DiffusionValidationInit();
-    virtual void Integrate(bool midstep);
+    virtual void Integrate();
     virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePosition() {}

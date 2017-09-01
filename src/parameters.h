@@ -43,13 +43,7 @@ class filament_parameters : public species_parameters {
     double v_depoly = 0.793;
     int theta_analysis = 0;
     int lp_analysis = 0;
-};
-
-class br_bead_parameters : public species_parameters {
-  public:
-    double diameter = 1;
-    double driving_factor = 0;
-    double packing_fraction = -1;
+    int n_motors = 0;
 };
 
 class hard_rod_parameters : public species_parameters {
@@ -60,6 +54,13 @@ class hard_rod_parameters : public species_parameters {
     double max_length = 300;
     double max_bond_length = 5;
     double driving_factor = 0;
+};
+
+class br_bead_parameters : public species_parameters {
+  public:
+    double diameter = 1;
+    double driving_factor = 0;
+    double packing_fraction = -1;
 };
 
 class md_bead_parameters : public species_parameters {
@@ -130,8 +131,8 @@ class system_parameters {
     int n_steps_equil = 0;
     species_parameters species;
     filament_parameters filament;
-    br_bead_parameters br_bead;
     hard_rod_parameters hard_rod;
+    br_bead_parameters br_bead;
     md_bead_parameters md_bead;
     centrosome_parameters centrosome;
 };
