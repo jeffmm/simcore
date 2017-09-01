@@ -27,14 +27,18 @@ class Mesh : public Object {
     void AddSite(Site s);
     void AddBond(Bond b);
     void SetBondLength(double l);
+    void RemoveBondFromTip();
     void ReportSites();
     void ReportBonds();
     void Report();
     void SubReport();
     void UpdateBondPositions();
+    void UpdatePrevPositions();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     void Reserve(int n_bonds);
     void Clear();
+    void DoubleGranularityLinear();
+    void HalfGranularityLinear();
     Site * GetSite(int i);
     Bond * GetBond(int i);
     virtual void ZeroForce();

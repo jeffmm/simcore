@@ -85,29 +85,15 @@ void Filament::InitElements() {
     warning("Filament length less than min length -- setting length = min_length");
     length_ = min_length_;
   }
-  bond_length_ = 0;
-  bool polydisperse = (length_<0);
-  do {
-    // Polydisperse filaments
-    if (polydisperse) {
-      length_ = min_length_ + (max_length_-min_length_)*gsl_rng_uniform_pos(rng_.r);
-    }
-    n_bonds_max_ = (int) ceil(max_length_/max_bond_length_);
-    n_bonds = (int) ceil(length_/max_bond_length_);
-    if (n_bonds < 2) 
-      n_bonds++;
-    bond_length_ = length_/n_bonds;
-    if (n_bonds == 2 && bond_length_ <= diameter_) {
-      error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
-    }
-    if (bond_length_ <= diameter_) {
-      max_bond_length_ += 0.1*max_bond_length_;
-      warning("bond_length <= diameter, increasing max_bond_length to %2.2f",max_bond_length_);
-    }
-  } while (bond_length_ <= diameter_);
-  if (max_length_/n_bonds_max_ < min_bond_length_) {
-    error_exit("min_length_ of flexible filament bonds too large for filament length.");
+  int max_bonds = (int) ceil(max_length_/min_bond_length_);
+  n_bonds_max_ = 2;
+  while (n_bonds_max_ < max_bonds) {
+    n_bonds_max_*=2;
   }
+
+  //if (max_length_/n_bonds_max_ < min_bond_length_) {
+    //error_exit("min_length_ of flexible filament bonds too large for filament length.");
+  //}
   // Initialize mesh
   Reserve(n_bonds_max_);
   //Allocate control structures
@@ -164,9 +150,30 @@ void Filament::InsertFirstBond() {
 
 void Filament::InsertFilament() {
   bool out_of_bounds = true;
-  int n_bonds = (int) ceil(length_/max_bond_length_);
+  int n_bonds;
+  bool polydisperse = (length_<=0);
   do {
     out_of_bounds = false;
+    // Polydisperse filaments
+    if (polydisperse) {
+      length_ = min_length_ + (max_length_-min_length_)*gsl_rng_uniform_pos(rng_.r);
+    }
+    do {
+      n_bonds = 2;
+      bond_length_ = length_/n_bonds;
+      while (bond_length_ > max_bond_length_) {
+        n_bonds *= 2;
+        bond_length_ = length_/n_bonds;
+      }
+      //printf("\nn_bonds, max: %d, %d\n",n_bonds,n_bonds_max_);
+      if (n_bonds == 2 && bond_length_ <= diameter_) {
+        error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
+      }
+      if (bond_length_ <= diameter_) {
+        max_bond_length_ += 0.1*max_bond_length_;
+        warning("bond_length <= diameter, increasing max_bond_length to %2.2f",max_bond_length_);
+      }
+    } while (bond_length_ <= diameter_);
     Clear();
     InsertFirstBond();
     if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition(),diameter_)) continue;
@@ -320,13 +327,14 @@ void Filament::ApplyBoundaryForces() {
     }
     rmag = sqrt(rmag);
     double dr = space_->radius - rmag - 0.5*diameter_;
-    if (dr <= 0) dr = 1e-6;
+    if (dr < 1e-3) dr = 1e-3;
     if ( dr < bc_rcut_ ) {
       double boundary_force[3] = {0,0,0};
       double rinv = 1.0/(dr);
       double rinv2 = rinv*rinv;
       double r6 = rinv2*rinv2*rinv2;
       double ffac = -(12.0*wca_c12_*r6 - 6.0*wca_c6_)*r6*rinv;
+      //printf("%2.2f = -(12.0*%2.2f*%2.2f - 6.0*%2.2f)*%2.2f*%2.2f\n",ffac,wca_c12_,r6,wca_c6_,r6,rinv);
       for (int i=0; i<n_dim_; ++i) {
         boundary_force[i] = ffac*pos[i]/rmag;
       }
@@ -337,7 +345,6 @@ void Filament::ApplyBoundaryForces() {
 
 void Filament::UpdatePosition(bool midstep) {
   midstep_ = midstep;
-  DynamicInstability();
   ApplyForcesTorques();
   Integrate();
   // FIXME temporary
@@ -347,6 +354,7 @@ void Filament::UpdatePosition(bool midstep) {
     }
   }
   UpdateAvgPosition();
+  DynamicInstability();
   eq_steps_count_++;
 }
 
@@ -386,6 +394,9 @@ void Filament::CalculateAngles(bool rescale) {
     cos_angle = dot_product(n_dim_, u1, u2);
     cos_thetas_[i_site] = cos_angle;
     if (cos_angle <= 0 && dynamic_instability_flag_) {
+      printf("\ncos_angle: %2.2f\n",cos_angle);
+      printf("i_site/n_sites: %d/%d\n",i_site,n_sites_);
+      ReportSites();
       error_exit("Acute angle between adjoining bonds detected with dynamic instabiliy on.\n \
           Increase persistence length or turn off dynamic instability for floppy filaments\n");
     }
@@ -402,9 +413,11 @@ void Filament::CalculateAngles(bool rescale) {
     spiral_flag_ = false; // to prevent this message more than once
   }
   if (rescale && sharp_angle && midstep_ && length_/(n_bonds_+1) > min_bond_length_) {
-    exit(0);
-    // AddSite();
-    CalculateAngles();
+    printf("\nDoubling granularity due to sharp angle");
+    DoubleGranularityLinear();
+    printf(", n_bonds = %d\n",n_bonds_);
+    UpdateSiteOrientations();
+    CalculateAngles(false);
   }
 }
 
@@ -718,11 +731,6 @@ void Filament::UpdateAvgPosition() {
   }
 }
 
-void Filament::UpdatePrevPositions() {
-  for (auto site=sites_.begin(); site!=sites_.end(); ++site)
-    site->SetPrevPosition(site->GetPosition());
-}
-
 double const * const Filament::GetDrTot() {return nullptr;}
 
 void Filament::ApplyForcesTorques() {
@@ -821,76 +829,20 @@ void Filament::GrowFilament() {
   length_ += delta_length;
   RescaleBonds();
   if (bond_length_ > max_bond_length_) {
-    //AddSite(); 
-    //exit(0);
+    ReportSites();
+    printf("\nDoubling granularity");
+    DoubleGranularityLinear();
+    printf(", n_bonds = %d\n",n_bonds_);
+    UpdateSiteOrientations();
+    ReportSites();
   }
-  else if (bond_length_ < min_bond_length_) {
-    //exit(0);
-    //RemoveSite();
+  else if (bond_length_ < min_bond_length_ && n_bonds_ > 2) {
+    printf("\nHalving granularity");
+    HalfGranularityLinear();
+    printf(", n_bonds = %d\n",n_bonds_);
+    UpdateSiteOrientations();
   }
 }
-
-void Filament::AddSite() {
-  UpdatePrevPositions();
-  AddBondToTip(bonds_[n_bonds_-1].GetOrientation(), bond_length_);
-  // Place the new site in the same position as the current last site
-  double old_bond_length = bond_length_;
-  bond_length_ = length_/n_bonds_;
-  double error = 0;
-  double dl = 1;
-  int j=0;
-  double *r2, *r1, *u1, *r2_old, k;
-  do {
-    bond_length_ = bond_length_ + error/n_bonds_;
-    r2=sites[1].GetPosition();
-    r1=sites[0].GetPrevPosition();
-    u1=sites[0].GetOrientation();
-    r2_old;
-    k;
-    for (int i=0; i<n_dim; ++i) {
-      r2[i] = r1[i] + u1[i] * bond_length_;
-    }
-    dl = old_bond_length - bond_length_;
-    for (int i_site=2; i_site<n_sites_-1; ++i_site) {
-      r2 = sites[i_site].GetPosition();
-      r2_old = sites[i_site].GetPrevPosition();
-      r1 = sites[i_site-1].GetPrevPosition();
-      u1 = sites[i_site-1].GetOrientation();
-      k = SQR(dl*cos_thetas_[i_site-2]) + SQR(bond_length_) - SQR(dl);
-      k = (k>0 ? k : 0);
-      k = -cos_thetas_[i_site-2]*dl + sqrt(k);
-      dl = 0;
-      for (int i=0; i<n_dim; ++i) {
-        r2[i] = r1[i] + k * u1[i];
-        dl += SQR(r2_old[i]-r2[i]);
-      }
-      dl = sqrt(dl);
-    }
-    r2 = sites[n_sites_-1].GetPosition();
-    r2_old = sites[n_sites_-2].GetPrevPosition();
-    r1 = sites[n_sites_-2].GetPosition();
-    u1 = sites[n_sites_-3].GetOrientation();
-    for (int i=0; i<n_dim; ++i) 
-      r2[i] = r1[i] + bond_length_ * u1[i];
-    error = old_bond_length - k - bond_length_;
-    dl = ABS(error);
-    j++;
-    if (error!=error || j > 100) {
-      std::cout << j << std::endl;
-      std::cout << error << std::endl;
-      error_exit("Error while adding site\n");
-    }
-  } while (dl > 1e-4);
-  sites[n_sites_-1].SetScaledPosition(sites[n_sites_-1].GetPosition());
-  length_ = bond_length_ * n_bonds_;
-  for (site_iterator i_site=sites.begin();
-      i_site != sites.end();
-      ++i_site)
-    i_site->SetLength(bond_length_);
-  UpdateSiteOrientations();
-  CalculateAngles(false);
-}
-
 
 void Filament::RescaleBonds() {
   UpdatePrevPositions();
