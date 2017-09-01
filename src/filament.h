@@ -66,7 +66,6 @@ class Filament : public Mesh {
     void GenerateProbableOrientation();
     void CalculateAngles(bool rescale=true);
     void CalculateTangents();
-    void UpdatePrevPositions();
     void AddRandomForces();
     void ConstructUnprojectedRandomForces();
     void GeometricallyProjectRandomForces();
