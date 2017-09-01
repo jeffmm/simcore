@@ -128,6 +128,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("lp_analysis")==0) {
             params->filament.lp_analysis = jt->second.as<int>();
           }
+          else if (param_name.compare("n_motors")==0) {
+            params->filament.n_motors = jt->second.as<int>();
+          }
           else if (param_name.compare("checkpoint_flag")==0) {
             params->filament.checkpoint_flag = jt->second.as<int>();
           }
@@ -160,57 +163,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_checkpoint")==0) {
             params->filament.n_checkpoint = jt->second.as<int>();
-          }
-          else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
-          }
-        }
-      }
-      else if (struct_name.compare("br_bead") == 0) {
-        for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
-          param_name = jt->first.as<std::string>();
-          if (false) {}
-          else if (param_name.compare("diameter")==0) {
-            params->br_bead.diameter = jt->second.as<double>();
-          }
-          else if (param_name.compare("driving_factor")==0) {
-            params->br_bead.driving_factor = jt->second.as<double>();
-          }
-          else if (param_name.compare("packing_fraction")==0) {
-            params->br_bead.packing_fraction = jt->second.as<double>();
-          }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->br_bead.checkpoint_flag = jt->second.as<int>();
-          }
-          else if (param_name.compare("num")==0) {
-            params->br_bead.num = jt->second.as<int>();
-          }
-          else if (param_name.compare("insertion_type")==0) {
-            params->br_bead.insertion_type = jt->second.as<std::string>();
-          }
-          else if (param_name.compare("overlap")==0) {
-            params->br_bead.overlap = jt->second.as<int>();
-          }
-          else if (param_name.compare("draw_type")==0) {
-            params->br_bead.draw_type = jt->second.as<std::string>();
-          }
-          else if (param_name.compare("color")==0) {
-            params->br_bead.color = jt->second.as<double>();
-          }
-          else if (param_name.compare("posit_flag")==0) {
-            params->br_bead.posit_flag = jt->second.as<int>();
-          }
-          else if (param_name.compare("spec_flag")==0) {
-            params->br_bead.spec_flag = jt->second.as<int>();
-          }
-          else if (param_name.compare("n_posit")==0) {
-            params->br_bead.n_posit = jt->second.as<int>();
-          }
-          else if (param_name.compare("n_spec")==0) {
-            params->br_bead.n_spec = jt->second.as<int>();
-          }
-          else if (param_name.compare("n_checkpoint")==0) {
-            params->br_bead.n_checkpoint = jt->second.as<int>();
           }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
@@ -271,6 +223,57 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_checkpoint")==0) {
             params->hard_rod.n_checkpoint = jt->second.as<int>();
+          }
+          else {
+            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+          }
+        }
+      }
+      else if (struct_name.compare("br_bead") == 0) {
+        for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
+          param_name = jt->first.as<std::string>();
+          if (false) {}
+          else if (param_name.compare("diameter")==0) {
+            params->br_bead.diameter = jt->second.as<double>();
+          }
+          else if (param_name.compare("driving_factor")==0) {
+            params->br_bead.driving_factor = jt->second.as<double>();
+          }
+          else if (param_name.compare("packing_fraction")==0) {
+            params->br_bead.packing_fraction = jt->second.as<double>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->br_bead.checkpoint_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("num")==0) {
+            params->br_bead.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->br_bead.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("overlap")==0) {
+            params->br_bead.overlap = jt->second.as<int>();
+          }
+          else if (param_name.compare("draw_type")==0) {
+            params->br_bead.draw_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("color")==0) {
+            params->br_bead.color = jt->second.as<double>();
+          }
+          else if (param_name.compare("posit_flag")==0) {
+            params->br_bead.posit_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("spec_flag")==0) {
+            params->br_bead.spec_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_posit")==0) {
+            params->br_bead.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_spec")==0) {
+            params->br_bead.n_spec = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_checkpoint")==0) {
+            params->br_bead.n_checkpoint = jt->second.as<int>();
           }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";

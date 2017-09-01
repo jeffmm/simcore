@@ -27,6 +27,7 @@ class Site : public Object {
     double const * const GetRandomForce();
     double const * const GetTangent();
     directed_bond GetDirectedBond(int i);
+    directed_bond GetOutgoingBond();
     directed_bond GetOtherDirectedBond(int bond_oid);
 
 };

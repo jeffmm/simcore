@@ -60,7 +60,7 @@ species:
 
 filament:
   diameter: [1, double]
-  length: [40, double]
+  length: [-1, double]
   persistence_length: [400, double]
   max_length: [500,double]
   min_length: [1, double]
@@ -82,6 +82,7 @@ filament:
   v_depoly : [0.793,double]
   theta_analysis: [0, int]
   lp_analysis: [0,int]
+  n_motors: [0,int]
 hard_rod:
   diameter: [1, double]
   length: [40, double]
