@@ -30,6 +30,15 @@ directed_bond Site::GetDirectedBond(int i) {
   return bonds_[i];
 }
 
+directed_bond Site::GetOutgoingBond() {
+  for (auto it=bonds_.begin(); it!=bonds_.end(); ++it) {
+    if ((*it).second == OUTGOING ) {
+      return *it;
+    }
+  }
+  return std::make_pair(nullptr,NONE);
+}
+
 directed_bond Site::GetOtherDirectedBond(int bond_oid) {
   if (n_bonds_ == 1) {
     // there are no other bonds

@@ -194,8 +194,7 @@ void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_s
     background_color_[i] = background;
   }
   z_correct_ = 0;
-  std::string b_type(boundary_._to_string());
-  if (b_type.compare("budding")==0) {
+  if (boundary_ == +boundary_type::budding) {
     double m_rad = space_->radius;
     double d_rad = space_->bud_radius;
     double m_d_dist = space_->bud_height;
@@ -480,16 +479,15 @@ void Graphics::DrawDiscorectangles() {
     double theta = atan2((*it)->u[1], (*it)->u[0]); // rotation angle
     double theta_color = 0;
     // Check draw type
-    std::string draw_type((*it)->draw._to_string());
-    if (draw_type.compare("fixed") == 0 ) {
+    if ((*it)->draw == +draw_type::fixed) {
       // draw is set to flat
       theta_color = (*it)->color;
     }
-    else if (draw_type.compare("orientation") == 0) {
+    else if ((*it)->draw == +draw_type::orientation) {
       // orientation draw
       theta_color = theta;
     }
-    if (draw_type.compare("bw") == 0) {
+    if ((*it)->draw == +draw_type::bw) {
       for (int i=0; i<3; ++i)
         color[i] = (background_color_[0] < 1 ? 1 : 0.1);
       glColor4fv(color);
@@ -740,14 +738,13 @@ void Graphics::Draw3d() {
 }
 
 void Graphics::DrawBoundary() {
-  std::string b_type(boundary_._to_string());
-  if (b_type.compare("none") == 0)
+  if (boundary_ == +boundary_type::none)
     return;
   glUseProgram(0);
 
   GLfloat color[4] = {0.5, 0.5, 0.5, 1.0};
   glColor4fv(color);
-  if (b_type.compare("sphere") == 0) {
+  if (boundary_ == +boundary_type::sphere) {
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
 
@@ -760,9 +757,9 @@ void Graphics::DrawBoundary() {
       DrawWireSphere(0.5*unit_cell_[0], 16, 16);
 
   }
-  else if (b_type.compare("box") == 0)
+  else if (boundary_ == +boundary_type::box)
     DrawBox();
-  else if (b_type.compare("budding") == 0)
+  else if (boundary_ == +boundary_type::budding)
     DrawBudding();
 }
 

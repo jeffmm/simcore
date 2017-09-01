@@ -1,13 +1,13 @@
 # params.yaml
 ---
-seed : 31993147230894
+seed : 62092107224802
 run_name: test
 n_runs: 1
 n_random: 1
 n_dim: 2
 n_periodic: 2
 boundary: 2
-delta: 0.0001
+delta: 0.00001
 n_steps: 10000000
 n_steps_equil: 0
 system_radius: 100
@@ -29,7 +29,7 @@ graph_background: 1
 species_insertion_failure_threshold: 10000
 uniform_crystal: 0
 centrosome:
-  num: 1
+  num: 0
   diameter: 20
   k_spring: 10000
   k_align: 1000
@@ -41,14 +41,15 @@ centrosome:
 filament:
   color: 6
   draw_type: bw
-  insertion_type: random
-  num: 0
+  insertion_type: centered_oriented
+  num: 1
+  n_motors: 0
   overlap: 1
   diameter: 1
   spiral_flag: 0
   length: -1
   max_length: 80
-  min_length: 20
+  min_length: 30
   max_bond_length: 3
   min_bond_length: 1.5
   posit_flag: 0
@@ -57,8 +58,10 @@ filament:
   n_posit: 100
   n_spec: 100
   n_checkpoint: 100
-  driving_factor: 100
+  driving_factor: 0.6
+  dynamic_instability_flag: 1
   persistence_length: 10000
   theta_analysis: 0
   lp_analysis: 0
-
+  v_poly: 30
+  v_depoly: 30

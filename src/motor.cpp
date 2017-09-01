@@ -45,7 +45,7 @@ void Motor::UpdatePosition() {
   //else {
     Diffuse();
   //}
-  //UpdatePeriodic();
+  UpdatePeriodic();
 }
 
 // update binding probabilities based on relative position to nearby bonds, then do rolls to determine if we bind or unbind
@@ -121,6 +121,7 @@ void Motor::AttachToBond(directed_bond db, double lambda) {
     position_[i] = bond_position[i] - (0.5*bond_length_ - bond_lambda_)*orientation_[i];
   }
   bound_ = true;
+  UpdatePeriodic();
 }
 
 // Returns true if switch allowed, false otherwise
