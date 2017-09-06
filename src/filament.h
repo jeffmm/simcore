@@ -21,6 +21,9 @@ class Filament : public Mesh {
         spiral_flag_,
         stoch_flag_,
         metric_forces_,
+        // TEMPORARY FIXME
+        n_step_ = 0,
+        n_motors_bound_,
         eq_steps_,
         eq_steps_count_ = 0;
     double max_length_,
@@ -46,7 +49,11 @@ class Filament : public Mesh {
            // TEMPORARY FIXME
            bc_rcut_,
            wca_c6_,
-           wca_c12_;
+           wca_c12_,
+           motor_velocity_,
+           k_on_,
+           k_off_,
+           motor_concentration_;
     std::vector<double> gamma_inverse_,
                         tensions_, //n_sites-1
                         g_mat_lower_, //n_sites-2
@@ -88,9 +95,12 @@ class Filament : public Mesh {
     void RescaleBonds();
     //void InitSpiral2D();
     void ReportAll();
-    int n_motors_; //FIXME temporary
     std::vector<Motor> motors_; //FIXME temporary
     Anchor * anchor_; //FIXME temporary? 
+    void UnbindMotor();
+    void BindMotor();
+    void CalculateBinding();
+    void RebindMotors();
 
   public:
     Filament();
@@ -138,6 +148,7 @@ class Filament : public Mesh {
     void WriteCheckpoint(std::fstream &ocheck);
     void ReadCheckpoint(std::fstream &icheck);
     void ScalePosition();
+    double const GetVolume();
 };
 
 typedef std::vector<Filament>::iterator filament_iterator;

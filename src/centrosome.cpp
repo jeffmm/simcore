@@ -4,8 +4,8 @@ Centrosome::Centrosome() : Object() {
   color_ = params_->centrosome.color;
   draw_ = draw_type::_from_string(params_->centrosome.draw_type.c_str());
   diameter_ = params_->centrosome.diameter;
-  n_filaments_min_ = params_->centrosome.num_filaments_min;
-  n_filaments_max_ = params_->centrosome.num_filaments_max;
+  n_filaments_min_ = params_->centrosome.n_filaments_min;
+  n_filaments_max_ = params_->centrosome.n_filaments_max;
   k_spring_ = params_->centrosome.k_spring;
   k_align_ = params_->centrosome.k_align;
   spring_length_ = params_->centrosome.spring_length;
@@ -101,7 +101,7 @@ void Centrosome::GenerateAnchorSites() {
 void Centrosome::UpdatePosition(bool midstep) {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
-  filament_chuck_vector chunks;
+  std::vector<std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator> > chunks;
   chunks.reserve(max_threads); 
   size_t chunk_size= filaments_.size() / max_threads;
   filament_iterator cur_iter = filaments_.begin();

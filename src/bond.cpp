@@ -42,6 +42,14 @@ void Bond::ReInit() {
   UpdatePeriodic();
 }
 
+void Bond::SetBondNumber(int bnum) {
+  bond_number_ = bnum;
+}
+
+int const Bond::GetBondNumber() {
+  return bond_number_;
+}
+
 Site * Bond::GetSite(int i) {
   if (i<0 || i>1) {
     std::cerr << "ERROR! Requested adjacent site out of bounds!\n";

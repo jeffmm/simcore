@@ -2,6 +2,9 @@
 #define _SIMCORE_CENTROSOME_H_
 
 #include "filament.h"
+#ifdef ENABLE_OPENMP
+#include "omp.h"
+#endif
 
 class Centrosome : public Object {
   protected:

@@ -30,7 +30,8 @@ class Object {
            diameter_,
            length_,
            p_energy_;
-    bool interacting_;
+    bool interacting_,
+         is_mesh_;
     std::vector<Object*> interactors_;
   public:
     Object();
@@ -66,6 +67,7 @@ class Object {
     double const * const GetTorque();
     double const GetPotentialEnergy();
     bool const IsInteractor();
+    bool const IsMesh();
 
     // Virtual functions
     virtual void Init() {}
@@ -88,6 +90,7 @@ class Object {
     virtual double const * const GetInteractorOrientation();
     virtual double const GetInteractorDiameter();
     virtual double const GetInteractorLength();
+    virtual double const GetVolume();
 
     // I/O functions
     virtual void Report();

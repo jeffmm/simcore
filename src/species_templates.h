@@ -1,3 +1,11 @@
+template <typename T>
+double const Species<T>::GetVolume() {
+  double vol=0.0;
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    vol += it->GetVolume();
+  }
+  return vol;
+}
 
 template <typename T> 
 void Species<T>::Reserve() {

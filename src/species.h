@@ -70,6 +70,7 @@ class SpeciesBase {
     virtual void CloseFiles(); 
     virtual void CleanUp() {}
     virtual void Reserve() {}
+    virtual double const GetVolume() {}
 };
 
 template<typename T>
@@ -111,6 +112,7 @@ class Species : public SpeciesBase {
     virtual std::vector<T> * GetMembers() {return &members_;}
     virtual void CleanUp();
     virtual void Reserve();
+    virtual double const GetVolume();
 };
 
 #include "species_templates.h"
