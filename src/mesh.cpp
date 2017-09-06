@@ -5,6 +5,7 @@
 **************************/
 Mesh::Mesh() : Object() {
   n_sites_ = n_bonds_ = 0;
+  is_mesh_ = true;
 }
 
 void Mesh::Reserve(int n_bonds) {
@@ -190,8 +191,10 @@ void Mesh::AddBondToSite(double *u, double l, int i_site) {
   bonds_[n_bonds_-1].Init(&sites_[i_site],&sites_[n_sites_-1]);
 }
 void Mesh::UpdateBondPositions() {
+  int i=0;
   for (bond_iterator it=bonds_.begin(); it!=bonds_.end(); ++it) {
     it->ReInit();
+    it->SetBondNumber(i++);
   }
 }
 void Mesh::ReportSites() {
@@ -336,5 +339,13 @@ void Mesh::ScalePosition() {
     s.ScalePosition();
   for (auto b : bonds_)
     b.ScalePosition();
+}
+
+Bond * Mesh::GetRandomBond() {
+  if (n_bonds_ == 0) {
+    return nullptr;
+  }
+  int i_bond = gsl_rng_uniform_int(rng_.r,n_bonds_);
+  return &bonds_[i_bond];
 }
 

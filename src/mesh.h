@@ -14,6 +14,7 @@ class Mesh : public Object {
     std::vector<Site> sites_;
     std::vector<Bond> bonds_;
     double bond_length_;
+    Bond * GetRandomBond();
   public:
     Mesh();
     void InitSiteAt(double * pos, double d);

@@ -17,9 +17,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->species.checkpoint_flag = jt->second.as<int>();
-          }
           else if (param_name.compare("num")==0) {
             params->species.num = jt->second.as<int>();
           }
@@ -43,6 +40,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_posit")==0) {
             params->species.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->species.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("n_spec")==0) {
             params->species.n_spec = jt->second.as<int>();
@@ -131,8 +131,14 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_motors")==0) {
             params->filament.n_motors = jt->second.as<int>();
           }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->filament.checkpoint_flag = jt->second.as<int>();
+          else if (param_name.compare("k_on")==0) {
+            params->filament.k_on = jt->second.as<double>();
+          }
+          else if (param_name.compare("k_off")==0) {
+            params->filament.k_off = jt->second.as<double>();
+          }
+          else if (param_name.compare("motor_velocity")==0) {
+            params->filament.motor_velocity = jt->second.as<double>();
           }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
@@ -157,6 +163,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_posit")==0) {
             params->filament.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->filament.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("n_spec")==0) {
             params->filament.n_spec = jt->second.as<int>();
@@ -191,9 +200,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("driving_factor")==0) {
             params->hard_rod.driving_factor = jt->second.as<double>();
           }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->hard_rod.checkpoint_flag = jt->second.as<int>();
-          }
           else if (param_name.compare("num")==0) {
             params->hard_rod.num = jt->second.as<int>();
           }
@@ -217,6 +223,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_posit")==0) {
             params->hard_rod.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->hard_rod.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("n_spec")==0) {
             params->hard_rod.n_spec = jt->second.as<int>();
@@ -242,9 +251,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("packing_fraction")==0) {
             params->br_bead.packing_fraction = jt->second.as<double>();
           }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->br_bead.checkpoint_flag = jt->second.as<int>();
-          }
           else if (param_name.compare("num")==0) {
             params->br_bead.num = jt->second.as<int>();
           }
@@ -268,6 +274,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_posit")==0) {
             params->br_bead.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->br_bead.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("n_spec")==0) {
             params->br_bead.n_spec = jt->second.as<int>();
@@ -293,9 +302,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("driving_factor")==0) {
             params->md_bead.driving_factor = jt->second.as<double>();
           }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->md_bead.checkpoint_flag = jt->second.as<int>();
-          }
           else if (param_name.compare("num")==0) {
             params->md_bead.num = jt->second.as<int>();
           }
@@ -320,6 +326,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_posit")==0) {
             params->md_bead.n_posit = jt->second.as<int>();
           }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->md_bead.checkpoint_flag = jt->second.as<int>();
+          }
           else if (param_name.compare("n_spec")==0) {
             params->md_bead.n_spec = jt->second.as<int>();
           }
@@ -338,11 +347,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("diameter")==0) {
             params->centrosome.diameter = jt->second.as<double>();
           }
-          else if (param_name.compare("num_filaments_min")==0) {
-            params->centrosome.num_filaments_min = jt->second.as<int>();
+          else if (param_name.compare("n_filaments_min")==0) {
+            params->centrosome.n_filaments_min = jt->second.as<int>();
           }
-          else if (param_name.compare("num_filaments_max")==0) {
-            params->centrosome.num_filaments_max = jt->second.as<int>();
+          else if (param_name.compare("n_filaments_max")==0) {
+            params->centrosome.n_filaments_max = jt->second.as<int>();
           }
           else if (param_name.compare("fixed_spacing")==0) {
             params->centrosome.fixed_spacing = jt->second.as<int>();
@@ -358,9 +367,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("spring_length")==0) {
             params->centrosome.spring_length = jt->second.as<double>();
-          }
-          else if (param_name.compare("checkpoint_flag")==0) {
-            params->centrosome.checkpoint_flag = jt->second.as<int>();
           }
           else if (param_name.compare("num")==0) {
             params->centrosome.num = jt->second.as<int>();
@@ -386,11 +392,86 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_posit")==0) {
             params->centrosome.n_posit = jt->second.as<int>();
           }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->centrosome.checkpoint_flag = jt->second.as<int>();
+          }
           else if (param_name.compare("n_spec")==0) {
             params->centrosome.n_spec = jt->second.as<int>();
           }
           else if (param_name.compare("n_checkpoint")==0) {
             params->centrosome.n_checkpoint = jt->second.as<int>();
+          }
+          else {
+            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+          }
+        }
+      }
+      else if (struct_name.compare("motor") == 0) {
+        for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
+          param_name = jt->first.as<std::string>();
+          if (false) {}
+          else if (param_name.compare("diameter")==0) {
+            params->motor.diameter = jt->second.as<double>();
+          }
+          else if (param_name.compare("walker")==0) {
+            params->motor.walker = jt->second.as<int>();
+          }
+          else if (param_name.compare("step_direction")==0) {
+            params->motor.step_direction = jt->second.as<int>();
+          }
+          else if (param_name.compare("k_off")==0) {
+            params->motor.k_off = jt->second.as<double>();
+          }
+          else if (param_name.compare("k_on")==0) {
+            params->motor.k_on = jt->second.as<double>();
+          }
+          else if (param_name.compare("concentration")==0) {
+            params->motor.concentration = jt->second.as<double>();
+          }
+          else if (param_name.compare("velocity")==0) {
+            params->motor.velocity = jt->second.as<double>();
+          }
+          else if (param_name.compare("diffusion_flag")==0) {
+            params->motor.diffusion_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("k_spring")==0) {
+            params->motor.k_spring = jt->second.as<double>();
+          }
+          else if (param_name.compare("f_spring_max")==0) {
+            params->motor.f_spring_max = jt->second.as<double>();
+          }
+          else if (param_name.compare("num")==0) {
+            params->motor.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->motor.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("overlap")==0) {
+            params->motor.overlap = jt->second.as<int>();
+          }
+          else if (param_name.compare("draw_type")==0) {
+            params->motor.draw_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("color")==0) {
+            params->motor.color = jt->second.as<double>();
+          }
+          else if (param_name.compare("posit_flag")==0) {
+            params->motor.posit_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("spec_flag")==0) {
+            params->motor.spec_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_posit")==0) {
+            params->motor.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->motor.checkpoint_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_spec")==0) {
+            params->motor.n_spec = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_checkpoint")==0) {
+            params->motor.n_checkpoint = jt->second.as<int>();
           }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
@@ -404,6 +485,36 @@ void parse_params(YAML::Node node, system_parameters *params) {
     else {
       param_name = it->first.as<std::string>();
       if (false) {}
+      else if (param_name.compare("target_radius")==0) {
+        params->target_radius = it->second.as<double>();
+      }
+      else if (param_name.compare("pressure_time")==0) {
+        params->pressure_time = it->second.as<int>();
+      }
+      else if (param_name.compare("stoch_flag")==0) {
+        params->stoch_flag = it->second.as<int>();
+      }
+      else if (param_name.compare("compressibility")==0) {
+        params->compressibility = it->second.as<double>();
+      }
+      else if (param_name.compare("thermo_flag")==0) {
+        params->thermo_flag = it->second.as<int>();
+      }
+      else if (param_name.compare("n_thermo")==0) {
+        params->n_thermo = it->second.as<int>();
+      }
+      else if (param_name.compare("interaction_flag")==0) {
+        params->interaction_flag = it->second.as<int>();
+      }
+      else if (param_name.compare("n_steps_equil")==0) {
+        params->n_steps_equil = it->second.as<int>();
+      }
+      else if (param_name.compare("species_insertion_failure_threshold")==0) {
+        params->species_insertion_failure_threshold = it->second.as<int>();
+      }
+      else if (param_name.compare("uniform_crystal")==0) {
+        params->uniform_crystal = it->second.as<int>();
+      }
       else if (param_name.compare("seed")==0) {
         params->seed = it->second.as<long>();
       }
@@ -470,12 +581,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("time_flag")==0) {
         params->time_flag = it->second.as<int>();
       }
-      else if (param_name.compare("species_insertion_failure_threshold")==0) {
-        params->species_insertion_failure_threshold = it->second.as<int>();
-      }
-      else if (param_name.compare("uniform_crystal")==0) {
-        params->uniform_crystal = it->second.as<int>();
-      }
       else if (param_name.compare("bud_height")==0) {
         params->bud_height = it->second.as<double>();
       }
@@ -514,30 +619,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("target_pressure")==0) {
         params->target_pressure = it->second.as<double>();
-      }
-      else if (param_name.compare("target_radius")==0) {
-        params->target_radius = it->second.as<double>();
-      }
-      else if (param_name.compare("pressure_time")==0) {
-        params->pressure_time = it->second.as<int>();
-      }
-      else if (param_name.compare("compressibility")==0) {
-        params->compressibility = it->second.as<double>();
-      }
-      else if (param_name.compare("stoch_flag")==0) {
-        params->stoch_flag = it->second.as<int>();
-      }
-      else if (param_name.compare("thermo_flag")==0) {
-        params->thermo_flag = it->second.as<int>();
-      }
-      else if (param_name.compare("n_thermo")==0) {
-        params->n_thermo = it->second.as<int>();
-      }
-      else if (param_name.compare("interaction_flag")==0) {
-        params->interaction_flag = it->second.as<int>();
-      }
-      else if (param_name.compare("n_steps_equil")==0) {
-        params->n_steps_equil = it->second.as<int>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";

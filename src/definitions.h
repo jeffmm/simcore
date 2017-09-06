@@ -31,6 +31,8 @@ struct space_struct {
   double *b; // reciprocal lattice vector
   double *a_perp; // perpendicular distance between opposite unit cell faces
   double *mu; // scaling matrix for constant pressure
+  int n_bound; // number of bound motors
+  double concentration; // C of motors
   boundary_type type;
 };
 

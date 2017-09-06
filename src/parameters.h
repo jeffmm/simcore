@@ -5,7 +5,6 @@ class species_parameters;
 
 class species_parameters {
   public:
-    int checkpoint_flag = 0;
     int num = 0;
     std::string insertion_type = "random";
     int overlap = 0;
@@ -14,6 +13,7 @@ class species_parameters {
     int posit_flag = 0;
     int spec_flag = 0;
     int n_posit = 100;
+    int checkpoint_flag = 0;
     int n_spec = 100;
     int n_checkpoint = 10000;
 };
@@ -22,7 +22,7 @@ class filament_parameters : public species_parameters {
   public:
     double f_shrink_to_pause = 0.0;
     double diameter = 1;
-    double length = 40;
+    double length = -1;
     double persistence_length = 400;
     double max_length = 500;
     double min_length = 1;
@@ -44,6 +44,9 @@ class filament_parameters : public species_parameters {
     int theta_analysis = 0;
     int lp_analysis = 0;
     int n_motors = 0;
+    double k_on = 1;
+    double k_off = 1;
+    double motor_velocity = 1;
 };
 
 class hard_rod_parameters : public species_parameters {
@@ -73,17 +76,41 @@ class md_bead_parameters : public species_parameters {
 class centrosome_parameters : public species_parameters {
   public:
     double diameter = 10;
-    int num_filaments_min = 0;
-    int num_filaments_max = 10;
+    int n_filaments_min = 0;
+    int n_filaments_max = 10;
     int fixed_spacing = 0;
     int alignment_potential = 0;
-    double k_spring = 0;
+    double k_spring = 1000;
     double k_align = 0;
     double spring_length = 0;
 };
 
+class motor_parameters : public species_parameters {
+  public:
+    double diameter = 3;
+    int walker = 0;
+    int step_direction = 0;
+    double k_off = 2;
+    double k_on = 10;
+    double concentration = 0.5;
+    double velocity = 1;
+    int diffusion_flag = 1;
+    double k_spring = 1000;
+    double f_spring_max = 1000;
+};
+
 class system_parameters {
   public:
+    double target_radius = 100;
+    int pressure_time = 100;
+    int stoch_flag = 1;
+    double compressibility = 1;
+    int thermo_flag = 0;
+    int n_thermo = 1000;
+    int interaction_flag = 1;
+    int n_steps_equil = 0;
+    int species_insertion_failure_threshold = 10000;
+    int uniform_crystal = 0;
     long seed = 7859459105545;
     int n_runs = 1;
     int n_random = 1;
@@ -106,8 +133,6 @@ class system_parameters {
     int movie_flag = 0;
     std::string movie_directory = "frames";
     int time_flag = 0;
-    int species_insertion_failure_threshold = 10000;
-    int uniform_crystal = 0;
     double bud_height = 680;
     double bud_radius = 300;
     double lj_epsilon = 1;
@@ -121,20 +146,13 @@ class system_parameters {
     int constant_pressure = 0;
     int constant_volume = 0;
     double target_pressure = 0;
-    double target_radius = 100;
-    int pressure_time = 100;
-    double compressibility = 1;
-    int stoch_flag = 1;
-    int thermo_flag = 0;
-    int n_thermo = 1000;
-    int interaction_flag = 1;
-    int n_steps_equil = 0;
     species_parameters species;
     filament_parameters filament;
     hard_rod_parameters hard_rod;
     br_bead_parameters br_bead;
     md_bead_parameters md_bead;
     centrosome_parameters centrosome;
+    motor_parameters motor;
 };
 
 #endif // _SIMCORE_PARAMETERS_H_

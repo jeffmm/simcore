@@ -20,6 +20,7 @@ Object::Object() {
   length_ = 0;
   p_energy_ = 0;
   interacting_ = false;
+  is_mesh_ = false;
 }
 
 int Object::next_oid_ = 0;
@@ -127,9 +128,11 @@ double const Object::GetPotentialEnergy() {
 bool const Object::IsInteractor() {
   return interacting_;
 }
+bool const Object::IsMesh() {
+  return is_mesh_;
+}
 
 // Virtual functions
-
 bool Object::CheckBounds(double const * pos, double buffer) {
   if (space_->n_periodic == n_dim_)
     buffer = 0;
@@ -171,7 +174,7 @@ bool Object::CheckBounds(double const * pos, double buffer) {
 
 void Object::InsertRandom() {
   double mag;
-  double buffer = 0.5*diameter_;
+  double buffer = diameter_;
   if (space_->n_periodic == n_dim_)
     buffer = 0;
   double R = space_->radius;
@@ -349,6 +352,15 @@ double const Object::GetInteractorDiameter() {
 }
 double const Object::GetInteractorLength() {
   return GetLength();
+}
+double const Object::GetVolume() {
+  if (n_dim_ == 2) {
+    return 0.25*M_PI*diameter_*diameter_;
+  }
+  if (n_dim_ == 3) {
+    return 1.0/6.0 * M_PI * diameter_*diameter_*diameter_;
+  }
+  return -1;
 }
 
 // Object I/O functions
