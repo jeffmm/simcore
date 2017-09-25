@@ -29,6 +29,7 @@ class Bond : public Object {
     Site * GetSite(int i);
     Bond * GetNeighborBond(int i);
     directed_bond GetNeighborDirectedBond(int i);
+    virtual bool HasNeighbor(int other_oid);
 };
 
 #endif // _SIMCORE_BOND_H_

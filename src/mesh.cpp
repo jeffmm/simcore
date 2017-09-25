@@ -3,9 +3,12 @@
 /**************************
 ** Mesh member functions **
 **************************/
+int Mesh::next_mesh_id_ = 0;
+
 Mesh::Mesh() : Object() {
   n_sites_ = n_bonds_ = 0;
   is_mesh_ = true;
+  SetMeshID(++next_mesh_id_);
 }
 
 void Mesh::Reserve(int n_bonds) {
@@ -28,6 +31,7 @@ void Mesh::AddSite(Site s) {
   }
   sites_.push_back(s);
   sites_.back().SetColor(color_,draw_);
+  sites_.back().SetMeshID(GetMeshID());
   n_sites_++;
 }
 void Mesh::AddBond(Bond b) {
@@ -37,6 +41,7 @@ void Mesh::AddBond(Bond b) {
   }
   bonds_.push_back(b);
   bonds_.back().SetColor(color_,draw_);
+  bonds_.back().SetMeshID(GetMeshID());
   n_bonds_++;
 }
 
@@ -316,10 +321,12 @@ void Mesh::ReadCheckpoint(std::fstream &ip){
   sites_.resize(size, s);
   ip.read(reinterpret_cast<char*>(&size), sizeof(size));
   bonds_.resize(size, b);
-  for (auto& s : sites_)
-    s.ReadCheckpoint(ip);
-  for (auto& b : bonds_)
-    b.ReadCheckpoint(ip);
+  for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
+    site->ReadCheckpoint(ip);
+  }
+  for (bond_iterator bond=bonds_.begin(); bond!=bonds_.end(); ++bond) {
+    bond->ReadCheckpoint(ip);
+  }
 }
 
 void Mesh::WriteCheckpoint(std::fstream &op){
@@ -328,17 +335,21 @@ void Mesh::WriteCheckpoint(std::fstream &op){
   op.write(reinterpret_cast<char*>(&size), sizeof(size));
   size = bonds_.size();
   op.write(reinterpret_cast<char*>(&size), sizeof(size));
-  for (auto& s : sites_)
-    s.WriteCheckpoint(op);
-  for (auto& b : bonds_)
-    b.WriteCheckpoint(op);
+  for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
+    site->WriteCheckpoint(op);
+  }
+  for (bond_iterator bond=bonds_.begin(); bond!=bonds_.end(); ++bond) {
+    bond->WriteCheckpoint(op);
+  }
 }
 
 void Mesh::ScalePosition() {
-  for (auto s : sites_)
-    s.ScalePosition();
-  for (auto b : bonds_)
-    b.ScalePosition();
+  for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
+    site->ScalePosition();
+  }
+  for (bond_iterator bond=bonds_.begin(); bond!=bonds_.end(); ++bond) {
+    bond->ScalePosition();
+  }
 }
 
 Bond * Mesh::GetRandomBond() {
@@ -349,3 +360,25 @@ Bond * Mesh::GetRandomBond() {
   return &bonds_[i_bond];
 }
 
+void Mesh::UpdateDrTot() {
+  double max_dr = 0;
+  for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
+    site->UpdateDrTot();
+    double const dr = site->GetDrTot();
+    if (dr > max_dr) {
+      max_dr = dr;
+    }
+  }
+  dr_tot_ = max_dr;
+}
+
+void Mesh::ZeroDrTot() {
+  dr_tot_ = 0;
+  for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
+    site->ZeroDrTot();
+  }
+}
+
+double const Mesh::GetDrTot() {
+  return dr_tot_;
+}

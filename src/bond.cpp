@@ -95,6 +95,10 @@ void Bond::Draw(std::vector<graph_struct*> * graph_array) {
   graph_array->push_back(&g_);
 }
 
+bool Bond::HasNeighbor(int other_oid) {
+  return (sites_[0]->HasNeighbor(other_oid) || sites_[1]->HasNeighbor(other_oid));
+}
+
 //void Bond::UpdatePosition() {
   //ZeroForce();
   //Integrate();

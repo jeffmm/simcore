@@ -2,13 +2,13 @@
 ---
 seed : 303722426831655 
 #seed: 333681025637
-run_name: positioning_test_2
+run_name: positioning_test_3
 n_runs: 1
 n_random: 1
 n_dim: 2
 n_periodic: 2
 boundary: 2
-delta: 0.000003
+delta: 0.00001
 n_steps: 10000000
 n_steps_equil: 0
 system_radius: 100
@@ -19,18 +19,18 @@ n_graph: 2000
 movie_flag: 1
 movie_directory: frames
 cell_length: 5
-n_update_cells: 10
-f_cutoff: 100
+n_update_cells: 50
+f_cutoff: 10000
 thermo_flag: 0
 n_thermo: 100
 stoch_flag: 1
-interaction_flag: 0
+interaction_flag: 1
 draw_boundary: 1
 graph_background: 1
 species_insertion_failure_threshold: 10000
 uniform_crystal: 0
 centrosome:
-  num: 1
+  num: 0
   diameter: 20
   k_spring: 10000
   k_align: 10000
@@ -43,24 +43,23 @@ filament:
   color: 6
   draw_type: bw
   insertion_type: random
-  num: 0
-  n_motors: 100
-  overlap: 1
+  num: 1
+  overlap: 0
   diameter: 1
-  spiral_flag: 0
+  spiral_flag: 1
   length: -1
   max_length: 100
-  min_length: 3
+  min_length: 50
   max_bond_length: 3
   min_bond_length: 1.5
   posit_flag: 0
   spec_flag: 0
   checkpoint_flag: 0
-  n_posit: 100
-  n_spec: 100
-  n_checkpoint: 100
-  driving_factor: 0.6
-  dynamic_instability_flag: 1
+  n_posit: 1000
+  n_spec: 1000
+  n_checkpoint: 1000
+  driving_factor: 100
+  dynamic_instability_flag: 0
   force_induced_catastrophe_flag: 0
   persistence_length: 10000
   theta_analysis: 0
@@ -79,6 +78,7 @@ motor:
   walker: 1
   step_direction: 1
   diffusion_flag: 1
-  concentration: 0.08
+  #concentration: 0.08
+  concentration: 0
   k_spring: 10000
   f_spring_max: 10000

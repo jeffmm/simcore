@@ -25,6 +25,8 @@ struct space_struct {
   double volume;
   double bud_radius;
   double bud_height;
+  double bud_neck_radius;
+  double bud_neck_height;
   double *unit_cell;
   double *unit_cell_inv; // inverse unit cell
   double *a; // direct lattice vector

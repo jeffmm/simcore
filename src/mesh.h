@@ -7,6 +7,8 @@ typedef std::vector<Bond>::iterator bond_iterator;
 typedef std::vector<Site>::iterator site_iterator;
 
 class Mesh : public Object {
+  private:
+    static int next_mesh_id_;
   protected:
     int n_sites_,
         n_bonds_,
@@ -52,6 +54,9 @@ class Mesh : public Object {
     virtual void ReadCheckpoint(std::fstream &ip);
     virtual void WriteCheckpoint(std::fstream &op);
     virtual void ScalePosition();
+    virtual void UpdateDrTot();
+    virtual double const GetDrTot();
+    virtual void ZeroDrTot();
 };
 
 #endif // _SIMCORE_MESH_H_

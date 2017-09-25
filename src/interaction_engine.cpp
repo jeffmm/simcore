@@ -88,6 +88,12 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   // Check to make sure we aren't self-interacting
   if (obj1->GetOID() == obj2->GetOID()) 
     error_exit("Object %d attempted self-interaction!", obj1->GetOID());
+  // Check that object 1 is part of a mesh, in which case...
+  // ...check that object 1 is of the same mesh of object 2, in which case...
+  // ...check if object 2 is a neighbor of object 1, in which case: do not interact
+  if (obj1->GetMeshID() > 0 && obj1->GetMeshID() == obj2->GetMeshID() && obj1->HasNeighbor(obj2->GetOID())) {
+    return;
+  }
 
   MinimumDistance(obj1,obj2,ix,space_);
 

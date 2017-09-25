@@ -10,6 +10,7 @@ class Object {
 
   private:
     int oid_;
+    int mesh_id_;
     static int next_oid_;
     static long _seed_;
   protected:
@@ -29,7 +30,8 @@ class Object {
            color_,
            diameter_,
            length_,
-           p_energy_;
+           p_energy_,
+           dr_tot_;
     bool interacting_,
          is_mesh_;
     std::vector<Object*> interactors_;
@@ -56,7 +58,9 @@ class Object {
     void SetTorque(double const * const t);
     void AddPotential(double const p);
     void SetInteractor(bool ix);
+    void ToggleIsMesh();
     int const GetOID() const;
+    int const GetMeshID() const;
     double const * const GetPosition();
     double const * const GetPrevPosition();
     double const * const GetScaledPosition();
@@ -68,6 +72,7 @@ class Object {
     double const GetPotentialEnergy();
     bool const IsInteractor();
     bool const IsMesh();
+    void SetMeshID(int mid);
 
     // Virtual functions
     virtual void Init() {}
@@ -91,6 +96,10 @@ class Object {
     virtual double const GetInteractorDiameter();
     virtual double const GetInteractorLength();
     virtual double const GetVolume();
+    virtual void UpdateDrTot();
+    virtual double const GetDrTot();
+    virtual void ZeroDrTot();
+    virtual bool HasNeighbor(int other_id);
 
     // I/O functions
     virtual void Report();
