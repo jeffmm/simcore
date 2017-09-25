@@ -63,7 +63,7 @@ void Space::InitUnitCell() {
   double h_param1 = 2.0 * radius_;
   double h_major = h_param1;
   double h_minor = h_major;
-  if (boundary_._to_string() == "budding") {
+  if (boundary_ == +boundary_type::budding) {
     double h_param2 = bud_height_ + bud_radius_ + radius_;
     h_major = (h_param1 > h_param2 ? h_param1 : h_param2);
     h_minor = (h_param1 > h_param2 ? h_param2 : h_param1);
@@ -116,7 +116,7 @@ void Space::CalculateUnitCellQuantities() {
 
 void Space::UpdateSpace() {
   // No space update for budding yeast yet
-  if (boundary_._to_string() == "budding")
+  if (boundary_ == +boundary_type::budding)
     return;
   UpdateUnitCell();
   UpdateVolume();
@@ -272,11 +272,12 @@ void Space::InitSpaceStruct() {
   s_struct.n_dim = n_dim_;
   s_struct.n_periodic = n_periodic_;
   s_struct.type = boundary_;
-  std::string b_type(boundary_._to_string());
-  if (b_type.compare("budding")==0) {
+  if (boundary_ == +boundary_type::budding) {
     s_struct.bud = true;
     s_struct.bud_height = bud_height_;
     s_struct.bud_radius = bud_radius_;
+    s_struct.bud_neck_radius = neck_radius_;
+    s_struct.bud_neck_height = neck_height_;
   }
   else {
     s_struct.bud = false;

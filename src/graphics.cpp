@@ -1,5 +1,4 @@
 #ifndef NOGRAPH
-
 #include <GL/glew.h>
 
 #include "graphics.h"
@@ -293,8 +292,7 @@ void Graphics::Init2dWindow() {
   gluOrtho2D((GLdouble) (xmin - 0.05 * unit_cell_[0]),
         (GLdouble) (xmax + 0.05 * unit_cell_[0]),
         (GLdouble) (ymin - 0.05 * unit_cell_[3]),
-        (GLdouble) (ymax + 0.05 * unit_cell_[3])); //deprecated, but annoying
-                          //to implement
+        (GLdouble) (ymax + 0.05 * unit_cell_[3])); //deprecated, but annoying to implement
 
   /* establish initial viewport */
   glViewport(0, 0, windx_, windy_);

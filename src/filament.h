@@ -93,7 +93,7 @@ class Filament : public Mesh {
     void UpdatePolyState();
     void GrowFilament();
     void RescaleBonds();
-    //void InitSpiral2D();
+    void InitSpiral2D();
     void ReportAll();
     std::vector<Motor> motors_; //FIXME temporary
     Anchor * anchor_; //FIXME temporary? 
@@ -109,7 +109,6 @@ class Filament : public Mesh {
     virtual void SetAnchor(Anchor * a);
     //void DiffusionValidationInit();
     virtual void Integrate();
-    virtual double const * const GetDrTot();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePosition() {}
     virtual void UpdatePosition(bool midstep);
