@@ -123,6 +123,7 @@ void Centrosome::UpdatePosition(bool midstep) {
     it->UpdatePosition(midstep);
 #endif
   if (!midstep) {
+    SetPrevPosition(position_);
     ApplyForcesTorques();
     ApplyBoundaryForces();
     Integrate();

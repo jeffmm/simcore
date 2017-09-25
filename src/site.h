@@ -6,6 +6,7 @@
 class Bond; // Forward declaration
 enum directed_type {OUTGOING,INCOMING,NONE};
 typedef std::pair<Bond*,directed_type> directed_bond;
+typedef std::vector<directed_bond>::iterator db_iterator;
 
 // Sites, ie graph vertices
 class Site : public Object {
@@ -31,6 +32,7 @@ class Site : public Object {
     directed_bond GetOtherDirectedBond(int bond_oid);
     void RemoveOutgoingBonds();
     void RemoveBond(int bond_oid);
+    virtual bool HasNeighbor(int other_oid);
 };
 
 #endif // _SIMCORE_SITE_H_

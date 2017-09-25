@@ -21,6 +21,8 @@ Object::Object() {
   p_energy_ = 0;
   interacting_ = false;
   is_mesh_ = false;
+  dr_tot_ = 0;
+  mesh_id_ = 0;
 }
 
 int Object::next_oid_ = 0;
@@ -130,6 +132,15 @@ bool const Object::IsInteractor() {
 }
 bool const Object::IsMesh() {
   return is_mesh_;
+}
+int const Object::GetMeshID() const {
+  return mesh_id_;
+}
+void Object::SetMeshID(int mid) {
+  mesh_id_ = mid;
+}
+void Object::ToggleIsMesh() {
+  is_mesh_ = !is_mesh_;
 }
 
 // Virtual functions
@@ -361,6 +372,22 @@ double const Object::GetVolume() {
     return 1.0/6.0 * M_PI * diameter_*diameter_*diameter_;
   }
   return -1;
+}
+double const Object::GetDrTot() {
+  return dr_tot_;
+}
+void Object::ZeroDrTot() {
+  dr_tot_ = 0;
+}
+void Object::UpdateDrTot() {
+  for (int i=0;i<n_dim_;++i) {
+    double dr = position_[i] - prev_position_[i];
+    dr_tot_ += dr*dr;
+  }
+}
+bool Object::HasNeighbor(int other_oid) {
+  // Generic objects are not assumed to have neighbors
+  return false;
 }
 
 // Object I/O functions

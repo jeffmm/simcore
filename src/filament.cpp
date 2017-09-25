@@ -52,11 +52,11 @@ void Filament::SetAnchor(Anchor * a) {
 
 void Filament::Init() {
   InitElements();
-  //if (spiral_flag_) {
-    //InitSpiral2D();
-    //return;
-  //}
   InsertFilament();
+  if (spiral_flag_) {
+    InitSpiral2D();
+    return;
+  }
   UpdatePrevPositions();
   CalculateAngles();
   SetDiffusion();
@@ -233,41 +233,42 @@ void Filament::InsertAt(double *pos, double *u) {
 }
 
 // Place a spool centered at the origin
-//void Filament::InitSpiral2D() {
-  //if (n_dim_ > 2)
-    //error_exit("3D Spirals not coded yet.");
-  //double prev_pos[3] = {0, 0, 0};
-  //std::fill(position_, position_+3, 0);
-  //sites_[n_sites_-1].SetPosition(prev_pos);
-  //for (auto site=sites_.begin(); site!= sites_.end(); ++site) {
-    //site->SetDiameter(diameter_);
-    //site->SetLength(bond_length_);
-  //}
-  //double step = diameter_ / M_PI;
-  //double theta = bond_length_ / step;
-  //for (int i=2; i<n_sites_+1; ++i) {
-    //double move = step*theta;
-    //double angle = theta + 2*M_PI;
-    //position_[0] = move * cos(angle);
-    //position_[1] = move * sin(angle);
-    //theta += bond_length_ / move;
-    //// Set current site position and orientation
-    //sites_[n_sites_-i].SetPosition(position_);
-    //for (int j=0; j<3; ++j) {
-      //orientation_[j] = (prev_pos[j] - position_[j])/bond_length_;
-      //prev_pos[j] = position_[j];
-    //}
-    //sites_[n_sites_-i].SetOrientation(orientation_);
-  //}
-  //// Set last site orientation
-  //sites_[n_sites_-1].SetOrientation(sites_[n_sites_-2].GetOrientation());
-  //// Init usual suspects
-  //UpdatePrevPositions();
-  //CalculateAngles();
-  //UpdateBondPositions();
-  //SetDiffusion();
-  //poly_ = poly_state::grow;
-//}
+void Filament::InitSpiral2D() {
+  if (n_dim_ > 2)
+    error_exit("3D Spirals not coded yet.");
+  double prev_pos[3] = {0, 0, 0};
+  std::fill(position_, position_+3, 0);
+  sites_[n_sites_-1].SetPosition(prev_pos);
+  for (auto site=sites_.begin(); site!= sites_.end(); ++site) {
+    site->SetDiameter(diameter_);
+    site->SetLength(bond_length_);
+  }
+  double step = diameter_ / M_PI;
+  double theta = bond_length_ / step;
+  for (int i=2; i<n_sites_+1; ++i) {
+    double move = step*theta;
+    double angle = theta + 2*M_PI;
+    position_[0] = move * cos(angle);
+    position_[1] = move * sin(angle);
+    theta += bond_length_ / move;
+    // Set current site position and orientation
+    sites_[n_sites_-i].SetPosition(position_);
+    for (int j=0; j<3; ++j) {
+      orientation_[j] = (prev_pos[j] - position_[j])/bond_length_;
+      prev_pos[j] = position_[j];
+    }
+    sites_[n_sites_-i].SetOrientation(orientation_);
+  }
+  // Set last site orientation
+  sites_[n_sites_-1].SetOrientation(sites_[n_sites_-2].GetOrientation());
+  // Init usual suspects
+  UpdatePrevPositions();
+  CalculateAngles();
+  UpdateBondPositions();
+  UpdateSiteOrientations();
+  SetDiffusion();
+  poly_ = poly_state::grow;
+}
 
 void Filament::SetDiffusion() {
   double logLD = log(length_/diameter_);
@@ -317,33 +318,65 @@ void Filament::GenerateProbableOrientation() {
   std::copy(new_orientation,new_orientation+3,orientation_);
 }
 
+// FIXME
 void Filament::ApplyBoundaryForces() {
-  if (params_->boundary != 2) return;
-  tip_force_ = 0;
-  for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
-    double const * const pos = site->GetPosition();
-    double rmag = 0;
-    for (int i=0;i<n_dim_;++i) {
-      rmag += pos[i]*pos[i];
-    }
-    rmag = sqrt(rmag);
-    double dr = space_->radius - rmag - 0.5*diameter_;
-    if (dr < 1e-3) dr = 1e-3;
-    if ( dr < bc_rcut_ ) {
-      double boundary_force[3] = {0,0,0};
-      double rinv = 1.0/(dr);
-      double rinv2 = rinv*rinv;
-      double r6 = rinv2*rinv2*rinv2;
-      double ffac = -(12.0*wca_c12_*r6 - 6.0*wca_c6_)*r6*rinv;
-      for (int i=0; i<n_dim_; ++i) {
-        boundary_force[i] = ffac*pos[i]/rmag;
+  if (space_->type == +boundary_type::sphere) {
+    tip_force_ = 0;
+    for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
+      double const * const pos = site->GetPosition();
+      double rmag = 0;
+      for (int i=0;i<n_dim_;++i) {
+        rmag += pos[i]*pos[i];
       }
-      if (site == sites_.end()-1) {
-        tip_force_ = -dot_product(n_dim_,boundary_force,sites_[n_sites_-1].GetOrientation());
+      rmag = sqrt(rmag);
+      double dr = space_->radius - rmag - 0.5*diameter_;
+      if (dr < 1e-3) dr = 1e-3;
+      if ( dr < bc_rcut_ ) {
+        double boundary_force[3] = {0,0,0};
+        double rinv = 1.0/(dr);
+        double rinv2 = rinv*rinv;
+        double r6 = rinv2*rinv2*rinv2;
+        double ffac = -(12.0*wca_c12_*r6 - 6.0*wca_c6_)*r6*rinv;
+        for (int i=0; i<n_dim_; ++i) {
+          boundary_force[i] = ffac*pos[i]/rmag;
+        }
+        if (site == sites_.end()-1) {
+          tip_force_ = -dot_product(n_dim_,boundary_force,sites_[n_sites_-1].GetOrientation());
+        }
+        site->AddForce(boundary_force);
       }
-      site->AddForce(boundary_force);
     }
   }
+  else if (space_->type == +boundary_type::budding) {
+    return;
+    tip_force_ = 0;
+    for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
+      double const * const pos = site->GetPosition();
+      double rmag = 0;
+      for (int i=0;i<n_dim_-1;++i) {
+        rmag += pos[i]*pos[i];
+      }
+      rmag += (pos[n_dim_-1]-space_->bud_height)*(pos[n_dim_-1]-space_->bud_height);
+      rmag = sqrt(rmag);
+      double dr = space_->bud_radius - rmag - 0.5*diameter_;
+      if (dr < 1e-3) dr = 1e-3;
+      if ( dr < bc_rcut_ ) {
+        double boundary_force[3] = {0,0,0};
+        double rinv = 1.0/(dr);
+        double rinv2 = rinv*rinv;
+        double r6 = rinv2*rinv2*rinv2;
+        double ffac = -(12.0*wca_c12_*r6 - 6.0*wca_c6_)*r6*rinv;
+        for (int i=0; i<n_dim_; ++i) {
+          boundary_force[i] = ffac*pos[i]/rmag;
+        }
+        if (site == sites_.end()-1) {
+          tip_force_ = -dot_product(n_dim_,boundary_force,sites_[n_sites_-1].GetOrientation());
+        }
+        site->AddForce(boundary_force);
+      }
+    }
+  }
+
 }
 
 double const Filament::GetVolume() {
@@ -776,8 +809,6 @@ void Filament::UpdateAvgPosition() {
     position_[i] /= n_sites_;
   }
 }
-
-double const * const Filament::GetDrTot() {return nullptr;}
 
 void Filament::ApplyForcesTorques() {
   ApplyInteractionForces();

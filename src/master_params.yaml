@@ -82,10 +82,6 @@ filament:
   v_depoly : [0.793,double]
   theta_analysis: [0, int]
   lp_analysis: [0,int]
-  n_motors: [0,int]
-  k_on: [1,double]
-  k_off: [1,double]
-  motor_velocity: [1,double]
 hard_rod:
   diameter: [1, double]
   length: [40, double]

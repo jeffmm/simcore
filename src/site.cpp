@@ -116,3 +116,14 @@ void Site::AddRandomForce() {
     force_[i] += random_force_[i];
   }
 }
+bool Site::HasNeighbor(int other_oid) {
+  if (n_bonds_ == 0) {
+    return false;
+  }
+  for (db_iterator db = bonds_.begin(); db!=bonds_.end(); ++db) {
+    if (db->first->GetOID() == other_oid) {
+      return true;
+    }
+  }
+  return false;
+}
