@@ -18,6 +18,8 @@ void InteractionEngine::Init(system_parameters *params,
   i_update_ = -1;
   n_objs_ = 0;
   clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
+  // Update dr distance should be half the cell length, and we are comparing the squares of the trajectory distances
+  dr_update_ = 0.25*clist_.GetCellLength()*clist_.GetCellLength();
   potentials_.InitPotentials(params_);
 }
 
@@ -71,11 +73,33 @@ void InteractionEngine::CheckUpdate() {
     UpdateInteractors();
     UpdateInteractions();
   }
-  // Otherwise check periodic update count
-  else if ((++i_update_) % n_update_ == 0)
+  else if (n_update_ <=0 && GetDrMax() > dr_update_) {
+    i_update_ = 0; 
     UpdateInteractions();
+    ZeroDrTot();
+  }
+  // Otherwise check periodic update count
+  else if (n_update_ > 0 && (++i_update_) % n_update_ == 0) {
+    UpdateInteractions();
+  }
 }
 
+double InteractionEngine::GetDrMax() {
+  double max_dr = 0;
+  for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
+    double dr = (*spec)->GetDrMax();
+    if (dr>max_dr) {
+      max_dr = dr;
+    }
+  }
+  return max_dr;
+}
+
+void InteractionEngine::ZeroDrTot() {
+  for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
+    (*spec)->ZeroDrTot();
+  }
+}
 
 void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterator pix) {
   // Avoid certain types of interactions

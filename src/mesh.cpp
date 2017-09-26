@@ -8,6 +8,8 @@ int Mesh::next_mesh_id_ = 0;
 Mesh::Mesh() : Object() {
   n_sites_ = n_bonds_ = 0;
   is_mesh_ = true;
+  midstep_ = true;
+  anchored_ = false;
   SetMeshID(++next_mesh_id_);
 }
 
@@ -361,15 +363,16 @@ Bond * Mesh::GetRandomBond() {
 }
 
 void Mesh::UpdateDrTot() {
-  double max_dr = 0;
+  if (midstep_) {
+    return;
+  }
   for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
     site->UpdateDrTot();
     double const dr = site->GetDrTot();
-    if (dr > max_dr) {
-      max_dr = dr;
+    if (dr > dr_tot_) {
+      dr_tot_ = dr;
     }
   }
-  dr_tot_ = max_dr;
 }
 
 void Mesh::ZeroDrTot() {
@@ -380,5 +383,6 @@ void Mesh::ZeroDrTot() {
 }
 
 double const Mesh::GetDrTot() {
+  UpdateDrTot();
   return dr_tot_;
 }

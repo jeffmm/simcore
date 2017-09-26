@@ -22,6 +22,25 @@ void Species<T>::AddMember() {
 }
 
 template <typename T> 
+double const Species<T>::GetDrMax() {
+  double max_dr = 0;
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    double dr = it->GetDrTot();
+    if (dr>max_dr) {
+      max_dr = dr;
+    }
+  }
+  return max_dr;
+}
+
+template <typename T> 
+void Species<T>::ZeroDrTot() {
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    it->ZeroDrTot();
+  }
+}
+
+template <typename T> 
 void Species<T>::AddMember(T newmem) {
   members_.push_back(newmem);
   n_members_++;

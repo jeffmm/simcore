@@ -33,7 +33,6 @@ void Filament::SetParameters() {
   stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
   eq_steps_ = params_->n_steps_equil;
   eq_steps_count_ = 0;
-  anchored_ = false;
   //temporary
   bc_rcut_ = pow(2.0, 1.0/6.0)*params_->wca_sig;
   wca_c12_ = 4.0 * params_->wca_eps * pow(params_->wca_sig, 12.0);
