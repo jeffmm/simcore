@@ -10,6 +10,8 @@ class Mesh : public Object {
   private:
     static int next_mesh_id_;
   protected:
+    bool anchored_,
+         midstep_;
     int n_sites_,
         n_bonds_,
         n_bonds_max_;

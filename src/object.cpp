@@ -14,6 +14,7 @@ Object::Object() {
   std::fill(orientation_,orientation_+3,0.0);
   std::fill(force_,force_+3,0.0);
   std::fill(torque_, torque_+3, 0.0);
+  std::fill(dr_zero_, dr_zero_+3, 0.0);
   draw_ = draw_type::orientation;
   color_ = 0;
   diameter_ = 1;
@@ -377,11 +378,12 @@ double const Object::GetDrTot() {
   return dr_tot_;
 }
 void Object::ZeroDrTot() {
+  std::copy(position_,position_+3,dr_zero_);
   dr_tot_ = 0;
 }
 void Object::UpdateDrTot() {
   for (int i=0;i<n_dim_;++i) {
-    double dr = position_[i] - prev_position_[i];
+    double dr = position_[i] - dr_zero_[i];
     dr_tot_ += dr*dr;
   }
 }
