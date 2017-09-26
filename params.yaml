@@ -7,19 +7,19 @@ n_runs: 1
 n_random: 1
 n_dim: 2
 n_periodic: 2
-boundary: 2
+boundary: 0
 delta: 0.00001
-n_steps: 10000000
+n_steps: 100000
 n_steps_equil: 0
 system_radius: 100
 bud_radius: 50
 bud_height: 125
 graph_flag: 1
 n_graph: 2000
-movie_flag: 1
+movie_flag: 0
 movie_directory: frames
-cell_length: 5
-n_update_cells: 50
+cell_length: 3
+n_update_cells: 0
 f_cutoff: 10000
 thermo_flag: 0
 n_thermo: 100
@@ -43,22 +43,22 @@ filament:
   color: 6
   draw_type: bw
   insertion_type: random
-  num: 1
+  num: 10
   overlap: 0
   diameter: 1
-  spiral_flag: 1
-  length: -1
+  spiral_flag: 0
+  length: 50
   max_length: 100
   min_length: 50
-  max_bond_length: 3
-  min_bond_length: 1.5
+  max_bond_length: 5
+  min_bond_length: 2.5
   posit_flag: 0
   spec_flag: 0
   checkpoint_flag: 0
   n_posit: 1000
   n_spec: 1000
   n_checkpoint: 1000
-  driving_factor: 100
+  driving_factor: 30
   dynamic_instability_flag: 0
   force_induced_catastrophe_flag: 0
   persistence_length: 10000

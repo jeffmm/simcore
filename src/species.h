@@ -71,6 +71,8 @@ class SpeciesBase {
     virtual void CleanUp() {}
     virtual void Reserve() {}
     virtual double const GetVolume() {}
+    virtual double const GetDrMax() {}
+    virtual void ZeroDrTot() {}
 };
 
 template<typename T>
@@ -113,6 +115,8 @@ class Species : public SpeciesBase {
     virtual void CleanUp();
     virtual void Reserve();
     virtual double const GetVolume();
+    virtual double const GetDrMax();
+    virtual void ZeroDrTot();
 };
 
 #include "species_templates.h"

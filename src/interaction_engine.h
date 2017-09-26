@@ -14,7 +14,8 @@
 class InteractionEngine {
 
   private:
-    double stress_[9];
+    double stress_[9],
+           dr_update_;
     bool overlap_,
          no_interactions_;
     int n_dim_,
@@ -39,6 +40,8 @@ class InteractionEngine {
     void CalculateInteractionsMP();
     void CalculateInteractions();
     void ApplyInteractions();
+    double GetDrMax();
+    void ZeroDrTot();
     int CountSpecies();
 
   public:

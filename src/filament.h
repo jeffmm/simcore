@@ -12,8 +12,6 @@
 class Filament : public Mesh {
 
   private:
-    bool anchored_,
-         midstep_;
     int dynamic_instability_flag_,
         force_induced_catastrophe_flag_,
         theta_validation_flag_,

@@ -27,6 +27,7 @@ class Object {
            orientation_[3],
            force_[3],
            torque_[3],
+           dr_zero_[3],
            color_,
            diameter_,
            length_,
