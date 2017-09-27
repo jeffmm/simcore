@@ -3,8 +3,6 @@
 
 #include "auxiliary.h"
 #include "rng.h"
-#include "minimum_distance.h"
-#include "interaction.h"
 
 class Object {
 
@@ -114,6 +112,7 @@ class Object {
 
 };
 
-void MinimumDistance(Object* o1, Object* o2, Interaction *ix, space_struct *space);
+//void MinimumDistance(Object* o1, Object* o2, Interaction *ix, space_struct *space);
+//void BoundaryConditions(Object * o1, space_struct *space);
 
 #endif // _SIMCORE_OBJECT_H_

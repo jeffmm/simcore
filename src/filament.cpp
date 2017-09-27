@@ -811,7 +811,7 @@ void Filament::UpdateAvgPosition() {
 
 void Filament::ApplyForcesTorques() {
   ApplyInteractionForces();
-  ApplyBoundaryForces(); // FIXME temporary
+  //ApplyBoundaryForces(); // FIXME temporary
   if (anchored_) ApplyAnchorForces();
 }
 
