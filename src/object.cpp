@@ -1,5 +1,4 @@
 #include "object.h"
-#include "minimum_distance.h"
 
 Object::Object() {
   // Initialize object ID
@@ -450,47 +449,5 @@ void Object::Report() {
   fprintf(stderr, "      u: {%2.2f %2.2f %2.2f}\n",orientation_[0],orientation_[1],orientation_[2]);
   fprintf(stderr, "      l: %2.2f\n",length_);
   fprintf(stderr, "      d: %2.2f\n",diameter_);
-}
-
-// Find the minimum distance beween two particles
-void MinimumDistance(Object* o1, Object* o2, Interaction *ix, space_struct *space) {
-  double const * const r1 = o1->GetInteractorPosition();
-  double const * const s1 = o1->GetInteractorScaledPosition();
-  double const * const u1 = o1->GetInteractorOrientation();
-  double const l1 = o1->GetInteractorLength();
-  double const d1 = o1->GetInteractorDiameter();
-  double const * const r2 = o2->GetInteractorPosition();
-  double const * const s2 = o2->GetInteractorScaledPosition();
-  double const * const u2 = o2->GetInteractorOrientation();
-  double const l2 = o2->GetInteractorLength();
-  double const d2 = o2->GetInteractorDiameter();
-  /* TODO: Think about how best to do this for general shapes, like 2d
-     polygons that can represent the local surface of more complex 3d
-     shapes. Perhaps assume all local surface to be triangular polygons.*/
-  ix->dr_mag2 = 0;
-  std::fill(ix->dr, ix->dr+3, 0.0);
-  std::fill(ix->contact1, ix->contact1+3, 0.0);
-  std::fill(ix->contact2, ix->contact2+3, 0.0);
-  ix->buffer_mag = 0.5*(d1+d2);
-  ix->buffer_mag2 = ix->buffer_mag*ix->buffer_mag;
-  if (l1 == 0 && l2 == 0) 
-    min_distance_point_point(space->n_dim, space->n_periodic, space->unit_cell,
-                 r1, s1, r2, s2, ix->dr, &ix->dr_mag2);
-  else if (l1 == 0 && l2 > 0)
-    min_distance_sphere_sphero(space->n_dim, space->n_periodic, space->unit_cell,
-                   r1, s1, r2, s2, u2, l2,
-                   ix->dr, &ix->dr_mag2, ix->contact2);
-  else if (l1 > 0 && l2 == 0) {
-    min_distance_sphere_sphero(space->n_dim, space->n_periodic, space->unit_cell,
-                   r2, s2, r1, s1, u1, l1,
-                   ix->dr, &ix->dr_mag2, ix->contact1);
-    for (int i=0;i<3;++i) {
-      ix->dr[i] = -ix->dr[i];
-    }
-  }
-  else if (l1 > 0 && l2 > 0) 
-    min_distance_sphero(space->n_dim, space->n_periodic, space->unit_cell,
-              r1, s1, u1, l1, r2, s2, u2, l2,
-              ix->dr, &ix->dr_mag2, ix->contact1, ix->contact2);
 }
 
