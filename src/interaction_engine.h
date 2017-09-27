@@ -6,6 +6,7 @@
 #include "species.h"
 #include "auxiliary.h"
 #include "potential_manager.h"
+#include "minimum_distance.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -28,7 +29,10 @@ class InteractionEngine {
     space_struct *space_;
     std::vector<SpeciesBase*> *species_;
 
+    MinimumDistance mindist_;
+
     std::vector<pair_interaction> pair_interactions_;
+    std::vector<boundary_interaction> boundary_interactions_;
     std::vector<Object*> interactors_;
     CellList clist_;
     PotentialManager potentials_;
@@ -36,10 +40,14 @@ class InteractionEngine {
     void CheckUpdate();
     void UpdateInteractors();
     void UpdateInteractions();
-    void ProcessInteraction(std::vector<pair_interaction>::iterator pix);
-    void CalculateInteractionsMP();
-    void CalculateInteractions();
-    void ApplyInteractions();
+    void ProcessPairInteraction(std::vector<pair_interaction>::iterator pix);
+    void ProcessBoundaryInteraction(std::vector<boundary_interaction>::iterator bix);
+    void CalculatePairInteractionsMP();
+    void CalculateBoundaryInteractionsMP();
+    void CalculatePairInteractions();
+    void CalculateBoundaryInteractions();
+    void ApplyPairInteractions();
+    void ApplyBoundaryInteractions();
     double GetDrMax();
     void ZeroDrTot();
     int CountSpecies();

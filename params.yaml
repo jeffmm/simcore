@@ -7,7 +7,7 @@ n_runs: 1
 n_random: 1
 n_dim: 2
 n_periodic: 2
-boundary: 0
+boundary: 2
 delta: 0.00001
 n_steps: 100000
 n_steps_equil: 0
@@ -43,7 +43,7 @@ filament:
   color: 6
   draw_type: bw
   insertion_type: random
-  num: 10
+  num: 60
   overlap: 0
   diameter: 1
   spiral_flag: 0

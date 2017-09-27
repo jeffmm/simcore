@@ -16,6 +16,3 @@ void invert_sym_3d_matrix(double *a, double *b);
 void periodic_boundary_conditions(int n_dim, int n_periodic, double *h, double *h_inv,
                                          double *r, double *s);
 
-template <typename T, typename V, typename W>
-void MinimumDistance(T *o1, T *o2, V *ix, W *space); 
-
