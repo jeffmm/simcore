@@ -263,8 +263,8 @@ void InteractionEngine::ApplyBoundaryInteractions() {
   for(auto bix = boundary_interactions_.begin(); bix != boundary_interactions_.end(); ++bix) {
     auto obj1 = bix->first;
     Interaction *ix = &(bix->second);
-    obj1->SubForce(ix->force);
-    obj1->SubTorque(ix->t1);
+    obj1->AddForce(ix->force);
+    obj1->AddTorque(ix->t1);
     obj1->AddPotential(ix->pote);
     for (int i=0; i<n_dim_; ++i) {
       for (int j=0; j<n_dim_; ++j) {
@@ -302,7 +302,17 @@ bool InteractionEngine::CheckOverlap() {
   UpdateInteractors();
   UpdateInteractions();
   CalculatePairInteractions();
-  CalculateBoundaryInteractions();
   return overlap_;
+}
+
+bool InteractionEngine::CheckBoundaryConditions() {
+  UpdateInteractors();
+  bool outside_boundary = false;
+  for (auto ixor=interactors_.begin(); ixor!=interactors_.end(); ++ixor) {
+    if (mindist_.CheckOutsideBoundary(*ixor)) {
+      outside_boundary = true;
+    }
+  }
+  return outside_boundary;
 }
 

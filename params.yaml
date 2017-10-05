@@ -1,25 +1,24 @@
 # params.yaml
 ---
-seed : 303722426831655 
-#seed: 333681025637
+seed : 14241324632188
 run_name: positioning_test_3
 n_runs: 1
 n_random: 1
 n_dim: 2
 n_periodic: 2
-boundary: 2
+boundary: 3
 delta: 0.00001
-n_steps: 100000
+n_steps: 10000000
 n_steps_equil: 0
 system_radius: 100
 bud_radius: 50
 bud_height: 125
 graph_flag: 1
-n_graph: 2000
-movie_flag: 0
+n_graph: 500
+movie_flag: 1
 movie_directory: frames
 cell_length: 3
-n_update_cells: 0
+n_update_cells: -1
 f_cutoff: 10000
 thermo_flag: 0
 n_thermo: 100
@@ -43,11 +42,11 @@ filament:
   color: 6
   draw_type: bw
   insertion_type: random
-  num: 60
+  num: 30
   overlap: 0
   diameter: 1
   spiral_flag: 0
-  length: 50
+  length: -1
   max_length: 100
   min_length: 50
   max_bond_length: 5

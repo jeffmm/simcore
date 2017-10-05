@@ -172,11 +172,20 @@ for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
       while(num != inserted) {
         (*spec)->AddMember();
         inserted++;
-        if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+        // First check that we are respecting boundary conditions
+        if (params_.boundary != 0 && iengine_.CheckBoundaryConditions()) {
+          (*spec)->PopMember();
+          inserted--;
+          // We are not counting boundary condition failures in insertion
+          // failures, since insertion failures are for packing issues
+        }
+        // Check if we have an overlap of objects
+        else if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
           (*spec)->PopMember();
           inserted--;
           num_failures++;
         }
+        // Otherwise update display of percentage of species inserted
         else {
           printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
           fflush(stdout);
