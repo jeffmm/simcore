@@ -60,6 +60,7 @@ class InteractionEngine {
     void Interact();
     void CalculatePressure();
     bool CheckOverlap();
+    bool CheckBoundaryConditions();
 };
 
 #endif
