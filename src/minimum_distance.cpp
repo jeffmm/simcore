@@ -624,7 +624,7 @@ void MinimumDistance::PointSphereBC(double const * const r, double *dr, double *
   }
   r_mag = sqrt(r_mag);
   for (int i=0;i<n_dim_;++i) {
-    dr[i] = (1-space_->radius/r_mag)*r[i];
+    dr[i] = (space_->radius/r_mag-1)*r[i];
   }
   *dr_mag2 = 0;
   for (int i=0;i<n_dim_;++i) {
@@ -635,10 +635,14 @@ void MinimumDistance::PointSphereBC(double const * const r, double *dr, double *
 void MinimumDistance::SpheroSphereBC(double const * const r, double const * const u, 
                                      double const length, double *dr, double *dr_mag2,
                                      double *r_contact) {
-  // For a spherocylinder with spherical BCs, the minimum distance will
-  // always be at one of the endpoints
+  /* For a spherocylinder with spherical BCs, the minimum distance will
+     always be at one of the endpoints */
   double r_min[3] = {0,0,0};
-  // Check which site is furthest from the origin
+  /* Check which site is furthest from the origin. This is done by
+     looking at the sign of the dot product of the position and
+     orientation of the spherocylinder. If it is positive, then it
+     is the site in the positive direction of the sphero origin, and
+     vice versa */
   int sign = SIGNOF(dot_product(n_dim_,r,u));
   for (int i=0;i<n_dim_; ++i) {
     r_contact[i] = sign*0.5*length*u[i];
@@ -650,7 +654,7 @@ void MinimumDistance::SpheroSphereBC(double const * const r, double const * cons
   }
   r_mag = sqrt(r_mag);
   for (int i=0;i<n_dim_;++i) {
-    dr[i] = (1-space_->radius/r_mag)*r_min[i];
+    dr[i] = (space_->radius/r_mag-1)*r_min[i];
   }
   *dr_mag2 = 0;
   for (int i=0;i<n_dim_;++i) {
@@ -661,25 +665,103 @@ void MinimumDistance::SpheroSphereBC(double const * const r, double const * cons
 void MinimumDistance::PointBuddingBC(double const * const r, double *dr, double *dr_mag2) {
   // First see which cell (mother or daughter) we are primarily located in
   bool in_mother = (r[n_dim_-1] < space_->bud_neck_height);
-  // Check to see if we are in the overlap region of the mother and daughter cells
-  double rmag = 0.0;
-  for (int i=0;i<n_dim_-1;++i) {
-    rmag += SQR(r[i]);
-  }
-  // If we are primarily in the mother cell, we are looking at the distance from
-  // the origin of the daughter cell, otherwise we are primarily in the daughter
-  // cell and are concerned with the distance from the origin of the mother cell.
-  rmag += ( in_mother ? SQR(r[n_dim_-1]-space_->bud_height) : SQR(r[n_dim_-1]) );
-  // We are in the overlap region if we are primarily in one cell while still being
-  // within the bounds of the second cell
-  bool in_overlap = rmag < ( in_mother ? SQR(space_->bud_radius) : SQR(space_->radius) );
-  if (in_overlap) {
+  /* There are two regions in which the cusp of the bud neck is always the
+     minimum distance region to the object. The first is the cone defined from
+     the origin of the mother cell to the bud neck, the second is defined from
+     the origin of the daughter cell to the bud neck. */
 
+  /* In 2D, the equation for a (double) cone is: h^2*x^2/r^2 = (y-y0)^2
+     In 3D, the equation for a (double) cone is: h^2(x^2+y^2)/r^2 = (z-z0)^2
+     where h = bud_neck_height, r = bud_neck_radius, and inside the mother cell
+     z0 = 0, inside the daughter cell z0 = bud_height */
+
+  /* First check to see if object has vertical coordinate less than 0, or
+     greater than bud_height, in which case, we are definitely not in the cone 
+     regions */
+  bool in_cone_region = !( r[n_dim_-1] < 0 || r[n_dim_-1] > space_->bud_height );
+
+  /* If in_cone_region is false, then we are definitely not in the cone region,
+     if in_cone_region is true, we need to check definitively whether we are in
+     the cone region. */
+  double r_mag = 0.0;
+  /* use r_mag to store magnitude of rho^2 for now */
+  for (int i=0;i<n_dim_-1;++i) {
+    r_mag += SQR(r[i]);
+  }
+  double z0 = (in_mother ? 0 : space_->bud_height);
+  if (in_cone_region) {
+    /* Check to see if distance from vertical axis (rho) has the property
+       rho^2 > r^2(z-z0)^2/h^2, if so, we are not in the cone region */
+    double cone_rho2 = SQR(space_->bud_neck_radius)*SQR(r[n_dim_-1]-z0)/SQR(space_->bud_neck_height);
+    in_cone_region = (r_mag < cone_rho2);
+  }
+  /* Now in_cone_region definitely means what it says it means */
+  if (in_cone_region) {
+    /* Minimum distance is to the cusp of the bud neck, a little algebra shows that
+       in cylindrical coords:
+       dr = { rho ( bud_neck_radius / |rho| - 1) , bud_neck_height - z } */
+    double scale_factor = space_->bud_neck_radius/sqrt(r_mag) - 1;
+    // Temp test code FIXME
+    if (scale_factor < 0) error_exit("Something went wrong in PointBuddingBC!!\n");
+    *dr_mag2 = 0;
+    for (int i=0;i<n_dim_-1; ++i) {
+      dr[i] = scale_factor*r[i];
+      *dr_mag2 += SQR(dr[i]);
+    }
+    dr[n_dim_-1] = space_->bud_neck_height - r[n_dim_-1];
+    *dr_mag2 += SQR(dr[n_dim_-1]);
+  }
+  /* else we are not in the cone region, we do a typical spherical boundary check,
+     with respect to the mother or daughter cell we are inside */
+  else {
+    r_mag = sqrt(r_mag+SQR(r[n_dim_-1] - z0));
+    double r_cell = (in_mother ? space_->radius : space_->bud_radius);
+    *dr_mag2 = 0;
+    for (int i=0;i<n_dim_-1;++i) {
+      dr[i] = (r_cell/r_mag-1)*r[i];
+      *dr_mag2 += SQR(dr[i]);
+    }
+    dr[n_dim_-1] = (r_cell/r_mag-1)*(r[n_dim_-1] - z0);
+    *dr_mag2 += SQR(dr[n_dim_-1]);
   }
 }
 
 void MinimumDistance::SpheroBuddingBC(double const * const r, double const * const u, 
-                                      double const length, double *dr, double *dr_mag2, double *r_contact) {}
+                                      double const length, double *dr, double *dr_mag2, double *r_contact) {
+  /* For spherocylinders, there are two distinct cases we want to consider:
+     whether both end sites are above or below the bud neck in the same cell,
+     or if they are in different cells. I determine this by determining if
+     the z-coordinate of the sites are on the same side of the bud neck */
+  double site_z = 0.5*length*u[n_dim_-1];
+  double z_offset = space_->bud_neck_height - r[n_dim_-1];
+  bool same_cell = SIGNOF(z_offset+site_z) == SIGNOF(z_offset-site_z);
+  /* If they're in the same cell, determine which site is furthest from the
+     origin of their respective cell. This is done by taking a dot product,
+     as is done in the sphere boundary, but now the origin can change */
+  if (same_cell) {
+    bool in_mother = (r[n_dim_-1] < space_->bud_neck_height);
+    double z0 = (in_mother ? 0 : space_->bud_height);
+    double dp = 0.0;
+    for (int i=0;i<n_dim_-1;++i) {
+      dp += r[i]*u[i];
+    }
+    dp += (r[n_dim_-1]-z0)*u[n_dim_-1];
+    int sign = SIGNOF(dp);
+    double r_min[3] = {0,0,0};
+    for (int i=0;i<n_dim_;++i) {
+      r_contact[i] = sign*0.5*length*u[i];
+      r_min[i] = r[i] + r_contact[i];
+    }
+    PointBuddingBC(r_min, dr, dr_mag2);
+  }
+  else {
+    //For now just use the centerpoint of the sphero... fix this later FIXME
+    for (int i=0;i<n_dim_;++i) {
+      r_contact[i] = 0.0;
+    }
+    PointBuddingBC(r, dr, dr_mag2);
+  }
+}
 
 bool MinimumDistance::CheckBoundary(Object *o1, Interaction *ix) {
   double const * const r1 = o1->GetInteractorPosition();
@@ -692,7 +774,7 @@ bool MinimumDistance::CheckBoundary(Object *o1, Interaction *ix) {
   ix->buffer_mag = 0.5*d1;
   ix->buffer_mag2 = ix->buffer_mag*ix->buffer_mag;
   if (space_->type == +boundary_type::sphere) {
-    if (l1 > 0) {
+    if (l1 == 0) {
       PointSphereBC(r1, ix->dr, &(ix->dr_mag2));
     }
     else {
@@ -700,7 +782,7 @@ bool MinimumDistance::CheckBoundary(Object *o1, Interaction *ix) {
     }
   }
   else if (space_->type == +boundary_type::budding) {
-    if (l1 > 0) {
+    if (l1 == 0) {
       PointBuddingBC(r1, ix->dr, &(ix->dr_mag2));
     }
     else {
