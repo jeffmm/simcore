@@ -55,7 +55,8 @@ class MinimumDistance {
     MinimumDistance() {}
     void Init(space_struct * space, double boundary_cutoff_sq);
     void ObjectObject(Object* o1, Object* o2, Interaction *ix);
-    bool CheckBoundary(Object *o1, Interaction *ix);
+    bool CheckBoundaryInteraction(Object *o1, Interaction *ix);
+    bool CheckOutsideBoundary(Object *o1);
     void BoundaryCondition(std::vector<boundary_interaction>::iterator bix);
 };
 
