@@ -63,7 +63,7 @@ void InteractionEngine::UpdateInteractions() {
   boundary_interactions_.clear();
   for (auto ixor=interactors_.begin(); ixor!=interactors_.end(); ++ixor) {
     Interaction ix;
-    if (mindist_.CheckBoundary(*ixor,&ix)) {
+    if (mindist_.CheckBoundaryInteraction(*ixor,&ix)) {
       boundary_interactions_.push_back(std::make_pair(*ixor,ix));
     }
   }
