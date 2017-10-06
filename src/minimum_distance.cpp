@@ -763,7 +763,7 @@ void MinimumDistance::SpheroBuddingBC(double const * const r, double const * con
   }
 }
 
-bool MinimumDistance::CheckBoundary(Object *o1, Interaction *ix) {
+bool MinimumDistance::CheckBoundaryInteraction(Object *o1, Interaction *ix) {
   double const * const r1 = o1->GetInteractorPosition();
   double const * const u1 = o1->GetInteractorOrientation();
   double const l1 = o1->GetInteractorLength();
@@ -796,8 +796,28 @@ bool MinimumDistance::CheckBoundary(Object *o1, Interaction *ix) {
   return false;
 }
 
+bool MinimumDistance::CheckOutsideBoundary(Object * obj) {
+  double const * const r = obj->GetInteractorPosition();
+  double const * const u = obj->GetInteractorOrientation();
+  double const l = obj->GetInteractorLength();
+  double const d = obj->GetInteractorDiameter();
+  double r_mag = 0.0;
+  double z0 = 0.0;
+  double r_boundary = space_->radius;
+  if (space_->type == +boundary_type::budding && r[n_dim_-1] > space_->bud_neck_height) {
+    z0 = space_->bud_height;
+    r_boundary = space_->bud_radius;
+  }
+  int sign = ( l>0 ? SIGNOF(dot_product(n_dim_,r,u)) : 0 );
+  for (int i=0;i<n_dim_-1;++i) {
+    r_mag += SQR(r[i] + sign*0.5*l*u[i]);
+  }
+  r_mag += SQR(r[n_dim_-1] + sign*0.5*l*u[n_dim_-1] - z0);
+  return (r_mag > SQR(r_boundary - 0.5*d));
+}
+
 void MinimumDistance::BoundaryCondition(std::vector<boundary_interaction>::iterator bix) {
-  CheckBoundary(bix->first,&(bix->second));
+  CheckBoundaryInteraction(bix->first,&(bix->second));
 }
 
 #undef SMALL
