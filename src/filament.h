@@ -43,11 +43,9 @@ class Filament : public Mesh {
            p_g2s_,
            p_g2p_,
            driving_factor_,
+           fic_factor_,
            tip_force_,
            // TEMPORARY FIXME
-           bc_rcut_,
-           wca_c6_,
-           wca_c12_,
            motor_velocity_,
            k_on_,
            k_off_,
@@ -79,12 +77,11 @@ class Filament : public Mesh {
     void UpdateSitePositions();
     void UpdateSiteOrientations();
     void ApplyForcesTorques();
-    void ApplyBoundaryForces(); // FIXME temporary
     void ApplyAnchorForces(); // FIXME temporary
     void ApplyInteractionForces();
     void SetParameters();
     void InitElements();
-    void InsertFilament();
+    void InsertFilament(bool force_overlap=false);
     void InsertFirstBond();
     void UpdateAvgPosition();
     void DynamicInstability();
@@ -102,9 +99,10 @@ class Filament : public Mesh {
 
   public:
     Filament();
-    virtual void Init();
+    virtual void Init(bool force_overlap = false);
     virtual void InsertAt(double *pos, double *u);
     virtual void SetAnchor(Anchor * a);
+    virtual bool CheckBounds(double buffer = 0);
     //void DiffusionValidationInit();
     virtual void Integrate();
     virtual void Draw(std::vector<graph_struct*> * graph_array);

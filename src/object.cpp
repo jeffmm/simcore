@@ -5,7 +5,7 @@ Object::Object() {
   oid_ = ++next_oid_;
   // Initialize RNG and set new object seed
   rng_.Init(_seed_);
-  _seed_ = gsl_rng_get(rng_.r);
+  _seed_ = 1000*gsl_rng_get(rng_.r)-gsl_rng_get(rng_.r);//gsl_rng_get(rng_.r);
   // Set some defaults
   std::fill(position_,position_+3,0.0);
   std::fill(prev_position_,prev_position_+3,0.0);
@@ -144,44 +144,70 @@ void Object::ToggleIsMesh() {
 }
 
 // Virtual functions
-bool Object::CheckBounds(double const * pos, double buffer) {
-  if (space_->n_periodic == n_dim_)
-    buffer = 0;
-  double R = space_->radius;
-  bool out_of_bounds = false;
-  switch (space_->type._to_integral()) {
-    case 0: // none
-      break;
-    case 2: // sphere
-      {
-        double rmag = 0;
-        for (int i=0; i<n_dim_; ++i) {
-          rmag += pos[i]*pos[i];
-        }
-        // Check that r^2 <= R^2
-        rmag=sqrt(rmag);
-        if (rmag+buffer>R) {
-          out_of_bounds = true;
-        }
-        break;
-      }
-    case 1: // box
-      // Make sure each dimension of position, x, y etc is within the box radius
-      for (int i=0; i<n_dim_; ++i) {
-        if (ABS(pos[i]) + buffer > R) {
-          out_of_bounds = true;
-        }
-      }
-      break;
-    case 3: // budding
-      // FIXME Add checks to make sure object is placed within budding boundary...
-      // right now, just trust user knows what they are doing.
-      break;
-    default:
-      error_exit("ERROR: Boundary type not recognized.\n");
+bool Object::CheckBounds(double buffer) {
+  double const * const r = GetInteractorPosition();
+  double const * const u = GetInteractorOrientation();
+  double const l = GetInteractorLength();
+  double const d = GetInteractorDiameter();
+  double r_mag = 0.0;
+  double z0 = 0.0;
+  double r_boundary = space_->radius;
+  buffer += 0.5*diameter_;
+  if (buffer > r_boundary) {
+    error_exit("Cannot insert object into system!\n");
   }
-  return out_of_bounds;
+  if (space_->type == +boundary_type::budding && r[n_dim_-1] > space_->bud_neck_height) {
+    z0 = space_->bud_height;
+    r_boundary = space_->bud_radius;
+  }
+  int sign = ( l>0 ? SIGNOF(dot_product(n_dim_,r,u)) : 0 );
+  for (int i=0;i<n_dim_-1;++i) {
+    r_mag += SQR(r[i] + sign*0.5*l*u[i]);
+  }
+  r_mag += SQR(r[n_dim_-1] + sign*0.5*l*u[n_dim_-1] - z0);
+  return (r_mag > SQR(r_boundary - buffer));
 }
+
+//bool Object::CheckBounds() {
+  //double const * const pos = GetPosition();
+  //double buffer = diameter_;
+  //if (space_->n_periodic == n_dim_)
+    //buffer = 0;
+  //double R = space_->radius;
+  //bool out_of_bounds = false;
+  //switch (space_->type._to_integral()) {
+    //case 0: // none
+      //break;
+    //case 2: // sphere
+      //{
+        //double rmag = 0;
+        //for (int i=0; i<n_dim_; ++i) {
+          //rmag += pos[i]*pos[i];
+        //}
+        //// Check that r^2 <= R^2
+        //rmag=sqrt(rmag);
+        //if (rmag+buffer>R) {
+          //out_of_bounds = true;
+        //}
+        //break;
+      //}
+    //case 1: // box
+      //// Make sure each dimension of position, x, y etc is within the box radius
+      //for (int i=0; i<n_dim_; ++i) {
+        //if (ABS(pos[i]) + buffer > R) {
+          //out_of_bounds = true;
+        //}
+      //}
+      //break;
+    //case 3: // budding
+      //// FIXME Add checks to make sure object is placed within budding boundary...
+      //// right now, just trust user knows what they are doing.
+      //break;
+    //default:
+      //error_exit("ERROR: Boundary type not recognized.\n");
+  //}
+  //return out_of_bounds;
+//}
 
 void Object::InsertRandom() {
   double mag;
@@ -390,6 +416,7 @@ bool Object::HasNeighbor(int other_oid) {
   // Generic objects are not assumed to have neighbors
   return false;
 }
+void Object::Cleanup() {}
 
 // Object I/O functions
 void Object::WriteCheckpoint(std::fstream &ocheck) {

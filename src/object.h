@@ -78,7 +78,7 @@ class Object {
     virtual void InsertRandom();
     virtual void InsertRandomOriented(double *u);
     virtual void InsertAt(double *pos, double *u);
-    virtual bool CheckBounds(double const *pos, double buffer);
+    virtual bool CheckBounds(double buffer = 0);
     virtual void ZeroForce();
     virtual void UpdatePeriodic();
     virtual void UpdatePosition() {}
@@ -99,6 +99,7 @@ class Object {
     virtual double const GetDrTot();
     virtual void ZeroDrTot();
     virtual bool HasNeighbor(int other_id);
+    virtual void Cleanup();
 
     // I/O functions
     virtual void Report();

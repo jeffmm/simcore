@@ -19,11 +19,7 @@ class Centrosome : public Object {
            anchor_distance_,
            gamma_trans_,
            gamma_rot_,
-           diffusion_,
-           //temporary
-           bc_rcut_,
-           wca_c12_,
-           wca_c6_;
+           diffusion_;
     std::vector<Filament> filaments_;
     std::vector<Anchor> anchors_;
     void ApplyForcesTorques();
@@ -34,11 +30,14 @@ class Centrosome : public Object {
     void Translate();
     void Rotate();
     void Integrate();
+    void RandomizeAnchorPosition(int i_fil);
   public:
     Centrosome();
     void Init();
     void UpdatePosition() {}
     void UpdatePosition(bool midstep);
+    virtual std::vector<Object*> GetInteractors();
+    virtual int GetCount();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void ZeroForce();
 };
@@ -56,8 +55,9 @@ class CentrosomeSpecies : public Species<Centrosome> {
       sparams_ = &(params_->centrosome);
     }
     void UpdatePositions() {
-      for (auto it=members_.begin(); it!=members_.end(); ++it) 
+      for (auto it=members_.begin(); it!=members_.end(); ++it) {
         it->UpdatePosition(midstep_);
+      }
       midstep_ = !midstep_;
     }
 };
