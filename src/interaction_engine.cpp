@@ -35,17 +35,21 @@ void InteractionEngine::Interact() {
   // Check if we need to update cell list
   CheckUpdate();
   // Loop through and calculate interactions
-  if (! no_interactions_ ) {
 #ifdef ENABLE_OPENMP
+  if (! no_interactions_ ) {
     CalculatePairInteractionsMP();
+  }
     CalculateBoundaryInteractionsMP();
 #else
+  if (! no_interactions_ ) {
     CalculatePairInteractions();
-    CalculateBoundaryInteractions();
-#endif
   }
+  CalculateBoundaryInteractions();
+#endif
   // Apply forces, torques, and potentials in serial
-  ApplyPairInteractions();
+  if (! no_interactions_ ) {
+    ApplyPairInteractions();
+  }
   ApplyBoundaryInteractions();
 }
 
@@ -71,8 +75,9 @@ void InteractionEngine::UpdateInteractions() {
 
 int InteractionEngine::CountSpecies() {
   int obj_count = 0;
-  for (auto spec=species_->begin(); spec!=species_->end(); ++spec)
+  for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
     obj_count += (*spec)->GetCount();
+  }
   return obj_count;
 }
 
@@ -123,8 +128,9 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   //if (obj1->GetRID() == obj2->GetRID())  return;
   // Composite objects do self interact if they want to
   // Check to make sure we aren't self-interacting
-  if (obj1->GetOID() == obj2->GetOID()) 
+  if (obj1->GetOID() == obj2->GetOID()) {
     error_exit("Object %d attempted self-interaction!", obj1->GetOID());
+  }
   // Check that object 1 is part of a mesh, in which case...
   // ...check that object 1 is of the same mesh of object 2, in which case...
   // ...check if object 2 is a neighbor of object 1, in which case: do not interact
@@ -137,6 +143,7 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   // XXX Don't interact if we have an overlap. This should eventually go to a max force routine
   if (ix->dr_mag2 < 0.25*SQR(obj1->GetDiameter() + obj2->GetDiameter())) {
     overlap_ = true;
+    //printf("We have an overlap!\n");
   }
   // XXX Only calculate WCA potential for now
   if (ix->dr_mag2 > potentials_.wca_.GetRCut2())  return;
@@ -282,16 +289,18 @@ void InteractionEngine::CalculatePressure() {
   for (int i=0; i<n_dim_; ++i) {
     for (int j=0; j<n_dim_; ++j) {
       // Add particle density along principle axes
-      if (i==j)
+      if (i==j) {
         space_->pressure_tensor[n_dim_*i+j] += n_objs_*inv_V;
+      }
       // Add time-averaged virial component
       space_->pressure_tensor[n_dim_*i+j] += stress_[n_dim_*i+j]*inv_V/n_thermo_;
     }
   }
   // Calculate isometric pressure
   space_->pressure = 0;
-  for (int i=0; i<n_dim_; ++i)
+  for (int i=0; i<n_dim_; ++i) {
     space_->pressure += space_->pressure_tensor[n_dim_*i+i];
+  }
   space_->pressure /= n_dim_;
   // Reset local stress tensor
   std::fill(stress_,stress_+9,0);

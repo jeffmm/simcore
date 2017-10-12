@@ -44,12 +44,12 @@ class MinimumDistance {
                       double *r_2, double *s_2, double *u_2, 
                       double *r_min, double *r_min_mag2, 
                       double *lambda, double *mu);
-    void PointSphereBC(double const * const r, double *dr, double *dr_mag2);
+    void PointSphereBC(double const * const r, double *dr, double *dr_mag2, double buffer);
     void SpheroSphereBC(double const * const r, double const * const u, double const length, 
-                        double * r_contact, double *dr, double *dr_mag2);
-    void PointBuddingBC(double const * const r, double *dr, double *dr_mag2);
+                        double * r_contact, double *dr, double *dr_mag2, double buffer);
+    void PointBuddingBC(double const * const r, double *dr, double *dr_mag2, double buffer);
     void SpheroBuddingBC(double const * const r, double const * const u, double const length,
-                         double *dr, double *dr_mag2, double *r_contact);
+                         double *dr, double *dr_mag2, double *r_contact, double buffer);
 
   public:
     MinimumDistance() {}

@@ -48,6 +48,7 @@ void Species<T>::AddMember(T newmem) {
 
 template <typename T> 
 void Species<T>::PopMember() {
+  members_.back().Cleanup();
   members_.pop_back();
   n_members_--;
 }
@@ -61,14 +62,16 @@ void Species<T>::PopAll() {
 
 template <typename T> 
 void Species<T>::Draw(std::vector<graph_struct*> * graph_array) {
-  for (auto it=members_.begin(); it!=members_.end(); ++it)
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
     it->Draw(graph_array);
+  }
 }
 
 template <typename T> 
 void Species<T>::UpdatePositions() {
-  for (auto it=members_.begin(); it!=members_.end(); ++it)
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
     it->UpdatePosition();
+  }
 }
 
 template <typename T> 
@@ -84,31 +87,35 @@ std::vector<Object*> Species<T>::GetInteractors() {
 template <typename T> 
 double Species<T>::GetPotentialEnergy() {
   double pe=0;
-  for (auto it=members_.begin(); it!=members_.end(); ++it)
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
     pe+=it->GetPotentialEnergy();
-    /* The total potential energy is going to be half of the
-     potential energy felt by each particle. Potential energy 
-     is shared, so I need to avoid double counting. */
+  }
+  /* The total potential energy is going to be half of the
+   potential energy felt by each particle. Potential energy 
+   is shared, so I need to avoid double counting. */
   return 0.5*pe;
 }
 
 template <typename T> 
 void Species<T>::ZeroForces() {
-  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
     it->ZeroForce();
+  }
 }
 
 template <typename T> 
 void Species<T>::Report() {
-  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
     it->Report();
+  }
 }
 
 template <typename T> 
 int Species<T>::GetCount() {
   int count = 0;
-  for (auto it=members_.begin(); it!=members_.end(); ++it) 
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
     count += it->GetCount();
+  }
   return count;
 }
 

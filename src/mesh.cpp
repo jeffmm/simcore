@@ -254,10 +254,11 @@ void Mesh::ZeroForce() {
   }
 }
 std::vector<Object*> Mesh::GetInteractors() {
-  std::vector<Object*> ix_vec;
-  for (auto it=bonds_.begin(); it!=bonds_.end(); ++it)
-    ix_vec.push_back(&(*it));
-  return ix_vec;
+  interactors_.clear();
+  for (auto it=bonds_.begin(); it!=bonds_.end(); ++it) {
+    interactors_.push_back(&(*it));
+  }
+  return interactors_;
 }
 int Mesh::GetCount() {
   return bonds_.size();

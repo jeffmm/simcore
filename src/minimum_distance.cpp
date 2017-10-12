@@ -617,14 +617,14 @@ void MinimumDistance::CarrierLines(double *r_1, double *s_1, double *u_1,
     return;
 }
 
-void MinimumDistance::PointSphereBC(double const * const r, double *dr, double *dr_mag2) {
+void MinimumDistance::PointSphereBC(double const * const r, double *dr, double *dr_mag2, double buffer) {
   double r_mag = 0;
   for (int i=0;i<n_dim_;++i) {
     r_mag += r[i]*r[i];
   }
   r_mag = sqrt(r_mag);
   for (int i=0;i<n_dim_;++i) {
-    dr[i] = (space_->radius/r_mag-1)*r[i];
+    dr[i] = ((space_->radius-buffer)/r_mag-1)*r[i];
   }
   *dr_mag2 = 0;
   for (int i=0;i<n_dim_;++i) {
@@ -634,7 +634,7 @@ void MinimumDistance::PointSphereBC(double const * const r, double *dr, double *
 
 void MinimumDistance::SpheroSphereBC(double const * const r, double const * const u, 
                                      double const length, double *dr, double *dr_mag2,
-                                     double *r_contact) {
+                                     double *r_contact, double buffer) {
   /* For a spherocylinder with spherical BCs, the minimum distance will
      always be at one of the endpoints */
   double r_min[3] = {0,0,0};
@@ -654,7 +654,7 @@ void MinimumDistance::SpheroSphereBC(double const * const r, double const * cons
   }
   r_mag = sqrt(r_mag);
   for (int i=0;i<n_dim_;++i) {
-    dr[i] = (space_->radius/r_mag-1)*r_min[i];
+    dr[i] = ((space_->radius-buffer)/r_mag-1)*r_min[i];
   }
   *dr_mag2 = 0;
   for (int i=0;i<n_dim_;++i) {
@@ -662,7 +662,7 @@ void MinimumDistance::SpheroSphereBC(double const * const r, double const * cons
   }
 }
 
-void MinimumDistance::PointBuddingBC(double const * const r, double *dr, double *dr_mag2) {
+void MinimumDistance::PointBuddingBC(double const * const r, double *dr, double *dr_mag2, double buffer) {
   // First see which cell (mother or daughter) we are primarily located in
   bool in_mother = (r[n_dim_-1] < space_->bud_neck_height);
   /* There are two regions in which the cusp of the bud neck is always the
@@ -718,16 +718,17 @@ void MinimumDistance::PointBuddingBC(double const * const r, double *dr, double 
     double r_cell = (in_mother ? space_->radius : space_->bud_radius);
     *dr_mag2 = 0;
     for (int i=0;i<n_dim_-1;++i) {
-      dr[i] = (r_cell/r_mag-1)*r[i];
+      dr[i] = ((r_cell-buffer)/r_mag-1)*r[i];
       *dr_mag2 += SQR(dr[i]);
     }
-    dr[n_dim_-1] = (r_cell/r_mag-1)*(r[n_dim_-1] - z0);
+    dr[n_dim_-1] = ((r_cell-buffer)/r_mag-1)*(r[n_dim_-1] - z0);
     *dr_mag2 += SQR(dr[n_dim_-1]);
   }
 }
 
 void MinimumDistance::SpheroBuddingBC(double const * const r, double const * const u, 
-                                      double const length, double *dr, double *dr_mag2, double *r_contact) {
+                                      double const length, double *dr, double *dr_mag2, 
+                                      double *r_contact, double buffer) {
   /* For spherocylinders, there are two distinct cases we want to consider:
      whether both end sites are above or below the bud neck in the same cell,
      or if they are in different cells. I determine this by determining if
@@ -752,14 +753,14 @@ void MinimumDistance::SpheroBuddingBC(double const * const r, double const * con
       r_contact[i] = sign*0.5*length*u[i];
       r_min[i] = r[i] + r_contact[i];
     }
-    PointBuddingBC(r_min, dr, dr_mag2);
+    PointBuddingBC(r_min, dr, dr_mag2, buffer);
   }
   else {
     //For now just use the centerpoint of the sphero... fix this later FIXME
     for (int i=0;i<n_dim_;++i) {
       r_contact[i] = 0.0;
     }
-    PointBuddingBC(r, dr, dr_mag2);
+    PointBuddingBC(r, dr, dr_mag2, buffer);
   }
 }
 
@@ -775,21 +776,20 @@ bool MinimumDistance::CheckBoundaryInteraction(Object *o1, Interaction *ix) {
   ix->buffer_mag2 = ix->buffer_mag*ix->buffer_mag;
   if (space_->type == +boundary_type::sphere) {
     if (l1 == 0) {
-      PointSphereBC(r1, ix->dr, &(ix->dr_mag2));
+      PointSphereBC(r1, ix->dr, &(ix->dr_mag2), ix->buffer_mag);
     }
     else {
-      SpheroSphereBC(r1, u1, l1, ix->dr, &(ix->dr_mag2), ix->contact1);
+      SpheroSphereBC(r1, u1, l1, ix->dr, &(ix->dr_mag2), ix->contact1, ix->buffer_mag);
     }
   }
   else if (space_->type == +boundary_type::budding) {
     if (l1 == 0) {
-      PointBuddingBC(r1, ix->dr, &(ix->dr_mag2));
+      PointBuddingBC(r1, ix->dr, &(ix->dr_mag2), ix->buffer_mag);
     }
     else {
-      SpheroBuddingBC(r1, u1, l1, ix->dr, &(ix->dr_mag2), ix->contact1);
+      SpheroBuddingBC(r1, u1, l1, ix->dr, &(ix->dr_mag2), ix->contact1, ix->buffer_mag);
     }
   }
-
   if (ix->dr_mag2 < boundary_cut2_) {
     return true;
   }
