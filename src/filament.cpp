@@ -33,10 +33,7 @@ void Filament::SetParameters() {
   stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
   eq_steps_ = params_->n_steps_equil;
   eq_steps_count_ = 0;
-  //temporary
-  bc_rcut_ = pow(2.0, 1.0/6.0)*params_->wca_sig;
-  wca_c12_ = 4.0 * params_->wca_eps * pow(params_->wca_sig, 12.0);
-  wca_c6_  = 4.0 * params_->wca_eps * pow(params_->wca_sig,  6.0);
+  fic_factor_ = params_->filament.fic_factor;
   tip_force_ = 0.0;
   k_off_ = params_->motor.k_off;
   k_on_ = params_->motor.k_on;
@@ -49,9 +46,16 @@ void Filament::SetAnchor(Anchor * a) {
   anchored_ = true;
 }
 
-void Filament::Init() {
+bool Filament::CheckBounds(double buffer) {
+  for (auto site=sites_.begin();site!=sites_.end(); ++site) {
+    if (site->CheckBounds()) return true;
+  }
+  return false;
+}
+
+void Filament::Init(bool force_overlap) {
   InitElements();
-  InsertFilament();
+  InsertFilament(force_overlap);
   if (spiral_flag_) {
     InitSpiral2D();
     return;
@@ -139,7 +143,7 @@ void Filament::InsertFirstBond() {
   }
 }
 
-void Filament::InsertFilament() {
+void Filament::InsertFilament(bool force_overlap) {
   bool out_of_bounds = true;
   int n_bonds;
   bool polydisperse = (length_<=0);
@@ -166,14 +170,14 @@ void Filament::InsertFilament() {
     } while (bond_length_ <= diameter_);
     Clear();
     InsertFirstBond();
-    if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition(),diameter_)) continue;
+    if (!force_overlap && (out_of_bounds = sites_[n_sites_-1].CheckBounds())) continue;
     SetOrientation(bonds_[n_bonds_-1].GetOrientation());
     for (int i=0;i<n_bonds-1;++i) {
       if (params_->filament.insertion_type.compare("simple_crystal") != 0) {
         GenerateProbableOrientation();
       }
       AddBondToTip(orientation_, bond_length_);
-      if (out_of_bounds = CheckBounds(sites_[n_sites_-1].GetPosition(),diameter_)) break;
+      if (!force_overlap && (out_of_bounds = sites_[n_sites_-1].CheckBounds())) break;
     }
   } while (out_of_bounds);
   for (bond_iterator bond=bonds_.begin(); bond!=bonds_.end(); ++bond) {
@@ -210,7 +214,7 @@ void Filament::InsertAt(double *pos, double *u) {
   InitSiteAt(position_,diameter_);
   std::copy(u,u+3,orientation_);
   AddBondToTip(orientation_, bond_length_);
-  if (CheckBounds(sites_[n_sites_-1].GetPosition(),diameter_)) {
+  if (sites_[n_sites_-1].CheckBounds()) {
     error_exit("Filament inserted manually out of bounds.");
   }
   SetOrientation(bonds_[n_bonds_-1].GetOrientation());
@@ -219,7 +223,7 @@ void Filament::InsertAt(double *pos, double *u) {
       GenerateProbableOrientation();
     }
     AddBondToTip(orientation_, bond_length_);
-    if (CheckBounds(sites_[n_sites_-1].GetPosition(),diameter_)) {
+    if (sites_[n_sites_-1].CheckBounds()) {
       error_exit("Filament inserted manually out of bounds.");
     }
   }
@@ -315,67 +319,6 @@ void Filament::GenerateProbableOrientation() {
   }
   rotate_orientation_vector(n_dim_, new_orientation, orientation_);
   std::copy(new_orientation,new_orientation+3,orientation_);
-}
-
-// FIXME
-void Filament::ApplyBoundaryForces() {
-  if (space_->type == +boundary_type::sphere) {
-    tip_force_ = 0;
-    for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
-      double const * const pos = site->GetPosition();
-      double rmag = 0;
-      for (int i=0;i<n_dim_;++i) {
-        rmag += pos[i]*pos[i];
-      }
-      rmag = sqrt(rmag);
-      double dr = space_->radius - rmag - 0.5*diameter_;
-      if (dr < 1e-3) dr = 1e-3;
-      if ( dr < bc_rcut_ ) {
-        double boundary_force[3] = {0,0,0};
-        double rinv = 1.0/(dr);
-        double rinv2 = rinv*rinv;
-        double r6 = rinv2*rinv2*rinv2;
-        double ffac = -(12.0*wca_c12_*r6 - 6.0*wca_c6_)*r6*rinv;
-        for (int i=0; i<n_dim_; ++i) {
-          boundary_force[i] = ffac*pos[i]/rmag;
-        }
-        if (site == sites_.end()-1) {
-          tip_force_ = -dot_product(n_dim_,boundary_force,sites_[n_sites_-1].GetOrientation());
-        }
-        site->AddForce(boundary_force);
-      }
-    }
-  }
-  else if (space_->type == +boundary_type::budding) {
-    return;
-    tip_force_ = 0;
-    for (site_iterator site=sites_.begin(); site!=sites_.end(); ++site) {
-      double const * const pos = site->GetPosition();
-      double rmag = 0;
-      for (int i=0;i<n_dim_-1;++i) {
-        rmag += pos[i]*pos[i];
-      }
-      rmag += (pos[n_dim_-1]-space_->bud_height)*(pos[n_dim_-1]-space_->bud_height);
-      rmag = sqrt(rmag);
-      double dr = space_->bud_radius - rmag - 0.5*diameter_;
-      if (dr < 1e-3) dr = 1e-3;
-      if ( dr < bc_rcut_ ) {
-        double boundary_force[3] = {0,0,0};
-        double rinv = 1.0/(dr);
-        double rinv2 = rinv*rinv;
-        double r6 = rinv2*rinv2*rinv2;
-        double ffac = -(12.0*wca_c12_*r6 - 6.0*wca_c6_)*r6*rinv;
-        for (int i=0; i<n_dim_; ++i) {
-          boundary_force[i] = ffac*pos[i]/rmag;
-        }
-        if (site == sites_.end()-1) {
-          tip_force_ = -dot_product(n_dim_,boundary_force,sites_[n_sites_-1].GetOrientation());
-        }
-        site->AddForce(boundary_force);
-      }
-    }
-  }
-
 }
 
 double const Filament::GetVolume() {
@@ -811,7 +754,6 @@ void Filament::UpdateAvgPosition() {
 
 void Filament::ApplyForcesTorques() {
   ApplyInteractionForces();
-  //ApplyBoundaryForces(); // FIXME temporary
   if (anchored_) ApplyAnchorForces();
 }
 
@@ -823,6 +765,9 @@ void Filament::ApplyInteractionForces() {
     double const * const f = bonds_[i].GetForce();
     double const * const t = bonds_[i].GetTorque();
     double const * const u = sites_[i].GetOrientation();
+    if (i == n_bonds_-1) {
+      tip_force_ = -dot_product(n_dim_,u,f);
+    }
     AddPotential(bonds_[i].GetPotentialEnergy());
     // Convert torques into forces at bond ends
     // u x t / bond_length = pure torque force at tail of bond
@@ -873,9 +818,9 @@ void Filament::ApplyAnchorForces() {
   if (anchor_->alignment_potential_) {
     double const * const tail_u = bonds_[0].GetOrientation();
     double cos_theta = dot_product(n_dim_,tail_u,anchor_->orientation_);
-    double factor = anchor_->k_align_*sqrt( persistence_length_*ABS(1-cos_theta) );
+    double factor = anchor_->k_align_* sqrt(persistence_length_)*0.5*ABS(1-cos_theta);
     double temp[3] = {0,0,0};
-    cross_product(anchor_->orientation_, tail_u, temp, n_dim_);
+    cross_product(anchor_->orientation_, tail_u, temp, 3);
     normalize_vector(temp, 3);
     for (int i=0;i<3;++i) {
       anchor_->torque_[i] = factor * temp[i]; 
@@ -983,7 +928,7 @@ void Filament::UpdatePolyState() {
   double p_norm;
   // Modify catastrophe probabilities if the end of the filament is under a load
   if (force_induced_catastrophe_flag_ && tip_force_ > 0) {
-    double p_factor = exp(0.0828*tip_force_);
+    double p_factor = exp(fic_factor_*tip_force_);
     p_g2s = (p_g2s+p_g2p_)*p_factor;
     p_p2s = p_p2s*p_factor;
   }

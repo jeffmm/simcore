@@ -6,36 +6,63 @@ Centrosome::Centrosome() : Object() {
   diameter_ = params_->centrosome.diameter;
   n_filaments_min_ = params_->centrosome.n_filaments_min;
   n_filaments_max_ = params_->centrosome.n_filaments_max;
+  if (n_filaments_min_ > n_filaments_max_) {
+    n_filaments_min_ = n_filaments_max_;
+  }
+  n_filaments_ = n_filaments_min_ + gsl_rng_uniform_int(rng_.r,n_filaments_max_ - n_filaments_min_ + 1); 
   k_spring_ = params_->centrosome.k_spring;
   k_align_ = params_->centrosome.k_align;
   spring_length_ = params_->centrosome.spring_length;
   alignment_potential_ = (params_->centrosome.alignment_potential ? true : false);
   fixed_spacing_ = (params_->centrosome.fixed_spacing ? true : false);
   anchor_distance_ = 0.5*diameter_;
-  n_filaments_ = 0;
   SetDiffusion();
-  // temporary
-  bc_rcut_ = pow(2.0, 1.0/6.0)*params_->wca_sig;
-  wca_c12_ = 4.0 * params_->wca_eps * pow(params_->wca_sig, 12.0);
-  wca_c6_  = 4.0 * params_->wca_eps * pow(params_->wca_sig,  6.0);
 }
 
 void Centrosome::Init() {
-  InsertCentrosome();
   if (n_filaments_min_ > n_filaments_max_) {
     warning("Min n_filaments greater than max n_filaments in centrosome. Setting equal.");
-    n_filaments_min_ = n_filaments_max_;
   }
-  n_filaments_ = n_filaments_min_ + gsl_rng_uniform_int(rng_.r,n_filaments_max_ - n_filaments_min_ + 1); 
   filaments_.reserve(n_filaments_);
   anchors_.resize(n_filaments_);
-  GenerateAnchorSites();
-  for (int i=0;i<n_filaments_;++i) {
-    Filament fil;
-    filaments_.push_back(fil);
-    filaments_.back().SetAnchor(&anchors_[i]);
-    filaments_.back().Init();
+  bool out_of_bounds;
+  int n_insert = 0;
+  do {
+    InsertCentrosome();
+    double buffer = MIN(1.5*params_->filament.min_length,1.1*params_->filament.max_length);
+    if (out_of_bounds = CheckBounds(buffer)) continue;
+    GenerateAnchorSites();
+    filaments_.clear();
+    for (int i=0;i<n_filaments_;++i) {
+      n_insert = 0;
+      do {
+        Filament fil;
+        filaments_.push_back(fil);
+        filaments_.back().SetAnchor(&anchors_[i]);
+        filaments_.back().Init(true);
+        if (out_of_bounds = filaments_.back().CheckBounds()) {
+          filaments_.pop_back();
+        }
+        if (out_of_bounds && n_insert++ > 100) {
+          //if (!fixed_spacing_) RandomizeAnchorPosition(i);
+          if (n_insert > 1000) {
+            break;
+          }
+        }
+      } while (out_of_bounds);
+      if (out_of_bounds) {
+        break;
+      }
+    }
+  } while (out_of_bounds);
+}
+
+int Centrosome::GetCount() {
+  int count=1;
+  for (filament_iterator it=filaments_.begin();it!=filaments_.end();++it) {
+    count += it->GetCount();
   }
+  return count;
 }
 
 void Centrosome::ZeroForce() {
@@ -98,6 +125,13 @@ void Centrosome::GenerateAnchorSites() {
   }
 }
 
+void Centrosome::RandomizeAnchorPosition(int i_fil) {
+  generate_random_unit_vector(n_dim_,anchors_[i_fil].orientation_,rng_.r);
+  for (int i=0;i<n_dim_;++i) {
+    anchors_[i_fil].position_[i] = position_[i] + anchor_distance_*anchors_[i_fil].orientation_[i];
+  }
+}
+
 void Centrosome::UpdatePosition(bool midstep) {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
@@ -114,41 +148,22 @@ void Centrosome::UpdatePosition(bool midstep) {
 #pragma omp parallel shared(chunks)
   {
 #pragma omp for 
-    for(int i = 0; i < max_threads; ++i)
-      for(auto it = chunks[i].first; it != chunks[i].second; ++it)
+    for(int i = 0; i < max_threads; ++i) {
+      for(auto it = chunks[i].first; it != chunks[i].second; ++it) {
         it->UpdatePosition(midstep);
+      }
+    }
   }
 #else
-  for (filament_iterator it=filaments_.begin(); it!=filaments_.end(); ++it) 
+  for (filament_iterator it=filaments_.begin(); it!=filaments_.end(); ++it) {
     it->UpdatePosition(midstep);
+  }
 #endif
   if (!midstep) {
     SetPrevPosition(position_);
     ApplyForcesTorques();
-    ApplyBoundaryForces();
     Integrate();
     UpdatePeriodic();
-  }
-}
-
-void Centrosome::ApplyBoundaryForces() {
-  if (params_->boundary != 2) return;
-  double rmag = 0;
-  for (int i=0;i<n_dim_;++i) {
-    rmag += position_[i]*position_[i];
-  }
-  rmag = sqrt(rmag);
-  double dr = space_->radius - rmag - 0.5*diameter_;
-  if (dr <= 0) dr = 1e-6;
-  if ( dr < bc_rcut_ ) {
-    double boundary_force[3] = {0,0,0};
-    double rinv = 1.0/(dr);
-    double rinv2 = rinv*rinv;
-    double r6 = rinv2*rinv2*rinv2;
-    double ffac = -(12.0*wca_c12_*r6 - 6.0*wca_c6_)*r6*rinv;
-    for (int i=0; i<n_dim_; ++i) {
-      force_[i] += ffac*position_[i]/rmag;
-    }
   }
 }
 
@@ -179,6 +194,7 @@ void Centrosome::ApplyForcesTorques() {
     }
   }
 }
+
 void Centrosome::SetDiffusion() {
   gamma_trans_ = 1.0/(diameter_);
   gamma_rot_ = 3.0/CUBE(diameter_);
@@ -250,6 +266,16 @@ void Centrosome::Rotate() {
 void Centrosome::Integrate() {
   Translate();
   Rotate();
+}
+
+std::vector<Object*> Centrosome::GetInteractors() {
+  interactors_.clear();
+  interactors_.push_back(this);
+  for (auto it=filaments_.begin(); it!=filaments_.end(); ++it) {
+    auto ix_vec = it->GetInteractors();
+    interactors_.insert(interactors_.end(), ix_vec.begin(), ix_vec.end());
+  }
+  return interactors_;
 }
 
 void Centrosome::Draw(std::vector<graph_struct*> * graph_array) {

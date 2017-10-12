@@ -135,8 +135,8 @@ void Simulation::InitSpecies() {
   //REGISTER_SPECIES(MDBeadSpecies,md_bead);
   //REGISTER_SPECIES(HardRodSpecies,hard_rod);
   //REGISTER_SPECIES(BrBeadSpecies,br_bead);
-  REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(CentrosomeSpecies,centrosome);
+  REGISTER_SPECIES(FilamentSpecies,filament);
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
@@ -155,9 +155,10 @@ void Simulation::InitSpecies() {
 void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   printf("\r  Inserting species: 0%% complete");
   fflush(stdout);
-// Assuming Random insertion for now
-for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
-// Check for random insertion
+  // Assuming Random insertion for now
+  //force_overlap = true;
+  for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
+  // Check for random insertion
     if (processing || (*spec)->GetInsertionType().find("random") == std::string::npos) {
       // Insertion not random, force overlap
       force_overlap = true;
@@ -181,6 +182,7 @@ for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
         }
         // Check if we have an overlap of objects
         else if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+          printf("Has an overlap\n");
           (*spec)->PopMember();
           inserted--;
           num_failures++;
