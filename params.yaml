@@ -1,25 +1,25 @@
 # params.yaml
 ---
 seed : 265171921029335
-run_name: test
+run_name: test3
 n_runs: 1
 n_random: 1
 n_dim: 2
 n_periodic: 2
 boundary_type: 0
 delta: 0.00003
-n_steps: 10000000
-n_steps_equil: 10000
+n_steps: 10000
+n_steps_equil: 0
 system_radius: 100
-graph_flag: 1
+graph_flag: 0
 n_graph: 500
 movie_flag: 0
 movie_directory: frames
 cell_length: 3
 n_update_cells: 10
 f_cutoff: 1000
-thermo_flag: 0
-n_thermo: 100
+thermo_flag: 1
+n_thermo: 10
 stoch_flag: 1
 interaction_flag: 1
 draw_boundary: 0
@@ -30,7 +30,7 @@ filament:
   color: 6
   draw_type: blah
   insertion_type: random
-  num: 1
+  num: 10
   overlap: 0
   diameter: 1
   spiral_flag: 0
@@ -41,7 +41,7 @@ filament:
   n_posit: 100
   n_spec: 100
   n_checkpoint: 100
-  driving_factor: 0
+  driving_factor: 10
   length: 50
   persistence_length: 500
   theta_analysis: 0

@@ -2,9 +2,9 @@
 #define _SIMCORE_SIMULATION_MANAGER_H_
 
 #include "simulation.h"
-#include "parse_flags.h"
+//#include "parse_flags.h"
 //#include "analysis_manager.h"
-#include "auxiliary.h"
+//#include "auxiliary.h"
 #include "yaml-cpp/yaml.h"
 
 class SimulationManager {
