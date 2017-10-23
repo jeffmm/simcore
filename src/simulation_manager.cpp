@@ -25,15 +25,15 @@ void SimulationManager::InitManager(run_options run_opts) {
   // Prefer command-line options over param values for n_runs, run_name
   if (run_opts_.debug)
     debug_trace = true;
-  if (run_opts_.n_flag)
+  if (run_opts_.n_run_flag)
     n_runs_ = run_opts_.n_runs;
-  if (run_opts_.r_flag)
+  if (run_opts_.run_name_flag)
     run_name_ = run_opts_.run_name;
-  if (run_opts_.g_flag) {
+  if (run_opts_.graphics_flag) {
     pnode_["graph_flag"] = 1;
     pnode_["n_graph"] = run_opts_.n_graph;
   }
-  if ((run_opts_.m_flag || run_opts_.a_flag) && n_runs_ > 1)
+  if ((run_opts_.make_movie || run_opts_.analysis_flag || run_opts_.reduce_flag) && n_runs_ > 1)
     error_exit("Attempted to run movies/analysis on multiple files.");
   rng_.init(seed);
 }
@@ -55,7 +55,7 @@ void SimulationManager::RunManager() {
   GenerateParameters();
   // Write parameters to individual files
   WriteParams();
-  if (run_opts_.a_flag || run_opts_.m_flag)
+  if (run_opts_.analysis_flag || run_opts_.make_movie || run_opts_.reduce_flag)
     // Process the output files associated with the param file
     ProcessOutputs();
   else
@@ -188,7 +188,7 @@ void SimulationManager::CountVariations() {
           n_var_*=jt->second.size();
   }
   n_var_*=n_random_;
-  if ((run_opts_.m_flag || run_opts_.a_flag) && n_var_ > 1)
+  if ((run_opts_.make_movie || run_opts_.analysis_flag || run_opts_.reduce_flag) && n_var_ > 1)
     error_exit("Attempted to run movies/analysis on multiple files.");
   if (n_var_ > 1)
     std::cout << "Initializing batch " << run_name_ << " of " << n_var_*n_runs_ << " simulations with " << n_var_ << " variations of " << n_runs_ << " runs each.\n";
@@ -294,6 +294,15 @@ void SimulationManager::WriteParams() {
       if (n_random_ > 1) {
         pvector_[i_var]["n_random"] = 1;
       }
+      if (run_opts_.reduce_flag) {
+        std::string red_file_name = file_name.str() + "_reduced" + std::to_string(run_opts_.reduce_factor);
+        pvector_[i_var]["run_name"] = red_file_name;
+        red_file_name = red_file_name + "_params.yaml";
+        std::ofstream pfile(red_file_name, std::ios_base::out);
+        YAML::Emitter out;
+        pfile << (out<<pvector_[i_var]).c_str();
+        pfile.close();
+      }
       pvector_[i_var]["run_name"] = file_name.str();
       file_name << "_params.yaml";
       pfiles_.push_back(file_name.str());
@@ -338,14 +347,14 @@ void SimulationManager::ParseParams(std::string file_name) {
   YAML::Emitter out;
   std::cout << "Initializing simulation with parameters:\n" << (out<<node).c_str() << "\n";
   parse_params(node, &params_);
-  if (run_opts_.l_flag)
+  if (run_opts_.load_checkpoint)
     params_.load_checkpoint = 1;
 }
 
 void SimulationManager::ProcessOutputs() {
   ParseParams(pfiles_[0]);
   sim_ = new Simulation;
-  sim_->ProcessOutputs(params_, run_opts_.g_flag, run_opts_.m_flag, run_opts_.a_flag, run_opts_.p_flag);
+  sim_->ProcessOutputs(params_, run_opts_);
   delete sim_;
 }
 

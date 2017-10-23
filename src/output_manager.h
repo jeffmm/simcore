@@ -11,12 +11,14 @@ class OutputManager{
          spec_flag_ =  false,
          checkpoint_flag_ = false,
          thermo_flag_ = false,
-         posits_only_ = false;
+         posits_only_ = false,
+         reduce_flag_ = false;
     int *i_step_,
         n_posit_,
         n_spec_,
         n_checkpoint_,
-        n_thermo_;
+        n_thermo_,
+        reduce_factor_;
     std::string run_name_;
     system_parameters *params_;
     std::vector<SpeciesBase*> *species_;
@@ -25,8 +27,12 @@ class OutputManager{
     void WriteSpecs();
     void WriteCheckpoints();
     void WriteThermo();
-    void InitThermo();
-    std::fstream thermo_file_;
+    void ReadThermo();
+    void InitThermo(std::string fname);
+    void InitThermoInput(std::string fname);
+    void WriteReduce();
+    std::fstream othermo_file_;
+    std::fstream ithermo_file_;
 
   public:
     OutputManager() {}
@@ -35,7 +41,8 @@ class OutputManager{
               space_struct *space,
               int *i_step, std::string run_name,
               bool reading_inputs = false,
-              bool posits_only = false);
+              bool posits_only = false,
+              int reduce_factor = 1);
     //void SetPosits(std::vector<std::string> posit_files) {
       //posit_files_ = posit_files; 
     //}
