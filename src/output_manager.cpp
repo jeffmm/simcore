@@ -4,24 +4,41 @@ void OutputManager::Init(system_parameters *params,
                          std::vector<SpeciesBase*> *species,
                          space_struct *space,
                          int *i_step, std::string run_name,
-                         bool reading_inputs, bool posits_only) {
+                         bool reading_inputs, bool posits_only,
+                         int reduce_factor) {
   run_name_ = run_name;
+  if (reduce_factor > 1) {
+    reduce_flag_ = true;
+  }
+  reduce_factor_ = reduce_factor;
   species_ = species;
   params_ = params;
   space_ = space;
   i_step_ = i_step;
   n_posit_ = n_spec_ = n_checkpoint_ = params_->n_steps;
   posits_only_ = posits_only;
-  if (thermo_flag_ = params_->thermo_flag) {
-    n_thermo_ = params_->n_thermo;
-    InitThermo();
+  n_thermo_ = params_->n_thermo;
+  thermo_flag_ = params_->thermo_flag;
+  if (!reading_inputs && thermo_flag_) {
+    InitThermo(run_name_);
   }
+  else if (reading_inputs && thermo_flag_) {
+    InitThermoInput(run_name_);
+  }
+  std::string red_file_name = run_name_  + "_reduced" + std::to_string(reduce_factor);
+  if (thermo_flag_ && reduce_flag_) {
+    InitThermo(red_file_name);
+  }
+
   for (auto it = species_->begin(); it != species_->end(); ++it) {
     if (params->load_checkpoint) {
       (*it)->InitCheckpoints(run_name_);
     }
     else if (reading_inputs) {
       (*it)->InitInputFiles(run_name_, posits_only);
+      if (reduce_flag_) {
+        (*it)->InitOutputFiles(red_file_name);
+      }
     }
     else {
       (*it)->InitOutputFiles(run_name_);
@@ -86,35 +103,65 @@ void OutputManager::WriteCheckpoints() {
   }
 }
 
-void OutputManager::InitThermo() {
-  std::string fname = run_name_;
+void OutputManager::InitThermo(std::string fname) {
   fname.append(".thermo");
-  thermo_file_.open(fname, std::ios::out | std::ios::binary);
-  if (!thermo_file_.is_open()) {
+  othermo_file_.open(fname, std::ios::out | std::ios::binary);
+  if (!othermo_file_.is_open()) {
     std::cout << "ERROR: Thermo file failed to open!\n";
     exit(1);
   }
-  thermo_file_.write(reinterpret_cast<char*>(&(params_->n_steps)), sizeof(int));
-  thermo_file_.write(reinterpret_cast<char*>(&(n_thermo_)), sizeof(int));
-  thermo_file_.write(reinterpret_cast<char*>(&(params_->delta)), sizeof(double));
-  thermo_file_.write(reinterpret_cast<char*>(&(params_->n_dim)), sizeof(int));
+  othermo_file_.write(reinterpret_cast<char*>(&(params_->n_steps)), sizeof(int));
+  othermo_file_.write(reinterpret_cast<char*>(&(n_thermo_)), sizeof(int));
+  othermo_file_.write(reinterpret_cast<char*>(&(params_->delta)), sizeof(double));
+  othermo_file_.write(reinterpret_cast<char*>(&(params_->n_dim)), sizeof(int));
+}
+
+void OutputManager::InitThermoInput(std::string fname) {
+  fname.append(".thermo");
+  ithermo_file_.open(fname, std::ios::in | std::ios::binary);
+  if (!ithermo_file_.is_open()) {
+    std::cout << "ERROR: Thermo file failed to open!\n";
+    exit(1);
+  }
+  int n_steps, n_thermo, ndim;
+  double delta;
+  ithermo_file_.read(reinterpret_cast<char*> (&n_steps), sizeof(int));
+  ithermo_file_.read(reinterpret_cast<char*> (&n_thermo), sizeof(int));
+  ithermo_file_.read(reinterpret_cast<char*> (&delta), sizeof(double));
+  ithermo_file_.read(reinterpret_cast<char*> (&ndim), sizeof(int));
+  if (n_steps != params_->n_steps || n_thermo != params_->n_thermo || delta != params_->delta || ndim != params_->n_dim) {
+    std::cout << "ERROR: Input file " << fname << " does not match parameter file\n";
+    printf("%d %d, %d %d, %2.5f %2.5f %d %d\n",n_steps, params_->n_steps, n_thermo, params_->n_thermo, delta, params_->delta, ndim, params_->n_dim);
+    exit(1);
+  }
 }
 
 void OutputManager::WriteThermo() {
   for (int i=0; i<9; ++i) {
-    thermo_file_.write(reinterpret_cast<char*>(&(space_->unit_cell[i])), sizeof(double));
+    othermo_file_.write(reinterpret_cast<char*>(&(space_->unit_cell[i])), sizeof(double));
   }
   for (int i=0; i<9; ++i) {
-    thermo_file_.write(reinterpret_cast<char*>(&(space_->pressure_tensor[i])), sizeof(double));
+    othermo_file_.write(reinterpret_cast<char*>(&(space_->pressure_tensor[i])), sizeof(double));
   }
-  thermo_file_.write(reinterpret_cast<char*>(&(space_->pressure)), sizeof(double));
-  thermo_file_.write(reinterpret_cast<char*>(&(space_->volume)), sizeof(double));
+  othermo_file_.write(reinterpret_cast<char*>(&(space_->pressure)), sizeof(double));
+  othermo_file_.write(reinterpret_cast<char*>(&(space_->volume)), sizeof(double));
+}
+
+void OutputManager::ReadThermo() {
+  for (int i=0; i<9; ++i) {
+    ithermo_file_.read(reinterpret_cast<char*>(&(space_->unit_cell[i])), sizeof(double));
+  }
+  for (int i=0; i<9; ++i) {
+    ithermo_file_.read(reinterpret_cast<char*>(&(space_->pressure_tensor[i])), sizeof(double));
+  }
+  ithermo_file_.read(reinterpret_cast<char*>(&(space_->pressure)), sizeof(double));
+  ithermo_file_.read(reinterpret_cast<char*>(&(space_->volume)), sizeof(double));
 }
 
 void OutputManager::ReadInputs() {
-  if ( *i_step_ % n_posit_ != 0 && *i_step_ % n_spec_ != 0) {
-    return;
-  }
+  //if ( *i_step_ % n_posit_ != 0 && *i_step_ % n_spec_ != 0) {
+    //return;
+  //}
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if ((*spec)->GetPositFlag() && *i_step_ % (*spec)->GetNPosit() == 0 ) {
       (*spec)->ReadPosits();
@@ -123,14 +170,39 @@ void OutputManager::ReadInputs() {
       (*spec)->ReadSpecs();
     }
   }
+  if (thermo_flag_) {
+    ReadThermo();
+  }
+  if (reduce_flag_) {
+    WriteReduce();
+  }
+}
+
+void OutputManager::WriteReduce() {
+  for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+    if ((*spec)->GetPositFlag() && *i_step_ % (reduce_factor_*(*spec)->GetNPosit()) == 0 ) {
+      (*spec)->WritePosits();
+    }
+    if (!posits_only_ && (*spec)->GetSpecFlag() && *i_step_ % (reduce_factor_*(*spec)->GetNSpec()) == 0 ) {
+      (*spec)->WriteSpecs();
+    }
+  }
+  if (thermo_flag_ && *i_step_ % (reduce_factor_*n_thermo_) == 0) {
+    WriteThermo();
+  }
 }
 
 void OutputManager::Close() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     (*spec)->CloseFiles();
   }
-  if (thermo_flag_ && thermo_file_.is_open()) {
-    thermo_file_.close();
+  if (thermo_flag_) {
+    if (ithermo_file_.is_open()) {
+      ithermo_file_.close();
+    }
+    if (othermo_file_.is_open()) {
+      othermo_file_.close();
+    }
   }
 }
 
