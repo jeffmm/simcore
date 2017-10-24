@@ -10,31 +10,40 @@ bool early_exit;
 void SimulationManager::InitManager(run_options run_opts) {
   run_opts_ = run_opts;
   pnode_ = YAML::LoadFile(run_opts_.param_file);
-  if (pnode_["n_runs"] && pnode_["n_runs"].size()==0)
+  if (pnode_["n_runs"] && pnode_["n_runs"].size()==0) {
     n_runs_ = pnode_["n_runs"].as<int>();
-  if (pnode_["n_random"] && pnode_["n_random"].size()==0)
+  }
+  if (pnode_["n_random"] && pnode_["n_random"].size()==0) {
     n_random_ = pnode_["n_random"].as<int>();
-  if (pnode_["run_name"] && pnode_["run_name"].size()==0)
+  }
+  if (pnode_["run_name"] && pnode_["run_name"].size()==0) {
     run_name_ = pnode_["run_name"].as<std::string>();
+  }
   long seed = 7143961348914;
-  if (pnode_["seed"] && pnode_["seed"].size() == 0)
+  if (pnode_["seed"] && pnode_["seed"].size() == 0) {
     seed = pnode_["seed"].as<long>();
-  else
+  }
+  else {
     std::cout << "  WARNING: Default seed not overwritten!\n";
+  }
 
   // Prefer command-line options over param values for n_runs, run_name
-  if (run_opts_.debug)
+  if (run_opts_.debug) {
     debug_trace = true;
-  if (run_opts_.n_run_flag)
+  }
+  if (run_opts_.n_run_flag) {
     n_runs_ = run_opts_.n_runs;
-  if (run_opts_.run_name_flag)
+  }
+  if (run_opts_.run_name_flag) {
     run_name_ = run_opts_.run_name;
+  }
   if (run_opts_.graphics_flag) {
     pnode_["graph_flag"] = 1;
     pnode_["n_graph"] = run_opts_.n_graph;
   }
-  if ((run_opts_.make_movie || run_opts_.analysis_flag || run_opts_.reduce_flag) && n_runs_ > 1)
+  if ((run_opts_.make_movie || run_opts_.analysis_flag || run_opts_.reduce_flag) && n_runs_ > 1) {
     error_exit("Attempted to run movies/analysis on multiple files.");
+  }
   rng_.init(seed);
 }
 
@@ -55,12 +64,14 @@ void SimulationManager::RunManager() {
   GenerateParameters();
   // Write parameters to individual files
   WriteParams();
-  if (run_opts_.analysis_flag || run_opts_.make_movie || run_opts_.reduce_flag)
+  if (run_opts_.analysis_flag || run_opts_.make_movie || run_opts_.reduce_flag) {
     // Process the output files associated with the param file
     ProcessOutputs();
-  else
+  }
+  else {
     // Run simulations from parameter files
     RunSimulations();
+  }
 }
 
 /****************************************
@@ -95,12 +106,16 @@ void SimulationManager::CheckAppendParams() {
 void SimulationManager::AppendParams(YAML::Node app_node) {
   for (YAML::const_iterator it=app_node.begin(); it!= app_node.end(); ++it) {
     std::string param_name = it->first.as<std::string>();
-    if (!pnode_[param_name])
-      if (it->second.IsMap())
-        for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+    if (!pnode_[param_name]) {
+      if (it->second.IsMap()) {
+        for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt) {
           pnode_[param_name][jt->first.as<std::string>()] = jt->second;
-      else
+        }
+      }
+      else {
         pnode_[param_name] = it->second;
+      }
+    }
   }
 }
 
@@ -114,12 +129,16 @@ void SimulationManager::LoadDefaultParams() {
   YAML::Node defaults = YAML::LoadFile(default_param_file_);
   for (YAML::const_iterator it=defaults.begin(); it!=defaults.end(); ++it) {
     std::string param_name = it->first.as<std::string>();
-    if (!pnode_[param_name] && it->second.IsSequence())
-        pnode_[param_name] = it->second[0];
-    else if (it->second.IsMap())
-      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
-        if (!pnode_[param_name][jt->first.as<std::string>()] && jt->second.IsSequence())
+    if (!pnode_[param_name] && it->second.IsSequence()) {
+      pnode_[param_name] = it->second[0];
+    }
+    else if (it->second.IsMap()) {
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt) {
+        if (!pnode_[param_name][jt->first.as<std::string>()] && jt->second.IsSequence()) {
           pnode_[param_name][jt->first.as<std::string>()] = jt->second[0];
+        }
+      }
+    }
   }
 }
 
@@ -139,18 +158,22 @@ void SimulationManager::CheckRandomParams() {
       min = it->second[1].as<double>();
       max = it->second[2].as<double>();
       pnode_[it->first] = YAML::Load("[R]");
-      for (int i=0; i<n_random_; ++i)
+      for (int i=0; i<n_random_; ++i) {
         pnode_[it->first].push_back(GetRandomParam(rtype,min,max));
+      }
     }
-    else if (it->second.IsMap())
-      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+    else if (it->second.IsMap()) {
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt) {
         if (jt->second.IsSequence() && jt->second.size()==3 && (rtype=jt->second[0].as<std::string>()).at(0) == 'R') {
           min = jt->second[1].as<double>();
           max = jt->second[2].as<double>();
           pnode_[it->first][jt->first] = YAML::Load("[R]");
-          for (int i=0; i<n_random_; ++i)
+          for (int i=0; i<n_random_; ++i) {
             pnode_[it->first][jt->first].push_back(GetRandomParam(rtype,min,max));
+          }
         }
+      }
+    }
   }
 }
 
@@ -161,16 +184,21 @@ void SimulationManager::CheckRandomParams() {
    rtype, which can be R, RINT, or RLOG.
    *************************************/
 double SimulationManager::GetRandomParam(std::string rtype, double min, double max) {
-  if (max == min) 
+  if (max == min) {
     error_exit("Min and max value of parameter randomization sequence are equal.");
-  if (rtype.compare("R") == 0) 
+  }
+  if (rtype.compare("R") == 0) {
     return (min+(max-min)*gsl_rng_uniform_pos(rng_.r));
-  else if (rtype.compare("RINT")==0) 
+  }
+  else if (rtype.compare("RINT")==0) {
     return (min + gsl_rng_uniform_int(rng_.r,max-min));
-  else if (rtype.compare("RLOG")==0) 
+  }
+  else if (rtype.compare("RLOG")==0) {
     return pow(10.0, min+(max-min)*gsl_rng_uniform_pos(rng_.r));
-  else 
+  }
+  else {
     error_exit("Parameter randomization type not recognized.");
+  }
 }
 
 /****************************************
@@ -180,22 +208,30 @@ double SimulationManager::GetRandomParam(std::string rtype, double min, double m
    *************************************/
 void SimulationManager::CountVariations() {
   for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it) {
-    if (it->second.IsSequence() && (it->second[0].as<std::string>()).at(0) != 'R')
+    if (it->second.IsSequence() && (it->second[0].as<std::string>()).at(0) != 'R') {
       n_var_*=it->second.size();
-    else if (it->second.IsMap())
-      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
-        if (jt->second.IsSequence() && (jt->second[0].as<std::string>()).at(0) != 'R')
+    }
+    else if (it->second.IsMap()) {
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt) {
+        if (jt->second.IsSequence() && (jt->second[0].as<std::string>()).at(0) != 'R') {
           n_var_*=jt->second.size();
+        }
+      }
+    }
   }
   n_var_*=n_random_;
-  if ((run_opts_.make_movie || run_opts_.analysis_flag || run_opts_.reduce_flag) && n_var_ > 1)
+  if ((run_opts_.make_movie || run_opts_.analysis_flag || run_opts_.reduce_flag) && n_var_ > 1) {
     error_exit("Attempted to run movies/analysis on multiple files.");
-  if (n_var_ > 1)
+  }
+  if (n_var_ > 1) {
     std::cout << "Initializing batch " << run_name_ << " of " << n_var_*n_runs_ << " simulations with " << n_var_ << " variations of " << n_runs_ << " runs each.\n";
-  else if (n_runs_ > 1)
+  }
+  else if (n_runs_ > 1) {
     std::cout << "Initializing batch of %d runs of simulation " << run_name_ <<".\n";
-  else
+  }
+  else {
     std::cout << "Initializing simulation " << run_name_ << ".\n";
+  }
 }
 
 /****************************************
@@ -211,53 +247,73 @@ void SimulationManager::CountVariations() {
 void SimulationManager::GenerateParameters() {
   pvector_.resize(n_var_);
   int i_var,j_var,k_var = n_var_;
-  for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it)
+  for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it) {
     if (it->second.IsSequence() && (it->second[0].as<std::string>()).at(0) != 'R') {
       unsigned int s = it->second.size();
       k_var /= s;
       j_var = n_var_ / (k_var * s) ;
       i_var = 0;
-      for (int j=0; j<j_var; ++j)
-        for (int i_param=0; i_param<s; ++i_param)
-          for (int k=0; k<k_var; ++k)
+      for (int j=0; j<j_var; ++j) {
+        for (int i_param=0; i_param<s; ++i_param) {
+          for (int k=0; k<k_var; ++k) {
             pvector_[i_var++][it->first] = it->second[i_param];
+          }
+        }
+      }
     }
-    else if (it->second.IsMap())
-      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+    else if (it->second.IsMap()) {
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt) {
         if (jt->second.IsSequence() && (jt->second[0].as<std::string>()).at(0) != 'R') {
           unsigned int s = jt->second.size();
           k_var /= s;
           j_var = n_var_ / (k_var * s) ;
           i_var = 0;
-          for (int j=0; j<j_var; ++j)
-            for (int i_param=0; i_param<s; ++i_param)
-              for (int k=0; k<k_var; ++k)
+          for (int j=0; j<j_var; ++j) {
+            for (int i_param=0; i_param<s; ++i_param) {
+              for (int k=0; k<k_var; ++k) {
                 pvector_[i_var++][it->first][jt->first] = jt->second[i_param];
+              }
+            }
+          }
         }
-        else 
-          for (i_var=0; i_var<n_var_; ++i_var) 
+        else {
+          for (i_var=0; i_var<n_var_; ++i_var) {
             pvector_[i_var][it->first][jt->first] = jt->second;
-    else 
-      for (i_var=0; i_var<n_var_; ++i_var)
+          }
+        }
+      }
+    }
+    else {
+      for (i_var=0; i_var<n_var_; ++i_var) {
         pvector_[i_var][it->first] = it->second;
+      }
+    }
+  }
 
   // Now handle random parameters
   k_var = n_var_/n_random_;
-  for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it)
+  for (YAML::const_iterator it=pnode_.begin(); it!=pnode_.end(); ++it) {
     if (it->second.IsSequence() && (it->second[0].as<std::string>()).at(0) == 'R') {
       i_var=0;
-      for (int k=0; k<k_var; ++k)
-        for (int i=0; i<n_random_; ++i)
+      for (int k=0; k<k_var; ++k) {
+        for (int i=0; i<n_random_; ++i) {
           pvector_[i_var++][it->first] = it->second[i+1];
+        }
+      }
     }
-    else if (it->second.IsMap())
-      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt)
+    else if (it->second.IsMap()) {
+      for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt) {
         if (jt->second.IsSequence() && (jt->second[0].as<std::string>()).at(0) == 'R') {
           i_var=0;
-          for (int k=0; k<k_var; ++k)
-            for (int i=0; i<n_random_; ++i)
+          for (int k=0; k<k_var; ++k) {
+            for (int i=0; i<n_random_; ++i) {
               pvector_[i_var++][it->first][jt->first] = jt->second[i+1];
+            }
+          }
         }
+      }
+    }
+  }
 }
 
 /****************************************
@@ -268,14 +324,15 @@ void SimulationManager::GenerateParameters() {
    vector to loop over in RunSimulations
    *************************************/
 void SimulationManager::WriteParams() {
-  for (int i_var=0; i_var<n_var_; ++i_var)
+  for (int i_var=0; i_var<n_var_; ++i_var) {
     for (int i_run=0; i_run<n_runs_; ++i_run) {
       /* Only write new seed if we have more than one run/variation as
          this will ensure that parameters generated using WriteParams
          can be rerun individually with the expected result, ie not
          generating a different seed than the one generated here */
-      if (n_runs_ > 1 || n_var_ > 1)
+      if (n_runs_ > 1 || n_var_ > 1) {
         pvector_[i_var]["seed"]=gsl_rng_get(rng_.r);
+      }
       std::ostringstream var;
       std::ostringstream run;
       std::ostringstream file_name;
@@ -303,6 +360,11 @@ void SimulationManager::WriteParams() {
         pfile << (out<<pvector_[i_var]).c_str();
         pfile.close();
       }
+      if (run_opts_.load_checkpoint) {
+        pvector_[i_var]["load_checkpoint"] = 1;
+        pvector_[i_var]["checkpoint_run_name"] = file_name.str();
+        file_name << "_reloaded";
+      }
       pvector_[i_var]["run_name"] = file_name.str();
       file_name << "_params.yaml";
       pfiles_.push_back(file_name.str());
@@ -311,6 +373,7 @@ void SimulationManager::WriteParams() {
       pfile << (out<<pvector_[i_var]).c_str();
       pfile.close();
     }
+  }
 }
 
 /****************************************
@@ -347,8 +410,9 @@ void SimulationManager::ParseParams(std::string file_name) {
   YAML::Emitter out;
   std::cout << "Initializing simulation with parameters:\n" << (out<<node).c_str() << "\n";
   parse_params(node, &params_);
-  if (run_opts_.load_checkpoint)
+  if (run_opts_.load_checkpoint) {
     params_.load_checkpoint = 1;
+  }
 }
 
 void SimulationManager::ProcessOutputs() {
