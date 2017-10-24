@@ -32,7 +32,7 @@ void OutputManager::Init(system_parameters *params,
 
   for (auto it = species_->begin(); it != species_->end(); ++it) {
     if (params->load_checkpoint) {
-      (*it)->InitCheckpoints(run_name_);
+      (*it)->InitCheckpoints(run_name_, params->checkpoint_run_name);
     }
     else if (reading_inputs) {
       (*it)->InitInputFiles(run_name_, posits_only);
