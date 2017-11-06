@@ -1216,7 +1216,7 @@ void FilamentSpecies::FinalizeMse2eAnalysis() {
   mse2e_ /= n_samples_*num;
   mse2e2_ /= n_samples_*num;
   mse2e_file_ << mse2e_ << " ";
-  mse2e_file_ << sqrt((mse2e2_ - mse2e_*mse2e_)/num) << "\n";
+  mse2e_file_ << sqrt((mse2e2_ - mse2e_*mse2e_)/(num*n_samples_)) << "\n";
 }
 
 void FilamentSpecies::FinalizeThetaAnalysis() {

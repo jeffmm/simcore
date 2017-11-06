@@ -18,6 +18,7 @@ obj
 *.diffusion
 *.filament
 *.thermo
+*.mse2e
 *.spec
 *.checkpoint
 *.spiral
