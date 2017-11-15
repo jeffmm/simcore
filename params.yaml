@@ -1,6 +1,6 @@
 # params.yaml
 ---
-seed : 12833525124045
+seed : 700225204638
 run_name: mse2e_test2
 n_runs: 1
 n_random: 1
@@ -38,8 +38,8 @@ filament:
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 0
-  n_posit: 100
-  n_spec: 100
+  n_posit: 10
+  n_spec: 10
   n_checkpoint: 100
   driving_factor: 0
   length: 50
