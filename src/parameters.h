@@ -5,8 +5,8 @@ class species_parameters;
 
 class species_parameters {
   public:
-    std::string insertion_type = "random";
     int num = 0;
+    std::string insertion_type = "random";
     int overlap = 0;
     std::string draw_type = "orientation";
     double color = 0;
@@ -42,6 +42,7 @@ class filament_parameters : public species_parameters {
     double v_depoly = 0.793;
     int theta_analysis = 0;
     int lp_analysis = 0;
+    double packing_fraction = -1;
 };
 
 class hard_rod_parameters : public species_parameters {
@@ -70,52 +71,52 @@ class md_bead_parameters : public species_parameters {
 
 class system_parameters {
   public:
-    long seed = 7859459105545;
-    int n_runs = 1;
-    int n_random = 1;
-    int n_dim = 3;
     std::string run_name = "sc";
-    int n_periodic = 0;
-    int graph_background = 1;
-    int boundary_type = 0;
-    double system_radius = 100;
-    long n_steps = 1000000;
-    double delta = 0.001;
-    double cell_length = 10;
-    int n_update_cells = 10;
+    int n_dim = 3;
     int graph_flag = 0;
     int n_graph = 1000;
     double graph_diameter = 0;
-    int constant_pressure = 0;
-    int draw_boundary = 1;
-    int load_checkpoint = 0;
+    int graph_background = 1;
     std::string checkpoint_run_name = "sc";
+    int load_checkpoint = 0;
+    int draw_boundary = 1;
     std::string insertion_type = "species";
     int movie_flag = 0;
     std::string movie_directory = "frames";
+    int n_random = 1;
     int time_flag = 0;
-    double bud_height = 680;
     double bud_radius = 300;
+    double bud_height = 680;
     double lj_epsilon = 1;
     double wca_eps = 1;
     double wca_sig = 1;
     double ss_a = 1;
     double ss_rs = 1.5;
+    int constant_pressure = 0;
     double ss_eps = 1;
     double f_cutoff = 100;
     int max_overlap = 100000;
-    double target_radius = 100;
     int constant_volume = 0;
     double target_pressure = 0;
+    int species_insertion_failure_threshold = 10000;
+    int uniform_crystal = 0;
+    double target_radius = 100;
     int pressure_time = 100;
     double compressibility = 1;
     int stoch_flag = 1;
     int thermo_flag = 0;
-    int interaction_flag = 1;
     int n_thermo = 1000;
-    int species_insertion_failure_threshold = 10000;
-    int uniform_crystal = 0;
+    int interaction_flag = 1;
     int n_steps_equil = 0;
+    long seed = 7859459105545;
+    int n_runs = 1;
+    int n_periodic = 0;
+    int boundary_type = 0;
+    long n_steps = 1000000;
+    double system_radius = 100;
+    double delta = 0.001;
+    double cell_length = 10;
+    int n_update_cells = 10;
     species_parameters species;
     filament_parameters filament;
     hard_rod_parameters hard_rod;
