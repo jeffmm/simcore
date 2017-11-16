@@ -106,7 +106,12 @@ void Filament::Init() {
   else if(params_->filament.insertion_type.compare("random_oriented")==0) {
     InsertRandom();
     std::fill(orientation_,orientation_+3,0.0);
-    orientation_[n_dim_-1]=1.0;
+    if (gsl_rng_uniform_pos(rng_.r) > 0.5) {
+      orientation_[n_dim_-1]=1.0;
+    }
+    else {
+      orientation_[n_dim_-1]=-1.0;
+    }
     probable_conformation = false;
   }
   else if(params_->filament.insertion_type.compare("centered_random")==0) {
