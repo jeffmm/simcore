@@ -1,7 +1,7 @@
 # params.yaml
 ---
 seed : 700225204638
-run_name: mse2e_test2
+run_name: nematic_test
 n_runs: 1
 n_random: 1
 n_dim: 2
@@ -9,9 +9,9 @@ n_periodic: 2
 boundary_type: 0
 delta: 0.0001
 n_steps: 2000000
-n_steps_equil: 0
+n_steps_equil: 100000
 system_radius: 100
-graph_flag: 0
+graph_flag: 1
 n_graph: 500
 movie_flag: 0
 movie_directory: frames
@@ -21,7 +21,7 @@ f_cutoff: 1000
 thermo_flag: 1
 n_thermo: 100
 stoch_flag: 1
-interaction_flag: 0
+interaction_flag: 1
 draw_boundary: 0
 graph_background: 1
 species_insertion_failure_threshold: 10000
@@ -29,9 +29,10 @@ uniform_crystal: 0
 filament:
   color: 6
   draw_type: blah
-  insertion_type: random
+  insertion_type: random_oriented
+  packing_fraction: 0.3
   num: 100
-  overlap: 1
+  overlap: 0
   diameter: 1
   spiral_flag: 0
   max_child_length: 3

@@ -107,7 +107,7 @@ void Filament::Init() {
     InsertRandom();
     std::fill(orientation_,orientation_+3,0.0);
     orientation_[n_dim_-1]=1.0;
-    probable_conformation = true;
+    probable_conformation = false;
   }
   else if(params_->filament.insertion_type.compare("centered_random")==0) {
     InsertRandom();
@@ -126,7 +126,7 @@ void Filament::Init() {
       position_[i] = position_[i] - 0.5*length_*orientation_[i];
     }
     // We still want to sample probable conformations
-    probable_conformation = true; 
+    probable_conformation = false; 
   }
   else if (params_->filament.insertion_type.compare("simple_crystal")==0) {
     probable_conformation = false;

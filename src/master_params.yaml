@@ -82,6 +82,7 @@ filament:
   v_depoly : [0.793,double]
   theta_analysis: [0, int]
   lp_analysis: [0,int]
+  packing_fraction: [-1, double]
 hard_rod:
   diameter: [1, double]
   length: [40, double]
