@@ -143,6 +143,19 @@ class FilamentSpecies : public Species<Filament> {
     void Init(system_parameters *params, space_struct *space, long seed) {
       Species::Init(params, space, seed);
       sparams_ = &(params_->filament);
+      if (params_->filament.packing_fraction>0) {
+        if (params_->filament.length <= 0) {
+          error_exit("Packing fraction with polydisperse lengths not implemented yet\n");
+        }
+        if (params_->n_dim == 2) {
+          double fil_vol = params_->filament.length*params_->filament.diameter+0.25*M_PI*SQR(params_->filament.diameter);
+          sparams_->num = params_->filament.packing_fraction*space_->volume/fil_vol;
+        }
+        else {
+          double fil_vol = 0.25*M_PI*SQR(params_->filament.diameter)*params_->filament.length+M_PI*CUBE(params_->filament.diameter)/6.0;
+          sparams_->num = params_->filament.packing_fraction*space_->volume/fil_vol;
+        }
+      }
     }
     void InitAnalysis();
     void InitSpiralAnalysis();
