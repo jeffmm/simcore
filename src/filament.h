@@ -20,6 +20,7 @@ class Filament : public Composite<Site,Bond> {
         theta_validation_run_flag_,
         diffusion_validation_run_flag_,
         spiral_flag_,
+        shuffle_flag_,
         stoch_flag_,
         metric_forces_,
         eq_steps_,
@@ -43,6 +44,8 @@ class Filament : public Composite<Site,Bond> {
            p_g2s_,
            p_g2p_,
            driving_factor_,
+           shuffle_factor_,
+           shuffle_frequency_,
            tip_force_;
     std::vector<double> gamma_inverse_,
                         tensions_, //n_sites-1
@@ -76,6 +79,7 @@ class Filament : public Composite<Site,Bond> {
     void InitElements(system_parameters *params, space_struct *space);
     void UpdateAvgPosition();
     void InitSpiral2D();
+    bool CheckBondLengths();
     void DumpAll();
 
   public:
