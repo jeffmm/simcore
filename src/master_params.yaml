@@ -83,6 +83,9 @@ filament:
   theta_analysis: [0, int]
   lp_analysis: [0,int]
   packing_fraction: [-1, double]
+  shuffle: [1, int]
+  shuffle_factor: [10, double]
+  shuffle_frequency: [0.001, double]
 hard_rod:
   diameter: [1, double]
   length: [40, double]

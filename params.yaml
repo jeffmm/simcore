@@ -1,21 +1,21 @@
 seed: 31964986148671454
-run_name: filament_ensemble_pf0.2
+run_name: fixer
 n_runs: 1
 n_random: 1
 n_dim: 2
 n_periodic: 2
 boundary_type: 0
-delta: 0.000003
-n_steps: 20100000
-n_steps_equil: 100000
-system_radius: 100
+delta: 0.0001
+n_steps: 22000000
+n_steps_equil: 2000000
+system_radius: 250
 graph_flag: 1
 n_graph: 500
 graph_background: 0
 draw_boundary: 0
 movie_flag: 0
 movie_directory: frames
-cell_length: 3
+cell_length: 5
 n_update_cells: 10
 f_cutoff: 1500
 max_overlap: 100000
@@ -25,14 +25,17 @@ n_thermo: 100
 stoch_flag: 1
 interaction_flag: 1
 filament:
+  shuffle: 1
+  shuffle_factor: 10
+  shuffle_frequency: 0.0001
   overlap: 0
-  packing_fraction: 0.2
+  packing_fraction: 0.1
   insertion_type: random_oriented
-  num: 300
+  num: 1
   diameter: 1
-  max_child_length: 3
-  length: 50
-  persistence_length: [500,1500,5000,15000,50000,150000,500000]
+  max_child_length: 5
+  length: 100
+  persistence_length: [1000,3000,10000,30000,100000]
   driving_factor: [2.5,5,7.5,10,12.5,15,17.5,20]
   posit_flag: 1
   spec_flag: 1

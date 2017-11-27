@@ -30,6 +30,9 @@ void Filament::SetParameters(system_parameters *params) {
   stoch_flag_ = params->stoch_flag; // determines whether we are using stochastic forces
   eq_steps_ = params->n_steps_equil;
   eq_steps_count_ = 0;
+  shuffle_flag_ = params->filament.shuffle;
+  shuffle_factor_ = params->filament.shuffle_factor;
+  shuffle_frequency_ = params->filament.shuffle_frequency;
 }
 
 void Filament::InitElements(system_parameters *params, space_struct *space) {
@@ -155,6 +158,7 @@ void Filament::Init() {
   UpdateBondPositions();
   SetDiffusion();
   poly_state_ = GROW;
+  shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*shuffle_factor_;
 }
 
 void Filament::InsertAt(double *pos, double *u) {
@@ -420,6 +424,24 @@ void Filament::GeometricallyProjectRandomForces() {
     }
     elements_[i_site].SetRandomForce(f_proj);
   }
+  // Test for geometrically projected random forces. This should always yield zero, by definition
+  //bool resulted = false;
+  //for (int i_site=0; i_site<n_sites_-1; ++i_site) {
+    //double eta[3] = {0,0,0};
+    //for (int i=0;i<n_dim_;++i) {
+      //eta[i] = elements_[i_site+1].GetRandomForce()[i] - elements_[i_site].GetRandomForce()[i];
+    //}
+    //double result = 0;
+    //for (int i=0; i<n_dim_; ++i) {
+      //result += eta[i]*elements_[i_site].GetOrientation()[i];
+    //}
+    //if (ABS(result) > 1e-12) {
+      //printf("%2.12f ", result);
+      //resulted = true;
+    //}
+  //}
+  //if (resulted)
+    //printf("\n");
 }
 
 void Filament::AddRandomForces() {
@@ -623,13 +645,35 @@ void Filament::UpdateSitePositions(bool midstep) {
   }
   elements_[n_sites_-1].SetOrientation(elements_[n_sites_-2].GetOrientation());
   // Finally, normalize site positions, making sure the sites are still rod-length apart
-  for (int i_site=1; i_site<n_sites_; ++i_site) {
-    double const * const r_site1 = elements_[i_site-1].GetPosition();
-    double const * const u_site1 = elements_[i_site-1].GetOrientation();
-    for (int i=0; i<n_dim_; ++i)
-      r_diff[i] = r_site1[i] + child_length_ * u_site1[i];
-    elements_[i_site].SetPosition(r_diff);
+  if (CheckBondLengths()) {
+    //printf("renormalizing\n");
+    for (int i_site=1; i_site<n_sites_; ++i_site) {
+      double const * const r_site1 = elements_[i_site-1].GetPosition();
+      double const * const u_site1 = elements_[i_site-1].GetOrientation();
+      for (int i=0; i<n_dim_; ++i)
+        r_diff[i] = r_site1[i] + child_length_ * u_site1[i];
+      elements_[i_site].SetPosition(r_diff);
+    }
   }
+}
+
+bool Filament::CheckBondLengths() {
+  bool renormalize = false;
+  for (int i_site=1;i_site<n_sites_;++i_site) {
+    double const * const r_site1 = elements_[i_site-1].GetPosition();
+    double const * const r_site2 = elements_[i_site].GetPosition();
+    double a = 0.0;
+    for (int i=0;i<n_dim_;++i) {
+      double temp = r_site2[i] - r_site1[i];
+      a += temp*temp;
+    }
+    a = sqrt(a);
+    double err = ABS(child_length_ - a)/child_length_;
+    if (err > 1e-3) {
+      renormalize = true;
+    }
+  }
+  return renormalize;
 }
 
 void Filament::UpdateAvgPosition() {
@@ -686,6 +730,16 @@ void Filament::ApplyForcesTorques() {
       double f_dr[3];
       for (int j=0; j<n_dim_; ++j)
         f_dr[j] = 0.5*u[j]*driving_factor_ * child_length_;
+      elements_[i].AddForce(f_dr);
+      elements_[i+1].AddForce(f_dr);
+    }
+    else if (shuffle_flag_) {
+      if (gsl_rng_uniform_pos(rng_.r) < shuffle_frequency_) {
+        shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*params_->filament.shuffle_factor;
+      }
+      double f_dr[3];
+      for (int j=0; j<n_dim_; ++j)
+        f_dr[j] = 0.5*u[j]*shuffle_factor_ * child_length_;
       elements_[i].AddForce(f_dr);
       elements_[i+1].AddForce(f_dr);
     }
