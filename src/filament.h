@@ -14,9 +14,10 @@ class Filament : public Mesh {
   private:
     int dynamic_instability_flag_,
         force_induced_catastrophe_flag_,
-        theta_validation_flag_,
-        diffusion_validation_flag_,
+        theta_validation_run_flag_,
+        diffusion_validation_run_flag_,
         spiral_flag_,
+        shuffle_flag_,
         stoch_flag_,
         metric_forces_,
         // TEMPORARY FIXME
@@ -44,12 +45,14 @@ class Filament : public Mesh {
            p_g2p_,
            driving_factor_,
            fic_factor_,
-           tip_force_,
            // TEMPORARY FIXME
            motor_velocity_,
            k_on_,
            k_off_,
-           motor_concentration_;
+           motor_concentration_,
+           shuffle_factor_,
+           shuffle_frequency_,
+           tip_force_;
     std::vector<double> gamma_inverse_,
                         tensions_, //n_sites-1
                         g_mat_lower_, //n_sites-2
@@ -96,6 +99,7 @@ class Filament : public Mesh {
     void BindMotor();
     void CalculateBinding();
     void RebindMotors();
+    bool CheckBondLengths();
 
   public:
     Filament();
@@ -172,6 +176,19 @@ class FilamentSpecies : public Species<Filament> {
     void Init(system_parameters *params, space_struct *space, long seed) {
       Species::Init(params, space, seed);
       sparams_ = &(params_->filament);
+      if (params_->filament.packing_fraction>0) {
+        if (params_->filament.length <= 0) {
+          error_exit("Packing fraction with polydisperse lengths not implemented yet\n");
+        }
+        if (params_->n_dim == 2) {
+          double fil_vol = params_->filament.length*params_->filament.diameter+0.25*M_PI*SQR(params_->filament.diameter);
+          sparams_->num = params_->filament.packing_fraction*space_->volume/fil_vol;
+        }
+        else {
+          double fil_vol = 0.25*M_PI*SQR(params_->filament.diameter)*params_->filament.length+M_PI*CUBE(params_->filament.diameter)/6.0;
+          sparams_->num = params_->filament.packing_fraction*space_->volume/fil_vol;
+        }
+      }
     }
     void InitAnalysis();
     void InitSpiralAnalysis();

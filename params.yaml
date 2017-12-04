@@ -1,20 +1,20 @@
 # params.yaml
 ---
-seed : 32351264321752
-run_name: aster_test_3
+seed: 31964986148671454
+run_name: merger
 n_runs: 1
 n_random: 1
 n_dim: 2
 n_periodic: 2
-boundary: 3
-delta: 0.000003
+boundary: 0
+delta: 0.00003
 n_steps: 100000000
 n_steps_equil: 0
-system_radius: 30
-bud_radius: 20
-bud_height: 45
+system_radius: 100
+bud_radius: 60
+bud_height: 140
 graph_flag: 1
-n_graph: 10000
+n_graph: 100
 movie_flag: 1
 movie_directory: frames
 cell_length: 5
@@ -28,29 +28,23 @@ draw_boundary: 1
 graph_background: 1
 species_insertion_failure_threshold: 10000
 uniform_crystal: 0
-centrosome:
-  num: 1
-  diameter: 10
-  k_spring: 10000
-  k_align: 100000
-  alignment_potential: 1
-  fixed_spacing: 1
-  insertion_type: random
-  n_filaments_max: 10
-  n_filaments_min: 10
 filament:
   color: 6
   draw_type: bw
-  insertion_type: random
-  num: 0
+  insertion_type: random_oriented
+  num: 200
+  shuffle: 0
+  shuffle_factor: 10
+  shuffle_frequency: 0.0001
   overlap: 0
+  packing_fraction: -1
   diameter: 1
   spiral_flag: 0
-  length: -1
+  length: 15
   max_length: 100
-  min_length: 5
-  max_bond_length: 10
-  min_bond_length: 5
+  min_length: 4
+  max_bond_length: 8
+  min_bond_length: 4
   posit_flag: 0
   spec_flag: 0
   checkpoint_flag: 0
@@ -58,10 +52,10 @@ filament:
   n_spec: 1000
   n_checkpoint: 1000
   driving_factor: 0
-  dynamic_instability_flag: 1
-  force_induced_catastrophe_flag: 1
+  dynamic_instability_flag: 0
+  force_induced_catastrophe_flag: 0
   fic_factor: 0.018
-  persistence_length: 100000
+  persistence_length: 1000
   theta_analysis: 0
   lp_analysis: 0
   v_poly: 50
@@ -82,3 +76,14 @@ motor:
   concentration: 0
   k_spring: 10000
   f_spring_max: 10000
+centrosome:
+  num: 0
+  diameter: 10
+  k_spring: 10000
+  k_align: 10000
+  alignment_potential: 1
+  fixed_spacing: 1
+  insertion_type: random
+  n_filaments_max: 10
+  n_filaments_min: 10
+
