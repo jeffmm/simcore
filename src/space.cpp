@@ -15,8 +15,9 @@ void Space::Init(system_parameters *params) {
   if (n_periodic_ > n_dim_) 
     n_periodic_ = params_->n_periodic = n_dim_;
   radius_ = params_->system_radius;
-  if (radius_ <= 0)
+  if (radius_ <= 0) {
     error_exit("System radius is not a positive number!");
+  }
   bud_radius_ = 0;
   bud_height_ = 0;
   //r_cutoff_ = params_->r_cutoff_boundary;
@@ -43,11 +44,21 @@ void Space::Init(system_parameters *params) {
       // Get bud parameters
       bud_radius_ = params_->bud_radius;
       bud_height_ = params_->bud_height;
-      if (bud_radius_ > radius_) 
+      if (bud_radius_ > radius_) {
         error_exit("Bud radius larger than parent cell radius!");
-      if (bud_radius_ <= 0 || bud_height_ <= 0)
+      }
+      if (bud_radius_ <= 0 || bud_height_ <= 0) {
         error_exit("Budding yeast boundary type selected but either bud radius\n\
             or bud height is not a positive number!");
+      }
+      if (bud_height_ >= bud_radius_ + radius_) {
+        error_exit("Budding cell is not attached to mother cell.\
+            Check bud height or boundary type!\n");
+      }
+      if (bud_height_ <= radius_ - bud_radius_) {
+        error_exit("Budding cell is enclosed by mother cell.\
+            Check bud height or boundary type!\n");
+      }
       boundary_ = boundary_type::budding;
       break;
     default:
@@ -59,7 +70,6 @@ void Space::Init(system_parameters *params) {
 }
 
 void Space::InitUnitCell() {
-
   double h_param1 = 2.0 * radius_;
   double h_major = h_param1;
   double h_minor = h_major;
@@ -76,7 +86,6 @@ void Space::InitUnitCell() {
   unit_cell_[n_dim_*n_dim_-1] = h_major;
   // Compute unit cell quantities
   CalculateUnitCellQuantities();
-
 }
 
 void Space::CalculateUnitCellQuantities() {

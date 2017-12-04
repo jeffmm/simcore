@@ -39,6 +39,9 @@ void Filament::SetParameters() {
   k_on_ = params_->motor.k_on;
   motor_concentration_ = params_->motor.concentration;
   n_motors_bound_ = 0;
+  shuffle_flag_ = params_->filament.shuffle;
+  shuffle_factor_ = params_->filament.shuffle_factor;
+  shuffle_frequency_ = params_->filament.shuffle_frequency;
 }
 
 void Filament::SetAnchor(Anchor * a) {
@@ -122,7 +125,7 @@ void Filament::InsertFirstBond() {
   else if (params_->filament.insertion_type.compare("random_oriented") == 0) {
     InitRandomSite(diameter_);
     std::fill(orientation_,orientation_+3,0.0);
-    orientation_[n_dim_-1] = 1.0;
+    orientation_[n_dim_-1] = (gsl_rng_uniform_pos(rng_.r) > 0.5 ? 1.0 : -1.0);
     AddBondToTip(orientation_, bond_length_);
   }
   else if (params_->filament.insertion_type.compare("centered_oriented") == 0) {
@@ -172,8 +175,9 @@ void Filament::InsertFilament(bool force_overlap) {
     InsertFirstBond();
     if (!force_overlap && (out_of_bounds = sites_[n_sites_-1].CheckBounds())) continue;
     SetOrientation(bonds_[n_bonds_-1].GetOrientation());
+    bool probable_orientation = (params_->filament.insertion_type.compare("simple_crystal") != 0 && params_->filament.insertion_type.compare("random_oriented") != 0);
     for (int i=0;i<n_bonds-1;++i) {
-      if (params_->filament.insertion_type.compare("simple_crystal") != 0) {
+      if (probable_orientation) {
         GenerateProbableOrientation();
       }
       AddBondToTip(orientation_, bond_length_);
@@ -185,6 +189,7 @@ void Filament::InsertFilament(bool force_overlap) {
   }
   UpdateBondPositions();
   UpdateSiteOrientations();
+  shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*shuffle_factor_;
 }
 
 void Filament::InsertAt(double *pos, double *u) {
@@ -523,6 +528,24 @@ void Filament::GeometricallyProjectRandomForces() {
     }
     sites_[i_site].SetRandomForce(f_proj);
   }
+  // Test for geometrically projected random forces. This should always yield zero, by definition
+  //bool resulted = false;
+  //for (int i_site=0; i_site<n_sites_-1; ++i_site) {
+    //double eta[3] = {0,0,0};
+    //for (int i=0;i<n_dim_;++i) {
+      //eta[i] = elements_[i_site+1].GetRandomForce()[i] - elements_[i_site].GetRandomForce()[i];
+    //}
+    //double result = 0;
+    //for (int i=0; i<n_dim_; ++i) {
+      //result += eta[i]*elements_[i_site].GetOrientation()[i];
+    //}
+    //if (ABS(result) > 1e-12) {
+      //printf("%2.12f ", result);
+      //resulted = true;
+    //}
+  //}
+  //if (resulted)
+    //printf("\n");
 }
 
 void Filament::AddRandomForces() {
@@ -726,13 +749,35 @@ void Filament::UpdateSitePositions() {
   }
   sites_[n_sites_-1].SetOrientation(sites_[n_sites_-2].GetOrientation());
   // Finally, normalize site positions, making sure the sites are still rod-length apart
-  for (int i_site=1; i_site<n_sites_; ++i_site) {
-    double const * const r_site1 = sites_[i_site-1].GetPosition();
-    double const * const u_site1 = sites_[i_site-1].GetOrientation();
-    for (int i=0; i<n_dim_; ++i)
-      r_diff[i] = r_site1[i] + bond_length_ * u_site1[i];
-    sites_[i_site].SetPosition(r_diff);
+  if (CheckBondLengths()) {
+    //printf("renormalizing\n");
+    for (int i_site=1; i_site<n_sites_; ++i_site) {
+      double const * const r_site1 = sites_[i_site-1].GetPosition();
+      double const * const u_site1 = sites_[i_site-1].GetOrientation();
+      for (int i=0; i<n_dim_; ++i)
+        r_diff[i] = r_site1[i] + bond_length_ * u_site1[i];
+      sites_[i_site].SetPosition(r_diff);
+    }
   }
+}
+
+bool Filament::CheckBondLengths() {
+  bool renormalize = false;
+  for (int i_site=1;i_site<n_sites_;++i_site) {
+    double const * const r_site1 = sites_[i_site-1].GetPosition();
+    double const * const r_site2 = sites_[i_site].GetPosition();
+    double a = 0.0;
+    for (int i=0;i<n_dim_;++i) {
+      double temp = r_site2[i] - r_site1[i];
+      a += temp*temp;
+    }
+    a = sqrt(a);
+    double err = ABS(bond_length_ - a)/bond_length_;
+    if (err > 1e-3) {
+      renormalize = true;
+    }
+  }
+  return renormalize;
 }
 
 void Filament::UpdateAvgPosition() {
@@ -790,6 +835,16 @@ void Filament::ApplyInteractionForces() {
       double f_dr[3];
       for (int j=0; j<n_dim_; ++j)
         f_dr[j] = 0.5*u[j]*driving_factor_ * bond_length_;
+      sites_[i].AddForce(f_dr);
+      sites_[i+1].AddForce(f_dr);
+    }
+    else if (shuffle_flag_) {
+      if (gsl_rng_uniform_pos(rng_.r) < shuffle_frequency_) {
+        shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*params_->filament.shuffle_factor;
+      }
+      double f_dr[3];
+      for (int j=0; j<n_dim_; ++j)
+        f_dr[j] = 0.5*u[j]*shuffle_factor_ * bond_length_;
       sites_[i].AddForce(f_dr);
       sites_[i+1].AddForce(f_dr);
     }
@@ -1375,7 +1430,7 @@ void FilamentSpecies::InitThetaAnalysis() {
     nbonds = it->GetNBonds();
   }
   int nspec = GetNSpec();
-  theta_file_ << l << " " << d << " " << cl << " " << pl << " " << nmembers << " " << nbonds << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << params_->n_dim << " " << params_->filament.metric_forces << "\n";
+  theta_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " " << nmembers << " " << nbonds << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << params_->n_dim << " " << params_->filament.metric_forces << "\n";
   theta_file_ << "cos_theta";
   for (int i=0; i<nbonds-1; ++i) {
     theta_file_ << " theta_" << i+1 << i+2;
@@ -1502,7 +1557,7 @@ void FilamentSpecies::FinalizeMse2eAnalysis() {
   mse2e_ /= n_samples_*num;
   mse2e2_ /= n_samples_*num;
   mse2e_file_ << mse2e_ << " ";
-  mse2e_file_ << sqrt((mse2e2_ - mse2e_*mse2e_)/num) << "\n";
+  mse2e_file_ << sqrt((mse2e2_ - mse2e_*mse2e_)/(num*n_samples_)) << "\n";
 }
 
 void FilamentSpecies::FinalizeThetaAnalysis() {

@@ -86,19 +86,21 @@ void SpeciesBase::InitOutputFiles(std::string run_name) {
   }
 }
 
-void SpeciesBase::InitCheckpoints(std::string run_name) {
+void SpeciesBase::InitCheckpoints(std::string run_name, std::string checkpoint_run_name) {
   std::string sid_str = sid_._to_string();
-  checkpoint_file_ = run_name + "_" + sid_str + ".checkpoint";
+  checkpoint_file_ = checkpoint_run_name + "_" + sid_str + ".checkpoint";
   if (!sparams_->checkpoint_flag) {
     std::cout << "ERROR: Checkpoint file " << checkpoint_file_ << " not available for parameter file!\n";
     exit(1);
   }
   ReadCheckpoints();
-  std::cout << "WARNING: Loading checkpoint. SimCORE will overwrite any present output files from previous simulation \"" << run_name << "\". Proceed? (y/N)\n";
-  std::string response;
-  std::cin >> response;
-  if (response.compare("y") != 0 && response.compare("Y") != 0)
-    exit(0);
+  //std::cout << "WARNING: Loading checkpoint. SimCORE will overwrite any present output files from previous simulation \"" << run_name << "\". Proceed? (y/N)\n";
+  //std::string response;
+  //std::cin >> response;
+  //if (response.compare("y") != 0 && response.compare("Y") != 0) {
+    //std::cout << " Cancelling loading checkpoint\n";
+    //exit(0);
+  //}
   // XXX Need to fix appending to output file in the correct position
   if (sparams_->posit_flag) {
     std::string posit_file_name = run_name + "_" + sid_str + ".posit";

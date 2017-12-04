@@ -182,7 +182,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         }
         // Check if we have an overlap of objects
         else if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
-          printf("Has an overlap\n");
+          //printf("Has an overlap\n");
           (*spec)->PopMember();
           inserted--;
           num_failures++;
@@ -196,6 +196,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           break;
         }
       }
+      putchar('\n');
       if (num != inserted) {
         printf("  Species insertion failure threshold reached. Reattempting insertion.\n");
         (*spec)->PopAll();
@@ -263,8 +264,8 @@ void Simulation::InitOutputs() {
   }
 }
 
-void Simulation::InitInputs(bool posits_only) {
-  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_, true, posits_only);
+void Simulation::InitInputs(bool posits_only, int reduce_factor) {
+  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_, true, posits_only, reduce_factor);
 }
 
 void Simulation::WriteOutputs() {
@@ -282,31 +283,36 @@ void Simulation::WriteOutputs() {
   }
 }
 
-void Simulation::ProcessOutputs(system_parameters params, int graphics, int make_movie, int run_analyses, int use_posits) {
+void Simulation::ProcessOutputs(system_parameters params, run_options run_opts) {
   params_ = params;
   run_name_ = params.run_name;
-  InitProcessing(graphics, make_movie, run_analyses, use_posits);
-  RunProcessing(run_analyses);
+  InitProcessing(run_opts);
+  RunProcessing(run_opts.analysis_flag);
   ClearSimulation();
 }
 
 // Initialize everything we need for processing
-void Simulation::InitProcessing(int graphics, int make_movie, int run_analyses, int use_posits) {
+void Simulation::InitProcessing(run_options run_opts) {
   rng_.Init(params_.seed);
   space_.Init(&params_);
   InitObjects();
   InitSpecies();
   InsertSpecies(true, true);
-  InitInputs(use_posits);
-  if (graphics || make_movie) {
+  if (run_opts.reduce_flag) {
+    InitInputs(run_opts.use_posits,run_opts.reduce_factor);
+  }
+  else {
+    InitInputs(run_opts.use_posits, 1);
+  }
+  if (run_opts.graphics_flag || run_opts.make_movie) {
     params_.graph_flag = 1;
-    if (use_posits && params_.n_graph < output_mgr_.GetNPosit()) {
+    if (run_opts.use_posits && params_.n_graph < output_mgr_.GetNPosit()) {
       params_.n_graph = output_mgr_.GetNPosit();
     }
-    else if (!use_posits && params_.n_graph < output_mgr_.GetNSpec()) {
+    else if (!run_opts.use_posits && params_.n_graph < output_mgr_.GetNSpec()) {
       params_.n_graph = output_mgr_.GetNSpec();
     }
-    if (make_movie) {
+    if (run_opts.make_movie) {
       params_.movie_flag = 1;
     }
     InitGraphics();
@@ -314,7 +320,7 @@ void Simulation::InitProcessing(int graphics, int make_movie, int run_analyses, 
   else {
     params_.graph_flag = 0;
   }
-  if (run_analyses) {
+  if (run_opts.analysis_flag) {
     for (auto it=species_.begin(); it!=species_.end(); ++it) {
       (*it)->InitAnalysis();
     }
