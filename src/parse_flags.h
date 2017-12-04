@@ -8,24 +8,26 @@
 struct run_options {
   int n_runs = 1;
   int debug = 0;
-  int r_flag = 0;
-  int n_flag = 0;
-  int g_flag = 0;
-  int m_flag = 0;
-  int a_flag = 0;
-  int p_flag = 0;
-  int l_flag = 0;
+  int run_name_flag = 0;
+  int n_run_flag = 0;
+  int graphics_flag = 0;
+  int make_movie = 0;
+  int analysis_flag = 0;
+  int use_posits = 0;
+  int load_checkpoint = 0;
+  int reduce_flag = 0;
   int n_graph = 100;
+  int reduce_factor = 1;
   std::string param_file;
   std::string run_name = "sc";
 };
 
-// Define flags here
-// NOTE: Need to update n_flags, PARSE_OPTS function case-switches, 
-//       as well as any flag descriptions in the static string array below
-//       when adding new flags.
+/* NOTE TO THE FUTURE: Need to update n_flags, PARSE_OPTS function 
+   case-switches, as well as any flag descriptions in the static
+   string array below when adding new flags. */
 
-static const int n_flags = 9;
+// Define flags here
+static const int n_flags = 10;
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
@@ -36,6 +38,7 @@ static struct option long_options[] = {
   {"analysis", no_argument, 0, 'a'},
   {"posit", no_argument, 0, 'p'},
   {"load",no_argument, 0, 'l'},
+  {"reduce",required_argument, 0, 'R'},
   {0, 0, 0, 0}
 };
 
@@ -49,7 +52,8 @@ static const std::string desc[n_flags][2] = {
   {"run simulation to make movie using spec files with same run-name\n", "none"},
   {"run analysis on spec files with same run-name for parameter species", "none"},
   {"use posit files for movies/analysis rather than spec files\n", "none"},
-  {"run simulation starting from checkpoint files with same run-name for parameter species\n", "none"}
+  {"run simulation starting from checkpoint files with same run-name for parameter species\n", "none"},
+  {"reduce output file resolution by a factor of reduce_factor\n", "reduce_factor"}
 };
 
 
@@ -90,7 +94,7 @@ static run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdmaplg:r:n:", long_options, &option_index);
+    tmp = getopt_long(argc, argv, "hdmaplg:r:n:R:", long_options, &option_index);
     if (tmp == -1)
       break;
     switch (tmp) {
@@ -104,28 +108,32 @@ static run_options parse_opts(int argc, char *argv[]) {
         run_opts.debug = 1;
         break;
       case 'r':
-        run_opts.r_flag = 1;
+        run_opts.run_name_flag = 1;
         run_opts.run_name = optarg;
         break;
       case 'n':
-        run_opts.n_flag = 1;
+        run_opts.n_run_flag = 1;
         run_opts.n_runs = atoi(optarg);
         break;
       case 'g':
-        run_opts.g_flag = 1;
+        run_opts.graphics_flag = 1;
         run_opts.n_graph = atoi(optarg);
         break;
       case 'm':
-        run_opts.m_flag = 1;
+        run_opts.make_movie = 1;
         break;
       case 'a':
-        run_opts.a_flag = 1;
+        run_opts.analysis_flag = 1;
         break;
       case 'p':
-        run_opts.p_flag = 1;
+        run_opts.use_posits = 1;
         break;
       case 'l':
-        run_opts.l_flag = 1;
+        run_opts.load_checkpoint = 1;
+        break;
+      case 'R':
+        run_opts.reduce_flag = 1;
+        run_opts.reduce_factor = atoi(optarg);
         break;
       case '?':
         exit(1);
@@ -149,37 +157,23 @@ static run_options parse_opts(int argc, char *argv[]) {
     putchar('\n');
     exit(1);
   }
-  if (run_opts.m_flag) {
+  if (run_opts.make_movie) {
     printf("  Making movies");
-    if (run_opts.p_flag) {
+    if (run_opts.use_posits) {
       printf(" using posit files.");
     }
   }
   putchar('\n');
-  if (run_opts.a_flag) {
+  if (run_opts.analysis_flag) {
     printf("  Running analyses");
-    if (run_opts.p_flag) {
+    if (run_opts.use_posits) {
       printf(" using posit files.");
     }
   }
   putchar('\n');
-    //if (run_opts.a_flag!=1 && run_opts.m_flag!=1) {
-      //printf("ERROR: Unrecognized context for non-option arguments: ");
-      //while (optind < argc)
-        //printf ("%s ", argv[optind++]);
-      //putchar ('\n');
-      //exit(1);
-    //}
-    //else {
-      //printf("Posit files: ");
-      //while (optind < argc) {
-        //run_opts.posit_files.push_back(argv[optind++]);
-      //}
-      //for (int i=0; i<run_opts.posit_files.size(); ++i)
-        //std::cout << run_opts.posit_files[i] << " ";
-      //putchar('\n');
-    //}
-  //}
+  if (run_opts.reduce_flag) {
+    printf("  Reducing output file resolution by a factor of %d\n",run_opts.reduce_factor);
+  }
   return run_opts;
 }
 

@@ -12,6 +12,7 @@
 #include "centrosome.h"
 //#include "br_bead.h"
 //#include "objects.h"
+#include "parse_flags.h"
 
 class Simulation {
 
@@ -41,7 +42,7 @@ class Simulation {
     void InitPositInput();
     void ClearSpecies();
     void InitOutputs();
-    void InitInputs(bool posits_only);
+    void InitInputs(bool posits_only, int reduce_factor = 1);
     void RunSimulation();
     void RunMovie();
     void ClearSimulation();
@@ -59,12 +60,12 @@ class Simulation {
     void InsertSpecies(bool force_overlap = false, bool processing = false);
     void RunProcessing(int run_analyses);
     void InitGraphics();
-    void InitProcessing(int graphics, int make_movie, int run_analyses, int use_posits);
+    void InitProcessing(run_options run_opts);
 
   public:
     Simulation() {}
     void Run(system_parameters params);
-    void ProcessOutputs(system_parameters params, int graphics, int make_movie, int run_analyses, int use_posits);
+    void ProcessOutputs(system_parameters params, run_options run_opts);
 };
 
 #endif // _SIMCORE_SIMULATION_H_  
