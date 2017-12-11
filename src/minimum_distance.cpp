@@ -765,6 +765,8 @@ void MinimumDistance::SpheroBuddingBC(double const * const r, double const * con
 }
 
 bool MinimumDistance::CheckBoundaryInteraction(Object *o1, Interaction *ix) {
+  // No interaction with box boundary yet
+  if (space_->type == +boundary_type::box || space_->type == +boundary_type::none) return false;
   double const * const r1 = o1->GetInteractorPosition();
   double const * const u1 = o1->GetInteractorOrientation();
   double const l1 = o1->GetInteractorLength();
@@ -797,6 +799,7 @@ bool MinimumDistance::CheckBoundaryInteraction(Object *o1, Interaction *ix) {
 }
 
 bool MinimumDistance::CheckOutsideBoundary(Object * obj) {
+  if (space_->type == +boundary_type::none) return false;
   double const * const r = obj->GetInteractorPosition();
   double const * const u = obj->GetInteractorOrientation();
   double const l = obj->GetInteractorLength();
@@ -804,11 +807,19 @@ bool MinimumDistance::CheckOutsideBoundary(Object * obj) {
   double r_mag = 0.0;
   double z0 = 0.0;
   double r_boundary = space_->radius;
+  int sign = ( l>0 ? SIGNOF(dot_product(n_dim_,r,u)) : 0 );
+  if (space_->type == +boundary_type::box)  {
+    if (space_->n_periodic == n_dim_) return false;
+    for (int j=space_->n_periodic; j<n_dim_; ++j) {
+      double r_far = r[j] + sign*0.5*l*u[j];
+      if (ABS(r_far) > (r_boundary - 0.5*d)) return true;
+    }
+    return false;
+  }
   if (space_->type == +boundary_type::budding && r[n_dim_-1] > space_->bud_neck_height) {
     z0 = space_->bud_height;
     r_boundary = space_->bud_radius;
   }
-  int sign = ( l>0 ? SIGNOF(dot_product(n_dim_,r,u)) : 0 );
   for (int i=0;i<n_dim_-1;++i) {
     r_mag += SQR(r[i] + sign*0.5*l*u[i]);
   }

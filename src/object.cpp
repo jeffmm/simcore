@@ -145,6 +145,7 @@ void Object::ToggleIsMesh() {
 
 // Virtual functions
 bool Object::CheckBounds(double buffer) {
+  if (space_->type == +boundary_type::none) return false;
   double const * const r = GetInteractorPosition();
   double const * const u = GetInteractorOrientation();
   double const l = GetInteractorLength();
@@ -156,11 +157,19 @@ bool Object::CheckBounds(double buffer) {
   if (buffer > r_boundary) {
     error_exit("Cannot insert object into system!\n");
   }
+  int sign = ( l>0 ? SIGNOF(dot_product(n_dim_,r,u)) : 0 );
+  if (space_->type == +boundary_type::box)  {
+    if (space_->n_periodic == n_dim_) return false;
+    for (int j=space_->n_periodic; j<n_dim_; ++j) {
+      double r_far = r[j] + sign*0.5*l*u[j];
+      if (ABS(r_far) > (r_boundary - buffer)) return true;
+    }
+    return false;
+  }
   if (space_->type == +boundary_type::budding && r[n_dim_-1] > space_->bud_neck_height) {
     z0 = space_->bud_height;
     r_boundary = space_->bud_radius;
   }
-  int sign = ( l>0 ? SIGNOF(dot_product(n_dim_,r,u)) : 0 );
   for (int i=0;i<n_dim_-1;++i) {
     r_mag += SQR(r[i] + sign*0.5*l*u[i]);
   }
@@ -216,31 +225,32 @@ void Object::InsertRandom() {
     buffer = 0;
   double R = space_->radius;
   // XXX Check to make sure object fits inside unit cell if non-periodic
-  if (R - buffer < 0)
+  if (R - buffer < 0) {
     error_exit("Object #%d is too large to place in system.\n system radius: %2.2f, buffer: %2.2f",GetOID(), R, buffer);
-  switch (space_->type._to_integral()) {
+  }
+  switch (space_->type) {
     // If no boundary, insert wherever
-    case 0: // none
+    case +boundary_type::none: // none
+      for (int i=0; i<n_dim_; ++i) {
+        position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer);
+      }
+      break;
+    // box type boundary
+    case +boundary_type::box: // box
       for (int i=0; i<n_dim_; ++i) {
         position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer);
       }
       break;
     // spherical boundary
-    case 2: // sphere
+    case +boundary_type::sphere: // sphere
       generate_random_unit_vector(n_dim_, position_, rng_.r);
       mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer);
       for (int i=0; i<n_dim_; ++i) {
         position_[i] *= mag;
       }
       break;
-    // box type boundary
-    case 1: // box
-      for (int i=0; i<n_dim_; ++i) {
-        position_[i] = (2.0*gsl_rng_uniform_pos(rng_.r)-1.0) * (R - buffer);
-      }
-      break;
     // budding yeast boundary type
-    case 3: // budding
+    case +boundary_type::budding: // budding
       {
         double r = space_->bud_radius;
         double roll = gsl_rng_uniform_pos(rng_.r);
