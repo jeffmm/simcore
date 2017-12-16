@@ -10,6 +10,7 @@
 #include "helpers.h"
 #include "filament.h"
 #include "centrosome.h"
+#include "bead_spring.h"
 //#include "br_bead.h"
 //#include "objects.h"
 #include "parse_flags.h"

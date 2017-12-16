@@ -123,3 +123,14 @@ motor:
   diffusion_flag: [1, int]
   k_spring: [1000, double]
   f_spring_max: [100, double]
+bead_spring:
+  diameter: [1, double]
+  length: [40, double]
+  persistence_length: [4000, double]
+  max_bond_length: [1, double]
+  bond_spring: [100, double]
+  driving_factor: [0, double]
+  lp_analysis: [0, int]
+  theta_analysis: [0, int]
+  packing_fraction: [-1, double]
+
