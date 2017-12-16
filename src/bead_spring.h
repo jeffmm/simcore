@@ -3,7 +3,6 @@
 
 #include "species.h"
 #include "mesh.h"
-#include "motor.h"
 
 #ifdef ENABLE_OPENMP
 #include "omp.h"
@@ -12,106 +11,42 @@
 class BeadSpring : public Mesh {
 
   private:
-    int dynamic_instability_flag_,
-        force_induced_catastrophe_flag_,
-        theta_validation_run_flag_,
-        diffusion_validation_run_flag_,
-        spiral_flag_,
-        shuffle_flag_,
-        stoch_flag_,
-        metric_forces_,
-        // TEMPORARY FIXME
-        n_step_ = 0,
-        n_motors_bound_,
+    int stoch_flag_,
         eq_steps_,
         eq_steps_count_ = 0;
-    double max_length_,
-           min_length_,
-           max_bond_length_,
-           min_bond_length_,
+    double max_bond_length_,
+           bond_spring_,
            persistence_length_,
-           friction_ratio_, // friction_par/friction_perp
-           friction_par_,
-           friction_perp_,
-           rand_sigma_par_,
-           rand_sigma_perp_,
-           v_poly_,
-           v_depoly_,
-           p_s2g_,
-           p_s2p_,
-           p_p2s_,
-           p_p2g_,
-           p_g2s_,
-           p_g2p_,
-           driving_factor_,
-           fic_factor_,
-           // TEMPORARY FIXME
-           motor_velocity_,
-           k_on_,
-           k_off_,
-           motor_concentration_,
-           shuffle_factor_,
-           shuffle_frequency_,
-           tip_force_;
-    std::vector<double> gamma_inverse_,
-                        tensions_, //n_sites-1
-                        g_mat_lower_, //n_sites-2
-                        g_mat_upper_, //n_sites-2
-                        g_mat_diag_, //n_sites-1
-                        det_t_mat_, //n_sites+1
-                        det_b_mat_, //n_sites+1
-                        g_mat_inverse_, //n_sites-2
-                        k_eff_, //n_sites-2
-                        h_mat_diag_, //n_sites-1
-                        h_mat_upper_, //n_sites-2
-                        h_mat_lower_, //n_sites-2
-                        cos_thetas_;
-    poly_state poly_;
-    void UpdateSiteBondPositions();
+           rand_sigma_,
+           driving_factor_;
+    std::vector<double> cos_thetas_;
     void SetDiffusion();
     void GenerateProbableOrientation();
-    void CalculateAngles(bool rescale=true);
+    void CalculateAngles();
     void CalculateTangents();
     void AddRandomForces();
-    void ConstructUnprojectedRandomForces();
-    void GeometricallyProjectRandomForces();
-    void CalculateBendingForces();
-    void CalculateTensions();
+    void AddBendingForces();
+    void AddSpringForces();
     void UpdateSitePositions();
     void UpdateSiteOrientations();
     void ApplyForcesTorques();
-    void ApplyAnchorForces(); // FIXME temporary
     void ApplyInteractionForces();
     void SetParameters();
     void InitElements();
     void InsertBeadSpring(bool force_overlap=false);
     void InsertFirstBond();
     void UpdateAvgPosition();
-    void DynamicInstability();
-    void UpdatePolyState();
-    void GrowBeadSpring();
-    void RescaleBonds();
-    void InitSpiral2D();
     void ReportAll();
-    std::vector<Motor> motors_; //FIXME temporary
-    Anchor * anchor_; //FIXME temporary? 
-    void UnbindMotor();
-    void BindMotor();
-    void CalculateBinding();
-    void RebindMotors();
-    bool CheckBondLengths();
 
   public:
     BeadSpring();
     virtual void Init(bool force_overlap = false);
     virtual void InsertAt(double *pos, double *u);
-    virtual void SetAnchor(Anchor * a);
     virtual bool CheckBounds(double buffer = 0);
     //void DiffusionValidationInit();
     virtual void Integrate();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
-    virtual void UpdatePosition() {}
-    virtual void UpdatePosition(bool midstep);
+    virtual void UpdatePosition();
     double const GetLength() { return length_;}
     double const GetDriving() {return driving_factor_;}
     double const GetPersistenceLength() {return persistence_length_;}
@@ -150,12 +85,11 @@ class BeadSpring : public Mesh {
     double const GetVolume();
 };
 
-typedef std::vector<BeadSpring>::iterator filament_iterator;
-typedef std::vector<std::pair<std::vector<BeadSpring>::iterator, std::vector<BeadSpring>::iterator> > filament_chunk_vector;
+typedef std::vector<BeadSpring>::iterator bs_iterator;
+typedef std::vector<std::pair<std::vector<BeadSpring>::iterator, std::vector<BeadSpring>::iterator> > bead_spring_chunk_vector;
 
 class BeadSpringSpecies : public Species<BeadSpring> {
   protected:
-    bool midstep_;
     // Analysis structures
     double e_bend_,
            tot_angle_,
@@ -170,32 +104,29 @@ class BeadSpringSpecies : public Species<BeadSpring> {
                  mse2e_file_;
   public:
     BeadSpringSpecies() : Species() {
-      SetSID(species_id::filament);
-      midstep_ = true;
+      SetSID(species_id::bead_spring);
     }
     void Init(system_parameters *params, space_struct *space, long seed) {
       Species::Init(params, space, seed);
-      sparams_ = &(params_->filament);
-      if (params_->filament.packing_fraction>0) {
-        if (params_->filament.length <= 0) {
+      sparams_ = &(params_->bead_spring);
+      if (params_->bead_spring.packing_fraction>0) {
+        if (params_->bead_spring.length <= 0) {
           error_exit("Packing fraction with polydisperse lengths not implemented yet\n");
         }
         if (params_->n_dim == 2) {
-          double fil_vol = params_->filament.length*params_->filament.diameter+0.25*M_PI*SQR(params_->filament.diameter);
-          sparams_->num = params_->filament.packing_fraction*space_->volume/fil_vol;
+          double fil_vol = params_->bead_spring.length*params_->bead_spring.diameter+0.25*M_PI*SQR(params_->bead_spring.diameter);
+          sparams_->num = params_->bead_spring.packing_fraction*space_->volume/fil_vol;
         }
         else {
-          double fil_vol = 0.25*M_PI*SQR(params_->filament.diameter)*params_->filament.length+M_PI*CUBE(params_->filament.diameter)/6.0;
-          sparams_->num = params_->filament.packing_fraction*space_->volume/fil_vol;
+          double fil_vol = 0.25*M_PI*SQR(params_->bead_spring.diameter)*params_->bead_spring.length+M_PI*CUBE(params_->bead_spring.diameter)/6.0;
+          sparams_->num = params_->bead_spring.packing_fraction*space_->volume/fil_vol;
         }
       }
     }
     void InitAnalysis();
-    void InitSpiralAnalysis();
     void InitThetaAnalysis();
     void InitMse2eAnalysis();
     void RunAnalysis();
-    void RunSpiralAnalysis();
     void RunThetaAnalysis();
     void RunMse2eAnalysis();
     void FinalizeAnalysis();
@@ -204,12 +135,12 @@ class BeadSpringSpecies : public Species<BeadSpring> {
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();
-      filament_chunk_vector chunks;
+      bead_spring_chunk_vector chunks;
       chunks.reserve(max_threads); 
       size_t chunk_size= members_.size() / max_threads;
-      filament_iterator cur_iter = members_.begin();
+      bs_iterator cur_iter = members_.begin();
       for(int i = 0; i < max_threads - 1; ++i) {
-        filament_iterator last_iter = cur_iter;
+        bs_iterator last_iter = cur_iter;
         std::advance(cur_iter, chunk_size);
         chunks.push_back(std::make_pair(last_iter, cur_iter));
       }
@@ -220,14 +151,13 @@ class BeadSpringSpecies : public Species<BeadSpring> {
 #pragma omp for 
         for(int i = 0; i < max_threads; ++i)
           for(auto it = chunks[i].first; it != chunks[i].second; ++it)
-            it->UpdatePosition(midstep_);
+            it->UpdatePosition();
       }
 #else
-      for (filament_iterator it=members_.begin(); it!=members_.end(); ++it) 
-        it->UpdatePosition(midstep_);
+      for (bs_iterator it=members_.begin(); it!=members_.end(); ++it) 
+        it->UpdatePosition();
 #endif
 
-      midstep_ = !midstep_;
     }
 };
 
