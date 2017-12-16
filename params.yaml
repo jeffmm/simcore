@@ -7,13 +7,13 @@ n_random: 1
 n_dim: 2
 n_periodic: 2
 boundary: 1
-delta: 0.0001
-n_steps: 10000
+delta: 0.00001
+n_steps: 1000000
 n_steps_equil: 0
-system_radius: 100
+system_radius: 40
 bud_radius: 60
 bud_height: 140
-graph_flag: 0
+graph_flag: 1
 n_graph: 100
 movie_flag: 1
 movie_directory: frames
@@ -23,67 +23,29 @@ f_cutoff: 1000
 thermo_flag: 0
 n_thermo: 100
 stoch_flag: 1
-interaction_flag: 1
+interaction_flag: 0
 draw_boundary: 1
 graph_background: 1
 species_insertion_failure_threshold: 10000
 uniform_crystal: 0
-filament:
+bead_spring:
   color: 6
   draw_type: bw
   insertion_type: random_oriented
   num: 1
-  shuffle: 0
-  shuffle_factor: 100
-  shuffle_frequency: 0.0001
-  overlap: 0
-  packing_fraction: 0.2
+  overlap: 1
+  packing_fraction: -1
   diameter: 1
-  spiral_flag: 0
   length: 20
-  max_length: 100
-  min_length: 4
-  max_bond_length: 4
-  min_bond_length: 2
+  persistence_length: 20000
+  bond_rest_length: 0.8
+  bond_spring: 100
   posit_flag: 0
   spec_flag: 0
   checkpoint_flag: 0
   n_posit: 1000
   n_spec: 1000
   n_checkpoint: 1000
-  driving_factor: 100
-  dynamic_instability_flag: 0
-  force_induced_catastrophe_flag: 0
-  fic_factor: 0.018
-  persistence_length: 2000
+  driving_factor: 0
   theta_analysis: 0
   lp_analysis: 0
-  v_poly: 50
-  v_depoly: 50
-  f_grow_to_shrink: 0.005
-  f_shrink_to_grow: 0.05
-motor: 
-  draw_type: fixed
-  color: 1.5
-  diameter: 3
-  k_on: 2
-  k_off: 1.8
-  velocity: 60
-  walker: 1
-  step_direction: 1
-  diffusion_flag: 1
-  #concentration: 0.08
-  concentration: 0
-  k_spring: 10000
-  f_spring_max: 10000
-centrosome:
-  num: 0
-  diameter: 10
-  k_spring: 10000
-  k_align: 10000
-  alignment_potential: 1
-  fixed_spacing: 1
-  insertion_type: random
-  n_filaments_max: 10
-  n_filaments_min: 10
-

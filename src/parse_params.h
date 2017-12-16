@@ -481,6 +481,75 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
         }
       }
+      else if (struct_name.compare("bead_spring") == 0) {
+        for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
+          param_name = jt->first.as<std::string>();
+          if (false) {}
+          else if (param_name.compare("diameter")==0) {
+            params->bead_spring.diameter = jt->second.as<double>();
+          }
+          else if (param_name.compare("length")==0) {
+            params->bead_spring.length = jt->second.as<double>();
+          }
+          else if (param_name.compare("persistence_length")==0) {
+            params->bead_spring.persistence_length = jt->second.as<double>();
+          }
+          else if (param_name.compare("max_bond_length")==0) {
+            params->bead_spring.max_bond_length = jt->second.as<double>();
+          }
+          else if (param_name.compare("bond_spring")==0) {
+            params->bead_spring.bond_spring = jt->second.as<double>();
+          }
+          else if (param_name.compare("driving_factor")==0) {
+            params->bead_spring.driving_factor = jt->second.as<double>();
+          }
+          else if (param_name.compare("lp_analysis")==0) {
+            params->bead_spring.lp_analysis = jt->second.as<int>();
+          }
+          else if (param_name.compare("theta_analysis")==0) {
+            params->bead_spring.theta_analysis = jt->second.as<int>();
+          }
+          else if (param_name.compare("packing_fraction")==0) {
+            params->bead_spring.packing_fraction = jt->second.as<double>();
+          }
+          else if (param_name.compare("num")==0) {
+            params->bead_spring.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->bead_spring.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("overlap")==0) {
+            params->bead_spring.overlap = jt->second.as<int>();
+          }
+          else if (param_name.compare("draw_type")==0) {
+            params->bead_spring.draw_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("color")==0) {
+            params->bead_spring.color = jt->second.as<double>();
+          }
+          else if (param_name.compare("posit_flag")==0) {
+            params->bead_spring.posit_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("spec_flag")==0) {
+            params->bead_spring.spec_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->bead_spring.checkpoint_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_posit")==0) {
+            params->bead_spring.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_spec")==0) {
+            params->bead_spring.n_spec = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_checkpoint")==0) {
+            params->bead_spring.n_checkpoint = jt->second.as<int>();
+          }
+          else {
+            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+          }
+        }
+      }
       else {
         std::cout << "  WARNING! Unrecognized struct parameter '" << struct_name << "'\n";
       }
@@ -497,17 +566,17 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("n_random")==0) {
         params->n_random = it->second.as<int>();
       }
-      else if (param_name.compare("n_dim")==0) {
-        params->n_dim = it->second.as<int>();
-      }
       else if (param_name.compare("run_name")==0) {
         params->run_name = it->second.as<std::string>();
       }
-      else if (param_name.compare("n_periodic")==0) {
-        params->n_periodic = it->second.as<int>();
+      else if (param_name.compare("n_dim")==0) {
+        params->n_dim = it->second.as<int>();
       }
       else if (param_name.compare("draw_boundary")==0) {
         params->draw_boundary = it->second.as<int>();
+      }
+      else if (param_name.compare("n_periodic")==0) {
+        params->n_periodic = it->second.as<int>();
       }
       else if (param_name.compare("boundary")==0) {
         params->boundary = it->second.as<int>();
@@ -545,17 +614,20 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("checkpoint_run_name")==0) {
         params->checkpoint_run_name = it->second.as<std::string>();
       }
-      else if (param_name.compare("movie_flag")==0) {
-        params->movie_flag = it->second.as<int>();
+      else if (param_name.compare("movie_directory")==0) {
+        params->movie_directory = it->second.as<std::string>();
       }
       else if (param_name.compare("insertion_type")==0) {
         params->insertion_type = it->second.as<std::string>();
       }
-      else if (param_name.compare("movie_directory")==0) {
-        params->movie_directory = it->second.as<std::string>();
+      else if (param_name.compare("movie_flag")==0) {
+        params->movie_flag = it->second.as<int>();
       }
       else if (param_name.compare("time_flag")==0) {
         params->time_flag = it->second.as<int>();
+      }
+      else if (param_name.compare("target_pressure")==0) {
+        params->target_pressure = it->second.as<double>();
       }
       else if (param_name.compare("bud_height")==0) {
         params->bud_height = it->second.as<double>();
@@ -593,9 +665,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("constant_volume")==0) {
         params->constant_volume = it->second.as<int>();
       }
-      else if (param_name.compare("target_pressure")==0) {
-        params->target_pressure = it->second.as<double>();
-      }
       else if (param_name.compare("target_radius")==0) {
         params->target_radius = it->second.as<double>();
       }
@@ -608,6 +677,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("stoch_flag")==0) {
         params->stoch_flag = it->second.as<int>();
       }
+      else if (param_name.compare("species_insertion_failure_threshold")==0) {
+        params->species_insertion_failure_threshold = it->second.as<int>();
+      }
+      else if (param_name.compare("uniform_crystal")==0) {
+        params->uniform_crystal = it->second.as<int>();
+      }
       else if (param_name.compare("thermo_flag")==0) {
         params->thermo_flag = it->second.as<int>();
       }
@@ -619,12 +694,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("n_steps_equil")==0) {
         params->n_steps_equil = it->second.as<int>();
-      }
-      else if (param_name.compare("species_insertion_failure_threshold")==0) {
-        params->species_insertion_failure_threshold = it->second.as<int>();
-      }
-      else if (param_name.compare("uniform_crystal")==0) {
-        params->uniform_crystal = it->second.as<int>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";

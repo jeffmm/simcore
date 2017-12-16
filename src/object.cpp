@@ -71,16 +71,15 @@ void Object::SetLength(double new_length) {
   length_ = new_length;
 }
 void Object::AddForce(double const * const f) {
-  for (int i=0; i<3; ++i)
+  for (int i=0; i<n_dim_; ++i)
     force_[i]+=f[i];
 }
 void Object::SubForce(double const * const f) {
-  for (int i=0; i<3; ++i)
+  for (int i=0; i<n_dim_; ++i)
     force_[i]-=f[i];
 }
 void Object::SetForce(double const * const f) {
-  for (int i=0; i<3; ++i)
-    force_[i]=f[i];
+  std::copy(f, f+n_dim_, force_);
 }
 void Object::AddTorque(double const * const t) {
   for (int i=0; i<3; ++i)
@@ -91,8 +90,7 @@ void Object::SubTorque(double const * const t) {
     torque_[i]-=t[i];
 }
 void Object::SetTorque(double const * const t) {
-  for (int i=0; i<3; ++i)
-    torque_[i]=t[i];
+  std::copy(t, t+3, torque_);
 }
 void Object::AddPotential(double const p) {
   p_energy_ += p;
