@@ -15,6 +15,7 @@ class BeadSpring : public Mesh {
         eq_steps_,
         eq_steps_count_ = 0;
     double max_bond_length_,
+           bond_rest_length_,
            bond_spring_,
            persistence_length_,
            rand_sigma_,
@@ -24,10 +25,11 @@ class BeadSpring : public Mesh {
     void GenerateProbableOrientation();
     void CalculateAngles();
     void CalculateTangents();
+    void CalcRandomForces();
     void AddRandomForces();
     void AddBendingForces();
     void AddSpringForces();
-    void UpdateSitePositions();
+    void UpdateSitePositions(bool midstep);
     void UpdateSiteOrientations();
     void ApplyForcesTorques();
     void ApplyInteractionForces();
@@ -44,9 +46,10 @@ class BeadSpring : public Mesh {
     virtual void InsertAt(double *pos, double *u);
     virtual bool CheckBounds(double buffer = 0);
     //void DiffusionValidationInit();
-    virtual void Integrate();
-    virtual void Draw(std::vector<graph_struct*> * graph_array);
-    virtual void UpdatePosition();
+    virtual void Integrate(bool midstep);
+    //virtual void Draw(std::vector<graph_struct*> * graph_array);
+    virtual void UpdatePosition() {}
+    virtual void UpdatePosition(bool midstep);
     double const GetLength() { return length_;}
     double const GetDriving() {return driving_factor_;}
     double const GetPersistenceLength() {return persistence_length_;}
@@ -91,6 +94,7 @@ typedef std::vector<std::pair<std::vector<BeadSpring>::iterator, std::vector<Bea
 class BeadSpringSpecies : public Species<BeadSpring> {
   protected:
     // Analysis structures
+    bool midstep_;
     double e_bend_,
            tot_angle_,
            mse2e_,
@@ -109,6 +113,7 @@ class BeadSpringSpecies : public Species<BeadSpring> {
     void Init(system_parameters *params, space_struct *space, long seed) {
       Species::Init(params, space, seed);
       sparams_ = &(params_->bead_spring);
+      midstep_ = true;
       if (params_->bead_spring.packing_fraction>0) {
         if (params_->bead_spring.length <= 0) {
           error_exit("Packing fraction with polydisperse lengths not implemented yet\n");
@@ -151,13 +156,14 @@ class BeadSpringSpecies : public Species<BeadSpring> {
 #pragma omp for 
         for(int i = 0; i < max_threads; ++i)
           for(auto it = chunks[i].first; it != chunks[i].second; ++it)
-            it->UpdatePosition();
+            it->UpdatePosition(midstep_);
       }
 #else
       for (bs_iterator it=members_.begin(); it!=members_.end(); ++it) 
-        it->UpdatePosition();
+        it->UpdatePosition(midstep_);
 #endif
 
+      midstep_ = !midstep_;
     }
 };
 
