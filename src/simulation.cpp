@@ -175,14 +175,14 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         (*spec)->AddMember();
         inserted++;
         // First check that we are respecting boundary conditions
-        if (params_.boundary != 0 && iengine_.CheckBoundaryConditions()) {
+        if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions()) {
           (*spec)->PopMember();
           inserted--;
           // We are not counting boundary condition failures in insertion
           // failures, since insertion failures are for packing issues
         }
         // Check if we have an overlap of objects
-        else if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+        else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap()) {
           //printf("Has an overlap\n");
           (*spec)->PopMember();
           inserted--;
