@@ -128,16 +128,16 @@ bool Site::HasNeighbor(int other_oid) {
   return false;
 }
 
-//void Site::Draw(std::vector<graph_struct*> * graph_array) {
-  //std::copy(scaled_position_,scaled_position_+3, g_.r);
-  //for (int i=space_->n_periodic; i<n_dim_; ++i) {
-    //g_.r[i] = position_[i];
-  //}
-  //std::copy(orientation_, orientation_+3, g_.u);
-  //g_.color = color_;
-  //g_.diameter = diameter_;
-  //g_.length = length_;
-  //g_.draw = draw_;
-  //graph_array->push_back(&g_);
-//}
+void Site::Draw(std::vector<graph_struct*> * graph_array) {
+  std::copy(scaled_position_,scaled_position_+3, g_.r);
+  for (int i=space_->n_periodic; i<n_dim_; ++i) {
+    g_.r[i] = position_[i];
+  }
+  std::copy(orientation_, orientation_+3, g_.u);
+  g_.color = color_;
+  g_.diameter = diameter_;
+  g_.length = length_;
+  g_.draw = draw_;
+  graph_array->push_back(&g_);
+}
 

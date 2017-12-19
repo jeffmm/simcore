@@ -33,6 +33,7 @@ class Site : public Object {
     void RemoveOutgoingBonds();
     void RemoveBond(int bond_oid);
     virtual bool HasNeighbor(int other_oid);
+    void Draw(std::vector<graph_struct*> * graph_array);
 };
 
 #endif // _SIMCORE_SITE_H_

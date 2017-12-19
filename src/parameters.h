@@ -102,6 +102,7 @@ class motor_parameters : public species_parameters {
 
 class bead_spring_parameters : public species_parameters {
   public:
+    double bond_rest_length = 0.8;
     double diameter = 1;
     double length = 40;
     double persistence_length = 4000;
