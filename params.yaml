@@ -8,12 +8,12 @@ n_dim: 2
 n_periodic: 2
 boundary: 1
 delta: 0.00001
-n_steps: 1000000000
+n_steps: 10000
 n_steps_equil: 0
 system_radius: 40
 bud_radius: 60
 bud_height: 140
-graph_flag: 0
+graph_flag: 1
 n_graph: 1000
 movie_flag: 0
 movie_directory: frames
@@ -36,17 +36,17 @@ bead_spring:
   overlap: 1
   packing_fraction: -1
   diameter: 1
-  length: 20
+  length: 18
   persistence_length: 200
   max_bond_length: 1
-  bond_rest_length: 0.9
+  bond_rest_length: 0.98
   bond_spring: 1000
-  posit_flag: 0
-  spec_flag: 0
-  checkpoint_flag: 0
+  posit_flag: 1
+  spec_flag: 1
+  checkpoint_flag: 1
   n_posit: 100
   n_spec: 100
   n_checkpoint: 100
-  driving_factor: 0
+  driving_factor: 100
   theta_analysis: 1
   lp_analysis: 1
