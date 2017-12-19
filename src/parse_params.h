@@ -485,6 +485,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
+          else if (param_name.compare("bond_rest_length")==0) {
+            params->bead_spring.bond_rest_length = jt->second.as<double>();
+          }
           else if (param_name.compare("diameter")==0) {
             params->bead_spring.diameter = jt->second.as<double>();
           }

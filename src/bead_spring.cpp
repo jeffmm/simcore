@@ -11,6 +11,7 @@ void BeadSpring::SetParameters() {
   persistence_length_ = params_->bead_spring.persistence_length;
   diameter_ = params_->bead_spring.diameter;
   max_bond_length_ = params_->bead_spring.max_bond_length;
+  bond_rest_length_ = params_->bead_spring.bond_rest_length;
   bond_spring_ = params_->bead_spring.bond_spring;
   driving_factor_ = params_->bead_spring.driving_factor;
   stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
@@ -34,7 +35,7 @@ void BeadSpring::Init(bool force_overlap) {
 }
 
 void BeadSpring::InitElements() {
-  n_bonds_max_ = (int) ceil(length_/(0.8*max_bond_length_));
+  n_bonds_max_ = (int) ceil(length_/(bond_rest_length_));
   Reserve(n_bonds_max_);
   //Allocate control structures
   int n_sites_max = n_bonds_max_+1;
@@ -112,7 +113,7 @@ void BeadSpring::InsertBeadSpring(bool force_overlap) {
   bool out_of_bounds = true;
   do {
     out_of_bounds = false;
-    bond_length_ = 0.8*max_bond_length_;
+    bond_length_ = bond_rest_length_;
     Clear();
     InsertFirstBond();
     if (!force_overlap && (out_of_bounds = sites_[n_sites_-1].CheckBounds())) continue;
@@ -134,7 +135,7 @@ void BeadSpring::InsertBeadSpring(bool force_overlap) {
 }
 
 void BeadSpring::InsertAt(double *pos, double *u) {
-  bond_length_ = 0.8*max_bond_length_;
+  bond_length_ = bond_rest_length_;
   for (int i=0;i<n_dim_; ++i) {
     position_[i] = pos[i] - 0.5*length_*u[i];
   }
@@ -174,9 +175,9 @@ double const BeadSpring::GetVolume() {
   }
 }
 
-void BeadSpring::UpdatePosition() {
+void BeadSpring::UpdatePosition(bool midstep) {
   //ApplyForcesTorques();
-  Integrate();
+  Integrate(midstep);
   eq_steps_count_++;
 }
 
@@ -184,16 +185,26 @@ void BeadSpring::UpdatePosition() {
   BD algorithm for inextensible wormlike chains with anisotropic friction
   Montesi, Morse, Pasquali. J Chem Phys 122, 084903 (2005).
 ********************************************************************************/
-void BeadSpring::Integrate() {
+void BeadSpring::Integrate(bool midstep) {
   CalculateAngles();
   CalculateTangents();
+  if (midstep) {
+    CalcRandomForces();
+    UpdatePrevPositions();
+  }
   AddRandomForces();
   AddBendingForces();
   AddSpringForces();
-  UpdateSitePositions();
+  UpdateSitePositions(midstep);
   UpdateBondPositions();
   UpdateSiteOrientations();
 }
+
+//void BeadSpring::UpdatePrevPositions() {
+  //for (int i_site=0;i_site<n_sites_;++i_site) {
+    //sites_[i_site].SetPrevPosition(sites_[i_site].GetPosition());
+  //}
+//}
 
 void BeadSpring::UpdateSiteOrientations() {
   for (int i=0; i<n_sites_-1; ++i) {
@@ -218,14 +229,21 @@ void BeadSpring::CalculateTangents() {
   }
 }
 
-void BeadSpring::AddRandomForces() {
+void BeadSpring::CalcRandomForces() {
   if (!stoch_flag_) return;
   for (int i_site=0; i_site<n_sites_; ++i_site) {
     for (int i=0; i<n_dim_; ++i) {
       double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
       force_[i] = kick*rand_sigma_;
     }
-    sites_[i_site].AddForce(force_);
+    sites_[i_site].SetRandomForce(force_);
+  }
+}
+
+void BeadSpring::AddRandomForces() {
+  if (!stoch_flag_) return;
+  for (int i_site=0; i_site<n_sites_; ++i_site) {
+    sites_[i_site].AddRandomForce();
   }
 }
 
@@ -235,14 +253,13 @@ void BeadSpring::AddBendingForces() {
    * beads.  I will include the derivation of the site forces in the
    * documentation (JMM 20171215) */
   for (int i_theta=0; i_theta<n_bonds_-1; ++i_theta) {
-    double udotu = dot_product(n_dim_, sites_[i_theta].GetOrientation(), 
-        sites_[i_theta+1].GetOrientation());
+    double udotu = cos_thetas_[i_theta];
     double kappa;
-    if (udotu - 1 < 1e-10) {
+    if (1-udotu < 1e-10) {
       kappa = 0;
     }
     else {
-      kappa = 2*persistence_length_*(acos(cos_thetas_[i_theta])-
+      kappa = -2*persistence_length_*(acos(cos_thetas_[i_theta])-
         M_PI)/sqrt(1-SQR(cos_thetas_[i_theta]));
     }
     double rho1 = 0;
@@ -273,10 +290,11 @@ void BeadSpring::AddBendingForces() {
 }
 
 void BeadSpring::AddSpringForces() {
-  /* FENE springs have the potential U(r) = -1/2 k r0 ln(1 - (r/r0)^2) */
+  /* FENE springs have the potential U(r) = -1/2 k r_max^2 ln(1 - ((r-r0)/r_max)^2) */
   for(int i_bond=0; i_bond<n_bonds_; ++i_bond) {
-    double r = bonds_[i_bond].GetLength();
-    double f_mag = bond_spring_ * (r-max_bond_length_);
+    double r_diff = bonds_[i_bond].GetLength() - bond_rest_length_;
+    double f_mag = bond_spring_ * r_diff / (1 - SQR(r_diff)/SQR(max_bond_length_));
+    //double f_mag = bond_spring_ * (r-max_bond_length_);
     for (int i=0;i<n_dim_;++i) {
       force_[i] = f_mag * sites_[i_bond].GetOrientation()[i];
     }
@@ -295,13 +313,13 @@ void BeadSpring::AddSpringForces() {
   //}
 }
 
-void BeadSpring::UpdateSitePositions() {
+void BeadSpring::UpdateSitePositions(bool midstep) {
+  double delta = (midstep ? 0.5*delta_ : delta_);
   for (int i_site=0; i_site<n_sites_; ++i_site) {
     double const * const f_site = sites_[i_site].GetForce();
-    double const * const r_site = sites_[i_site].GetPosition();
-    sites_[i_site].SetPrevPosition(r_site);
+    double const * const r_prev = sites_[i_site].GetPrevPosition();
     for (int i=0; i<n_dim_; ++i) {
-      position_[i] = r_site[i] + f_site[i] * delta_ / diameter_;
+      position_[i] = r_prev[i] + f_site[i] * delta / diameter_;
     }
     sites_[i_site].SetPosition(position_);
   }
@@ -348,11 +366,11 @@ void BeadSpring::ApplyForcesTorques() {
 //FIXME
 void BeadSpring::ApplyInteractionForces() {}
 
-void BeadSpring::Draw(std::vector<graph_struct*> * graph_array) {
-  for (auto site=sites_.begin(); site!= sites_.end(); ++site) {
-    site->Draw(graph_array);
-  }
-}
+//void BeadSpring::Draw(std::vector<graph_struct*> * graph_array) {
+  //for (auto site=sites_.begin(); site!= sites_.end(); ++site) {
+    //site->Draw(graph_array);
+  //}
+//}
 
 // Scale bond and site positions from new unit cell
 void BeadSpring::ScalePosition() {
@@ -458,6 +476,7 @@ void BeadSpring::ReadSpec(std::fstream &ispec) {
   }
   UpdateBondPositions();
   UpdateSiteOrientations();
+  UpdatePrevPositions();
   CalculateAngles();
 }
 

@@ -128,6 +128,7 @@ bead_spring:
   length: [40, double]
   persistence_length: [4000, double]
   max_bond_length: [1, double]
+  bond_rest_length: [0.8, double]
   bond_spring: [100, double]
   driving_factor: [0, double]
   lp_analysis: [0, int]
