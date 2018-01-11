@@ -78,6 +78,13 @@ class BeadSpring : public Mesh {
     void AddForceTail(double *f) {
       sites_[0].AddForce(f);
     }
+    double GetContourLength() {
+      double clen = 0;
+      for (int i=0;i<n_bonds_;++i) {
+        clen += bonds_[i].GetLength();
+      }
+      return clen;
+    }
     void WritePosit(std::fstream &oposit);
     void ReadPosit(std::fstream &iposit);
     void WriteSpec(std::fstream &ospec);
@@ -98,14 +105,16 @@ class BeadSpringSpecies : public Species<BeadSpring> {
     double e_bend_,
            tot_angle_,
            mse2e_,
-           mse2e2_;
+           mse2e2_,
+           avg_clen_;
     int **theta_histogram_;
     int time_,
         n_bins_,
         n_samples_;
     std::fstream spiral_file_,
                  theta_file_,
-                 mse2e_file_;
+                 mse2e_file_,
+                 diffusion_file_;
   public:
     BeadSpringSpecies() : Species() {
       SetSID(species_id::bead_spring);
@@ -129,12 +138,14 @@ class BeadSpringSpecies : public Species<BeadSpring> {
       }
     }
     void InitAnalysis();
+    void InitDiffusionAnalysis();
     void InitThetaAnalysis();
     void InitMse2eAnalysis();
     void RunAnalysis();
     void RunThetaAnalysis();
     void RunMse2eAnalysis();
     void FinalizeAnalysis();
+    void FinalizeDiffusionAnalysis();
     void FinalizeMse2eAnalysis();
     void FinalizeThetaAnalysis();
     void UpdatePositions() {
