@@ -1,23 +1,23 @@
 # params.yaml
 ---
-seed: 135131125424323
-run_name: bspring_test
+seed: 47962277021143
+run_name: filament_test
 n_runs: 1
 n_random: 1
-n_dim: 2
-n_periodic: 2
+n_dim: 3
+n_periodic: 3
 boundary: 1
-delta: 0.00001
-n_steps: 10000
+delta: 0.0001
+n_steps: 100000000
 n_steps_equil: 0
 system_radius: 40
 bud_radius: 60
 bud_height: 140
-graph_flag: 1
+graph_flag: 0
 n_graph: 1000
 movie_flag: 0
 movie_directory: frames
-cell_length: 5
+cell_length: -1
 n_update_cells: -1
 f_cutoff: 1000
 thermo_flag: 1
@@ -28,25 +28,45 @@ draw_boundary: 1
 graph_background: 1
 species_insertion_failure_threshold: 10000
 uniform_crystal: 0
-bead_spring:
+filament:
   color: 6
   draw_type: bw
   insertion_type: random
-  num: 100
+  num: 1
   overlap: 1
   packing_fraction: -1
   diameter: 1
-  length: 18
-  persistence_length: 200
+  length: 50
   max_bond_length: 1
-  bond_rest_length: 0.98
-  bond_spring: 1000
+  persistence_length: 0
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 1
-  n_posit: 100
-  n_spec: 100
-  n_checkpoint: 100
-  driving_factor: 100
+  n_posit: 1000
+  n_spec: 1000
+  n_checkpoint: 1000
+  driving_factor: 0
   theta_analysis: 1
   lp_analysis: 1
+#bead_spring:
+  #color: 6
+  #draw_type: bw
+  #insertion_type: random
+  #num: 1
+  #overlap: 1
+  #packing_fraction: -1
+  #diameter: 1
+  #length: 20
+  #persistence_length: 2000
+  #max_bond_length: 1
+  #bond_rest_length: 1
+  #bond_spring: 5000
+  #posit_flag: 1
+  #spec_flag: 1
+  #checkpoint_flag: 1
+  #n_posit: 100
+  #n_spec: 100
+  #n_checkpoint: 100
+  #driving_factor: 100
+  #theta_analysis: 1
+  #lp_analysis: 1

@@ -95,6 +95,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("force_induced_catastrophe_flag")==0) {
             params->filament.force_induced_catastrophe_flag = jt->second.as<int>();
           }
+          else if (param_name.compare("f_pause_to_shrink")==0) {
+            params->filament.f_pause_to_shrink = jt->second.as<double>();
+          }
           else if (param_name.compare("fic_factor")==0) {
             params->filament.fic_factor = jt->second.as<double>();
           }
@@ -106,9 +109,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("f_pause_to_grow")==0) {
             params->filament.f_pause_to_grow = jt->second.as<double>();
-          }
-          else if (param_name.compare("f_pause_to_shrink")==0) {
-            params->filament.f_pause_to_shrink = jt->second.as<double>();
           }
           else if (param_name.compare("f_grow_to_pause")==0) {
             params->filament.f_grow_to_pause = jt->second.as<double>();
