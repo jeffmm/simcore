@@ -156,21 +156,21 @@ void Filament::InsertFilament(bool force_overlap) {
     if (polydisperse) {
       length_ = min_length_ + (max_length_-min_length_)*gsl_rng_uniform_pos(rng_.r);
     }
-    do {
-      n_bonds = 2;
+    //do {
+    n_bonds = 2;
+    bond_length_ = length_/n_bonds;
+    while (bond_length_ > max_bond_length_) {
+      n_bonds *= 2;
       bond_length_ = length_/n_bonds;
-      while (bond_length_ > max_bond_length_) {
-        n_bonds *= 2;
-        bond_length_ = length_/n_bonds;
-      }
-      if (n_bonds == 2 && bond_length_ <= diameter_) {
-        error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
-      }
-      if (bond_length_ <= diameter_) {
-        max_bond_length_ += 0.1*max_bond_length_;
-        warning("bond_length <= diameter, increasing max_bond_length to %2.2f",max_bond_length_);
-      }
-    } while (bond_length_ <= diameter_);
+    }
+    //if (n_bonds == 2 && bond_length_ <= diameter_) {
+      //error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
+    //}
+      //if (bond_length_ <= diameter_) {
+        //max_bond_length_ += 0.1*max_bond_length_;
+        //warning("bond_length <= diameter, increasing max_bond_length to %2.2f",max_bond_length_);
+      //}
+    //} while (bond_length_ <= diameter_);
     Clear();
     InsertFirstBond();
     if (!force_overlap && (out_of_bounds = sites_[n_sites_-1].CheckBounds())) continue;
