@@ -64,7 +64,11 @@ void SimulationManager::RunManager() {
   GenerateParameters();
   // Write parameters to individual files
   WriteParams();
-  if (run_opts_.analysis_flag || run_opts_.make_movie || run_opts_.reduce_flag) {
+  if (run_opts_.blank_flag) {
+    // Blank run -- we only write the parameter files without running a simulation.
+    return;
+  }
+  else if (run_opts_.analysis_flag || run_opts_.make_movie || run_opts_.reduce_flag) {
     // Process the output files associated with the param file
     ProcessOutputs();
   }
