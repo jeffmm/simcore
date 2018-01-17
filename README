@@ -83,8 +83,7 @@ RUNNING SIMCORE:
                   objects.
 
     --analysis (-a): loads posit/spec files into simulation for analysis in the
-                     same manner as the movie flag, however no analysis code is
-                     currently written for most objects.
+                     same manner as the movie flag.
 
     --load (-l): specifies to load any checkpoint files corresponding to the
                  given parameter file, which can be used to continue a
@@ -109,7 +108,7 @@ PARAMETERS:
     species_param_1: sp1_value
     species_param_2: sp2_value
 
-  The "global species" parameter type houses parameters that are shared be every
+  The "global species" parameter type houses parameters that are shared by every
   species, such as "num" which specifies how many items of each species to
   insert into the system, "insertion_type" which specifies how to insert them,
   "posit_flag" which instructs whether to output position files, etc. These do
@@ -305,4 +304,35 @@ OUTPUTS:
 
   Where the pressure is the isometric pressure, and the pressure tensor is
   calculated from the time-averaged stress tensor.
+
+ANALYSIS:
+  
+  If analysis operations of output files are already defined for your species,
+  as is the case for Filament species for example, analyzing outputs is a
+  simple matter. First, make sure the desired analysis flag is set in the
+  species parameters. For example, in Filament there is a persistence length
+  analysis that produces .mse2e files that analyzes the mean-square end-to-end
+  distance of semiflexible filaments. This is triggered by a parameter
+  lp_analysis=1, which can be set in the parameter file. Then run simcore as
+  
+  ./simcore -a parameter_file.yaml.
+  
+  NOTE: It is important to keep in mind that the parameter_file should be
+  identical to the parameter file used to generate the outputs. There are a few
+  exceptions that only affect post-processing, such as analysis flags, but this
+  is true in general.
+
+  The way inputs and outputs work in simcore is to output the data in the
+  initial run and then read the data back into the structures in
+  post-processing. The .posit files just contain bare-bones information that
+  allow many types of analyses, but .spec files should in general contain all
+  the necessary information to recreate a member of a species. All analysis
+  does in simcore is read in inputs, calculate necessary ensemble information
+  from the usual data structures, and repeat.
+
+  For new analyses of different species, the analysis routine should be defined
+  in the species container class, rather than the species member class. For
+  example, the RunSpiralAnalysis routine is defined in FilamentSpecies, which
+  uses the positions, etc defined in each Filament member. See Filament for
+  examples of how analyses can be initialized, post-processed, etc.
 
