@@ -1,8 +1,8 @@
 system_radius: 200
-bud_radis: 100
+bud_radius: 100
 bud_height: 280
 
-centrosome:
+spindle:
 # Insertion and graphics details
   num: 1
   draw_type: orientation
@@ -10,14 +10,13 @@ centrosome:
   insertion_type: random
   overlap: 0
 # Physical parameters
-  diameter: 10
-  n_filaments_min: 2
-  n_filaments_max: 2
-  fixed_spacing: 0
-  alignment_potential: 0
+  diameter: 40
+  length: 120
+  n_filaments: 1
+  spb_radius: 5
+  alignment_potential: 1
   k_spring: 1000
-  k_align: 0
-  spring_length: 0
+  k_align: 1000
 # Outputs
   posit_flag: 1
   spec_flag: 1

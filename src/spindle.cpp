@@ -1,34 +1,30 @@
-#include "centrosome.h"
+#include "spindle.h"
 
-Centrosome::Centrosome() : Object() {
-  color_ = params_->centrosome.color;
-  draw_ = draw_type::_from_string(params_->centrosome.draw_type.c_str());
-  diameter_ = params_->centrosome.diameter;
-  n_filaments_min_ = params_->centrosome.n_filaments_min;
-  n_filaments_max_ = params_->centrosome.n_filaments_max;
-  if (n_filaments_min_ > n_filaments_max_) {
-    n_filaments_min_ = n_filaments_max_;
-  }
-  n_filaments_ = n_filaments_min_ + gsl_rng_uniform_int(rng_.r,n_filaments_max_ - n_filaments_min_ + 1); 
-  k_spring_ = params_->centrosome.k_spring;
-  k_align_ = params_->centrosome.k_align;
-  spring_length_ = params_->centrosome.spring_length;
-  alignment_potential_ = (params_->centrosome.alignment_potential ? true : false);
-  fixed_spacing_ = (params_->centrosome.fixed_spacing ? true : false);
+Spindle::Spindle() : Object() {
+  color_ = params_->spindle.color;
+  draw_ = draw_type::_from_string(params_->spindle.draw_type.c_str());
+  diameter_ = params_->spindle.diameter;
+  n_filaments_ = n_filaments_min_ = n_filaments_max_ = params_->spindle.n_filaments;
+  k_spring_ = params_->spindle.k_spring;
+  k_align_ = params_->spindle.k_align;
+  spring_length_ = params_->spindle.spring_length;
+  alignment_potential_ = (params_->spindle.alignment_potential ? true : false);
+  fixed_spacing_ = false;
   anchor_distance_ = 0.5*diameter_;
+  spb_radius_ = params_->spindle.spb_radius;
   SetDiffusion();
 }
 
-void Centrosome::Init() {
+void Spindle::Init() {
   if (n_filaments_min_ > n_filaments_max_) {
-    warning("Min n_filaments greater than max n_filaments in centrosome. Setting equal.");
+    warning("Min n_filaments greater than max n_filaments in spindle. Setting equal.");
   }
   filaments_.reserve(n_filaments_);
   anchors_.resize(n_filaments_);
   bool out_of_bounds;
   int n_insert = 0;
   do {
-    InsertCentrosome();
+    InsertSpindle();
     double buffer = MIN(1.5*params_->filament.min_length,1.1*params_->filament.max_length);
     if (out_of_bounds = CheckBounds(buffer)) continue;
     GenerateAnchorSites();
@@ -57,7 +53,7 @@ void Centrosome::Init() {
   } while (out_of_bounds);
 }
 
-int Centrosome::GetCount() {
+int Spindle::GetCount() {
   int count=1;
   for (filament_iterator it=filaments_.begin();it!=filaments_.end();++it) {
     count += it->GetCount();
@@ -65,7 +61,7 @@ int Centrosome::GetCount() {
   return count;
 }
 
-void Centrosome::ZeroForce() {
+void Spindle::ZeroForce() {
   Object::ZeroForce();
   for (filament_iterator it=filaments_.begin();it!=filaments_.end();++it) {
     it->ZeroForce();
@@ -75,30 +71,30 @@ void Centrosome::ZeroForce() {
   }
 }
 
-void Centrosome::InsertCentrosome() {
-  if (params_->centrosome.insertion_type.compare("random") == 0) {
+void Spindle::InsertSpindle() {
+  if (params_->spindle.insertion_type.compare("random") == 0) {
     InsertRandom();
   }
-  else if (params_->centrosome.insertion_type.compare("random_oriented") == 0) {
+  else if (params_->spindle.insertion_type.compare("random_oriented") == 0) {
     InsertRandom();
     std::fill(orientation_,orientation_+3,0.0);
     orientation_[n_dim_-1] = 1.0;
   }
-  else if (params_->centrosome.insertion_type.compare("centered_random") == 0) {
+  else if (params_->spindle.insertion_type.compare("centered_random") == 0) {
     std::fill(position_,position_+3,0.0);
     generate_random_unit_vector(n_dim_,orientation_,rng_.r);
   }
-  else if (params_->centrosome.insertion_type.compare("centered_oriented") == 0 ) {
+  else if (params_->spindle.insertion_type.compare("centered_oriented") == 0 ) {
     std::fill(position_,position_+3,0.0);
     std::fill(orientation_,orientation_+3,0.0);
     orientation_[n_dim_-1] = 1.0;
   }
   else {
-    error_exit("Centrosome insertion type not recognized!");
+    error_exit("Spindle insertion type not recognized!");
   }
 }
 
-void Centrosome::GenerateAnchorSites() {
+void Spindle::GenerateAnchorSites() {
   anchor_distance_ += (0.5 + 1e-3)*params_->filament.diameter;
   double theta = 0.0;
   double dtheta = 2.0*M_PI/(n_filaments_);
@@ -109,7 +105,7 @@ void Centrosome::GenerateAnchorSites() {
       theta+=dtheta;
     }
     else if (fixed_spacing_ && n_dim_ == 3) {
-      warning("Fixed filament spacing not yet implemented for 3D in centrosome. Inserting randomly.");
+      warning("Fixed filament spacing not yet implemented for 3D in spindle. Inserting randomly.");
       generate_random_unit_vector(n_dim_,anchors_[i_fil].orientation_,rng_.r);
     }
     else {
@@ -125,14 +121,14 @@ void Centrosome::GenerateAnchorSites() {
   }
 }
 
-void Centrosome::RandomizeAnchorPosition(int i_fil) {
+void Spindle::RandomizeAnchorPosition(int i_fil) {
   generate_random_unit_vector(n_dim_,anchors_[i_fil].orientation_,rng_.r);
   for (int i=0;i<n_dim_;++i) {
     anchors_[i_fil].position_[i] = position_[i] + anchor_distance_*anchors_[i_fil].orientation_[i];
   }
 }
 
-void Centrosome::UpdatePosition(bool midstep) {
+void Spindle::UpdatePosition(bool midstep) {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
   std::vector<std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator> > chunks;
@@ -167,7 +163,7 @@ void Centrosome::UpdatePosition(bool midstep) {
   }
 }
 
-void Centrosome::ApplyForcesTorques() {
+void Spindle::ApplyForcesTorques() {
   for (int i=0; i<n_dim_; ++i) {
     double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
     force_[i] += kick*diffusion_;
@@ -195,13 +191,13 @@ void Centrosome::ApplyForcesTorques() {
   }
 }
 
-void Centrosome::SetDiffusion() {
+void Spindle::SetDiffusion() {
   gamma_trans_ = 1.0/(diameter_);
   gamma_rot_ = 3.0/CUBE(diameter_);
   diffusion_ = sqrt(24.0*diameter_/delta_);
 }
 
-void Centrosome::Translate() {
+void Spindle::Translate() {
   //double f_cutoff = 0.1 / gamma_trans_ / delta; // ????? arbitrary holdovers from snowman
   //double force_mag = 0.0;
   //for (int i=0; i<n_dim_; ++i)
@@ -221,7 +217,7 @@ void Centrosome::Translate() {
       it->position_[i]+=dr[i];
   }
 }
-void Centrosome::Rotate() {
+void Spindle::Rotate() {
   double unit_torque[3], temp[3], r_rel[3];
   double domega, cos_domega, sin_domega, torque_mag;
   // First rotate orientation vector of sphere
@@ -263,12 +259,12 @@ void Centrosome::Rotate() {
   }
 }
 
-void Centrosome::Integrate() {
+void Spindle::Integrate() {
   Translate();
   Rotate();
 }
 
-std::vector<Object*> Centrosome::GetInteractors() {
+std::vector<Object*> Spindle::GetInteractors() {
   interactors_.clear();
   interactors_.push_back(this);
   for (auto it=filaments_.begin(); it!=filaments_.end(); ++it) {
@@ -278,7 +274,7 @@ std::vector<Object*> Centrosome::GetInteractors() {
   return interactors_;
 }
 
-void Centrosome::Draw(std::vector<graph_struct*> * graph_array) {
+void Spindle::Draw(std::vector<graph_struct*> * graph_array) {
   Object::Draw(graph_array);
   for (auto fil=filaments_.begin(); fil!= filaments_.end(); ++fil) {
     fil->Draw(graph_array);

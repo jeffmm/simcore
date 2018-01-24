@@ -33,6 +33,7 @@ class Motor : public Site {
     void Activate();
     void Deactivate();
     void CheckNearBoundary();
+    void CheckNearBuddingBoundary();
     void AnchorBoundary(double * anchor_point);
     void DetachBoundary();
     void ApplyAnchorForces();

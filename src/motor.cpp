@@ -94,20 +94,66 @@ void Motor::ApplyAnchorForces() {
 }
 
 void Motor::CheckNearBoundary() {
-  if (params_->boundary != 2) return;
-  double dr_mag = 0.0;
-  for (int i=0;i<n_dim_;++i) {
-    dr_mag += position_[i]*position_[i];
+  // Only attaches to spherical and budding yeast boundary conditions
+  if (params_->boundary == 3) {
+    CheckNearBuddingBoundary();
   }
-  if (dr_mag > SQR(space_->radius - 0.5*diameter_ - 1)) {
-    //double p[3] = {0,0,0};
-    //dr_mag = sqrt(dr_mag);
-    //for (int i=0;i<n_dim_; ++i) {
-      //p[i] = space_->radius*position_[i]/dr_mag;
-    //}
+  else if (params_->boundary == 2) {
+    double dr_mag = 0.0;
+    for (int i=0;i<n_dim_;++i) {
+      dr_mag += position_[i]*position_[i];
+    }
+    if (dr_mag > SQR(space_->radius - 0.5*diameter_ - 1)) {
+      AnchorBoundary(position_);
+    }
+  }
+}
+
+// Copy of MinimumDistance::PointBuddingBC (see for comments/notes)
+void Motor::CheckNearBuddingBoundary() {
+  double const * const r = position_;
+  double dr[3] = {0,0,0};
+  double dr_mag2 = 0;
+  bool in_mother = (r[n_dim_-1] < space_->bud_neck_height);
+  bool in_cone_region = !( r[n_dim_-1] < 0 || r[n_dim_-1] > space_->bud_height );
+  double r_mag = 0.0;
+  for (int i=0;i<n_dim_-1;++i) {
+    r_mag += SQR(r[i]);
+  }
+  double z0 = (in_mother ? 0 : space_->bud_height);
+  /* Check if in_cone_region means what it says it means */
+  if (in_cone_region) {
+    double cone_rho2 = SQR(space_->bud_neck_radius)*SQR(r[n_dim_-1]-z0)/SQR(space_->bud_neck_height);
+    in_cone_region = (r_mag < cone_rho2);
+  }
+  /* Now in_cone_region definitely means what it says it means */
+  if (in_cone_region) {
+    double scale_factor = space_->bud_neck_radius/sqrt(r_mag) - 1;
+    if (scale_factor < 0) error_exit("Something went wrong in CheckNearBuddingBoundary !\n");
+    dr_mag2 = 0;
+    for (int i=0;i<n_dim_-1; ++i) {
+      dr[i] = scale_factor*r[i];
+      dr_mag2 += SQR(dr[i]);
+    }
+    dr[n_dim_-1] = space_->bud_neck_height - r[n_dim_-1];
+    dr_mag2 += SQR(dr[n_dim_-1]);
+  }
+  else {
+    r_mag = sqrt(r_mag+SQR(r[n_dim_-1] - z0));
+    double r_cell = (in_mother ? space_->radius : space_->bud_radius);
+    dr_mag2 = 0;
+    for (int i=0;i<n_dim_-1;++i) {
+      dr[i] = ((r_cell-diameter_)/r_mag-1)*r[i];
+      dr_mag2 += SQR(dr[i]);
+    }
+    dr[n_dim_-1] = ((r_cell-diameter_)/r_mag-1)*(r[n_dim_-1] - z0);
+    dr_mag2 += SQR(dr[n_dim_-1]);
+  }
+  if (dr_mag2 < SQR(1 + 0.5*diameter_)) {
     AnchorBoundary(position_);
   }
 }
+
 
 void Motor::AnchorBoundary(double * attach_point) {
   anchored_ = true;
