@@ -142,7 +142,7 @@ void SpeciesBase::CloseFiles() {
     ospec_file_.close(); 
   if (ispec_file_.is_open())
     ispec_file_.close(); 
-  FinalizeAnalysis();
+  //FinalizeAnalysis();
 }
 
 std::vector<Object*> SpeciesBase::GetInteractors() {

@@ -1321,21 +1321,6 @@ void Filament::ReadCheckpoint(std::fstream &icheck) {
   sites_[n_sites_-1].SetPosition(r); 
   sites_[n_sites_-1].SetOrientation(bonds_[n_bonds_-1].GetOrientation());
   UpdateBondPositions();
-  // Hack CIDs and RIDs to Set up interaction zones
-  //for (int i=0; i<n_bonds_; ++i) {
-    //bonds_[i].InitRID();
-    //bonds_[i].SetCID(bonds_[i].GetRID());
-    //bonds_[i].UpdatePeriodic();
-  //}
-  //for (int i=1; i<n_bonds_-1; ++i) {
-    //if (i%2==0) 
-      //bonds_[i].SetRID(bonds_[i-1].GetRID());
-    //else
-      //bonds_[i].SetCID(bonds_[i-1].GetCID());
-  //}
-  //bonds_[n_bonds_-1].SetCID(bonds_[n_bonds_-2].GetCID());
-  //bonds_[n_bonds_-1].SetRID(bonds_[n_bonds_-2].GetRID());
-
   //Reallocate control structures
   tensions_.resize(n_sites_-1); //max_sites -1
   g_mat_lower_.resize(n_sites_-2); //max_sites-2

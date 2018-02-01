@@ -21,6 +21,7 @@ class Object {
     draw_type draw_;
     double position_[3],
            prev_position_[3],
+           prev_orientation_[3],
            scaled_position_[3],
            orientation_[3],
            force_[3],
@@ -47,6 +48,7 @@ class Object {
     void SetScaledPosition(double const *const spos);
     void SetOrientation(double const * const u);
     void SetPrevPosition(double const * const ppos);
+    void SetPrevOrientation(double const * const pu);
     void SetDiameter(double new_diameter);
     void SetLength(double new_length);
     void AddForce(double const * const f);
