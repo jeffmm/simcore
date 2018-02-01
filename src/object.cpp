@@ -9,6 +9,7 @@ Object::Object() {
   // Set some defaults
   std::fill(position_,position_+3,0.0);
   std::fill(prev_position_,prev_position_+3,0.0);
+  std::fill(prev_orientation_,prev_orientation_+3,0.0);
   std::fill(scaled_position_,scaled_position_+3,0.0);
   std::fill(orientation_,orientation_+3,0.0);
   std::fill(force_,force_+3,0.0);
@@ -63,6 +64,9 @@ void Object::SetOrientation(double const * const u) {
 }
 void Object::SetPrevPosition(double const * const ppos) {
   std::copy(ppos, ppos+n_dim_, prev_position_);
+}
+void Object::SetPrevOrientation(double const * const pu) {
+  std::copy(pu, pu+n_dim_, prev_orientation_);
 }
 void Object::SetDiameter(double new_diameter) {
   diameter_ = new_diameter;

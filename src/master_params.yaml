@@ -133,4 +133,9 @@ bead_spring:
   lp_analysis: [0, int]
   theta_analysis: [0, int]
   packing_fraction: [-1, double]
-
+spherocylinder:
+  diameter: [1, double]
+  length: [5, double]
+  diffusion_analysis: [0, int]
+  n_diffusion_samples: [1, int]
+  midstep: [0, int]

@@ -553,6 +553,63 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
         }
       }
+      else if (struct_name.compare("spherocylinder") == 0) {
+        for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
+          param_name = jt->first.as<std::string>();
+          if (false) {}
+          else if (param_name.compare("diameter")==0) {
+            params->spherocylinder.diameter = jt->second.as<double>();
+          }
+          else if (param_name.compare("length")==0) {
+            params->spherocylinder.length = jt->second.as<double>();
+          }
+          else if (param_name.compare("diffusion_analysis")==0) {
+            params->spherocylinder.diffusion_analysis = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_diffusion_samples")==0) {
+            params->spherocylinder.n_diffusion_samples = jt->second.as<int>();
+          }
+          else if (param_name.compare("midstep")==0) {
+            params->spherocylinder.midstep = jt->second.as<int>();
+          }
+          else if (param_name.compare("num")==0) {
+            params->spherocylinder.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->spherocylinder.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("overlap")==0) {
+            params->spherocylinder.overlap = jt->second.as<int>();
+          }
+          else if (param_name.compare("draw_type")==0) {
+            params->spherocylinder.draw_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("color")==0) {
+            params->spherocylinder.color = jt->second.as<double>();
+          }
+          else if (param_name.compare("posit_flag")==0) {
+            params->spherocylinder.posit_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("spec_flag")==0) {
+            params->spherocylinder.spec_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->spherocylinder.checkpoint_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_posit")==0) {
+            params->spherocylinder.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_spec")==0) {
+            params->spherocylinder.n_spec = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_checkpoint")==0) {
+            params->spherocylinder.n_checkpoint = jt->second.as<int>();
+          }
+          else {
+            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+          }
+        }
+      }
       else {
         std::cout << "  WARNING! Unrecognized struct parameter '" << struct_name << "'\n";
       }
