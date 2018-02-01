@@ -138,6 +138,7 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(CentrosomeSpecies,centrosome);
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(BeadSpringSpecies,bead_spring);
+  REGISTER_SPECIES(SpherocylinderSpecies,spherocylinder);
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
@@ -347,6 +348,11 @@ void Simulation::RunProcessing(int run_analyses) {
           (*it)->RunAnalysis();
         }
       }
+    }
+  }
+  if (run_analyses) {
+    for (auto it=species_.begin(); it!=species_.end(); ++it) {
+      (*it)->FinalizeAnalysis();
     }
   }
   // ClearSimulation will run CloseFiles which runs

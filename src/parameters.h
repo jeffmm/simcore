@@ -114,6 +114,15 @@ class bead_spring_parameters : public species_parameters {
     double packing_fraction = -1;
 };
 
+class spherocylinder_parameters : public species_parameters {
+  public:
+    double diameter = 1;
+    double length = 5;
+    int diffusion_analysis = 0;
+    int n_diffusion_samples = 1;
+    int midstep = 0;
+};
+
 class system_parameters {
   public:
     long seed = 7859459105545;
@@ -170,6 +179,7 @@ class system_parameters {
     centrosome_parameters centrosome;
     motor_parameters motor;
     bead_spring_parameters bead_spring;
+    spherocylinder_parameters spherocylinder;
 };
 
 #endif // _SIMCORE_PARAMETERS_H_

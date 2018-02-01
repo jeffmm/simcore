@@ -1,39 +1,37 @@
 # params.yaml
 ---
-run_name: centrosome_test_2
-seed: 6537294993817
+run_name: sphero_diffusion_test
+seed: 14063293882665
 n_runs: 1
 
 # time options
 delta: 0.0001
-n_steps: 100000000
+n_steps: 10000000
 n_steps_equil: 0
 
 # space options
 n_dim: 3
 n_periodic: 3
-boundary: 3
-
-# model options
-append_file: positioning_model.yaml
+boundary: 0
+system_radius: 5
 
 # interaction options
-interaction_flag: 1
+interaction_flag: 0
 stoch_flag: 1
 cell_length: 5
 n_update_cells: -1
 f_cutoff: 1500
 
 # graphics options
-graph_flag: 1
+graph_flag: 0
 n_graph: 10000
 draw_boundary: 1
 graph_background: 1
-movie_flag: 1
+movie_flag: 0
 movie_directory: frames
 
 # output options
-thermo_flag: 1
+thermo_flag: 0
 n_thermo: 100
 species:
   posit_flag: 1
@@ -43,4 +41,20 @@ species:
   n_spec: 100
   n_checkpoint: 10000
 
-
+# model options
+#append_file: positioning_model.yaml
+spherocylinder:
+  draw_type: orientation
+  insertion_type: random
+  num: 100
+  length: 4
+  diameter: 1
+  n_posit: 100
+  n_spec: 100
+  n_checkpoint: 10000
+  posit_flag: 1
+  spec_flag: 1
+  checkpoint_flag: 1
+  diffusion_analysis: 1
+  n_diffusion_samples: 100
+  midstep: 1
