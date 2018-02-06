@@ -1,7 +1,7 @@
 # params.yaml
 ---
 run_name: sphero_diffusion_test
-seed: 14063293882665
+seed: 298212689221
 n_runs: 1
 
 # time options
@@ -11,20 +11,19 @@ n_steps_equil: 0
 
 # space options
 n_dim: 3
-n_periodic: 3
-boundary: 0
-system_radius: 5
+n_periodic: 0
+boundary: 3
 
 # interaction options
-interaction_flag: 0
+interaction_flag: 1
 stoch_flag: 1
-cell_length: 5
+cell_length: -1
 n_update_cells: -1
 f_cutoff: 1500
 
 # graphics options
-graph_flag: 0
-n_graph: 10000
+graph_flag: 1
+n_graph: 1000
 draw_boundary: 1
 graph_background: 1
 movie_flag: 0
@@ -42,19 +41,5 @@ species:
   n_checkpoint: 10000
 
 # model options
-#append_file: positioning_model.yaml
-spherocylinder:
-  draw_type: orientation
-  insertion_type: random
-  num: 100
-  length: 4
-  diameter: 1
-  n_posit: 100
-  n_spec: 100
-  n_checkpoint: 10000
-  posit_flag: 1
-  spec_flag: 1
-  checkpoint_flag: 1
-  diffusion_analysis: 1
-  n_diffusion_samples: 100
-  midstep: 1
+append_file: add_spindle.yaml
+

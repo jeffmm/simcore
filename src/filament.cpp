@@ -322,7 +322,7 @@ void Filament::GenerateProbableOrientation() {
     new_orientation[1] = sin(theta)*sin(phi);
     new_orientation[2] = cos(theta);
   }
-  rotate_orientation_vector(n_dim_, new_orientation, orientation_);
+  rotate_vector_relative(n_dim_, new_orientation, orientation_);
   std::copy(new_orientation,new_orientation+3,orientation_);
 }
 
