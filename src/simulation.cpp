@@ -139,6 +139,7 @@ void Simulation::InitSpecies() {
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(BeadSpringSpecies,bead_spring);
   REGISTER_SPECIES(SpherocylinderSpecies,spherocylinder);
+  REGISTER_SPECIES(SpindleSpecies,spindle);
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */

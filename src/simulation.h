@@ -12,6 +12,7 @@
 #include "centrosome.h"
 #include "bead_spring.h"
 #include "spherocylinder.h"
+#include "spindle.h"
 //#include "br_bead.h"
 //#include "objects.h"
 #include "parse_flags.h"
