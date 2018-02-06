@@ -10,7 +10,7 @@
 #define ENABLE_OPENMP
 #endif
 
-BETTER_ENUM(species_id, unsigned char, br_bead, filament, centrosome, bead_spring, spherocylinder)
+BETTER_ENUM(species_id, unsigned char, br_bead, filament, centrosome, bead_spring, spherocylinder, spindle)
 BETTER_ENUM(draw_type, unsigned char, fixed, orientation, bw, none);
 BETTER_ENUM(boundary_type, unsigned char, none=0, box=1, sphere=2, budding=3);
 BETTER_ENUM(poly_state, unsigned char, grow, shrink, pause);
@@ -57,6 +57,8 @@ class Anchor {
            torque_[3],
            k_spring_,
            k_align_,
+           theta_, //euler angles
+           phi_, //euler angles
            spring_length_;
     Anchor() {
       std::fill(position_,position_+3,0.0);

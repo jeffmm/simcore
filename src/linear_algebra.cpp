@@ -34,26 +34,6 @@ void normalize_vector(double *a, int n_dim) {
   }
 }
  
-// Rotates vector a counterclockwise around a UNIT VECTOR b,
-// by an amount theta
-void rotate_3d_vector(double theta, double *a, double *b) {
-  double t[3];
-  double cos_theta = cos(theta);
-  double sin_theta = sin(theta);
-  for (int i=0; i<3; ++i) {
-    t[i] = a[i];
-  }
-  a[0] = t[0]*(b[0]*b[0]+(b[1]*b[1]+b[2]*b[2])*cos_theta)
-        +t[2]*(b[0]*b[2]*(1-cos_theta)+b[1]*sin_theta)
-        +t[1]*(b[0]*b[1]*(1-cos_theta)-b[2]*sin_theta);
-  a[1] = t[1]*(b[1]*b[1]+(b[0]*b[0]+b[2]*b[2])*cos_theta)
-        +t[2]*(b[1]*b[2]*(1-cos_theta)-b[0]*sin_theta)
-        +t[0]*(b[0]*b[1]*(1-cos_theta)+b[2]*sin_theta);
-  a[2] = t[2]*(b[2]*b[2]+(b[1]*b[1]+b[0]*b[0])*cos_theta)
-        +t[1]*(b[1]*b[2]*(1-cos_theta)+b[0]*sin_theta)
-        +t[0]*(b[0]*b[2]*(1-cos_theta)-b[1]*sin_theta); 
-}
-
 //Inverts symmetric "linear" 2D matrix
 //Input:  2x2 Matrix to be inverted (a)
 //Output: Inverted matrix ( b)
@@ -213,5 +193,49 @@ void tridiagonal_solver(std::vector<double> *a, std::vector<double> *b,
   for (int i=n; i-- >0;) 
     (*d)[i] -= (*c)[i]*(*d)[i+1];
   return;
+}
+
+/* This function rotates vector v about vector k by an angle theta.
+* Derived using rodrigues' rotation formula */
+void rotate_vector(double * v, double * k, double theta) {
+  double cos_theta = cos(theta);
+  double sin_theta = sin(theta);
+  double k_dot_v = k[0]*v[0]+k[1]*v[1]+k[2]*v[2];
+  double t[3];
+  t[0] = v[0]*cos_theta + (k[1]*v[2]-v[1]*k[2])*sin_theta + k[0]*k_dot_v*(1-cos_theta);
+  t[1] = v[1]*cos_theta + (k[2]*v[0]-k[0]*v[2])*sin_theta + k[1]*k_dot_v*(1-cos_theta);
+  t[2] = v[2]*cos_theta + (k[0]*v[1]-k[1]*v[0])*sin_theta + k[2]*k_dot_v*(1-cos_theta);
+
+  v[0]=t[0];
+  v[1]=t[1];
+  v[2]=t[2];
+}
+
+/* This function takes two unit vectors and rotates vect1 such that its relative
+* z axis is aligned with unit vector vect2. This allows the placement of an
+* orientation vector on the surface of a sphere such that it is orientated away
+* from the sphere (ie we wont have any randomly placed mts on a centrosome that
+* are pointing inward). The formulas for rotation was derived using rodrigues */
+
+void rotate_vector_relative(int n_dim, double *vect1, double *vect2) {
+  double vx, vy, vz, theta, phi;
+  vx = vect1[0];
+  vy = vect1[1];
+  if (n_dim == 3) vz = vect1[2];
+
+  // get theta, phi for vect2
+  phi = atan2(vect2[1],vect2[0]);
+  if (n_dim == 3) theta = acos(vect2[2]);
+
+  // rodrigues formula
+  if (n_dim == 3) {
+    vect1[0] = vx * cos(theta) * cos(phi) - vy * sin(phi) + vz * cos(phi) * sin(theta);
+    vect1[1] = vx * cos(theta) * sin(phi) + vy * cos(phi) + vz * sin(theta) * sin(phi);
+    vect1[2] = vz * cos(theta) - vx * sin(theta);
+  }
+  else if (n_dim==2) {
+    vect1[0] = vx * cos(phi) - vy * sin(phi);
+    vect1[1] = vx * sin(phi) + vy * cos(phi);
+  }
 }
 

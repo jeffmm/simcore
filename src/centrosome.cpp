@@ -240,7 +240,7 @@ void Centrosome::Rotate() {
     for (int i=0; i<3; ++i) 
       unit_torque[i] = torque_[i]/torque_mag;
     domega = torque_mag * delta_*gamma_rot_;
-    rotate_3d_vector(domega, orientation_, unit_torque);
+    rotate_vector(orientation_, unit_torque, domega);
   }
   normalize_vector(orientation_, n_dim_);
   // Now rotate all the attachment sites of the attached filaments
@@ -254,7 +254,7 @@ void Centrosome::Rotate() {
       r_rel[1] = sin_domega * temp[0] + cos_domega * temp[1];
     }
     else if (n_dim_ == 3) 
-      rotate_3d_vector(domega, r_rel, unit_torque);
+      rotate_vector(r_rel, unit_torque, domega);
     normalize_vector(r_rel,n_dim_);
     for (int i=0; i<n_dim_; ++i) {
       it->orientation_[i] = r_rel[i];
