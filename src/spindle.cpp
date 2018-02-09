@@ -148,23 +148,23 @@ void Spindle::ApplyForcesTorques() {
   for (anchor_iterator it=anchors_.begin(); it!=anchors_.end(); ++it) {
     // First calculate translational forces
     //double f_mag = dot_product(n_dim_, it->orientation_, it->force_);
-    //double dr[3] = {0,0,0};
+    double dr[3] = {0,0,0};
     for (int i=0; i<n_dim_; ++i) {
       //force_[i] += f_mag * it->orientation_[i];
       force_[i] += it->force_[i];
-      //dr[i] = it->orientation_[i]*anchor_distance_;
+      dr[i] = it->position_[i]-position_[i];
     }
     // Then calculate torques
-    //double i_torque[3] = {0,0,0};
-    //cross_product(dr, it->force_, i_torque, n_dim_);
-    // 3-dimensions due to torques
-    //for (int i=0; i<3; ++i) {
-      //torque_[i] += i_torque[i];
-      // And add torque from alignment potential
-      //if (alignment_potential_) {
-        //torque_[i] += it->torque_[i];
-      //}
-    //}
+    double i_torque[3] = {0,0,0};
+    cross_product(dr, it->force_, i_torque, 3);
+     //3-dimensions due to torques
+    for (int i=0; i<3; ++i) {
+      torque_[i] += i_torque[i];
+       //And add torque from alignment potential
+      if (alignment_potential_) {
+        torque_[i] += it->torque_[i];
+      }
+    }
   }
 }
 
