@@ -1,10 +1,6 @@
-#ifndef _SIMCORE_RNG_H_
-#define _SIMCORE_RNG_H_
-
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <math.h>
-#include "definitions.h"
 
 class RNG { 
   private:
@@ -36,7 +32,3 @@ class RNG {
     }
 };
 
-void generate_random_unit_vector(double * vec, int const n_dim, gsl_rng * r);
-void get_random_coordinate(double * pos, int const n_dim, double radius, boundary_type btype, gsl_rng * r);
-
-#endif
