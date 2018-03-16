@@ -9,6 +9,9 @@ void Filament::SetParameters() {
   draw_ = draw_type::_from_string(params_->filament.draw_type.c_str());
   length_ = params_->filament.length;
   persistence_length_ = params_->filament.persistence_length;
+  if (params_->filament.perlen_ratio > 0) {
+    persistence_length_ = length_ * params_->filament.perlen_ratio;
+  }
   diameter_ = params_->filament.diameter;
   // TODO JMM: add subdivisions of bonds for interactions, 
   //           should depend on cell length
@@ -16,6 +19,10 @@ void Filament::SetParameters() {
   min_length_ = params_->filament.min_length;
   max_bond_length_ = params_->filament.max_bond_length;
   min_bond_length_ = params_->filament.min_bond_length;
+  if (length_ > 0 && params_->filament.n_bonds > 0) {
+    min_bond_length_ = length_ / params_->filament.n_bonds + 1e-6;
+    max_bond_length_ = length_ / params_->filament.n_bonds - 1e-6;
+  }
   dynamic_instability_flag_ = params_->filament.dynamic_instability_flag;
   spiral_flag_ = params_->filament.spiral_flag;
   force_induced_catastrophe_flag_ = params_->filament.force_induced_catastrophe_flag;
@@ -157,11 +164,16 @@ void Filament::InsertFilament(bool force_overlap) {
       length_ = min_length_ + (max_length_-min_length_)*gsl_rng_uniform_pos(rng_.r);
     }
     //do {
-    n_bonds = 2;
+    n_bonds = floor(length_/max_bond_length_);
+    if (dynamic_instability_flag_) {
+      n_bonds = 2;
+    }
     bond_length_ = length_/n_bonds;
-    while (bond_length_ > max_bond_length_) {
-      n_bonds *= 2;
-      bond_length_ = length_/n_bonds;
+    if (dynamic_instability_flag_) {
+      while (bond_length_ > max_bond_length_) {
+        n_bonds *= 2;
+        bond_length_ = length_/n_bonds;
+      }
     }
     //if (n_bonds == 2 && bond_length_ <= diameter_) {
       //error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
@@ -828,25 +840,41 @@ void Filament::ApplyInteractionForces() {
       pure_torque[j] *= -1;
     sites_[i+1].AddForce(site_force);
     sites_[i+1].AddForce(pure_torque);
-    // Add driving (originating from the com of the bond)
     // The driving factor is a force per unit length,
     // so need to multiply by bond length to get f_dr on bond
     if (eq_steps_count_ > eq_steps_) {
-      double f_dr[3];
-      for (int j=0; j<n_dim_; ++j)
-        f_dr[j] = 0.5*u[j]*driving_factor_ * bond_length_;
-      sites_[i].AddForce(f_dr);
-      sites_[i+1].AddForce(f_dr);
+      if (params_->filament.driving_method == 0) {
+        // Add driving (originating from the com of the bond)
+        double f_dr[3];
+        for (int j=0; j<n_dim_; ++j)
+          f_dr[j] = 0.5*u[j]*driving_factor_ * bond_length_;
+        sites_[i].AddForce(f_dr);
+        sites_[i+1].AddForce(f_dr);
+      }
     }
     else if (shuffle_flag_) {
       if (gsl_rng_uniform_pos(rng_.r) < shuffle_frequency_) {
         shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*params_->filament.shuffle_factor;
       }
       double f_dr[3];
-      for (int j=0; j<n_dim_; ++j)
+      for (int j=0; j<n_dim_; ++j) {
         f_dr[j] = 0.5*u[j]*shuffle_factor_ * bond_length_;
+      }
       sites_[i].AddForce(f_dr);
       sites_[i+1].AddForce(f_dr);
+    }
+  }
+  if (params_->filament.driving_method == 1) {
+    // Add driving (originating from the site tangents)
+    CalculateTangents();
+    double mag = length_/n_sites_*driving_factor_;
+    for (int i=0; i<n_sites_; ++i) {
+      double f_dr[3];
+      double const * const u_tan = sites_[i].GetTangent();
+      for (int j=0; j<n_dim_; ++j) {
+        f_dr[j] = mag*u_tan[j];
+      }
+      sites_[i].AddForce(f_dr);
     }
   }
 }

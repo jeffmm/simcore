@@ -48,6 +48,9 @@ class filament_parameters : public species_parameters {
     int shuffle = 1;
     double shuffle_factor = 10;
     double shuffle_frequency = 0.001;
+    double perlen_ratio = -1;
+    int n_bonds = -1;
+    int driving_method = 0;
 };
 
 class hard_rod_parameters : public species_parameters {
@@ -102,11 +105,11 @@ class motor_parameters : public species_parameters {
 
 class bead_spring_parameters : public species_parameters {
   public:
-    double bond_rest_length = 0.8;
+    double persistence_length = 4000;
     double diameter = 1;
     double length = 40;
-    double persistence_length = 4000;
     double max_bond_length = 1;
+    double bond_rest_length = 0.8;
     double bond_spring = 100;
     double driving_factor = 0;
     int lp_analysis = 0;
@@ -125,11 +128,11 @@ class spherocylinder_parameters : public species_parameters {
 
 class spindle_parameters : public species_parameters {
   public:
+    int alignment_potential = 0;
     double diameter = 10;
     double length = 20;
     int n_filaments_bud = 1;
     int n_filaments_mother = 0;
-    int alignment_potential = 0;
     double k_spring = 1000;
     double k_align = 0;
     double spring_length = 0;
@@ -138,32 +141,32 @@ class spindle_parameters : public species_parameters {
 
 class system_parameters {
   public:
-    int graph_background = 1;
     long seed = 7859459105545;
     int n_runs = 1;
-    int n_dim = 3;
     int n_random = 1;
     std::string run_name = "sc";
+    int n_dim = 3;
     int n_periodic = 0;
     int boundary = 0;
     double system_radius = 100;
-    long n_steps = 1000000;
     double delta = 0.001;
+    long n_steps = 1000000;
     double cell_length = 10;
+    int movie_flag = 0;
     int n_update_cells = 0;
     int graph_flag = 0;
     int n_graph = 1000;
     double graph_diameter = 0;
-    std::string insertion_type = "species";
+    int graph_background = 1;
     int draw_boundary = 1;
     int load_checkpoint = 0;
     std::string checkpoint_run_name = "sc";
-    int movie_flag = 0;
+    std::string insertion_type = "species";
     std::string movie_directory = "frames";
-    int max_overlap = 100000;
     int time_flag = 0;
     double bud_height = 680;
     double bud_radius = 300;
+    int uniform_crystal = 0;
     double lj_epsilon = 1;
     double wca_eps = 1;
     double wca_sig = 1;
@@ -171,6 +174,7 @@ class system_parameters {
     double ss_rs = 1.5;
     double ss_eps = 1;
     double f_cutoff = 100;
+    int max_overlap = 100000;
     int constant_pressure = 0;
     int constant_volume = 0;
     double target_pressure = 0;
@@ -181,9 +185,8 @@ class system_parameters {
     int thermo_flag = 0;
     int n_thermo = 1000;
     int interaction_flag = 1;
-    int n_steps_equil = 0;
     int species_insertion_failure_threshold = 10000;
-    int uniform_crystal = 0;
+    int n_steps_equil = 0;
     species_parameters species;
     filament_parameters filament;
     hard_rod_parameters hard_rod;

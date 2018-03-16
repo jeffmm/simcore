@@ -87,6 +87,9 @@ filament:
   shuffle: [1, int]
   shuffle_factor: [10, double]
   shuffle_frequency: [0.001, double]
+  perlen_ratio: [-1, double]
+  n_bonds: [-1, int]
+  driving_method: [0, int]
 hard_rod:
   diameter: [1, double]
   length: [40, double]

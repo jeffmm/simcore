@@ -230,6 +230,16 @@ void Space::UpdateVolume() {
 
 void Space::CalculateVolume() {
   switch (boundary_._to_integral()) {
+    case 0:
+      v_ratio_ = 0;
+      neck_height_ = 0;
+      neck_radius_ = 0;
+      //FIXME This is not correct for cell lists with periodic boundary. Should not hurt calculations though, just not efficient.
+      if (n_dim_ == 2)
+        volume_ = SQR(2*radius_);
+      else
+        volume_ = CUBE(2*radius_);
+      break;
     case 1:
       v_ratio_ = 0;
       neck_height_ = 0;
