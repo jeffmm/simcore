@@ -2,7 +2,6 @@
 #include "omp.h"
 #include <iostream>
 #include <math.h>
-#include <vector>
 #include <tuple>
 
 class Simulation {
@@ -11,6 +10,7 @@ class Simulation {
     void InitRNG();
     void InitPositions();
     void CreatePairs();
+    void PrintPairs();
   public:
     void Run();
 };
