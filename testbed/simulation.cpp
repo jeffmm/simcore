@@ -8,13 +8,15 @@ void Simulation::Run() {
   InitRNG(); // Init RNGs
   printf("Initializing positions\n");
   InitPositions(); // Init object positions
-  printf("Assigning cells\n");
-  AssignCells();
-  printf("Creating pairs\n");
-  //CreatePairs();
-  CreatePairsCellList();
-  printf("Interacting\n");
-  InteractPairs();
+  for (int i=0;i<10;++i) {
+    printf("Assigning cells\n");
+    AssignCells();
+    printf("Creating pairs\n");
+    //CreatePairs();
+    CreatePairsCellList();
+    printf("Interacting\n");
+    InteractPairs();
+  }
   DeallocateCellList();
   printf("Done\n");
   //PrintPairs();
@@ -78,6 +80,21 @@ void Simulation::AssignCells() {
   {
     int tid = omp_get_thread_num();
     int n_threads = omp_get_num_threads();
+    int low = n_cells_1d*tid/n_threads;
+    int high = n_cells_1d*(tid+1)/n_threads;
+    int khigh = (NDIM==3 ? n_cells_1d : 1);
+    for (int i=low; i<high; ++i) {
+      for (int j=0;j<n_cells_1d;++j) {
+        for (int k=0; k<khigh; ++k) {
+          clist[i][j][k].objs.clear();
+        }
+      }
+    }
+  }
+#pragma omp parallel
+  {
+    int tid = omp_get_thread_num();
+    int n_threads = omp_get_num_threads();
     int low = NOBJS*tid/n_threads;
     int high = NOBJS*(tid+1)/n_threads;
     for (int i=low; i<high; ++i) {
@@ -98,6 +115,7 @@ void Simulation::AssignCells() {
 // Second attempt, pair via cell lists
 void Simulation::CreatePairsCellList() {
   std::cout << " Running on " << omp_get_max_threads() << " threads\n";
+  nlist.clear();
 #pragma omp parallel
   {
     std::vector<ix_pair> nlist_local;
