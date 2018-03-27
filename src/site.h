@@ -1,24 +1,39 @@
 #ifndef _SIMCORE_SITE_H_
 #define _SIMCORE_SITE_H_
 
-#include "species.h"
 #include "object.h"
-#include "auxiliary.h"
 
-class Site : public Simple {
-  private:
-    double tangent_[3];
-    double random_force_[3];
+class Bond; // Forward declaration
+enum directed_type {OUTGOING,INCOMING,NONE};
+typedef std::pair<Bond*,directed_type> directed_bond;
+typedef std::vector<directed_bond>::iterator db_iterator;
+
+// Sites, ie graph vertices
+class Site : public Object {
+  protected:
+    std::vector<directed_bond> bonds_;
+    double tangent_[3]; // if one or two bonds, vector tangent to bonds at site
+    double random_force_[3]; // random forces for filaments
+    int n_bonds_;
   public:
-    Site(system_parameters *params, space_struct *space, 
-        long seed, SID sid) : Simple(params, space, seed, sid) {}
-    void Init();
+    Site();
+    void AddBond(Bond * bond, directed_type dir);
+    void Report();
+    void ReportBonds();
+    Bond * GetBond(int i);
+    Bond * GetOtherBond(int bond_oid);
+    void CalcTangent();
+    void SetRandomForce(double * f_rand);
+    void AddRandomForce();
+    double const * const GetRandomForce();
+    double const * const GetTangent();
+    directed_bond GetDirectedBond(int i);
+    directed_bond GetOutgoingBond();
+    directed_bond GetOtherDirectedBond(int bond_oid);
+    void RemoveOutgoingBonds();
+    void RemoveBond(int bond_oid);
+    virtual bool HasNeighbor(int other_oid);
     void Draw(std::vector<graph_struct*> * graph_array);
-    double const * const GetTangent() {return tangent_;}
-    void SetTangent(double const * const tan) {std::copy(tan, tan+n_dim_, tangent_);}
-    void SetRandomForce(double const * const f_rand) {std::copy(f_rand, f_rand+n_dim_, random_force_);}
-    void AddRandomForce() {for (int i=0; i<n_dim_; ++i) force_[i] += random_force_[i];}
-    double const * const GetRandomForce() {return random_force_;}
 };
 
 #endif // _SIMCORE_SITE_H_

@@ -5,19 +5,19 @@
 
    output: elapsed cpu time in seconds (return value) */
 
-#include "auxiliary.h"
-
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
 #include <stdio.h>
 
-double cpu(void) {
-    struct rusage ru;
-    //int getrusage();
+namespace sc_performance {
+  double cpu_time(void) {
+      struct rusage ru;
+      //int getrusage();
 
-    (void) getrusage(RUSAGE_SELF, &ru);
+      (void) getrusage(RUSAGE_SELF, &ru);
 
-    return (ru.ru_utime.tv_sec + ru.ru_stime.tv_sec
-            + 1.0e-6 * (ru.ru_utime.tv_usec + ru.ru_stime.tv_usec));
+      return (ru.ru_utime.tv_sec + ru.ru_stime.tv_sec
+              + 1.0e-6 * (ru.ru_utime.tv_usec + ru.ru_stime.tv_usec));
+  }
 }

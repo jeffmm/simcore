@@ -1,5 +1,5 @@
-#ifndef _MACROS_H
-#define _MACROS_H
+#ifndef _MACROS_H_
+#define _MACROS_H_
 
 #define SQR(x)             ((x) * (x))
 #define CUBE(x)            ((x) * (x) * (x))
@@ -17,4 +17,4 @@
 #define DPRINTF(M, ...) do { fprintf(stdout, "" M "", ##__VA_ARGS__); } while(0)
 #endif
 
-#endif //_MACROS_H
+#endif //_MACROS_H_

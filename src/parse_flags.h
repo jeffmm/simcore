@@ -18,6 +18,7 @@ struct run_options {
   int reduce_flag = 0;
   int n_graph = 100;
   int reduce_factor = 1;
+  int blank_flag = 0;
   std::string param_file;
   std::string run_name = "sc";
 };
@@ -27,7 +28,7 @@ struct run_options {
    string array below when adding new flags. */
 
 // Define flags here
-static const int n_flags = 10;
+static const int n_flags = 11;
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
@@ -39,21 +40,23 @@ static struct option long_options[] = {
   {"posit", no_argument, 0, 'p'},
   {"load",no_argument, 0, 'l'},
   {"reduce",required_argument, 0, 'R'},
+  {"blank", no_argument, 0, 'b'},
   {0, 0, 0, 0}
 };
 
 // Descriptions for flags
 static const std::string desc[n_flags][2] = {
-  {"show this menu\n", "none"},
-  {"run program in debug mode\n", "none"},
-  {"where rname is the name of a run session (for organizing batch jobs)\n", "rname"},
-  {"where num is the number of independent runs to perform with the given parameters\n", "num"},
-  {"run graphics from posit/spec files without recording, with n_graph = ngraph\n", "ngraph"},
-  {"run simulation to make movie using spec files with same run-name\n", "none"},
+  {"show this menu", "none"},
+  {"run program in debug mode", "none"},
+  {"where rname is the name of a run session (for organizing batch jobs)", "rname"},
+  {"where num is the number of independent runs to perform with the given parameters", "num"},
+  {"run graphics from posit/spec files without recording, with n_graph = ngraph", "ngraph"},
+  {"run simulation to make movie using spec files with same run-name", "none"},
   {"run analysis on spec files with same run-name for parameter species", "none"},
-  {"use posit files for movies/analysis rather than spec files\n", "none"},
-  {"run simulation starting from checkpoint files with same run-name for parameter species\n", "none"},
-  {"reduce output file resolution by a factor of reduce_factor\n", "reduce_factor"}
+  {"use posit files for movies/analysis rather than spec files", "none"},
+  {"run simulation starting from checkpoint files with same run-name for parameter species", "none"},
+  {"reduce output file resolution by a factor of reduce_factor", "reduce_factor"},
+  {"write all necessary parameter files without running any simulations","none"}
 };
 
 
@@ -73,15 +76,16 @@ static void show_help_info(std::string progname) {
     std::cout << ", -" << (char) long_options[i].val;
     if (desc[i][1].compare("none") != 0)
       std::cout << " " << desc[i][1];
-    std::cout << ", " << desc[i][0];
+    std::cout << ", " << desc[i][0] << "\n";
   }
 }
 
 /*************************
    PARSE_OPTS
-    New flag switches should be added below,
-    as well as any information that needs to be carried forward
-    in the run_options structure defined above.
+    New flag switches should be added below, as well as any information that
+    needs to be carried forward in the run_options structure defined above.
+    You need to add a case for your flag, as well as the shorthand flag name in
+    the string in getopt_long function for the tmp variable
 **************************/
 static run_options parse_opts(int argc, char *argv[]) {
   
@@ -94,7 +98,7 @@ static run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdmaplg:r:n:R:", long_options, &option_index);
+    tmp = getopt_long(argc, argv, "hdmaplg:r:n:R:b", long_options, &option_index);
     if (tmp == -1)
       break;
     switch (tmp) {
@@ -135,6 +139,9 @@ static run_options parse_opts(int argc, char *argv[]) {
         run_opts.reduce_flag = 1;
         run_opts.reduce_factor = atoi(optarg);
         break;
+      case 'b':
+        run_opts.blank_flag = 1;
+        break;
       case '?':
         exit(1);
       default:
@@ -174,6 +181,10 @@ static run_options parse_opts(int argc, char *argv[]) {
   if (run_opts.reduce_flag) {
     printf("  Reducing output file resolution by a factor of %d\n",run_opts.reduce_factor);
   }
+  if (run_opts.blank_flag) {
+    printf("  Doing a blank run -- generating parameter files without running simulation.");
+  }
+  putchar('\n');
   return run_opts;
 }
 

@@ -29,3 +29,4 @@ sc-*
 results
 octave-workspace
 nohup.out
+*.tar.gz

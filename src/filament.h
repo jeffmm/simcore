@@ -1,21 +1,18 @@
 #ifndef _SIMCORE_FILAMENT_H_
 #define _SIMCORE_FILAMENT_H_
 
-#include "site.h"
-#include "bond.h"
 #include "species.h"
-#include "auxiliary.h"
-#include <yaml-cpp/yaml.h>
+#include "mesh.h"
+#include "motor.h"
+
 #ifdef ENABLE_OPENMP
 #include "omp.h"
 #endif
 
-class Filament : public Composite<Site,Bond> {
+class Filament : public Mesh {
 
   private:
-    int n_bonds_,
-        n_sites_,
-        dynamic_instability_flag_,
+    int dynamic_instability_flag_,
         force_induced_catastrophe_flag_,
         theta_validation_run_flag_,
         diffusion_validation_run_flag_,
@@ -23,12 +20,15 @@ class Filament : public Composite<Site,Bond> {
         shuffle_flag_,
         stoch_flag_,
         metric_forces_,
+        // TEMPORARY FIXME
+        n_step_ = 0,
+        n_motors_bound_,
         eq_steps_,
         eq_steps_count_ = 0;
     double max_length_,
            min_length_,
-           max_child_length_,
-           child_length_,
+           max_bond_length_,
+           min_bond_length_,
            persistence_length_,
            friction_ratio_, // friction_par/friction_perp
            friction_par_,
@@ -44,6 +44,12 @@ class Filament : public Composite<Site,Bond> {
            p_g2s_,
            p_g2p_,
            driving_factor_,
+           fic_factor_,
+           // TEMPORARY FIXME
+           motor_velocity_,
+           k_on_,
+           k_off_,
+           motor_concentration_,
            shuffle_factor_,
            shuffle_frequency_,
            tip_force_;
@@ -60,46 +66,56 @@ class Filament : public Composite<Site,Bond> {
                         h_mat_upper_, //n_sites-2
                         h_mat_lower_, //n_sites-2
                         cos_thetas_;
-    poly_state_t poly_state_;
+    poly_state poly_;
     void UpdateSiteBondPositions();
     void SetDiffusion();
     void GenerateProbableOrientation();
-    void CalculateAngles();
+    void CalculateAngles(bool rescale=true);
     void CalculateTangents();
-    void UpdatePrevPositions();
     void AddRandomForces();
     void ConstructUnprojectedRandomForces();
     void GeometricallyProjectRandomForces();
     void CalculateBendingForces();
     void CalculateTensions();
-    void UpdateSitePositions(bool midstep);
-    void UpdateBondPositions();
+    void UpdateSitePositions();
+    void UpdateSiteOrientations();
     void ApplyForcesTorques();
-    void SetParameters(system_parameters *params);
-    void InitElements(system_parameters *params, space_struct *space);
+    void ApplyAnchorForces(); // FIXME temporary
+    void ApplyInteractionForces();
+    void SetParameters();
+    void InitElements();
+    void InsertFilament(bool force_overlap=false);
+    void InsertFirstBond();
     void UpdateAvgPosition();
+    void DynamicInstability();
+    void UpdatePolyState();
+    void GrowFilament();
+    void RescaleBonds();
     void InitSpiral2D();
+    void ReportAll();
+    std::vector<Motor> motors_; //FIXME temporary
+    Anchor * anchor_; //FIXME temporary? 
+    void UnbindMotor();
+    void BindMotor();
+    void CalculateBinding();
+    void RebindMotors();
     bool CheckBondLengths();
-    void DumpAll();
 
   public:
-    Filament(system_parameters *params, space_struct * space, 
-        long seed, SID sid) : Composite(params, space, seed, sid) {
-      SetParameters(params);
-      InitElements(params, space);
-    }
-    virtual void Init();
+    Filament();
+    virtual void Init(bool force_overlap = false);
     virtual void InsertAt(double *pos, double *u);
-    void DiffusionValidationInit();
-    virtual void Integrate(bool midstep);
-    virtual double const * const GetDrTot();
+    virtual void SetAnchor(Anchor * a);
+    virtual bool CheckBounds(double buffer = 0);
+    //void DiffusionValidationInit();
+    virtual void Integrate();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePosition() {}
     virtual void UpdatePosition(bool midstep);
     double const GetLength() { return length_;}
     double const GetDriving() {return driving_factor_;}
     double const GetPersistenceLength() {return persistence_length_;}
-    double const GetChildLength() {return child_length_;}
+    double const GetBondLength() {return bond_length_;}
     int const GetNBonds() {return n_bonds_;}
     void GetAvgOrientation(double * au);
     void GetAvgPosition(double * ap);
@@ -107,13 +123,22 @@ class Filament : public Composite<Site,Bond> {
       return &cos_thetas_;
     }
     double GetTipZ() {
-      return elements_[n_sites_-1].GetOrientation()[n_dim_-1];
+      return sites_[n_sites_-1].GetOrientation()[n_dim_-1];
     }
-    double const * const GetHeadPos() {
-      return elements_[n_sites_-1].GetPosition();
+    double const * const GetHeadPosition() {
+      return sites_[n_sites_-1].GetPosition();
     }
-    double const * const GetTailPos() {
-      return elements_[0].GetPosition();
+    double const * const GetTailPosition() {
+      return sites_[0].GetPosition();
+    }
+    double const * const GetTailOrientation() {
+      return sites_[0].GetOrientation();
+    }
+    void AddTorqueTail(double * t) {
+      bonds_[0].AddTorque(t);
+    }
+    void AddForceTail(double *f) {
+      sites_[0].AddForce(f);
     }
     void WritePosit(std::fstream &oposit);
     void ReadPosit(std::fstream &iposit);
@@ -122,7 +147,11 @@ class Filament : public Composite<Site,Bond> {
     void WriteCheckpoint(std::fstream &ocheck);
     void ReadCheckpoint(std::fstream &icheck);
     void ScalePosition();
+    double const GetVolume();
 };
+
+typedef std::vector<Filament>::iterator filament_iterator;
+typedef std::vector<std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator> > filament_chunk_vector;
 
 class FilamentSpecies : public Species<Filament> {
   protected:
@@ -141,7 +170,7 @@ class FilamentSpecies : public Species<Filament> {
                  mse2e_file_;
   public:
     FilamentSpecies() : Species() {
-      SetSID(SID::filament);
+      SetSID(species_id::filament);
       midstep_ = true;
     }
     void Init(system_parameters *params, space_struct *space, long seed) {
@@ -175,12 +204,12 @@ class FilamentSpecies : public Species<Filament> {
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();
-      std::vector<std::pair<std::vector<Filament*>::iterator, std::vector<Filament*>::iterator> > chunks;
+      filament_chunk_vector chunks;
       chunks.reserve(max_threads); 
       size_t chunk_size= members_.size() / max_threads;
-      auto cur_iter = members_.begin();
+      filament_iterator cur_iter = members_.begin();
       for(int i = 0; i < max_threads - 1; ++i) {
-        auto last_iter = cur_iter;
+        filament_iterator last_iter = cur_iter;
         std::advance(cur_iter, chunk_size);
         chunks.push_back(std::make_pair(last_iter, cur_iter));
       }
@@ -191,11 +220,11 @@ class FilamentSpecies : public Species<Filament> {
 #pragma omp for 
         for(int i = 0; i < max_threads; ++i)
           for(auto it = chunks[i].first; it != chunks[i].second; ++it)
-            (*it)->UpdatePosition(midstep_);
+            it->UpdatePosition(midstep_);
       }
 #else
-      for (auto it=members_.begin(); it!=members_.end(); ++it) 
-        (*it)->UpdatePosition(midstep_);
+      for (filament_iterator it=members_.begin(); it!=members_.end(); ++it) 
+        it->UpdatePosition(midstep_);
 #endif
 
       midstep_ = !midstep_;

@@ -1,203 +1,255 @@
-#include <iostream>
-#include <iomanip>
 #include "filament.h"
 
-void Filament::SetParameters(system_parameters *params) {
-  color_ = params->filament.color;
-  draw_type_ = DrawTypeInt(params->filament.draw_type);
-  length_ = params->filament.length;
-  persistence_length_ = params->filament.persistence_length;
-  diameter_ = params->filament.diameter;
+Filament::Filament() : Mesh() {
+  SetParameters();
+} 
+
+void Filament::SetParameters() {
+  color_ = params_->filament.color;
+  draw_ = draw_type::_from_string(params_->filament.draw_type.c_str());
+  length_ = params_->filament.length;
+  persistence_length_ = params_->filament.persistence_length;
+  if (params_->filament.perlen_ratio > 0) {
+    persistence_length_ = length_ * params_->filament.perlen_ratio;
+  }
+  diameter_ = params_->filament.diameter;
   // TODO JMM: add subdivisions of bonds for interactions, 
   //           should depend on cell length
-  max_length_ = params->filament.max_length;
-  min_length_ = params->filament.min_length;
-  max_child_length_ = params->filament.max_child_length;
-  dynamic_instability_flag_ = params->filament.dynamic_instability_flag;
-  spiral_flag_ = params->filament.spiral_flag;
-  force_induced_catastrophe_flag_ = params->filament.force_induced_catastrophe_flag;
-  p_g2s_ = params->filament.f_grow_to_shrink*delta_;
-  p_g2p_ = params->filament.f_grow_to_pause*delta_;
-  p_s2p_ = params->filament.f_shrink_to_pause*delta_;
-  p_s2g_ = params->filament.f_shrink_to_grow*delta_;
-  p_p2s_ = params->filament.f_pause_to_shrink*delta_;
-  p_p2g_ = params->filament.f_pause_to_grow*delta_;
-  v_depoly_ = params->filament.v_depoly;
-  v_poly_ = params->filament.v_poly;
-  driving_factor_ = params->filament.driving_factor;
-  friction_ratio_ = params->filament.friction_ratio;
-  metric_forces_ = params->filament.metric_forces;
-  stoch_flag_ = params->stoch_flag; // determines whether we are using stochastic forces
-  eq_steps_ = params->n_steps_equil;
+  max_length_ = params_->filament.max_length;
+  min_length_ = params_->filament.min_length;
+  max_bond_length_ = params_->filament.max_bond_length;
+  min_bond_length_ = params_->filament.min_bond_length;
+  if (length_ > 0 && params_->filament.n_bonds > 0) {
+    min_bond_length_ = length_ / params_->filament.n_bonds + 1e-6;
+    max_bond_length_ = length_ / params_->filament.n_bonds - 1e-6;
+  }
+  dynamic_instability_flag_ = params_->filament.dynamic_instability_flag;
+  spiral_flag_ = params_->filament.spiral_flag;
+  force_induced_catastrophe_flag_ = params_->filament.force_induced_catastrophe_flag;
+  p_g2s_ = params_->filament.f_grow_to_shrink*delta_;
+  p_g2p_ = params_->filament.f_grow_to_pause*delta_;
+  p_s2p_ = params_->filament.f_shrink_to_pause*delta_;
+  p_s2g_ = params_->filament.f_shrink_to_grow*delta_;
+  p_p2s_ = params_->filament.f_pause_to_shrink*delta_;
+  p_p2g_ = params_->filament.f_pause_to_grow*delta_;
+  v_depoly_ = params_->filament.v_depoly;
+  v_poly_ = params_->filament.v_poly;
+  driving_factor_ = params_->filament.driving_factor;
+  friction_ratio_ = params_->filament.friction_ratio;
+  metric_forces_ = params_->filament.metric_forces;
+  stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
+  eq_steps_ = params_->n_steps_equil;
   eq_steps_count_ = 0;
-  shuffle_flag_ = params->filament.shuffle;
-  shuffle_factor_ = params->filament.shuffle_factor;
-  shuffle_frequency_ = params->filament.shuffle_frequency;
+  fic_factor_ = params_->filament.fic_factor;
+  tip_force_ = 0.0;
+  k_off_ = params_->motor.k_off;
+  k_on_ = params_->motor.k_on;
+  motor_concentration_ = params_->motor.concentration;
+  n_motors_bound_ = 0;
+  shuffle_flag_ = params_->filament.shuffle;
+  shuffle_factor_ = params_->filament.shuffle_factor;
+  shuffle_frequency_ = params_->filament.shuffle_frequency;
 }
 
-void Filament::InitElements(system_parameters *params, space_struct *space) {
-  child_length_ = 0;
-  do {
-    n_bonds_ = (int) ceil(length_/max_child_length_);
-    if (n_bonds_ < 2) 
-      n_bonds_++;
-    n_sites_ = n_bonds_+1;
-    child_length_ = length_/n_bonds_;
-    if (n_bonds_ == 2 && child_length_ <= diameter_) {
-      error_exit("child_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
-    }
-    if (child_length_ <= diameter_) {
-      max_child_length_ += 0.1*max_child_length_;
-      warning("child_length <= diameter, increasing max_child_length to %2.2f",max_child_length_);
-    }
-  } while (child_length_ <= diameter_);
-  if (length_/n_bonds_ < min_length_) {
-    error_exit("min_length_ of flexible filament segments too large for filament length.");
-  }
-  // Initialize sites
-  for (int i=0; i<n_sites_; ++i) {
-    Site s(params, space, gsl_rng_get(rng_.r), GetSID());
-    s.SetCID(GetCID());
-    elements_.push_back(s);
-  }
-  // Initialize bonds
-  for (int i=0; i<n_bonds_; ++i) {
-    Bond b(params, space, gsl_rng_get(rng_.r), GetSID());
-    b.InitRID();
-    b.SetCID(b.GetRID());
-    //b.SetCID(GetCID());
-    //b.SetRID(GetCID());
-    v_elements_.push_back(b);
-  }
-  // Hack CIDs and RIDs to Set up interaction zones
-  for (int i=1; i<n_bonds_-1; ++i) {
-    if (i%2==0) 
-      v_elements_[i].SetRID(v_elements_[i-1].GetRID());
-    else
-      v_elements_[i].SetCID(v_elements_[i-1].GetCID());
-  }
-  v_elements_[n_bonds_-1].SetCID(v_elements_[n_bonds_-2].GetCID());
-  v_elements_[n_bonds_-1].SetRID(v_elements_[n_bonds_-2].GetRID());
-
-  
-  //Allocate control structures
-  tensions_.resize(n_sites_-1); //max_sites -1
-  g_mat_lower_.resize(n_sites_-2); //max_sites-2
-  g_mat_upper_.resize(n_sites_-2); //max_sites-2
-  g_mat_diag_.resize(n_sites_-1); //max_sites-1
-  det_t_mat_.resize(n_sites_+1); //max_sites+1
-  det_b_mat_.resize(n_sites_+1); //max_sites+1
-  g_mat_inverse_.resize(n_sites_-2); //max_sites-2
-  k_eff_.resize(n_sites_-2); //max_sites-2
-  h_mat_diag_.resize(n_sites_-1); //max_sites-1
-  h_mat_upper_.resize(n_sites_-2); //max_sites-2
-  h_mat_lower_.resize(n_sites_-2); //max_sites-2
-  gamma_inverse_.resize(n_sites_*n_dim_*n_dim_); //max_sites*ndim*ndim
-  cos_thetas_.resize(n_sites_-2); //max_sites-2
+void Filament::SetAnchor(Anchor * a) {
+  anchor_ = a;
+  anchored_ = true;
 }
 
-void Filament::Init() {
+bool Filament::CheckBounds(double buffer) {
+  for (auto site=sites_.begin();site!=sites_.end(); ++site) {
+    if (site->CheckBounds()) return true;
+  }
+  return false;
+}
+
+void Filament::Init(bool force_overlap) {
+  InitElements();
+  InsertFilament(force_overlap);
   if (spiral_flag_) {
     InitSpiral2D();
     return;
   }
-  bool probable_conformation = false;
-  if (params_->filament.insertion_type.compare("random")==0) {
-    InsertRandom();
-    probable_conformation = true;
-  }
-  else if(params_->filament.insertion_type.compare("random_oriented")==0) {
-    InsertRandom();
-    std::fill(orientation_,orientation_+3,0.0);
-    if (gsl_rng_uniform_pos(rng_.r) > 0.5) {
-      orientation_[n_dim_-1]=1.0;
-    }
-    else {
-      orientation_[n_dim_-1]=-1.0;
-    }
-    probable_conformation = false;
-  }
-  else if(params_->filament.insertion_type.compare("centered_random")==0) {
-    InsertRandom();
-    std::fill(position_,position_+3,0.0);
-    for (int i=0;i<n_dim_; ++i) {
-      position_[i] = position_[i] - 0.5*length_*orientation_[i];
-    }
-    probable_conformation = true;
-  }
-  else if(params_->filament.insertion_type.compare("centered_oriented")==0) {
-    InsertRandom();
-    std::fill(position_,position_+3,0.0);
-    std::fill(orientation_,orientation_+3,0.0);
-    orientation_[n_dim_-1]=1.0;
-    for (int i=0;i<n_dim_; ++i) {
-      position_[i] = position_[i] - 0.5*length_*orientation_[i];
-    }
-    // We still want to sample probable conformations
-    probable_conformation = false; 
-  }
-  else if (params_->filament.insertion_type.compare("simple_crystal")==0) {
-    probable_conformation = false;
-  }
-  else {
-    error_exit("Insertion type not recognized for filaments. Exiting.");
-  }
-  //generate_random_unit_vector(n_dim_, orientation_, rng_.r);
-  for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
-    site->SetDiameter(diameter_);
-    site->SetLength(child_length_);
-    site->SetPosition(position_);
-    site->SetOrientation(orientation_);
-    for (int i=0; i<n_dim_; ++i)
-      position_[i] = position_[i] + orientation_[i] * child_length_;
-    if (probable_conformation)
-      GenerateProbableOrientation();
-  }
   UpdatePrevPositions();
   CalculateAngles();
-  UpdateBondPositions();
   SetDiffusion();
-  poly_state_ = GROW;
+  poly_ = poly_state::grow;
+}
+
+void Filament::InitElements() {
+  int n_bonds;
+  if (max_length_ < min_length_) {
+    warning("Minimum filament length larger than max length -- setting min_length = max_length");
+    min_length_ = max_length_;
+  }
+  if (length_ > max_length_) {
+    warning("Filament length larger than max length -- setting length = max_length");
+    length_ = max_length_;
+  }
+  else if (length_ > 0 && length_ < min_length_) {
+    warning("Filament length less than min length -- setting length = min_length");
+    length_ = min_length_;
+  }
+  int max_bonds = (int) ceil(max_length_/min_bond_length_);
+  n_bonds_max_ = 2;
+  while (n_bonds_max_ < max_bonds) {
+    n_bonds_max_*=2;
+  }
+
+  //if (max_length_/n_bonds_max_ < min_bond_length_) {
+    //error_exit("min_length_ of flexible filament bonds too large for filament length.");
+  //}
+  // Initialize mesh
+  Reserve(n_bonds_max_);
+  //Allocate control structures
+  int n_sites_max = n_bonds_max_+1;
+  tensions_.resize(n_sites_max-1); //max_sites -1
+  g_mat_lower_.resize(n_sites_max-2); //max_sites-2
+  g_mat_upper_.resize(n_sites_max-2); //max_sites-2
+  g_mat_diag_.resize(n_sites_max-1); //max_sites-1
+  det_t_mat_.resize(n_sites_max+1); //max_sites+1
+  det_b_mat_.resize(n_sites_max+1); //max_sites+1
+  g_mat_inverse_.resize(n_sites_max-2); //max_sites-2
+  k_eff_.resize(n_sites_max-2); //max_sites-2
+  h_mat_diag_.resize(n_sites_max-1); //max_sites-1
+  h_mat_upper_.resize(n_sites_max-2); //max_sites-2
+  h_mat_lower_.resize(n_sites_max-2); //max_sites-2
+  gamma_inverse_.resize(n_sites_max*n_dim_*n_dim_); //max_sites*ndim*ndim
+  cos_thetas_.resize(n_sites_max-2); //max_sites-2
+}
+
+void Filament::InsertFirstBond() {
+  if (anchored_) {
+    InitSiteAt(anchor_->position_,diameter_);
+    std::copy(anchor_->orientation_,anchor_->orientation_+3,orientation_);
+    GenerateProbableOrientation();
+    AddBondToTip(orientation_,bond_length_);
+  }
+  else if (params_->filament.insertion_type.compare("random") == 0) {
+    InitRandomSite(diameter_);
+    AddRandomBondToTip(bond_length_);
+  }
+  else if (params_->filament.insertion_type.compare("random_oriented") == 0) {
+    InitRandomSite(diameter_);
+    std::fill(orientation_,orientation_+3,0.0);
+    orientation_[n_dim_-1] = (gsl_rng_uniform_pos(rng_.r) > 0.5 ? 1.0 : -1.0);
+    AddBondToTip(orientation_, bond_length_);
+  }
+  else if (params_->filament.insertion_type.compare("centered_oriented") == 0) {
+    std::fill(position_,position_+3,0.0);
+    position_[n_dim_-1] = -0.5*length_;
+    InitSiteAt(position_,diameter_);
+    std::fill(orientation_,orientation_+3,0.0);
+    orientation_[n_dim_-1] = 1.0;
+    AddBondToTip(orientation_, bond_length_);
+  }
+  else if (params_->filament.insertion_type.compare("centered_random") == 0) {
+    generate_random_unit_vector(n_dim_,orientation_,rng_.r);
+    for (int i=0;i<n_dim_;++i) {
+      position_[i] = - 0.5*length_*orientation_[i];
+    }
+    InitSiteAt(position_,diameter_);
+    AddBondToTip(orientation_, bond_length_);
+  }
+}
+
+void Filament::InsertFilament(bool force_overlap) {
+  bool out_of_bounds = true;
+  int n_bonds;
+  bool polydisperse = (length_<=0);
+  do {
+    out_of_bounds = false;
+    // Polydisperse filaments
+    if (polydisperse) {
+      length_ = min_length_ + (max_length_-min_length_)*gsl_rng_uniform_pos(rng_.r);
+    }
+    //do {
+    n_bonds = floor(length_/max_bond_length_);
+    if (dynamic_instability_flag_) {
+      n_bonds = 2;
+    }
+    bond_length_ = length_/n_bonds;
+    if (dynamic_instability_flag_) {
+      while (bond_length_ > max_bond_length_) {
+        n_bonds *= 2;
+        bond_length_ = length_/n_bonds;
+      }
+    }
+    //if (n_bonds == 2 && bond_length_ <= diameter_) {
+      //error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
+    //}
+      //if (bond_length_ <= diameter_) {
+        //max_bond_length_ += 0.1*max_bond_length_;
+        //warning("bond_length <= diameter, increasing max_bond_length to %2.2f",max_bond_length_);
+      //}
+    //} while (bond_length_ <= diameter_);
+    Clear();
+    InsertFirstBond();
+    if (!force_overlap && (out_of_bounds = sites_[n_sites_-1].CheckBounds())) continue;
+    SetOrientation(bonds_[n_bonds_-1].GetOrientation());
+    bool probable_orientation = (params_->filament.insertion_type.compare("simple_crystal") != 0 && params_->filament.insertion_type.compare("random_oriented") != 0);
+    for (int i=0;i<n_bonds-1;++i) {
+      if (probable_orientation) {
+        GenerateProbableOrientation();
+      }
+      AddBondToTip(orientation_, bond_length_);
+      if (!force_overlap && (out_of_bounds = sites_[n_sites_-1].CheckBounds())) break;
+    }
+  } while (out_of_bounds);
+  for (bond_iterator bond=bonds_.begin(); bond!=bonds_.end(); ++bond) {
+    bond->SetColor(color_,draw_);
+  }
+  UpdateBondPositions();
+  UpdateSiteOrientations();
   shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*shuffle_factor_;
 }
 
 void Filament::InsertAt(double *pos, double *u) {
-  std::copy(pos, pos+3,position_);
+  int n_bonds;
+  bool polydisperse = (length_<=0);
+  if (polydisperse) {
+    length_ = min_length_ + (max_length_-min_length_)*gsl_rng_uniform_pos(rng_.r);
+  }
+  do {
+    n_bonds = 2;
+    bond_length_ = length_/n_bonds;
+    while (bond_length_ > max_bond_length_) {
+      n_bonds *= 2;
+      bond_length_ = length_/n_bonds;
+    }
+    if (n_bonds == 2 && bond_length_ <= diameter_) {
+      error_exit("bond_length <= diameter despite minimum number of bonds.\nTry reducing filament diameter or increasing filament length.");
+    }
+    if (bond_length_ <= diameter_) {
+      max_bond_length_ += 0.1*max_bond_length_;
+      warning("bond_length <= diameter, increasing max_bond_length to %2.2f",max_bond_length_);
+    }
+  } while (bond_length_ <= diameter_);
+  for (int i=0;i<n_dim_; ++i) {
+    position_[i] = pos[i] - 0.5*length_*u[i];
+  }
+  InitSiteAt(position_,diameter_);
   std::copy(u,u+3,orientation_);
-  for (int i=0; i<n_dim_; ++i) {
-    position_[i] = position_[i] - 0.5*orientation_[i]*length_;
+  AddBondToTip(orientation_, bond_length_);
+  if (sites_[n_sites_-1].CheckBounds()) {
+    error_exit("Filament inserted manually out of bounds.");
   }
-  for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
-    site->SetPosition(position_);
-    site->SetOrientation(orientation_);
-    for (int i=0; i<n_dim_; ++i)
-      position_[i] = position_[i] + orientation_[i] * child_length_;
+  SetOrientation(bonds_[n_bonds_-1].GetOrientation());
+  for (int i=0;i<n_bonds-1;++i) {
+    if (params_->filament.insertion_type.compare("simple_crystal") != 0) {
+      GenerateProbableOrientation();
+    }
+    AddBondToTip(orientation_, bond_length_);
+    if (sites_[n_sites_-1].CheckBounds()) {
+      error_exit("Filament inserted manually out of bounds.");
+    }
   }
+  UpdateBondPositions();
+  UpdateSiteOrientations();
   UpdatePrevPositions();
   CalculateAngles();
-  UpdateBondPositions();
-}
-
-void Filament::DiffusionValidationInit() {
-  for (int i=0; i<3; ++i) {
-    position_[i] = 0.0;
-    orientation_[i] = 0.0;
-  }
-  position_[n_dim_-1] = -0.5*length_;
-  orientation_[n_dim_-1] = 1.0;
-  for (auto site=elements_.begin(); site!=elements_.end(); ++site) {
-    site->SetDiameter(diameter_);
-    site->SetLength(child_length_);
-    site->SetPosition(position_);
-    site->SetOrientation(orientation_);
-    for (int i=0; i<n_dim_; ++i)
-      position_[i] = position_[i] + orientation_[i] * child_length_;
-  }
-  UpdatePrevPositions();
-  CalculateAngles();
-  UpdateBondPositions();
   SetDiffusion();
-  poly_state_ = GROW;
+  poly_ = poly_state::grow;
 }
 
 // Place a spool centered at the origin
@@ -206,41 +258,42 @@ void Filament::InitSpiral2D() {
     error_exit("3D Spirals not coded yet.");
   double prev_pos[3] = {0, 0, 0};
   std::fill(position_, position_+3, 0);
-  elements_[n_sites_-1].SetPosition(prev_pos);
-  for (auto site=elements_.begin(); site!= elements_.end(); ++site) {
+  sites_[n_sites_-1].SetPosition(prev_pos);
+  for (auto site=sites_.begin(); site!= sites_.end(); ++site) {
     site->SetDiameter(diameter_);
-    site->SetLength(child_length_);
+    site->SetLength(bond_length_);
   }
   double step = diameter_ / M_PI;
-  double theta = child_length_ / step;
+  double theta = bond_length_ / step;
   for (int i=2; i<n_sites_+1; ++i) {
     double move = step*theta;
     double angle = theta + 2*M_PI;
     position_[0] = move * cos(angle);
     position_[1] = move * sin(angle);
-    theta += child_length_ / move;
+    theta += bond_length_ / move;
     // Set current site position and orientation
-    elements_[n_sites_-i].SetPosition(position_);
+    sites_[n_sites_-i].SetPosition(position_);
     for (int j=0; j<3; ++j) {
-      orientation_[j] = (prev_pos[j] - position_[j])/child_length_;
+      orientation_[j] = (prev_pos[j] - position_[j])/bond_length_;
       prev_pos[j] = position_[j];
     }
-    elements_[n_sites_-i].SetOrientation(orientation_);
+    sites_[n_sites_-i].SetOrientation(orientation_);
   }
   // Set last site orientation
-  elements_[n_sites_-1].SetOrientation(elements_[n_sites_-2].GetOrientation());
+  sites_[n_sites_-1].SetOrientation(sites_[n_sites_-2].GetOrientation());
   // Init usual suspects
   UpdatePrevPositions();
   CalculateAngles();
   UpdateBondPositions();
+  UpdateSiteOrientations();
   SetDiffusion();
-  poly_state_ = GROW;
+  poly_ = poly_state::grow;
 }
 
 void Filament::SetDiffusion() {
   double logLD = log(length_/diameter_);
   //double gamma_0 = 4.0/3.0*eps*((1+0.64*eps)/(1-1.15*eps) + 1.659 * SQR(eps));
-  //friction_perp_ = child_length_ * gamma_0;
+  //friction_perp_ = bond_length_ * gamma_0;
   friction_perp_ = 4.0*length_/(3.0*n_sites_*logLD);
   friction_par_ = friction_perp_ / friction_ratio_;
   rand_sigma_perp_ = sqrt(24.0*friction_perp_/delta_);
@@ -260,14 +313,14 @@ void Filament::GenerateProbableOrientation() {
   }
   else if (persistence_length_ < 100) {
     theta = gsl_rng_uniform_pos(rng_.r) * M_PI;
-    theta = acos( log( exp(-persistence_length_/child_length_) + 
-          2.0*gsl_rng_uniform_pos(rng_.r)*sinh(persistence_length_/child_length_) ) 
-        / (persistence_length_/child_length_) );
+    theta = acos( log( exp(-persistence_length_/bond_length_) + 
+          2.0*gsl_rng_uniform_pos(rng_.r)*sinh(persistence_length_/bond_length_) ) 
+        / (persistence_length_/bond_length_) );
   }
   else {
     theta = acos( (log( 2.0*gsl_rng_uniform_pos(rng_.r)) - 
-          log(2.0) + persistence_length_/child_length_)
-        /(persistence_length_/child_length_) );
+          log(2.0) + persistence_length_/bond_length_)
+        /(persistence_length_/bond_length_) );
   }
   double new_orientation[3] = {0, 0, 0};
   if (n_dim_==2) {
@@ -281,14 +334,32 @@ void Filament::GenerateProbableOrientation() {
     new_orientation[1] = sin(theta)*sin(phi);
     new_orientation[2] = cos(theta);
   }
-  rotate_orientation_vector(n_dim_, new_orientation, orientation_);
+  rotate_vector_relative(n_dim_, new_orientation, orientation_);
   std::copy(new_orientation,new_orientation+3,orientation_);
 }
 
+double const Filament::GetVolume() {
+  if (n_dim_ == 2) {
+    return diameter_*length_ + 0.25*M_PI*diameter_*diameter_;
+  }
+  if (n_dim_ == 3) {
+    return 0.25*M_PI*diameter_*diameter_*length_ + 1.0/6.0 * M_PI * diameter_*diameter_*diameter_;
+  }
+}
+
 void Filament::UpdatePosition(bool midstep) {
+  midstep_ = midstep;
+  if (!midstep_) {
+    CalculateBinding();
+    for (auto it=motors_.begin(); it!= motors_.end(); ++it) {
+      it->UpdatePosition();
+    }
+  }
   ApplyForcesTorques();
-  Integrate(midstep);
+  Integrate();
+  // FIXME temporary
   UpdateAvgPosition();
+  DynamicInstability();
   eq_steps_count_++;
 }
 
@@ -296,10 +367,10 @@ void Filament::UpdatePosition(bool midstep) {
   BD algorithm for inextensible wormlike chains with anisotropic friction
   Montesi, Morse, Pasquali. J Chem Phys 122, 084903 (2005).
 ********************************************************************************/
-void Filament::Integrate(bool midstep) {
+void Filament::Integrate() {
   CalculateAngles();
   CalculateTangents();
-  if (midstep) {
+  if (midstep_) {
     ConstructUnprojectedRandomForces();
     GeometricallyProjectRandomForces();
     UpdatePrevPositions();
@@ -307,17 +378,68 @@ void Filament::Integrate(bool midstep) {
   AddRandomForces();
   CalculateBendingForces();
   CalculateTensions();
-  UpdateSitePositions(midstep);
+  UpdateSitePositions();
   UpdateBondPositions();
+  UpdateSiteOrientations();
 }
 
-void Filament::CalculateAngles() {
+//  FIXME move this out of filament!
+void Filament::CalculateBinding() {
+  if (++n_step_ % 100 != 0) return;
+  double vol = GetVolume();
+  // Check motor unbinding
+  if (gsl_rng_uniform_pos(rng_.r) <= k_off_*n_motors_bound_*100*delta_) {
+    UnbindMotor();
+  }
+  // Check motor binding
+  if (gsl_rng_uniform_pos(rng_.r) <= motor_concentration_*vol*k_on_*100*delta_) {
+    BindMotor();
+  }
+}
+
+void Filament::BindMotor() {
+  Motor m;
+  motors_.push_back(m);
+  motors_.back().Init();
+  int i_bond = gsl_rng_uniform_int(rng_.r,n_bonds_);
+  motors_.back().AttachBondRandom(&bonds_[i_bond],i_bond*bond_length_);
+  n_motors_bound_++;
+  motor_concentration_ -= 1.0/space_->volume;
+}
+
+void Filament::UnbindMotor() {
+  int i_motor = gsl_rng_uniform_int(rng_.r,n_motors_bound_);
+  motors_.erase(motors_.begin()+i_motor);
+  n_motors_bound_--;
+  motor_concentration_ += 1.0/space_->volume;
+}
+
+void Filament::UpdateSiteOrientations() {
+  for (int i=0; i<n_sites_-1; ++i) {
+    sites_[i].SetOrientation(bonds_[i].GetOrientation());
+  }
+  sites_[n_sites_-1].SetOrientation(bonds_[n_bonds_-1].GetOrientation());
+}
+
+void Filament::CalculateAngles(bool rescale) {
   double cos_angle, angle_sum = 0;
+  bool sharp_angle = false;
   for (int i_site=0; i_site<n_sites_-2; ++i_site) {
-    double const * const u1 = elements_[i_site].GetOrientation();
-    double const * const u2 = elements_[i_site+1].GetOrientation();
+    double const * const u1 = sites_[i_site].GetOrientation();
+    double const * const u2 = sites_[i_site+1].GetOrientation();
     cos_angle = dot_product(n_dim_, u1, u2);
     cos_thetas_[i_site] = cos_angle;
+    //if (cos_angle <= 0 && dynamic_instability_flag_) {
+      //printf("\ncos_angle: %2.2f\n",cos_angle);
+      //printf("i_site/n_sites: %d/%d\n",i_site,n_sites_);
+      //ReportSites();
+      //error_exit("Acute angle between adjoining bonds detected with dynamic instabiliy on.\n \
+          //Increase persistence length or turn off dynamic instability for floppy filaments\n");
+    //}
+    // FIXME
+    //if (cos_angle < 0.7 && dynamic_instability_flag_) {
+      //sharp_angle = true;
+    //}
     if (spiral_flag_) {
       angle_sum += acos(cos_angle);
     }
@@ -327,25 +449,19 @@ void Filament::CalculateAngles() {
     early_exit = true; // exit the simulation early
     spiral_flag_ = false; // to prevent this message more than once
   }
+  if (rescale && sharp_angle && midstep_ && length_/(n_bonds_+1) > min_bond_length_) {
+    //printf("\nDoubling granularity due to sharp angle");
+    DoubleGranularityLinear();
+    RebindMotors();
+    //printf(", n_bonds = %d\n",n_bonds_);
+    UpdateSiteOrientations();
+    CalculateAngles(false);
+  }
 }
 
 void Filament::CalculateTangents() {
-  elements_[0].SetTangent(elements_[0].GetOrientation());
-  elements_[n_sites_-1].SetTangent(elements_[n_sites_-2].GetOrientation());
-  double u_tan_mag;
-  double u_tan[3];
-  for (int i_site=1;i_site < n_sites_-1; ++i_site) {
-    double const * const u1 = elements_[i_site-1].GetOrientation();
-    double const * const u2 = elements_[i_site].GetOrientation();
-    u_tan_mag = 0.0;
-    for (int i=0; i<n_dim_; ++i) {
-      u_tan[i] = u2[i]+u1[i];
-      u_tan_mag += SQR(u_tan[i]);
-    }
-    u_tan_mag = sqrt(u_tan_mag);
-    for (int i=0; i<n_dim_; ++i)
-      u_tan[i]/=u_tan_mag;
-    elements_[i_site].SetTangent(u_tan);
+  for (auto it = sites_.begin(); it!=sites_.end(); ++it) {
+    it->CalcTangent();
   }
 }
 
@@ -357,7 +473,7 @@ void Filament::ConstructUnprojectedRandomForces() {
   if (!stoch_flag_) return;
   double xi[3], xi_term[3], f_rand[3];
   for (int i_site=0; i_site<n_sites_; ++i_site) {
-    double const * const utan = elements_[i_site].GetTangent();
+    double const * const utan = sites_[i_site].GetTangent();
     for (int i=0; i<n_dim_; ++i) 
       xi[i] = gsl_rng_uniform_pos(rng_.r) - 0.5;
     if (n_dim_ == 2) {
@@ -376,7 +492,7 @@ void Filament::ConstructUnprojectedRandomForces() {
       f_rand[i] = rand_sigma_perp_ * xi[i] + 
           (rand_sigma_par_ - rand_sigma_perp_) * xi_term[i];
     }
-    elements_[i_site].SetRandomForce(f_rand);
+    sites_[i_site].SetRandomForce(f_rand);
   }
 }
 
@@ -386,9 +502,9 @@ void Filament::GeometricallyProjectRandomForces() {
   for (int i_site=0; i_site<n_sites_-1; ++i_site) {
     // Use the tensions vector to calculate the hard components of the random forces
     // These are not the same as the tensions, they will be calculated later
-    double const * const f_rand1 = elements_[i_site].GetRandomForce();
-    double const * const f_rand2 = elements_[i_site+1].GetRandomForce();
-    double const * const u_site = elements_[i_site].GetOrientation();
+    double const * const f_rand1 = sites_[i_site].GetRandomForce();
+    double const * const f_rand2 = sites_[i_site+1].GetRandomForce();
+    double const * const u_site = sites_[i_site].GetOrientation();
     for (int i=0; i<n_dim_; ++i)
       f_rand_temp[i] = f_rand2[i] - f_rand1[i];
     tensions_[i_site] = dot_product(n_dim_, f_rand_temp, u_site);
@@ -406,23 +522,23 @@ void Filament::GeometricallyProjectRandomForces() {
   // First the end sites:
   double f_proj[3];
   for (int i=0; i<n_dim_; ++i) {
-    f_proj[i] = elements_[0].GetRandomForce()[i]
-      + tensions_[0] * elements_[0].GetOrientation()[i];
+    f_proj[i] = sites_[0].GetRandomForce()[i]
+      + tensions_[0] * sites_[0].GetOrientation()[i];
   }
-  elements_[0].SetRandomForce(f_proj);
+  sites_[0].SetRandomForce(f_proj);
   for (int i=0; i<n_dim_; ++i) {
-    f_proj[i] = elements_[n_sites_-1].GetRandomForce()[i] 
-    - tensions_[n_sites_-2] * elements_[n_sites_-2].GetOrientation()[i];
+    f_proj[i] = sites_[n_sites_-1].GetRandomForce()[i] 
+    - tensions_[n_sites_-2] * sites_[n_sites_-2].GetOrientation()[i];
   }
-  elements_[n_sites_-1].SetRandomForce(f_proj);
+  sites_[n_sites_-1].SetRandomForce(f_proj);
   // Then the rest
   for (int i_site=1; i_site<n_sites_-1; ++i_site) {
-    double const * const u1 = elements_[i_site-1].GetOrientation();
-    double const * const u2 = elements_[i_site].GetOrientation();
+    double const * const u1 = sites_[i_site-1].GetOrientation();
+    double const * const u2 = sites_[i_site].GetOrientation();
     for (int i=0; i<n_dim_; ++i) {
-      f_proj[i] = elements_[i_site].GetRandomForce()[i] + tensions_[i_site]*u2[i] - tensions_[i_site-1] * u1[i];
+      f_proj[i] = sites_[i_site].GetRandomForce()[i] + tensions_[i_site]*u2[i] - tensions_[i_site-1] * u1[i];
     }
-    elements_[i_site].SetRandomForce(f_proj);
+    sites_[i_site].SetRandomForce(f_proj);
   }
   // Test for geometrically projected random forces. This should always yield zero, by definition
   //bool resulted = false;
@@ -446,7 +562,7 @@ void Filament::GeometricallyProjectRandomForces() {
 
 void Filament::AddRandomForces() {
   if (!stoch_flag_) return;
-  for (auto site=elements_.begin(); site!=elements_.end(); ++site)
+  for (auto site=sites_.begin(); site!=sites_.end(); ++site)
     site->AddRandomForce();
 }
 
@@ -472,7 +588,7 @@ void Filament::CalculateBendingForces() {
   }                                        
   // Now calculate the effective rigidities 
   for (int i=0; i<n_sites_-2; ++i) {
-    k_eff_[i] = (persistence_length_ + child_length_ * g_mat_inverse_[i])/SQR(child_length_);
+    k_eff_[i] = (persistence_length_ + bond_length_ * g_mat_inverse_[i])/SQR(bond_length_);
   }
   // Using these, we can calculate the forces on each of the sites
   // These calculations were done by hand and are not particularly readable,
@@ -485,41 +601,41 @@ void Filament::CalculateBendingForces() {
     for (int k_site=0; k_site<n_sites_; ++k_site) {
       std::fill(f_site,f_site+3,0.0);
       if (k_site>1) {
-        double const * const u1 = elements_[k_site-2].GetOrientation();
-        double const * const u2 = elements_[k_site-1].GetOrientation();
+        double const * const u1 = sites_[k_site-2].GetOrientation();
+        double const * const u2 = sites_[k_site-1].GetOrientation();
         f_site[0] += k_eff_[k_site-2] * ( (1-SQR(u2[0]))*u1[0] - u2[0]*u2[1]*u1[1] );
         f_site[1] += k_eff_[k_site-2] * ( (1-SQR(u2[1]))*u1[1] - u2[0]*u2[1]*u1[0] );
       }
       if (k_site>0 && k_site<n_sites_-1) {
-        double const * const u1 = elements_[k_site-1].GetOrientation();
-        double const * const u2 = elements_[k_site].GetOrientation();
+        double const * const u1 = sites_[k_site-1].GetOrientation();
+        double const * const u2 = sites_[k_site].GetOrientation();
         f_site[0] += k_eff_[k_site-1] * ( (1-SQR(u1[0]))*u2[0] - u1[0]*u1[1]*u2[1]
                         -((1-SQR(u2[0]))*u1[0] - u2[0]*u2[1]*u1[1]) );
         f_site[1] += k_eff_[k_site-1] * ( (1-SQR(u1[1]))*u2[1] - u1[0]*u1[1]*u2[0]
                         -((1-SQR(u2[1]))*u1[1] - u2[0]*u2[1]*u1[0]) );
       }
       if (k_site<n_sites_-2) {
-        double const * const u1 = elements_[k_site].GetOrientation();
-        double const * const u2 = elements_[k_site+1].GetOrientation();
+        double const * const u1 = sites_[k_site].GetOrientation();
+        double const * const u2 = sites_[k_site+1].GetOrientation();
         f_site[0] -= k_eff_[k_site] * ( (1-SQR(u1[0]))*u2[0] - u1[0]*u1[1]*u2[1] );
         f_site[1] -= k_eff_[k_site] * ( (1-SQR(u1[1]))*u2[1] - u1[0]*u1[1]*u2[0] );
       }
-      elements_[k_site].AddForce(f_site);
+      sites_[k_site].AddForce(f_site);
     }
   }
   else if (n_dim_ == 3) {
     for (int k_site=0; k_site<n_sites_; ++k_site) {
       std::fill(f_site,f_site+3,0.0);
       if (k_site>1) {
-        double const * const u1 = elements_[k_site-2].GetOrientation();
-        double const * const u2 = elements_[k_site-1].GetOrientation();
+        double const * const u1 = sites_[k_site-2].GetOrientation();
+        double const * const u2 = sites_[k_site-1].GetOrientation();
         f_site[0] += k_eff_[k_site-2] * ( (1-SQR(u2[0]))*u1[0] - u2[0]*u2[1]*u1[1] - u2[0]*u2[2]*u1[2] );
         f_site[1] += k_eff_[k_site-2] * ( (1-SQR(u2[1]))*u1[1] - u2[1]*u2[0]*u1[0] - u2[1]*u2[2]*u1[2] );
         f_site[2] += k_eff_[k_site-2] * ( (1-SQR(u2[2]))*u1[2] - u2[2]*u2[0]*u1[0] - u2[2]*u2[1]*u1[1] );
       }
       if (k_site>0 && k_site<n_sites_-1) {
-        double const * const u1 = elements_[k_site-1].GetOrientation();
-        double const * const u2 = elements_[k_site].GetOrientation();
+        double const * const u1 = sites_[k_site-1].GetOrientation();
+        double const * const u2 = sites_[k_site].GetOrientation();
         f_site[0] += k_eff_[k_site-1] * ( (1-SQR(u1[0]))*u2[0] - u1[0]*u1[1]*u2[1] - u1[0]*u1[2]*u2[2] 
                         - ( (1-SQR(u2[0]))*u1[0] - u2[0]*u2[1]*u1[1] - u2[0]*u2[2]*u1[2] ) );
         f_site[1] += k_eff_[k_site-1] * ( (1-SQR(u1[1]))*u2[1] - u1[1]*u1[0]*u2[0] - u1[1]*u1[2]*u2[2]
@@ -528,13 +644,13 @@ void Filament::CalculateBendingForces() {
                         - ( (1-SQR(u2[2]))*u1[2] - u2[2]*u2[0]*u1[0] - u2[1]*u2[2]*u1[1] ) );
       }
       if(k_site<n_sites_-2) {
-        double const * const u1 = elements_[k_site].GetOrientation();
-        double const * const u2 = elements_[k_site+1].GetOrientation();
+        double const * const u1 = sites_[k_site].GetOrientation();
+        double const * const u2 = sites_[k_site+1].GetOrientation();
         f_site[0] -= k_eff_[k_site] * ( (1-SQR(u1[0]))*u2[0] - u1[0]*u1[1]*u2[1] - u1[0]*u1[2]*u2[2] );
         f_site[1] -= k_eff_[k_site] * ( (1-SQR(u1[1]))*u2[1] - u1[1]*u1[0]*u2[0] - u1[1]*u1[2]*u2[2] );
         f_site[2] -= k_eff_[k_site] * ( (1-SQR(u1[2]))*u2[2] - u1[2]*u1[0]*u2[0] - u1[2]*u1[1]*u2[1] );
       }
-      elements_[k_site].AddForce(f_site);
+      sites_[k_site].AddForce(f_site);
     }
   }
 }
@@ -545,7 +661,7 @@ void Filament::CalculateTensions() {
   int next_site = n_dim_*n_dim_;
   for (int i_site=0; i_site<n_sites_; ++i_site) {
     int gamma_index = 0;
-    double const * const utan = elements_[i_site].GetTangent();
+    double const * const utan = sites_[i_site].GetTangent();
     for (int i=0; i<n_dim_; ++i) {
       for (int j=0; j<n_dim_; ++j) {
         gamma_inverse_[site_index+gamma_index] = 1.0/friction_par_ * (utan[i]*utan[j])
@@ -562,11 +678,11 @@ void Filament::CalculateTensions() {
   site_index = 0;
   for (int i_site=0; i_site<n_sites_-1; ++i_site) {
     // f_diff is the term in par_entheses in equation 29 of J. Chem. Phys. 122, 084903 (2005)
-    double const * const f1 = elements_[i_site].GetForce();
-    double const * const f2 = elements_[i_site+1].GetForce();
-    double const * const u2 = elements_[i_site].GetOrientation();
-    double const * const utan1 = elements_[i_site].GetTangent();
-    double const * const utan2 = elements_[i_site+1].GetTangent();
+    double const * const f1 = sites_[i_site].GetForce();
+    double const * const f2 = sites_[i_site+1].GetForce();
+    double const * const u2 = sites_[i_site].GetOrientation();
+    double const * const utan1 = sites_[i_site].GetTangent();
+    double const * const utan2 = sites_[i_site+1].GetTangent();
     for (int i=0; i<n_dim_; ++i) {
       temp_a = gamma_inverse_[site_index+n_dim_*i] * f1[0] + gamma_inverse_[site_index + n_dim_*i+1] * f1[1];
       if (n_dim_ == 3) temp_a += gamma_inverse_[site_index+n_dim_*i+2] * f1[2];
@@ -580,7 +696,7 @@ void Filament::CalculateTensions() {
     h_mat_diag_[i_site] = 2.0/friction_perp_ + (1.0/friction_par_ - 1.0/friction_perp_) *
       (SQR(utan1_dot_u2) + SQR(utan2_dot_u2));
     if (i_site>0) {
-      double const * const u1 = elements_[i_site-1].GetOrientation();
+      double const * const u1 = sites_[i_site-1].GetOrientation();
       h_mat_upper_[i_site-1] = -1.0/friction_perp_ * dot_product(n_dim_, u2, u1)
         - (1.0/friction_par_ - 1.0/friction_perp_) * (dot_product(n_dim_, utan1, u1) *
             dot_product(n_dim_, utan1, u2));
@@ -591,48 +707,48 @@ void Filament::CalculateTensions() {
   tridiagonal_solver(&h_mat_lower_, &h_mat_diag_, &h_mat_upper_, &tensions_, n_sites_-1);
 }
 
-void Filament::UpdateSitePositions(bool midstep) {
-  double delta = (midstep ? 0.5*delta_ : delta_);
+void Filament::UpdateSitePositions() {
+  double delta = (midstep_ ? 0.5*delta_ : delta_);
   double f_site[3];
   // First get total forces
   // Handle end sites first
   for (int i=0; i<n_dim_; ++i)
-    f_site[i] = tensions_[0] * elements_[0].GetOrientation()[i];
-  elements_[0].AddForce(f_site);
+    f_site[i] = tensions_[0] * sites_[0].GetOrientation()[i];
+  sites_[0].AddForce(f_site);
   for (int i=0; i<n_dim_; ++i)
-    f_site[i] = -tensions_[n_sites_-2] * elements_[n_sites_-2].GetOrientation()[i];
-  elements_[n_sites_-1].AddForce(f_site);
+    f_site[i] = -tensions_[n_sites_-2] * sites_[n_sites_-2].GetOrientation()[i];
+  sites_[n_sites_-1].AddForce(f_site);
   // and then the rest
   for (int i_site=1; i_site<n_sites_-1; ++i_site) {
-    double const * const u_site1 = elements_[i_site-1].GetOrientation();
-    double const * const u_site2 = elements_[i_site].GetOrientation();
+    double const * const u_site1 = sites_[i_site-1].GetOrientation();
+    double const * const u_site2 = sites_[i_site].GetOrientation();
     for (int i=0; i<n_dim_; ++i) {
       f_site[i] = tensions_[i_site] * u_site2[i] - tensions_[i_site-1] * u_site1[i];
     }
-    elements_[i_site].AddForce(f_site);
+    sites_[i_site].AddForce(f_site);
   }
   // Now update positions
   double f_term[3], r_new[3];
   int site_index = 0;
   int next_site = n_dim_*n_dim_;
   for (int i_site=0; i_site<n_sites_; ++i_site) {
-    double const * const f_site1 = elements_[i_site].GetForce();
-    double const * const r_site1 = elements_[i_site].GetPosition();
-    double const * const r_prev = elements_[i_site].GetPrevPosition();
+    double const * const f_site1 = sites_[i_site].GetForce();
+    double const * const r_site1 = sites_[i_site].GetPosition();
+    double const * const r_prev = sites_[i_site].GetPrevPosition();
     for (int i=0; i<n_dim_; ++i) {
       f_term[i] = gamma_inverse_[site_index+n_dim_*i] * f_site1[0] + gamma_inverse_[site_index+n_dim_*i+1] * f_site1[1];
       if (n_dim_ == 3)
         f_term[i] += gamma_inverse_[site_index+n_dim_*i+2] * f_site1[2];
       r_new[i] = r_prev[i] + delta * f_term[i];
     }
-    elements_[i_site].SetPosition(r_new);
+    sites_[i_site].SetPosition(r_new);
     site_index += next_site;
   }
   // Next, update orientation vectors
   double u_mag, r_diff[3];
   for (int i_site=0; i_site<n_sites_-1; ++i_site) {
-    double const * const r_site1 = elements_[i_site].GetPosition();
-    double const * const r_site2 = elements_[i_site+1].GetPosition();
+    double const * const r_site1 = sites_[i_site].GetPosition();
+    double const * const r_site2 = sites_[i_site+1].GetPosition();
     u_mag = 0.0;
     for (int i=0; i<n_dim_; ++i) {
       r_diff[i] = r_site2[i] - r_site1[i];
@@ -641,18 +757,18 @@ void Filament::UpdateSitePositions(bool midstep) {
     u_mag = sqrt(u_mag);
     for (int i=0; i<n_dim_; ++i)
       r_diff[i]/=u_mag;
-    elements_[i_site].SetOrientation(r_diff);
+    sites_[i_site].SetOrientation(r_diff);
   }
-  elements_[n_sites_-1].SetOrientation(elements_[n_sites_-2].GetOrientation());
+  sites_[n_sites_-1].SetOrientation(sites_[n_sites_-2].GetOrientation());
   // Finally, normalize site positions, making sure the sites are still rod-length apart
   if (CheckBondLengths()) {
     //printf("renormalizing\n");
     for (int i_site=1; i_site<n_sites_; ++i_site) {
-      double const * const r_site1 = elements_[i_site-1].GetPosition();
-      double const * const u_site1 = elements_[i_site-1].GetOrientation();
+      double const * const r_site1 = sites_[i_site-1].GetPosition();
+      double const * const u_site1 = sites_[i_site-1].GetOrientation();
       for (int i=0; i<n_dim_; ++i)
-        r_diff[i] = r_site1[i] + child_length_ * u_site1[i];
-      elements_[i_site].SetPosition(r_diff);
+        r_diff[i] = r_site1[i] + bond_length_ * u_site1[i];
+      sites_[i_site].SetPosition(r_diff);
     }
   }
 }
@@ -660,15 +776,15 @@ void Filament::UpdateSitePositions(bool midstep) {
 bool Filament::CheckBondLengths() {
   bool renormalize = false;
   for (int i_site=1;i_site<n_sites_;++i_site) {
-    double const * const r_site1 = elements_[i_site-1].GetPosition();
-    double const * const r_site2 = elements_[i_site].GetPosition();
+    double const * const r_site1 = sites_[i_site-1].GetPosition();
+    double const * const r_site2 = sites_[i_site].GetPosition();
     double a = 0.0;
     for (int i=0;i<n_dim_;++i) {
       double temp = r_site2[i] - r_site1[i];
       a += temp*temp;
     }
     a = sqrt(a);
-    double err = ABS(child_length_ - a)/child_length_;
+    double err = ABS(bond_length_ - a)/bond_length_;
     if (err > 1e-3) {
       renormalize = true;
     }
@@ -679,7 +795,7 @@ bool Filament::CheckBondLengths() {
 void Filament::UpdateAvgPosition() {
   std::fill(position_, position_+3, 0.0);
   std::fill(orientation_, orientation_+3, 0.0);
-  for (auto site_it=elements_.begin(); site_it!=elements_.end(); ++site_it) {
+  for (auto site_it=sites_.begin(); site_it!=sites_.end(); ++site_it) {
     double const * const site_pos = site_it->GetPosition();
     double const * const site_u = site_it->GetOrientation();
     for (int i=0; i<n_dim_; ++i) {
@@ -693,22 +809,23 @@ void Filament::UpdateAvgPosition() {
   }
 }
 
-void Filament::UpdatePrevPositions() {
-  for (auto site=elements_.begin(); site!=elements_.end(); ++site)
-    site->SetPrevPosition(site->GetPosition());
+void Filament::ApplyForcesTorques() {
+  ApplyInteractionForces();
+  if (anchored_) ApplyAnchorForces();
 }
 
-double const * const Filament::GetDrTot() {return nullptr;}
-
-void Filament::ApplyForcesTorques() {
+void Filament::ApplyInteractionForces() {
   double pure_torque[3] = {0,0,0};
   double site_force[3] = {0,0,0};
-  double linv=1.0/child_length_;
+  double linv=1.0/bond_length_;
   for (int i=0; i<n_bonds_; ++i) {
-    double const * const f = v_elements_[i].GetForce();
-    double const * const t = v_elements_[i].GetTorque();
-    double const * const u = elements_[i].GetOrientation();
-    AddPotential(v_elements_[i].GetPotentialEnergy());
+    double const * const f = bonds_[i].GetForce();
+    double const * const t = bonds_[i].GetTorque();
+    double const * const u = sites_[i].GetOrientation();
+    if (i == n_bonds_-1) {
+      tip_force_ = -dot_product(n_dim_,u,f);
+    }
+    AddPotential(bonds_[i].GetPotentialEnergy());
     // Convert torques into forces at bond ends
     // u x t / bond_length = pure torque force at tail of bond
     cross_product(u, t, pure_torque, 3);
@@ -717,85 +834,259 @@ void Filament::ApplyForcesTorques() {
       site_force[i] = 0.5*f[i];
     }
     // Add translational forces and pure torque forces at bond ends
-    elements_[i].AddForce(site_force);
-    elements_[i].AddForce(pure_torque);
+    sites_[i].AddForce(site_force);
+    sites_[i].AddForce(pure_torque);
     for (int j=0; j<n_dim_; ++j)
       pure_torque[j] *= -1;
-    elements_[i+1].AddForce(site_force);
-    elements_[i+1].AddForce(pure_torque);
-    // Add driving (originating from the com of the bond)
+    sites_[i+1].AddForce(site_force);
+    sites_[i+1].AddForce(pure_torque);
     // The driving factor is a force per unit length,
     // so need to multiply by bond length to get f_dr on bond
     if (eq_steps_count_ > eq_steps_) {
-      double f_dr[3];
-      for (int j=0; j<n_dim_; ++j)
-        f_dr[j] = 0.5*u[j]*driving_factor_ * child_length_;
-      elements_[i].AddForce(f_dr);
-      elements_[i+1].AddForce(f_dr);
+      if (params_->filament.driving_method == 0) {
+        // Add driving (originating from the com of the bond)
+        double f_dr[3];
+        for (int j=0; j<n_dim_; ++j)
+          f_dr[j] = 0.5*u[j]*driving_factor_ * bond_length_;
+        sites_[i].AddForce(f_dr);
+        sites_[i+1].AddForce(f_dr);
+      }
     }
     else if (shuffle_flag_) {
       if (gsl_rng_uniform_pos(rng_.r) < shuffle_frequency_) {
         shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*params_->filament.shuffle_factor;
       }
       double f_dr[3];
-      for (int j=0; j<n_dim_; ++j)
-        f_dr[j] = 0.5*u[j]*shuffle_factor_ * child_length_;
-      elements_[i].AddForce(f_dr);
-      elements_[i+1].AddForce(f_dr);
+      for (int j=0; j<n_dim_; ++j) {
+        f_dr[j] = 0.5*u[j]*shuffle_factor_ * bond_length_;
+      }
+      sites_[i].AddForce(f_dr);
+      sites_[i+1].AddForce(f_dr);
+    }
+  }
+  if (params_->filament.driving_method == 1) {
+    // Add driving (originating from the site tangents)
+    CalculateTangents();
+    double mag = length_/n_sites_*driving_factor_;
+    for (int i=0; i<n_sites_; ++i) {
+      double f_dr[3];
+      double const * const u_tan = sites_[i].GetTangent();
+      for (int j=0; j<n_dim_; ++j) {
+        f_dr[j] = mag*u_tan[j];
+      }
+      sites_[i].AddForce(f_dr);
     }
   }
 }
 
-void Filament::Draw(std::vector<graph_struct*> * graph_array) {
-  for (auto bond=v_elements_.begin(); bond!= v_elements_.end(); ++bond) {
-    bond->SetColor(color_, draw_type_);
-    bond->Draw(graph_array);
+void Filament::ApplyAnchorForces() {
+  double const * const tail_pos = sites_[0].GetPosition();
+  double dr[3] = {0,0,0};
+  double dr_mag=0.0;
+  for (int i=0;i<n_dim_;++i) {
+    dr[i] = tail_pos[i] - anchor_->position_[i];
+    dr_mag += SQR(dr[i]);
+  }
+  dr_mag = sqrt(dr_mag);
+  if (dr_mag < 1e-12) {
+    std::fill(anchor_->force_,anchor_->force_+3,0.0);
+  }
+  else {
+    for (int i=0;i<n_dim_;++i) {
+      anchor_->force_[i] = anchor_->k_spring_*(dr_mag - anchor_->spring_length_)*dr[i]/dr_mag;
+    }
+  }
+  sites_[0].SubForce(anchor_->force_);
+
+  if (anchor_->alignment_potential_) {
+    double const * const tail_u = bonds_[0].GetOrientation();
+    double cos_theta = dot_product(n_dim_,tail_u,anchor_->orientation_);
+    double factor = anchor_->k_align_* sqrt(persistence_length_)*0.5*ABS(1-cos_theta);
+    double temp[3] = {0,0,0};
+    cross_product(anchor_->orientation_, tail_u, temp, 3);
+    normalize_vector(temp, 3);
+    for (int i=0;i<3;++i) {
+      anchor_->torque_[i] = factor * temp[i]; 
+    }
+    bonds_[0].SubTorque(anchor_->torque_);
   }
 }
 
-void Filament::UpdateBondPositions() {
-  double pos[3];
-  int i_site = 0;
-  if (elements_.size() != v_elements_.size() + 1)
-    error_exit("n_bonds != n_sites - 1 in flexible filament!");
-  for (auto bond=v_elements_.begin(); bond!=v_elements_.end(); ++bond) {
-    double const * const r = elements_[i_site].GetPosition();
-    double const * const u = elements_[i_site].GetOrientation();
-    for (int i=0; i<n_dim_; ++i)
-      pos[i] = r[i] + 0.5 * child_length_ * u[i];
-    bond->SetPosition(pos);
-    bond->SetOrientation(u);
-    bond->SetLength(child_length_);
-    bond->SetDiameter(diameter_);
-    bond->UpdatePeriodic();
-    bond->SetRigidPosition(bond->GetPosition());
-    bond->SetRigidScaledPosition(bond->GetScaledPosition());
-    bond->SetRigidOrientation(u);
-    bond->SetRigidLength(child_length_);
-    bond->SetRigidDiameter(diameter_);
-    i_site++;
+void Filament::DynamicInstability() {
+  if (midstep_ || !dynamic_instability_flag_) return;
+  UpdatePolyState();
+  GrowFilament();
+  SetDiffusion();
+}
+
+void Filament::GrowFilament() {
+  // If the filament is paused, do nothing
+  if (poly_ == +poly_state::pause) return;
+  // Otherwise, adjust filament length due to polymerization
+  double delta_length = 0;
+  if (poly_ == +poly_state::grow) {
+    delta_length = v_poly_ * delta_;
+  }
+  else if (poly_ == +poly_state::shrink) {
+    delta_length = -v_depoly_ * delta_;
+  }
+  length_ += delta_length;
+  RescaleBonds();
+  if (bond_length_ > max_bond_length_) {
+    //ReportSites();
+    //printf("\nDoubling granularity");
+    DoubleGranularityLinear();
+    RebindMotors();
+    //printf(", n_bonds = %d\n",n_bonds_);
+    UpdateSiteOrientations();
+    //ReportSites();
+  }
+  else if (bond_length_ < min_bond_length_ && n_bonds_ > 2) {
+    //printf("\nHalving granularity");
+    HalfGranularityLinear();
+    RebindMotors();
+    //printf(", n_bonds = %d\n",n_bonds_);
+    UpdateSiteOrientations();
+  }
+}
+
+void Filament::RescaleBonds() {
+  UpdatePrevPositions();
+  double old_bond_length = bond_length_;
+  bond_length_ = length_/n_bonds_;
+  double k, dl;
+  double r2[3] = {0,0,0};
+  if (poly_ == +poly_state::shrink) {
+    // Old code
+    double const * const r0=GetTailPosition();
+    double const * const u0=GetTailOrientation();
+    for (int i=0; i<n_dim_; ++i) {
+      r2[i] = r0[i] + u0[i] * bond_length_;
+    }
+    sites_[1].SetPosition(r2);
+    dl = old_bond_length - bond_length_;
+    for (int i_site=2; i_site<n_sites_; ++i_site) {
+      double const * const r1 = sites_[i_site-1].GetPrevPosition();
+      double const * const u1 = sites_[i_site-1].GetOrientation();
+      k = SQR(dl*cos_thetas_[i_site-2]) - SQR(dl) + SQR(bond_length_);
+      k = (k > 0 ? k : 0);
+      k = -cos_thetas_[i_site-2]*dl + sqrt(k);
+      for (int i=0; i<n_dim_; ++i)
+        r2[i] = r1[i] + k * u1[i];
+      sites_[i_site].SetPosition(r2);
+      dl = old_bond_length - k;
+    }
+  }
+  else if (poly_ == +poly_state::grow) {
+    dl = old_bond_length;
+    for (int i_site=1; i_site<n_sites_-1; ++i_site) {
+      double const * const r_old = sites_[i_site].GetPrevPosition();
+      double const * const u = sites_[i_site].GetOrientation();
+      k = SQR(dl*cos_thetas_[i_site-1]) - SQR(dl) + SQR(bond_length_);
+      k = (k > 0 ? k : 0);
+      k = -cos_thetas_[i_site-1]*dl + sqrt(k);
+      for (int i=0; i<n_dim_; ++i) {
+        r2[i] = r_old[i] + k * u[i];
+      }
+      sites_[i_site].SetPosition(r2);
+      dl = old_bond_length - k;
+    }
+    double const * const u = sites_[n_sites_-2].GetOrientation();
+    double const * const r_old = sites_[n_sites_-2].GetPosition();
+    for (int i=0; i<n_dim_; ++i) {
+      r2[i] = r_old[i] + bond_length_ * u[i];
+    }
+    sites_[n_sites_-1].SetPosition(r2);
+  }
+  UpdateBondPositions();
+  UpdateSiteOrientations();
+  CalculateAngles(false);
+}
+
+
+void Filament::UpdatePolyState() {
+  double p_g2s = p_g2s_;
+  double p_p2s = p_p2s_;
+  double roll = gsl_rng_uniform_pos(rng_.r);
+  double p_norm;
+  // Modify catastrophe probabilities if the end of the filament is under a load
+  if (force_induced_catastrophe_flag_ && tip_force_ > 0) {
+    double p_factor = exp(fic_factor_*tip_force_);
+    p_g2s = (p_g2s+p_g2p_)*p_factor;
+    p_p2s = p_p2s*p_factor;
+  }
+  // Filament shrinking
+  if (poly_ == +poly_state::shrink) {
+    p_norm = p_s2g_ + p_s2p_;
+    if (p_norm > 1.0) 
+      poly_ = (roll < p_s2g_/p_norm ? poly_state::grow : poly_state::pause);
+    else {
+      if (roll < p_s2g_) 
+        poly_ = poly_state::grow;
+      else if (roll < (p_s2g_ + p_s2p_)) 
+        poly_ = poly_state::pause;
+    }
+  }
+  // Filament growing
+  else if (poly_ == +poly_state::grow) {
+    p_norm = p_g2s + p_g2p_;
+    if (p_norm > 1.0)
+      poly_ = (roll < p_g2s/p_norm ? poly_state::shrink : poly_state::pause);
+    else {
+      if (roll < p_g2s) 
+        poly_ = poly_state::shrink;
+      else if (roll < (p_g2s + p_g2p_)) 
+        poly_ = poly_state::pause;
+    }
+  }
+  // Filament paused
+  else if (poly_ == +poly_state::pause) {
+    p_norm = p_p2g_ + p_p2s;
+    if (p_norm > 1) 
+      poly_ = (roll < p_p2g_/p_norm ? poly_state::grow : poly_state::shrink);
+    else {
+      if (roll < p_p2g_) 
+        poly_ = poly_state::grow;
+      else if (roll < (p_p2g_ + p_p2s)) 
+        poly_ = poly_state::shrink;
+    }
+  }
+  // Check to make sure the filament lengths stay in the correct ranges
+  if (length_ < min_length_)
+    poly_ = poly_state::grow;
+  else if (length_ > max_length_)
+    poly_ = poly_state::shrink;
+}
+
+void Filament::Draw(std::vector<graph_struct*> * graph_array) {
+  for (auto bond=bonds_.begin(); bond!= bonds_.end(); ++bond) {
+    bond->Draw(graph_array);
+  }
+  // FIXME temporary
+  for (auto motor=motors_.begin(); motor!= motors_.end(); ++motor) {
+    motor->Draw(graph_array);
   }
 }
 
 // Scale bond and site positions from new unit cell
 void Filament::ScalePosition() {
   // scale first bond position using new unit cell
-  v_elements_[0].ScalePosition();
+  bonds_[0].ScalePosition();
   // then reposition sites based on first bond position
   // handle first site
   double r[3];
-  double const * const bond_r = v_elements_[0].GetPosition();
-  double const * const bond_u = v_elements_[0].GetOrientation();
+  double const * const bond_r = bonds_[0].GetPosition();
+  double const * const bond_u = bonds_[0].GetOrientation();
   for (int i=0; i<n_dim_; ++i)
-    r[i] = bond_r[i] - 0.5*child_length_*bond_u[i];
-  elements_[0].SetPosition(r);
+    r[i] = bond_r[i] - 0.5*bond_length_*bond_u[i];
+  sites_[0].SetPosition(r);
   // then handle remaining sites
   for (int i_site=1; i_site<n_sites_; ++i_site) {
-    double const * const prev_r = elements_[i_site-1].GetPosition();
-    double const * const prev_u = elements_[i_site-1].GetOrientation();
+    double const * const prev_r = sites_[i_site-1].GetPosition();
+    double const * const prev_u = sites_[i_site-1].GetOrientation();
     for (int i=0; i<n_dim_; ++i)
-      r[i] = prev_r[i] + child_length_*prev_u[i];
-    elements_[i_site].SetPosition(r);
+      r[i] = prev_r[i] + bond_length_*prev_u[i];
+    sites_[i_site].SetPosition(r);
   }
   // update remaining bond positions
   UpdateBondPositions();
@@ -805,7 +1096,7 @@ void Filament::ScalePosition() {
 void Filament::GetAvgOrientation(double * au) {
   double avg_u[3] = {0.0, 0.0, 0.0};
   int size=0;
-  for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
+  for (auto it=sites_.begin(); it!=sites_.end(); ++it) {
     double const * const u = it->GetOrientation();
     for (int i=0; i<n_dim_; ++i)
       avg_u[i] += u[i];
@@ -818,10 +1109,29 @@ void Filament::GetAvgOrientation(double * au) {
   std::copy(avg_u, avg_u+3, au);
 }
 
+void Filament::RebindMotors() {
+  for (motor_iterator it=motors_.begin(); it!=motors_.end(); ++it) {
+    double mesh_lambda = it->GetMeshLambda();
+    int i_site = (int) floor(mesh_lambda/bond_length_);
+    double bond_lambda = mesh_lambda - i_site*bond_length_;
+    if (i_site > n_sites_-2) {
+      i_site = n_sites_-2;
+      mesh_lambda = length_;
+      bond_lambda = bond_length_;
+    }
+    if (i_site < 0) {
+      i_site = 0;
+      mesh_lambda = 0;
+      bond_lambda = 0;
+    }
+    it->AttachToBond(sites_[i_site].GetOutgoingBond(),bond_lambda,mesh_lambda);
+  }
+}
+
 void Filament::GetAvgPosition(double * ap) {
   double avg_p[3] = {0.0, 0.0, 0.0};
   int size=0;
-  for (auto it=elements_.begin(); it!=elements_.end(); ++it) {
+  for (auto it=sites_.begin(); it!=sites_.end(); ++it) {
     double const * const p = it->GetPosition();
     for (int i=0; i<n_dim_; ++i)
       avg_p[i] += p[i];
@@ -834,7 +1144,7 @@ void Filament::GetAvgPosition(double * ap) {
   std::copy(avg_p, avg_p+3, ap);
 }
 
-void Filament::DumpAll() {
+void Filament::ReportAll() {
   printf("tensions:\n  {");
   for (int i=0; i<n_sites_-1; ++i)
     printf(" %5.5f ",tensions_[i]);
@@ -900,19 +1210,19 @@ void Filament::WriteSpec(std::fstream &ospec){
   ospec.write(reinterpret_cast<char*>(&persistence_length_), sizeof(persistence_length_));
   ospec.write(reinterpret_cast<char*>(&friction_par_), sizeof(friction_par_));
   ospec.write(reinterpret_cast<char*>(&friction_perp_), sizeof(friction_perp_));
-  ospec.write(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
+  ospec.write(reinterpret_cast<char*>(&bond_length_), sizeof(bond_length_));
   ospec.write(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
   double temp[3];
-  double const * const r0 = elements_[0].GetPosition();
+  double const * const r0 = sites_[0].GetPosition();
   std::copy(r0, r0+3, temp);
   for (auto& pos : temp)
     ospec.write(reinterpret_cast<char*>(&pos), sizeof(pos));
-  double const * const rf = elements_[n_bonds_].GetPosition();
+  double const * const rf = sites_[n_bonds_].GetPosition();
   std::copy(rf, rf+3, temp);
   for (auto& pos : temp)
     ospec.write(reinterpret_cast<char*>(&pos), sizeof(pos));
   for (int i=0; i<n_bonds_; ++i) {
-    double const * const orientation = v_elements_[i].GetOrientation();
+    double const * const orientation = bonds_[i].GetOrientation();
     std::copy(orientation, orientation+3, temp);
     for (auto& u : temp) 
       ospec.write(reinterpret_cast<char*>(&u), sizeof(u));
@@ -928,9 +1238,9 @@ void Filament::ReadSpec(std::fstream &ispec) {
   ispec.read(reinterpret_cast<char*>(&persistence_length_), sizeof(persistence_length_));
   ispec.read(reinterpret_cast<char*>(&friction_par_), sizeof(friction_par_));
   ispec.read(reinterpret_cast<char*>(&friction_perp_), sizeof(friction_perp_));
-  ispec.read(reinterpret_cast<char*>(&child_length_), sizeof(child_length_));
+  ispec.read(reinterpret_cast<char*>(&bond_length_), sizeof(bond_length_));
   ispec.read(reinterpret_cast<char*>(&n_bonds_), sizeof(n_bonds_));
-  v_elements_.resize(n_bonds_, v_elements_[0]);
+  bonds_.resize(n_bonds_, bonds_[0]);
   // Get initial site position
   for (int i=0; i<3; ++i)
     ispec.read(reinterpret_cast<char*>(&r0[i]), sizeof(double));
@@ -942,27 +1252,27 @@ void Filament::ReadSpec(std::fstream &ispec) {
       ispec.read(reinterpret_cast<char*>(&u_bond[i]), sizeof(double));
     for (int i=0; i<n_dim_; ++i) {
       // Set bond position
-      rf[i] = r0[i] + 0.5 * child_length_ * u_bond[i];
+      rf[i] = r0[i] + 0.5 * bond_length_ * u_bond[i];
       // Set next site position
-      r0[i] += child_length_ * u_bond[i];
+      r0[i] += bond_length_ * u_bond[i];
     }
-    elements_[i_bond].SetOrientation(u_bond);
-    v_elements_[i_bond].SetPosition(rf);
-    v_elements_[i_bond].SetOrientation(u_bond);
-    v_elements_[i_bond].SetDiameter(diameter_);
-    v_elements_[i_bond].SetLength(child_length_);
-    v_elements_[i_bond].UpdatePeriodic();
+    sites_[i_bond].SetOrientation(u_bond);
+    bonds_[i_bond].SetPosition(rf);
+    bonds_[i_bond].SetOrientation(u_bond);
+    bonds_[i_bond].SetDiameter(diameter_);
+    bonds_[i_bond].SetLength(bond_length_);
+    bonds_[i_bond].UpdatePeriodic();
   }
-  elements_[n_bonds_].SetOrientation(elements_[n_bonds_-1].GetOrientation());
+  sites_[n_bonds_].SetOrientation(sites_[n_bonds_-1].GetOrientation());
   double pos[3];
   for (int i=0; i < params_->n_dim; ++i) {
-    pos[i] = v_elements_[0].GetPosition()[i] - 0.5*v_elements_[0].GetOrientation()[i] * child_length_;
+    pos[i] = bonds_[0].GetPosition()[i] - 0.5*bonds_[0].GetOrientation()[i] * bond_length_;
   }
-  elements_[0].SetPosition(pos);
+  sites_[0].SetPosition(pos);
   for (int i=0; i < params_->n_dim; ++i) {
-    pos[i] = v_elements_[n_bonds_-1].GetPosition()[i] + 0.5*v_elements_[n_bonds_-1].GetOrientation()[i] * child_length_;
+    pos[i] = bonds_[n_bonds_-1].GetPosition()[i] + 0.5*bonds_[n_bonds_-1].GetOrientation()[i] * bond_length_;
   }
-  elements_[n_bonds_].SetPosition(pos);
+  sites_[n_bonds_].SetPosition(pos);
   CalculateAngles();
 }
 
@@ -995,15 +1305,15 @@ void Filament::ReadPosit(std::fstream &iposit) {
   iposit.read(reinterpret_cast<char*>(&length_), sizeof(length_));
   // Initialize first bond position
   for (int i=0; i<n_dim_; ++i) 
-    avg_pos[i] = avg_pos[i] - 0.5*(length_ - child_length_)*avg_u[i];
+    avg_pos[i] = avg_pos[i] - 0.5*(length_ - bond_length_)*avg_u[i];
   for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
-    v_elements_[i_bond].SetPosition(avg_pos);
-    v_elements_[i_bond].SetOrientation(avg_u);
-    v_elements_[i_bond].SetDiameter(diameter_);
-    v_elements_[i_bond].UpdatePeriodic();
+    bonds_[i_bond].SetPosition(avg_pos);
+    bonds_[i_bond].SetOrientation(avg_u);
+    bonds_[i_bond].SetDiameter(diameter_);
+    bonds_[i_bond].UpdatePeriodic();
     // Set next bond position
     for (int i=0; i<n_dim_; ++i) 
-      avg_pos[i] += child_length_*avg_u[i];
+      avg_pos[i] += bond_length_*avg_u[i];
   }
 }
 
@@ -1025,35 +1335,20 @@ void Filament::ReadCheckpoint(std::fstream &icheck) {
   n_sites_ = n_bonds_+1;
   double r[3];
   for (int i=0; i<3; ++i)
-    r[i] = v_elements_[0].GetPosition()[i] - 0.5*child_length_*v_elements_[0].GetOrientation()[i];
-  elements_[0].SetPosition(r);
-  elements_[0].SetOrientation(v_elements_[0].GetOrientation());
+    r[i] = bonds_[0].GetPosition()[i] - 0.5*bond_length_*bonds_[0].GetOrientation()[i];
+  sites_[0].SetPosition(r);
+  sites_[0].SetOrientation(bonds_[0].GetOrientation());
   for (int i_bond=1; i_bond<n_bonds_; ++i_bond) {
     for (int i=0; i<3; ++i)
-      r[i] += child_length_*elements_[i_bond-1].GetOrientation()[i];
-    elements_[i_bond].SetPosition(r);
-    elements_[i_bond].SetOrientation(v_elements_[i_bond].GetOrientation());
+      r[i] += bond_length_*sites_[i_bond-1].GetOrientation()[i];
+    sites_[i_bond].SetPosition(r);
+    sites_[i_bond].SetOrientation(bonds_[i_bond].GetOrientation());
   }
   for (int i=0; i<3; ++i)
-    r[i] += child_length_*elements_[n_sites_-2].GetOrientation()[i];
-  elements_[n_sites_-1].SetPosition(r); 
-  elements_[n_sites_-1].SetOrientation(v_elements_[n_bonds_-1].GetOrientation());
+    r[i] += bond_length_*sites_[n_sites_-2].GetOrientation()[i];
+  sites_[n_sites_-1].SetPosition(r); 
+  sites_[n_sites_-1].SetOrientation(bonds_[n_bonds_-1].GetOrientation());
   UpdateBondPositions();
-  // Hack CIDs and RIDs to Set up interaction zones
-  for (int i=0; i<n_bonds_; ++i) {
-    v_elements_[i].InitRID();
-    v_elements_[i].SetCID(v_elements_[i].GetRID());
-    v_elements_[i].UpdatePeriodic();
-  }
-  for (int i=1; i<n_bonds_-1; ++i) {
-    if (i%2==0) 
-      v_elements_[i].SetRID(v_elements_[i-1].GetRID());
-    else
-      v_elements_[i].SetCID(v_elements_[i-1].GetCID());
-  }
-  v_elements_[n_bonds_-1].SetCID(v_elements_[n_bonds_-2].GetCID());
-  v_elements_[n_bonds_-1].SetRID(v_elements_[n_bonds_-2].GetRID());
-
   //Reallocate control structures
   tensions_.resize(n_sites_-1); //max_sites -1
   g_mat_lower_.resize(n_sites_-2); //max_sites-2
@@ -1089,13 +1384,13 @@ void FilamentSpecies::InitMse2eAnalysis() {
   fname.append("_filament.mse2e");
   mse2e_file_.open(fname, std::ios::out);
   mse2e_file_ << "mse2e_analysis_file\n";
-  mse2e_file_ << "length diameter child_length persistence_length driving ndim nsteps nspec delta theory\n";
+  mse2e_file_ << "length diameter bond_length persistence_length driving ndim nsteps nspec delta theory\n";
   auto it=members_.begin();
-  double l = (*it)->GetLength();
-  double d = (*it)->GetDiameter();
-  double cl = (*it)->GetChildLength();
-  double pl = (*it)->GetPersistenceLength();
-  double dr = (*it)->GetDriving();
+  double l = it->GetLength();
+  double d = it->GetDiameter();
+  double cl = it->GetBondLength();
+  double pl = it->GetPersistenceLength();
+  double dr = it->GetDriving();
   double nspec = GetNSpec();
   double theory;
   if (params_->n_dim == 2) {
@@ -1116,13 +1411,13 @@ void FilamentSpecies::InitSpiralAnalysis() {
   fname.append("_filament.spiral");
   spiral_file_.open(fname, std::ios::out);
   spiral_file_ << "spiral_analysis_file\n";
-  spiral_file_ << "length diameter child_length persistence_length driving nsteps nspec delta\n";
+  spiral_file_ << "length diameter bond_length persistence_length driving nsteps nspec delta\n";
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
-    double l = (*it)->GetLength();
-    double d = (*it)->GetDiameter();
-    double cl = (*it)->GetChildLength();
-    double pl = (*it)->GetPersistenceLength();
-    double dr = (*it)->GetDriving();
+    double l = it->GetLength();
+    double d = it->GetDiameter();
+    double cl = it->GetBondLength();
+    double pl = it->GetPersistenceLength();
+    double dr = it->GetDriving();
     double nspec = GetNSpec();
     spiral_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
   }
@@ -1135,17 +1430,17 @@ void FilamentSpecies::InitThetaAnalysis() {
   fname.append("_filament.theta");
   theta_file_.open(fname, std::ios::out);
   theta_file_ << "theta_analysis_file\n";
-  theta_file_ << "length diameter child_length persistence_length driving n_filaments n_bonds n_steps n_spec delta n_dim metric_forces\n";
+  theta_file_ << "length diameter bond_length persistence_length n_filaments n_bonds n_steps n_spec delta n_dim metric_forces\n";
   double l, cl, pl, dr, d;
   int nbonds;
   int nmembers = members_.size();
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
-    l = (*it)->GetLength();
-    d = (*it)->GetDiameter();
-    cl = (*it)->GetChildLength();
-    pl = (*it)->GetPersistenceLength();
-    dr = (*it)->GetDriving();
-    nbonds = (*it)->GetNBonds();
+    l = it->GetLength();
+    d = it->GetDiameter();
+    cl = it->GetBondLength();
+    pl = it->GetPersistenceLength();
+    dr = it->GetDriving();
+    nbonds = it->GetNBonds();
   }
   int nspec = GetNSpec();
   theta_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " " << nmembers << " " << nbonds << " " << params_->n_steps << " " << nspec << " " << params_->delta << " " << params_->n_dim << " " << params_->filament.metric_forces << "\n";
@@ -1187,20 +1482,20 @@ void FilamentSpecies::RunSpiralAnalysis() {
   double tip_z;
   auto it=members_.begin();
   e_bend_ = tot_angle_ = 0;
-  double length = (*it)->GetLength();
-  double plength = (*it)->GetPersistenceLength();
-  double clength = (*it)->GetChildLength();
+  double length = it->GetLength();
+  double plength = it->GetPersistenceLength();
+  double clength = it->GetBondLength();
   double e_zero = length * plength / (clength * clength);
-  std::vector<double> const * const thetas = (*it)->GetThetas();
+  std::vector<double> const * const thetas = it->GetThetas();
   for (int i=0; i<thetas->size(); ++i) {
     tot_angle_ += acos((*thetas)[i]);
     e_bend_ += (*thetas)[i];
   }
   // record energy relative to the bending "zero energy" (straight rod)
   e_bend_ = e_zero - e_bend_ * plength / clength;
-  tip_z = (*it)->GetTipZ();
-  double const * const head_pos = (*it)->GetHeadPos();
-  double const * const tail_pos = (*it)->GetTailPos();
+  tip_z = it->GetTipZ();
+  double const * const head_pos = it->GetHeadPosition();
+  double const * const tail_pos = it->GetTailPosition();
   if (spiral_file_.is_open()) {
     spiral_file_ << time_ << " " << tot_angle_ << " " << e_bend_ << " " << tip_z << " " << head_pos[0] << " " << head_pos[1] << " " << tail_pos[0] << " " << tail_pos[1] << "\n";
   }
@@ -1218,8 +1513,8 @@ void FilamentSpecies::RunMse2eAnalysis() {
   //}
   //mse2e_file_ << time_;
   for (auto it=members_.begin(); it!= members_.end(); ++it) {
-    double const * const head_pos = (*it)->GetHeadPos();
-    double const * const tail_pos = (*it)->GetTailPos();
+    double const * const head_pos = it->GetHeadPosition();
+    double const * const tail_pos = it->GetTailPosition();
     double mse2e_temp = 0.0;
     for (int i=0; i<params_->n_dim; ++i) {
       double temp = (head_pos[i] - tail_pos[i]);
@@ -1238,8 +1533,8 @@ void FilamentSpecies::RunMse2eAnalysis() {
 
 void FilamentSpecies::RunThetaAnalysis() {
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
-    std::vector<double> const * const thetas = (*it)->GetThetas();
-    for (int i=0; i<((*it)->GetNBonds()-1); ++i) {
+    std::vector<double> const * const thetas = it->GetThetas();
+    for (int i=0; i<(it->GetNBonds()-1); ++i) {
       int bin_number = (int) floor( (1 + (*thetas)[i]) * (n_bins_/2) );
       if (bin_number == n_bins_) {
         bin_number = n_bins_-1;
@@ -1279,7 +1574,7 @@ void FilamentSpecies::FinalizeMse2eAnalysis() {
 }
 
 void FilamentSpecies::FinalizeThetaAnalysis() {
-  int nbonds = members_[members_.size()-1]->GetNBonds();
+  int nbonds = members_[members_.size()-1].GetNBonds();
   for (int i=0; i<n_bins_; ++i) {
     double axis = (2.0/n_bins_)*i - 1;
     theta_file_ << " " << axis;

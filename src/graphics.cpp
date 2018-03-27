@@ -1,5 +1,4 @@
 #ifndef NOGRAPH
-
 #include <GL/glew.h>
 
 #include "graphics.h"
@@ -185,15 +184,16 @@ void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_s
   unit_cell_ = space_->unit_cell;
   //ScalePositions();
   if (draw_boundary == 0) {
-    boundary_type_ = "none";
+    boundary_ = boundary_type::none;
   }
   else {
-    boundary_type_ = space_->type;
+    boundary_ = space_->type;
   }
-  for (int i=0;i<3;++i)
+  for (int i=0;i<3;++i) {
     background_color_[i] = background;
+  }
   z_correct_ = 0;
-  if (boundary_type_.compare("budding")==0) {
+  if (boundary_ == +boundary_type::budding) {
     double m_rad = space_->radius;
     double d_rad = space_->bud_radius;
     double m_d_dist = space_->bud_height;
@@ -292,8 +292,7 @@ void Graphics::Init2dWindow() {
   gluOrtho2D((GLdouble) (xmin - 0.05 * unit_cell_[0]),
         (GLdouble) (xmax + 0.05 * unit_cell_[0]),
         (GLdouble) (ymin - 0.05 * unit_cell_[3]),
-        (GLdouble) (ymax + 0.05 * unit_cell_[3])); //deprecated, but annoying
-                          //to implement
+        (GLdouble) (ymax + 0.05 * unit_cell_[3])); //deprecated, but annoying to implement
 
   /* establish initial viewport */
   glViewport(0, 0, windx_, windy_);
@@ -478,16 +477,15 @@ void Graphics::DrawDiscorectangles() {
     double theta = atan2((*it)->u[1], (*it)->u[0]); // rotation angle
     double theta_color = 0;
     // Check draw type
-    if ((*it)->draw_type == 0) {
-      // draw_type is set to flat
+    if ((*it)->draw == +draw_type::fixed) {
+      // draw is set to flat
       theta_color = (*it)->color;
     }
-    else if ((*it)->draw_type == 1) {
+    else if ((*it)->draw == +draw_type::orientation) {
       // orientation draw
       theta_color = theta;
     }
-
-    if ((*it)->draw_type == 2) {
+    if ((*it)->draw == +draw_type::bw) {
       for (int i=0; i<3; ++i)
         color[i] = (background_color_[0] < 1 ? 1 : 0.1);
       glColor4fv(color);
@@ -634,17 +632,17 @@ void Graphics::DrawSpheros() {
         theta = (2.0 * M_PI) - theta;
     }
     color[3] = alpha_;
-
-    // Color is now based on draw_type for the object
-    if ((*it)->draw_type == 0) {
+    std::string d_type((*it)->draw._to_string());
+    // Color is now based on draw for the object
+    if (d_type.compare("fixed") == 0) {
      // flat color
       theta_color = (*it)->color;
     } 
-    else if ((*it)->draw_type == 1) {
+    else if (d_type.compare("orientation")==0) {
       theta_color = theta;
     }
 
-    if ((*it)->draw_type == 2) {
+    if (d_type.compare("bw")==0) {
       for (int i=0; i<3; ++i)
         color[i] = (background_color_[0] < 1 ? 1 : 0.1);
       glColor4fv(color);
@@ -738,24 +736,28 @@ void Graphics::Draw3d() {
 }
 
 void Graphics::DrawBoundary() {
-  if (boundary_type_.compare("none") == 0)
+  if (boundary_ == +boundary_type::none)
     return;
   glUseProgram(0);
 
   GLfloat color[4] = {0.5, 0.5, 0.5, 1.0};
   glColor4fv(color);
-  if (boundary_type_.compare("sphere") == 0) {
+  if (boundary_ == +boundary_type::sphere) {
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
 
     /* Fixme: I'm not drawing anything */
     // Turn on wireframe mode
-    DrawWireSphere(0.5*unit_cell_[0], 16, 16);
+    if (n_dim_ == 2)
+      //DrawWireSphere(0.5*unit_cell_[0], 3, 32);
+      DrawWireSphere(0.5*unit_cell_[0], 32, 32);
+    if (n_dim_ == 3)
+      DrawWireSphere(0.5*unit_cell_[0], 16, 16);
 
   }
-  else if (boundary_type_.compare("box") == 0)
+  else if (boundary_ == +boundary_type::box)
     DrawBox();
-  else if (boundary_type_.compare("budding") == 0)
+  else if (boundary_ == +boundary_type::budding)
     DrawBudding();
 }
 

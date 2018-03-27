@@ -8,7 +8,13 @@
 #include "interaction_engine.h"
 #include "auxiliary.h"
 #include "helpers.h"
-#include "objects.h"
+#include "filament.h"
+#include "centrosome.h"
+#include "bead_spring.h"
+#include "spherocylinder.h"
+#include "spindle.h"
+//#include "br_bead.h"
+//#include "objects.h"
 #include "parse_flags.h"
 
 class Simulation {
@@ -23,7 +29,7 @@ class Simulation {
 
     OutputManager output_mgr_;
     system_parameters params_;
-    rng_properties rng_;
+    RNG rng_;
 
     InteractionEngine iengine_;
 
@@ -34,6 +40,7 @@ class Simulation {
     std::vector<SpeciesBase*> species_;
     rfh::factory species_factory_;
     void InitSimulation();
+    void InitObjects();
     void InitSpecies();
     void InitPositInput();
     void ClearSpecies();

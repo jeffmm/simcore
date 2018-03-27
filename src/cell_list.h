@@ -7,26 +7,26 @@
 //#include <unordered_map>
 
 typedef std::array<int,3> cell_index;
-typedef std::pair<Simple*,Simple*> simple_pair;
-typedef std::pair< simple_pair , Interaction > pair_interaction;
+typedef std::pair<Object*,Object*> interactor_pair;
+typedef std::pair< interactor_pair , Interaction > pair_interaction;
 
 class Cell {
   private:
     cell_index index_;
-    std::vector<Simple*> simples_;
+    std::vector<Object*> interactors_;
     std::vector<Cell*> neighbors_;
-    std::vector< simple_pair > interactions_;
+    std::vector< interactor_pair > interactions_;
   public:
     Cell() {}
     Cell(int i, int j, int k) {index_ = {i,j,k};}
-    void AddSimple(Simple * sim) {simples_.push_back(sim);}
+    void AddInteractor(Object * ix) {interactors_.push_back(ix);}
     void AddNeighbor(Cell * neighbor) {neighbors_.push_back(neighbor);}
-    std::vector<Simple*>::iterator Begin() {return simples_.begin();}
-    std::vector<Simple*>::iterator End() {return simples_.end();}
-    int const Count() {return simples_.size();}
+    std::vector<Object*>::iterator Begin() {return interactors_.begin();}
+    std::vector<Object*>::iterator End() {return interactors_.end();}
+    int const Count() {return interactors_.size();}
     Cell * GetCellPtr() {return this;}
     int const GetNInteractions();
-    std::vector<simple_pair> PairInteractions();
+    std::vector<interactor_pair> PairInteractions();
 };
 
 //typedef std::unordered_map<cell_index, Cell> cell_map;
@@ -49,7 +49,7 @@ class CellList {
     CellList() {}
     void Init(int n_dim, int n_periodic, double cell_length, double system_radius);
     void ClearCells() {cells_.clear();}
-    void LoadSimples(std::vector<Simple*> sim_vec);
+    void LoadInteractors(std::vector<Object*> ix_vec);
     double const GetCellLength() { return cell_length_; }
     std::vector<pair_interaction> GetPairInteractions();
 
