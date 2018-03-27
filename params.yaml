@@ -13,10 +13,10 @@ n_steps_equil: 0
 n_dim: 2
 n_periodic: 2
 boundary: 0
-system_radius: 4500
+system_radius: 900
 
 # interaction options
-interaction_flag: 1
+interaction_flag: 0
 stoch_flag: 0
 cell_length: 5
 n_update_cells: -1
@@ -38,7 +38,7 @@ n_thermo: 100
 filament:
   num: 1
   insertion_type: random_oriented
-  packing_fraction: 0.5
+  packing_fraction: 0.01
   overlap: 1
   length: 100
   min_bond_length: 1.5

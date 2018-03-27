@@ -2,11 +2,15 @@
 #define _SIMCORE_INTERACTION_ENGINE_H_
  
 
-#include "cell_list.h"
+//#include "cell_list.h"
 #include "species.h"
 #include "auxiliary.h"
 #include "potential_manager.h"
 #include "minimum_distance.h"
+#include "particle_tracker.h"
+#include "interaction.h"
+typedef std::pair<Object*,Object*> interactor_pair;
+typedef std::pair< interactor_pair , Interaction > pair_interaction;
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -24,17 +28,20 @@ class InteractionEngine {
         i_update_,
         n_update_,
         n_objs_,
-        n_thermo_;
+        n_thermo_,
+        static_pnumber_;
     system_parameters *params_;
     space_struct *space_;
     std::vector<SpeciesBase*> *species_;
+    std::vector<ix_pair> nlist_;
 
     MinimumDistance mindist_;
 
     std::vector<pair_interaction> pair_interactions_;
     std::vector<boundary_interaction> boundary_interactions_;
     std::vector<Object*> interactors_;
-    CellList clist_;
+    //CellList clist_;
+    ParticleTracker ptracker_;
     PotentialManager potentials_;
 
     void CheckUpdate();
@@ -61,6 +68,7 @@ class InteractionEngine {
     void CalculatePressure();
     bool CheckOverlap();
     bool CheckBoundaryConditions();
+    void Clear();
 };
 
 #endif

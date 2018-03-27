@@ -20,6 +20,7 @@ class species_parameters {
 
 class filament_parameters : public species_parameters {
   public:
+    int dynamic_instability_flag = 0;
     double diameter = 1;
     double length = -1;
     double persistence_length = 400;
@@ -30,13 +31,12 @@ class filament_parameters : public species_parameters {
     int spiral_flag = 0;
     double driving_factor = 0;
     double friction_ratio = 2;
-    int dynamic_instability_flag = 0;
     int force_induced_catastrophe_flag = 0;
-    double f_pause_to_shrink = 0.0;
     double fic_factor = 0.828;
     double f_shrink_to_grow = 0.017;
     double f_shrink_to_pause = 0.0;
     double f_pause_to_grow = 0.0;
+    double f_pause_to_shrink = 0.0;
     double f_grow_to_pause = 0.0;
     double f_grow_to_shrink = 0.00554;
     int metric_forces = 1;
@@ -89,25 +89,11 @@ class centrosome_parameters : public species_parameters {
     double spring_length = 0;
 };
 
-class motor_parameters : public species_parameters {
-  public:
-    double diameter = 3;
-    int walker = 0;
-    int step_direction = 0;
-    double k_off = 2;
-    double k_on = 10;
-    double concentration = 0;
-    double velocity = 1;
-    int diffusion_flag = 1;
-    double k_spring = 1000;
-    double f_spring_max = 100;
-};
-
 class bead_spring_parameters : public species_parameters {
   public:
-    double persistence_length = 4000;
     double diameter = 1;
     double length = 40;
+    double persistence_length = 4000;
     double max_bond_length = 1;
     double bond_rest_length = 0.8;
     double bond_spring = 100;
@@ -128,15 +114,29 @@ class spherocylinder_parameters : public species_parameters {
 
 class spindle_parameters : public species_parameters {
   public:
-    int alignment_potential = 0;
+    int n_filaments_mother = 0;
     double diameter = 10;
     double length = 20;
     int n_filaments_bud = 1;
-    int n_filaments_mother = 0;
+    int alignment_potential = 0;
     double k_spring = 1000;
     double k_align = 0;
     double spring_length = 0;
     double spb_diameter = 5;
+};
+
+class motor_parameters : public species_parameters {
+  public:
+    double k_off = 2;
+    double k_on = 10;
+    double concentration = 0;
+    double velocity = 1;
+    int diffusion_flag = 1;
+    double k_spring = 1000;
+    double f_spring_max = 100;
+    double diameter = 3;
+    int walker = 0;
+    int step_direction = 0;
 };
 
 class system_parameters {
@@ -150,53 +150,54 @@ class system_parameters {
     int boundary = 0;
     double system_radius = 100;
     double delta = 0.001;
+    int graph_background = 1;
     long n_steps = 1000000;
     double cell_length = 10;
-    int movie_flag = 0;
     int n_update_cells = 0;
     int graph_flag = 0;
     int n_graph = 1000;
     double graph_diameter = 0;
-    int graph_background = 1;
-    int draw_boundary = 1;
     int load_checkpoint = 0;
+    int movie_flag = 0;
+    int draw_boundary = 1;
     std::string checkpoint_run_name = "sc";
     std::string insertion_type = "species";
-    std::string movie_directory = "frames";
     int time_flag = 0;
+    std::string movie_directory = "frames";
     double bud_height = 680;
     double bud_radius = 300;
-    int uniform_crystal = 0;
     double lj_epsilon = 1;
     double wca_eps = 1;
     double wca_sig = 1;
+    double target_pressure = 0;
     double ss_a = 1;
     double ss_rs = 1.5;
     double ss_eps = 1;
     double f_cutoff = 100;
     int max_overlap = 100000;
-    int constant_pressure = 0;
     int constant_volume = 0;
-    double target_pressure = 0;
-    double target_radius = 100;
+    int constant_pressure = 0;
     int pressure_time = 100;
+    double target_radius = 100;
     double compressibility = 1;
     int stoch_flag = 1;
     int thermo_flag = 0;
     int n_thermo = 1000;
     int interaction_flag = 1;
     int species_insertion_failure_threshold = 10000;
+    int uniform_crystal = 0;
     int n_steps_equil = 0;
+    int static_particle_number = 0;
     species_parameters species;
     filament_parameters filament;
     hard_rod_parameters hard_rod;
     br_bead_parameters br_bead;
     md_bead_parameters md_bead;
     centrosome_parameters centrosome;
-    motor_parameters motor;
     bead_spring_parameters bead_spring;
     spherocylinder_parameters spherocylinder;
     spindle_parameters spindle;
+    motor_parameters motor;
 };
 
 #endif // _SIMCORE_PARAMETERS_H_
