@@ -2,28 +2,28 @@
 
 int const Cell::GetNInteractions() {
   int count = 0;
-  for (auto it=simples_.begin(); it!=simples_.end();) {
+  for (auto it=interactors_.begin(); it!=interactors_.end();) {
     count += Count()-1;
     for (auto it=neighbors_.begin(); it!=neighbors_.end(); ++it)
       count += (*it)->Count();
-    simples_.erase(it);
+    interactors_.erase(it);
   }
   return count;
 }
-std::vector<simple_pair> Cell::PairInteractions() {
-  std::vector<simple_pair> interactions;
-  for (auto it=simples_.begin(); it!=simples_.end();) {
-    for (auto jt=it+1; jt!=simples_.end(); ++jt) {
-      simple_pair cell_int(*it,*jt);
+std::vector<interactor_pair> Cell::PairInteractions() {
+  std::vector<interactor_pair> interactions;
+  for (auto it=interactors_.begin(); it!=interactors_.end();) {
+    for (auto jt=it+1; jt!=interactors_.end(); ++jt) {
+      interactor_pair cell_int(*it,*jt);
       interactions.push_back(cell_int);
     }
     for (auto nt=neighbors_.begin(); nt!=neighbors_.end(); ++nt) {
       for (auto jt=(*nt)->Begin(); jt!=(*nt)->End(); ++jt) {
-        simple_pair cell_int(*it, *jt);
+        interactor_pair cell_int(*it, *jt);
         interactions.push_back(cell_int);
       }
     }
-    simples_.erase(it);
+    interactors_.erase(it);
   }
   return interactions;
 }
@@ -118,23 +118,23 @@ void CellList::InitCells() {
   //exit(0);
 }
 
-void CellList::LoadSimples(std::vector<Simple*> sim_vec) {
-  for (auto sim = sim_vec.begin(); sim!= sim_vec.end(); ++sim) {
-    double const * const s = (*sim)->GetScaledPosition();
+void CellList::LoadInteractors(std::vector<Object*> ix_vec) {
+  for (auto ix = ix_vec.begin(); ix!= ix_vec.end(); ++ix) {
+    double const * const s = (*ix)->GetScaledPosition();
     cell_index ind = {0,0,0};
     for (int i=0; i<n_dim_; ++i)
       ind[i]=(int) floor((s[i]+0.5)/scaled_cell_length_);
-    cells_[ind].AddSimple(*sim);
+    cells_[ind].AddInteractor(*ix);
   }
 }
 
 std::vector<pair_interaction> CellList::GetPairInteractions() {
   std::vector<pair_interaction> pair_interactions;
   for (cell_map_it it=cells_.begin(); it!= cells_.end(); ++it) {
-    std::vector<simple_pair> j = it->second.PairInteractions();
-    for (auto jx : j) {
+    std::vector<interactor_pair> j = it->second.PairInteractions();
+    for (auto jx=j.begin(); jx!=j.end(); ++jx) {
       Interaction ix;
-      pair_interaction pix(jx,ix);
+      pair_interaction pix(*jx,ix);
       pair_interactions.push_back(pix);
     }
     //pair_interactions.insert(interactions.end(), j.begin(), j.end());

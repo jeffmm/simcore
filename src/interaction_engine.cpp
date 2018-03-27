@@ -18,6 +18,9 @@ void InteractionEngine::Init(system_parameters *params,
   i_update_ = -1;
   n_objs_ = 0;
   clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
+  // Update dr distance should be half the cell length, and we are comparing the squares of the trajectory distances
+  dr_update_ = 0.25*clist_.GetCellLength()*clist_.GetCellLength();
+  mindist_.Init(space, 2.0*dr_update_);
   potentials_.InitPotentials(params_);
 }
 
@@ -28,36 +31,53 @@ void InteractionEngine::Init(system_parameters *params,
 
 void InteractionEngine::Interact() {
   // First check if we need to interact
-  if (no_interactions_) return;
+  if (no_interactions_ && space_->type == +boundary_type::none) return;
   // Check if we need to update cell list
   CheckUpdate();
   // Loop through and calculate interactions
 #ifdef ENABLE_OPENMP
-  CalculateInteractionsMP();
+  if (! no_interactions_ ) {
+    CalculatePairInteractionsMP();
+  }
+    CalculateBoundaryInteractionsMP();
 #else
-  CalculateInteractions();
+  if (! no_interactions_ ) {
+    CalculatePairInteractions();
+  }
+  CalculateBoundaryInteractions();
 #endif
   // Apply forces, torques, and potentials in serial
-  ApplyInteractions();
+  if (! no_interactions_ ) {
+    ApplyPairInteractions();
+  }
+  ApplyBoundaryInteractions();
 }
 
-void InteractionEngine::UpdateSimples() {
-  simples_.clear();
+void InteractionEngine::UpdateInteractors() {
+  interactors_.clear();
   for (auto spec_it= species_->begin(); spec_it!=species_->end(); ++spec_it) {
-    std::vector<Simple*> simps = (*spec_it)->GetSimples();
-    simples_.insert(simples_.end(),simps.begin(),simps.end());
+    std::vector<Object*> ixs = (*spec_it)->GetInteractors();
+    interactors_.insert(interactors_.end(),ixs.begin(),ixs.end());
   }
 }
 
 void InteractionEngine::UpdateInteractions() {
-  clist_.LoadSimples(simples_);
+  clist_.LoadInteractors(interactors_);
   pair_interactions_ = clist_.GetPairInteractions();
+  boundary_interactions_.clear();
+  for (auto ixor=interactors_.begin(); ixor!=interactors_.end(); ++ixor) {
+    Interaction ix;
+    if (mindist_.CheckBoundaryInteraction(*ixor,&ix)) {
+      boundary_interactions_.push_back(std::make_pair(*ixor,ix));
+    }
+  }
 }
 
 int InteractionEngine::CountSpecies() {
   int obj_count = 0;
-  for (auto spec=species_->begin(); spec!=species_->end(); ++spec)
+  for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
     obj_count += (*spec)->GetCount();
+  }
   return obj_count;
 }
 
@@ -68,31 +88,62 @@ void InteractionEngine::CheckUpdate() {
     // reset periodic update count and update number of objects we're tracking
     i_update_ = 0; 
     n_objs_ = obj_count;
-    UpdateSimples();
+    UpdateInteractors();
     UpdateInteractions();
   }
-  // Otherwise check periodic update count
-  else if ((++i_update_) % n_update_ == 0)
+  else if (n_update_ <=0 && GetDrMax() > dr_update_) {
+    i_update_ = 0; 
     UpdateInteractions();
+    ZeroDrTot();
+  }
+  // Otherwise check periodic update count
+  else if (n_update_ > 0 && (++i_update_) % n_update_ == 0) {
+    UpdateInteractions();
+  }
 }
 
+double InteractionEngine::GetDrMax() {
+  double max_dr = 0;
+  for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
+    double dr = (*spec)->GetDrMax();
+    if (dr>max_dr) {
+      max_dr = dr;
+    }
+  }
+  return max_dr;
+}
 
-void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterator pix) {
+void InteractionEngine::ZeroDrTot() {
+  for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
+    (*spec)->ZeroDrTot();
+  }
+}
+
+void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::iterator pix) {
   // Avoid certain types of interactions
   auto obj1 = pix->first.first;
   auto obj2 = pix->first.second;
   Interaction *ix = &(pix->second);
-  if (obj1->GetRID() == obj2->GetRID())  return;
-  if (obj1->GetCID() == obj2->GetCID())  return;
-  if (obj1->GetOID() == obj2->GetOID()) 
+  // Rigid objects don't self interact
+  //if (obj1->GetRID() == obj2->GetRID())  return;
+  // Composite objects do self interact if they want to
+  // Check to make sure we aren't self-interacting
+  if (obj1->GetOID() == obj2->GetOID()) {
     error_exit("Object %d attempted self-interaction!", obj1->GetOID());
+  }
+  // Check that object 1 is part of a mesh, in which case...
+  // ...check that object 1 is of the same mesh of object 2, in which case...
+  // ...check if object 2 is a neighbor of object 1, in which case: do not interact
+  if (obj1->GetMeshID() > 0 && obj1->GetMeshID() == obj2->GetMeshID() && obj1->HasNeighbor(obj2->GetOID())) {
+    return;
+  }
 
-  //interactionmindist imd;
-  MinimumDistance(obj1,obj2,ix,space_);
+  mindist_.ObjectObject(obj1,obj2,ix);
 
   // XXX Don't interact if we have an overlap. This should eventually go to a max force routine
   if (ix->dr_mag2 < 0.25*SQR(obj1->GetDiameter() + obj2->GetDiameter())) {
     overlap_ = true;
+    //printf("We have an overlap!\n");
   }
   // XXX Only calculate WCA potential for now
   if (ix->dr_mag2 > potentials_.wca_.GetRCut2())  return;
@@ -103,7 +154,62 @@ void InteractionEngine::ProcessInteraction(std::vector<pair_interaction>::iterat
   //potentials_.sspot_.CalcPotential(ix);
 }
 
-void InteractionEngine::CalculateInteractionsMP() {
+void InteractionEngine::ProcessBoundaryInteraction(std::vector<boundary_interaction>::iterator bix) {
+  mindist_.BoundaryCondition(bix);
+  Interaction * ix = &(bix->second);
+  // XXX Don't interact if we have an overlap. This should eventually go to a max force routine
+  if (ix->dr_mag2 < 0.25*SQR(bix->first->GetDiameter())) {
+    overlap_ = true;
+  }
+  // XXX Only calculate WCA potential for now
+  if (ix->dr_mag2 > potentials_.wca_.GetRCut2()) return;
+  potentials_.wca_.CalcPotential(ix);
+}
+
+void InteractionEngine::CalculateBoundaryInteractionsMP() {
+  if (space_->type == +boundary_type::none) {
+    return;
+  }
+#ifdef ENABLE_OPENMP
+  int max_threads = omp_get_max_threads();
+  std::vector<std::pair<std::vector<boundary_interaction>::iterator, std::vector<boundary_interaction>::iterator> > chunks;
+  chunks.reserve(max_threads); 
+  size_t chunk_size= boundary_interactions_.size() / max_threads;
+  auto cur_iter = boundary_interactions_.begin();
+  for(int i = 0; i < max_threads - 1; ++i) {
+    auto last_iter = cur_iter;
+    std::advance(cur_iter, chunk_size);
+    chunks.push_back(std::make_pair(last_iter, cur_iter));
+  }
+  chunks.push_back(std::make_pair(cur_iter, boundary_interactions_.end()));
+
+#pragma omp parallel shared(chunks)
+  {
+#pragma omp for 
+    for(int i = 0; i < max_threads; ++i) {
+      for(auto bix = chunks[i].first; bix != chunks[i].second; ++bix) {
+        ProcessBoundaryInteraction(bix);
+        // Do torque crossproducts
+        cross_product(bix->second.contact1,bix->second.force,bix->second.t1,3);
+      }
+    }
+  }
+#endif
+}
+
+void InteractionEngine::CalculateBoundaryInteractions() {
+  if (space_->type == +boundary_type::none) {
+    return;
+  }
+  for(auto bix = boundary_interactions_.begin(); bix != boundary_interactions_.end(); ++bix) {
+    ProcessBoundaryInteraction(bix);
+    // Do torque crossproducts
+    cross_product(bix->second.contact1,bix->second.force,bix->second.t1,3);
+  }
+}
+
+
+void InteractionEngine::CalculatePairInteractionsMP() {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
   std::vector<std::pair<std::vector<pair_interaction>::iterator, std::vector<pair_interaction>::iterator> > chunks;
@@ -122,7 +228,7 @@ void InteractionEngine::CalculateInteractionsMP() {
 #pragma omp for 
     for(int i = 0; i < max_threads; ++i) {
       for(auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
-        ProcessInteraction(pix);
+        ProcessPairInteraction(pix);
         // Do torque crossproducts
         cross_product(pix->second.contact1,pix->second.force,pix->second.t1,3);
         cross_product(pix->second.contact2,pix->second.force,pix->second.t2,3);
@@ -132,16 +238,16 @@ void InteractionEngine::CalculateInteractionsMP() {
 #endif
 }
 
-void InteractionEngine::CalculateInteractions() {
+void InteractionEngine::CalculatePairInteractions() {
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
-    ProcessInteraction(pix);
+    ProcessPairInteraction(pix);
     // Do torque crossproducts
     cross_product(pix->second.contact1,pix->second.force,pix->second.t1,3);
     cross_product(pix->second.contact2,pix->second.force,pix->second.t2,3);
   }
 }
 
-void InteractionEngine::ApplyInteractions() {
+void InteractionEngine::ApplyPairInteractions() {
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
     auto obj1 = pix->first.first;
     auto obj2 = pix->first.second;
@@ -152,9 +258,26 @@ void InteractionEngine::ApplyInteractions() {
     obj2->SubTorque(ix->t2);
     obj1->AddPotential(ix->pote);
     obj2->AddPotential(ix->pote);
-    for (int i=0; i<n_dim_; ++i)
-      for (int j=0; j<n_dim_; ++j)
+    for (int i=0; i<n_dim_; ++i) {
+      for (int j=0; j<n_dim_; ++j) {
         stress_[n_dim_*i+j] += ix->stress[n_dim_*i+j];
+      }
+    }
+  }
+}
+
+void InteractionEngine::ApplyBoundaryInteractions() {
+  for(auto bix = boundary_interactions_.begin(); bix != boundary_interactions_.end(); ++bix) {
+    auto obj1 = bix->first;
+    Interaction *ix = &(bix->second);
+    obj1->AddForce(ix->force);
+    obj1->AddTorque(ix->t1);
+    obj1->AddPotential(ix->pote);
+    for (int i=0; i<n_dim_; ++i) {
+      for (int j=0; j<n_dim_; ++j) {
+        stress_[n_dim_*i+j] += ix->stress[n_dim_*i+j];
+      }
+    }
   }
 }
 
@@ -166,16 +289,18 @@ void InteractionEngine::CalculatePressure() {
   for (int i=0; i<n_dim_; ++i) {
     for (int j=0; j<n_dim_; ++j) {
       // Add particle density along principle axes
-      if (i==j)
+      if (i==j) {
         space_->pressure_tensor[n_dim_*i+j] += n_objs_*inv_V;
+      }
       // Add time-averaged virial component
       space_->pressure_tensor[n_dim_*i+j] += stress_[n_dim_*i+j]*inv_V/n_thermo_;
     }
   }
   // Calculate isometric pressure
   space_->pressure = 0;
-  for (int i=0; i<n_dim_; ++i)
+  for (int i=0; i<n_dim_; ++i) {
     space_->pressure += space_->pressure_tensor[n_dim_*i+i];
+  }
   space_->pressure /= n_dim_;
   // Reset local stress tensor
   std::fill(stress_,stress_+9,0);
@@ -183,9 +308,20 @@ void InteractionEngine::CalculatePressure() {
 
 bool InteractionEngine::CheckOverlap() {
   overlap_ = false;
-  UpdateSimples();
+  UpdateInteractors();
   UpdateInteractions();
-  CalculateInteractions();
+  CalculatePairInteractions();
   return overlap_;
+}
+
+bool InteractionEngine::CheckBoundaryConditions() {
+  UpdateInteractors();
+  bool outside_boundary = false;
+  for (auto ixor=interactors_.begin(); ixor!=interactors_.end(); ++ixor) {
+    if (mindist_.CheckOutsideBoundary(*ixor)) {
+      outside_boundary = true;
+    }
+  }
+  return outside_boundary;
 }
 

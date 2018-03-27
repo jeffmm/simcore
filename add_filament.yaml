@@ -1,0 +1,20 @@
+filament:
+  color: 6
+  draw_type: bw
+  insertion_type: random
+  num: 0
+  overlap: 1
+  packing_fraction: -1
+  diameter: 1
+  length: 50
+  max_bond_length: 1
+  persistence_length: 0
+  posit_flag: 1
+  spec_flag: 1
+  checkpoint_flag: 1
+  n_posit: 1000
+  n_spec: 1000
+  n_checkpoint: 1000
+  driving_factor: 0
+  theta_analysis: 1
+  lp_analysis: 1
