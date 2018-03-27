@@ -177,14 +177,14 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         (*spec)->AddMember();
         inserted++;
         // First check that we are respecting boundary conditions
-        if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions()) {
+        if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
           (*spec)->PopMember();
           inserted--;
           // We are not counting boundary condition failures in insertion
           // failures, since insertion failures are for packing issues
         }
         // Check if we have an overlap of objects
-        else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap()) {
+        else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
           //printf("Has an overlap\n");
           (*spec)->PopMember();
           inserted--;
@@ -192,6 +192,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         }
         // Otherwise update display of percentage of species inserted
         else {
+          iengine_.AddInteractors((*spec)->GetLastInteractors());
           printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
           fflush(stdout);
         }
@@ -231,6 +232,7 @@ void Simulation::ClearSpecies() {
 void Simulation::ClearSimulation() {
   output_mgr_.Close();
   ClearSpecies();
+  iengine_.Clear();
   #ifndef NOGRAPH
   if (params_.graph_flag) {
     graphics_.Clear();

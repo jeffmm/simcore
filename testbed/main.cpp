@@ -1,7 +1,7 @@
-#include "simulation.h"
+#include "fff_simulation.h"
 
 int main() {
-  Simulation sim;
+  FFFSim sim;
   sim.Run();
   return 0;
 }

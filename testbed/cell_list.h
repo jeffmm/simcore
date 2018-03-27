@@ -10,7 +10,7 @@ class Cell {
     void PairSelf(std::vector<ix_pair> & nl);
 
   public:
-    std::vector<int> objs_;
+    std::vector<int> objs;
     Cell();
     void AddObj(int oid);
     void PairObjs(Cell * c, std::vector<ix_pair> * nl);

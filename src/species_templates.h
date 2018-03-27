@@ -85,6 +85,14 @@ std::vector<Object*> Species<T>::GetInteractors() {
 }
 
 template <typename T> 
+std::vector<Object*> Species<T>::GetLastInteractors() {
+  if (members_.size() == 0) {
+    error_exit("Called for last interactors of species, but species has zero members\n");
+  }
+  return members_.back()->GetInteractors();
+}
+
+template <typename T> 
 double Species<T>::GetPotentialEnergy() {
   double pe=0;
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
