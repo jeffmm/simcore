@@ -10,6 +10,7 @@ void InteractionEngine::Init(system_parameters *params,
   space_ = space;
 
   // Initialize owned structures
+  static_pnumber_ = params_->static_particle_number;
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
   n_update_ = params_->n_update_cells;
@@ -17,9 +18,10 @@ void InteractionEngine::Init(system_parameters *params,
   no_interactions_ = !(params_->interaction_flag);
   i_update_ = -1;
   n_objs_ = 0;
-  clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
+  //clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
+  ptracker_.Init(params, &interactors_, &nlist_);
   // Update dr distance should be half the cell length, and we are comparing the squares of the trajectory distances
-  dr_update_ = 0.25*clist_.GetCellLength()*clist_.GetCellLength();
+  dr_update_ = 0.25*ptracker_.GetCellLength()*ptracker_.GetCellLength();
   mindist_.Init(space, 2.0*dr_update_);
   potentials_.InitPotentials(params_);
 }
@@ -62,8 +64,15 @@ void InteractionEngine::UpdateInteractors() {
 }
 
 void InteractionEngine::UpdateInteractions() {
-  clist_.LoadInteractors(interactors_);
-  pair_interactions_ = clist_.GetPairInteractions();
+  //clist_.LoadInteractors(interactors_);
+  ptracker_.AssignCells();
+  //pair_interactions_ = clist_.GetPairInteractions();
+  ptracker_.CreatePairsCellList();
+  for (auto pair=nlist_.begin(); pair!=nlist_.end(); ++pair) {
+    Interaction ix;
+    pair_interaction pix(std::make_pair(interactors_[pair->first],interactors_[pair->second]),ix);
+    pair_interactions_.push_back(pix);
+  }
   boundary_interactions_.clear();
   for (auto ixor=interactors_.begin(); ixor!=interactors_.end(); ++ixor) {
     Interaction ix;
@@ -83,13 +92,15 @@ int InteractionEngine::CountSpecies() {
 
 void InteractionEngine::CheckUpdate() {
   // First check to see if any objects were added to the system
-  int obj_count = CountSpecies();
-  if (obj_count != n_objs_) {
-    // reset periodic update count and update number of objects we're tracking
-    i_update_ = 0; 
-    n_objs_ = obj_count;
-    UpdateInteractors();
-    UpdateInteractions();
+  if (!static_pnumber_) {
+    int obj_count = CountSpecies();
+    if (obj_count != n_objs_) {
+      // reset periodic update count and update number of objects we're tracking
+      i_update_ = 0; 
+      n_objs_ = obj_count;
+      UpdateInteractors();
+      UpdateInteractions();
+    }
   }
   else if (n_update_ <=0 && GetDrMax() > dr_update_) {
     i_update_ = 0; 
@@ -306,18 +317,16 @@ void InteractionEngine::CalculatePressure() {
   std::fill(stress_,stress_+9,0);
 }
 
-bool InteractionEngine::CheckOverlap() {
+bool InteractionEngine::CheckOverlap(std::vector<Object*> ixs) {
   overlap_ = false;
-  UpdateInteractors();
-  UpdateInteractions();
+  ptracker_.CreatePartialPairsCellList(ixs);
   CalculatePairInteractions();
   return overlap_;
 }
 
-bool InteractionEngine::CheckBoundaryConditions() {
-  UpdateInteractors();
+bool InteractionEngine::CheckBoundaryConditions(std::vector<Object*> ixs) {
   bool outside_boundary = false;
-  for (auto ixor=interactors_.begin(); ixor!=interactors_.end(); ++ixor) {
+  for (auto ixor=ixs.begin(); ixor!=ixs.end(); ++ixor) {
     if (mindist_.CheckOutsideBoundary(*ixor)) {
       outside_boundary = true;
     }
@@ -325,3 +334,10 @@ bool InteractionEngine::CheckBoundaryConditions() {
   return outside_boundary;
 }
 
+void InteractionEngine::Clear() {
+  ptracker_.Clear();
+}
+
+void InteractionEngine::AddInteractors(std::vector<Object*> ixs) {
+  interactors_.insert(interactors_.end(),ixs.begin(),ixs.end());
+}
