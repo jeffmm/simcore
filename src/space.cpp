@@ -15,8 +15,9 @@ void Space::Init(system_parameters *params) {
   if (n_periodic_ > n_dim_) 
     n_periodic_ = params_->n_periodic = n_dim_;
   radius_ = params_->system_radius;
-  if (radius_ <= 0)
+  if (radius_ <= 0) {
     error_exit("System radius is not a positive number!");
+  }
   bud_radius_ = 0;
   bud_height_ = 0;
   //r_cutoff_ = params_->r_cutoff_boundary;
@@ -27,30 +28,41 @@ void Space::Init(system_parameters *params) {
   update_ = false;
 
   // Make sure space_type is recognized
-  switch (params_->boundary_type) {
+  switch (params_->boundary) {
     case 0:
-      boundary_type_ = BOX;
-      boundary_type_string_ = "box";
+      boundary_ = boundary_type::none;
       break;
     case 1:
-      boundary_type_ = SPHERE;
-      boundary_type_string_ = "sphere";
+      boundary_ = boundary_type::box;
       break;
     case 2:
+      boundary_ = boundary_type::sphere;
+      break;
+    case 3:
       // No periodicity allowed in budding yeast boundary type
       n_periodic_ = params_->n_periodic = 0;
       // Get bud parameters
       bud_radius_ = params_->bud_radius;
       bud_height_ = params_->bud_height;
-      if (bud_radius_ > radius_) 
+      if (bud_radius_ > radius_) {
         error_exit("Bud radius larger than parent cell radius!");
-      if (bud_radius_ <= 0 || bud_height_ <= 0)
+      }
+      if (bud_radius_ <= 0 || bud_height_ <= 0) {
         error_exit("Budding yeast boundary type selected but either bud radius\n\
             or bud height is not a positive number!");
-      boundary_type_ = BUDDING;
-      boundary_type_string_ = "budding";
+      }
+      if (bud_height_ >= bud_radius_ + radius_) {
+        error_exit("Budding cell is not attached to mother cell.\
+            Check bud height or boundary type!\n");
+      }
+      if (bud_height_ <= radius_ - bud_radius_) {
+        error_exit("Budding cell is enclosed by mother cell.\
+            Check bud height or boundary type!\n");
+      }
+      boundary_ = boundary_type::budding;
+      break;
     default:
-      error_exit("Boundary type %d not recognized!",params_->boundary_type);
+      error_exit("Boundary type %d not recognized!",params_->boundary);
   }
   InitUnitCell();
   CalculateVolume();
@@ -58,11 +70,10 @@ void Space::Init(system_parameters *params) {
 }
 
 void Space::InitUnitCell() {
-
   double h_param1 = 2.0 * radius_;
   double h_major = h_param1;
   double h_minor = h_major;
-  if (boundary_type_ == BUDDING) {
+  if (boundary_ == +boundary_type::budding) {
     double h_param2 = bud_height_ + bud_radius_ + radius_;
     h_major = (h_param1 > h_param2 ? h_param1 : h_param2);
     h_minor = (h_param1 > h_param2 ? h_param2 : h_param1);
@@ -75,7 +86,6 @@ void Space::InitUnitCell() {
   unit_cell_[n_dim_*n_dim_-1] = h_major;
   // Compute unit cell quantities
   CalculateUnitCellQuantities();
-
 }
 
 void Space::CalculateUnitCellQuantities() {
@@ -115,7 +125,7 @@ void Space::CalculateUnitCellQuantities() {
 
 void Space::UpdateSpace() {
   // No space update for budding yeast yet
-  if (boundary_type_ == BUDDING)
+  if (boundary_ == +boundary_type::budding)
     return;
   UpdateUnitCell();
   UpdateVolume();
@@ -183,84 +193,110 @@ void Space::CalculateScalingMatrix() {
 }
 
 void Space::CalculateRadius() {
-  if (boundary_type_ == BOX) {
-    if (n_dim_ == 3)
-      radius_ = 0.5*pow(volume_, 1.0/3.0);
-    else if (n_dim_ == 2)
-      radius_ = 0.5*sqrt(volume_);
-  }
-  else if (boundary_type_ == SPHERE) {
-    if (n_dim_ == 3)
-      radius_ = pow(3.0*volume_/(4.0*M_PI), 1.0/3.0);
-    else if (n_dim_ == 2)
-      radius_ = sqrt(volume_/M_PI);
+  switch (boundary_._to_integral()) {
+    case 1:
+      if (n_dim_ == 3)
+        radius_ = 0.5*pow(volume_, 1.0/3.0);
+      else if (n_dim_ == 2)
+        radius_ = 0.5*sqrt(volume_);
+      break;
+    case 2:
+      if (n_dim_ == 3)
+        radius_ = pow(3.0*volume_/(4.0*M_PI), 1.0/3.0);
+      else if (n_dim_ == 2)
+        radius_ = sqrt(volume_/M_PI);
+      break;
+    default:
+      break;
   }
 }
 
 void Space::UpdateVolume() {
-  if (boundary_type_ == BOX) {
-    volume_ = unit_cell_volume_;
-    CalculateRadius();
-  }
-  else if (boundary_type_ == SPHERE) {
-    error_exit("Updating volume for spherical boundary types not implemented.");
-  }
-  else if (boundary_type_ == BUDDING) {
-    error_exit("Updating volume for budding yeast boundary types not implemented.");
+  switch (boundary_._to_integral()) {
+    case 1:
+      volume_ = unit_cell_volume_;
+      CalculateRadius();
+      break;
+    case 2:
+      error_exit("Updating volume for spherical boundary types not implemented.");
+      break;
+    case 3:
+      error_exit("Updating volume for budding yeast boundary types not implemented.");
+      break;
+    default:
+      break;
   }
 }
 
 void Space::CalculateVolume() {
-  if (boundary_type_ == BOX) {
-    v_ratio_ = 0;
-    neck_height_ = 0;
-    neck_radius_ = 0;
-    //FIXME This is not correct for cell lists with periodic boundary. Should not hurt calculations though, just not efficient.
-    if (n_dim_ == 2)
-      volume_ = SQR(2*radius_);
-    else
-      volume_ = CUBE(2*radius_);
-  }
-  else if (boundary_type_ == SPHERE) {
-    v_ratio_ = 0;
-    neck_height_ = 0;
-    neck_radius_ = 0;
-    if (n_dim_ == 2)
-      volume_ = M_PI * SQR(radius_);
-    else
-      volume_ = 4.0/3.0*M_PI*CUBE(radius_);
-  }
-  else if (boundary_type_ == BUDDING) {
-    double R = radius_;
-    double r = bud_radius_;
-    double d = bud_height_;
-    if (n_dim_ == 2) {
-      volume_ = M_PI * SQR(R) + M_PI * SQR(r)
-               - SQR(r) * acos((SQR(d)+SQR(r)-SQR(R))/(2*d*r))
-               - SQR(R) * acos((SQR(d)+SQR(R)-SQR(r))/(2*d*R))
-               + 0.5 * sqrt((R+r-d)*(r+d-R)*(R+d-r)*(R+r+d));
-      v_ratio_ = SQR(r) / (SQR(r) + SQR(R));
-    }
-    else {
-      volume_ = 4.0/3.0*M_PI*CUBE(R) + 4.0/3.0*M_PI*CUBE(r)
-                - M_PI * SQR(R+r-d)
-                  * (SQR(d) + 2*d*r - 3*SQR(r) + 2*d*R + 6*r*R - 3*SQR(R))
-                  / (12*d);
-      v_ratio_ = CUBE(r) / (CUBE(R) + CUBE(r));
-    }
-    neck_height_ = ( SQR(R)+SQR(d)-SQR(r) )/(2*d);
-    neck_radius_ = R * sqrt(1 - SQR( (SQR(R)+SQR(d)-SQR(r))/(2*d*R) ));
+  switch (boundary_._to_integral()) {
+    case 0:
+      v_ratio_ = 0;
+      neck_height_ = 0;
+      neck_radius_ = 0;
+      //FIXME This is not correct for cell lists with periodic boundary. Should not hurt calculations though, just not efficient.
+      if (n_dim_ == 2)
+        volume_ = SQR(2*radius_);
+      else
+        volume_ = CUBE(2*radius_);
+      break;
+    case 1:
+      v_ratio_ = 0;
+      neck_height_ = 0;
+      neck_radius_ = 0;
+      //FIXME This is not correct for cell lists with periodic boundary. Should not hurt calculations though, just not efficient.
+      if (n_dim_ == 2)
+        volume_ = SQR(2*radius_);
+      else
+        volume_ = CUBE(2*radius_);
+      break;
+    case 2:
+      v_ratio_ = 0;
+      neck_height_ = 0;
+      neck_radius_ = 0;
+      if (n_dim_ == 2)
+        volume_ = M_PI * SQR(radius_);
+      else
+        volume_ = 4.0/3.0*M_PI*CUBE(radius_);
+      break;
+    case 3:
+      {
+        double R = radius_;
+        double r = bud_radius_;
+        double d = bud_height_;
+        if (n_dim_ == 2) {
+          volume_ = M_PI * SQR(R) + M_PI * SQR(r)
+                   - SQR(r) * acos((SQR(d)+SQR(r)-SQR(R))/(2*d*r))
+                   - SQR(R) * acos((SQR(d)+SQR(R)-SQR(r))/(2*d*R))
+                   + 0.5 * sqrt((R+r-d)*(r+d-R)*(R+d-r)*(R+r+d));
+          v_ratio_ = SQR(r) / (SQR(r) + SQR(R));
+        }
+        else {
+          volume_ = 4.0/3.0*M_PI*CUBE(R) + 4.0/3.0*M_PI*CUBE(r)
+                    - M_PI * SQR(R+r-d)
+                      * (SQR(d) + 2*d*r - 3*SQR(r) + 2*d*R + 6*r*R - 3*SQR(R))
+                      / (12*d);
+          v_ratio_ = CUBE(r) / (CUBE(R) + CUBE(r));
+        }
+        neck_height_ = ( SQR(R)+SQR(d)-SQR(r) )/(2*d);
+        neck_radius_ = R * sqrt(1 - SQR( (SQR(R)+SQR(d)-SQR(r))/(2*d*R) ));
+        break;
+      }
+    default:
+      break;
   }
 }
 
 void Space::InitSpaceStruct() {
   s_struct.n_dim = n_dim_;
   s_struct.n_periodic = n_periodic_;
-  s_struct.type = boundary_type_string_;
-  if (boundary_type_ == BUDDING) {
+  s_struct.type = boundary_;
+  if (boundary_ == +boundary_type::budding) {
     s_struct.bud = true;
     s_struct.bud_height = bud_height_;
     s_struct.bud_radius = bud_radius_;
+    s_struct.bud_neck_radius = neck_radius_;
+    s_struct.bud_neck_height = neck_height_;
   }
   else {
     s_struct.bud = false;

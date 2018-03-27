@@ -1,45 +1,56 @@
-seed: 31964986148671454
-run_name: fixer
+# params.yaml
+---
+run_name: spiral_sanity_test
+seed: 298212689221
 n_runs: 1
-n_random: 1
+
+# time options
+delta: 0.00001
+n_steps: 100000000
+n_steps_equil: 0
+
+# space options
 n_dim: 2
 n_periodic: 2
-boundary_type: 0
-delta: 0.0001
-n_steps: 22000000
-n_steps_equil: 2000000
-system_radius: 250
+boundary: 0
+system_radius: 4500
+
+# interaction options
+interaction_flag: 1
+stoch_flag: 0
+cell_length: 5
+n_update_cells: -1
+f_cutoff: 1500
+
+# graphics options
 graph_flag: 1
-n_graph: 500
-graph_background: 0
+n_graph: 1000
 draw_boundary: 0
+graph_background: 1
 movie_flag: 0
 movie_directory: frames
-cell_length: 5
-n_update_cells: 10
-f_cutoff: 1500
-max_overlap: 100000
-species_insertion_failure_threshold: 10000
-thermo_flag: 1
+
+# output options
+thermo_flag: 0
 n_thermo: 100
-stoch_flag: 1
-interaction_flag: 1
+
+# model options
 filament:
-  shuffle: 1
-  shuffle_factor: 10
-  shuffle_frequency: 0.0001
-  overlap: 0
-  packing_fraction: 0.1
-  insertion_type: random_oriented
   num: 1
-  diameter: 1
-  max_child_length: 5
+  insertion_type: random_oriented
+  packing_fraction: 0.5
+  overlap: 1
   length: 100
-  persistence_length: [1000,3000,10000,30000,100000]
-  driving_factor: [2.5,5,7.5,10,12.5,15,17.5,20]
+  min_bond_length: 1.5
+  max_bond_length: 3
+  persistence_length: 4000
+  driving_factor: 30
+  spiral_flag: 0
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 1
   n_posit: 100
   n_spec: 100
-  n_checkpoint: 100
+  n_checkpoint: 10000
+  perlen_ratio: 100
+  driving_method: 1

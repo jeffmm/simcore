@@ -90,8 +90,9 @@ void Simulation::ScaleSpeciesPositions() {
 
 void Simulation::InitSimulation() {
   std::cout << "  Initializing simulation" << std::endl;
-  rng_.init(params_.seed);
+  rng_.Init(params_.seed);
   space_.Init(&params_);
+  InitObjects();
   InitSpecies();
   iengine_.Init(&params_, &species_, space_.GetStruct());
   InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
@@ -99,6 +100,14 @@ void Simulation::InitSimulation() {
   if (params_.graph_flag) {
     InitGraphics();
   }
+}
+
+void Simulation::InitObjects() {
+  Object::SetParams(&params_);
+  Object::SetNDim(params_.n_dim);
+  Object::SetDelta(params_.delta);
+  Object::SetSeed(gsl_rng_get(rng_.r));
+  Object::SetSpace(space_.GetStruct());
 }
 
 void Simulation::InitGraphics() {
@@ -123,27 +132,36 @@ void Simulation::InitGraphics() {
 void Simulation::InitSpecies() {
 
   // We have to search for the various types of species that we have
-  REGISTER_SPECIES(MDBeadSpecies,md_bead);
-  REGISTER_SPECIES(HardRodSpecies,hard_rod);
+  //REGISTER_SPECIES(MDBeadSpecies,md_bead);
+  //REGISTER_SPECIES(HardRodSpecies,hard_rod);
+  //REGISTER_SPECIES(BrBeadSpecies,br_bead);
+  REGISTER_SPECIES(CentrosomeSpecies,centrosome);
   REGISTER_SPECIES(FilamentSpecies,filament);
-  REGISTER_SPECIES(BrBeadSpecies,br_bead);
+  REGISTER_SPECIES(BeadSpringSpecies,bead_spring);
+  REGISTER_SPECIES(SpherocylinderSpecies,spherocylinder);
+  REGISTER_SPECIES(SpindleSpecies,spindle);
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
+  species_.reserve(species_factory_.m_classes.size());
   for (auto registered = species_factory_.m_classes.begin();
       registered != species_factory_.m_classes.end(); ++registered) {
     SpeciesBase *spec = (SpeciesBase*)species_factory_.construct(registered->first);
     spec->Init(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
     if (spec->GetNInsert() > 0) {
       species_.push_back(spec);
+      species_.back()->Reserve();
     }
   }
 }
 
 void Simulation::InsertSpecies(bool force_overlap, bool processing) {
+  printf("\r  Inserting species: 0%% complete");
+  fflush(stdout);
   // Assuming Random insertion for now
+  //force_overlap = true;
   for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
-    // Check for random insertion
+  // Check for random insertion
     if (processing || (*spec)->GetInsertionType().find("random") == std::string::npos) {
       // Insertion not random, force overlap
       force_overlap = true;
@@ -158,11 +176,21 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       while(num != inserted) {
         (*spec)->AddMember();
         inserted++;
-        if (!force_overlap && !(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+        // First check that we are respecting boundary conditions
+        if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions()) {
+          (*spec)->PopMember();
+          inserted--;
+          // We are not counting boundary condition failures in insertion
+          // failures, since insertion failures are for packing issues
+        }
+        // Check if we have an overlap of objects
+        else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap()) {
+          //printf("Has an overlap\n");
           (*spec)->PopMember();
           inserted--;
           num_failures++;
         }
+        // Otherwise update display of percentage of species inserted
         else {
           printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
           fflush(stdout);
@@ -235,7 +263,7 @@ void Simulation::GetGraphicsStructure() {
 void Simulation::InitOutputs() {
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_);
   if (params_.time_flag) {
-    cpu_init_time_ = cpu();
+    cpu_init_time_ = cpu_time();
   }
 }
 
@@ -249,7 +277,8 @@ void Simulation::WriteOutputs() {
     return; // skip first step
   }
   if (params_.time_flag && i_step_ == params_.n_steps-1) {
-    double cpu_time = cpu() - cpu_init_time_;
+    double cpu_final_time = cpu_time();
+    double cpu_time = cpu_final_time - cpu_init_time_;
     std::cout << "CPU Time for Initialization: " <<  cpu_init_time_ << "\n";
     std::cout << "CPU Time: " << cpu_time << "\n";
     std::cout << "Sim Time: " << time_ << "\n";
@@ -267,8 +296,9 @@ void Simulation::ProcessOutputs(system_parameters params, run_options run_opts) 
 
 // Initialize everything we need for processing
 void Simulation::InitProcessing(run_options run_opts) {
-  rng_.init(params_.seed);
+  rng_.Init(params_.seed);
   space_.Init(&params_);
+  InitObjects();
   InitSpecies();
   InsertSpecies(true, true);
   if (run_opts.reduce_flag) {
@@ -319,6 +349,11 @@ void Simulation::RunProcessing(int run_analyses) {
           (*it)->RunAnalysis();
         }
       }
+    }
+  }
+  if (run_analyses) {
+    for (auto it=species_.begin(); it!=species_.end(); ++it) {
+      (*it)->FinalizeAnalysis();
     }
   }
   // ClearSimulation will run CloseFiles which runs
