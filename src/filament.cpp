@@ -129,10 +129,16 @@ void Filament::InsertFirstBond() {
     InitRandomSite(diameter_);
     AddRandomBondToTip(bond_length_);
   }
-  else if (params_->filament.insertion_type.compare("random_oriented") == 0) {
+  else if (params_->filament.insertion_type.compare("random_nematic") == 0) {
     InitRandomSite(diameter_);
     std::fill(orientation_,orientation_+3,0.0);
     orientation_[n_dim_-1] = (gsl_rng_uniform_pos(rng_.r) > 0.5 ? 1.0 : -1.0);
+    AddBondToTip(orientation_, bond_length_);
+  }
+  else if (params_->filament.insertion_type.compare("random_polar") == 0) {
+    InitRandomSite(diameter_);
+    std::fill(orientation_,orientation_+3,0.0);
+    orientation_[n_dim_-1] = 1.0;
     AddBondToTip(orientation_, bond_length_);
   }
   else if (params_->filament.insertion_type.compare("centered_oriented") == 0) {
@@ -187,7 +193,7 @@ void Filament::InsertFilament(bool force_overlap) {
     InsertFirstBond();
     if (!force_overlap && (out_of_bounds = sites_[n_sites_-1].CheckBounds())) continue;
     SetOrientation(bonds_[n_bonds_-1].GetOrientation());
-    bool probable_orientation = (params_->filament.insertion_type.compare("simple_crystal") != 0 && params_->filament.insertion_type.compare("random_oriented") != 0);
+    bool probable_orientation = (params_->filament.insertion_type.compare("simple_crystal") != 0 && params_->filament.insertion_type.compare("random_polar") != 0 && params_->filament.insertion_type.compare("random_nematic") != 0);
     for (int i=0;i<n_bonds-1;++i) {
       if (probable_orientation) {
         GenerateProbableOrientation();

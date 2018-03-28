@@ -122,6 +122,37 @@ void Mesh::InitSiteAt(double * pos, double d) {
   s.SetDiameter(d);
   AddSite(s);
 }
+
+void Mesh::SetPosition(double const * const pos) {
+  std::fill(position_, position_+3, 0.0);
+  std::fill(orientation_, orientation_+3, 0.0);
+  for (auto site_it=sites_.begin(); site_it!=sites_.end(); ++site_it) {
+    double const * const site_pos = site_it->GetPosition();
+    double const * const site_u = site_it->GetOrientation();
+    for (int i=0; i<n_dim_; ++i) {
+      position_[i] += site_pos[i];
+      orientation_[i] += site_u[i];
+    }
+  }
+  normalize_vector(orientation_, n_dim_);
+  for (int i=0; i<n_dim_; ++i) {
+    position_[i] /= n_sites_;
+  }
+  double dr[3] = {0,0,0};
+  for (int i=0;i<n_dim_;++i) {
+    dr[i] = pos[i] - position_[i];
+  }
+  for (auto site_it=sites_.begin(); site_it!=sites_.end(); ++site_it) {
+    double new_pos[3] = {0,0,0};
+    double const * const site_pos = site_it->GetPosition();
+    for (int i=0; i<n_dim_; ++i) {
+      new_pos[i] = site_pos[i] + dr[i];
+    }
+    site_it->SetPosition(new_pos);
+  }
+  UpdateBondPositions();
+}
+
 void Mesh::InitBondAt(double * pos, double * u, double l, double d) {
   Site s1;
   Site s2;

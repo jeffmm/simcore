@@ -95,12 +95,15 @@ void ParticleTracker::AssignCells() {
     double const * const spos = (*objs_)[i]->GetScaledPosition();
     double x = spos[0] + 0.5;
     int r = (int) floor (n_cells_1d_*x);
+    if (r == n_cells_1d_) r-=1;
     double y = spos[1] + 0.5;
     int s = (int) floor(n_cells_1d_*y);
+    if (s == n_cells_1d_) s-=1;
     int t = 0;
     if (n_dim_ == 3) {
       double z = spos[2] + 0.5;
       t = (int) floor (n_cells_1d_*z);
+      if (t == n_cells_1d_) t-=1;
     }
     clist_[r][s][t].AddObj(i);
   }
@@ -209,8 +212,6 @@ void ParticleTracker::CreatePairsCellList() {
 #endif
 }
 
-void ParticleTracker::Check
-
 void ParticleTracker::Clear() {
   DeallocateCellList();
 }
@@ -219,6 +220,82 @@ double ParticleTracker::GetCellLength() {
   return cell_length_1d_;
 }
 
-void ParticleTracker::CreatePartialPairsCellList() {
+void ParticleTracker::CreatePartialPairsCellList(std::vector<Object*> ixs, int n_interactors) {
+  nlist_->clear();
+  std::vector<std::tuple<int,int,int> > partial_cells;
+  for (auto it=ixs.begin(); it!=ixs.end(); ++it) {
+    double const * const spos = (*it)->GetScaledPosition();
+    double x = spos[0] + 0.5;
+    int r = (int) floor (n_cells_1d_*x);
+    if (r == n_cells_1d_) r-=1;
+    double y = spos[1] + 0.5;
+    int s = (int) floor(n_cells_1d_*y);
+    if (s == n_cells_1d_) s-=1;
+    int t = 0;
+    if (n_dim_ == 3) {
+      double z = spos[2] + 0.5;
+      t = (int) floor (n_cells_1d_*z);
+      if (t == n_cells_1d_) t-=1;
+    }
+    clist_[r][s][t].AddObj(n_interactors++);
+    partial_cells.push_back(std::make_tuple(r,s,t));
+  }
+  for (auto it=partial_cells.begin(); it!=partial_cells.end(); ++it) {
+    int i,j,k;
+    std::tie(i,j,k) = (*it);
+    for (int iprime = i-1; iprime < i+2; ++iprime) {
+      int ii = iprime;
+      if (ii == n_cells_1d_ && n_per_ > 0) ii = 0;
+      else if (ii == n_cells_1d_) continue;
+      if (ii < 0 && n_per_ > 0) ii = n_cells_1d_-1;
+      else if (ii < 0) continue;
+      for (int jprime = j-1; jprime < j+2; ++jprime) {
+        int jj = jprime;
+        /* Wrap for periodic boundary conditions */
+        if (jj == n_cells_1d_  && n_per_ > 1) jj = 0;
+        else if (jj == n_cells_1d_) continue;
+        if (jj < 0 && n_per_ > 1) jj = n_cells_1d_-1;
+        else if (jj < 0) continue;
+        if (n_dim_<3) {
+          clist_[i][j][0].PairObjs(&(clist_[ii][jj][0]),nlist_);
+          continue;
+        }
+        for (int kprime=k-1; kprime<k+2; ++kprime) {
+          int kk = kprime;
+          /* Wrap for periodic boundary conditions */
+          if (kk == n_cells_1d_ && n_per_ > 2) kk = 0;
+          else if (kk == n_cells_1d_) continue;
+          if (kk < 0 && n_per_ > 2) kk = n_cells_1d_-1;
+          else if (kk < 0) continue;
+          clist_[i][j][k].PairObjs(&(clist_[ii][jj][kk]),nlist_);
+        }
+      }
+    }
+  }
+  // Now remove the partial list of objects from the cell list
+  for (auto it=partial_cells.begin(); it!=partial_cells.end(); ++it) {
+    int i,j,k;
+    std::tie(i,j,k) = (*it);
+    clist_[i][j][k].PopBack();
+  }
+}
 
+void ParticleTracker::AddToCellList(std::vector<Object*> ixs, int n_interactors) {
+  nlist_->clear();
+  for (auto it=ixs.begin(); it!=ixs.end(); ++it) {
+    double const * const spos = (*it)->GetScaledPosition();
+    double x = spos[0] + 0.5;
+    int r = (int) floor (n_cells_1d_*x);
+    if (r == n_cells_1d_) r-=1;
+    double y = spos[1] + 0.5;
+    int s = (int) floor(n_cells_1d_*y);
+    if (s == n_cells_1d_) s-=1;
+    int t = 0;
+    if (n_dim_ == 3) {
+      double z = spos[2] + 0.5;
+      t = (int) floor (n_cells_1d_*z);
+      if (t == n_cells_1d_) t-=1;
+    }
+    clist_[r][s][t].AddObj(n_interactors++);
+  }
 }

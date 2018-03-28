@@ -66,8 +66,10 @@ class InteractionEngine {
               space_struct *space);
     void Interact();
     void CalculatePressure();
-    bool CheckOverlap();
-    bool CheckBoundaryConditions();
+    bool CheckOverlap(std::vector<Object*> ixs);
+    bool CheckBoundaryConditions(std::vector<Object*> ixs);
+    void AddInteractors(std::vector<Object*> ixs);
+    void Reset();
     void Clear();
 };
 

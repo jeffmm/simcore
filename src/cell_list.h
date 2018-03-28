@@ -13,5 +13,6 @@ class Cell {
     std::vector<int> objs_;
     Cell();
     void AddObj(int oid);
+    void PopBack();
     void PairObjs(Cell * c, std::vector<ix_pair> * nl);
 };

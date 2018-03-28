@@ -21,6 +21,8 @@ class ParticleTracker {
     ParticleTracker() {}
     void Init(system_parameters * p, std::vector<Object*> * o, std::vector<ix_pair> * n);
     void CreatePairsCellList();
+    void CreatePartialPairsCellList(std::vector<Object*> ixs, int n_interactors);
+    void AddToCellList(std::vector<Object*> ixs, int n_interactors);
     void AssignCells();
     void ClearCells();
     void Clear();
