@@ -28,3 +28,7 @@ void Cell::AddObj(int oid) {
   std::lock_guard<std::mutex> lk(cell_mtx);
   objs_.push_back(oid);
 }
+
+void Cell::PopBack() {
+  objs_.pop_back();
+}

@@ -95,11 +95,11 @@ void Simulation::InitSimulation() {
   InitObjects();
   InitSpecies();
   iengine_.Init(&params_, &species_, space_.GetStruct());
-  InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
-  InitOutputs();
   if (params_.graph_flag) {
     InitGraphics();
   }
+  InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
+  InitOutputs();
 }
 
 void Simulation::InitObjects() {
@@ -167,6 +167,8 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       force_overlap = true;
     }
     int num = (*spec)->GetNInsert();
+    printf("n_insert: %d\n",num);
+    //exit(0);
     bool not_done = true;
     int inserted = 0;
     int num_attempts = 0;
@@ -175,11 +177,11 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       int num_failures = 0;
       while(num != inserted) {
         (*spec)->AddMember();
-        inserted++;
+        Draw();
         // First check that we are respecting boundary conditions
         if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
           (*spec)->PopMember();
-          inserted--;
+          //num_failures++;
           // We are not counting boundary condition failures in insertion
           // failures, since insertion failures are for packing issues
         }
@@ -187,33 +189,92 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
           //printf("Has an overlap\n");
           (*spec)->PopMember();
-          inserted--;
           num_failures++;
         }
         // Otherwise update display of percentage of species inserted
         else {
+          inserted++;
           iengine_.AddInteractors((*spec)->GetLastInteractors());
           printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
           fflush(stdout);
         }
         if (num_failures>params_.species_insertion_failure_threshold) {
           break;
+        } 
+      }
+      if (num != inserted) {
+        // Attempt a lattice-based insertion strategy (only 2d for now)
+        if (params_.n_dim == 3) continue;
+        double pos[3] = {0,0,0};
+        pos[0] = -params_.system_radius;
+        pos[1] = -params_.system_radius;
+        double d = (*spec)->GetSpecDiameter();
+        double l = (*spec)->GetSpecLength();
+        int num_x = (int) floor(2*params_.system_radius/(0.5*d));
+        int num_y = (int) floor(2*params_.system_radius/(0.5*l));
+        std::vector<std::pair<int, int> > grid_array;
+        for (int i=0;i<num_x;++i) {
+          for (int j=0;j<num_y; ++j) {
+            grid_array.push_back(std::make_pair(i,j));
+          }
         }
+        int * grid_index = new int[num_x*num_y];
+        for (int i=0;i<num_x*num_y; ++i) {
+          grid_index[i] = i;
+        }
+        gsl_ran_shuffle(rng_.r, grid_index, num_x*num_y, sizeof(int));
+        //while (pos[1] < params_.system_radius && inserted!=num) {
+        for (int i=0; i<num_x*num_y; ++i) {
+          pos[0] = grid_array[grid_index[i]].first*0.5*d;
+          pos[1] = grid_array[grid_index[i]].second*0.5*l;
+          (*spec)->AddMember();
+          (*spec)->SetLastMemberPosition(pos);
+          Draw();
+          // First check that we are respecting boundary conditions
+          if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
+            (*spec)->PopMember();
+            //num_failures++;
+            // We are not counting boundary condition failures in insertion
+            // failures, since insertion failures are for packing issues
+          }
+          // Check if we have an overlap of objects
+          else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
+            //printf("Has an overlap\n");
+            (*spec)->PopMember();
+            num_failures++;
+          }
+          // Otherwise update display of percentage of species inserted
+          else {
+            inserted++;
+            iengine_.AddInteractors((*spec)->GetLastInteractors());
+            printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
+            fflush(stdout);
+          }
+          if (inserted == num) break;
+          //pos[0]+=0.5*d;
+          //if (pos[0] > params_.system_radius) {
+            //pos[0] = -params_.system_radius;
+            //pos[1] += 1+l;
+          //}
+        }
+        delete[] grid_index;
       }
       putchar('\n');
       if (num != inserted) {
         printf("  Species insertion failure threshold reached. Reattempting insertion.\n");
         (*spec)->PopAll();
+        iengine_.Reset();
       }
-      if (++num_attempts > 20) {
+      if (++num_attempts > 5) {
         error_exit("Unable to insert species randomly within the hard-coded attempt threshold of 20!\n");
       }
     }
+    printf("inserted: %d\n",inserted);
     if (!processing) {
       printf("\n");
       if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
         (*spec)->ArrangeMembers();
-        if (!(*spec)->CanOverlap() && iengine_.CheckOverlap()) {
+        if (!(*spec)->CanOverlap() && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
           error_exit("Species inserted with deterministic insertion type is overlapping!");
         }
       }
