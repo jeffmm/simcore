@@ -68,9 +68,10 @@ void InteractionEngine::UpdateInteractions() {
   ptracker_.AssignCells();
   //pair_interactions_ = clist_.GetPairInteractions();
   ptracker_.CreatePairsCellList();
+  pair_interactions_.clear();
   for (auto pair=nlist_.begin(); pair!=nlist_.end(); ++pair) {
     Interaction ix;
-    pair_interaction pix(std::make_pair(interactors_[pair->first],interactors_[pair->second]),ix);
+    pair_interaction pix(std::make_pair(&(*(interactors_[pair->first])),&(*(interactors_[pair->second]))),ix);
     pair_interactions_.push_back(pix);
   }
   boundary_interactions_.clear();
@@ -319,7 +320,31 @@ void InteractionEngine::CalculatePressure() {
 
 bool InteractionEngine::CheckOverlap(std::vector<Object*> ixs) {
   overlap_ = false;
-  ptracker_.CreatePartialPairsCellList(ixs);
+  int n_interactors = interactors_.size();
+  ptracker_.CreatePartialPairsCellList(ixs,n_interactors);
+  pair_interactions_.clear();
+  for (auto pair=nlist_.begin(); pair!=nlist_.end(); ++pair) {
+    Object *o1,*o2;
+    Interaction ix;
+    if (pair->first > n_interactors-1 && pair->second < n_interactors) {
+      o1 = ixs[pair->first - n_interactors];
+      o2 = interactors_[pair->second];
+    }
+    else if (pair->second > n_interactors-1 && pair->first < n_interactors) {
+      o1 = ixs[pair->second - n_interactors];
+      o2 = interactors_[pair->first];
+    }
+    else if (pair->second > n_interactors-1 && pair->first > n_interactors-1) {
+      o1 = ixs[pair->first - n_interactors];
+      o2 = ixs[pair->second - n_interactors];
+    }
+    else {
+      o1 = interactors_[pair->first];
+      o2 = interactors_[pair->second];
+    }
+    pair_interaction pix(std::make_pair(o1,o2),ix);
+    pair_interactions_.push_back(pix);
+  }
   CalculatePairInteractions();
   return overlap_;
 }
@@ -338,6 +363,15 @@ void InteractionEngine::Clear() {
   ptracker_.Clear();
 }
 
+void InteractionEngine::Reset() {
+  pair_interactions_.clear();
+  interactors_.clear();
+  ptracker_.ClearCells();
+}
+
 void InteractionEngine::AddInteractors(std::vector<Object*> ixs) {
+  ptracker_.AddToCellList(ixs,interactors_.size());
+  //UpdateInteractors();
+  //UpdateInteractions();
   interactors_.insert(interactors_.end(),ixs.begin(),ixs.end());
 }

@@ -180,14 +180,16 @@ class FilamentSpecies : public Species<Filament> {
         if (params_->filament.length <= 0) {
           error_exit("Packing fraction with polydisperse lengths not implemented yet\n");
         }
+        double fil_vol;
         if (params_->n_dim == 2) {
-          double fil_vol = params_->filament.length*params_->filament.diameter+0.25*M_PI*SQR(params_->filament.diameter);
+          fil_vol = params_->filament.length*params_->filament.diameter+0.25*M_PI*SQR(params_->filament.diameter);
           sparams_->num = params_->filament.packing_fraction*space_->volume/fil_vol;
         }
         else {
-          double fil_vol = 0.25*M_PI*SQR(params_->filament.diameter)*params_->filament.length+M_PI*CUBE(params_->filament.diameter)/6.0;
+          fil_vol = 0.25*M_PI*SQR(params_->filament.diameter)*params_->filament.length+M_PI*CUBE(params_->filament.diameter)/6.0;
           sparams_->num = params_->filament.packing_fraction*space_->volume/fil_vol;
         }
+        printf("  num: %d\n  vol: %2.2f\n  fil_vol: %2.2f\n  pf: %2.2f\n",sparams_->num, space_->volume, fil_vol, params_->filament.packing_fraction);
       }
     }
     void InitAnalysis();
