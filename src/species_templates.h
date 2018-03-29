@@ -85,6 +85,14 @@ std::vector<Object*> Species<T>::GetInteractors() {
 }
 
 template <typename T> 
+std::vector<Object*> Species<T>::GetLastInteractors() {
+  if (members_.size() == 0) {
+    error_exit("Called for last interactors of species, but species has zero members\n");
+  }
+  return members_.back().GetInteractors();
+}
+
+template <typename T> 
 double Species<T>::GetPotentialEnergy() {
   double pe=0;
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
@@ -241,6 +249,28 @@ void Species<T>::ArrangeMembers() {
     CenteredOrientedArrangement();
   else
     warning("Arrangement not recognized and ArrangeMembers not overwritten by species!\n");
+}
+
+template<typename T>
+void Species<T>::SetLastMemberPosition(double const * const pos) {
+  members_.back().SetPosition(pos);
+  members_.back().UpdatePeriodic();
+}
+
+template<typename T>
+double Species<T>::GetSpecLength() {
+  if (members_.size() == 0)
+    return 0;
+  else
+    return members_[0].GetLength();
+}
+
+template<typename T>
+double Species<T>::GetSpecDiameter() {
+  if (members_.size() == 0)
+    return 0;
+  else
+    return members_[0].GetDiameter();
 }
 
 template<typename T>

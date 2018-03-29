@@ -1,30 +1,32 @@
 # params.yaml
 ---
 run_name: spiral_sanity_test
-seed: 298212689221
+seed: 278001156231815
 n_runs: 1
 
 # time options
-delta: 0.00001
+delta: 0.0001
 n_steps: 100000000
 n_steps_equil: 0
 
 # space options
 n_dim: 2
 n_periodic: 2
-boundary: 0
-system_radius: 4500
+boundary: 1
+system_radius: 1000
 
 # interaction options
 interaction_flag: 1
-stoch_flag: 0
+stoch_flag: 1
 cell_length: 5
 n_update_cells: -1
 f_cutoff: 1500
+static_particle_number: 1
+species_insertion_failure_threshold: 10000
 
 # graphics options
 graph_flag: 1
-n_graph: 1000
+n_graph: 100
 draw_boundary: 0
 graph_background: 1
 movie_flag: 0
@@ -37,10 +39,11 @@ n_thermo: 100
 # model options
 filament:
   num: 1
-  insertion_type: random_oriented
-  packing_fraction: 0.5
-  overlap: 1
-  length: 100
+  insertion_type: random_nematic
+  packing_fraction: 0.4
+  overlap: 0
+  length: 50
+  n_bonds: 15
   min_bond_length: 1.5
   max_bond_length: 3
   persistence_length: 4000

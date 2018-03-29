@@ -89,14 +89,14 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("friction_ratio")==0) {
             params->filament.friction_ratio = jt->second.as<double>();
           }
+          else if (param_name.compare("f_grow_to_shrink")==0) {
+            params->filament.f_grow_to_shrink = jt->second.as<double>();
+          }
           else if (param_name.compare("dynamic_instability_flag")==0) {
             params->filament.dynamic_instability_flag = jt->second.as<int>();
           }
           else if (param_name.compare("force_induced_catastrophe_flag")==0) {
             params->filament.force_induced_catastrophe_flag = jt->second.as<int>();
-          }
-          else if (param_name.compare("f_pause_to_shrink")==0) {
-            params->filament.f_pause_to_shrink = jt->second.as<double>();
           }
           else if (param_name.compare("fic_factor")==0) {
             params->filament.fic_factor = jt->second.as<double>();
@@ -110,11 +110,11 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("f_pause_to_grow")==0) {
             params->filament.f_pause_to_grow = jt->second.as<double>();
           }
+          else if (param_name.compare("f_pause_to_shrink")==0) {
+            params->filament.f_pause_to_shrink = jt->second.as<double>();
+          }
           else if (param_name.compare("f_grow_to_pause")==0) {
             params->filament.f_grow_to_pause = jt->second.as<double>();
-          }
-          else if (param_name.compare("f_grow_to_shrink")==0) {
-            params->filament.f_grow_to_shrink = jt->second.as<double>();
           }
           else if (param_name.compare("metric_forces")==0) {
             params->filament.metric_forces = jt->second.as<int>();
@@ -494,14 +494,14 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
-          else if (param_name.compare("persistence_length")==0) {
-            params->bead_spring.persistence_length = jt->second.as<double>();
-          }
           else if (param_name.compare("diameter")==0) {
             params->bead_spring.diameter = jt->second.as<double>();
           }
           else if (param_name.compare("length")==0) {
             params->bead_spring.length = jt->second.as<double>();
+          }
+          else if (param_name.compare("persistence_length")==0) {
+            params->bead_spring.persistence_length = jt->second.as<double>();
           }
           else if (param_name.compare("max_bond_length")==0) {
             params->bead_spring.max_bond_length = jt->second.as<double>();
@@ -623,9 +623,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
-          else if (param_name.compare("alignment_potential")==0) {
-            params->spindle.alignment_potential = jt->second.as<int>();
-          }
           else if (param_name.compare("diameter")==0) {
             params->spindle.diameter = jt->second.as<double>();
           }
@@ -637,6 +634,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_filaments_mother")==0) {
             params->spindle.n_filaments_mother = jt->second.as<int>();
+          }
+          else if (param_name.compare("alignment_potential")==0) {
+            params->spindle.alignment_potential = jt->second.as<int>();
           }
           else if (param_name.compare("k_spring")==0) {
             params->spindle.k_spring = jt->second.as<double>();
@@ -770,9 +770,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("bud_radius")==0) {
         params->bud_radius = it->second.as<double>();
       }
-      else if (param_name.compare("uniform_crystal")==0) {
-        params->uniform_crystal = it->second.as<int>();
-      }
       else if (param_name.compare("lj_epsilon")==0) {
         params->lj_epsilon = it->second.as<double>();
       }
@@ -830,8 +827,17 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("species_insertion_failure_threshold")==0) {
         params->species_insertion_failure_threshold = it->second.as<int>();
       }
+      else if (param_name.compare("species_insertion_reattempt_threshold")==0) {
+        params->species_insertion_reattempt_threshold = it->second.as<int>();
+      }
+      else if (param_name.compare("uniform_crystal")==0) {
+        params->uniform_crystal = it->second.as<int>();
+      }
       else if (param_name.compare("n_steps_equil")==0) {
         params->n_steps_equil = it->second.as<int>();
+      }
+      else if (param_name.compare("static_particle_number")==0) {
+        params->static_particle_number = it->second.as<int>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";
