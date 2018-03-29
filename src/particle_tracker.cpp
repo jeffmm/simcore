@@ -14,7 +14,7 @@ void ParticleTracker::Init(system_parameters * p, std::vector<Object*> * o, std:
 
 void ParticleTracker::AllocateCellList() {
   DPRINTF("Allocating cell lists\n");
-  printf("Cell length: %2.2f\n",cell_length_1d_);
+  //printf("Cell length: %2.2f\n",cell_length_1d_);
   int third_dim = (n_dim_==3 ? n_cells_1d_ : 1);
   clist_ = new Cell ** [n_cells_1d_];
   for (int i=0;i<n_cells_1d_;++i) {
