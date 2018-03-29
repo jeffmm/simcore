@@ -189,7 +189,7 @@ class FilamentSpecies : public Species<Filament> {
           fil_vol = 0.25*M_PI*SQR(params_->filament.diameter)*params_->filament.length+M_PI*CUBE(params_->filament.diameter)/6.0;
           sparams_->num = params_->filament.packing_fraction*space_->volume/fil_vol;
         }
-        printf("  num: %d\n  vol: %2.2f\n  fil_vol: %2.2f\n  pf: %2.2f\n",sparams_->num, space_->volume, fil_vol, params_->filament.packing_fraction);
+        //DPRINTF("  filament_num: %d\n  sys_volume: %2.2f\n  fil_volume: %2.2f\n  packing_fraction: %2.2f\n",sparams_->num, space_->volume, fil_vol, params_->filament.packing_fraction);
       }
     }
     void InitAnalysis();
