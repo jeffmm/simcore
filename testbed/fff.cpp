@@ -1,71 +1,27 @@
-#include "filament.h"
+#include "fff.h"
 
-Filament::Filament() : Mesh() {
+FFF::FFF() : Mesh() {
   SetParameters();
 } 
 
-void Filament::SetParameters() {
+void FFF::SetParameters() {
   color_ = params_->filament.color;
   draw_ = draw_type::_from_string(params_->filament.draw_type.c_str());
-  length_ = params_->filament.length;
-  persistence_length_ = params_->filament.persistence_length;
-  if (params_->filament.perlen_ratio > 0) {
-    persistence_length_ = length_ * params_->filament.perlen_ratio;
-  }
-  diameter_ = params_->filament.diameter;
-  // TODO JMM: add subdivisions of bonds for interactions, 
-  //           should depend on cell length
-  max_length_ = params_->filament.max_length;
-  min_length_ = params_->filament.min_length;
-  max_bond_length_ = params_->filament.max_bond_length;
-  min_bond_length_ = params_->filament.min_bond_length;
-  if (length_ > 0 && params_->filament.n_bonds > 0) {
-    min_bond_length_ = length_ / params_->filament.n_bonds + 1e-6;
-    max_bond_length_ = length_ / params_->filament.n_bonds - 1e-6;
-  }
-  dynamic_instability_flag_ = params_->filament.dynamic_instability_flag;
-  spiral_flag_ = params_->filament.spiral_flag;
-  force_induced_catastrophe_flag_ = params_->filament.force_induced_catastrophe_flag;
-  p_g2s_ = params_->filament.f_grow_to_shrink*delta_;
-  p_g2p_ = params_->filament.f_grow_to_pause*delta_;
-  p_s2p_ = params_->filament.f_shrink_to_pause*delta_;
-  p_s2g_ = params_->filament.f_shrink_to_grow*delta_;
-  p_p2s_ = params_->filament.f_pause_to_shrink*delta_;
-  p_p2g_ = params_->filament.f_pause_to_grow*delta_;
-  v_depoly_ = params_->filament.v_depoly;
-  v_poly_ = params_->filament.v_poly;
-  driving_factor_ = params_->filament.driving_factor;
-  friction_ratio_ = params_->filament.friction_ratio;
-  metric_forces_ = params_->filament.metric_forces;
-  stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
-  eq_steps_ = params_->n_steps_equil;
-  eq_steps_count_ = 0;
-  fic_factor_ = params_->filament.fic_factor;
-  tip_force_ = 0.0;
-  k_off_ = params_->motor.k_off;
-  k_on_ = params_->motor.k_on;
-  motor_concentration_ = params_->motor.concentration;
-  n_motors_bound_ = 0;
-  shuffle_flag_ = params_->filament.shuffle;
-  shuffle_factor_ = params_->filament.shuffle_factor;
-  shuffle_frequency_ = params_->filament.shuffle_frequency;
+  length_ = FFF_AR;
+  persistence_length_ = length_*FFF_LP_RATIO;
+  diameter_ = 1;
+  n_bonds_ = FFF_BOND_NUM;
+  n_sites_ = n_bonds_+1;
+  bond_length_ = length_ / n_bonds_;
+  driving_factor_ = FFF_DRIVING;
+  friction_ratio_ = FFF_FRICTION_RATIO;
+  metric_forces_ = FFF_METRIC;
+  stoch_flag_ = FFF_STOCH; 
 }
 
-void Filament::SetAnchor(Anchor * a) {
-  anchor_ = a;
-  anchored_ = true;
-}
-
-bool Filament::CheckBounds(double buffer) {
-  for (auto site=sites_.begin();site!=sites_.end(); ++site) {
-    if (site->CheckBounds()) return true;
-  }
-  return false;
-}
-
-void Filament::Init(bool force_overlap) {
+void FFF::Init(bool force_overlap) {
   InitElements();
-  InsertFilament(force_overlap);
+  InsertFFF(force_overlap);
   if (spiral_flag_) {
     InitSpiral2D();
     return;
@@ -76,18 +32,18 @@ void Filament::Init(bool force_overlap) {
   poly_ = poly_state::grow;
 }
 
-void Filament::InitElements() {
+void FFF::InitElements() {
   int n_bonds;
   if (max_length_ < min_length_) {
     warning("Minimum filament length larger than max length -- setting min_length = max_length");
     min_length_ = max_length_;
   }
   if (length_ > max_length_) {
-    warning("Filament length larger than max length -- setting length = max_length");
+    warning("FFF length larger than max length -- setting length = max_length");
     length_ = max_length_;
   }
   else if (length_ > 0 && length_ < min_length_) {
-    warning("Filament length less than min length -- setting length = min_length");
+    warning("FFF length less than min length -- setting length = min_length");
     length_ = min_length_;
   }
   int max_bonds = (int) ceil(max_length_/min_bond_length_);
@@ -118,7 +74,7 @@ void Filament::InitElements() {
   cos_thetas_.resize(n_sites_max-2); //max_sites-2
 }
 
-void Filament::InsertFirstBond() {
+void FFF::InsertFirstBond() {
   if (anchored_) {
     InitSiteAt(anchor_->position_,diameter_);
     std::copy(anchor_->orientation_,anchor_->orientation_+3,orientation_);
@@ -129,16 +85,10 @@ void Filament::InsertFirstBond() {
     InitRandomSite(diameter_);
     AddRandomBondToTip(bond_length_);
   }
-  else if (params_->filament.insertion_type.compare("random_nematic") == 0) {
+  else if (params_->filament.insertion_type.compare("random_oriented") == 0) {
     InitRandomSite(diameter_);
     std::fill(orientation_,orientation_+3,0.0);
     orientation_[n_dim_-1] = (gsl_rng_uniform_pos(rng_.r) > 0.5 ? 1.0 : -1.0);
-    AddBondToTip(orientation_, bond_length_);
-  }
-  else if (params_->filament.insertion_type.compare("random_polar") == 0) {
-    InitRandomSite(diameter_);
-    std::fill(orientation_,orientation_+3,0.0);
-    orientation_[n_dim_-1] = 1.0;
     AddBondToTip(orientation_, bond_length_);
   }
   else if (params_->filament.insertion_type.compare("centered_oriented") == 0) {
@@ -159,7 +109,7 @@ void Filament::InsertFirstBond() {
   }
 }
 
-void Filament::InsertFilament(bool force_overlap) {
+void FFF::InsertFFF(bool force_overlap) {
   bool out_of_bounds = true;
   int n_bonds;
   bool polydisperse = (length_<=0);
@@ -193,7 +143,7 @@ void Filament::InsertFilament(bool force_overlap) {
     InsertFirstBond();
     if (!force_overlap && (out_of_bounds = sites_[n_sites_-1].CheckBounds())) continue;
     SetOrientation(bonds_[n_bonds_-1].GetOrientation());
-    bool probable_orientation = (params_->filament.insertion_type.compare("simple_crystal") != 0 && params_->filament.insertion_type.compare("random_polar") != 0 && params_->filament.insertion_type.compare("random_nematic") != 0);
+    bool probable_orientation = (params_->filament.insertion_type.compare("simple_crystal") != 0 && params_->filament.insertion_type.compare("random_oriented") != 0);
     for (int i=0;i<n_bonds-1;++i) {
       if (probable_orientation) {
         GenerateProbableOrientation();
@@ -210,7 +160,7 @@ void Filament::InsertFilament(bool force_overlap) {
   shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*shuffle_factor_;
 }
 
-void Filament::InsertAt(double *pos, double *u) {
+void FFF::InsertAt(double *pos, double *u) {
   int n_bonds;
   bool polydisperse = (length_<=0);
   if (polydisperse) {
@@ -238,7 +188,7 @@ void Filament::InsertAt(double *pos, double *u) {
   std::copy(u,u+3,orientation_);
   AddBondToTip(orientation_, bond_length_);
   if (sites_[n_sites_-1].CheckBounds()) {
-    error_exit("Filament inserted manually out of bounds.");
+    error_exit("FFF inserted manually out of bounds.");
   }
   SetOrientation(bonds_[n_bonds_-1].GetOrientation());
   for (int i=0;i<n_bonds-1;++i) {
@@ -247,7 +197,7 @@ void Filament::InsertAt(double *pos, double *u) {
     }
     AddBondToTip(orientation_, bond_length_);
     if (sites_[n_sites_-1].CheckBounds()) {
-      error_exit("Filament inserted manually out of bounds.");
+      error_exit("FFF inserted manually out of bounds.");
     }
   }
   UpdateBondPositions();
@@ -259,7 +209,7 @@ void Filament::InsertAt(double *pos, double *u) {
 }
 
 // Place a spool centered at the origin
-void Filament::InitSpiral2D() {
+void FFF::InitSpiral2D() {
   if (n_dim_ > 2)
     error_exit("3D Spirals not coded yet.");
   double prev_pos[3] = {0, 0, 0};
@@ -296,7 +246,7 @@ void Filament::InitSpiral2D() {
   poly_ = poly_state::grow;
 }
 
-void Filament::SetDiffusion() {
+void FFF::SetDiffusion() {
   double logLD = log(length_/diameter_);
   //double gamma_0 = 4.0/3.0*eps*((1+0.64*eps)/(1-1.15*eps) + 1.659 * SQR(eps));
   //friction_perp_ = bond_length_ * gamma_0;
@@ -306,7 +256,7 @@ void Filament::SetDiffusion() {
   rand_sigma_par_ = sqrt(24.0*friction_par_/delta_);
 }
 
-void Filament::GenerateProbableOrientation() {
+void FFF::GenerateProbableOrientation() {
   /* This updates the current orientation with a generated probable orientation where
   we generate random theta pulled from probability distribution P(th) = exp(k cos(th))
   where k is the persistence_length of the filament
@@ -344,7 +294,7 @@ void Filament::GenerateProbableOrientation() {
   std::copy(new_orientation,new_orientation+3,orientation_);
 }
 
-double const Filament::GetVolume() {
+double const FFF::GetVolume() {
   if (n_dim_ == 2) {
     return diameter_*length_ + 0.25*M_PI*diameter_*diameter_;
   }
@@ -353,7 +303,7 @@ double const Filament::GetVolume() {
   }
 }
 
-void Filament::UpdatePosition(bool midstep) {
+void FFF::UpdatePosition(bool midstep) {
   midstep_ = midstep;
   if (!midstep_) {
     CalculateBinding();
@@ -373,7 +323,7 @@ void Filament::UpdatePosition(bool midstep) {
   BD algorithm for inextensible wormlike chains with anisotropic friction
   Montesi, Morse, Pasquali. J Chem Phys 122, 084903 (2005).
 ********************************************************************************/
-void Filament::Integrate() {
+void FFF::Integrate() {
   CalculateAngles();
   CalculateTangents();
   if (midstep_) {
@@ -390,7 +340,7 @@ void Filament::Integrate() {
 }
 
 //  FIXME move this out of filament!
-void Filament::CalculateBinding() {
+void FFF::CalculateBinding() {
   if (++n_step_ % 100 != 0) return;
   double vol = GetVolume();
   // Check motor unbinding
@@ -403,7 +353,7 @@ void Filament::CalculateBinding() {
   }
 }
 
-void Filament::BindMotor() {
+void FFF::BindMotor() {
   Motor m;
   motors_.push_back(m);
   motors_.back().Init();
@@ -413,21 +363,21 @@ void Filament::BindMotor() {
   motor_concentration_ -= 1.0/space_->volume;
 }
 
-void Filament::UnbindMotor() {
+void FFF::UnbindMotor() {
   int i_motor = gsl_rng_uniform_int(rng_.r,n_motors_bound_);
   motors_.erase(motors_.begin()+i_motor);
   n_motors_bound_--;
   motor_concentration_ += 1.0/space_->volume;
 }
 
-void Filament::UpdateSiteOrientations() {
+void FFF::UpdateSiteOrientations() {
   for (int i=0; i<n_sites_-1; ++i) {
     sites_[i].SetOrientation(bonds_[i].GetOrientation());
   }
   sites_[n_sites_-1].SetOrientation(bonds_[n_bonds_-1].GetOrientation());
 }
 
-void Filament::CalculateAngles(bool rescale) {
+void FFF::CalculateAngles(bool rescale) {
   double cos_angle, angle_sum = 0;
   bool sharp_angle = false;
   for (int i_site=0; i_site<n_sites_-2; ++i_site) {
@@ -465,13 +415,13 @@ void Filament::CalculateAngles(bool rescale) {
   }
 }
 
-void Filament::CalculateTangents() {
+void FFF::CalculateTangents() {
   for (auto it = sites_.begin(); it!=sites_.end(); ++it) {
     it->CalcTangent();
   }
 }
 
-void Filament::ConstructUnprojectedRandomForces() {
+void FFF::ConstructUnprojectedRandomForces() {
   // Create unprojected forces, see J. Chem. Phys. 122, 084903 (2005), eqn. 40.
   // xi is the random force vector with elements that are uncorrelated and randomly
   // distributed uniformly between -0.5 and 0.5, xi_term is the outer product of the
@@ -502,7 +452,7 @@ void Filament::ConstructUnprojectedRandomForces() {
   }
 }
 
-void Filament::GeometricallyProjectRandomForces() {
+void FFF::GeometricallyProjectRandomForces() {
   if (!stoch_flag_) return;
   double f_rand_temp[3];
   for (int i_site=0; i_site<n_sites_-1; ++i_site) {
@@ -566,13 +516,13 @@ void Filament::GeometricallyProjectRandomForces() {
     //printf("\n");
 }
 
-void Filament::AddRandomForces() {
+void FFF::AddRandomForces() {
   if (!stoch_flag_) return;
   for (auto site=sites_.begin(); site!=sites_.end(); ++site)
     site->AddRandomForce();
 }
 
-void Filament::CalculateBendingForces() {
+void FFF::CalculateBendingForces() {
   if (metric_forces_) {
     det_t_mat_[0] = 1;
     det_t_mat_[1] = 2;
@@ -661,7 +611,7 @@ void Filament::CalculateBendingForces() {
   }
 }
 
-void Filament::CalculateTensions() {
+void FFF::CalculateTensions() {
   // Calculate friction_inverse matrix
   int site_index = 0;
   int next_site = n_dim_*n_dim_;
@@ -713,7 +663,7 @@ void Filament::CalculateTensions() {
   tridiagonal_solver(&h_mat_lower_, &h_mat_diag_, &h_mat_upper_, &tensions_, n_sites_-1);
 }
 
-void Filament::UpdateSitePositions() {
+void FFF::UpdateSitePositions() {
   double delta = (midstep_ ? 0.5*delta_ : delta_);
   double f_site[3];
   // First get total forces
@@ -779,7 +729,7 @@ void Filament::UpdateSitePositions() {
   }
 }
 
-bool Filament::CheckBondLengths() {
+bool FFF::CheckBondLengths() {
   bool renormalize = false;
   for (int i_site=1;i_site<n_sites_;++i_site) {
     double const * const r_site1 = sites_[i_site-1].GetPosition();
@@ -798,7 +748,7 @@ bool Filament::CheckBondLengths() {
   return renormalize;
 }
 
-void Filament::UpdateAvgPosition() {
+void FFF::UpdateAvgPosition() {
   std::fill(position_, position_+3, 0.0);
   std::fill(orientation_, orientation_+3, 0.0);
   for (auto site_it=sites_.begin(); site_it!=sites_.end(); ++site_it) {
@@ -815,12 +765,12 @@ void Filament::UpdateAvgPosition() {
   }
 }
 
-void Filament::ApplyForcesTorques() {
+void FFF::ApplyForcesTorques() {
   ApplyInteractionForces();
   if (anchored_) ApplyAnchorForces();
 }
 
-void Filament::ApplyInteractionForces() {
+void FFF::ApplyInteractionForces() {
   double pure_torque[3] = {0,0,0};
   double site_force[3] = {0,0,0};
   double linv=1.0/bond_length_;
@@ -885,7 +835,7 @@ void Filament::ApplyInteractionForces() {
   }
 }
 
-void Filament::ApplyAnchorForces() {
+void FFF::ApplyAnchorForces() {
   double const * const tail_pos = sites_[0].GetPosition();
   double dr[3] = {0,0,0};
   double dr_mag=0.0;
@@ -918,14 +868,14 @@ void Filament::ApplyAnchorForces() {
   }
 }
 
-void Filament::DynamicInstability() {
+void FFF::DynamicInstability() {
   if (midstep_ || !dynamic_instability_flag_) return;
   UpdatePolyState();
-  GrowFilament();
+  GrowFFF();
   SetDiffusion();
 }
 
-void Filament::GrowFilament() {
+void FFF::GrowFFF() {
   // If the filament is paused, do nothing
   if (poly_ == +poly_state::pause) return;
   // Otherwise, adjust filament length due to polymerization
@@ -956,7 +906,7 @@ void Filament::GrowFilament() {
   }
 }
 
-void Filament::RescaleBonds() {
+void FFF::RescaleBonds() {
   UpdatePrevPositions();
   double old_bond_length = bond_length_;
   bond_length_ = length_/n_bonds_;
@@ -1010,7 +960,7 @@ void Filament::RescaleBonds() {
 }
 
 
-void Filament::UpdatePolyState() {
+void FFF::UpdatePolyState() {
   double p_g2s = p_g2s_;
   double p_p2s = p_p2s_;
   double roll = gsl_rng_uniform_pos(rng_.r);
@@ -1021,7 +971,7 @@ void Filament::UpdatePolyState() {
     p_g2s = (p_g2s+p_g2p_)*p_factor;
     p_p2s = p_p2s*p_factor;
   }
-  // Filament shrinking
+  // FFF shrinking
   if (poly_ == +poly_state::shrink) {
     p_norm = p_s2g_ + p_s2p_;
     if (p_norm > 1.0) 
@@ -1033,7 +983,7 @@ void Filament::UpdatePolyState() {
         poly_ = poly_state::pause;
     }
   }
-  // Filament growing
+  // FFF growing
   else if (poly_ == +poly_state::grow) {
     p_norm = p_g2s + p_g2p_;
     if (p_norm > 1.0)
@@ -1045,7 +995,7 @@ void Filament::UpdatePolyState() {
         poly_ = poly_state::pause;
     }
   }
-  // Filament paused
+  // FFF paused
   else if (poly_ == +poly_state::pause) {
     p_norm = p_p2g_ + p_p2s;
     if (p_norm > 1) 
@@ -1064,7 +1014,7 @@ void Filament::UpdatePolyState() {
     poly_ = poly_state::shrink;
 }
 
-void Filament::Draw(std::vector<graph_struct*> * graph_array) {
+void FFF::Draw(std::vector<graph_struct*> * graph_array) {
   for (auto bond=bonds_.begin(); bond!= bonds_.end(); ++bond) {
     bond->Draw(graph_array);
   }
@@ -1075,7 +1025,7 @@ void Filament::Draw(std::vector<graph_struct*> * graph_array) {
 }
 
 // Scale bond and site positions from new unit cell
-void Filament::ScalePosition() {
+void FFF::ScalePosition() {
   // scale first bond position using new unit cell
   bonds_[0].ScalePosition();
   // then reposition sites based on first bond position
@@ -1099,7 +1049,7 @@ void Filament::ScalePosition() {
 }
 
 
-void Filament::GetAvgOrientation(double * au) {
+void FFF::GetAvgOrientation(double * au) {
   double avg_u[3] = {0.0, 0.0, 0.0};
   int size=0;
   for (auto it=sites_.begin(); it!=sites_.end(); ++it) {
@@ -1115,7 +1065,7 @@ void Filament::GetAvgOrientation(double * au) {
   std::copy(avg_u, avg_u+3, au);
 }
 
-void Filament::RebindMotors() {
+void FFF::RebindMotors() {
   for (motor_iterator it=motors_.begin(); it!=motors_.end(); ++it) {
     double mesh_lambda = it->GetMeshLambda();
     int i_site = (int) floor(mesh_lambda/bond_length_);
@@ -1134,7 +1084,7 @@ void Filament::RebindMotors() {
   }
 }
 
-void Filament::GetAvgPosition(double * ap) {
+void FFF::GetAvgPosition(double * ap) {
   double avg_p[3] = {0.0, 0.0, 0.0};
   int size=0;
   for (auto it=sites_.begin(); it!=sites_.end(); ++it) {
@@ -1150,7 +1100,7 @@ void Filament::GetAvgPosition(double * ap) {
   std::copy(avg_p, avg_p+3, ap);
 }
 
-void Filament::ReportAll() {
+void FFF::ReportAll() {
   printf("tensions:\n  {");
   for (int i=0; i<n_sites_-1; ++i)
     printf(" %5.5f ",tensions_[i]);
@@ -1210,7 +1160,7 @@ void Filament::ReportAll() {
     all bond orientations
     */
 
-void Filament::WriteSpec(std::fstream &ospec){
+void FFF::WriteSpec(std::fstream &ospec){
   ospec.write(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
   ospec.write(reinterpret_cast<char*>(&length_), sizeof(length_));
   ospec.write(reinterpret_cast<char*>(&persistence_length_), sizeof(persistence_length_));
@@ -1236,7 +1186,7 @@ void Filament::WriteSpec(std::fstream &ospec){
   return;
 }
 
-void Filament::ReadSpec(std::fstream &ispec) {
+void FFF::ReadSpec(std::fstream &ispec) {
   if (ispec.eof()) return;
   double r0[3], rf[3], u_bond[3];
   ispec.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
@@ -1282,7 +1232,7 @@ void Filament::ReadSpec(std::fstream &ispec) {
   CalculateAngles();
 }
 
-void Filament::WritePosit(std::fstream &oposit) {
+void FFF::WritePosit(std::fstream &oposit) {
   double avg_pos[3], avg_u[3];
   GetAvgPosition(avg_pos);
   GetAvgOrientation(avg_u);
@@ -1298,7 +1248,7 @@ void Filament::WritePosit(std::fstream &oposit) {
   oposit.write(reinterpret_cast<char*>(&length_), sizeof(length_));
 }
 
-void Filament::ReadPosit(std::fstream &iposit) {
+void FFF::ReadPosit(std::fstream &iposit) {
   if (iposit.eof()) return;
   double avg_pos[3], avg_u[3], s_pos[3];
   for (int i=0; i<3; ++i)
@@ -1323,7 +1273,7 @@ void Filament::ReadPosit(std::fstream &iposit) {
   }
 }
 
-void Filament::WriteCheckpoint(std::fstream &ocheck) {
+void FFF::WriteCheckpoint(std::fstream &ocheck) {
   void * rng_state = gsl_rng_state(rng_.r);
   size_t rng_size = gsl_rng_size(rng_.r);
   ocheck.write(reinterpret_cast<char*>(&rng_size), sizeof(size_t));
@@ -1331,7 +1281,7 @@ void Filament::WriteCheckpoint(std::fstream &ocheck) {
   WriteSpec(ocheck);
 }
 
-void Filament::ReadCheckpoint(std::fstream &icheck) {
+void FFF::ReadCheckpoint(std::fstream &icheck) {
   if (icheck.eof()) return;
   void * rng_state = gsl_rng_state(rng_.r);
   size_t rng_size;
@@ -1371,7 +1321,7 @@ void Filament::ReadCheckpoint(std::fstream &icheck) {
   cos_thetas_.resize(n_sites_-2); //max_sites-2
 }
 
-void FilamentSpecies::InitAnalysis() {
+void FFFSpecies::InitAnalysis() {
   time_ = 0;
   if (params_->filament.spiral_flag) {
     InitSpiralAnalysis();
@@ -1385,7 +1335,7 @@ void FilamentSpecies::InitAnalysis() {
   RunAnalysis();
 }
 
-void FilamentSpecies::InitMse2eAnalysis() {
+void FFFSpecies::InitMse2eAnalysis() {
   std::string fname = params_->run_name;
   fname.append("_filament.mse2e");
   mse2e_file_.open(fname, std::ios::out);
@@ -1412,7 +1362,7 @@ void FilamentSpecies::InitMse2eAnalysis() {
   n_samples_ = 0;
 }
 
-void FilamentSpecies::InitSpiralAnalysis() {
+void FFFSpecies::InitSpiralAnalysis() {
   std::string fname = params_->run_name;
   fname.append("_filament.spiral");
   spiral_file_.open(fname, std::ios::out);
@@ -1430,7 +1380,7 @@ void FilamentSpecies::InitSpiralAnalysis() {
   spiral_file_ << "time angle_sum E_bend tip_z_proj head_pos_x head_pos_y tail_pos_x tail_pos_y\n";
 }
 
-void FilamentSpecies::InitThetaAnalysis() {
+void FFFSpecies::InitThetaAnalysis() {
   // TODO Should check to make sure the same lengths, child lengths, persistence lengths, etc are used for each filament in system.
   std::string fname = params_->run_name;
   fname.append("_filament.theta");
@@ -1466,7 +1416,7 @@ void FilamentSpecies::InitThetaAnalysis() {
   }
 }
 
-void FilamentSpecies::RunAnalysis() {
+void FFFSpecies::RunAnalysis() {
   if (params_->filament.spiral_flag) {
     RunSpiralAnalysis();
   }
@@ -1483,7 +1433,7 @@ void FilamentSpecies::RunAnalysis() {
   time_++;
 }
 
-void FilamentSpecies::RunSpiralAnalysis() {
+void FFFSpecies::RunSpiralAnalysis() {
   // Treat as though we have many spirals for now
   double tip_z;
   auto it=members_.begin();
@@ -1511,7 +1461,7 @@ void FilamentSpecies::RunSpiralAnalysis() {
   }
 }
 
-void FilamentSpecies::RunMse2eAnalysis() {
+void FFFSpecies::RunMse2eAnalysis() {
   // Treat as though we have many spirals for now
   //if ( ! mse2e_file_.is_open()) {
     //early_exit = true;
@@ -1537,7 +1487,7 @@ void FilamentSpecies::RunMse2eAnalysis() {
 }
 
 
-void FilamentSpecies::RunThetaAnalysis() {
+void FFFSpecies::RunThetaAnalysis() {
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
     std::vector<double> const * const thetas = it->GetThetas();
     for (int i=0; i<(it->GetNBonds()-1); ++i) {
@@ -1556,7 +1506,7 @@ void FilamentSpecies::RunThetaAnalysis() {
   }
 }
 
-void FilamentSpecies::FinalizeAnalysis() {
+void FFFSpecies::FinalizeAnalysis() {
   if (spiral_file_.is_open()) {
     spiral_file_.close();
   }
@@ -1570,7 +1520,7 @@ void FilamentSpecies::FinalizeAnalysis() {
   }
 }
 
-void FilamentSpecies::FinalizeMse2eAnalysis() {
+void FFFSpecies::FinalizeMse2eAnalysis() {
   int num = members_.size();
   mse2e_file_ << num << " ";
   mse2e_ /= n_samples_*num;
@@ -1579,7 +1529,7 @@ void FilamentSpecies::FinalizeMse2eAnalysis() {
   mse2e_file_ << sqrt((mse2e2_ - mse2e_*mse2e_)/(num*n_samples_)) << "\n";
 }
 
-void FilamentSpecies::FinalizeThetaAnalysis() {
+void FFFSpecies::FinalizeThetaAnalysis() {
   int nbonds = members_[members_.size()-1].GetNBonds();
   for (int i=0; i<n_bins_; ++i) {
     double axis = (2.0/n_bins_)*i - 1;

@@ -30,15 +30,15 @@ class filament_parameters : public species_parameters {
     int spiral_flag = 0;
     double driving_factor = 0;
     double friction_ratio = 2;
+    double f_grow_to_shrink = 0.00554;
     int dynamic_instability_flag = 0;
     int force_induced_catastrophe_flag = 0;
-    double f_pause_to_shrink = 0.0;
     double fic_factor = 0.828;
     double f_shrink_to_grow = 0.017;
     double f_shrink_to_pause = 0.0;
     double f_pause_to_grow = 0.0;
+    double f_pause_to_shrink = 0.0;
     double f_grow_to_pause = 0.0;
-    double f_grow_to_shrink = 0.00554;
     int metric_forces = 1;
     double v_poly = 0.44;
     double v_depoly = 0.793;
@@ -105,9 +105,9 @@ class motor_parameters : public species_parameters {
 
 class bead_spring_parameters : public species_parameters {
   public:
-    double persistence_length = 4000;
     double diameter = 1;
     double length = 40;
+    double persistence_length = 4000;
     double max_bond_length = 1;
     double bond_rest_length = 0.8;
     double bond_spring = 100;
@@ -128,11 +128,11 @@ class spherocylinder_parameters : public species_parameters {
 
 class spindle_parameters : public species_parameters {
   public:
-    int alignment_potential = 0;
     double diameter = 10;
     double length = 20;
     int n_filaments_bud = 1;
     int n_filaments_mother = 0;
+    int alignment_potential = 0;
     double k_spring = 1000;
     double k_align = 0;
     double spring_length = 0;
@@ -166,7 +166,6 @@ class system_parameters {
     int time_flag = 0;
     double bud_height = 680;
     double bud_radius = 300;
-    int uniform_crystal = 0;
     double lj_epsilon = 1;
     double wca_eps = 1;
     double wca_sig = 1;
@@ -186,7 +185,10 @@ class system_parameters {
     int n_thermo = 1000;
     int interaction_flag = 1;
     int species_insertion_failure_threshold = 10000;
+    int species_insertion_reattempt_threshold = 10;
+    int uniform_crystal = 0;
     int n_steps_equil = 0;
+    int static_particle_number = 0;
     species_parameters species;
     filament_parameters filament;
     hard_rod_parameters hard_rod;

@@ -149,3 +149,7 @@ std::vector<Object*> SpeciesBase::GetInteractors() {
   std::vector<Object*> ix;
   return ix;
 }
+std::vector<Object*> SpeciesBase::GetLastInteractors() {
+  std::vector<Object*> ix;
+  return ix;
+}

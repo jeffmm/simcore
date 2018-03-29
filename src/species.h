@@ -29,11 +29,15 @@ class SpeciesBase {
     virtual void Init(system_parameters *params, space_struct *space, long seed);
     virtual void ZeroForces() {}
     virtual std::vector<Object*> GetInteractors();
+    virtual std::vector<Object*> GetLastInteractors();
     virtual double GetPotentialEnergy() {return 0;}
     virtual void ScalePositions() {}
     virtual void AddMember() {}
+    virtual void SetLastMemberPosition(double const * const pos) {}
     virtual void PopMember() {}
     virtual void PopAll() {}
+    virtual double GetSpecLength() {}
+    virtual double GetSpecDiameter() {}
     virtual void ArrangeMembers() {}
     virtual int CanOverlap() {return sparams_->overlap;}
     species_id const GetSID() {return sid_;}
@@ -94,9 +98,11 @@ class Species : public SpeciesBase {
     virtual void ArrangeMembers();
     virtual void CrystalArrangement();
     virtual void CenteredOrientedArrangement();
+    void SetLastMemberPosition(double const * const pos);
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePositions();
     virtual std::vector<Object*> GetInteractors();
+    virtual std::vector<Object*> GetLastInteractors();
     virtual double GetPotentialEnergy();
     virtual void ZeroForces();
     virtual void Report();
@@ -117,6 +123,8 @@ class Species : public SpeciesBase {
     virtual double const GetVolume();
     virtual double const GetDrMax();
     virtual void ZeroDrTot();
+    virtual double GetSpecLength();
+    virtual double GetSpecDiameter();
 };
 
 #include "species_templates.h"
