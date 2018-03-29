@@ -194,7 +194,9 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         // Otherwise update display of percentage of species inserted
         else {
           inserted++;
-          iengine_.AddInteractors((*spec)->GetLastInteractors());
+          if (!processing) {
+            iengine_.AddInteractors((*spec)->GetLastInteractors());
+          }
           printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
           fflush(stdout);
         }
