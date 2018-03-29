@@ -95,11 +95,11 @@ void Simulation::InitSimulation() {
   InitObjects();
   InitSpecies();
   iengine_.Init(&params_, &species_, space_.GetStruct());
+  InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
+  InitOutputs();
   if (params_.graph_flag) {
     InitGraphics();
   }
-  InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
-  InitOutputs();
 }
 
 void Simulation::InitObjects() {
@@ -167,7 +167,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       force_overlap = true;
     }
     int num = (*spec)->GetNInsert();
-    printf("n_insert: %d\n",num);
+    //printf("n_insert: %d\n",num);
     //exit(0);
     bool not_done = true;
     int inserted = 0;
@@ -177,7 +177,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       int num_failures = 0;
       while(num != inserted) {
         (*spec)->AddMember();
-        Draw();
+        //Draw();
         // First check that we are respecting boundary conditions
         if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
           (*spec)->PopMember();
@@ -208,10 +208,10 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         double pos[3] = {0,0,0};
         pos[0] = -params_.system_radius;
         pos[1] = -params_.system_radius;
-        double d = (*spec)->GetSpecDiameter();
-        double l = (*spec)->GetSpecLength();
-        int num_x = (int) floor(2*params_.system_radius/(0.5*d));
-        int num_y = (int) floor(2*params_.system_radius/(0.5*l));
+        double d = 0.5*(*spec)->GetSpecDiameter();
+        double l = 0.25*(*spec)->GetSpecLength();
+        int num_x = (int) floor(2*params_.system_radius/d);
+        int num_y = (int) floor(2*params_.system_radius/l);
         std::vector<std::pair<int, int> > grid_array;
         for (int i=0;i<num_x;++i) {
           for (int j=0;j<num_y; ++j) {
@@ -225,11 +225,11 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         gsl_ran_shuffle(rng_.r, grid_index, num_x*num_y, sizeof(int));
         //while (pos[1] < params_.system_radius && inserted!=num) {
         for (int i=0; i<num_x*num_y; ++i) {
-          pos[0] = grid_array[grid_index[i]].first*0.5*d;
-          pos[1] = grid_array[grid_index[i]].second*0.5*l;
+          pos[0] = grid_array[grid_index[i]].first*d;
+          pos[1] = grid_array[grid_index[i]].second*l;
           (*spec)->AddMember();
           (*spec)->SetLastMemberPosition(pos);
-          Draw();
+          //Draw();
           // First check that we are respecting boundary conditions
           if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
             (*spec)->PopMember();
@@ -261,15 +261,15 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       }
       putchar('\n');
       if (num != inserted) {
-        printf("  Species insertion failure threshold reached. Reattempting insertion.\n");
+        printf("  Species insertion failure threshold of %d reached. Reattempting insertion.\n",params_.species_insertion_failure_threshold);
         (*spec)->PopAll();
         iengine_.Reset();
       }
-      if (++num_attempts > 5) {
-        error_exit("Unable to insert species randomly within the hard-coded attempt threshold of 20!\n");
+      if (++num_attempts > params_.species_insertion_reattempt_threshold) {
+        error_exit("Unable to insert species randomly within the reattempt threshold of %d.\n",params_.species_insertion_reattempt_threshold);
       }
     }
-    printf("inserted: %d\n",inserted);
+    //printf("inserted: %d\n",inserted);
     if (!processing) {
       printf("\n");
       if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
