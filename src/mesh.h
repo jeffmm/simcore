@@ -59,6 +59,7 @@ class Mesh : public Object {
     virtual void UpdateDrTot();
     virtual double const GetDrTot();
     virtual void ZeroDrTot();
+    virtual void SetPosition(double const * const pos);
 };
 
 #endif // _SIMCORE_MESH_H_
