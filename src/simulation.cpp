@@ -40,7 +40,10 @@ void Simulation::PrintComplete() {
     it = i_step_*100;
     steps = params_.n_steps;
   }
-  if (it % (steps/10) == 0) {
+  if (params_.print_complete && it % steps == 0) {
+    printf("    %d%% complete\n", it/steps);
+  }
+  else if (!params_.print_complete && it % (steps/10) == 0) {
     printf("    %2.1f%% complete\r", (double) it/ steps);
     fflush(stdout);
   }
@@ -156,8 +159,13 @@ void Simulation::InitSpecies() {
 }
 
 void Simulation::InsertSpecies(bool force_overlap, bool processing) {
-  printf("\r  Inserting species: 0%% complete");
-  fflush(stdout);
+  if (params_.print_complete) {
+    printf("  Inserting species: 0%% complete\n");
+  }
+  else {
+    printf("\r  Inserting species: 0%% complete");
+    fflush(stdout);
+  }
   // Assuming Random insertion for now
   //force_overlap = true;
   for (auto spec = species_.begin(); spec!=species_.end(); ++spec) {
@@ -197,8 +205,16 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           if (!processing) {
             iengine_.AddInteractors((*spec)->GetLastInteractors());
           }
-          printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
-          fflush(stdout);
+          int insert_percentage = (int)(100 * (float)inserted / (float)num);
+          if (params_.print_complete) {
+            if (insert_percentage % 10 == 0) {
+              printf("  Inserting species: %d%% complete\n", insert_percentage);
+            }
+          }
+          else {
+            printf("\r  Inserting species: %d%% complete", insert_percentage);
+            fflush(stdout);
+          }
         }
         if (num_failures>params_.species_insertion_failure_threshold) {
           break;
@@ -249,8 +265,16 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           else {
             inserted++;
             iengine_.AddInteractors((*spec)->GetLastInteractors());
-            printf("\r  Inserting species: %d%% complete", (int)(100 * (float)inserted / (float)num));
-            fflush(stdout);
+            int insert_percentage = (int)(100 * (float)inserted / (float)num);
+            if (params_.print_complete) {
+              if (insert_percentage % 10 == 0) {
+                printf("  Inserting species: %d%% complete\n", insert_percentage);
+              }
+            }
+            else {
+              printf("\r  Inserting species: %d%% complete", insert_percentage);
+              fflush(stdout);
+            }
           }
           if (inserted == num) break;
           //pos[0]+=0.5*d;
@@ -281,6 +305,9 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         }
       }
     }
+  }
+  if (params_.load_checkpoint) {
+    iengine_.ForceUpdate();
   }
 }
 

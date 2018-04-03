@@ -94,36 +94,7 @@ void SpeciesBase::InitCheckpoints(std::string run_name, std::string checkpoint_r
     exit(1);
   }
   ReadCheckpoints();
-  //std::cout << "WARNING: Loading checkpoint. SimCORE will overwrite any present output files from previous simulation \"" << run_name << "\". Proceed? (y/N)\n";
-  //std::string response;
-  //std::cin >> response;
-  //if (response.compare("y") != 0 && response.compare("Y") != 0) {
-    //std::cout << " Cancelling loading checkpoint\n";
-    //exit(0);
-  //}
-  // XXX Need to fix appending to output file in the correct position
-  if (sparams_->posit_flag) {
-    std::string posit_file_name = run_name + "_" + sid_str + ".posit";
-    oposit_file_.open(posit_file_name, std::ios::out | std::ios::binary ); 
-    if (!oposit_file_.is_open()) {
-      std::cout<<"ERROR: Output file "<< posit_file_name <<" did not open for appending\n";
-      exit(1);
-    }
-    oposit_file_.write(reinterpret_cast<char*> (&params_->n_steps), sizeof(int));
-    oposit_file_.write(reinterpret_cast<char*> (&sparams_->n_posit), sizeof(int));
-    oposit_file_.write(reinterpret_cast<char*> (&params_->delta), sizeof(double));
-  }
-  if (sparams_->spec_flag) {
-    std::string spec_file_name = run_name + "_" + sid_str + ".spec";
-    ospec_file_.open(spec_file_name, std::ios::out | std::ios::binary ); 
-    if (!ospec_file_.is_open()) {
-      std::cout<<"ERROR: Output file "<< spec_file_name <<" did not open for appending\n";
-      exit(1);
-    }
-    ospec_file_.write(reinterpret_cast<char*> (&params_->n_steps), sizeof(int));
-    ospec_file_.write(reinterpret_cast<char*> (&sparams_->n_spec), sizeof(int));
-    ospec_file_.write(reinterpret_cast<char*> (&params_->delta), sizeof(double));
-  }
+  InitOutputFiles(run_name);
 }
 
 void SpeciesBase::InitInputFiles(std::string run_name, bool posits_only) {
