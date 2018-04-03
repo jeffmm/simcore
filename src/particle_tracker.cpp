@@ -13,7 +13,7 @@ void ParticleTracker::Init(system_parameters * p, std::vector<Object*> * o, std:
 }
 
 void ParticleTracker::AllocateCellList() {
-  DPRINTF("Allocating cell lists\n");
+  if (debug_trace) DPRINTF("Allocating cell lists\n");
   //printf("Cell length: %2.2f\n",cell_length_1d_);
   int third_dim = (n_dim_==3 ? n_cells_1d_ : 1);
   clist_ = new Cell ** [n_cells_1d_];
@@ -36,7 +36,7 @@ void ParticleTracker::DeallocateCellList() {
 }
 
 void ParticleTracker::ClearCells() {
-  DPRINTF("Clearing cells\n");
+  if (debug_trace) DPRINTF("Clearing cells\n");
 #ifdef ENABLE_OPENMP
 #pragma omp parallel
   {
@@ -68,7 +68,7 @@ void ParticleTracker::ClearCells() {
 void ParticleTracker::AssignCells() {
   ClearCells();
   int n_objs_ = objs_->size();
-  DPRINTF("Assigning cells\n");
+  if (debug_trace) DPRINTF("Assigning cells\n");
 #ifdef ENABLE_OPENMP
 #pragma omp parallel
   {
@@ -111,7 +111,7 @@ void ParticleTracker::AssignCells() {
 }
 
 void ParticleTracker::CreatePairsCellList() {
-  DPRINTF("Creating pairs\n");
+  if (debug_trace) DPRINTF("Creating pairs\n");
   nlist_->clear();
 #ifdef ENABLE_OPENMP
 #pragma omp parallel

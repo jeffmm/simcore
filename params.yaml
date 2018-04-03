@@ -1,19 +1,19 @@
 # params.yaml
 ---
-run_name: spiral_sanity_test
+run_name: load_test
 seed: 278001156231815
 n_runs: 1
 
 # time options
 delta: 0.0001
-n_steps: 100000000
+n_steps: 1000
 n_steps_equil: 0
 
 # space options
 n_dim: 2
 n_periodic: 2
 boundary: 1
-system_radius: 1000
+system_radius: 50
 
 # interaction options
 interaction_flag: 1
@@ -35,6 +35,7 @@ movie_directory: frames
 # output options
 thermo_flag: 0
 n_thermo: 100
+print_complete: 1
 
 # model options
 filament:
@@ -42,18 +43,18 @@ filament:
   insertion_type: random_nematic
   packing_fraction: 0.4
   overlap: 0
-  length: 50
-  n_bonds: 15
-  min_bond_length: 1.5
-  max_bond_length: 3
-  persistence_length: 4000
+  length: 20
+  n_bonds: 8
+  perlen_ratio: 10
   driving_factor: 30
+  driving_method: 0
+  #persistence_length: 4000
+  #min_bond_length: 2.5
+  #max_bond_length: 5
   spiral_flag: 0
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 1
   n_posit: 100
   n_spec: 100
-  n_checkpoint: 10000
-  perlen_ratio: 100
-  driving_method: 1
+  n_checkpoint: 100
