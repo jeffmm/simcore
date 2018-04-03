@@ -32,12 +32,15 @@ void OutputManager::Init(system_parameters *params,
 
   for (auto it = species_->begin(); it != species_->end(); ++it) {
     if (params->load_checkpoint) {
-      (*it)->InitCheckpoints(run_name_, params->checkpoint_run_name);
+      (*it)->LoadFromCheckpoints(run_name_, params->checkpoint_run_name);
     }
     else if (reading_inputs) {
       (*it)->InitInputFiles(run_name_, posits_only);
       if (reduce_flag_) {
         (*it)->InitOutputFiles(red_file_name);
+      }
+      else if (params->checkpoint_from_spec) {
+        (*it)->InitCheckpoints(run_name_);
       }
     }
     else {
@@ -168,6 +171,9 @@ void OutputManager::ReadInputs() {
     }
     if (!posits_only_ && (*spec)->GetSpecFlag() && *i_step_ % (*spec)->GetNSpec() == 0 ) {
       (*spec)->ReadSpecs();
+      if (params_->checkpoint_from_spec) {
+        (*spec)->WriteCheckpoints();
+      }
     }
   }
   if (thermo_flag_) {

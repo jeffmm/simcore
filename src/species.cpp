@@ -81,12 +81,16 @@ void SpeciesBase::InitOutputFiles(std::string run_name) {
   if (sparams_->spec_flag) 
     InitSpecFile(run_name);
   if (sparams_->checkpoint_flag) {
-    std::string sid_str = sid_._to_string();
-    checkpoint_file_ = run_name + "_" + sid_str + ".checkpoint";
+    InitCheckpoints(run_name);
   }
 }
 
-void SpeciesBase::InitCheckpoints(std::string run_name, std::string checkpoint_run_name) {
+void SpeciesBase::InitCheckpoints(std::string run_name) {
+  std::string sid_str = sid_._to_string();
+  checkpoint_file_ = run_name + "_" + sid_str + ".checkpoint";
+}
+
+void SpeciesBase::LoadFromCheckpoints(std::string run_name, std::string checkpoint_run_name) {
   std::string sid_str = sid_._to_string();
   checkpoint_file_ = checkpoint_run_name + "_" + sid_str + ".checkpoint";
   if (!sparams_->checkpoint_flag) {

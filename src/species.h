@@ -68,7 +68,8 @@ class SpeciesBase {
     virtual void InitPositFileInput(std::string run_name);
     virtual void InitSpecFileInput(std::string run_name);
     virtual void InitInputFiles(std::string run_name, bool posits_only);
-    virtual void InitCheckpoints(std::string run_name,std::string checkpoint_run_name);
+    virtual void InitCheckpoints(std::string run_name);
+    virtual void LoadFromCheckpoints(std::string run_name,std::string checkpoint_run_name);
     virtual int OutputIsOpen(){ return oposit_file_.is_open(); }
     virtual int InputIsOpen(){ return iposit_file_.is_open(); }
     virtual void CloseFiles(); 
