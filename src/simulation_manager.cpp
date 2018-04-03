@@ -366,8 +366,19 @@ void SimulationManager::WriteParams() {
       }
       if (run_opts_.load_checkpoint) {
         pvector_[i_var]["load_checkpoint"] = 1;
+        int n_load = pvector_[i_var]["n_load"].as<int>() + 1;
+        pvector_[i_var]["n_load"] = n_load;
         pvector_[i_var]["checkpoint_run_name"] = file_name.str();
-        file_name << "_reloaded";
+        std::ostringstream nload;
+        nload << std::setw(3) << std::setfill('0') << n_load;
+        if (file_name.str().find("reload") == std::string::npos) {
+          file_name << "_reload" << nload.str();
+        }
+        else {
+          long pos = file_name.tellp();
+          file_name.seekp(pos-3);
+          file_name << nload.str();
+        }
       }
       pvector_[i_var]["run_name"] = file_name.str();
       file_name << "_params.yaml";

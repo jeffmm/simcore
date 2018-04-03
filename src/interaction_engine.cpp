@@ -55,6 +55,11 @@ void InteractionEngine::Interact() {
   ApplyBoundaryInteractions();
 }
 
+void InteractionEngine::ForceUpdate() {
+  UpdateInteractors();
+  UpdateInteractions();
+}
+
 void InteractionEngine::UpdateInteractors() {
   interactors_.clear();
   for (auto spec_it= species_->begin(); spec_it!=species_->end(); ++spec_it) {
