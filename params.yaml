@@ -35,7 +35,8 @@ movie_directory: frames
 # output options
 thermo_flag: 0
 n_thermo: 100
-print_complete: 1
+print_complete: 0
+checkpoint_from_spec: 1
 
 # model options
 filament:
