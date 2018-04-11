@@ -52,6 +52,7 @@ class Filament : public Mesh {
            motor_concentration_,
            shuffle_factor_,
            shuffle_frequency_,
+           spiral_number_,
            tip_force_;
     std::vector<double> gamma_inverse_,
                         tensions_, //n_sites-1
@@ -71,6 +72,7 @@ class Filament : public Mesh {
     void SetDiffusion();
     void GenerateProbableOrientation();
     void CalculateAngles(bool rescale=true);
+    void CalculateSpiralNumber();
     void CalculateTangents();
     void AddRandomForces();
     void ConstructUnprojectedRandomForces();
@@ -122,6 +124,7 @@ class Filament : public Mesh {
     std::vector<double> const * const GetThetas() {
       return &cos_thetas_;
     }
+    double GetSpiralNumber();
     double GetTipZ() {
       return sites_[n_sites_-1].GetOrientation()[n_dim_-1];
     }

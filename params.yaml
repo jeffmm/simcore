@@ -6,19 +6,19 @@ n_runs: 1
 
 # time options
 delta: 0.0001
-n_steps: 1000
+n_steps: 10000000
 n_steps_equil: 0
 
 # space options
 n_dim: 2
 n_periodic: 2
 boundary: 1
-system_radius: 50
+system_radius: 100
 
 # interaction options
 interaction_flag: 1
 stoch_flag: 1
-cell_length: 5
+cell_length: 8
 n_update_cells: -1
 f_cutoff: 1500
 static_particle_number: 1
@@ -35,24 +35,24 @@ movie_directory: frames
 # output options
 thermo_flag: 0
 n_thermo: 100
-print_complete: 0
+print_complete: 1
 checkpoint_from_spec: 1
 
 # model options
 filament:
   num: 1
   insertion_type: random_nematic
-  packing_fraction: 0.4
-  overlap: 0
-  length: 20
-  n_bonds: 8
-  perlen_ratio: 10
-  driving_factor: 30
-  driving_method: 0
+  packing_fraction: -1
+  overlap: 1
+  length: 50
+  n_bonds: 18
+  perlen_ratio: 30
+  driving_factor: 10
+  driving_method: 1
   #persistence_length: 4000
   #min_bond_length: 2.5
   #max_bond_length: 5
-  spiral_flag: 0
+  spiral_flag: 1
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 1

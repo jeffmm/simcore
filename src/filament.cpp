@@ -375,6 +375,7 @@ void Filament::UpdatePosition(bool midstep) {
 ********************************************************************************/
 void Filament::Integrate() {
   CalculateAngles();
+  CalculateSpiralNumber();
   CalculateTangents();
   if (midstep_) {
     ConstructUnprojectedRandomForces();
@@ -469,6 +470,55 @@ void Filament::CalculateTangents() {
   for (auto it = sites_.begin(); it!=sites_.end(); ++it) {
     it->CalcTangent();
   }
+}
+
+void Filament::CalculateSpiralNumber() {
+  // This will calculate the angle 
+  if (!spiral_flag_) return;
+  double u_bond[3] = {0,0,0};
+  double const * const u_head = sites_[n_sites_-1].GetOrientation();
+  //double const * const p_head = sites_[n_sites_-1].GetPosition();
+  double const * const p_head_real = sites_[n_sites_-1].GetPosition();
+   //From COM
+  double p_head[3] = {0,0,0};
+  GetAvgPosition(p_head);
+  for (int i=0;i<n_dim_;++i) {
+    u_bond[i] = p_head_real[i] - p_head[i];
+  }
+  normalize_vector(u_bond,n_dim_);
+  //std::copy(u_head,u_head+3,u_bond);
+  //for (int i=0;i<3;++i) {
+    //u_bond[i] = -u_bond[i];
+  //}
+  spiral_number_ = 0;
+  //for (int i=n_sites_-3; i>=0; --i) {
+  for (int i=n_sites_-2; i>=0; --i) {
+    double u[3] = {0,0,0};
+    double const * const p = sites_[i].GetPosition();
+    for (int i=0;i<n_dim_;++i) {
+      u[i] = p[i] - p_head[i];
+    }
+    normalize_vector(u,n_dim_);
+    double angle = acos(dot_product(n_dim_,u_bond,u));
+    double temp[3];
+    cross_product(u_bond,u,temp,3);
+    int sign = SIGNOF(temp[2]);
+    for (int i=0;i<n_dim_; ++i) {
+      u_bond[i] = u[i];
+    }
+    spiral_number_ += sign*angle;
+  }
+  // Failed spiral
+  if (ABS(GetSpiralNumber()) < 0.5) {
+    early_exit = true;
+  }
+  //fprintf(stderr,"%2.2f\n",GetSpiralNumber());
+}
+
+double Filament::GetSpiralNumber() {
+  double temp = 0.5*spiral_number_/M_PI;
+  if (temp >= 0.75) return temp+0.25;
+  else return temp/0.75;
 }
 
 void Filament::ConstructUnprojectedRandomForces() {
