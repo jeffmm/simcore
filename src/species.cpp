@@ -15,7 +15,7 @@ void SpeciesBase::InitPositFile(std::string run_name) {
     std::cout<<"ERROR: Output file "<< posit_file_name <<" did not open\n";
     exit(1);
   }
-  oposit_file_.write(reinterpret_cast<char*> (&params_->n_steps), sizeof(long));
+  oposit_file_.write(reinterpret_cast<char*> (&params_->n_steps), sizeof(int));
   oposit_file_.write(reinterpret_cast<char*> (&sparams_->n_posit), sizeof(int));
   oposit_file_.write(reinterpret_cast<char*> (&params_->delta), sizeof(double));
 }
@@ -28,15 +28,15 @@ void SpeciesBase::InitPositFileInput(std::string run_name) {
     std::cout<<"ERROR: Input file "<< posit_file_name <<" did not open\n";
     exit(1);
   }
-  long n_steps;
-  int n_posit;
+  //long n_steps;
+  int n_posit,n_steps;
   double delta;
-  iposit_file_.read(reinterpret_cast<char*> (&n_steps), sizeof(long));
+  iposit_file_.read(reinterpret_cast<char*> (&n_steps), sizeof(int));
   iposit_file_.read(reinterpret_cast<char*> (&n_posit), sizeof(int));
   iposit_file_.read(reinterpret_cast<char*> (&delta), sizeof(double));
   if (n_steps != params_->n_steps || n_posit != sparams_->n_posit || delta != params_->delta) {
     std::cout << "ERROR: Input file " << posit_file_name << " does not match parameter file\n";
-    printf("%ld %ld, %d %d, %2.5f %2.5f\n",n_steps, params_->n_steps, n_posit, sparams_->n_posit, delta, params_->delta);
+    printf("%d %d, %d %d, %2.5f %2.5f\n",n_steps, params_->n_steps, n_posit, sparams_->n_posit, delta, params_->delta);
     exit(1);
   }
   ReadPosits();
@@ -51,7 +51,7 @@ void SpeciesBase::InitSpecFile(std::string run_name) {
     std::cout<<"ERROR: Output file "<< spec_file_name <<" did not open\n";
     exit(1);
   }
-  ospec_file_.write(reinterpret_cast<char*> (&params_->n_steps), sizeof(long));
+  ospec_file_.write(reinterpret_cast<char*> (&params_->n_steps), sizeof(int));
   ospec_file_.write(reinterpret_cast<char*> (&sparams_->n_spec), sizeof(int));
   ospec_file_.write(reinterpret_cast<char*> (&params_->delta), sizeof(double));
 }
@@ -64,10 +64,10 @@ void SpeciesBase::InitSpecFileInput(std::string run_name) {
     std::cout<<"ERROR: Input file "<< spec_file_name <<" did not open\n";
     exit(1);
   }
-  long n_steps;
-  int n_spec;
+  //long n_steps;
+  int n_spec,n_steps;
   double delta;
-  ispec_file_.read(reinterpret_cast<char*> (&n_steps), sizeof(long));
+  ispec_file_.read(reinterpret_cast<char*> (&n_steps), sizeof(int));
   ispec_file_.read(reinterpret_cast<char*> (&n_spec), sizeof(int));
   ispec_file_.read(reinterpret_cast<char*> (&delta), sizeof(double));
   if (n_steps != params_->n_steps || n_spec != sparams_->n_spec || delta != params_->delta) {

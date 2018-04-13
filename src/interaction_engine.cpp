@@ -155,6 +155,10 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
     return;
   }
 
+  if (params_->filament.spiral_flag == 1 && obj1->GetMeshID() != obj2->GetMeshID()) {
+    return;
+  }
+
   mindist_.ObjectObject(obj1,obj2,ix);
 
   // XXX Don't interact if we have an overlap. This should eventually go to a max force routine
