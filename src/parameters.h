@@ -119,10 +119,10 @@ class bead_spring_parameters : public species_parameters {
 
 class spherocylinder_parameters : public species_parameters {
   public:
-    int n_diffusion_samples = 1;
     double diameter = 1;
     double length = 5;
     int diffusion_analysis = 0;
+    int n_diffusion_samples = 1;
     int midstep = 0;
 };
 
@@ -146,11 +146,10 @@ class system_parameters {
     int n_random = 1;
     std::string run_name = "sc";
     int n_dim = 3;
-    int draw_boundary = 1;
     int n_periodic = 0;
     int boundary = 0;
     double system_radius = 100;
-    long n_steps = 1000000;
+    int n_steps = 1000000;
     double delta = 0.001;
     double cell_length = 10;
     int n_update_cells = 0;
@@ -158,11 +157,12 @@ class system_parameters {
     int n_graph = 1000;
     double graph_diameter = 0;
     int graph_background = 1;
+    int draw_boundary = 1;
     int load_checkpoint = 0;
     std::string checkpoint_run_name = "sc";
-    std::string insertion_type = "species";
     int n_load = 0;
     int print_complete = 0;
+    std::string insertion_type = "species";
     int movie_flag = 0;
     std::string movie_directory = "frames";
     int time_flag = 0;
