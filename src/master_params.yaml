@@ -8,7 +8,7 @@ n_dim : [3,int]
 n_periodic : [0,int]
 boundary : [0,int]
 system_radius : [100,double] # radius of system
-n_steps : [1000000,long]
+n_steps : [1000000,int]
 delta : [0.001,double] # time duration between each simulation step
 cell_length: [10, double]
 n_update_cells: [0, int] # used if >0, otherwise simcore uses dr_tot

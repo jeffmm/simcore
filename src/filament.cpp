@@ -451,11 +451,11 @@ void Filament::CalculateAngles(bool rescale) {
       angle_sum += acos(cos_angle);
     }
   }
-  if (spiral_flag_ && angle_sum < 3) { // check if sum of angles is much less than 2*pi
-    std::cout << "  Spiral terminated\n";
-    early_exit = true; // exit the simulation early
-    spiral_flag_ = false; // to prevent this message more than once
-  }
+  //if (spiral_flag_ && angle_sum < 3) { // check if sum of angles is much less than 2*pi
+    //std::cout << "  Spiral terminated\n";
+    //early_exit = true; // exit the simulation early
+    //spiral_flag_ = false; // to prevent this message more than once
+  //}
   if (rescale && sharp_angle && midstep_ && length_/(n_bonds_+1) > min_bond_length_) {
     //printf("\nDoubling granularity due to sharp angle");
     DoubleGranularityLinear();
@@ -477,22 +477,22 @@ void Filament::CalculateSpiralNumber() {
   if (!spiral_flag_) return;
   double u_bond[3] = {0,0,0};
   double const * const u_head = sites_[n_sites_-1].GetOrientation();
-  //double const * const p_head = sites_[n_sites_-1].GetPosition();
-  double const * const p_head_real = sites_[n_sites_-1].GetPosition();
+  double const * const p_head = sites_[n_sites_-1].GetPosition();
+  //double const * const p_head_real = sites_[n_sites_-1].GetPosition();
    //From COM
-  double p_head[3] = {0,0,0};
-  GetAvgPosition(p_head);
-  for (int i=0;i<n_dim_;++i) {
-    u_bond[i] = p_head_real[i] - p_head[i];
-  }
-  normalize_vector(u_bond,n_dim_);
-  //std::copy(u_head,u_head+3,u_bond);
-  //for (int i=0;i<3;++i) {
-    //u_bond[i] = -u_bond[i];
+  //double p_head[3] = {0,0,0};
+  //GetAvgPosition(p_head);
+  //for (int i=0;i<n_dim_;++i) {
+    //u_bond[i] = p_head_real[i] - p_head[i];
   //}
+  //normalize_vector(u_bond,n_dim_);
+  std::copy(u_head,u_head+3,u_bond);
+  for (int i=0;i<3;++i) {
+    u_bond[i] = -u_bond[i];
+  }
   spiral_number_ = 0;
-  //for (int i=n_sites_-3; i>=0; --i) {
-  for (int i=n_sites_-2; i>=0; --i) {
+  for (int i=n_sites_-3; i>=0; --i) {
+  //for (int i=n_sites_-2; i>=0; --i) {
     double u[3] = {0,0,0};
     double const * const p = sites_[i].GetPosition();
     for (int i=0;i<n_dim_;++i) {
@@ -509,16 +509,17 @@ void Filament::CalculateSpiralNumber() {
     spiral_number_ += sign*angle;
   }
   // Failed spiral
-  if (ABS(GetSpiralNumber()) < 0.5) {
-    early_exit = true;
-  }
+  //if (ABS(GetSpiralNumber()) < 0.50) {
+    //early_exit = true;
+  //}
   //fprintf(stderr,"%2.2f\n",GetSpiralNumber());
 }
 
 double Filament::GetSpiralNumber() {
-  double temp = 0.5*spiral_number_/M_PI;
-  if (temp >= 0.75) return temp+0.25;
-  else return temp/0.75;
+  //double temp = 0.5*spiral_number_/M_PI;
+  //if (temp >= 0.75) return temp+0.25;
+  //else return temp/0.75;
+  return 0.5*spiral_number_/M_PI;
 }
 
 void Filament::ConstructUnprojectedRandomForces() {

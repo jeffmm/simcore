@@ -113,7 +113,7 @@ void OutputManager::InitThermo(std::string fname) {
     std::cout << "ERROR: Thermo file failed to open!\n";
     exit(1);
   }
-  othermo_file_.write(reinterpret_cast<char*>(&(params_->n_steps)), sizeof(long));
+  othermo_file_.write(reinterpret_cast<char*>(&(params_->n_steps)), sizeof(int));
   othermo_file_.write(reinterpret_cast<char*>(&(n_thermo_)), sizeof(int));
   othermo_file_.write(reinterpret_cast<char*>(&(params_->delta)), sizeof(double));
   othermo_file_.write(reinterpret_cast<char*>(&(params_->n_dim)), sizeof(int));
@@ -126,16 +126,15 @@ void OutputManager::InitThermoInput(std::string fname) {
     std::cout << "ERROR: Thermo file failed to open!\n";
     exit(1);
   }
-  int n_thermo, ndim;
-  long n_steps;
+  int n_thermo, ndim, n_steps;
   double delta;
-  ithermo_file_.read(reinterpret_cast<char*> (&n_steps), sizeof(long));
+  ithermo_file_.read(reinterpret_cast<char*> (&n_steps), sizeof(int));
   ithermo_file_.read(reinterpret_cast<char*> (&n_thermo), sizeof(int));
   ithermo_file_.read(reinterpret_cast<char*> (&delta), sizeof(double));
   ithermo_file_.read(reinterpret_cast<char*> (&ndim), sizeof(int));
   if (n_steps != params_->n_steps || n_thermo != params_->n_thermo || delta != params_->delta || ndim != params_->n_dim) {
     std::cout << "ERROR: Input file " << fname << " does not match parameter file\n";
-    printf("%ld %ld, %d %d, %2.5f %2.5f %d %d\n",n_steps, params_->n_steps, n_thermo, params_->n_thermo, delta, params_->delta, ndim, params_->n_dim);
+    printf("%d %d, %d %d, %2.5f %2.5f %d %d\n",n_steps, params_->n_steps, n_thermo, params_->n_thermo, delta, params_->delta, ndim, params_->n_dim);
     exit(1);
   }
 }

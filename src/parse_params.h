@@ -566,9 +566,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
-          else if (param_name.compare("n_diffusion_samples")==0) {
-            params->spherocylinder.n_diffusion_samples = jt->second.as<int>();
-          }
           else if (param_name.compare("diameter")==0) {
             params->spherocylinder.diameter = jt->second.as<double>();
           }
@@ -577,6 +574,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("diffusion_analysis")==0) {
             params->spherocylinder.diffusion_analysis = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_diffusion_samples")==0) {
+            params->spherocylinder.n_diffusion_samples = jt->second.as<int>();
           }
           else if (param_name.compare("midstep")==0) {
             params->spherocylinder.midstep = jt->second.as<int>();
@@ -710,9 +710,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("n_dim")==0) {
         params->n_dim = it->second.as<int>();
       }
-      else if (param_name.compare("draw_boundary")==0) {
-        params->draw_boundary = it->second.as<int>();
-      }
       else if (param_name.compare("n_periodic")==0) {
         params->n_periodic = it->second.as<int>();
       }
@@ -723,7 +720,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
         params->system_radius = it->second.as<double>();
       }
       else if (param_name.compare("n_steps")==0) {
-        params->n_steps = it->second.as<long>();
+        params->n_steps = it->second.as<int>();
       }
       else if (param_name.compare("delta")==0) {
         params->delta = it->second.as<double>();
@@ -746,20 +743,23 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("graph_background")==0) {
         params->graph_background = it->second.as<int>();
       }
+      else if (param_name.compare("draw_boundary")==0) {
+        params->draw_boundary = it->second.as<int>();
+      }
       else if (param_name.compare("load_checkpoint")==0) {
         params->load_checkpoint = it->second.as<int>();
       }
       else if (param_name.compare("checkpoint_run_name")==0) {
         params->checkpoint_run_name = it->second.as<std::string>();
       }
-      else if (param_name.compare("insertion_type")==0) {
-        params->insertion_type = it->second.as<std::string>();
-      }
       else if (param_name.compare("n_load")==0) {
         params->n_load = it->second.as<int>();
       }
       else if (param_name.compare("print_complete")==0) {
         params->print_complete = it->second.as<int>();
+      }
+      else if (param_name.compare("insertion_type")==0) {
+        params->insertion_type = it->second.as<std::string>();
       }
       else if (param_name.compare("movie_flag")==0) {
         params->movie_flag = it->second.as<int>();

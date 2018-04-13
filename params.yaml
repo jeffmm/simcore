@@ -35,19 +35,19 @@ movie_directory: frames
 # output options
 thermo_flag: 0
 n_thermo: 100
-print_complete: 1
-checkpoint_from_spec: 1
+print_complete: 0
+checkpoint_from_spec: 0
 
 # model options
 filament:
-  num: 1
+  num: 100
   insertion_type: random_nematic
   packing_fraction: -1
   overlap: 1
   length: 50
   n_bonds: 18
   perlen_ratio: 30
-  driving_factor: 10
+  driving_factor: 18
   driving_method: 1
   #persistence_length: 4000
   #min_bond_length: 2.5
