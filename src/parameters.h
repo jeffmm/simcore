@@ -192,6 +192,8 @@ class system_parameters {
     int n_steps_equil = 0;
     int static_particle_number = 0;
     int checkpoint_from_spec = 0;
+    std::string potential = "wca";
+    double soft_potential_mag = 10;
     species_parameters species;
     filament_parameters filament;
     hard_rod_parameters hard_rod;

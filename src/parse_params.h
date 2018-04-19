@@ -848,6 +848,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("checkpoint_from_spec")==0) {
         params->checkpoint_from_spec = it->second.as<int>();
       }
+      else if (param_name.compare("potential")==0) {
+        params->potential = it->second.as<std::string>();
+      }
+      else if (param_name.compare("soft_potential_mag")==0) {
+        params->soft_potential_mag = it->second.as<double>();
+      }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";
       }
