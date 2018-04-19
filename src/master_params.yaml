@@ -51,6 +51,9 @@ uniform_crystal: [0, int]
 n_steps_equil: [0, int]
 static_particle_number: [0, int]
 checkpoint_from_spec: [0, int]
+potential: [wca, string]
+soft_potential_mag: [10, double]
+
 species:
   num: [0, int]
   insertion_type: [random, string]

@@ -1,7 +1,7 @@
 # params.yaml
 ---
 run_name: load_test
-seed: 278001156231815
+seed: 16760121109839
 n_runs: 1
 
 # time options
@@ -13,16 +13,18 @@ n_steps_equil: 0
 n_dim: 2
 n_periodic: 2
 boundary: 1
-system_radius: 100
+system_radius: 25
 
 # interaction options
 interaction_flag: 1
 stoch_flag: 1
 cell_length: 8
 n_update_cells: -1
-f_cutoff: 1500
+f_cutoff: 15000
 static_particle_number: 1
 species_insertion_failure_threshold: 10000
+potential: soft
+soft_potential_mag: 100
 
 # graphics options
 graph_flag: 1
@@ -40,19 +42,19 @@ checkpoint_from_spec: 0
 
 # model options
 filament:
-  num: 100
+  num: 10
   insertion_type: random_nematic
   packing_fraction: -1
-  overlap: 1
-  length: 50
-  n_bonds: 18
+  overlap: 0
+  length: 20
+  n_bonds: 10
   perlen_ratio: 30
-  driving_factor: 18
+  driving_factor: 30
   driving_method: 1
   #persistence_length: 4000
   #min_bond_length: 2.5
   #max_bond_length: 5
-  spiral_flag: 1
+  spiral_flag: 0
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 1
