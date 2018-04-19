@@ -164,11 +164,11 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   // XXX Don't interact if we have an overlap. This should eventually go to a max force routine
   if (ix->dr_mag2 < 0.25*SQR(obj1->GetDiameter() + obj2->GetDiameter())) {
     overlap_ = true;
-    //printf("We have an overlap!\n");
+    ////printf("We have an overlap!\n");
   }
   // XXX Only calculate WCA potential for now
-  if (ix->dr_mag2 > potentials_.wca_.GetRCut2())  return;
-  potentials_.wca_.CalcPotential(ix);
+  if (ix->dr_mag2 > potentials_.GetRCut2())  return;
+  potentials_.CalcPotential(ix);
   //if (ix->dr_mag2 > potentials_.r2pot_.GetRCut2()) return;
   //potentials_.r2pot_.CalcPotential(ix);
   //if (ix->dr_mag2 > potentials_.sspot_.GetRCut2()) return;
@@ -183,8 +183,8 @@ void InteractionEngine::ProcessBoundaryInteraction(std::vector<boundary_interact
     overlap_ = true;
   }
   // XXX Only calculate WCA potential for now
-  if (ix->dr_mag2 > potentials_.wca_.GetRCut2()) return;
-  potentials_.wca_.CalcPotential(ix);
+  if (ix->dr_mag2 > potentials_.GetRCut2()) return;
+  potentials_.CalcPotential(ix);
 }
 
 void InteractionEngine::CalculateBoundaryInteractionsMP() {
