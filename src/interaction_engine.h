@@ -22,7 +22,8 @@ class InteractionEngine {
     double stress_[9],
            dr_update_;
     bool overlap_,
-         no_interactions_;
+         no_interactions_,
+         no_init_ = true;
     int n_dim_,
         n_periodic_,
         i_update_,

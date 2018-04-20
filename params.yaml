@@ -1,19 +1,19 @@
 # params.yaml
 ---
-run_name: load_test
+run_name: spiral_test
 seed: 16760121109839
 n_runs: 1
 
 # time options
 delta: 0.0001
-n_steps: 10000000
+n_steps: 100000
 n_steps_equil: 0
 
 # space options
 n_dim: 2
 n_periodic: 2
 boundary: 1
-system_radius: 25
+system_radius: 50
 
 # interaction options
 interaction_flag: 1
@@ -42,22 +42,21 @@ checkpoint_from_spec: 0
 
 # model options
 filament:
-  num: 10
+  num: 1
   insertion_type: random_nematic
   packing_fraction: -1
   overlap: 0
-  length: 20
-  n_bonds: 10
+  length: 50
+  n_bonds: 18
   perlen_ratio: 30
-  driving_factor: 30
+  driving_factor: 1
   driving_method: 1
-  #persistence_length: 4000
-  #min_bond_length: 2.5
-  #max_bond_length: 5
-  spiral_flag: 0
+  spiral_flag: 1
+  spiral_number_fail_condition: 0.5
+  theta_analysis: 0
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 1
   n_posit: 100
   n_spec: 100
-  n_checkpoint: 100
+  n_checkpoint: 1000

@@ -72,7 +72,6 @@ class Filament : public Mesh {
     void SetDiffusion();
     void GenerateProbableOrientation();
     void CalculateAngles(bool rescale=true);
-    void CalculateSpiralNumber();
     void CalculateTangents();
     void AddRandomForces();
     void ConstructUnprojectedRandomForces();
@@ -124,6 +123,7 @@ class Filament : public Mesh {
     std::vector<double> const * const GetThetas() {
       return &cos_thetas_;
     }
+    void CalculateSpiralNumber();
     double GetSpiralNumber();
     double GetTipZ() {
       return sites_[n_sites_-1].GetOrientation()[n_dim_-1];

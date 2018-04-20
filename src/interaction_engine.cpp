@@ -5,6 +5,7 @@ void InteractionEngine::Init(system_parameters *params,
               std::vector<SpeciesBase*> *species, 
               space_struct *space) {
   // Set up pointer structures
+  no_init_ = false;
   params_ = params;
   species_ = species;
   space_ = space;
@@ -369,6 +370,7 @@ bool InteractionEngine::CheckBoundaryConditions(std::vector<Object*> ixs) {
 }
 
 void InteractionEngine::Clear() {
+  if (no_init_) return;
   ptracker_.Clear();
 }
 

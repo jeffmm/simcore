@@ -75,6 +75,7 @@ filament:
   max_bond_length: [5, double]
   min_bond_length: [1.5, double]
   spiral_flag: [0, int]
+  spiral_number_fail_condition: [0, double]
   driving_factor: [0, double]
   friction_ratio: [2, double]
   dynamic_instability_flag : [0,int]
