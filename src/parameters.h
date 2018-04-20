@@ -28,6 +28,7 @@ class filament_parameters : public species_parameters {
     double max_bond_length = 5;
     double min_bond_length = 1.5;
     int spiral_flag = 0;
+    double spiral_number_fail_condition = 0;
     double driving_factor = 0;
     double friction_ratio = 2;
     int dynamic_instability_flag = 0;

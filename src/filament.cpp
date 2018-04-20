@@ -49,6 +49,9 @@ void Filament::SetParameters() {
   shuffle_flag_ = params_->filament.shuffle;
   shuffle_factor_ = params_->filament.shuffle_factor;
   shuffle_frequency_ = params_->filament.shuffle_frequency;
+  if (params_->filament.spiral_number_fail_condition <= 0) {
+    params_->filament.spiral_number_fail_condition = 1e-6;
+  }
 }
 
 void Filament::SetAnchor(Anchor * a) {
@@ -476,7 +479,7 @@ void Filament::CalculateSpiralNumber() {
   // This will calculate the angle 
   if (!spiral_flag_) return;
   double u_bond[3] = {0,0,0};
-  double const * const u_head = sites_[n_sites_-1].GetOrientation();
+  double const * const u_head = bonds_[n_bonds_-1].GetOrientation();
   double const * const p_head = sites_[n_sites_-1].GetPosition();
   //double const * const p_head_real = sites_[n_sites_-1].GetPosition();
    //From COM
@@ -508,18 +511,18 @@ void Filament::CalculateSpiralNumber() {
     }
     spiral_number_ += sign*angle;
   }
-  // Failed spiral
-  //if (ABS(GetSpiralNumber()) < 0.50) {
-    //early_exit = true;
-  //}
-  //fprintf(stderr,"%2.2f\n",GetSpiralNumber());
+  // Failed spiral (waiting until the filament straightens)
+  if (ABS(GetSpiralNumber()) < params_->filament.spiral_number_fail_condition) {
+    early_exit = true;
+  }
 }
 
 double Filament::GetSpiralNumber() {
+  return 0.5*spiral_number_/M_PI;
   //double temp = 0.5*spiral_number_/M_PI;
   //if (temp >= 0.75) return temp+0.25;
   //else return temp/0.75;
-  return 0.5*spiral_number_/M_PI;
+  //return temp;
 }
 
 void Filament::ConstructUnprojectedRandomForces() {
@@ -1305,6 +1308,7 @@ void Filament::ReadSpec(std::fstream &ispec) {
     ispec.read(reinterpret_cast<char*>(&rf[i]), sizeof(double));
   // Initialize bonds from relative orientations
   for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
+    sites_[i_bond].SetPosition(r0);
     for (int i=0; i<3; ++i)
       ispec.read(reinterpret_cast<char*>(&u_bond[i]), sizeof(double));
     for (int i=0; i<n_dim_; ++i) {
@@ -1321,11 +1325,11 @@ void Filament::ReadSpec(std::fstream &ispec) {
     bonds_[i_bond].UpdatePeriodic();
   }
   sites_[n_bonds_].SetOrientation(sites_[n_bonds_-1].GetOrientation());
-  double pos[3];
-  for (int i=0; i < params_->n_dim; ++i) {
-    pos[i] = bonds_[0].GetPosition()[i] - 0.5*bonds_[0].GetOrientation()[i] * bond_length_;
-  }
-  sites_[0].SetPosition(pos);
+  double pos[3] = {0,0,0};
+  //for (int i=0; i < params_->n_dim; ++i) {
+    //pos[i] = bonds_[0].GetPosition()[i] - 0.5*bonds_[0].GetOrientation()[i] * bond_length_;
+  //}
+  //sites_[0].SetPosition(pos);
   for (int i=0; i < params_->n_dim; ++i) {
     pos[i] = bonds_[n_bonds_-1].GetPosition()[i] + 0.5*bonds_[n_bonds_-1].GetOrientation()[i] * bond_length_;
   }
@@ -1428,6 +1432,9 @@ void FilamentSpecies::InitAnalysis() {
     InitSpiralAnalysis();
   }
   if (params_->filament.theta_analysis) {
+    if (params_->interaction_flag) {
+      std::cout << "WARNING! Theta analysis running on interacting filaments!\n";
+    }
     InitThetaAnalysis();
   }
   if (params_->filament.lp_analysis) {
@@ -1478,7 +1485,7 @@ void FilamentSpecies::InitSpiralAnalysis() {
     double nspec = GetNSpec();
     spiral_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
   }
-  spiral_file_ << "time angle_sum E_bend tip_z_proj head_pos_x head_pos_y tail_pos_x tail_pos_y\n";
+  spiral_file_ << "time angle_sum E_bend tip_z_proj spiral_number head_pos_x head_pos_y tail_pos_x tail_pos_y\n";
 }
 
 void FilamentSpecies::InitThetaAnalysis() {
@@ -1523,9 +1530,6 @@ void FilamentSpecies::RunAnalysis() {
   }
   // TODO Analyze conformation and ms end-to-end
   if (params_->filament.theta_analysis) {
-    if (params_->interaction_flag) {
-      std::cout << "WARNING! Theta analysis running on interacting filaments!\n";
-    }
     RunThetaAnalysis();
   }
   if (params_->filament.lp_analysis) {
@@ -1543,6 +1547,8 @@ void FilamentSpecies::RunSpiralAnalysis() {
   double plength = it->GetPersistenceLength();
   double clength = it->GetBondLength();
   double e_zero = length * plength / (clength * clength);
+  it->CalculateSpiralNumber();
+  double spiral_number = it->GetSpiralNumber();
   std::vector<double> const * const thetas = it->GetThetas();
   for (int i=0; i<thetas->size(); ++i) {
     tot_angle_ += acos((*thetas)[i]);
@@ -1554,7 +1560,7 @@ void FilamentSpecies::RunSpiralAnalysis() {
   double const * const head_pos = it->GetHeadPosition();
   double const * const tail_pos = it->GetTailPosition();
   if (spiral_file_.is_open()) {
-    spiral_file_ << time_ << " " << tot_angle_ << " " << e_bend_ << " " << tip_z << " " << head_pos[0] << " " << head_pos[1] << " " << tail_pos[0] << " " << tail_pos[1] << "\n";
+    spiral_file_ << time_ << " " << tot_angle_ << " " << e_bend_ << " " << tip_z << " " << spiral_number << " " << head_pos[0] << " " << head_pos[1] << " " << tail_pos[0] << " " << tail_pos[1] << "\n";
   }
   else {
     early_exit = true;
