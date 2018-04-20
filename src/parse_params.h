@@ -83,6 +83,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("spiral_flag")==0) {
             params->filament.spiral_flag = jt->second.as<int>();
           }
+          else if (param_name.compare("spiral_number_fail_condition")==0) {
+            params->filament.spiral_number_fail_condition = jt->second.as<double>();
+          }
           else if (param_name.compare("driving_factor")==0) {
             params->filament.driving_factor = jt->second.as<double>();
           }

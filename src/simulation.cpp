@@ -431,6 +431,11 @@ void Simulation::RunProcessing(int run_analyses) {
     if (early_exit) {
       early_exit = false;
       std::cout << "  Early exit triggered. Ending simulation.\n";
+      if (run_analyses) {
+        for (auto it=species_.begin(); it!=species_.end(); ++it) {
+          (*it)->FinalizeAnalysis();
+        }
+      }
       return;
     }
     Draw();
