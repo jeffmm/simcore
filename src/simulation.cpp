@@ -381,6 +381,8 @@ void Simulation::WriteOutputs() {
 void Simulation::ProcessOutputs(system_parameters params, run_options run_opts) {
   params_ = params;
   run_name_ = params.run_name;
+  // Ensure that we are not trying to load any checkpoints when processing outputs
+  params_.load_checkpoint = 0;
   InitProcessing(run_opts);
   RunProcessing(run_opts.analysis_flag);
   ClearSimulation();
