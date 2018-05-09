@@ -1,31 +1,22 @@
-
-delta: 0.0003
-boundary: 3
-n_update_cells: 10
-
-graph_flag: 1
-n_graph: 100
-
-system_radius: 200
-bud_radius: 100
-bud_height: 280
+system_radius: 100
+bud_radius: 50
+bud_height: 140
 
 spindle:
-# Insertion and graphics details
   num: 1
   draw_type: orientation
+  insertion_type: centered_oriented
   color: 6
-  insertion_type: random
+  diameter: 15
+  length: 25
+  n_filaments_bud: 2
+  n_filaments_mother: 1
   overlap: 0
-# Physical parameters
-  diameter: 40
-  length: 80
-  n_filaments_bud: 1
   spb_diameter: 5
-  alignment_potential: 1
-  k_spring: 10
-  k_align: 10
-# Outputs
+  k_spring: 100
+  k_align: 0
+  alignment_potential: 0
+  spring_length: 0
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 1
@@ -37,7 +28,7 @@ filament:
   diameter: 1
   length: -1
   persistence_length: 10000
-  max_length: 500
+  max_length: 100
   min_length: 10
   max_bond_length: 6
   min_bond_length: 3
