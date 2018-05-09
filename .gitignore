@@ -25,6 +25,7 @@ obj
 *.spiral
 *_params.yaml
 *.log
+*.time
 sc-*
 results
 octave-workspace

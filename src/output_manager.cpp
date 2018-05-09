@@ -210,5 +210,17 @@ void OutputManager::Close() {
       othermo_file_.close();
     }
   }
+  if (params_->time_flag) {
+    WriteTime();
+  }
+}
+
+void OutputManager::WriteTime() {
+  std::string fname = run_name_;
+  fname.append(".time");
+  time_file_.open(fname, std::ios::out);
+  time_file_ << "i_step n_steps delta\n";
+  time_file_ << *i_step_ << " " << params_->n_steps << " " << params_->delta << "\n";
+  time_file_.close();
 }
 

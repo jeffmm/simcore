@@ -31,8 +31,10 @@ class OutputManager{
     void InitThermo(std::string fname);
     void InitThermoInput(std::string fname);
     void WriteReduce();
+    void WriteTime();
     std::fstream othermo_file_;
     std::fstream ithermo_file_;
+    std::fstream time_file_;
 
   public:
     OutputManager() {}

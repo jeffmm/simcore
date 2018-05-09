@@ -1,7 +1,5 @@
 
-delta: 0.0003
-boundary: 3
-n_update_cells: 10
+delta: 0.0001
 
 graph_flag: 1
 n_graph: 100
