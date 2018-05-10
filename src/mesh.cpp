@@ -44,6 +44,7 @@ void Mesh::AddBond(Bond b) {
   bonds_.push_back(b);
   bonds_.back().SetColor(color_,draw_);
   bonds_.back().SetMeshID(GetMeshID());
+  bonds_.back().SetSID(GetSID());
   n_bonds_++;
 }
 

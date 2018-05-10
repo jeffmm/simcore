@@ -1,3 +1,6 @@
+#ifndef _SIMCORE_MOTOR_H_
+#define _SIMCORE_MOTOR_H_
+
 #include "species.h"
 #include "bond.h"
 #ifdef ENABLE_OPENMP
@@ -82,3 +85,4 @@ class MotorSpecies : public Species<Motor> {
     }
 };
 
+#endif // _SIMCORE_MOTOR_H_

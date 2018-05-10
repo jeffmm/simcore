@@ -3,6 +3,7 @@
 
 #include "auxiliary.h"
 #include "object.h"
+#include "yaml-cpp/yaml.h"
 
 class SpeciesBase {
   private:
@@ -78,6 +79,7 @@ class SpeciesBase {
     virtual double const GetVolume() {}
     virtual double const GetDrMax() {}
     virtual void ZeroDrTot() {}
+    virtual void CustomInsert() {}
 };
 
 template<typename T>
@@ -126,6 +128,7 @@ class Species : public SpeciesBase {
     virtual void ZeroDrTot();
     virtual double GetSpecLength();
     virtual double GetSpecDiameter();
+    virtual void CustomInsert();
 };
 
 #include "species_templates.h"
