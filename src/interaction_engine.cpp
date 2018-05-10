@@ -149,6 +149,10 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   if (obj1->GetOID() == obj2->GetOID()) {
     error_exit("Object %d attempted self-interaction!", obj1->GetOID());
   }
+  // If we are disallowing like-like interactions, return if same species
+  if (!params_->like_like_interactions && obj1->GetSID() == obj2->GetSID()) {
+    return;
+  }
   // Check that object 1 is part of a mesh, in which case...
   // ...check that object 1 is of the same mesh of object 2, in which case...
   // ...check if object 2 is a neighbor of object 1, in which case: do not interact

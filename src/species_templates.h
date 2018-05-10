@@ -16,6 +16,7 @@ template <typename T>
 void Species<T>::AddMember() {
   T newmember;
   members_.push_back(newmember);
+  members_.back().SetSID(GetSID());
   members_.back().Init();
   //newmember->SetColor(sparams_->color, sparams_->draw_type);
   n_members_++;
@@ -43,6 +44,7 @@ void Species<T>::ZeroDrTot() {
 template <typename T> 
 void Species<T>::AddMember(T newmem) {
   members_.push_back(newmem);
+  newmem.SetSID(GetSID());
   n_members_++;
 }
 
@@ -243,7 +245,9 @@ void Species<T>::CleanUp() {members_.clear();}
 
 template<typename T>
 void Species<T>::ArrangeMembers() {
-  if (GetInsertionType().compare("simple_crystal") == 0)
+  if (GetInsertionType().compare("custom") == 0 )
+    CustomInsert();
+  else if (GetInsertionType().compare("simple_crystal") == 0)
     CrystalArrangement();
   else if (GetInsertionType().compare("centered_oriented") == 0 )
     CenteredOrientedArrangement();
@@ -372,4 +376,46 @@ void Species<T>::CrystalArrangement() {
   }
 }
 
+template<typename T>
+void Species<T>::CustomInsert() {
+  YAML::Node inode;
+  try {
+    inode = YAML::LoadFile(sparams_->insert_file);
+  }
+  catch (...) {
+    std::cout << "Failed to load custom insert file " << sparams_->insert_file << " for species " << spec_name_ << "\n";
+    error_exit("");
+  }
+  if (!inode[spec_name_] || inode[spec_name_].size()!=n_members_) {
+    std::cout << "Custom insert file for species " << spec_name_ << " was invalid: \n";
+    if (!inode[spec_name_]) {
+      std::cout << "  Species ID header was missing from file\n";
+    }
+    else if (inode[spec_name_].size()!=n_members_) {
+      std::cout << "  There were " << inode[spec_name_].size() << " positions specified for " << n_members_ << " species members\n";
+    }
+    error_exit("");
+  }
+  for (YAML::const_iterator it=inode.begin(); it!=inode.end(); ++it) {
+    if (it->first.as<std::string>().compare(spec_name_) != 0) continue;
+    if (! it->second.IsSequence()) {
+      error_exit("Custom insert file positions not specified as sequence");
+    }
+    int i_member = 0;
+    for (YAML::const_iterator jt=it->second.begin(); jt!=it->second.end(); ++jt) {
+      double pos[3],u[3];
+      if (! jt->IsSequence()) {
+        error_exit("Custom insert position not specified as sequence");
+      }
+      if (jt->size() != 2 || (*jt)[0].size() !=3 || (*jt)[1].size() !=3) {
+        error_exit("Custom insert position not in format [[pos_x,pos_y,pos_z],[u_x,u_y,u_z]]");
+      }
+      for (int i=0;i<3;++i) {
+        pos[i] = (*jt)[0][i].as<double>();
+        u[i] = (*jt)[1][i].as<double>();
+      }
+      members_[i_member++].InsertAt(pos,u);
+    }
+  }
+}
 

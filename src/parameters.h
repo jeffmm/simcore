@@ -7,6 +7,7 @@ class species_parameters {
   public:
     int num = 0;
     std::string insertion_type = "random";
+    std::string insert_file = "none";
     int overlap = 0;
     std::string draw_type = "orientation";
     double color = 0;
@@ -52,6 +53,25 @@ class filament_parameters : public species_parameters {
     double perlen_ratio = -1;
     int n_bonds = -1;
     int driving_method = 0;
+};
+
+class passive_filament_parameters : public species_parameters {
+  public:
+    double diameter = 1;
+    double length = -1;
+    double persistence_length = 400;
+    double max_length = 500;
+    double min_length = 1;
+    double max_bond_length = 5;
+    double min_bond_length = 1.5;
+    double driving_factor = 0;
+    double friction_ratio = 2;
+    int metric_forces = 1;
+    int theta_analysis = 0;
+    int lp_analysis = 0;
+    double packing_fraction = -1;
+    double perlen_ratio = -1;
+    int n_bonds = -1;
 };
 
 class hard_rod_parameters : public species_parameters {
@@ -195,8 +215,10 @@ class system_parameters {
     int checkpoint_from_spec = 0;
     std::string potential = "wca";
     double soft_potential_mag = 10;
+    int like_like_interactions = 1;
     species_parameters species;
     filament_parameters filament;
+    passive_filament_parameters passive_filament;
     hard_rod_parameters hard_rod;
     br_bead_parameters br_bead;
     md_bead_parameters md_bead;
