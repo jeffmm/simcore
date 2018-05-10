@@ -23,6 +23,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("insertion_type")==0) {
             params->species.insertion_type = jt->second.as<std::string>();
           }
+          else if (param_name.compare("insert_file")==0) {
+            params->species.insert_file = jt->second.as<std::string>();
+          }
           else if (param_name.compare("overlap")==0) {
             params->species.overlap = jt->second.as<int>();
           }
@@ -161,6 +164,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("insertion_type")==0) {
             params->filament.insertion_type = jt->second.as<std::string>();
           }
+          else if (param_name.compare("insert_file")==0) {
+            params->filament.insert_file = jt->second.as<std::string>();
+          }
           else if (param_name.compare("overlap")==0) {
             params->filament.overlap = jt->second.as<int>();
           }
@@ -187,6 +193,96 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_checkpoint")==0) {
             params->filament.n_checkpoint = jt->second.as<int>();
+          }
+          else {
+            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+          }
+        }
+      }
+      else if (struct_name.compare("passive_filament") == 0) {
+        for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
+          param_name = jt->first.as<std::string>();
+          if (false) {}
+          else if (param_name.compare("diameter")==0) {
+            params->passive_filament.diameter = jt->second.as<double>();
+          }
+          else if (param_name.compare("length")==0) {
+            params->passive_filament.length = jt->second.as<double>();
+          }
+          else if (param_name.compare("persistence_length")==0) {
+            params->passive_filament.persistence_length = jt->second.as<double>();
+          }
+          else if (param_name.compare("max_length")==0) {
+            params->passive_filament.max_length = jt->second.as<double>();
+          }
+          else if (param_name.compare("min_length")==0) {
+            params->passive_filament.min_length = jt->second.as<double>();
+          }
+          else if (param_name.compare("max_bond_length")==0) {
+            params->passive_filament.max_bond_length = jt->second.as<double>();
+          }
+          else if (param_name.compare("min_bond_length")==0) {
+            params->passive_filament.min_bond_length = jt->second.as<double>();
+          }
+          else if (param_name.compare("driving_factor")==0) {
+            params->passive_filament.driving_factor = jt->second.as<double>();
+          }
+          else if (param_name.compare("friction_ratio")==0) {
+            params->passive_filament.friction_ratio = jt->second.as<double>();
+          }
+          else if (param_name.compare("metric_forces")==0) {
+            params->passive_filament.metric_forces = jt->second.as<int>();
+          }
+          else if (param_name.compare("theta_analysis")==0) {
+            params->passive_filament.theta_analysis = jt->second.as<int>();
+          }
+          else if (param_name.compare("lp_analysis")==0) {
+            params->passive_filament.lp_analysis = jt->second.as<int>();
+          }
+          else if (param_name.compare("packing_fraction")==0) {
+            params->passive_filament.packing_fraction = jt->second.as<double>();
+          }
+          else if (param_name.compare("perlen_ratio")==0) {
+            params->passive_filament.perlen_ratio = jt->second.as<double>();
+          }
+          else if (param_name.compare("n_bonds")==0) {
+            params->passive_filament.n_bonds = jt->second.as<int>();
+          }
+          else if (param_name.compare("num")==0) {
+            params->passive_filament.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->passive_filament.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("insert_file")==0) {
+            params->passive_filament.insert_file = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("overlap")==0) {
+            params->passive_filament.overlap = jt->second.as<int>();
+          }
+          else if (param_name.compare("draw_type")==0) {
+            params->passive_filament.draw_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("color")==0) {
+            params->passive_filament.color = jt->second.as<double>();
+          }
+          else if (param_name.compare("posit_flag")==0) {
+            params->passive_filament.posit_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("spec_flag")==0) {
+            params->passive_filament.spec_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->passive_filament.checkpoint_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_posit")==0) {
+            params->passive_filament.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_spec")==0) {
+            params->passive_filament.n_spec = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_checkpoint")==0) {
+            params->passive_filament.n_checkpoint = jt->second.as<int>();
           }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
@@ -220,6 +316,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("insertion_type")==0) {
             params->hard_rod.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("insert_file")==0) {
+            params->hard_rod.insert_file = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->hard_rod.overlap = jt->second.as<int>();
@@ -272,6 +371,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("insertion_type")==0) {
             params->br_bead.insertion_type = jt->second.as<std::string>();
           }
+          else if (param_name.compare("insert_file")==0) {
+            params->br_bead.insert_file = jt->second.as<std::string>();
+          }
           else if (param_name.compare("overlap")==0) {
             params->br_bead.overlap = jt->second.as<int>();
           }
@@ -322,6 +424,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("insertion_type")==0) {
             params->md_bead.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("insert_file")==0) {
+            params->md_bead.insert_file = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->md_bead.overlap = jt->second.as<int>();
@@ -388,6 +493,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("insertion_type")==0) {
             params->centrosome.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("insert_file")==0) {
+            params->centrosome.insert_file = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->centrosome.overlap = jt->second.as<int>();
@@ -461,6 +569,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("insertion_type")==0) {
             params->motor.insertion_type = jt->second.as<std::string>();
           }
+          else if (param_name.compare("insert_file")==0) {
+            params->motor.insert_file = jt->second.as<std::string>();
+          }
           else if (param_name.compare("overlap")==0) {
             params->motor.overlap = jt->second.as<int>();
           }
@@ -533,6 +644,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("insertion_type")==0) {
             params->bead_spring.insertion_type = jt->second.as<std::string>();
           }
+          else if (param_name.compare("insert_file")==0) {
+            params->bead_spring.insert_file = jt->second.as<std::string>();
+          }
           else if (param_name.compare("overlap")==0) {
             params->bead_spring.overlap = jt->second.as<int>();
           }
@@ -589,6 +703,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("insertion_type")==0) {
             params->spherocylinder.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("insert_file")==0) {
+            params->spherocylinder.insert_file = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->spherocylinder.overlap = jt->second.as<int>();
@@ -658,6 +775,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("insertion_type")==0) {
             params->spindle.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("insert_file")==0) {
+            params->spindle.insert_file = jt->second.as<std::string>();
           }
           else if (param_name.compare("overlap")==0) {
             params->spindle.overlap = jt->second.as<int>();
@@ -856,6 +976,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("soft_potential_mag")==0) {
         params->soft_potential_mag = it->second.as<double>();
+      }
+      else if (param_name.compare("like_like_interactions")==0) {
+        params->like_like_interactions = it->second.as<int>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";

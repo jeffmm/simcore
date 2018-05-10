@@ -48,7 +48,6 @@ void Object::SetNDim(int n_dim) {
 void Object::SetDelta(double delta) {
   delta_ = delta;
 }
-
 // Trivial Get/Set functions
 int const Object::GetOID() const {
   return oid_;
@@ -143,6 +142,12 @@ void Object::SetMeshID(int mid) {
 }
 void Object::ToggleIsMesh() {
   is_mesh_ = !is_mesh_;
+}
+species_id const Object::GetSID() {
+  return sid_;
+}
+void Object::SetSID(species_id sid) {
+  sid_ = sid;
 }
 
 // Virtual functions

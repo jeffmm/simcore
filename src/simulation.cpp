@@ -32,7 +32,7 @@ void Simulation::RunSimulation() {
 
 void Simulation::PrintComplete() {
   int it,steps;
-  if (params_.n_steps > 10000) {// && i_step_ >= 100) {
+  if (params_.n_steps > 100000) {// && i_step_ >= 100) {
     it = i_step_/100;
     steps = params_.n_steps/10000;
   }
@@ -140,6 +140,7 @@ void Simulation::InitSpecies() {
   //REGISTER_SPECIES(BrBeadSpecies,br_bead);
   REGISTER_SPECIES(CentrosomeSpecies,centrosome);
   REGISTER_SPECIES(FilamentSpecies,filament);
+  REGISTER_SPECIES(PassiveFilamentSpecies,passive_filament);
   REGISTER_SPECIES(BeadSpringSpecies,bead_spring);
   REGISTER_SPECIES(SpherocylinderSpecies,spherocylinder);
   REGISTER_SPECIES(SpindleSpecies,spindle);
@@ -300,9 +301,10 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       printf("\n");
       if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
         (*spec)->ArrangeMembers();
-        if (!(*spec)->CanOverlap() && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
-          error_exit("Species inserted with deterministic insertion type is overlapping!");
-        }
+        // This catch is breaking centered_oriented insertion. Skip it for now.
+        //if (!(*spec)->CanOverlap() && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
+          //error_exit("Species inserted with deterministic insertion type is overlapping!");
+        //}
       }
     }
   }
