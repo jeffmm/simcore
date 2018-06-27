@@ -1,49 +1,56 @@
+seed: 3290514
 
-run_name: crossing_test
+run_name: global_order_test
 n_dim: 2
-n_periodic: 0
+n_periodic: 2
 delta: 0.0001
-n_steps: 100000
+n_steps: 10000000
 boundary: 0
-n_update_cells: -1
+n_update_cells: 10
+cell_length: 10
 
 graph_flag: 1
 n_graph: 100
+graph_background: 0
 
-system_radius: 50
+system_radius: 15
 potential: soft
-soft_potential_mag: 40
-like_like_interactions: 0
-stoch_flag: 0
-
-passive_filament:
-  num: 1
-  diameter: 1
-  length: 115
-  draw_type: bw
-  insertion_type: custom
-  insert_file: filament_crossing_25.yaml
-  perlen_ratio: 100 
-  n_bonds: 18
-  posit_flag: 1
-  spec_flag: 1
-  checkpoint_flag: 1
-  n_posit: 100
-  n_spec: 100
-  n_checkpoint: 100
+soft_potential_mag: 500
+#like_like_interactions: 1
+stoch_flag: 1
 
 filament:
-  num: 25
-  insertion_type: custom
-  insert_file: filament_crossing_25.yaml
+  num: 2
+  packing_fraction: -1
+  #overlap: 1
+  insertion_type: random_nematic
   diameter: 1
-  length: 50
-  perlen_ratio: 100 
-  n_bonds: 18
+  length: 20
+  perlen_ratio: 50
+  n_bonds: 6
   posit_flag: 1
   spec_flag: 1
   checkpoint_flag: 1
   n_posit: 100
   n_spec: 100
   n_checkpoint: 100
-  driving_factor: 10
+  driving_factor: 30
+  global_order_analysis: 1
+
+#passive_filament:
+  #num: 0
+  #diameter: 1
+  #length: 115
+  #draw_type: bw
+  #insertion_type: custom
+  #insert_file: filament_crossing_2.yaml
+  #perlen_ratio: 100 
+  #n_bonds: 18
+  #posit_flag: 1
+  #spec_flag: 1
+  #checkpoint_flag: 1
+  #n_posit: 100
+  #n_spec: 100
+  #n_checkpoint: 100
+
+

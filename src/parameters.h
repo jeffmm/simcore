@@ -46,6 +46,7 @@ class filament_parameters : public species_parameters {
     double v_depoly = 0.793;
     int theta_analysis = 0;
     int lp_analysis = 0;
+    int global_order_analysis = 0;
     double packing_fraction = -1;
     int shuffle = 1;
     double shuffle_factor = 10;
@@ -216,6 +217,7 @@ class system_parameters {
     std::string potential = "wca";
     double soft_potential_mag = 10;
     int like_like_interactions = 1;
+    int auto_graph = 0;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;

@@ -44,6 +44,9 @@ void SimulationManager::InitManager(run_options run_opts) {
   if ((run_opts_.make_movie || run_opts_.analysis_flag || run_opts_.reduce_flag) && n_runs_ > 1) {
     error_exit("Attempted to run movies/analysis on multiple files.");
   }
+  if (run_opts_.auto_graph) {
+    pnode_["auto_graph"] = 1;
+  }
   rng_.Init(seed);
 }
 
