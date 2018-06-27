@@ -19,6 +19,7 @@ struct run_options {
   int n_graph = 100;
   int reduce_factor = 1;
   int blank_flag = 0;
+  int auto_graph = 0;
   std::string param_file;
   std::string run_name = "sc";
 };
@@ -28,7 +29,7 @@ struct run_options {
    string array below when adding new flags. */
 
 // Define flags here
-static const int n_flags = 11;
+static const int n_flags = 12;
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
@@ -36,6 +37,7 @@ static struct option long_options[] = {
   {"n-runs", required_argument, 0, 'n'},
   {"graphics", required_argument, 0, 'g'},
   {"movie", no_argument, 0, 'm'},
+  {"auto-graph",no_argument, 0, 'G'},
   {"analysis", no_argument, 0, 'a'},
   {"posit", no_argument, 0, 'p'},
   {"load",no_argument, 0, 'l'},
@@ -50,8 +52,9 @@ static const std::string desc[n_flags][2] = {
   {"run program in debug mode", "none"},
   {"where rname is the name of a run session (for organizing batch jobs)", "rname"},
   {"where num is the number of independent runs to perform with the given parameters", "num"},
-  {"run graphics from posit/spec files without recording, with n_graph = ngraph", "ngraph"},
+  {"force to run with graphics from posit/spec files, with n_graph = ngraph", "ngraph"},
   {"run simulation to make movie using spec files with same run-name", "none"},
+  {"if running with graphics, do not wait for human input at graphics initialization", "none"},
   {"run analysis on spec files with same run-name for parameter species", "none"},
   {"use posit files for movies/analysis rather than spec files", "none"},
   {"run simulation starting from checkpoint files with same run-name for parameter species", "none"},
@@ -98,7 +101,7 @@ static run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdmaplg:r:n:R:b", long_options, &option_index);
+    tmp = getopt_long(argc, argv, "hdmaplg:r:n:R:bG", long_options, &option_index);
     if (tmp == -1)
       break;
     switch (tmp) {
@@ -125,6 +128,9 @@ static run_options parse_opts(int argc, char *argv[]) {
         break;
       case 'm':
         run_opts.make_movie = 1;
+        break;
+      case 'G':
+        run_opts.auto_graph = 1;
         break;
       case 'a':
         run_opts.analysis_flag = 1;

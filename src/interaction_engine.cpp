@@ -5,12 +5,12 @@ void InteractionEngine::Init(system_parameters *params,
               std::vector<SpeciesBase*> *species, 
               space_struct *space) {
   // Set up pointer structures
-  no_init_ = false;
   params_ = params;
   species_ = species;
   space_ = space;
 
   // Initialize owned structures
+  no_init_ = false;
   static_pnumber_ = params_->static_particle_number;
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
@@ -107,9 +107,10 @@ void InteractionEngine::CheckUpdate() {
       n_objs_ = obj_count;
       UpdateInteractors();
       UpdateInteractions();
+      return;
     }
   }
-  else if (n_update_ <=0 && GetDrMax() > dr_update_) {
+  if (n_update_ <=0 && GetDrMax() > dr_update_) {
     i_update_ = 0; 
     UpdateInteractions();
     ZeroDrTot();

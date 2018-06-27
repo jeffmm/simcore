@@ -125,6 +125,8 @@ class Filament : public Mesh {
     }
     void CalculateSpiralNumber();
     double GetSpiralNumber();
+    void GetNematicOrder(double * nematic_order_tensor);
+    void GetPolarOrder(double * polar_order_vector);
     double GetTipZ() {
       return sites_[n_sites_-1].GetOrientation()[n_dim_-1];
     }
@@ -163,14 +165,17 @@ class FilamentSpecies : public Species<Filament> {
     double e_bend_,
            tot_angle_,
            mse2e_,
-           mse2e2_;
+           mse2e2_,
+           * nematic_order_tensor_,
+           * polar_order_vector_;
     int **theta_histogram_;
     int time_,
         n_bins_,
         n_samples_;
     std::fstream spiral_file_,
                  theta_file_,
-                 mse2e_file_;
+                 mse2e_file_,
+                 global_order_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(species_id::filament);
@@ -195,17 +200,27 @@ class FilamentSpecies : public Species<Filament> {
         //DPRINTF("  filament_num: %d\n  sys_volume: %2.2f\n  fil_volume: %2.2f\n  packing_fraction: %2.2f\n",sparams_->num, space_->volume, fil_vol, params_->filament.packing_fraction);
       }
     }
+
     void InitAnalysis();
-    void InitSpiralAnalysis();
-    void InitThetaAnalysis();
-    void InitMse2eAnalysis();
     void RunAnalysis();
-    void RunSpiralAnalysis();
-    void RunThetaAnalysis();
-    void RunMse2eAnalysis();
     void FinalizeAnalysis();
-    void FinalizeMse2eAnalysis();
+
+    void InitSpiralAnalysis();
+    void RunSpiralAnalysis();
+    //void FinalizeSpiralAnalysis();
+
+    void InitThetaAnalysis();
+    void RunThetaAnalysis();
     void FinalizeThetaAnalysis();
+
+    void InitMse2eAnalysis();
+    void RunMse2eAnalysis();
+    void FinalizeMse2eAnalysis();
+
+    void InitGlobalOrderAnalysis();
+    void RunGlobalOrderAnalysis();
+    void FinalizeGlobalOrderAnalysis();
+
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();

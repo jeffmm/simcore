@@ -3,17 +3,19 @@ delta: 0.0001
 
 graph_flag: 1
 n_graph: 100
+boundary: 3
 
 system_radius: 200
 bud_radius: 100
 bud_height: 280
+seed: 328951134
 
 spindle:
 # Insertion and graphics details
   num: 1
   draw_type: orientation
   color: 6
-  insertion_type: random
+  insertion_type: random_oriented
   overlap: 0
 # Physical parameters
   diameter: 40
@@ -32,7 +34,7 @@ spindle:
   n_checkpoint: 1000
 
 filament:
-  diameter: 1
+  diameter: 3
   length: -1
   persistence_length: 10000
   max_length: 500
@@ -46,7 +48,7 @@ filament:
   fic_factor: 0.128
   f_shrink_to_grow : 0.017
   f_grow_to_shrink : 0.00554
-  v_poly : 1.44
+  v_poly : 14.4 #1.44
   v_depoly : 1.793
 # Outputs
   posit_flag: 1
