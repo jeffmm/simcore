@@ -116,16 +116,26 @@ void Simulation::InitObjects() {
 void Simulation::InitGraphics() {
   GetGraphicsStructure();
   double background_color = (params_.graph_background == 0 ? 0.1 : 1);
+  // If NOGRAPH is defined, skip drawing and grabbing
   #ifndef NOGRAPH
+  // Initialize graphics structures
   graphics_.Init(&graph_array, space_.GetStruct(), background_color, params_.draw_boundary);
-  graphics_.DrawLoop();
+  // Check if we want to wait for human input before beginning movie/graphed simulation
+  if (params_.auto_graph) {
+    graphics_.Draw();
+  }
+  else {
+    // Waiting for human input
+    graphics_.DrawLoop();
+  }
   #endif
+  // Initialize directory for grabbed images
   params_.movie_directory.append("/");
   params_.movie_directory.append(params_.run_name);
-  // Grab first frame
   #ifndef NOGRAPH
+  // Grab first frame
   if (params_.movie_flag) {
-    // Record bmp image of frame 
+    // Record bmp image of frame into movie_directory
     grabber(graphics_.windx_, graphics_.windy_,
             params_.movie_directory, (int) i_step_/params_.n_graph);
   }
@@ -134,16 +144,17 @@ void Simulation::InitGraphics() {
 
 void Simulation::InitSpecies() {
 
-  // We have to search for the various types of species that we have
-  //REGISTER_SPECIES(MDBeadSpecies,md_bead);
-  //REGISTER_SPECIES(HardRodSpecies,hard_rod);
-  //REGISTER_SPECIES(BrBeadSpecies,br_bead);
+  /* Factories for creating and initializing registered species with their
+     assigned species id */
   REGISTER_SPECIES(CentrosomeSpecies,centrosome);
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(PassiveFilamentSpecies,passive_filament);
   REGISTER_SPECIES(BeadSpringSpecies,bead_spring);
   REGISTER_SPECIES(SpherocylinderSpecies,spherocylinder);
   REGISTER_SPECIES(SpindleSpecies,spindle);
+  //REGISTER_SPECIES(MDBeadSpecies,md_bead);
+  //REGISTER_SPECIES(HardRodSpecies,hard_rod);
+  //REGISTER_SPECIES(BrBeadSpecies,br_bead);
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
@@ -186,7 +197,6 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       int num_failures = 0;
       while(num != inserted) {
         (*spec)->AddMember();
-        //Draw();
         // First check that we are respecting boundary conditions
         if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
           (*spec)->PopMember();
@@ -196,14 +206,13 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         }
         // Check if we have an overlap of objects
         else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
-          //printf("Has an overlap\n");
           (*spec)->PopMember();
           num_failures++;
         }
         // Otherwise update display of percentage of species inserted
         else {
           inserted++;
-          if (!processing) {
+          if (!force_overlap && !processing) {
             iengine_.AddInteractors((*spec)->GetLastInteractors());
           }
           int insert_percentage = (int)(100 * (float)inserted / (float)num);
@@ -242,23 +251,19 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           grid_index[i] = i;
         }
         gsl_ran_shuffle(rng_.r, grid_index, num_x*num_y, sizeof(int));
-        //while (pos[1] < params_.system_radius && inserted!=num) {
         for (int i=0; i<num_x*num_y; ++i) {
           pos[0] = grid_array[grid_index[i]].first*d;
           pos[1] = grid_array[grid_index[i]].second*l;
           (*spec)->AddMember();
           (*spec)->SetLastMemberPosition(pos);
-          //Draw();
           // First check that we are respecting boundary conditions
           if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
             (*spec)->PopMember();
-            //num_failures++;
             // We are not counting boundary condition failures in insertion
             // failures, since insertion failures are for packing issues
           }
           // Check if we have an overlap of objects
           else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
-            //printf("Has an overlap\n");
             (*spec)->PopMember();
             num_failures++;
           }
@@ -278,11 +283,6 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
             }
           }
           if (inserted == num) break;
-          //pos[0]+=0.5*d;
-          //if (pos[0] > params_.system_radius) {
-            //pos[0] = -params_.system_radius;
-            //pos[1] += 1+l;
-          //}
         }
         delete[] grid_index;
       }
@@ -296,15 +296,18 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         error_exit("Unable to insert species randomly within the reattempt threshold of %d.\n",params_.species_insertion_reattempt_threshold);
       }
     }
-    //printf("inserted: %d\n",inserted);
     if (!processing) {
       printf("\n");
       if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
         (*spec)->ArrangeMembers();
-        // This catch is breaking centered_oriented insertion. Skip it for now.
-        //if (!(*spec)->CanOverlap() && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
-          //error_exit("Species inserted with deterministic insertion type is overlapping!");
-        //}
+        /*
+         * This catch is breaking centered_oriented insertion. Skip it for now.
+         *
+         *if (!(*spec)->CanOverlap() && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
+         *  error_exit("Species inserted with deterministic insertion type is overlapping!");
+         *}
+         *
+         */
       }
     }
   }

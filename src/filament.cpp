@@ -224,28 +224,6 @@ void Filament::InsertFilament(bool force_overlap) {
   shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*shuffle_factor_;
 }
 
-//void Filament::InsertAt(double *pos, double *u) {
-  //std::copy(pos,pos+3,position_);
-  //std::copy(u,u+3,orientation_);
-  //normalize_vector(orientation_,n_dim_);
-  //for (int i=0;i<n_dim_;++i) {
-    //position_[i] -= 0.5*length_*orientation_[i];
-  //}
-  //sites_[0].SetPosition(position_);
-  //sites_[0].SetOrientation(orientation_);
-  //for (int i=1;i<n_sites_;++i) {
-    //for (int j=0;j<n_dim_;++j) {
-      //position_[j] += bond_length_*orientation_[j];
-    //}
-    //sites_[i].SetPosition(position_);
-    //sites_[i].SetOrientation(orientation_);
-  //}
-  //UpdateBondPositions();
-  //UpdateSiteOrientations();
-  //UpdatePeriodic();
-//}
-
-
 void Filament::InsertAt(double *pos, double *u) {
   std::copy(pos,pos+3,position_);
   std::copy(u,u+3,orientation_);
@@ -290,8 +268,6 @@ void Filament::InsertAt(double *pos, double *u) {
   for (bond_iterator bond=bonds_.begin(); bond!=bonds_.end(); ++bond) {
     bond->SetColor(color_,draw_);
   }
-  UpdateBondPositions();
-  UpdateSiteOrientations();
   shuffle_factor_ = 2*(gsl_rng_uniform_pos(rng_.r)-0.5)*shuffle_factor_;
   UpdateBondPositions();
   UpdateSiteOrientations();
@@ -479,31 +455,13 @@ void Filament::CalculateAngles(bool rescale) {
     double const * const u2 = sites_[i_site+1].GetOrientation();
     cos_angle = dot_product(n_dim_, u1, u2);
     cos_thetas_[i_site] = cos_angle;
-    //if (cos_angle <= 0 && dynamic_instability_flag_) {
-      //printf("\ncos_angle: %2.2f\n",cos_angle);
-      //printf("i_site/n_sites: %d/%d\n",i_site,n_sites_);
-      //ReportSites();
-      //error_exit("Acute angle between adjoining bonds detected with dynamic instabiliy on.\n \
-          //Increase persistence length or turn off dynamic instability for floppy filaments\n");
-    //}
-    // FIXME
-    //if (cos_angle < 0.7 && dynamic_instability_flag_) {
-      //sharp_angle = true;
-    //}
     if (spiral_flag_) {
       angle_sum += acos(cos_angle);
     }
   }
-  //if (spiral_flag_ && angle_sum < 3) { // check if sum of angles is much less than 2*pi
-    //std::cout << "  Spiral terminated\n";
-    //early_exit = true; // exit the simulation early
-    //spiral_flag_ = false; // to prevent this message more than once
-  //}
   if (rescale && sharp_angle && midstep_ && length_/(n_bonds_+1) > min_bond_length_) {
-    //printf("\nDoubling granularity due to sharp angle");
     DoubleGranularityLinear();
     RebindMotors();
-    //printf(", n_bonds = %d\n",n_bonds_);
     UpdateSiteOrientations();
     CalculateAngles(false);
   }
@@ -552,7 +510,7 @@ void Filament::CalculateSpiralNumber() {
     spiral_number_ += sign*angle;
   }
   // Failed spiral (waiting until the filament straightens)
-  if (ABS(GetSpiralNumber()) < params_->filament.spiral_number_fail_condition) {
+  if (spiral_flag_ && ABS(GetSpiralNumber()) < params_->filament.spiral_number_fail_condition) {
     early_exit = true;
   }
 }
@@ -563,6 +521,35 @@ double Filament::GetSpiralNumber() {
   //if (temp >= 0.75) return temp+0.25;
   //else return temp/0.75;
   //return temp;
+}
+
+void Filament::GetNematicOrder(double * nematic_order_tensor) {
+  for (auto it=bonds_.begin(); it!=bonds_.end(); ++it) {
+    double const * const u_bond = it->GetOrientation();
+    for (int i=0; i<3; ++i) {
+      for (int j=0; j<3; ++j) {
+        if (i==j) {
+          nematic_order_tensor[3*i+j] += (2*u_bond[i]*u_bond[j] - 1)/n_bonds_;
+        }
+        else {
+          nematic_order_tensor[3*i+j] += 2*u_bond[i]*u_bond[j]/n_bonds_;
+        }
+      }
+    }
+  }
+}
+
+void Filament::GetPolarOrder(double * polar_order_vector) {
+  double p_i[3] = {0,0,0};
+  for (auto it=bonds_.begin(); it!=bonds_.end(); ++it) {
+    double const * const u_bond = it->GetOrientation();
+    for (int i=0; i<n_dim_; ++i) {
+      p_i[i] += u_bond[i];
+    }
+  }
+  for (int i=0; i<n_dim_; ++i) {
+    polar_order_vector[i] += p_i[i]/n_bonds_;
+  }
 }
 
 void Filament::ConstructUnprojectedRandomForces() {
@@ -640,24 +627,6 @@ void Filament::GeometricallyProjectRandomForces() {
     }
     sites_[i_site].SetRandomForce(f_proj);
   }
-  // Test for geometrically projected random forces. This should always yield zero, by definition
-  //bool resulted = false;
-  //for (int i_site=0; i_site<n_sites_-1; ++i_site) {
-    //double eta[3] = {0,0,0};
-    //for (int i=0;i<n_dim_;++i) {
-      //eta[i] = elements_[i_site+1].GetRandomForce()[i] - elements_[i_site].GetRandomForce()[i];
-    //}
-    //double result = 0;
-    //for (int i=0; i<n_dim_; ++i) {
-      //result += eta[i]*elements_[i_site].GetOrientation()[i];
-    //}
-    //if (ABS(result) > 1e-12) {
-      //printf("%2.12f ", result);
-      //resulted = true;
-    //}
-  //}
-  //if (resulted)
-    //printf("\n");
 }
 
 void Filament::AddRandomForces() {
@@ -862,7 +831,6 @@ void Filament::UpdateSitePositions() {
   sites_[n_sites_-1].SetOrientation(sites_[n_sites_-2].GetOrientation());
   // Finally, normalize site positions, making sure the sites are still rod-length apart
   if (CheckBondLengths()) {
-    //printf("renormalizing\n");
     for (int i_site=1; i_site<n_sites_; ++i_site) {
       double const * const r_site1 = sites_[i_site-1].GetPosition();
       double const * const u_site1 = sites_[i_site-1].GetOrientation();
@@ -1033,19 +1001,13 @@ void Filament::GrowFilament() {
   length_ += delta_length;
   RescaleBonds();
   if (bond_length_ > max_bond_length_) {
-    //ReportSites();
-    //printf("\nDoubling granularity");
     DoubleGranularityLinear();
     RebindMotors();
-    //printf(", n_bonds = %d\n",n_bonds_);
     UpdateSiteOrientations();
-    //ReportSites();
   }
   else if (bond_length_ < min_bond_length_ && n_bonds_ > 2) {
-    //printf("\nHalving granularity");
     HalfGranularityLinear();
     RebindMotors();
-    //printf(", n_bonds = %d\n",n_bonds_);
     UpdateSiteOrientations();
   }
 }
@@ -1480,7 +1442,22 @@ void FilamentSpecies::InitAnalysis() {
   if (params_->filament.lp_analysis) {
     InitMse2eAnalysis();
   }
+  if (params_->filament.global_order_analysis) {
+    InitGlobalOrderAnalysis();
+  }
   RunAnalysis();
+}
+
+void FilamentSpecies::InitGlobalOrderAnalysis() {
+  std::string fname = params_->run_name;
+  fname.append("_filament.global_order");
+  mse2e_file_.open(fname, std::ios::out);
+  mse2e_file_ << "global_order_analysis_file\n";
+  mse2e_file_ << "time polar_order_x polar_order_y polar_order_z nematic_order_xx nematic_order_xy nematic_order_xz nematic_order_yx nematic_order_yy nematic_order_yz nematic_order_zx nematic_order_zy nematic_order_zz spiral_order signed_spiral_order\n";
+  nematic_order_tensor_ = new double[9];
+  polar_order_vector_ = new double[3];
+  std::fill(nematic_order_tensor_, nematic_order_tensor_+9, 0.0);
+  std::fill(polar_order_vector_, polar_order_vector_+3, 0.0);
 }
 
 void FilamentSpecies::InitMse2eAnalysis() {
@@ -1575,7 +1552,37 @@ void FilamentSpecies::RunAnalysis() {
   if (params_->filament.lp_analysis) {
     RunMse2eAnalysis();
   }
+  if (params_->filament.global_order_analysis) {
+    RunGlobalOrderAnalysis();
+  }
   time_++;
+}
+
+void FilamentSpecies::RunGlobalOrderAnalysis() {
+  double sn_tot = 0.0;
+  double sn_mag = 0.0;
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    double sn = it->GetSpiralNumber();
+    it->GetPolarOrder(polar_order_vector_);
+    it->GetNematicOrder(nematic_order_tensor_);
+    sn_mag += ABS(sn);
+    sn_tot += sn;
+  }
+  sn_mag /= n_members_;
+  sn_tot /= n_members_;
+  for (int i=0; i<3; ++i) {
+    polar_order_vector_[i]/=n_members_;
+  }
+  for (int i=0; i<9; ++i) {
+    nematic_order_tensor_[i]/=n_members_;
+  }
+  if (global_order_file_.is_open()) {
+    global_order_file_ << time_ << " " << polar_order_vector_[0] << " " << polar_order_vector_[1] << " " << polar_order_vector_[2] << " " << nematic_order_tensor_[0] << " " << nematic_order_tensor_[1] << " " << nematic_order_tensor_[2] << " " << nematic_order_tensor_[3] << " " << nematic_order_tensor_[4] << " " << nematic_order_tensor_[5] << " " << nematic_order_tensor_[6] << " " << nematic_order_tensor_[7] << " " << nematic_order_tensor_[8] << " " << sn_mag << " " << sn_tot << "\n";
+  }
+  else {
+    early_exit = true;
+    std::cout << "ERROR: Problem opening file in RunGlobalOrderAnalysis! Exiting.\n";
+  }
 }
 
 void FilamentSpecies::RunSpiralAnalysis() {
@@ -1665,6 +1672,13 @@ void FilamentSpecies::FinalizeAnalysis() {
     FinalizeMse2eAnalysis();
     mse2e_file_.close();
   }
+  if (global_order_file_.is_open()) {
+    FinalizeGlobalOrderAnalysis();
+    global_order_file_.close();
+  }
+}
+
+void FilamentSpecies::FinalizeGlobalOrderAnalysis() {
 }
 
 void FilamentSpecies::FinalizeMse2eAnalysis() {

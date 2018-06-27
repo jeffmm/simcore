@@ -137,6 +137,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("lp_analysis")==0) {
             params->filament.lp_analysis = jt->second.as<int>();
           }
+          else if (param_name.compare("global_order_analysis")==0) {
+            params->filament.global_order_analysis = jt->second.as<int>();
+          }
           else if (param_name.compare("packing_fraction")==0) {
             params->filament.packing_fraction = jt->second.as<double>();
           }
@@ -979,6 +982,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("like_like_interactions")==0) {
         params->like_like_interactions = it->second.as<int>();
+      }
+      else if (param_name.compare("auto_graph")==0) {
+        params->auto_graph = it->second.as<int>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";

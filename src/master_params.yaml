@@ -54,6 +54,7 @@ checkpoint_from_spec: [0, int]
 potential: [wca, string]
 soft_potential_mag: [10, double]
 like_like_interactions: [1,int]
+auto_graph: [0,int]
 
 species:
   num: [0, int]
@@ -94,6 +95,7 @@ filament:
   v_depoly : [0.793,double]
   theta_analysis: [0, int]
   lp_analysis: [0,int]
+  global_order_analysis: [0, int]
   packing_fraction: [-1, double]
   shuffle: [1, int]
   shuffle_factor: [10, double]
