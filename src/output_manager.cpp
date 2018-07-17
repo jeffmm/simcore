@@ -166,7 +166,7 @@ void OutputManager::ReadInputs() {
     //return;
   //}
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-    if ((*spec)->GetPositFlag() && *i_step_ % (*spec)->GetNPosit() == 0 ) {
+    if (posits_only_ && (*spec)->GetPositFlag() && *i_step_ % (*spec)->GetNPosit() == 0 ) {
       (*spec)->ReadPosits();
     }
     if (!posits_only_ && (*spec)->GetSpecFlag() && *i_step_ % (*spec)->GetNSpec() == 0 ) {
