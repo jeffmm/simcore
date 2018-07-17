@@ -17,6 +17,7 @@ class species_parameters {
     int n_posit = 100;
     int n_spec = 100;
     int n_checkpoint = 10000;
+    int local_order_analysis = 0;
 };
 
 class filament_parameters : public species_parameters {

@@ -69,6 +69,7 @@ species:
   n_posit: [100, int]
   n_spec: [100, int]
   n_checkpoint: [10000, int]
+  local_order_analysis: [0, int]
 filament:
   diameter: [1, double]
   length: [-1, double]

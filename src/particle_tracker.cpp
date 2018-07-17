@@ -105,6 +105,13 @@ void ParticleTracker::AssignCells() {
       t = (int) floor (n_cells_1d_*z);
       if (t == n_cells_1d_) t-=1;
     }
+    // Catch NaN values to avoid segfault
+    if (x != x || y != y ) {
+      double const * const pos = (*objs_)[i]->GetPosition();
+      std::cout << "Something blew up in particle tracker\n";
+      std::cout << pos[0] << " " << pos[1] << " " << pos[2] << "\n";
+      exit(1);
+    }
     clist_[r][s][t].AddObj(i);
   }
 #endif
