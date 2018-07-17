@@ -72,6 +72,7 @@ class InteractionEngine {
     void AddInteractors(std::vector<Object*> ixs);
     void Reset();
     void Clear();
+    void StructAnalysis();
     void ForceUpdate();
 };
 

@@ -42,7 +42,7 @@ void InteractionEngine::Interact() {
   if (! no_interactions_ ) {
     CalculatePairInteractionsMP();
   }
-    CalculateBoundaryInteractionsMP();
+  CalculateBoundaryInteractionsMP();
 #else
   if (! no_interactions_ ) {
     CalculatePairInteractions();
@@ -98,11 +98,13 @@ int InteractionEngine::CountSpecies() {
 }
 
 void InteractionEngine::CheckUpdate() {
-  // First check to see if any objects were added to the system
+  /* First check to see if any objects were added to the system;
+     If static_pnumber_ is flagged, we know that particle numbers
+     never change, so we don't bother counting particles and move on */
   if (!static_pnumber_) {
     int obj_count = CountSpecies();
     if (obj_count != n_objs_) {
-      // reset periodic update count and update number of objects we're tracking
+      // reset update count and update number of objects to track
       i_update_ = 0; 
       n_objs_ = obj_count;
       UpdateInteractors();
@@ -110,17 +112,25 @@ void InteractionEngine::CheckUpdate() {
       return;
     }
   }
+
+  /* If n_update_ <=0, we update nearest neighbors if any particle 
+     has moved a distance further than dr_update_ */
   if (n_update_ <=0 && GetDrMax() > dr_update_) {
     i_update_ = 0; 
     UpdateInteractions();
     ZeroDrTot();
+    return;
   }
-  // Otherwise check periodic update count
-  else if (n_update_ > 0 && (++i_update_) % n_update_ == 0) {
+
+  /* If n_update_ > 0, we use that number as an update frequency,
+     and update nearest neighbors every n_update_ steps */
+  if (n_update_ > 0 && (++i_update_) % n_update_ == 0) {
     UpdateInteractions();
+    return;
   }
 }
 
+/* Returns maximum distance traveled by any particle of any species in the system */
 double InteractionEngine::GetDrMax() {
   double max_dr = 0;
   for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
@@ -132,6 +142,8 @@ double InteractionEngine::GetDrMax() {
   return max_dr;
 }
 
+/* Resets the origin of each particle's tracked trajectory, for tracking
+   total distance travelled by particle*/
 void InteractionEngine::ZeroDrTot() {
   for (auto spec=species_->begin(); spec!=species_->end(); ++spec) {
     (*spec)->ZeroDrTot();
@@ -170,15 +182,11 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   // XXX Don't interact if we have an overlap. This should eventually go to a max force routine
   if (ix->dr_mag2 < 0.25*SQR(obj1->GetDiameter() + obj2->GetDiameter())) {
     overlap_ = true;
-    ////printf("We have an overlap!\n");
   }
-  // XXX Only calculate WCA potential for now
+  /* Check to see if particles are not close enough to interact */
   if (ix->dr_mag2 > potentials_.GetRCut2())  return;
+  /* Calculates forces from the potential defined during initialization */
   potentials_.CalcPotential(ix);
-  //if (ix->dr_mag2 > potentials_.r2pot_.GetRCut2()) return;
-  //potentials_.r2pot_.CalcPotential(ix);
-  //if (ix->dr_mag2 > potentials_.sspot_.GetRCut2()) return;
-  //potentials_.sspot_.CalcPotential(ix);
 }
 
 void InteractionEngine::ProcessBoundaryInteraction(std::vector<boundary_interaction>::iterator bix) {
@@ -188,7 +196,6 @@ void InteractionEngine::ProcessBoundaryInteraction(std::vector<boundary_interact
   if (ix->dr_mag2 < 0.25*SQR(bix->first->GetDiameter())) {
     overlap_ = true;
   }
-  // XXX Only calculate WCA potential for now
   if (ix->dr_mag2 > potentials_.GetRCut2()) return;
   potentials_.CalcPotential(ix);
 }
@@ -374,6 +381,12 @@ bool InteractionEngine::CheckBoundaryConditions(std::vector<Object*> ixs) {
   return outside_boundary;
 }
 
+/* Here, I want to calculate P(r,phi), which tells me the probability
+   of finding an object at a position (r,phi) in its reference frame. */
+void InteractionEngine::StructAnalysis() {
+  ForceUpdate();
+}
+
 void InteractionEngine::Clear() {
   if (no_init_) return;
   ptracker_.Clear();
@@ -387,7 +400,5 @@ void InteractionEngine::Reset() {
 
 void InteractionEngine::AddInteractors(std::vector<Object*> ixs) {
   ptracker_.AddToCellList(ixs,interactors_.size());
-  //UpdateInteractors();
-  //UpdateInteractions();
   interactors_.insert(interactors_.end(),ixs.begin(),ixs.end());
 }

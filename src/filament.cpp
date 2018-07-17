@@ -475,7 +475,6 @@ void Filament::CalculateTangents() {
 
 void Filament::CalculateSpiralNumber() {
   // This will calculate the angle 
-  if (!spiral_flag_) return;
   double u_bond[3] = {0,0,0};
   double const * const u_head = bonds_[n_bonds_-1].GetOrientation();
   double const * const p_head = sites_[n_sites_-1].GetPosition();
@@ -500,7 +499,12 @@ void Filament::CalculateSpiralNumber() {
       u[i] = p[i] - p_head[i];
     }
     normalize_vector(u,n_dim_);
-    double angle = acos(dot_product(n_dim_,u_bond,u));
+    double dp = dot_product(n_dim_,u_bond,u);
+    /* Note that floating point errors occasionally lead to 
+       NANs in the acos function, these fix that */
+    if (dp > 1) dp = 1;
+    else if (dp < -1) dp = -1;
+    double angle = acos(dp);
     double temp[3];
     cross_product(u_bond,u,temp,3);
     int sign = SIGNOF(temp[2]);
@@ -526,8 +530,8 @@ double Filament::GetSpiralNumber() {
 void Filament::GetNematicOrder(double * nematic_order_tensor) {
   for (auto it=bonds_.begin(); it!=bonds_.end(); ++it) {
     double const * const u_bond = it->GetOrientation();
-    for (int i=0; i<3; ++i) {
-      for (int j=0; j<3; ++j) {
+    for (int i=0; i<n_dim_; ++i) {
+      for (int j=0; j<n_dim_; ++j) {
         if (i==j) {
           nematic_order_tensor[3*i+j] += (2*u_bond[i]*u_bond[j] - 1)/n_bonds_;
         }
@@ -1445,19 +1449,30 @@ void FilamentSpecies::InitAnalysis() {
   if (params_->filament.global_order_analysis) {
     InitGlobalOrderAnalysis();
   }
+  if (params_->filament.local_order_analysis) {
+    InitLocalOrderAnalysis();
+  }
   RunAnalysis();
 }
 
 void FilamentSpecies::InitGlobalOrderAnalysis() {
   std::string fname = params_->run_name;
   fname.append("_filament.global_order");
-  mse2e_file_.open(fname, std::ios::out);
-  mse2e_file_ << "global_order_analysis_file\n";
-  mse2e_file_ << "time polar_order_x polar_order_y polar_order_z nematic_order_xx nematic_order_xy nematic_order_xz nematic_order_yx nematic_order_yy nematic_order_yz nematic_order_zx nematic_order_zy nematic_order_zz spiral_order signed_spiral_order\n";
+  global_order_file_.open(fname, std::ios::out);
+  global_order_file_ << "global_order_analysis_file\n";
+  global_order_file_ << "time polar_order_x polar_order_y polar_order_z nematic_order_xx nematic_order_xy nematic_order_xz nematic_order_yx nematic_order_yy nematic_order_yz nematic_order_zx nematic_order_zy nematic_order_zz spiral_order signed_spiral_order\n";
   nematic_order_tensor_ = new double[9];
   polar_order_vector_ = new double[3];
   std::fill(nematic_order_tensor_, nematic_order_tensor_+9, 0.0);
   std::fill(polar_order_vector_, polar_order_vector_+3, 0.0);
+}
+
+void FilamentSpecies::InitLocalOrderAnalysis() {
+  std::string fname = params_->run_name;
+  fname.append("_filament.local_order");
+  local_order_file_.open(fname, std::ios::out);
+  local_order_file_ << "local_order_analysis_file\n";
+  local_order_file_ << "time pdf polar_orient_corr nematic_orient_corr\n";
 }
 
 void FilamentSpecies::InitMse2eAnalysis() {
@@ -1555,14 +1570,19 @@ void FilamentSpecies::RunAnalysis() {
   if (params_->filament.global_order_analysis) {
     RunGlobalOrderAnalysis();
   }
+  if (params_->filament.local_order_analysis) {
+    RunLocalOrderAnalysis();
+  }
   time_++;
 }
 
 void FilamentSpecies::RunGlobalOrderAnalysis() {
   double sn_tot = 0.0;
   double sn_mag = 0.0;
+  double sn;
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
-    double sn = it->GetSpiralNumber();
+    it->CalculateSpiralNumber();
+    sn = it->GetSpiralNumber();
     it->GetPolarOrder(polar_order_vector_);
     it->GetNematicOrder(nematic_order_tensor_);
     sn_mag += ABS(sn);
@@ -1584,6 +1604,26 @@ void FilamentSpecies::RunGlobalOrderAnalysis() {
     std::cout << "ERROR: Problem opening file in RunGlobalOrderAnalysis! Exiting.\n";
   }
 }
+
+void FilamentSpecies::RunLocalOrderAnalysis() {
+  // Calculate extra-filament local orientation correlations
+  //for (auto it=members_.begin(); it!= members_.end(); ++it) {
+    //for (auto jt=members_.begin(); jt!=members_.end(); ++jt) {
+      //// Avoid intra-filament correlations for now
+      //if (*it==*jt) continue;
+
+
+    //}
+  //}
+  //if (local_order_file_.is_open()) {
+    //local_order_file_ << time_ << " " << pdf << " " << polar_orient_corr << " " << polar_nematic_corr << "\n";
+  //}
+  //else {
+    //early_exit = true;
+    //std::cout << "ERROR: Problem opening file in RunGlobalOrderAnalysis! Exiting.\n";
+  //}
+}
+
 
 void FilamentSpecies::RunSpiralAnalysis() {
   // Treat as though we have many spirals for now
@@ -1676,9 +1716,16 @@ void FilamentSpecies::FinalizeAnalysis() {
     FinalizeGlobalOrderAnalysis();
     global_order_file_.close();
   }
+  if (local_order_file_.is_open()) {
+    FinalizeLocalOrderAnalysis();
+    local_order_file_.close();
+  }
 }
 
 void FilamentSpecies::FinalizeGlobalOrderAnalysis() {
+}
+
+void FilamentSpecies::FinalizeLocalOrderAnalysis() {
 }
 
 void FilamentSpecies::FinalizeMse2eAnalysis() {
