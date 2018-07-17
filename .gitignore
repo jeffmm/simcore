@@ -23,7 +23,8 @@ obj
 *.spec
 *.checkpoint
 *.spiral
-*_params.yaml
+*.global_order
+/*_params.yaml
 *.log
 *.time
 sc-*
