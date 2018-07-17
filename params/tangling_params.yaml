@@ -1,0 +1,199 @@
+seed: 10201354
+run_name: tangling
+n_dim: 2
+n_periodic: 2
+delta: 0.0001
+n_steps: 1000000
+boundary: 0
+n_update_cells: 10
+graph_flag: 1
+n_graph: 100
+graph_background: 0
+system_radius: 300
+potential: soft
+soft_potential_mag: 100
+like_like_interactions: 1
+stoch_flag: 1
+filament:
+  num: 2
+  insertion_type: custom
+  insert_file: filament_crossing_2.yaml
+  diameter: 1
+  length: 50
+  perlen_ratio: 100
+  n_bonds: 10
+  posit_flag: 1
+  spec_flag: 1
+  checkpoint_flag: 1
+  n_posit: 100
+  n_spec: 100
+  n_checkpoint: 100
+  driving_factor: 40
+  persistence_length: 400
+  max_length: 500
+  min_length: 1
+  max_bond_length: 5
+  min_bond_length: 1.5
+  spiral_flag: 0
+  spiral_number_fail_condition: 0
+  friction_ratio: 2
+  dynamic_instability_flag: 0
+  force_induced_catastrophe_flag: 0
+  fic_factor: 0.828
+  f_shrink_to_grow: 0.017
+  f_shrink_to_pause: 0.0
+  f_pause_to_grow: 0.0
+  f_pause_to_shrink: 0.0
+  f_grow_to_pause: 0.0
+  f_grow_to_shrink: 0.00554
+  metric_forces: 1
+  v_poly: 0.44
+  v_depoly: 0.793
+  theta_analysis: 0
+  lp_analysis: 0
+  global_order_analysis: 0
+  packing_fraction: -1
+  shuffle: 1
+  shuffle_factor: 10
+  shuffle_frequency: 0.001
+  driving_method: 0
+passive_filament:
+  num: 0
+  diameter: 1
+  length: 115
+  draw_type: bw
+  insertion_type: custom
+  insert_file: filament_crossing_2.yaml
+  perlen_ratio: 100
+  n_bonds: 18
+  posit_flag: 1
+  spec_flag: 1
+  checkpoint_flag: 1
+  n_posit: 100
+  n_spec: 100
+  n_checkpoint: 100
+  persistence_length: 400
+  max_length: 500
+  min_length: 1
+  max_bond_length: 5
+  min_bond_length: 1.5
+  driving_factor: 0
+  friction_ratio: 2
+  metric_forces: 1
+  theta_analysis: 0
+  lp_analysis: 0
+  packing_fraction: -1
+n_runs: 1
+n_random: 1
+cell_length: 10
+graph_diameter: 0
+draw_boundary: 1
+load_checkpoint: 0
+checkpoint_run_name: sc
+n_load: 0
+print_complete: 0
+insertion_type: species
+movie_flag: 0
+movie_directory: frames
+time_flag: 0
+bud_height: 680
+bud_radius: 300
+lj_epsilon: 1
+wca_eps: 1
+wca_sig: 1
+ss_a: 1
+ss_rs: 1.5
+ss_eps: 1
+f_cutoff: 100
+max_overlap: 100000
+constant_pressure: 0
+constant_volume: 0
+target_pressure: 0
+target_radius: 100
+pressure_time: 100
+compressibility: 1
+thermo_flag: 0
+n_thermo: 1000
+interaction_flag: 1
+species_insertion_failure_threshold: 10000
+species_insertion_reattempt_threshold: 10
+uniform_crystal: 0
+n_steps_equil: 0
+static_particle_number: 0
+checkpoint_from_spec: 0
+auto_graph: 0
+species:
+  num: 0
+  insertion_type: random
+  insert_file: none
+  overlap: 0
+  draw_type: orientation
+  color: 0
+  posit_flag: 0
+  spec_flag: 0
+  checkpoint_flag: 0
+  n_posit: 100
+  n_spec: 100
+  n_checkpoint: 10000
+hard_rod:
+  diameter: 1
+  length: 40
+  min_length: 3
+  max_length: 300
+  max_bond_length: 5
+  driving_factor: 0
+br_bead:
+  diameter: 1
+  driving_factor: 0
+  packing_fraction: -1
+md_bead:
+  diameter: 1
+  mass: 1
+  driving_factor: 0
+centrosome:
+  diameter: 10
+  n_filaments_min: 0
+  n_filaments_max: 10
+  fixed_spacing: 0
+  alignment_potential: 0
+  k_spring: 1000
+  k_align: 0
+  spring_length: 0
+motor:
+  diameter: 3
+  walker: 0
+  step_direction: 0
+  k_off: 2
+  k_on: 10
+  concentration: 0
+  velocity: 1
+  diffusion_flag: 1
+  k_spring: 1000
+  f_spring_max: 100
+bead_spring:
+  diameter: 1
+  length: 40
+  persistence_length: 4000
+  max_bond_length: 1
+  bond_rest_length: 0.8
+  bond_spring: 100
+  driving_factor: 0
+  lp_analysis: 0
+  theta_analysis: 0
+  packing_fraction: -1
+spherocylinder:
+  diameter: 1
+  length: 5
+  diffusion_analysis: 0
+  n_diffusion_samples: 1
+  midstep: 0
+spindle:
+  diameter: 10
+  length: 20
+  n_filaments_bud: 1
+  n_filaments_mother: 0
+  alignment_potential: 0
+  k_spring: 1000
+  k_align: 0
+  spring_length: 0
+  spb_diameter: 5
