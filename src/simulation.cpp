@@ -400,6 +400,9 @@ void Simulation::InitProcessing(run_options run_opts) {
   InitObjects();
   InitSpecies();
   InsertSpecies(true, true);
+  if (run_opts.analysis_flag) {
+    iengine_.Init(&params_, &species_, space_.GetStruct());
+  }
   if (run_opts.reduce_flag) {
     InitInputs(run_opts.use_posits,run_opts.reduce_factor);
   }
@@ -451,6 +454,9 @@ void Simulation::RunProcessing(int run_analyses) {
         if ( ((*it)->GetPositFlag() && i_step_%(*it)->GetNPosit()==0) 
             || ((*it)->GetSpecFlag() && i_step_%(*it)->GetNSpec()==0) ) {
           (*it)->RunAnalysis();
+          if ((*it)->GetLocalOrderAnalysisFlag()) {
+            iengine_.StructAnalysis();
+          }
         }
       }
     }

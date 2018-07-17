@@ -175,7 +175,8 @@ class FilamentSpecies : public Species<Filament> {
     std::fstream spiral_file_,
                  theta_file_,
                  mse2e_file_,
-                 global_order_file_;
+                 global_order_file_,
+                 local_order_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(species_id::filament);
@@ -220,6 +221,10 @@ class FilamentSpecies : public Species<Filament> {
     void InitGlobalOrderAnalysis();
     void RunGlobalOrderAnalysis();
     void FinalizeGlobalOrderAnalysis();
+
+    void InitLocalOrderAnalysis();
+    void RunLocalOrderAnalysis();
+    void FinalizeLocalOrderAnalysis();
 
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
