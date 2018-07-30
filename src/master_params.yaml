@@ -55,6 +55,9 @@ potential: [wca, string]
 soft_potential_mag: [10, double]
 like_like_interactions: [1,int]
 auto_graph: [0,int]
+local_structure_bins_1d: [0, int]
+local_structure_bin_width: [0.1, double]
+local_structure_average: [1, int]
 
 species:
   num: [0, int]

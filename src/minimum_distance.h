@@ -7,11 +7,11 @@ typedef std::pair< Object*, Interaction > boundary_interaction;
 
 class MinimumDistance {
   private:
-    int n_dim_,
-        n_periodic_;
-    double * unit_cell_,
-           boundary_cut2_;
-    space_struct * space_;
+    static int n_dim_,
+               n_periodic_;
+    static double * unit_cell_,
+                    boundary_cut2_;
+    static space_struct * space_;
     void PointPoint(double const * const r1, double const * const s1, 
                     double const * const r2, double const * const s2, 
                     double *dr, double *dr_mag2);
@@ -58,6 +58,9 @@ class MinimumDistance {
     bool CheckBoundaryInteraction(Object *o1, Interaction *ix);
     bool CheckOutsideBoundary(Object *o1);
     void BoundaryCondition(std::vector<boundary_interaction>::iterator bix);
+
+    // XXX
+    int GetNDim() {return n_dim_;}
 };
 
 #endif

@@ -1019,6 +1019,15 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("auto_graph")==0) {
         params->auto_graph = it->second.as<int>();
       }
+      else if (param_name.compare("local_structure_bins_1d")==0) {
+        params->local_structure_bins_1d = it->second.as<int>();
+      }
+      else if (param_name.compare("local_structure_bin_width")==0) {
+        params->local_structure_bin_width = it->second.as<double>();
+      }
+      else if (param_name.compare("local_structure_average")==0) {
+        params->local_structure_average = it->second.as<int>();
+      }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";
       }
