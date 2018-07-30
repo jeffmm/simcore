@@ -8,6 +8,7 @@
 #ifdef ENABLE_OPENMP
 #include "omp.h"
 #endif
+#include "minimum_distance.h"
 
 class Filament : public Mesh {
 
@@ -162,6 +163,7 @@ class FilamentSpecies : public Species<Filament> {
   protected:
     bool midstep_;
     // Analysis structures
+    MinimumDistance mindist_;
     double e_bend_,
            tot_angle_,
            mse2e_,
@@ -169,8 +171,12 @@ class FilamentSpecies : public Species<Filament> {
            * nematic_order_tensor_,
            * polar_order_vector_;
     int **theta_histogram_;
+    float ** pdf_histogram_;
+    float ** nematic_order_histogram_;
+    float ** polar_order_histogram_;
     int time_,
         n_bins_,
+        n_bins_1d_,
         n_samples_;
     std::fstream spiral_file_,
                  theta_file_,
@@ -224,6 +230,7 @@ class FilamentSpecies : public Species<Filament> {
 
     void InitLocalOrderAnalysis();
     void RunLocalOrderAnalysis();
+    void WriteLocalOrderData();
     void FinalizeLocalOrderAnalysis();
 
     void UpdatePositions() {

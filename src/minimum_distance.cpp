@@ -2,6 +2,13 @@
 
 #define SMALL 1.0e-12
 
+int MinimumDistance::n_dim_ = 0;
+int MinimumDistance::n_periodic_ = 0;
+double * MinimumDistance::unit_cell_ = nullptr;
+double MinimumDistance::boundary_cut2_ = 0;
+space_struct * MinimumDistance::space_ = nullptr;
+
+
 void MinimumDistance::Init(space_struct * space, double boundary_cutoff_sq) {
   space_ = space;
   n_dim_ = space_->n_dim;

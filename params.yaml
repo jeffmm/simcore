@@ -39,6 +39,7 @@ filament:
   n_checkpoint: 100
   driving_factor: 50
   global_order_analysis: 1
+  local_order_analysis: 1
 
 #passive_filament:
   #num: 0
