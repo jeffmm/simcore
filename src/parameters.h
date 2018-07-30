@@ -219,6 +219,9 @@ class system_parameters {
     double soft_potential_mag = 10;
     int like_like_interactions = 1;
     int auto_graph = 0;
+    int local_structure_bins_1d = 0;
+    double local_structure_bin_width = 0.1;
+    int local_structure_average = 1;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;
