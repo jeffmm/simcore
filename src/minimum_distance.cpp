@@ -29,6 +29,8 @@ void MinimumDistance::ObjectObject(Object* o1, Object* o2, Interaction *ix) {
   double const * const u2 = o2->GetInteractorOrientation();
   double const l2 = o2->GetInteractorLength();
   double const d2 = o2->GetInteractorDiameter();
+  ix->oids = std::make_pair(o1->GetOID(),o2->GetOID());
+  ix->mids = std::make_pair(o1->GetMeshID(),o2->GetMeshID());
   /* TODO: Think about how best to do this for general shapes, like 2d
      polygons that can represent the local surface of more complex 3d
      shapes. Perhaps assume all local surface to be triangular polygons.*/

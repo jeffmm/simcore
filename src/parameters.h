@@ -17,7 +17,6 @@ class species_parameters {
     int n_posit = 100;
     int n_spec = 100;
     int n_checkpoint = 10000;
-    int local_order_analysis = 0;
 };
 
 class filament_parameters : public species_parameters {
@@ -219,9 +218,10 @@ class system_parameters {
     double soft_potential_mag = 10;
     int like_like_interactions = 1;
     int auto_graph = 0;
-    int local_structure_bins_1d = 0;
-    double local_structure_bin_width = 0.1;
-    int local_structure_average = 1;
+    double local_order_width = 50;
+    double local_order_bin_width = 0.1;
+    int local_order_average = 1;
+    int local_order_analysis = 0;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;

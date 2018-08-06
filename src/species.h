@@ -51,7 +51,6 @@ class SpeciesBase {
     bool const GetPositFlag() {return sparams_->posit_flag;}
     bool const GetSpecFlag() {return sparams_->spec_flag;}
     bool const GetCheckpointFlag() {return sparams_->checkpoint_flag;}
-    bool const GetLocalOrderAnalysisFlag() {return sparams_->local_order_analysis;}
     std::string GetInsertionType() {return sparams_->insertion_type;}
     virtual int GetCount() {return 0;}
     virtual void WriteOutputs(std::string run_name) {}

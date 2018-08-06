@@ -119,8 +119,6 @@ class Filament : public Mesh {
     double const GetPersistenceLength() {return persistence_length_;}
     double const GetBondLength() {return bond_length_;}
     int const GetNBonds() {return n_bonds_;}
-    void GetAvgOrientation(double * au);
-    void GetAvgPosition(double * ap);
     std::vector<double> const * const GetThetas() {
       return &cos_thetas_;
     }

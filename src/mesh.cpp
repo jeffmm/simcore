@@ -10,6 +10,7 @@ Mesh::Mesh() : Object() {
   is_mesh_ = true;
   midstep_ = true;
   anchored_ = false;
+  posits_only_ = false;
   SetMeshID(++next_mesh_id_);
 }
 
@@ -285,15 +286,34 @@ void Mesh::ZeroForce() {
     it->ZeroForce();
   }
 }
+void Mesh::UpdateInteractors() {
+  if (posits_only_) {
+    double pos[3] = {0,0,0};
+    double u[3] = {0,0,0};
+    GetAvgPosition(pos);
+    GetAvgOrientation(u);
+    bonds_[0].SetLength(length_);
+    bonds_[0].SetPosition(pos);
+    bonds_[0].SetOrientation(u);
+    bonds_[0].UpdatePeriodic();
+    interactors_.push_back(&(bonds_[0]));
+  }
+  else {
+    for (auto it=bonds_.begin(); it!=bonds_.end(); ++it) {
+      interactors_.push_back(&(*it));
+    }
+  }
+}
+
 std::vector<Object*> Mesh::GetInteractors() {
   interactors_.clear();
-  for (auto it=bonds_.begin(); it!=bonds_.end(); ++it) {
-    interactors_.push_back(&(*it));
-  }
+  UpdateInteractors();
   return interactors_;
 }
+
 int Mesh::GetCount() {
-  return bonds_.size();
+  UpdateInteractors();
+  return interactors_.size();
 }
 
 void Mesh::ReadPosit(std::fstream &ip){
@@ -419,3 +439,47 @@ double const Mesh::GetDrTot() {
   UpdateDrTot();
   return dr_tot_;
 }
+
+std::vector<Interaction*> * Mesh::GetInteractions() {
+  for (bond_iterator bond=bonds_.begin(); bond!=bonds_.end(); ++bond) {
+    std::vector<Interaction*> * bond_ixs = bond->GetInteractions();
+    ixs_.insert(ixs_.end(), bond_ixs->begin(), bond_ixs->end());
+  }
+  return &ixs_;
+}
+
+void Mesh::ClearInteractions() {
+  for (bond_iterator bond=bonds_.begin(); bond!=bonds_.end(); ++bond) {
+    bond->ClearInteractions();
+  }
+}
+
+void Mesh::GetAvgPosition(double * ap) {
+  double avg_p[3] = {0.0, 0.0, 0.0};
+  int size=0;
+  for (auto it=sites_.begin(); it!=sites_.end(); ++it) {
+    double const * const p = it->GetPosition();
+    for (int i=0; i<n_dim_; ++i)
+      avg_p[i] += p[i];
+    size++;
+  }
+  if (size == 0)
+    error_exit("Something went wrong in GetAvgPosition!");
+  for (int i=0; i<n_dim_; ++i)
+    avg_p[i]/=size;
+  std::copy(avg_p, avg_p+3, ap);
+}
+
+void Mesh::GetAvgOrientation(double * au) {
+  double avg_u[3] = {0.0, 0.0, 0.0};
+  int size=0;
+  for (auto it=sites_.begin(); it!=sites_.end(); ++it) {
+    double const * const u = it->GetOrientation();
+    for (int i=0; i<n_dim_; ++i)
+      avg_u[i] += u[i];
+  }
+  normalize_vector(avg_u,n_dim_);
+  std::copy(avg_u, avg_u+3, au);
+}
+
+

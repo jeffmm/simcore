@@ -55,9 +55,10 @@ potential: [wca, string]
 soft_potential_mag: [10, double]
 like_like_interactions: [1,int]
 auto_graph: [0,int]
-local_structure_bins_1d: [0, int]
-local_structure_bin_width: [0.1, double]
-local_structure_average: [1, int]
+local_order_width: [50, double]
+local_order_bin_width: [0.1, double]
+local_order_average: [1, int]
+local_order_analysis: [0, int]
 
 species:
   num: [0, int]
@@ -72,7 +73,6 @@ species:
   n_posit: [100, int]
   n_spec: [100, int]
   n_checkpoint: [10000, int]
-  local_order_analysis: [0, int]
 filament:
   diameter: [1, double]
   length: [-1, double]
