@@ -3,6 +3,7 @@
 
 #include "auxiliary.h"
 #include "rng.h"
+#include "interaction.h"
 
 class Object {
 
@@ -36,6 +37,7 @@ class Object {
     bool interacting_,
          is_mesh_;
     std::vector<Object*> interactors_;
+    std::vector<Interaction*> ixs_;
   public:
     Object();
     // Static functions
@@ -104,6 +106,9 @@ class Object {
     virtual double const GetDrTot();
     virtual void ZeroDrTot();
     virtual bool HasNeighbor(int other_id);
+    virtual void GiveInteraction(Interaction *ix);
+    virtual std::vector<Interaction*> * GetInteractions();
+    virtual void ClearInteractions();
     virtual void Cleanup();
 
     // I/O functions

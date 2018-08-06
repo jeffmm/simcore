@@ -8,9 +8,7 @@
 #include "potential_manager.h"
 #include "minimum_distance.h"
 #include "particle_tracker.h"
-#include "interaction.h"
-typedef std::pair<Object*,Object*> interactor_pair;
-typedef std::pair< interactor_pair , Interaction > pair_interaction;
+#include "struct_analysis.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -23,7 +21,8 @@ class InteractionEngine {
            dr_update_;
     bool overlap_,
          no_interactions_,
-         no_init_ = true;
+         no_init_ = true,
+         processing_ = false;
     int n_dim_,
         n_periodic_,
         i_update_,
@@ -37,6 +36,7 @@ class InteractionEngine {
     std::vector<ix_pair> nlist_;
 
     MinimumDistance mindist_;
+    StructAnalysis struct_analysis_;
 
     std::vector<pair_interaction> pair_interactions_;
     std::vector<boundary_interaction> boundary_interactions_;
@@ -64,7 +64,8 @@ class InteractionEngine {
     InteractionEngine() {}
     void Init(system_parameters *params, 
               std::vector<SpeciesBase*> *species, 
-              space_struct *space);
+              space_struct *space,
+              bool processing=false);
     void Interact();
     void CalculatePressure();
     bool CheckOverlap(std::vector<Object*> ixs);
@@ -72,7 +73,9 @@ class InteractionEngine {
     void AddInteractors(std::vector<Object*> ixs);
     void Reset();
     void Clear();
-    void StructAnalysis();
+    void StructureAnalysis();
+    void CalculateStructureMP();
+    void CalculateStructure();
     void ForceUpdate();
 };
 

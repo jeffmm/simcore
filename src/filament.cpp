@@ -1158,23 +1158,6 @@ void Filament::ScalePosition() {
   UpdateBondPositions();
 }
 
-
-void Filament::GetAvgOrientation(double * au) {
-  double avg_u[3] = {0.0, 0.0, 0.0};
-  int size=0;
-  for (auto it=sites_.begin(); it!=sites_.end(); ++it) {
-    double const * const u = it->GetOrientation();
-    for (int i=0; i<n_dim_; ++i)
-      avg_u[i] += u[i];
-    size++;
-  }
-  if (size == 0)
-    error_exit("Something went wrong in GetAvgOrientation!");
-  for (int i=0; i<n_dim_; ++i)
-    avg_u[i]/=size;
-  std::copy(avg_u, avg_u+3, au);
-}
-
 void Filament::RebindMotors() {
   for (motor_iterator it=motors_.begin(); it!=motors_.end(); ++it) {
     double mesh_lambda = it->GetMeshLambda();
@@ -1192,22 +1175,6 @@ void Filament::RebindMotors() {
     }
     it->AttachToBond(sites_[i_site].GetOutgoingBond(),bond_lambda,mesh_lambda);
   }
-}
-
-void Filament::GetAvgPosition(double * ap) {
-  double avg_p[3] = {0.0, 0.0, 0.0};
-  int size=0;
-  for (auto it=sites_.begin(); it!=sites_.end(); ++it) {
-    double const * const p = it->GetPosition();
-    for (int i=0; i<n_dim_; ++i)
-      avg_p[i] += p[i];
-    size++;
-  }
-  if (size == 0)
-    error_exit("Something went wrong in GetAvgPosition!");
-  for (int i=0; i<n_dim_; ++i)
-    avg_p[i]/=size;
-  std::copy(avg_p, avg_p+3, ap);
 }
 
 void Filament::ReportAll() {
@@ -1361,6 +1328,7 @@ void Filament::WritePosit(std::fstream &oposit) {
 
 void Filament::ReadPosit(std::fstream &iposit) {
   if (iposit.eof()) return;
+  posits_only_ = true;
   double avg_pos[3], avg_u[3], s_pos[3];
   for (int i=0; i<3; ++i)
     iposit.read(reinterpret_cast<char*>(&avg_pos[i]), sizeof(double));
@@ -1371,20 +1339,29 @@ void Filament::ReadPosit(std::fstream &iposit) {
   iposit.read(reinterpret_cast<char*>(&diameter_), sizeof(diameter_));
   iposit.read(reinterpret_cast<char*>(&length_), sizeof(length_));
   // Initialize first bond position
+  std::copy(avg_pos, avg_pos+3, position_);
   for (int i=0; i<n_dim_; ++i) 
-    avg_pos[i] = avg_pos[i] - 0.5*(length_ - bond_length_)*avg_u[i];
+    avg_pos[i] = avg_pos[i] - 0.5*length_*avg_u[i];
   for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
+    sites_[i_bond].SetPosition(avg_pos);
+    sites_[i_bond].SetOrientation(avg_u);
+    for (int i=0;i<n_dim_;++i) {
+      avg_pos[i] += 0.5*bond_length_*avg_u[i];
+    }
     bonds_[i_bond].SetPosition(avg_pos);
     bonds_[i_bond].SetOrientation(avg_u);
     bonds_[i_bond].SetDiameter(diameter_);
     bonds_[i_bond].UpdatePeriodic();
     // Set next bond position
-    for (int i=0; i<n_dim_; ++i) 
-      avg_pos[i] += bond_length_*avg_u[i];
+    for (int i=0; i<n_dim_; ++i) {
+      avg_pos[i] += 0.5*bond_length_*avg_u[i];
+    }
   }
-  SetPosition(avg_pos);
+  sites_[n_bonds_].SetPosition(avg_pos);
+  sites_[n_bonds_].SetOrientation(avg_u);
   SetOrientation(avg_u);
   UpdatePeriodic();
+  CalculateAngles();
 }
 
 void Filament::WriteCheckpoint(std::fstream &ocheck) {

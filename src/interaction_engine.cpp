@@ -3,11 +3,12 @@
 
 void InteractionEngine::Init(system_parameters *params, 
               std::vector<SpeciesBase*> *species, 
-              space_struct *space) {
+              space_struct *space, bool processing) {
   // Set up pointer structures
   params_ = params;
   species_ = species;
   space_ = space;
+  processing_ = processing;
 
   // Initialize owned structures
   no_init_ = false;
@@ -20,11 +21,17 @@ void InteractionEngine::Init(system_parameters *params,
   i_update_ = -1;
   n_objs_ = 0;
   //clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
+  if (processing && params_->local_order_analysis) {
+    params_->cell_length = 0.5*params_->local_order_width;
+  }
   ptracker_.Init(params, &interactors_, &nlist_);
   // Update dr distance should be half the cell length, and we are comparing the squares of the trajectory distances
   dr_update_ = 0.25*ptracker_.GetCellLength()*ptracker_.GetCellLength();
   mindist_.Init(space, 2.0*dr_update_);
   potentials_.InitPotentials(params_);
+  if (params_->local_order_analysis && processing) {
+    struct_analysis_.Init(params);
+  }
 }
 
 /****************************************
@@ -158,11 +165,12 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   // Rigid objects don't self interact
   //if (obj1->GetRID() == obj2->GetRID())  return;
   // Composite objects do self interact if they want to
-  // Check to make sure we aren't self-interacting
+  // Check to make sure we aren't self-interacting at the simple object level
   if (obj1->GetOID() == obj2->GetOID()) {
     error_exit("Object %d attempted self-interaction!", obj1->GetOID());
   }
-  // If we are disallowing like-like interactions, return if same species
+  // If we are disallowing like-like interactions, then similar species do not interact...
+  // ...so do not interact if same species
   if (!params_->like_like_interactions && obj1->GetSID() == obj2->GetSID()) {
     return;
   }
@@ -383,13 +391,38 @@ bool InteractionEngine::CheckBoundaryConditions(std::vector<Object*> ixs) {
 
 /* Here, I want to calculate P(r,phi), which tells me the probability
    of finding an object at a position (r,phi) in its reference frame. */
-void InteractionEngine::StructAnalysis() {
+void InteractionEngine::StructureAnalysis() {
   ForceUpdate();
+#ifdef ENABLE_OPENMP
+  CalculateStructureMP();
+#else
+  CalculateStructure();
+#endif
+
+}
+
+void InteractionEngine::CalculateStructureMP() {
+
+}
+
+void InteractionEngine::CalculateStructure() {
+  if (struct_analysis_.GetNumObjs() == 0) {
+    int nobj=CountSpecies();
+    struct_analysis_.SetNumObjs(nobj);
+  }
+  struct_analysis_.IncrementCount();
+  for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
+    struct_analysis_.CalculateStructurePair(pix);
+  }
+  struct_analysis_.AverageStructure();
 }
 
 void InteractionEngine::Clear() {
   if (no_init_) return;
   ptracker_.Clear();
+  if (processing_ && params_->local_order_analysis) {
+    struct_analysis_.Clear();
+  }
 }
 
 void InteractionEngine::Reset() {
