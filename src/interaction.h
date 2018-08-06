@@ -2,12 +2,16 @@
 #define _SIMCORE_INTERACTION_H_
 #include <tuple>
 
+class Object;
+
 typedef std::pair<int,int> oid_pair;
+typedef std::pair<int,int> mesh_pair;
 
 class Interaction {
   public:
     Interaction() {}
     oid_pair oids;
+    mesh_pair mids;
     bool boundary = false; // true if boundary interaction
     double force[3] = {0}, // force acting on obj1 due to obj2
            t1[3] = {0}, // torque acting on obj1
@@ -21,5 +25,8 @@ class Interaction {
            stress[9] = {0}, // stress tensor for calculating pressure
            pote = 0; // potential energy
 };
+
+typedef std::pair<Object*,Object*> interactor_pair;
+typedef std::pair< interactor_pair , Interaction > pair_interaction;
 
 #endif

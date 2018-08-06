@@ -53,9 +53,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_checkpoint")==0) {
             params->species.n_checkpoint = jt->second.as<int>();
           }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->species.local_order_analysis = jt->second.as<int>();
-          }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
           }
@@ -200,9 +197,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_checkpoint")==0) {
             params->filament.n_checkpoint = jt->second.as<int>();
           }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->filament.local_order_analysis = jt->second.as<int>();
-          }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
           }
@@ -293,9 +287,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_checkpoint")==0) {
             params->passive_filament.n_checkpoint = jt->second.as<int>();
           }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->passive_filament.local_order_analysis = jt->second.as<int>();
-          }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
           }
@@ -359,9 +350,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_checkpoint")==0) {
             params->hard_rod.n_checkpoint = jt->second.as<int>();
           }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->hard_rod.local_order_analysis = jt->second.as<int>();
-          }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
           }
@@ -416,9 +404,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_checkpoint")==0) {
             params->br_bead.n_checkpoint = jt->second.as<int>();
           }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->br_bead.local_order_analysis = jt->second.as<int>();
-          }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
           }
@@ -472,9 +457,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_checkpoint")==0) {
             params->md_bead.n_checkpoint = jt->second.as<int>();
-          }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->md_bead.local_order_analysis = jt->second.as<int>();
           }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
@@ -544,9 +526,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_checkpoint")==0) {
             params->centrosome.n_checkpoint = jt->second.as<int>();
-          }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->centrosome.local_order_analysis = jt->second.as<int>();
           }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
@@ -623,9 +602,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_checkpoint")==0) {
             params->motor.n_checkpoint = jt->second.as<int>();
           }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->motor.local_order_analysis = jt->second.as<int>();
-          }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
           }
@@ -701,9 +677,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_checkpoint")==0) {
             params->bead_spring.n_checkpoint = jt->second.as<int>();
           }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->bead_spring.local_order_analysis = jt->second.as<int>();
-          }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
           }
@@ -763,9 +736,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_checkpoint")==0) {
             params->spherocylinder.n_checkpoint = jt->second.as<int>();
-          }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->spherocylinder.local_order_analysis = jt->second.as<int>();
           }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
@@ -838,9 +808,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("n_checkpoint")==0) {
             params->spindle.n_checkpoint = jt->second.as<int>();
-          }
-          else if (param_name.compare("local_order_analysis")==0) {
-            params->spindle.local_order_analysis = jt->second.as<int>();
           }
           else {
             std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
@@ -1019,14 +986,17 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("auto_graph")==0) {
         params->auto_graph = it->second.as<int>();
       }
-      else if (param_name.compare("local_structure_bins_1d")==0) {
-        params->local_structure_bins_1d = it->second.as<int>();
+      else if (param_name.compare("local_order_width")==0) {
+        params->local_order_width = it->second.as<double>();
       }
-      else if (param_name.compare("local_structure_bin_width")==0) {
-        params->local_structure_bin_width = it->second.as<double>();
+      else if (param_name.compare("local_order_bin_width")==0) {
+        params->local_order_bin_width = it->second.as<double>();
       }
-      else if (param_name.compare("local_structure_average")==0) {
-        params->local_structure_average = it->second.as<int>();
+      else if (param_name.compare("local_order_average")==0) {
+        params->local_order_average = it->second.as<int>();
+      }
+      else if (param_name.compare("local_order_analysis")==0) {
+        params->local_order_analysis = it->second.as<int>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";

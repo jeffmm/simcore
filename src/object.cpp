@@ -433,6 +433,15 @@ bool Object::HasNeighbor(int other_oid) {
   // Generic objects are not assumed to have neighbors
   return false;
 }
+void Object::GiveInteraction(Interaction *ix) {
+  ixs_.push_back(ix);
+}
+std::vector<Interaction*> * Object::GetInteractions() {
+  return &ixs_;
+}
+void Object::ClearInteractions() {
+  ixs_.clear();
+}
 void Object::Cleanup() {}
 
 // Object I/O functions

@@ -32,3 +32,4 @@ results
 octave-workspace
 nohup.out
 *.tar.gz
+*.local_*

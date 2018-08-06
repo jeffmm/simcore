@@ -11,7 +11,8 @@ class Mesh : public Object {
     static int next_mesh_id_;
   protected:
     bool anchored_,
-         midstep_;
+         midstep_,
+         posits_only_;
     int n_sites_,
         n_bonds_,
         n_bonds_max_;
@@ -19,6 +20,7 @@ class Mesh : public Object {
     std::vector<Bond> bonds_;
     double bond_length_;
     Bond * GetRandomBond();
+    void UpdateInteractors();
   public:
     Mesh();
     void InitSiteAt(double * pos, double d);
@@ -60,6 +62,10 @@ class Mesh : public Object {
     virtual double const GetDrTot();
     virtual void ZeroDrTot();
     virtual void SetPosition(double const * const pos);
+    virtual std::vector<Interaction*> * GetInteractions();
+    virtual void ClearInteractions();
+    virtual void GetAvgPosition(double * ap);
+    virtual void GetAvgOrientation(double * au);
 };
 
 #endif // _SIMCORE_MESH_H_
