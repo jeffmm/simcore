@@ -4,7 +4,7 @@ run_name: fjj
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 100000
+n_steps: 10000
 boundary: 0
 n_update_cells: -1
 cell_length: 4
