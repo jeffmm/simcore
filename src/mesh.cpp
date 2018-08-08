@@ -482,4 +482,34 @@ void Mesh::GetAvgOrientation(double * au) {
   std::copy(avg_u, avg_u+3, au);
 }
 
+void Mesh::SetAvgPosition() {
+  posits_only_ = true;
+  double avg_pos[3] = {0,0,0};
+  double avg_u[3] = {0,0,0};
+  GetAvgPosition(avg_pos);
+  GetAvgOrientation(avg_u);
+  std::copy(avg_pos, avg_pos+3, position_);
+  for (int i=0; i<n_dim_; ++i) 
+    avg_pos[i] = avg_pos[i] - 0.5*length_*avg_u[i];
+  for (int i_bond=0; i_bond<n_bonds_; ++i_bond) {
+    sites_[i_bond].SetPosition(avg_pos);
+    sites_[i_bond].SetOrientation(avg_u);
+    for (int i=0;i<n_dim_;++i) {
+      avg_pos[i] += 0.5*bond_length_*avg_u[i];
+    }
+    bonds_[i_bond].SetPosition(avg_pos);
+    bonds_[i_bond].SetOrientation(avg_u);
+    bonds_[i_bond].SetDiameter(diameter_);
+    bonds_[i_bond].UpdatePeriodic();
+    // Set next bond position
+    for (int i=0; i<n_dim_; ++i) {
+      avg_pos[i] += 0.5*bond_length_*avg_u[i];
+    }
+  }
+  sites_[n_bonds_].SetPosition(avg_pos);
+  sites_[n_bonds_].SetOrientation(avg_u);
+  SetOrientation(avg_u);
+  UpdatePeriodic();
+}
+
 

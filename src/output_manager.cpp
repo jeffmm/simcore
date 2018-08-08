@@ -22,7 +22,7 @@ void OutputManager::Init(system_parameters *params,
   if (!reading_inputs && thermo_flag_) {
     InitThermo(run_name_);
   }
-  else if (reading_inputs && thermo_flag_) {
+  else if (reading_inputs && thermo_flag_ && thermo_analysis_) {
     InitThermoInput(run_name_);
   }
   std::string red_file_name = run_name_  + "_reduced" + std::to_string(reduce_factor);
@@ -169,7 +169,11 @@ void OutputManager::ReadInputs() {
     if (posits_only_ && (*spec)->GetPositFlag() && *i_step_ % (*spec)->GetNPosit() == 0 ) {
       (*spec)->ReadPosits();
     }
-    if (!posits_only_ && (*spec)->GetSpecFlag() && *i_step_ % (*spec)->GetNSpec() == 0 ) {
+    // In the case that we only want to consider posits, but we only have spec files, use specs to read average positions
+    else if (posits_only_ && !(*spec)->GetPositFlag() && (*spec)->GetSpecFlag() && *i_step_ % (*spec)->GetNSpec() == 0) {
+      (*spec)->ReadPositsFromSpecs();
+    }
+    else if (!posits_only_ && (*spec)->GetSpecFlag() && *i_step_ % (*spec)->GetNSpec() == 0 ) {
       (*spec)->ReadSpecs();
       if (params_->checkpoint_from_spec) {
         (*spec)->WriteCheckpoints();

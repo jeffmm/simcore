@@ -67,6 +67,7 @@ class Graphics {
     int windy_; // window y dimension in pixels
 
     int n_dim_; // number of physical dimensions we're drawing
+    int auto_graph_;
     double *unit_cell_;
     double z_correct_; // Used to recenter graphics
     space_struct * space_;
@@ -94,7 +95,7 @@ class Graphics {
                                 // "box" and "sphere"
 
  public:
-    void Init(std::vector<graph_struct*> * const graph_array, space_struct * s_struct, double background, int draw_boundary); // Init. Must always be called.
+    void Init(std::vector<graph_struct*> * const graph_array, space_struct * s_struct, double background, int draw_boundary, int auto_graph); // Init. Must always be called.
     void Clear();
 
     void DrawLoop();

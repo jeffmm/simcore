@@ -487,6 +487,18 @@ void Object::WriteSpec(std::fstream &ospec) {
 void Object::ReadSpec(std::fstream &ispec) {
   ReadPosit(ispec);
 }
+void Object::ReadPositFromSpec(std::fstream &ispec) {
+  ReadPosit(ispec);
+}
+void Object::GetAvgPosition(double * ap) {
+  std::copy(position_,position_+3,ap);
+}
+void Object::GetAvgOrientation(double * au) {
+  std::copy(orientation_,orientation_+3, au);
+}
+void Object::SetAvgPosition() {
+  // Nothing to be done
+}
 void Object::SetRNGState(const std::string& filename) {
   // Load the rng state from binary file
   FILE* pfile = fopen(filename.c_str(), "r");

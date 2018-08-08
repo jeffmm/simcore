@@ -3,7 +3,7 @@ seed: 194393254722492
 run_name: fjj
 n_dim: 2
 n_periodic: 2
-delta: 0.00001
+delta: 0.0001
 n_steps: 100000
 boundary: 0
 n_update_cells: -1
@@ -13,7 +13,7 @@ graph_flag: 1
 n_graph: 100
 graph_background: 0
 
-system_radius: 125
+system_radius: 20
 potential: soft
 soft_potential_mag: 100
 #like_like_interactions: 1
@@ -21,7 +21,7 @@ stoch_flag: 1
 f_cutoff: 500
 n_thermo: 100
 thermo_flag: 1
-local_order_analysis: 0
+local_order_analysis: 1
 local_order_bin_width: 0.5
 local_order_width: 40
 local_order_average: 1
@@ -29,14 +29,14 @@ interaction_flag: 1
 
 filament:
   num: 1
-  packing_fraction: 0.01
-  overlap: 0
-  insertion_type: random
+  packing_fraction: 0.4
+  overlap: 1
+  insertion_type: random_nematic
   diameter: 1
-  length: 50
+  length: 20
   perlen_ratio: 100
-  n_bonds: 16
-  posit_flag: 1
+  n_bonds: 6
+  posit_flag: 0
   spec_flag: 1
   checkpoint_flag: 1
   n_posit: 100
