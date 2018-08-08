@@ -56,9 +56,10 @@ soft_potential_mag: [10, double]
 like_like_interactions: [1,int]
 auto_graph: [0,int]
 local_order_width: [50, double]
-local_order_bin_width: [0.1, double]
+local_order_bin_width: [0.5, double]
 local_order_average: [1, int]
 local_order_analysis: [0, int]
+local_order_n_analysis: [100, int]
 
 species:
   num: [0, int]

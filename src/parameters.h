@@ -219,9 +219,10 @@ class system_parameters {
     int like_like_interactions = 1;
     int auto_graph = 0;
     double local_order_width = 50;
-    double local_order_bin_width = 0.1;
+    double local_order_bin_width = 0.5;
     int local_order_average = 1;
     int local_order_analysis = 0;
+    int local_order_n_analysis = 100;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;

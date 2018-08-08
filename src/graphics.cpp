@@ -152,6 +152,10 @@ static void key_callback3d(GLFWwindow *window, int key, int scancode, int action
 }
 
 void Graphics::KeyInteraction() {
+  // No key interactions if we're doing auto_graph
+  if (auto_graph_) {
+    return;
+  }
   // Tell glfw where the graphics class is
   glfwSetWindowUserPointer(window_, static_cast<void*>(this));
   // Set the proper key callback, since 2d and 3d should have different key
@@ -177,11 +181,12 @@ void Graphics::ScalePositions() {
       (*it)->r[i] = unit_cell_[n_dim_*i+i]*(*it)->r[i];
 }
 
-void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_struct, double background, int draw_boundary) {
+void Graphics::Init(std::vector<graph_struct*> * graph_array, space_struct * s_struct, double background, int draw_boundary, int auto_graph) {
   space_ = s_struct;
   graph_array_ = graph_array;
   n_dim_ = space_->n_dim;
   unit_cell_ = space_->unit_cell;
+  auto_graph_ = auto_graph;
   //ScalePositions();
   if (draw_boundary == 0) {
     boundary_ = boundary_type::none;
@@ -791,6 +796,10 @@ void Graphics::DrawWireSphere(double r, int lats, int longs) {
 }
 
 void Graphics::DrawLoop() {
+  if (auto_graph_) {
+    Draw();
+    return;
+  }
   ScalePositions();
   do { 
     if (n_dim_ == 2)

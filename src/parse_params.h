@@ -998,6 +998,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("local_order_analysis")==0) {
         params->local_order_analysis = it->second.as<int>();
       }
+      else if (param_name.compare("local_order_n_analysis")==0) {
+        params->local_order_n_analysis = it->second.as<int>();
+      }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";
       }

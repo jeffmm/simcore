@@ -393,16 +393,7 @@ bool InteractionEngine::CheckBoundaryConditions(std::vector<Object*> ixs) {
    of finding an object at a position (r,phi) in its reference frame. */
 void InteractionEngine::StructureAnalysis() {
   ForceUpdate();
-#ifdef ENABLE_OPENMP
-  CalculateStructureMP();
-#else
   CalculateStructure();
-#endif
-
-}
-
-void InteractionEngine::CalculateStructureMP() {
-
 }
 
 void InteractionEngine::CalculateStructure() {
@@ -411,9 +402,33 @@ void InteractionEngine::CalculateStructure() {
     struct_analysis_.SetNumObjs(nobj);
   }
   struct_analysis_.IncrementCount();
+#ifdef ENABLE_OPENMP
+  int max_threads = omp_get_max_threads();
+  std::vector<std::pair<std::vector<pair_interaction>::iterator, std::vector<pair_interaction>::iterator> > chunks;
+  chunks.reserve(max_threads); 
+  size_t chunk_size= pair_interactions_.size() / max_threads;
+  auto cur_iter = pair_interactions_.begin();
+  for(int i = 0; i < max_threads - 1; ++i) {
+    auto last_iter = cur_iter;
+    std::advance(cur_iter, chunk_size);
+    chunks.push_back(std::make_pair(last_iter, cur_iter));
+  }
+  chunks.push_back(std::make_pair(cur_iter, pair_interactions_.end()));
+
+#pragma omp parallel shared(chunks)
+  {
+#pragma omp for 
+    for(int i = 0; i < max_threads; ++i) {
+      for(auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
+        struct_analysis_.CalculateStructurePair(pix);
+      }
+    }
+  }
+#else
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
     struct_analysis_.CalculateStructurePair(pix);
   }
+#endif
   struct_analysis_.AverageStructure();
 }
 

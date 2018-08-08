@@ -106,7 +106,7 @@ void SpeciesBase::LoadFromCheckpoints(std::string run_name, std::string checkpoi
 void SpeciesBase::InitInputFiles(std::string run_name, bool posits_only) {
   if (posits_only && sparams_->posit_flag) 
     InitPositFileInput(run_name);
-  if (!posits_only && sparams_->spec_flag) 
+  else if (sparams_->spec_flag)
     InitSpecFileInput(run_name);
 }
 

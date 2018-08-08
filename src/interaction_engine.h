@@ -74,7 +74,6 @@ class InteractionEngine {
     void Reset();
     void Clear();
     void StructureAnalysis();
-    void CalculateStructureMP();
     void CalculateStructure();
     void ForceUpdate();
 };

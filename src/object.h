@@ -71,6 +71,9 @@ class Object {
     double const * const GetPrevPosition();
     double const * const GetScaledPosition();
     double const * const GetOrientation();
+    virtual void GetAvgPosition(double * ap);
+    virtual void GetAvgOrientation(double * au);
+    virtual void SetAvgPosition();
     double const GetDiameter();
     double const GetLength();
     double const * const GetForce();
@@ -117,6 +120,7 @@ class Object {
     virtual void ReadPosit(std::fstream &iposit);
     virtual void WriteSpec(std::fstream &ospec);
     virtual void ReadSpec(std::fstream &ispec);
+    virtual void ReadPositFromSpec(std::fstream &ispec);
     virtual void WriteCheckpoint(std::fstream &ocheck);
     virtual void ReadCheckpoint(std::fstream &icheck);
     void SetRNGState(const std::string& filename);

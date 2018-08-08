@@ -12,7 +12,8 @@ class OutputManager{
          checkpoint_flag_ = false,
          thermo_flag_ = false,
          posits_only_ = false,
-         reduce_flag_ = false;
+         reduce_flag_ = false,
+         thermo_analysis_ = false;
     int *i_step_,
         n_posit_,
         n_spec_,

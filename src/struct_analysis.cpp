@@ -102,6 +102,11 @@ void StructAnalysis::CalculateStructurePair(std::vector<pair_interaction>::itera
   auto obj1 = pix->first.first;
   auto obj2 = pix->first.second;
 
+  /* For now, ignore intra-filament correlations */
+  if (obj1->GetMeshID() == obj2->GetMeshID()) {
+    return;
+  }
+
   double const * const r1 = obj1->GetInteractorPosition();
   double const * const r2 = obj2->GetInteractorPosition();
   double const * const u1 = obj1->GetInteractorOrientation();
