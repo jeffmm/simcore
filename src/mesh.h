@@ -66,6 +66,7 @@ class Mesh : public Object {
     virtual void ClearInteractions();
     virtual void GetAvgPosition(double * ap);
     virtual void GetAvgOrientation(double * au);
+    virtual void SetAvgPosition();
 };
 
 #endif // _SIMCORE_MESH_H_

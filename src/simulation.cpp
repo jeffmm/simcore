@@ -119,15 +119,8 @@ void Simulation::InitGraphics() {
   // If NOGRAPH is defined, skip drawing and grabbing
   #ifndef NOGRAPH
   // Initialize graphics structures
-  graphics_.Init(&graph_array, space_.GetStruct(), background_color, params_.draw_boundary);
-  // Check if we want to wait for human input before beginning movie/graphed simulation
-  if (params_.auto_graph) {
-    graphics_.Draw();
-  }
-  else {
-    // Waiting for human input
-    graphics_.DrawLoop();
-  }
+  graphics_.Init(&graph_array, space_.GetStruct(), background_color, params_.draw_boundary, params_.auto_graph);
+  graphics_.DrawLoop();
   #endif
   // Initialize directory for grabbed images
   params_.movie_directory.append("/");
@@ -458,7 +451,7 @@ void Simulation::RunProcessing(int run_analyses) {
           struct_update = true;
         }
       }
-      if (struct_update && params_.local_order_analysis) {
+      if (struct_update && params_.local_order_analysis && i_step_%params_.local_order_n_analysis==0) {
         iengine_.StructureAnalysis();
       }
     }

@@ -60,6 +60,7 @@ class SpeciesBase {
     virtual void ReadSpecs() {}
     virtual void ReadCheckpoints() {}
     virtual void ReadPosits() {}
+    virtual void ReadPositsFromSpecs() {}
     virtual void InitAnalysis() {}
     virtual void RunAnalysis() {}
     virtual void FinalizeAnalysis() {}
@@ -114,6 +115,7 @@ class Species : public SpeciesBase {
     virtual void WriteSpecs();
     virtual void WriteCheckpoints();
     virtual void ReadPosits();
+    virtual void ReadPositsFromSpecs();
     virtual void ReadSpecs();
     virtual void ReadCheckpoints();
     virtual void ScalePositions();

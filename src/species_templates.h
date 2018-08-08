@@ -189,6 +189,14 @@ void Species<T>::ReadPosits() {
     it->ReadPosit(iposit_file_);
 }
 
+template <typename T>
+void Species<T>::ReadPositsFromSpecs() {
+  ReadSpecs();
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    it->SetAvgPosition();
+  }
+}
+
 template <typename T> 
 void Species<T>::ReadCheckpoints() {
   std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
