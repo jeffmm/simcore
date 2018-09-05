@@ -512,4 +512,14 @@ void Mesh::SetAvgPosition() {
   UpdatePeriodic();
 }
 
+void Mesh::GetContactNumbers(std::vector<double> * cn) {
+  for (auto it=bonds_.begin(); it!= bonds_.end(); ++it) {
+    cn->push_back(it->GetContactNumber());
+  }
+}
 
+void Mesh::GetPolarOrders(std::vector<double> * po) {
+  for (auto it=bonds_.begin(); it!= bonds_.end(); ++it) {
+    po->push_back(it->GetPolarOrder());
+  }
+}

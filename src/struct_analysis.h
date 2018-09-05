@@ -8,12 +8,14 @@
 class StructAnalysis {
   private:
     system_parameters * params_;
-    int count_,
+        int count_,
         n_dim_,
         n_bins_,
         n_bins_1d_,
         average_structure_,
-        n_objs_;
+        n_objs_,
+        local_order_analysis_,
+        polar_order_analysis_;
     double bin_width_;
     float * pdf_array_,
           * nematic_array_,
@@ -21,24 +23,28 @@ class StructAnalysis {
           * pdf_array_temp_,
           * nematic_array_temp_,
           * polar_array_temp_;
+          //* polar_order_,
+          //* contact_number_;
     std::fstream pdf_file_;
     std::fstream nematic_file_;
     std::fstream polar_file_;
-
-  public:
-    void Init(system_parameters *params);
-    void Clear();
-    void CalculateStructurePair(std::vector<pair_interaction>::iterator pix);
     void WriteStructData();
     void PopulateLine(double * site1, double * site2, double dotprod);
     void BinLine(int x0, int y0, int x1, int y1, double dotprod);
     void BinLineLow(int x0, int y0, int x1, int y1, double dotprod);
     void BinLineHigh(int x0, int y0, int x1, int y1, double dotprod);
     void BinArray(int x, int y, double dotprod);
+    void CalculateLocalOrderPair(std::vector<pair_interaction>::iterator pix);
+    void CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix);
+
+  public:
+    void Init(system_parameters *params);
+    void Clear();
+    void CalculateStructurePair(std::vector<pair_interaction>::iterator pix);
     void AverageStructure();
-    void IncrementCount() {count_++;}
-    void SetNumObjs(int nobj) {n_objs_ = nobj;}
+    void SetNumObjs(int nobj);
     int GetNumObjs() {return n_objs_;}
+    void IncrementCount() {count_++;}
 };
 
 #endif

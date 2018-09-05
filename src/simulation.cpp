@@ -427,6 +427,7 @@ void Simulation::InitProcessing(run_options run_opts) {
 
 void Simulation::RunProcessing(int run_analyses) {
   std::cout << "Processing outputs for: " << run_name_ << std::endl;
+  bool local_order = (params_.local_order_analysis || params_.polar_order_analysis);
   for (i_step_ = 1; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
@@ -451,7 +452,7 @@ void Simulation::RunProcessing(int run_analyses) {
           struct_update = true;
         }
       }
-      if (struct_update && params_.local_order_analysis && i_step_%params_.local_order_n_analysis==0) {
+      if (struct_update && local_order && i_step_%params_.local_order_n_analysis==0) {
         iengine_.StructureAnalysis();
       }
     }
