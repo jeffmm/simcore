@@ -24,6 +24,9 @@ Object::Object() {
   is_mesh_ = false;
   dr_tot_ = 0;
   mesh_id_ = 0;
+  polar_order_ = 0;
+  contact_number_ = 0;
+  n_contact_ = 0;
 }
 
 int Object::next_oid_ = 0;
@@ -98,6 +101,24 @@ void Object::SetTorque(double const * const t) {
 void Object::AddPotential(double const p) {
   p_energy_ += p;
 }
+void Object::AddPolarOrder(double const po) {
+  polar_order_ += po;
+}
+void Object::AddContactNumber(double const cn) {
+  contact_number_ += cn;
+}
+void Object::CalcPolarOrder() {
+  if (contact_number_ > 0) {
+    polar_order_ /= contact_number_;
+  }
+  else {
+    polar_order_ = 0;
+  }
+}
+void Object::ZeroPolarOrder() {
+  contact_number_ = 0;
+  polar_order_ = 0;
+}
 void Object::SetInteractor(bool ix) {
   interacting_ = ix;
 }
@@ -127,6 +148,12 @@ double const Object::GetLength() {
 }
 double const Object::GetPotentialEnergy() {
   return p_energy_;
+}
+double const Object::GetPolarOrder() {
+  return polar_order_;
+}
+double const Object::GetContactNumber() {
+  return contact_number_;
 }
 bool const Object::IsInteractor() {
   return interacting_;

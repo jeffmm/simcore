@@ -6,37 +6,52 @@ void StructAnalysis::Init(system_parameters * params) {
   n_objs_ = 0;
   params_ = params;
   n_dim_ = params_->n_dim;
+  local_order_analysis_ = params_->local_order_analysis;
+  polar_order_analysis_ = params_->polar_order_analysis;
   if (n_dim_ != 2) {
     error_exit("3D structure analysis is not yet implemented");
   }
-  /* Array width is the width of the pdf (etc) histograms in units of sigma
-     and the bin width is also in units of sigma, the smaller, the higher the
-     total resolution */
-  bin_width_ = params_->local_order_bin_width;
-  n_bins_1d_ = (int) params_->local_order_width / bin_width_;
-  // Guarantee n_bins_1d_ is even, for sanity sake
-  if (n_bins_1d_%2 != 0) {
-    n_bins_1d_++;
-  }
-  n_bins_ = n_bins_1d_*n_bins_1d_;
   average_structure_ = params_->local_order_average;
-  /* Issue a RAM warning if the arrays are very large */
-  if (6.0*n_bins_*4.0/1e9 > 1) {
-    warning("Local structure content to exceed %2.2f GB of RAM!",6.0*n_bins_*4.0/1e9);
+  bin_width_ = params_->local_order_bin_width;
+  if (local_order_analysis_) {
+    /* Array width is the width of the pdf (etc) histograms in units of sigma
+       and the bin width is also in units of sigma, the smaller, the higher the
+       total resolution */
+    n_bins_1d_ = (int) params_->local_order_width / bin_width_;
+    // Guarantee n_bins_1d_ is even, for sanity sake
+    if (n_bins_1d_%2 != 0) {
+      n_bins_1d_++;
+    }
+    n_bins_ = n_bins_1d_*n_bins_1d_;
+    /* Issue a RAM warning if the arrays are very large */
+    if (6.0*n_bins_*4.0/1e9 > 1) {
+      warning("Local structure content to exceed %2.2f GB of RAM!",6.0*n_bins_*4.0/1e9);
+    }
+    /* Initialize arrays */
+    pdf_array_ = new float[n_bins_];
+    nematic_array_ = new float[n_bins_];
+    polar_array_ = new float[n_bins_];
+    pdf_array_temp_ = new float[n_bins_];
+    nematic_array_temp_ = new float[n_bins_];
+    polar_array_temp_ = new float[n_bins_];
+    std::fill(pdf_array_,pdf_array_+n_bins_,0.0);
+    std::fill(nematic_array_,nematic_array_+n_bins_,0.0);
+    std::fill(polar_array_,polar_array_+n_bins_,0.0);
+    std::fill(pdf_array_temp_,pdf_array_temp_+n_bins_,0.0);
+    std::fill(nematic_array_temp_,nematic_array_temp_+n_bins_,0.0);
+    std::fill(polar_array_temp_,polar_array_temp_+n_bins_,0.0);
   }
-  /* Initialize arrays */
-  pdf_array_ = new float[n_bins_];
-  nematic_array_ = new float[n_bins_];
-  polar_array_ = new float[n_bins_];
-  pdf_array_temp_ = new float[n_bins_];
-  nematic_array_temp_ = new float[n_bins_];
-  polar_array_temp_ = new float[n_bins_];
-  std::fill(pdf_array_,pdf_array_+n_bins_,0.0);
-  std::fill(nematic_array_,nematic_array_+n_bins_,0.0);
-  std::fill(polar_array_,polar_array_+n_bins_,0.0);
-  std::fill(pdf_array_temp_,pdf_array_temp_+n_bins_,0.0);
-  std::fill(nematic_array_temp_,nematic_array_temp_+n_bins_,0.0);
-  std::fill(polar_array_temp_,polar_array_temp_+n_bins_,0.0);
+}
+
+void StructAnalysis::SetNumObjs(int nobj) {
+  //if (n_objs_ > 0) {
+    //error_exit("Object number in struct analysis reset after initialization. This is unexpected.");
+  //}
+  n_objs_ = nobj;
+  //polar_order_ = new float[n_objs_];
+  //contact_number_ = new float[n_objs_];
+  //std::fill(polar_order_,polar_order_+n_objs_,0.0);
+  //std::fill(contact_number_,contact_number_+n_objs_,0.0);
 }
 
 void StructAnalysis::Clear() {
@@ -44,6 +59,10 @@ void StructAnalysis::Clear() {
   delete[] pdf_array_;
   delete[] nematic_array_;
   delete[] polar_array_;
+  //if (n_objs_ > 0) {
+    //delete[] polar_order_;
+    //delete[] contact_number_;
+  //}
 }
 
 void StructAnalysis::WriteStructData() {
@@ -99,6 +118,33 @@ void StructAnalysis::WriteStructData() {
 }
 
 void StructAnalysis::CalculateStructurePair(std::vector<pair_interaction>::iterator pix) {
+  if (local_order_analysis_) {
+    CalculateLocalOrderPair(pix);
+  }
+  if (polar_order_analysis_) {
+    CalculatePolarOrderPair(pix);
+  }
+}
+
+void StructAnalysis::CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix) {
+  auto obj1 = pix->first.first;
+  auto obj2 = pix->first.second;
+  /* For now, ignore intra-filament correlations */
+  if (obj1->GetMeshID() == obj2->GetMeshID()) {
+    return;
+  }
+  double dr2 = pix->second.dr_mag2;
+  double expdr2 = exp(-dr2);
+  double const * const u1 = obj1->GetInteractorOrientation();
+  double const * const u2 = obj2->GetInteractorOrientation();
+  double u1_dot_u2 = dot_product(n_dim_,u1,u2);
+  obj1->AddPolarOrder(u1_dot_u2*expdr2);
+  obj2->AddPolarOrder(u1_dot_u2*expdr2);
+  obj1->AddContactNumber(expdr2);
+  obj2->AddContactNumber(expdr2);
+}
+
+void StructAnalysis::CalculateLocalOrderPair(std::vector<pair_interaction>::iterator pix) {
   auto obj1 = pix->first.first;
   auto obj2 = pix->first.second;
 
@@ -288,14 +334,17 @@ void StructAnalysis::BinArray(int x, int y, double dotprod) {
 }
 
 void StructAnalysis::AverageStructure() {
-  for (int i=0; i<n_bins_;++i) {
-    float weight = pdf_array_temp_[i];
-    weight = (weight > 0 ? weight : 1);
-    pdf_array_[i] += pdf_array_temp_[i];
-    nematic_array_[i] += nematic_array_temp_[i]/weight;
-    polar_array_[i] += polar_array_temp_[i]/weight;
-    pdf_array_temp_[i] = 0;
-    nematic_array_temp_[i] = 0;
-    polar_array_temp_[i] = 0;
+  if (local_order_analysis_) {
+    for (int i=0; i<n_bins_;++i) {
+      float weight = pdf_array_temp_[i];
+      weight = (weight > 0 ? weight : 1);
+      pdf_array_[i] += pdf_array_temp_[i];
+      nematic_array_[i] += nematic_array_temp_[i]/weight;
+      polar_array_[i] += polar_array_temp_[i]/weight;
+      pdf_array_temp_[i] = 0;
+      nematic_array_temp_[i] = 0;
+      polar_array_temp_[i] = 0;
+    }
   }
 }
+

@@ -29,7 +29,8 @@ void InteractionEngine::Init(system_parameters *params,
   dr_update_ = 0.25*ptracker_.GetCellLength()*ptracker_.GetCellLength();
   mindist_.Init(space, 2.0*dr_update_);
   potentials_.InitPotentials(params_);
-  if (params_->local_order_analysis && processing) {
+  bool local_order = (params_->local_order_analysis || params_->polar_order_analysis);
+  if (local_order && processing) {
     struct_analysis_.Init(params);
   }
 }
@@ -45,17 +46,10 @@ void InteractionEngine::Interact() {
   // Check if we need to update cell list
   CheckUpdate();
   // Loop through and calculate interactions
-#ifdef ENABLE_OPENMP
-  if (! no_interactions_ ) {
-    CalculatePairInteractionsMP();
-  }
-  CalculateBoundaryInteractionsMP();
-#else
   if (! no_interactions_ ) {
     CalculatePairInteractions();
   }
   CalculateBoundaryInteractions();
-#endif
   // Apply forces, torques, and potentials in serial
   if (! no_interactions_ ) {
     ApplyPairInteractions();
@@ -208,7 +202,7 @@ void InteractionEngine::ProcessBoundaryInteraction(std::vector<boundary_interact
   potentials_.CalcPotential(ix);
 }
 
-void InteractionEngine::CalculateBoundaryInteractionsMP() {
+void InteractionEngine::CalculateBoundaryInteractions() {
   if (space_->type == +boundary_type::none) {
     return;
   }
@@ -236,22 +230,16 @@ void InteractionEngine::CalculateBoundaryInteractionsMP() {
       }
     }
   }
-#endif
-}
-
-void InteractionEngine::CalculateBoundaryInteractions() {
-  if (space_->type == +boundary_type::none) {
-    return;
-  }
+#else 
   for(auto bix = boundary_interactions_.begin(); bix != boundary_interactions_.end(); ++bix) {
     ProcessBoundaryInteraction(bix);
     // Do torque crossproducts
     cross_product(bix->second.contact1,bix->second.force,bix->second.t1,3);
   }
+#endif
 }
 
-
-void InteractionEngine::CalculatePairInteractionsMP() {
+void InteractionEngine::CalculatePairInteractions() {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
   std::vector<std::pair<std::vector<pair_interaction>::iterator, std::vector<pair_interaction>::iterator> > chunks;
@@ -277,16 +265,14 @@ void InteractionEngine::CalculatePairInteractionsMP() {
       }
     }
   }
-#endif
-}
-
-void InteractionEngine::CalculatePairInteractions() {
+#else
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
     ProcessPairInteraction(pix);
     // Do torque crossproducts
     cross_product(pix->second.contact1,pix->second.force,pix->second.t1,3);
     cross_product(pix->second.contact2,pix->second.force,pix->second.t2,3);
   }
+#endif
 }
 
 void InteractionEngine::ApplyPairInteractions() {
@@ -393,6 +379,10 @@ bool InteractionEngine::CheckBoundaryConditions(std::vector<Object*> ixs) {
    of finding an object at a position (r,phi) in its reference frame. */
 void InteractionEngine::StructureAnalysis() {
   ForceUpdate();
+  // Check if we need minimum distance for polar order parameter
+  //if (params_->polar_order_analysis) {
+    //CalculatePairInteractions();
+  //}
   CalculateStructure();
 }
 
@@ -402,6 +392,11 @@ void InteractionEngine::CalculateStructure() {
     struct_analysis_.SetNumObjs(nobj);
   }
   struct_analysis_.IncrementCount();
+  if (params_->polar_order_analysis) {
+    for (auto it=interactors_.begin(); it!=interactors_.end(); ++it) {
+      (*it)->ZeroPolarOrder();
+    }
+  }
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
   std::vector<std::pair<std::vector<pair_interaction>::iterator, std::vector<pair_interaction>::iterator> > chunks;
@@ -420,16 +415,27 @@ void InteractionEngine::CalculateStructure() {
 #pragma omp for 
     for(int i = 0; i < max_threads; ++i) {
       for(auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
+        if (params_->polar_order_analysis) {
+          mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
+        }
         struct_analysis_.CalculateStructurePair(pix);
       }
     }
   }
 #else
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
+    if (params_->polar_order_analysis) {
+      mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
+    }
     struct_analysis_.CalculateStructurePair(pix);
   }
 #endif
   struct_analysis_.AverageStructure();
+  if (params_->polar_order_analysis) {
+    for (auto it=interactors_.begin(); it!=interactors_.end(); ++it) {
+      (*it)->CalcPolarOrder();
+    }
+  }
 }
 
 void InteractionEngine::Clear() {
