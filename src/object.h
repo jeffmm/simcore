@@ -21,6 +21,7 @@ class Object {
     graph_struct g_;
     RNG rng_;
     draw_type draw_;
+    int n_contact_;
     double position_[3],
            prev_position_[3],
            prev_orientation_[3],
@@ -33,7 +34,9 @@ class Object {
            diameter_,
            length_,
            p_energy_,
-           dr_tot_;
+           dr_tot_,
+           polar_order_,
+           contact_number_;
     bool interacting_,
          is_mesh_;
     std::vector<Object*> interactors_;
@@ -62,8 +65,12 @@ class Object {
     void SubTorque(double const * const t);
     void SetTorque(double const * const t);
     void AddPotential(double const p);
+    void AddPolarOrder(double const po);
+    void AddContactNumber(double const cn);
     void SetInteractor(bool ix);
     void ToggleIsMesh();
+    void CalcPolarOrder();
+    void ZeroPolarOrder();
     species_id const GetSID();
     int const GetOID() const;
     int const GetMeshID() const;
@@ -79,6 +86,8 @@ class Object {
     double const * const GetForce();
     double const * const GetTorque();
     double const GetPotentialEnergy();
+    double const GetPolarOrder();
+    double const GetContactNumber();
     bool const IsInteractor();
     bool const IsMesh();
     void SetMeshID(int mid);

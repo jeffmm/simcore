@@ -50,8 +50,6 @@ class InteractionEngine {
     void UpdateInteractions();
     void ProcessPairInteraction(std::vector<pair_interaction>::iterator pix);
     void ProcessBoundaryInteraction(std::vector<boundary_interaction>::iterator bix);
-    void CalculatePairInteractionsMP();
-    void CalculateBoundaryInteractionsMP();
     void CalculatePairInteractions();
     void CalculateBoundaryInteractions();
     void ApplyPairInteractions();

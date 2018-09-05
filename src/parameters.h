@@ -223,6 +223,7 @@ class system_parameters {
     int local_order_average = 1;
     int local_order_analysis = 0;
     int local_order_n_analysis = 100;
+    int polar_order_analysis = 0;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;

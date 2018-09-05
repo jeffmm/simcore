@@ -17,6 +17,9 @@ void FilamentSpecies::InitAnalysis() {
   if (params_->filament.global_order_analysis) {
     InitGlobalOrderAnalysis();
   }
+  if (params_->polar_order_analysis) {
+    InitPolarOrderAnalysis();
+  }
   //if (params_->filament.local_order_analysis) {
     //InitLocalOrderAnalysis();
   //}
@@ -33,6 +36,37 @@ void FilamentSpecies::InitGlobalOrderAnalysis() {
   polar_order_vector_ = new double[3];
   std::fill(nematic_order_tensor_, nematic_order_tensor_+9, 0.0);
   std::fill(polar_order_vector_, polar_order_vector_+3, 0.0);
+}
+
+void FilamentSpecies::InitPolarOrderAnalysis() {
+  //int n_bins_1d = params_->polar_order_n_bins;
+  //polar_order_histogram_ = new float[n_bins_1d*n_bins_1d];
+  //double contact_cut = params_->contact_number_cutoff;
+  //contact_bin_width_ = contact_cut / n_bins_1d;
+  //polar_bin_width_ = 2.0 / n_bins_1d;
+  std::string fname = params_->run_name;
+  fname.append("_filament.polar_order");
+  polar_order_file_.open(fname, std::ios::out);
+  polar_order_file_ << "polar_order_analysis_file\n";
+  polar_order_file_ << "contact_number local_polar_order\n";
+}
+
+void FilamentSpecies::RunPolarOrderAnalysis() {
+  std::vector<double> po;
+  std::vector<double> cn;
+  for (auto it=members_.begin(); it!= members_.end(); ++it) {
+    it->GetPolarOrders(&po);
+    it->GetContactNumbers(&cn);
+  }
+  if (po.size() != cn.size()) {
+    error_exit("Number of polar order parameters and contact numbers not equal");
+  }
+  for (int i=0; i<po.size(); ++i) {
+    polar_order_file_ << cn[i] << " " << po[i] <<"\n";
+    //int x = (int) (floor(cn[i]/contact_bin_width_));
+    //int y = (int) (floor(po[i]/polar_bin_width_));
+    //polar_order_histogram_[params_->polar_order_n_bins * y + x]++;
+  }
 }
 
 //void FilamentSpecies::InitLocalOrderAnalysis() {
@@ -157,6 +191,9 @@ void FilamentSpecies::RunAnalysis() {
   }
   if (params_->filament.global_order_analysis) {
     RunGlobalOrderAnalysis();
+  }
+  if (params_->polar_order_analysis) {
+    RunPolarOrderAnalysis();
   }
   //if (params_->filament.local_order_analysis) {
     //RunLocalOrderAnalysis();
@@ -355,6 +392,10 @@ void FilamentSpecies::FinalizeAnalysis() {
   if (global_order_file_.is_open()) {
     FinalizeGlobalOrderAnalysis();
     global_order_file_.close();
+  }
+  if (polar_order_file_.is_open()) {
+    FinalizePolarOrderAnalysis();
+    polar_order_file_.close();
   }
   //if (local_order_file_.is_open()) {
     //FinalizeLocalOrderAnalysis();

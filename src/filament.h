@@ -169,9 +169,7 @@ class FilamentSpecies : public Species<Filament> {
            * nematic_order_tensor_,
            * polar_order_vector_;
     int **theta_histogram_;
-    float ** pdf_histogram_;
-    float ** nematic_order_histogram_;
-    float ** polar_order_histogram_;
+    //int * polar_order_histogram_;
     int time_,
         n_bins_,
         n_bins_1d_,
@@ -180,7 +178,8 @@ class FilamentSpecies : public Species<Filament> {
                  theta_file_,
                  mse2e_file_,
                  global_order_file_,
-                 local_order_file_;
+                 local_order_file_,
+                 polar_order_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(species_id::filament);
@@ -225,6 +224,10 @@ class FilamentSpecies : public Species<Filament> {
     void InitGlobalOrderAnalysis();
     void RunGlobalOrderAnalysis();
     void FinalizeGlobalOrderAnalysis();
+
+    void InitPolarOrderAnalysis();
+    void RunPolarOrderAnalysis();
+    void FinalizePolarOrderAnalysis() {}
 
     void InitLocalOrderAnalysis();
     void RunLocalOrderAnalysis();
