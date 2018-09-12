@@ -15,7 +15,9 @@ class StructAnalysis {
         average_structure_,
         n_objs_,
         local_order_analysis_,
-        polar_order_analysis_;
+        polar_order_analysis_,
+        overlap_analysis_,
+        n_overlaps_;
     double bin_width_;
     float * pdf_array_,
           * nematic_array_,
@@ -36,6 +38,7 @@ class StructAnalysis {
     void BinArray(int x, int y, double dotprod);
     void CalculateLocalOrderPair(std::vector<pair_interaction>::iterator pix);
     void CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix);
+    void CountOverlap(std::vector<pair_interaction>::iterator pix);
 
   public:
     void Init(system_parameters *params);

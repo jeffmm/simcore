@@ -4,10 +4,12 @@
 void StructAnalysis::Init(system_parameters * params) {
   count_ = 0;
   n_objs_ = 0;
+  n_overlaps_ = 0;
   params_ = params;
   n_dim_ = params_->n_dim;
   local_order_analysis_ = params_->local_order_analysis;
   polar_order_analysis_ = params_->polar_order_analysis;
+  overlap_analysis_ = params_->overlap_analysis;
   if (n_dim_ != 2) {
     error_exit("3D structure analysis is not yet implemented");
   }
@@ -124,6 +126,9 @@ void StructAnalysis::CalculateStructurePair(std::vector<pair_interaction>::itera
   if (polar_order_analysis_) {
     CalculatePolarOrderPair(pix);
   }
+  if (overlap_analysis_) {
+    CountOverlap(pix);
+  }
 }
 
 void StructAnalysis::CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix) {
@@ -158,7 +163,7 @@ void StructAnalysis::CalculateLocalOrderPair(std::vector<pair_interaction>::iter
   double const * const u1 = obj1->GetInteractorOrientation();
   double const * const u2 = obj2->GetInteractorOrientation();
   double const l1 = obj1->GetInteractorLength();
-  double const l2 = obj1->GetInteractorLength();
+  double const l2 = obj2->GetInteractorLength();
 
   /* Rotation angles that are used to rotate into the 
      reference frame of the corresponding objects when
@@ -346,5 +351,39 @@ void StructAnalysis::AverageStructure() {
       polar_array_temp_[i] = 0;
     }
   }
+  if (overlap_analysis_) {
+    std::cout << n_overlaps_ << "\n";
+    n_overlaps_ = 0;
+  }
+}
+
+/* In order to count the number of overlaps, I examine the vector pointing
+ * between the heads of the two objects and then the vector pointing between
+ * the tails of the two objects. If these objects point in opposite (relative)
+ * directions (e.g. if their dot product is negative) then the filaments must
+ * be crossing each other */
+void StructAnalysis::CountOverlap(std::vector<pair_interaction>::iterator pix) {
+  auto obj1 = pix->first.first;
+  auto obj2 = pix->first.second;
+  double const * const r1 = obj1->GetInteractorPosition();
+  double const * const r2 = obj2->GetInteractorPosition();
+  double const * const u1 = obj1->GetInteractorOrientation();
+  double const * const u2 = obj2->GetInteractorOrientation();
+  double const l1 = obj1->GetInteractorLength();
+  double const l2 = obj2->GetInteractorLength();
+  double dr_head[3], dr_tail[3];
+  std::fill(dr_head,dr_head+3,0.0);
+  std::fill(dr_tail,dr_tail+3,0.0);
+  for (int i=0;i<n_dim_;++i) {
+    dr_head[i] = -(r1[i] + 0.5*l1*u1[i]) + (r2[i] + 0.5*l2*u2[i]);
+    dr_tail[i] = -(r1[i] - 0.5*l1*u1[i]) + (r2[i] - 0.5*l2*u2[i]);
+  }
+  if (SIGNOF(u1[0]*dr_head[1] - u1[1]*dr_head[0]) != SIGNOF(u1[0]*dr_tail[1] - u1[1]*dr_tail[0])) {
+    n_overlaps_++;
+  }
+
+  //if (dot_product(n_dim_, dr_head, dr_tail) < 0) {
+    //n_overlaps_++;
+  //}
 }
 

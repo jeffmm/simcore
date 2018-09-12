@@ -427,7 +427,7 @@ void Simulation::InitProcessing(run_options run_opts) {
 
 void Simulation::RunProcessing(int run_analyses) {
   std::cout << "Processing outputs for: " << run_name_ << std::endl;
-  bool local_order = (params_.local_order_analysis || params_.polar_order_analysis);
+  bool local_order = (params_.local_order_analysis || params_.polar_order_analysis || params_.overlap_analysis);
   for (i_step_ = 1; i_step_<params_.n_steps; ++i_step_) {
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
@@ -443,6 +443,7 @@ void Simulation::RunProcessing(int run_analyses) {
       return;
     }
     Draw();
+    if (i_step_ < params_.n_steps_equil) continue;
     if (run_analyses) {
       bool struct_update = false;
       for (auto it=species_.begin(); it!=species_.end(); ++it) {
