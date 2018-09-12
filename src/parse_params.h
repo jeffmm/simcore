@@ -161,6 +161,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("driving_method")==0) {
             params->filament.driving_method = jt->second.as<int>();
           }
+          else if (param_name.compare("n_equil")==0) {
+            params->filament.n_equil = jt->second.as<int>();
+          }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
           }
@@ -1003,6 +1006,15 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("polar_order_analysis")==0) {
         params->polar_order_analysis = it->second.as<int>();
+      }
+      else if (param_name.compare("polar_order_n_bins")==0) {
+        params->polar_order_n_bins = it->second.as<int>();
+      }
+      else if (param_name.compare("polar_order_contact_cutoff")==0) {
+        params->polar_order_contact_cutoff = it->second.as<double>();
+      }
+      else if (param_name.compare("overlap_analysis")==0) {
+        params->overlap_analysis = it->second.as<int>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";
