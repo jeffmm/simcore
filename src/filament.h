@@ -166,10 +166,13 @@ class FilamentSpecies : public Species<Filament> {
            tot_angle_,
            mse2e_,
            mse2e2_,
+           polar_bin_width_,
+           contact_bin_width_,
+           contact_cut_,
            * nematic_order_tensor_,
            * polar_order_vector_;
     int **theta_histogram_;
-    //int * polar_order_histogram_;
+    int * polar_order_histogram_;
     int time_,
         n_bins_,
         n_bins_1d_,
@@ -227,7 +230,7 @@ class FilamentSpecies : public Species<Filament> {
 
     void InitPolarOrderAnalysis();
     void RunPolarOrderAnalysis();
-    void FinalizePolarOrderAnalysis() {}
+    void FinalizePolarOrderAnalysis();
 
     void InitLocalOrderAnalysis();
     void RunLocalOrderAnalysis();

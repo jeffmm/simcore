@@ -21,7 +21,8 @@ void InteractionEngine::Init(system_parameters *params,
   i_update_ = -1;
   n_objs_ = 0;
   //clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
-  if (processing && params_->local_order_analysis) {
+  bool local_order = (params_->local_order_analysis || params_->polar_order_analysis || params_->overlap_analysis);
+  if (processing && local_order) {
     params_->cell_length = 0.5*params_->local_order_width;
   }
   ptracker_.Init(params, &interactors_, &nlist_);
@@ -29,7 +30,6 @@ void InteractionEngine::Init(system_parameters *params,
   dr_update_ = 0.25*ptracker_.GetCellLength()*ptracker_.GetCellLength();
   mindist_.Init(space, 2.0*dr_update_);
   potentials_.InitPotentials(params_);
-  bool local_order = (params_->local_order_analysis || params_->polar_order_analysis);
   if (local_order && processing) {
     struct_analysis_.Init(params);
   }
@@ -379,10 +379,6 @@ bool InteractionEngine::CheckBoundaryConditions(std::vector<Object*> ixs) {
    of finding an object at a position (r,phi) in its reference frame. */
 void InteractionEngine::StructureAnalysis() {
   ForceUpdate();
-  // Check if we need minimum distance for polar order parameter
-  //if (params_->polar_order_analysis) {
-    //CalculatePairInteractions();
-  //}
   CalculateStructure();
 }
 
@@ -415,7 +411,7 @@ void InteractionEngine::CalculateStructure() {
 #pragma omp for 
     for(int i = 0; i < max_threads; ++i) {
       for(auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
-        if (params_->polar_order_analysis) {
+        if (params_->polar_order_analysis || params_->overlap_analysis) {
           mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
         }
         struct_analysis_.CalculateStructurePair(pix);
@@ -424,7 +420,7 @@ void InteractionEngine::CalculateStructure() {
   }
 #else
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
-    if (params_->polar_order_analysis) {
+    if (params_->polar_order_analysis || params_->overlap_analysis) {
       mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
     }
     struct_analysis_.CalculateStructurePair(pix);

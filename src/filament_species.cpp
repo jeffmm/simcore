@@ -39,15 +39,21 @@ void FilamentSpecies::InitGlobalOrderAnalysis() {
 }
 
 void FilamentSpecies::InitPolarOrderAnalysis() {
-  //int n_bins_1d = params_->polar_order_n_bins;
-  //polar_order_histogram_ = new float[n_bins_1d*n_bins_1d];
-  //double contact_cut = params_->contact_number_cutoff;
-  //contact_bin_width_ = contact_cut / n_bins_1d;
-  //polar_bin_width_ = 2.0 / n_bins_1d;
+  n_bins_1d_ = params_->polar_order_n_bins;
+  // Ensure n_bins_1d_ is even, to avoid headaches
+  if (n_bins_1d_%2 != 0) {
+    n_bins_1d_++;
+  }
+  n_bins_ = SQR(n_bins_1d_);
+  polar_order_histogram_ = new int[n_bins_];
+  std::fill(polar_order_histogram_,polar_order_histogram_+n_bins_,0.0);
+  contact_cut_ = params_->polar_order_contact_cutoff;
+  contact_bin_width_ = contact_cut_ / n_bins_1d_;
+  polar_bin_width_ = 2.0 / n_bins_1d_;
   std::string fname = params_->run_name;
   fname.append("_filament.polar_order");
   polar_order_file_.open(fname, std::ios::out);
-  polar_order_file_ << "polar_order_analysis_file\n";
+  polar_order_file_ << "polar_order_analysis_file, contact number cutoff = " << contact_cut_ << "\n";
   polar_order_file_ << "contact_number local_polar_order\n";
 }
 
@@ -62,10 +68,19 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
     error_exit("Number of polar order parameters and contact numbers not equal");
   }
   for (int i=0; i<po.size(); ++i) {
-    polar_order_file_ << cn[i] << " " << po[i] <<"\n";
-    //int x = (int) (floor(cn[i]/contact_bin_width_));
-    //int y = (int) (floor(po[i]/polar_bin_width_));
-    //polar_order_histogram_[params_->polar_order_n_bins * y + x]++;
+    if (cn[i] > contact_cut_) {
+      continue;
+    }
+    //polar_order_file_ << cn[i] << " " << po[i] <<"\n";
+    int x = (int) (floor(cn[i]/contact_bin_width_));
+    int y = (int) (floor((po[i]+1)/polar_bin_width_));
+    if (y == n_bins_1d_) y = n_bins_1d_-1;
+    if (x == n_bins_1d_) x = n_bins_1d_-1;
+    if (y<0 || x<0 || y>n_bins_1d_-1 || x>n_bins_1d_-1) {
+      std::cout << cn[i] << " " << po[i] << "\n";
+      error_exit("Out of range in RunPolarOrderAnalysis");
+    }
+    polar_order_histogram_[n_bins_1d_ * y + x]++;
   }
 }
 
@@ -404,6 +419,21 @@ void FilamentSpecies::FinalizeAnalysis() {
 }
 
 void FilamentSpecies::FinalizeGlobalOrderAnalysis() {
+}
+
+void FilamentSpecies::FinalizePolarOrderAnalysis() {
+  /* In order to avoid overcounting cases where there were no local interactors to
+   * count for local polar order, I am going to smooth the bin representing (0,0)
+   * in the histogram, by averaging vertically along the y-axis */
+  int avg_bin = (int) floor(0.5*(polar_order_histogram_[(n_bins_1d_/2-1)*n_bins_1d_]
+        + polar_order_histogram_[(n_bins_1d_/2+1)*n_bins_1d_]));
+  polar_order_histogram_[(n_bins_1d_/2)*n_bins_1d_] = avg_bin;
+  for (int i=0;i<n_bins_1d_; ++i) {
+    for (int j=0;j<n_bins_1d_;++j) {
+      polar_order_file_ << polar_order_histogram_[(n_bins_1d_-1-i)*n_bins_1d_+j] << " ";
+    }
+    polar_order_file_ << "\n";
+  }
 }
 
 //void FilamentSpecies::FinalizeLocalOrderAnalysis() {

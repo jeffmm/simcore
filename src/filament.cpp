@@ -38,7 +38,7 @@ void Filament::SetParameters() {
   friction_ratio_ = params_->filament.friction_ratio;
   metric_forces_ = params_->filament.metric_forces;
   stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
-  eq_steps_ = params_->n_steps_equil;
+  eq_steps_ = params_->filament.n_equil;
   eq_steps_count_ = 0;
   fic_factor_ = params_->filament.fic_factor;
   tip_force_ = 0.0;

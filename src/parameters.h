@@ -54,6 +54,7 @@ class filament_parameters : public species_parameters {
     double perlen_ratio = -1;
     int n_bonds = -1;
     int driving_method = 0;
+    int n_equil = 0;
 };
 
 class passive_filament_parameters : public species_parameters {
@@ -224,6 +225,9 @@ class system_parameters {
     int local_order_analysis = 0;
     int local_order_n_analysis = 100;
     int polar_order_analysis = 0;
+    int polar_order_n_bins = 100;
+    double polar_order_contact_cutoff = 3;
+    int overlap_analysis = 0;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;
