@@ -1,7 +1,7 @@
 #include "struct_analysis.h"
 
 // Assumes structure for now. In the future, could do 2d projections of 3d data
-void StructAnalysis::Init(system_parameters * params) {
+void StructAnalysis::Init(system_parameters * params, int * i_step) {
   count_ = 0;
   n_objs_ = 0;
   n_overlaps_ = 0;
@@ -10,6 +10,7 @@ void StructAnalysis::Init(system_parameters * params) {
   local_order_analysis_ = params_->local_order_analysis;
   polar_order_analysis_ = params_->polar_order_analysis;
   overlap_analysis_ = params_->overlap_analysis;
+  i_step_ = i_step;
   if (n_dim_ != 2) {
     error_exit("3D structure analysis is not yet implemented");
   }
@@ -29,7 +30,7 @@ void StructAnalysis::Init(system_parameters * params) {
     if (6.0*n_bins_*4.0/1e9 > 1) {
       warning("Local structure content to exceed %2.2f GB of RAM!",6.0*n_bins_*4.0/1e9);
     }
-    /* Initialize arrays */
+    /* initialize arrays */
     pdf_array_ = new float[n_bins_];
     nematic_array_ = new float[n_bins_];
     polar_array_ = new float[n_bins_];
@@ -42,6 +43,11 @@ void StructAnalysis::Init(system_parameters * params) {
     std::fill(pdf_array_temp_,pdf_array_temp_+n_bins_,0.0);
     std::fill(nematic_array_temp_,nematic_array_temp_+n_bins_,0.0);
     std::fill(polar_array_temp_,polar_array_temp_+n_bins_,0.0);
+  }
+  if (overlap_analysis_) {
+    std::string overlap_file_name = params_->run_name + ".overlaps";
+    overlap_file_.open(overlap_file_name, std::ios::out);
+    overlap_file_ << "time n_overlaps\n";
   }
 }
 
@@ -57,10 +63,16 @@ void StructAnalysis::SetNumObjs(int nobj) {
 }
 
 void StructAnalysis::Clear() {
-  WriteStructData();
-  delete[] pdf_array_;
-  delete[] nematic_array_;
-  delete[] polar_array_;
+  if (local_order_analysis_) {
+    WriteStructData();
+    delete[] pdf_array_;
+    delete[] nematic_array_;
+    delete[] polar_array_;
+  }
+  if (overlap_file_.is_open()) {
+    overlap_file_.close();
+  }
+
   //if (n_objs_ > 0) {
     //delete[] polar_order_;
     //delete[] contact_number_;
@@ -352,7 +364,9 @@ void StructAnalysis::AverageStructure() {
     }
   }
   if (overlap_analysis_) {
-    std::cout << n_overlaps_ << "\n";
+    if (n_overlaps_ > 0) {
+      overlap_file_ << ((*i_step_)*params_->delta) << " " << n_overlaps_ << "\n";
+    }
     n_overlaps_ = 0;
   }
 }
@@ -365,25 +379,13 @@ void StructAnalysis::AverageStructure() {
 void StructAnalysis::CountOverlap(std::vector<pair_interaction>::iterator pix) {
   auto obj1 = pix->first.first;
   auto obj2 = pix->first.second;
-  double const * const r1 = obj1->GetInteractorPosition();
-  double const * const r2 = obj2->GetInteractorPosition();
-  double const * const u1 = obj1->GetInteractorOrientation();
-  double const * const u2 = obj2->GetInteractorOrientation();
-  double const l1 = obj1->GetInteractorLength();
-  double const l2 = obj2->GetInteractorLength();
-  double dr_head[3], dr_tail[3];
-  std::fill(dr_head,dr_head+3,0.0);
-  std::fill(dr_tail,dr_tail+3,0.0);
-  for (int i=0;i<n_dim_;++i) {
-    dr_head[i] = -(r1[i] + 0.5*l1*u1[i]) + (r2[i] + 0.5*l2*u2[i]);
-    dr_tail[i] = -(r1[i] - 0.5*l1*u1[i]) + (r2[i] - 0.5*l2*u2[i]);
+  if (obj1->GetMeshID() == obj2->GetMeshID()) {
+    return;
   }
-  if (SIGNOF(u1[0]*dr_head[1] - u1[1]*dr_head[0]) != SIGNOF(u1[0]*dr_tail[1] - u1[1]*dr_tail[0])) {
+  if (ABS(pix->second.dr_mag2) < 1e-8) {
+    obj1->HasOverlap(true);
+    obj2->HasOverlap(true);
     n_overlaps_++;
   }
-
-  //if (dot_product(n_dim_, dr_head, dr_tail) < 0) {
-    //n_overlaps_++;
-  //}
 }
 
