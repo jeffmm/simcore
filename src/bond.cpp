@@ -109,6 +109,14 @@ bool Bond::HasNeighbor(int other_oid) {
   return (sites_[0]->HasNeighbor(other_oid) || sites_[1]->HasNeighbor(other_oid));
 }
 
+double const Bond::GetOrientationCorrelation() {
+  return dot_product(n_dim_,orientation_,orientation_0_);
+}
+
+void Bond::ZeroOrientationCorrelation() {
+  std::copy(orientation_,orientation_+3,orientation_0_);
+}
+
 //void Bond::UpdatePosition() {
   //ZeroForce();
   //Integrate();

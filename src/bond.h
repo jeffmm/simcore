@@ -11,7 +11,8 @@ class Bond : public Object {
     double dr_[3],
            equil_length_,
            k_spring_,
-           body_frame_[6];
+           body_frame_[6],
+           orientation_0_[3];
   public:
     Bond();
     void Init(Site * s1, Site * s2);
@@ -21,6 +22,8 @@ class Bond : public Object {
     void Draw(std::vector<graph_struct*> * graph_array);
     int const GetBondNumber();
     void SetBondNumber(int bnum);
+    void ZeroOrientationCorrelation();
+    double const GetOrientationCorrelation();
     //void GetBodyFrame();
     //void UpdateOrientation();
     //void AddRandomDisplacement();
