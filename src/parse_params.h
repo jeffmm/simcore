@@ -1016,6 +1016,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("overlap_analysis")==0) {
         params->overlap_analysis = it->second.as<int>();
       }
+      else if (param_name.compare("highlight_overlaps")==0) {
+        params->highlight_overlaps = it->second.as<int>();
+      }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";
       }

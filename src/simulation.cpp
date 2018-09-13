@@ -97,7 +97,7 @@ void Simulation::InitSimulation() {
   space_.Init(&params_);
   InitObjects();
   InitSpecies();
-  iengine_.Init(&params_, &species_, space_.GetStruct());
+  iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_);
   InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
   InitOutputs();
   if (params_.graph_flag) {
@@ -394,7 +394,7 @@ void Simulation::InitProcessing(run_options run_opts) {
   InitSpecies();
   InsertSpecies(true, true);
   if (run_opts.analysis_flag) {
-    iengine_.Init(&params_, &species_, space_.GetStruct(), true);
+    iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_, true);
   }
   if (run_opts.reduce_flag) {
     InitInputs(run_opts.use_posits,run_opts.reduce_factor);

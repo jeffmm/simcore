@@ -29,7 +29,8 @@ class InteractionEngine {
         n_update_,
         n_objs_,
         n_thermo_,
-        static_pnumber_;
+        static_pnumber_,
+        *i_step_;
     system_parameters *params_;
     space_struct *space_;
     std::vector<SpeciesBase*> *species_;
@@ -63,6 +64,7 @@ class InteractionEngine {
     void Init(system_parameters *params, 
               std::vector<SpeciesBase*> *species, 
               space_struct *space,
+              int *i_step,
               bool processing=false);
     void Interact();
     void CalculatePressure();

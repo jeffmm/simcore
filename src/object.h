@@ -38,7 +38,8 @@ class Object {
            polar_order_,
            contact_number_;
     bool interacting_,
-         is_mesh_;
+         is_mesh_,
+         has_overlap_;
     std::vector<Object*> interactors_;
     std::vector<Interaction*> ixs_;
   public:
@@ -90,6 +91,7 @@ class Object {
     double const GetContactNumber();
     bool const IsInteractor();
     bool const IsMesh();
+    void HasOverlap(bool overlap);
     void SetMeshID(int mid);
 
     // Virtual functions
