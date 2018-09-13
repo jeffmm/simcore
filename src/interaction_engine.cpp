@@ -429,6 +429,14 @@ void InteractionEngine::CalculateStructure() {
 #endif
   struct_analysis_.AverageStructure();
   if (params_->polar_order_analysis) {
+    for (auto pix=pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
+      auto obj1 = pix->first.first;
+      auto obj2 = pix->first.second;
+      obj1->AddPolarOrder(pix->second.polar_order);
+      obj2->AddPolarOrder(pix->second.polar_order);
+      obj1->AddContactNumber(pix->second.contact_number);
+      obj2->AddContactNumber(pix->second.contact_number);
+    }
     for (auto it=interactors_.begin(); it!=interactors_.end(); ++it) {
       (*it)->CalcPolarOrder();
     }
