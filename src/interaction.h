@@ -23,7 +23,9 @@ class Interaction {
            buffer_mag2 = 0, // " " " " squared
            dr_mag2 = -1, // magnitude of dr vector squared
            stress[9] = {0}, // stress tensor for calculating pressure
-           pote = 0; // potential energy
+           pote = 0, // potential energy
+           polar_order = 0, // local polar order contribution
+           contact_number = 0; // contact number contribution
 };
 
 typedef std::pair<Object*,Object*> interactor_pair;

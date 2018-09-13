@@ -115,6 +115,9 @@ void Object::CalcPolarOrder() {
   else {
     polar_order_ = 0;
   }
+  //if (polar_order_ < -1 || polar_order_ > 1) {
+    //std::cout << "error 2: " << polar_order_ << " " << contact_number_ << "\n";
+  //}
 }
 void Object::ZeroPolarOrder() {
   contact_number_ = 0;

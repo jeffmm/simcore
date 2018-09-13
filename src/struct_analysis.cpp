@@ -155,10 +155,15 @@ void StructAnalysis::CalculatePolarOrderPair(std::vector<pair_interaction>::iter
   double const * const u1 = obj1->GetInteractorOrientation();
   double const * const u2 = obj2->GetInteractorOrientation();
   double u1_dot_u2 = dot_product(n_dim_,u1,u2);
-  obj1->AddPolarOrder(u1_dot_u2*expdr2);
-  obj2->AddPolarOrder(u1_dot_u2*expdr2);
-  obj1->AddContactNumber(expdr2);
-  obj2->AddContactNumber(expdr2);
+  //if (u1_dot_u2 > 1 || u1_dot_u2 < -1) {
+    //std::cout << "error 1: " << u1_dot_u2 << "\n";
+  //}
+  pix->second.polar_order = u1_dot_u2*expdr2;
+  pix->second.contact_number = expdr2;
+  //obj1->AddPolarOrder(u1_dot_u2*expdr2);
+  //obj2->AddPolarOrder(u1_dot_u2*expdr2);
+  //obj1->AddContactNumber(expdr2);
+  //obj2->AddContactNumber(expdr2);
 }
 
 void StructAnalysis::CalculateLocalOrderPair(std::vector<pair_interaction>::iterator pix) {

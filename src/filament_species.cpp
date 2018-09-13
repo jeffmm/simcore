@@ -76,6 +76,8 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
     int y = (int) (floor((po[i]+1)/polar_bin_width_));
     if (y == n_bins_1d_) y = n_bins_1d_-1;
     if (x == n_bins_1d_) x = n_bins_1d_-1;
+    if (y == -1) y = 0;
+    if (x == -1) x = 0;
     if (y<0 || x<0 || y>n_bins_1d_-1 || x>n_bins_1d_-1) {
       std::cout << cn[i] << " " << po[i] << "\n";
       error_exit("Out of range in RunPolarOrderAnalysis");
@@ -83,6 +85,14 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
     polar_order_histogram_[n_bins_1d_ * y + x]++;
   }
 }
+
+//void FilamentSpecies::InitOrientationCorrelationAnalysis() {
+  //std::string fname = params_->run_name;
+  //fname.append("_filament.orientation_corr");
+  //orientation_corr_file_.open(fname, std::ios::out);
+  //orientation_corr_file_ << "orientation_corr_analysis_file\n";
+  //orientation_corr_file_ << "time orientation_corr_avg orientation_corr_var\n";
+//}
 
 //void FilamentSpecies::InitLocalOrderAnalysis() {
   //std::string fname = params_->run_name;
