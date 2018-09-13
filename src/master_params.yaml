@@ -64,6 +64,7 @@ polar_order_analysis: [0, int]
 polar_order_n_bins: [100, int]
 polar_order_contact_cutoff: [3, double]
 overlap_analysis: [0, int]
+highlight_overlaps: [0, int]
 species:
   num: [0, int]
   insertion_type: [random, string]

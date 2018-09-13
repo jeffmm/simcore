@@ -97,7 +97,12 @@ void Bond::Draw(std::vector<graph_struct*> * graph_array) {
   }
   g_.length = length_;
   g_.draw = draw_;
+  if (has_overlap_ && params_->highlight_overlaps) {
+    g_.draw = draw_type::bw;
+    g_.diameter = 2*diameter_;
+  }
   graph_array->push_back(&g_);
+  HasOverlap(false);
 }
 
 bool Bond::HasNeighbor(int other_oid) {

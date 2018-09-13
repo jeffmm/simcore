@@ -228,6 +228,7 @@ class system_parameters {
     int polar_order_n_bins = 100;
     double polar_order_contact_cutoff = 3;
     int overlap_analysis = 0;
+    int highlight_overlaps = 0;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;

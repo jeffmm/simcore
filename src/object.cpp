@@ -27,6 +27,7 @@ Object::Object() {
   polar_order_ = 0;
   contact_number_ = 0;
   n_contact_ = 0;
+  has_overlap_ = false;
 }
 
 int Object::next_oid_ = 0;
@@ -160,6 +161,9 @@ bool const Object::IsInteractor() {
 }
 bool const Object::IsMesh() {
   return is_mesh_;
+}
+void Object::HasOverlap(bool overlap) {
+  has_overlap_=overlap;
 }
 int const Object::GetMeshID() const {
   return mesh_id_;

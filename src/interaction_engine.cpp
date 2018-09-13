@@ -3,7 +3,7 @@
 
 void InteractionEngine::Init(system_parameters *params, 
               std::vector<SpeciesBase*> *species, 
-              space_struct *space, bool processing) {
+              space_struct *space, int *i_step, bool processing) {
   // Set up pointer structures
   params_ = params;
   species_ = species;
@@ -12,6 +12,7 @@ void InteractionEngine::Init(system_parameters *params,
 
   // Initialize owned structures
   no_init_ = false;
+  i_step_ = i_step;
   static_pnumber_ = params_->static_particle_number;
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
@@ -31,7 +32,7 @@ void InteractionEngine::Init(system_parameters *params,
   mindist_.Init(space, 2.0*dr_update_);
   potentials_.InitPotentials(params_);
   if (local_order && processing) {
-    struct_analysis_.Init(params);
+    struct_analysis_.Init(params, i_step);
   }
 }
 
@@ -437,7 +438,7 @@ void InteractionEngine::CalculateStructure() {
 void InteractionEngine::Clear() {
   if (no_init_) return;
   ptracker_.Clear();
-  if (processing_ && params_->local_order_analysis) {
+  if (processing_) {
     struct_analysis_.Clear();
   }
 }
