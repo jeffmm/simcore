@@ -182,7 +182,8 @@ class FilamentSpecies : public Species<Filament> {
                  mse2e_file_,
                  global_order_file_,
                  local_order_file_,
-                 polar_order_file_;
+                 polar_order_file_,
+                 orientation_corr_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(species_id::filament);
@@ -236,6 +237,10 @@ class FilamentSpecies : public Species<Filament> {
     void RunLocalOrderAnalysis();
     void WriteLocalOrderData();
     void FinalizeLocalOrderAnalysis();
+
+    void InitOrientationCorrelationAnalysis();
+    void RunOrientationCorrelationAnalysis();
+    void FinalizeOrientationCorrelationAnalysis();
 
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
