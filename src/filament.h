@@ -176,7 +176,8 @@ class FilamentSpecies : public Species<Filament> {
     int time_,
         n_bins_,
         n_bins_1d_,
-        n_samples_;
+        n_samples_,
+        orientation_corr_n_steps_;
     std::fstream spiral_file_,
                  theta_file_,
                  mse2e_file_,

@@ -418,24 +418,25 @@ void Simulation::InitProcessing(run_options run_opts) {
   else {
     params_.graph_flag = 0;
   }
-  if (run_opts.analysis_flag) {
-    for (auto it=species_.begin(); it!=species_.end(); ++it) {
-      (*it)->InitAnalysis();
-    }
-  }
+  //if (run_opts.analysis_flag) {
+    //for (auto it=species_.begin(); it!=species_.end(); ++it) {
+      //(*it)->InitAnalysis();
+    //}
+  //}
 }
 
 void Simulation::RunProcessing(int run_analyses) {
   std::cout << "Processing outputs for: " << run_name_ << std::endl;
   bool local_order = (params_.local_order_analysis || params_.polar_order_analysis || params_.overlap_analysis);
-  for (i_step_ = 1; i_step_<params_.n_steps; ++i_step_) {
+  // Only step to n_steps-1 since we already read in one input at initialization
+  for (i_step_ = 0; i_step_<params_.n_steps-1; ++i_step_) { 
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
     output_mgr_.ReadInputs(); 
     if (early_exit) {
       early_exit = false;
       std::cout << "  Early exit triggered. Ending simulation.\n";
-      if (run_analyses) {
+      if (run_analyses && i_step_ > params_.n_steps_equil) {
         for (auto it=species_.begin(); it!=species_.end(); ++it) {
           (*it)->FinalizeAnalysis();
         }
@@ -444,6 +445,16 @@ void Simulation::RunProcessing(int run_analyses) {
     }
     Draw();
     if (i_step_ < params_.n_steps_equil) continue;
+    else if (i_step_ == params_.n_steps_equil && run_analyses) {
+      // InitAnalysis initalizes and runs the first batch of analyses
+      for (auto it=species_.begin(); it!=species_.end(); ++it) {
+        (*it)->InitAnalysis();
+      }
+      if (local_order && i_step_%params_.local_order_n_analysis==0) {
+        iengine_.StructureAnalysis();
+      }
+      continue;
+    }
     if (run_analyses) {
       bool struct_update = false;
       for (auto it=species_.begin(); it!=species_.end(); ++it) {
