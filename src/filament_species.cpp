@@ -90,12 +90,29 @@ void FilamentSpecies::InitOrientationCorrelationAnalysis() {
   std::string fname = params_->run_name;
   fname.append("_filament.orientation_corr");
   orientation_corr_file_.open(fname, std::ios::out);
-  orientation_corr_file_ << "orientation_corr_analysis_file\n";
-  orientation_corr_file_ << "time orientation_corr_avg orientation_corr_var\n";
+  orientation_corr_n_steps_ = params_->filament.orientation_corr_n_steps;
+  orientation_corr_file_ << "orientation_corr_analysis_file, n_filaments = " << n_members_ << ", n_bonds = " << members_[0].GetNBonds() << ", n_avg_steps = " << orientation_corr_n_steps_ << "\n";
+  orientation_corr_file_ << "time orientation_corr_avg orientation_corr_sem\n";
 }
 
 void FilamentSpecies::RunOrientationCorrelationAnalysis() {
-  if (i_step_ > orientation_corr_n_steps
+  if (time_%orientation_corr_n_steps_ == 0) {
+    for (auto it=members_.begin(); it!=members_.end(); ++it) {
+      it->ZeroOrientationCorrelations();
+    }
+    orientation_corr_file_ << "0 1 0\n";
+    return;
+  }
+  double avg = 0;
+  double sem = 0;
+  for (auto it=members_.begin(); it!= members_.end(); ++it) {
+    std::pair<double, double> avg_var = it->GetAvgOrientationCorrelation();
+    avg += avg_var.first;
+    sem += avg_var.second;
+  }
+  avg/=n_members_;
+  sem = sqrt(sem/(n_members_*members_[0].GetNBonds()));
+  orientation_corr_file_ << time_%orientation_corr_n_steps_ << " " << avg << " " << sem << "\n";
 }
 
 void FilamentSpecies::FinalizeOrientationCorrelationAnalysis() {

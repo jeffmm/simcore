@@ -446,7 +446,8 @@ void InteractionEngine::CalculateStructure() {
 void InteractionEngine::Clear() {
   if (no_init_) return;
   ptracker_.Clear();
-  if (processing_) {
+  bool local_order = (params_->local_order_analysis || params_->polar_order_analysis || params_->overlap_analysis);
+  if (local_order && processing_) {
     struct_analysis_.Clear();
   }
 }

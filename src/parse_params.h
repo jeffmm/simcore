@@ -164,6 +164,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("n_equil")==0) {
             params->filament.n_equil = jt->second.as<int>();
           }
+          else if (param_name.compare("orientation_corr_analysis")==0) {
+            params->filament.orientation_corr_analysis = jt->second.as<int>();
+          }
+          else if (param_name.compare("orientation_corr_n_steps")==0) {
+            params->filament.orientation_corr_n_steps = jt->second.as<int>();
+          }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
           }
