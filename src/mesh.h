@@ -69,7 +69,7 @@ class Mesh : public Object {
     virtual void SetAvgPosition();
     virtual void GetContactNumbers(std::vector<double> * cn);
     virtual void GetPolarOrders(std::vector<double> * po);
-    //std::pair<double,double> Mesh::GetAvgOrientationCorrelation();
+    std::pair<double,double> GetAvgOrientationCorrelation();
 };
 
 #endif // _SIMCORE_MESH_H_
