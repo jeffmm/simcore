@@ -524,16 +524,17 @@ void Mesh::GetPolarOrders(std::vector<double> * po) {
   }
 }
 
-//std::pair<double,double> Mesh::GetAvgOrientationCorrelation() {
-  //std::pair<double,double> corr_err;
-  //corr_err.first = 0;
-  //corr_err.second = 0;
-  //for (auto it=bonds_.begin(); it!= bonds_.end(); ++it) {
-    //double corr = it->GetOrientationCorrelation();
-    //corr_err.first += corr;
-    //corr_err.second += corr*corr;
-  //}
-  //corr_err.first /= n_bonds_;
-  //corr_err.second /= n_bonds_;
-  //corr_err.second = corr_err.second - SQR(corr_err.first);
-//}
+std::pair<double,double> Mesh::GetAvgOrientationCorrelation() {
+  std::pair<double,double> corr_err;
+  corr_err.first = 0;
+  corr_err.second = 0;
+  for (auto it=bonds_.begin(); it!= bonds_.end(); ++it) {
+    double corr = it->GetOrientationCorrelation();
+    corr_err.first += corr;
+    corr_err.second += corr*corr;
+  }
+  corr_err.first /= n_bonds_;
+  corr_err.second /= n_bonds_;
+  corr_err.second = corr_err.second - SQR(corr_err.first);
+  return corr_err;
+}

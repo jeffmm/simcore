@@ -20,9 +20,9 @@ void FilamentSpecies::InitAnalysis() {
   if (params_->polar_order_analysis) {
     InitPolarOrderAnalysis();
   }
-  //if (params_->filament.local_order_analysis) {
-    //InitLocalOrderAnalysis();
-  //}
+  if (params_->filament.orientation_corr_analysis) {
+    InitOrientationCorrelationAnalysis();
+  }
   RunAnalysis();
 }
 
@@ -86,41 +86,21 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
   }
 }
 
-//void FilamentSpecies::InitOrientationCorrelationAnalysis() {
-  //std::string fname = params_->run_name;
-  //fname.append("_filament.orientation_corr");
-  //orientation_corr_file_.open(fname, std::ios::out);
-  //orientation_corr_file_ << "orientation_corr_analysis_file\n";
-  //orientation_corr_file_ << "time orientation_corr_avg orientation_corr_var\n";
-//}
+void FilamentSpecies::InitOrientationCorrelationAnalysis() {
+  std::string fname = params_->run_name;
+  fname.append("_filament.orientation_corr");
+  orientation_corr_file_.open(fname, std::ios::out);
+  orientation_corr_file_ << "orientation_corr_analysis_file\n";
+  orientation_corr_file_ << "time orientation_corr_avg orientation_corr_var\n";
+}
 
-//void FilamentSpecies::InitLocalOrderAnalysis() {
-  //std::string fname = params_->run_name;
-  //// Each bin represents a distance params_->local_structure_bin_width in units of sigma
-  //if (params_->local_structure_bins_1d > 0) {
-    //n_bins_1d_ = params_->local_structure_bins_1d;
-  //}
-  //else {
-    //// Default to a density that encompasses 3L*3L
-    //n_bins_1d_ = (int) (3*params_->filament.length/params_->local_structure_bin_width);
-  //}
-  //n_bins_ = n_bins_1d_*n_bins_1d_;
-  //// Warn if the amount of data is super large...
-  //if (3*n_bins_*4.0/1000000000 > 1) {
-    //warning("Local structure content to exceed %2.2f GB of RAM!",3*n_bins_*4.0/1000000000);
-  //}
-  //fname.append("_filament.local_order");
-  //local_order_file_.open(fname, std::ios::out);
-  //local_order_file_ << "local_order_analysis_file\n";
-  //local_order_file_ << "time num pdf polar_orient_corr nematic_orient_corr\n";
-  //pdf_histogram_ = new float*[n_bins_1d_];
-  //for (int i=0; i<n_bins_1d_; ++i) {
-    //pdf_histogram_[i] = new float[n_bins_1d_];
-    //for (int j=0;j<n_bins_1d_; ++j) {
-      //pdf_histogram_[i][j] = 0.0;
-    //}
-  //}
-//}
+void FilamentSpecies::RunOrientationCorrelationAnalysis() {
+  if (i_step_ > orientation_corr_n_steps
+}
+
+void FilamentSpecies::FinalizeOrientationCorrelationAnalysis() {
+
+}
 
 void FilamentSpecies::InitMse2eAnalysis() {
   std::string fname = params_->run_name;
@@ -220,9 +200,9 @@ void FilamentSpecies::RunAnalysis() {
   if (params_->polar_order_analysis) {
     RunPolarOrderAnalysis();
   }
-  //if (params_->filament.local_order_analysis) {
-    //RunLocalOrderAnalysis();
-  //}
+  if (params_->filament.orientation_corr_analysis) {
+    RunOrientationCorrelationAnalysis();
+  }
   time_++;
 }
 
@@ -382,7 +362,6 @@ void FilamentSpecies::RunMse2eAnalysis() {
   n_samples_++;
 }
 
-
 void FilamentSpecies::RunThetaAnalysis() {
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
     std::vector<double> const * const thetas = it->GetThetas();
@@ -422,10 +401,10 @@ void FilamentSpecies::FinalizeAnalysis() {
     FinalizePolarOrderAnalysis();
     polar_order_file_.close();
   }
-  //if (local_order_file_.is_open()) {
-    //FinalizeLocalOrderAnalysis();
-    //local_order_file_.close();
-  //}
+  if (orientation_corr_file_.is_open()) {
+    FinalizeOrientationCorrelationAnalysis();
+    orientation_corr_file_.close();
+  }
 }
 
 void FilamentSpecies::FinalizeGlobalOrderAnalysis() {
