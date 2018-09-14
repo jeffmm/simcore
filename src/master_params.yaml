@@ -113,6 +113,8 @@ filament:
   n_bonds: [-1, int]
   driving_method: [0, int]
   n_equil: [0, int]
+  orientation_corr_analysis: [0, int]
+  orientation_corr_n_steps: [1000,int]
 passive_filament:
   diameter: [1, double]
   length: [-1, double]

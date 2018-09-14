@@ -538,3 +538,9 @@ std::pair<double,double> Mesh::GetAvgOrientationCorrelation() {
   corr_err.second = corr_err.second - SQR(corr_err.first);
   return corr_err;
 }
+
+void Mesh::ZeroOrientationCorrelations() {
+  for (auto it=bonds_.begin(); it!=bonds_.end(); ++it) {
+    it->ZeroOrientationCorrelation();
+  }
+}

@@ -27,6 +27,8 @@ obj
 /*_params.yaml
 *.log
 *.time
+*.overlaps
+*.orientation_corr
 sc-*
 results
 octave-workspace
