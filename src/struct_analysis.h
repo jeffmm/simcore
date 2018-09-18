@@ -4,11 +4,13 @@
 #include "auxiliary.h"
 #include "interaction.h"
 #include "object.h"
+#include "neighbor_list.h"
+
 
 class StructAnalysis {
   private:
     system_parameters * params_;
-        int count_,
+    int count_,
         n_dim_,
         n_bins_,
         n_bins_1d_,
@@ -18,7 +20,10 @@ class StructAnalysis {
         polar_order_analysis_,
         overlap_analysis_,
         n_overlaps_,
+        n_crossings_init_,
+        n_crossings_complete_,
         * i_step_;
+    NeighborList crossing_list_;
     double bin_width_;
     float * pdf_array_,
           * nematic_array_,
@@ -39,6 +44,7 @@ class StructAnalysis {
     void CalculateLocalOrderPair(std::vector<pair_interaction>::iterator pix);
     void CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix);
     void CountOverlap(std::vector<pair_interaction>::iterator pix);
+    void CountOverlapEvents(int mid1, int mid2, bool is_overlapping);
 
   public:
     void Init(system_parameters *params, int *i_step);
