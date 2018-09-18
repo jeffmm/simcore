@@ -5,6 +5,8 @@ void StructAnalysis::Init(system_parameters * params, int * i_step) {
   count_ = 0;
   n_objs_ = 0;
   n_overlaps_ = 0;
+  n_crossings_init_ = 0;
+  n_crossings_complete_ = 0;
   params_ = params;
   n_dim_ = params_->n_dim;
   local_order_analysis_ = params_->local_order_analysis;
@@ -47,7 +49,7 @@ void StructAnalysis::Init(system_parameters * params, int * i_step) {
   if (overlap_analysis_) {
     std::string overlap_file_name = params_->run_name + ".overlaps";
     overlap_file_.open(overlap_file_name, std::ios::out);
-    overlap_file_ << "time n_overlaps\n";
+    overlap_file_ << "time n_instant_bond_overlaps n_total_crossings_init n_total_crossings_complete\n";
   }
 }
 
@@ -370,7 +372,7 @@ void StructAnalysis::AverageStructure() {
   }
   if (overlap_analysis_) {
     if (n_overlaps_ > 0) {
-      overlap_file_ << ((*i_step_)*params_->delta) << " " << n_overlaps_ << "\n";
+      overlap_file_ << ((*i_step_)*params_->delta) << " " << n_overlaps_ << " " << n_crossings_init_ << " " << n_crossings_complete_ << "\n";
     }
     n_overlaps_ = 0;
   }
@@ -391,6 +393,37 @@ void StructAnalysis::CountOverlap(std::vector<pair_interaction>::iterator pix) {
     obj1->HasOverlap(true);
     obj2->HasOverlap(true);
     n_overlaps_++;
+    CountOverlapEvents(obj1->GetMeshID(), obj2->GetMeshID(), true);
+  }
+  else {
+    CountOverlapEvents(obj1->GetMeshID(), obj2->GetMeshID(), false);
+  }
+}
+
+void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping) {
+  // If pair was previously overlapping
+  if (crossing_list_.AreNeighbors(mid1, mid2)) {
+    // Still overlapping. No new information
+    if (is_overlapping) {
+      return;
+    }
+    // No longer overlapping. Crossing event has ended.
+    else {
+      crossing_list_.RemoveNeighbors(mid1,mid2);
+      n_crossings_complete_++;
+    }
+  }
+  // Pair not previously overlapping
+  else {
+    // Fresh crossing event. Count crossing event and track pair.
+    if (is_overlapping) {
+      crossing_list_.AddNeighbors(mid1,mid2);
+      n_crossings_init_++;
+    }
+    // Still not overlapping.
+    else {
+      return;
+    }
   }
 }
 
