@@ -1,10 +1,13 @@
 #ifndef _SIMCORE_NEIGHBOR_LIST_H_
 #define _SIMCORE_NEIGHBOR_LIST_H_
 
-#include <map>
 #include <unordered_set>
+#include <map>
+#include <vector>
+#include <algorithm>
 
 typedef std::unordered_set<int> registry;
+
 typedef std::map<int, registry> verlet_list;
 
 class NeighborList {
@@ -40,7 +43,5 @@ class NeighborList {
       table_[id2].erase(id1);
     }
 };
-
-
 
 #endif

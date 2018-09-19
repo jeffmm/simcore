@@ -392,7 +392,7 @@ void StructAnalysis::CountOverlap(std::vector<pair_interaction>::iterator pix) {
   if (ABS(pix->second.dr_mag2) < 1e-8) {
     obj1->HasOverlap(true);
     obj2->HasOverlap(true);
-    n_overlaps_++;
+    AddOverlap();
     CountOverlapEvents(obj1->GetMeshID(), obj2->GetMeshID(), true);
   }
   else {
@@ -410,7 +410,7 @@ void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping)
     // No longer overlapping. Crossing event has ended.
     else {
       crossing_list_.RemoveNeighbors(mid1,mid2);
-      n_crossings_complete_++;
+      AddCrossingComplete();
     }
   }
   // Pair not previously overlapping
@@ -418,7 +418,7 @@ void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping)
     // Fresh crossing event. Count crossing event and track pair.
     if (is_overlapping) {
       crossing_list_.AddNeighbors(mid1,mid2);
-      n_crossings_init_++;
+      AddCrossingInit();
     }
     // Still not overlapping.
     else {
@@ -427,3 +427,16 @@ void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping)
   }
 }
 
+void StructAnalysis::AddOverlap() {
+  std::lock_guard<std::mutex> lk(mtx_);
+  n_overlaps_++;
+}
+
+void StructAnalysis::AddCrossingComplete() {
+  std::lock_guard<std::mutex> lk(mtx_);
+  n_crossings_complete_++;
+}
+void StructAnalysis::AddCrossingInit() {
+  std::lock_guard<std::mutex> lk(mtx_);
+  n_crossings_init_++;
+}
