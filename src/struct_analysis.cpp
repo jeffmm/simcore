@@ -352,6 +352,7 @@ void StructAnalysis::BinArray(int x, int y, double dotprod) {
     return;
   }
   int index = n_bins_1d_*y+x;
+  std::lock_guard<std::mutex> lk(mtx_);
   pdf_array_temp_[index] += 1.0;
   nematic_array_temp_[index] += (2*dotprod*dotprod - 1);
   polar_array_temp_[index] += dotprod;
