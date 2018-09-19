@@ -4,6 +4,7 @@
 #include "auxiliary.h"
 #include "rng.h"
 #include "interaction.h"
+#include <mutex>
 
 class Object {
 
