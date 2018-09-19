@@ -103,9 +103,11 @@ void Object::AddPotential(double const p) {
   p_energy_ += p;
 }
 void Object::AddPolarOrder(double const po) {
+  //std::lock_guard<std::mutex> lk(mtx_);
   polar_order_ += po;
 }
 void Object::AddContactNumber(double const cn) {
+  //std::lock_guard<std::mutex> lk(mtx_);
   contact_number_ += cn;
 }
 void Object::CalcPolarOrder() {

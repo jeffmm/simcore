@@ -5,11 +5,12 @@
 #include "interaction.h"
 #include "object.h"
 #include "neighbor_list.h"
-
+#include <mutex>
 
 class StructAnalysis {
   private:
     system_parameters * params_;
+    std::mutex mtx_;
     int count_,
         n_dim_,
         n_bins_,
@@ -45,6 +46,9 @@ class StructAnalysis {
     void CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix);
     void CountOverlap(std::vector<pair_interaction>::iterator pix);
     void CountOverlapEvents(int mid1, int mid2, bool is_overlapping);
+    void AddCrossingComplete();
+    void AddCrossingInit();
+    void AddOverlap();
 
   public:
     void Init(system_parameters *params, int *i_step);
