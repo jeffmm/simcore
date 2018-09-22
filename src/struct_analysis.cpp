@@ -140,9 +140,6 @@ void StructAnalysis::CalculateStructurePair(std::vector<pair_interaction>::itera
   if (polar_order_analysis_) {
     CalculatePolarOrderPair(pix);
   }
-  if (overlap_analysis_) {
-    CountOverlap(pix);
-  }
 }
 
 void StructAnalysis::CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix) {
@@ -416,7 +413,7 @@ void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping)
   }
   // Pair not previously overlapping
   else {
-    // Fresh crossing event. Count crossing event and track pair.
+    // Fresh crossing event. Count crossing event and track pair
     if (is_overlapping) {
       crossing_list_.AddNeighbors(mid1,mid2);
       AddCrossingInit();
@@ -429,15 +426,15 @@ void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping)
 }
 
 void StructAnalysis::AddOverlap() {
-  std::lock_guard<std::mutex> lk(mtx_);
+  //std::lock_guard<std::mutex> lk(mtx_);
   n_overlaps_++;
 }
 
 void StructAnalysis::AddCrossingComplete() {
-  std::lock_guard<std::mutex> lk(mtx_);
+  //std::lock_guard<std::mutex> lk(mtx_);
   n_crossings_complete_++;
 }
 void StructAnalysis::AddCrossingInit() {
-  std::lock_guard<std::mutex> lk(mtx_);
+  //std::lock_guard<std::mutex> lk(mtx_);
   n_crossings_init_++;
 }

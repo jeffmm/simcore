@@ -20,10 +20,11 @@ class StructAnalysis {
         local_order_analysis_,
         polar_order_analysis_,
         overlap_analysis_,
+        * i_step_,
         n_overlaps_,
         n_crossings_init_,
-        n_crossings_complete_,
-        * i_step_;
+        n_crossings_complete_;
+
     NeighborList crossing_list_;
     double bin_width_;
     float * pdf_array_,
@@ -44,7 +45,6 @@ class StructAnalysis {
     void BinArray(int x, int y, double dotprod);
     void CalculateLocalOrderPair(std::vector<pair_interaction>::iterator pix);
     void CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix);
-    void CountOverlap(std::vector<pair_interaction>::iterator pix);
     void CountOverlapEvents(int mid1, int mid2, bool is_overlapping);
     void AddCrossingComplete();
     void AddCrossingInit();
@@ -58,6 +58,7 @@ class StructAnalysis {
     void SetNumObjs(int nobj);
     int GetNumObjs() {return n_objs_;}
     void IncrementCount() {count_++;}
+    void CountOverlap(std::vector<pair_interaction>::iterator pix);
 };
 
 #endif

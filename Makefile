@@ -1,5 +1,5 @@
 CC = gcc-6
-CXX = g++
+CXX = g++-6
 
 SRCDIR = src
 OBJDIR = obj
