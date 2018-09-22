@@ -406,7 +406,6 @@ void InteractionEngine::CalculateStructure() {
     chunks.push_back(std::make_pair(last_iter, cur_iter));
   }
   chunks.push_back(std::make_pair(cur_iter, pair_interactions_.end()));
-
 #pragma omp parallel shared(chunks)
   {
 #pragma omp for 
@@ -419,12 +418,18 @@ void InteractionEngine::CalculateStructure() {
       }
     }
   }
+  if (params_->overlap_analysis) {
+    for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
+      struct_analysis_.CountOverlap(pix);
+    }
+  }
 #else
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
     if (params_->polar_order_analysis || params_->overlap_analysis) {
       mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
     }
     struct_analysis_.CalculateStructurePair(pix);
+    struct_analysis_.CountOverlap(pix);
   }
 #endif
   struct_analysis_.AverageStructure();
