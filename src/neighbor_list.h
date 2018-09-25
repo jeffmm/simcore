@@ -8,29 +8,27 @@
 
 typedef std::unordered_set<int> registry;
 
-typedef std::map<int, std::vector<int> > verlet_list;
-typedef std::map<int, registry> verlet_set;
+typedef std::map<int, registry> verlet_list;
 
 class NeighborList {
   private:
     std::mutex mtx_;
     registry reg_; // list of object ids in our verlet list
     verlet_list table_;
-    verlet_set table_persistent_;
+    verlet_list table_persistent_;
     void Register(int id) {
       //std::lock_guard<std::mutex> lk(mtx_);
       reg_.insert(id);
-      std::vector<int> neighbors;
-      registry neighbors_persistent;
+      registry neighbors;
       table_[id] = neighbors;
-      table_persistent_[id] = neighbors_persistent;
+      table_persistent_[id] = neighbors;
     }
     // returns true if not previously registered (id does not exist in table)
     bool NotRegistered(int id) {
-      return !(reg_.count(id) >0 );
+      return !(reg_.count(id) > 0);
     }
     bool NotNeighbors(int id1, int id2) {
-      return (std::find(table_[id1].begin(), table_[id1].end(), id2) == table_[id1].end());
+      return !(table_[id1].count(id2) > 0);
     }
   public:
     //  Returns true if neighbors, false if not neighbors
@@ -42,24 +40,12 @@ class NeighborList {
     void AddNeighbors(int id1, int id2) {
       if (NotRegistered(id1)) Register(id1);
       if (NotRegistered(id2)) Register(id2);
-      table_[id1].push_back(id2);
-      table_[id2].push_back(id1);
+      table_[id1].insert(id2);
+      table_[id2].insert(id1);
     }
     void RemoveNeighbors(int id1, int id2) {
-      if (table_[id1].size() > 1) {
-        auto it = std::find(table_[id1].begin(), table_[id1].end(), id2);
-        std::swap(*it,*(table_[id1].end()-1));
-        table_[id1].pop_back();
-      } else {
-        table_[id1].clear();
-      }
-      if (table_[id2].size() > 1) {
-        auto jt = std::find(table_[id2].begin(), table_[id2].end(), id1);
-        std::swap(*jt,*(table_[id2].end()-1));
-        table_[id2].pop_back();
-      } else {
-        table_[id2].clear();
-      }
+      table_[id1].erase(id2);
+      table_[id1].erase(id2);
     }
     void CompareLists(int * inits, int * completes) {
       for (auto id=reg_.begin(); id!=reg_.end(); ++id) {
@@ -79,6 +65,7 @@ class NeighborList {
           table_persistent_[*id].insert(*it);
         }
         (*inits) += (table_persistent_[*id].size() - size);
+        table_[*id].clear();
       }
     }
 };
