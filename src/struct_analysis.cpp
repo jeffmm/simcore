@@ -369,9 +369,8 @@ void StructAnalysis::AverageStructure() {
     }
   }
   if (overlap_analysis_) {
-    if (n_overlaps_ > 0) {
-      overlap_file_ << ((*i_step_)*params_->delta) << " " << n_overlaps_ << " " << n_crossings_init_ << " " << n_crossings_complete_ << "\n";
-    }
+    crossing_list_.CompareLists(&n_crossings_init_, &n_crossings_complete_);
+    overlap_file_ << ((*i_step_)*params_->delta) << " " << n_overlaps_ << " " << 0.5*n_crossings_init_ << " " << 0.5*n_crossings_complete_ << "\n";
     n_overlaps_ = 0;
   }
 }
@@ -387,15 +386,14 @@ void StructAnalysis::CountOverlap(std::vector<pair_interaction>::iterator pix) {
   if (obj1->GetMeshID() == obj2->GetMeshID()) {
     return;
   }
+  bool has_overlap = false;
   if (ABS(pix->second.dr_mag2) < 1e-8) {
     obj1->HasOverlap(true);
     obj2->HasOverlap(true);
     AddOverlap();
-    CountOverlapEvents(obj1->GetMeshID(), obj2->GetMeshID(), true);
+    has_overlap = true;
   }
-  else {
-    CountOverlapEvents(obj1->GetMeshID(), obj2->GetMeshID(), false);
-  }
+  CountOverlapEvents(obj1->GetMeshID(), obj2->GetMeshID(), has_overlap);
 }
 
 void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping) {
@@ -408,7 +406,6 @@ void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping)
     // No longer overlapping. Crossing event has ended.
     else {
       crossing_list_.RemoveNeighbors(mid1,mid2);
-      AddCrossingComplete();
     }
   }
   // Pair not previously overlapping
@@ -416,7 +413,6 @@ void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping)
     // Fresh crossing event. Count crossing event and track pair
     if (is_overlapping) {
       crossing_list_.AddNeighbors(mid1,mid2);
-      AddCrossingInit();
     }
     // Still not overlapping.
     else {
@@ -429,7 +425,6 @@ void StructAnalysis::AddOverlap() {
   //std::lock_guard<std::mutex> lk(mtx_);
   n_overlaps_++;
 }
-
 void StructAnalysis::AddCrossingComplete() {
   //std::lock_guard<std::mutex> lk(mtx_);
   n_crossings_complete_++;
