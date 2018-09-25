@@ -386,40 +386,39 @@ void StructAnalysis::CountOverlap(std::vector<pair_interaction>::iterator pix) {
   if (obj1->GetMeshID() == obj2->GetMeshID()) {
     return;
   }
-  bool has_overlap = false;
   if (ABS(pix->second.dr_mag2) < 1e-8) {
     obj1->HasOverlap(true);
     obj2->HasOverlap(true);
     AddOverlap();
-    has_overlap = true;
+    //CountOverlapEvents(obj1->GetMeshID(), obj2->GetMeshID());
+    crossing_list_.AddNeighbors(obj1->GetMeshID(), obj2->GetMeshID());
   }
-  CountOverlapEvents(obj1->GetMeshID(), obj2->GetMeshID(), has_overlap);
 }
 
-void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping) {
-  // If pair was previously overlapping
-  if (crossing_list_.AreNeighbors(mid1, mid2)) {
-    // Still overlapping. No new information
-    if (is_overlapping) {
-      return;
-    }
-    // No longer overlapping. Crossing event has ended.
-    else {
-      crossing_list_.RemoveNeighbors(mid1,mid2);
-    }
-  }
-  // Pair not previously overlapping
-  else {
-    // Fresh crossing event. Count crossing event and track pair
-    if (is_overlapping) {
-      crossing_list_.AddNeighbors(mid1,mid2);
-    }
-    // Still not overlapping.
-    else {
-      return;
-    }
-  }
-}
+//void StructAnalysis::CountOverlapEvents(int mid1, int mid2, bool is_overlapping) {
+  //// If pair was previously overlapping
+  //if (crossing_list_.AreNeighbors(mid1, mid2)) {
+    //// Still overlapping. No new information
+    //if (is_overlapping) {
+      //return;
+    //}
+    //// No longer overlapping. Crossing event has ended.
+    //else {
+      //crossing_list_.RemoveNeighbors(mid1,mid2);
+    //}
+  //}
+  //// Pair not previously overlapping
+  //else {
+    //// Fresh crossing event. Count crossing event and track pair
+    //if (is_overlapping) {
+      //crossing_list_.AddNeighbors(mid1,mid2);
+    //}
+    //// Still not overlapping.
+    //else {
+      //return;
+    //}
+  //}
+//}
 
 void StructAnalysis::AddOverlap() {
   //std::lock_guard<std::mutex> lk(mtx_);

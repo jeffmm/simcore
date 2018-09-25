@@ -45,7 +45,7 @@ class StructAnalysis {
     void BinArray(int x, int y, double dotprod);
     void CalculateLocalOrderPair(std::vector<pair_interaction>::iterator pix);
     void CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix);
-    void CountOverlapEvents(int mid1, int mid2, bool is_overlapping);
+    //void CountOverlapEvents(int mid1, int mid2, bool is_overlapping);
     void AddCrossingComplete();
     void AddCrossingInit();
     void AddOverlap();
