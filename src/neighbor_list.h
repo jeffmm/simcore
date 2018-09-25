@@ -8,25 +8,29 @@
 
 typedef std::unordered_set<int> registry;
 
-typedef std::map<int, registry> verlet_list;
+typedef std::map<int, std::vector<int> > verlet_list;
+typedef std::map<int, registry> verlet_set;
 
 class NeighborList {
   private:
     std::mutex mtx_;
     registry reg_; // list of object ids in our verlet list
     verlet_list table_;
+    verlet_set table_persistent_;
     void Register(int id) {
       //std::lock_guard<std::mutex> lk(mtx_);
       reg_.insert(id);
-      registry neighbors;
+      std::vector<int> neighbors;
+      registry neighbors_persistent;
       table_[id] = neighbors;
+      table_persistent_[id] = neighbors_persistent;
     }
     // returns true if not previously registered (id does not exist in table)
     bool NotRegistered(int id) {
       return !(reg_.count(id) >0 );
     }
     bool NotNeighbors(int id1, int id2) {
-      return !(table_[id1].count(id2) > 0);
+      return (std::find(table_[id1].begin(), table_[id1].end(), id2) == table_[id1].end());
     }
   public:
     //  Returns true if neighbors, false if not neighbors
@@ -38,14 +42,44 @@ class NeighborList {
     void AddNeighbors(int id1, int id2) {
       if (NotRegistered(id1)) Register(id1);
       if (NotRegistered(id2)) Register(id2);
-      //std::lock_guard<std::mutex> lk(mtx_);
-      table_[id1].insert(id2);
-      table_[id2].insert(id1);
+      table_[id1].push_back(id2);
+      table_[id2].push_back(id1);
     }
     void RemoveNeighbors(int id1, int id2) {
-      //std::lock_guard<std::mutex> lk(mtx_);
-      table_[id1].erase(id2);
-      table_[id2].erase(id1);
+      if (table_[id1].size() > 1) {
+        auto it = std::find(table_[id1].begin(), table_[id1].end(), id2);
+        std::swap(*it,*(table_[id1].end()-1));
+        table_[id1].pop_back();
+      } else {
+        table_[id1].clear();
+      }
+      if (table_[id2].size() > 1) {
+        auto jt = std::find(table_[id2].begin(), table_[id2].end(), id1);
+        std::swap(*jt,*(table_[id2].end()-1));
+        table_[id2].pop_back();
+      } else {
+        table_[id2].clear();
+      }
+    }
+    void CompareLists(int * inits, int * completes) {
+      for (auto id=reg_.begin(); id!=reg_.end(); ++id) {
+        // First check for mesh ids that are no longer crossing
+        for(auto it=table_persistent_[*id].begin(); it!=table_persistent_[*id].end();) {
+          if (NotNeighbors(*id, *it)) {
+            (*completes)++;
+            it=table_persistent_[*id].erase(it);
+          }
+          else {
+            ++it;
+          }
+        }
+        // Now check for new crossings
+        int size = table_persistent_[*id].size();
+        for(auto it=table_[*id].begin(); it!=table_[*id].end(); ++it) {
+          table_persistent_[*id].insert(*it);
+        }
+        (*inits) += (table_persistent_[*id].size() - size);
+      }
     }
 };
 
