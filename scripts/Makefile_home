@@ -1,12 +1,12 @@
-CC = gcc
-CXX = g++
+CC = gcc-6
+CXX = g++-6
 
 SRCDIR = src
 OBJDIR = obj
 BINDIR = bin
 SRCEXT = cpp
 
-COMPILE_FLAGS = -std=c++11
+COMPILE_FLAGS = -std=c++11 
 RCOMPILE_FLAGS = -D NDEBUG -O2 -march=native
 DCOMPILE_FLAGS = -D DEBUG -O0 -g
 #LINK_FLAGS = -gnu 
@@ -56,7 +56,7 @@ CC=$(CXX)
 ifeq ($(CC),icpc)
 	COMPILE_FLAGS += -Wno-deprecated
 else
-	COMPILE_FLAGS += -Wno-deprecated-declarations -Wno-deprecated
+	COMPILE_FLAGS += -Wno-deprecated-declarations -Wno-deprecated -Wno-return-type -Wno-parentheses
 endif
 
 # Combine compiler and linker flags
