@@ -17,7 +17,7 @@ class NeighborList {
     verlet_list table_;
     verlet_list table_persistent_;
     void Register(int id) {
-      //std::lock_guard<std::mutex> lk(mtx_);
+      std::lock_guard<std::mutex> lk(mtx_);
       reg_.insert(id);
       registry neighbors;
       table_[id] = neighbors;
@@ -40,10 +40,12 @@ class NeighborList {
     void AddNeighbors(int id1, int id2) {
       if (NotRegistered(id1)) Register(id1);
       if (NotRegistered(id2)) Register(id2);
+      std::lock_guard<std::mutex> lk(mtx_);
       table_[id1].insert(id2);
       table_[id2].insert(id1);
     }
     void RemoveNeighbors(int id1, int id2) {
+      std::lock_guard<std::mutex> lk(mtx_);
       table_[id1].erase(id2);
       table_[id1].erase(id2);
     }
