@@ -394,43 +394,43 @@ void InteractionEngine::CalculateStructure() {
       (*it)->ZeroPolarOrder();
     }
   }
-//#ifdef ENABLE_OPENMP
-  //int max_threads = omp_get_max_threads();
-  //std::vector<std::pair<std::vector<pair_interaction>::iterator, std::vector<pair_interaction>::iterator> > chunks;
-  //chunks.reserve(max_threads); 
-  //size_t chunk_size= pair_interactions_.size() / max_threads;
-  //auto cur_iter = pair_interactions_.begin();
-  //for(int i = 0; i < max_threads - 1; ++i) {
-    //auto last_iter = cur_iter;
-    //std::advance(cur_iter, chunk_size);
-    //chunks.push_back(std::make_pair(last_iter, cur_iter));
-  //}
-  //chunks.push_back(std::make_pair(cur_iter, pair_interactions_.end()));
-//#pragma omp parallel shared(chunks)
-  //{
-//#pragma omp for 
-    //for(int i = 0; i < max_threads; ++i) {
-      //for(auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
-        //if (params_->polar_order_analysis || params_->overlap_analysis) {
-          //mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
-        //}
-        //struct_analysis_.CalculateStructurePair(pix);
-      //}
-    //}
-  //}
-//#else
+#ifdef ENABLE_OPENMP
+  int max_threads = omp_get_max_threads();
+  std::vector<std::pair<std::vector<pair_interaction>::iterator, std::vector<pair_interaction>::iterator> > chunks;
+  chunks.reserve(max_threads); 
+  size_t chunk_size= pair_interactions_.size() / max_threads;
+  auto cur_iter = pair_interactions_.begin();
+  for(int i = 0; i < max_threads - 1; ++i) {
+    auto last_iter = cur_iter;
+    std::advance(cur_iter, chunk_size);
+    chunks.push_back(std::make_pair(last_iter, cur_iter));
+  }
+  chunks.push_back(std::make_pair(cur_iter, pair_interactions_.end()));
+#pragma omp parallel shared(chunks)
+  {
+#pragma omp for 
+    for(int i = 0; i < max_threads; ++i) {
+      for(auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
+        if (params_->polar_order_analysis || params_->overlap_analysis) {
+          mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
+        }
+        struct_analysis_.CalculateStructurePair(pix);
+      }
+    }
+  }
+#else
   for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
     if (params_->polar_order_analysis || params_->overlap_analysis) {
       mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
     }
     struct_analysis_.CalculateStructurePair(pix);
   }
-//#endif
-  if (params_->overlap_analysis) {
-    for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
-      struct_analysis_.CountOverlap(pix);
-    }
-  }
+#endif
+  //if (params_->overlap_analysis) {
+    //for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
+      //struct_analysis_.CountOverlap(pix);
+    //}
+  //}
   struct_analysis_.AverageStructure();
   if (params_->polar_order_analysis) {
     for (auto pix=pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
