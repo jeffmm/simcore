@@ -140,6 +140,9 @@ void StructAnalysis::CalculateStructurePair(std::vector<pair_interaction>::itera
   if (polar_order_analysis_) {
     CalculatePolarOrderPair(pix);
   }
+  if (overlap_analysis_) {
+    CountOverlap(pix);
+  }
 }
 
 void StructAnalysis::CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix) {
@@ -421,7 +424,7 @@ void StructAnalysis::CountOverlap(std::vector<pair_interaction>::iterator pix) {
 //}
 
 void StructAnalysis::AddOverlap() {
-  //std::lock_guard<std::mutex> lk(mtx_);
+  std::lock_guard<std::mutex> lk(mtx_);
   n_overlaps_++;
 }
 void StructAnalysis::AddCrossingComplete() {
