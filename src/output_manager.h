@@ -19,7 +19,8 @@ class OutputManager{
         n_spec_,
         n_checkpoint_,
         n_thermo_,
-        reduce_factor_;
+        reduce_factor_,
+        with_reloads_;
     std::string run_name_;
     system_parameters *params_;
     std::vector<SpeciesBase*> *species_;
@@ -45,6 +46,8 @@ class OutputManager{
               int *i_step, std::string run_name,
               bool reading_inputs = false,
               bool posits_only = false,
+              bool with_reloads = false,
+              bool reduce_flag = false,
               int reduce_factor = 1);
     //void SetPosits(std::vector<std::string> posit_files) {
       //posit_files_ = posit_files; 

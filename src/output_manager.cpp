@@ -5,12 +5,12 @@ void OutputManager::Init(system_parameters *params,
                          space_struct *space,
                          int *i_step, std::string run_name,
                          bool reading_inputs, bool posits_only,
+                         bool with_reloads, bool reduce_flag, 
                          int reduce_factor) {
   run_name_ = run_name;
-  if (reduce_factor > 1) {
-    reduce_flag_ = true;
-  }
+  reduce_flag_ = reduce_flag;
   reduce_factor_ = reduce_factor;
+  with_reloads_ = with_reloads;
   species_ = species;
   params_ = params;
   space_ = space;
@@ -21,8 +21,7 @@ void OutputManager::Init(system_parameters *params,
   thermo_flag_ = params_->thermo_flag;
   if (!reading_inputs && thermo_flag_) {
     InitThermo(run_name_);
-  }
-  else if (reading_inputs && thermo_flag_ && thermo_analysis_) {
+  } else if (reading_inputs && thermo_flag_ && thermo_analysis_) {
     InitThermoInput(run_name_);
   }
   std::string red_file_name = run_name_  + "_reduced" + std::to_string(reduce_factor);
@@ -33,17 +32,14 @@ void OutputManager::Init(system_parameters *params,
   for (auto it = species_->begin(); it != species_->end(); ++it) {
     if (params->load_checkpoint) {
       (*it)->LoadFromCheckpoints(run_name_, params->checkpoint_run_name);
-    }
-    else if (reading_inputs) {
-      (*it)->InitInputFiles(run_name_, posits_only);
+    } else if (reading_inputs) {
+      (*it)->InitInputFiles(run_name_, posits_only_, with_reloads_);
       if (reduce_flag_) {
         (*it)->InitOutputFiles(red_file_name);
-      }
-      else if (params->checkpoint_from_spec) {
+      } else if (params->checkpoint_from_spec) {
         (*it)->InitCheckpoints(run_name_);
       }
-    }
-    else {
+    } else {
       (*it)->InitOutputFiles(run_name_);
     }
     if ((*it)->GetPositFlag()) {

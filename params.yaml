@@ -31,7 +31,7 @@ overlap_analysis: 1
 
 filament:
   num: 2
-  packing_fraction: 0.2
+  packing_fraction: 0.01
   overlap: 1
   insertion_type: random
   diameter: 1
