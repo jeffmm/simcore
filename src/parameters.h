@@ -175,6 +175,7 @@ class system_parameters {
     int boundary = 0;
     double system_radius = 100;
     int n_steps = 1000000;
+    int i_step = 0;
     double delta = 0.001;
     double cell_length = 10;
     int n_update_cells = 0;
@@ -231,6 +232,8 @@ class system_parameters {
     double polar_order_contact_cutoff = 3;
     int overlap_analysis = 0;
     int highlight_overlaps = 0;
+    int reduced = 0;
+    int reload_reduce_switch = 0;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;

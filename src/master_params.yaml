@@ -9,6 +9,7 @@ n_periodic : [0,int]
 boundary : [0,int]
 system_radius : [100,double] # radius of system
 n_steps : [1000000,int]
+i_step: [0, int]
 delta : [0.001,double] # time duration between each simulation step
 cell_length: [10, double]
 n_update_cells: [0, int] # used if >0, otherwise simcore uses dr_tot
@@ -65,6 +66,8 @@ polar_order_n_bins: [100, int]
 polar_order_contact_cutoff: [3, double]
 overlap_analysis: [0, int]
 highlight_overlaps: [0, int]
+reduced: [0, int]
+reload_reduce_switch: [0, int]
 species:
   num: [0, int]
   insertion_type: [random, string]

@@ -216,12 +216,17 @@ void Species<T>::ReadCheckpoints() {
 template <typename T> 
 void Species<T>::ReadSpecs() {
   if (ispec_file_.eof()) {
-    printf("  EOF reached\n");
-    early_exit = true;
-    return;
+    if (HandleEOF()) {
+      printf("  switching spec file\n");
+      return;
+    } else {
+      printf("  EOF reached\n");
+      early_exit = true;
+      return;
+    }
   }
   if (! ispec_file_.is_open()) {
-    printf(" ERROR: Spec file unexpectedly not open! Exiting.\n");
+    printf(" ERROR: Spec file unexpectedly not open! Exiting early.\n");
     early_exit = true;
     return;
   }
@@ -230,8 +235,15 @@ void Species<T>::ReadSpecs() {
   ispec_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
   // Hacky workaround FIXME
   if (size == -1) {
-    early_exit = true;
-    return;
+    if (HandleEOF()) {
+      printf("  switching spec file\n");
+      return;
+    } else {
+      printf("Hacky workaround early exit.\n");
+      printf("  EOF reached\n");
+      early_exit = true;
+      return;
+    }
   }
   if (size != n_members_) {
     T member;

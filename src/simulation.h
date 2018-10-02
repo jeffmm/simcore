@@ -46,7 +46,7 @@ class Simulation {
     void InitPositInput();
     void ClearSpecies();
     void InitOutputs();
-    void InitInputs(bool posits_only, int reduce_factor = 1);
+    void InitInputs(run_options run_opts);
     void RunSimulation();
     void RunMovie();
     void ClearSimulation();
@@ -62,7 +62,7 @@ class Simulation {
     std::vector<graph_struct*> graph_array;
     void PrintComplete();
     void InsertSpecies(bool force_overlap = false, bool processing = false);
-    void RunProcessing(int run_analyses);
+    void RunProcessing(run_options run_opts);
     void InitGraphics();
     void InitProcessing(run_options run_opts);
 
