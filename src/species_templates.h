@@ -217,7 +217,7 @@ template <typename T>
 void Species<T>::ReadSpecs() {
   if (ispec_file_.eof()) {
     if (HandleEOF()) {
-      printf("  switching spec file\n");
+      printf("  Switching to new spec file\n");
       return;
     } else {
       printf("  EOF reached\n");
@@ -233,14 +233,14 @@ void Species<T>::ReadSpecs() {
   int size = -1;
   T *member;
   ispec_file_.read(reinterpret_cast<char*>(&size), sizeof(size));
-  // Hacky workaround FIXME
+  /* For some reason, we can't catch the EOF above. If size == -1 still, then
+     we caught a EOF here */
   if (size == -1) {
     if (HandleEOF()) {
-      printf("  switching spec file\n");
+      printf("  Switching to new spec file\n");
       return;
     } else {
-      printf("Hacky workaround early exit.\n");
-      printf("  EOF reached\n");
+      printf("  EOF reached in species\n");
       early_exit = true;
       return;
     }
