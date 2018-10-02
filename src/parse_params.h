@@ -857,6 +857,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("n_steps")==0) {
         params->n_steps = it->second.as<int>();
       }
+      else if (param_name.compare("i_step")==0) {
+        params->i_step = it->second.as<int>();
+      }
       else if (param_name.compare("delta")==0) {
         params->delta = it->second.as<double>();
       }
@@ -1024,6 +1027,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("highlight_overlaps")==0) {
         params->highlight_overlaps = it->second.as<int>();
+      }
+      else if (param_name.compare("reduced")==0) {
+        params->reduced = it->second.as<int>();
+      }
+      else if (param_name.compare("reload_reduce_switch")==0) {
+        params->reload_reduce_switch = it->second.as<int>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";

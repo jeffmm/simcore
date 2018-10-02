@@ -20,6 +20,7 @@ struct run_options {
   int reduce_factor = 1;
   int blank_flag = 0;
   int auto_graph = 0;
+  int with_reloads = 0;
   std::string param_file;
   std::string run_name = "sc";
 };
@@ -29,7 +30,7 @@ struct run_options {
    string array below when adding new flags. */
 
 // Define flags here
-static const int n_flags = 12;
+static const int n_flags = 13;
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
@@ -43,6 +44,7 @@ static struct option long_options[] = {
   {"load",no_argument, 0, 'l'},
   {"reduce",required_argument, 0, 'R'},
   {"blank", no_argument, 0, 'b'},
+  {"with-reloads", no_argument, 0, 'w'},
   {0, 0, 0, 0}
 };
 
@@ -59,7 +61,8 @@ static const std::string desc[n_flags][2] = {
   {"use posit files for movies/analysis rather than spec files", "none"},
   {"run simulation starting from checkpoint files with same run-name for parameter species", "none"},
   {"reduce output file resolution by a factor of reduce_factor", "reduce_factor"},
-  {"write all necessary parameter files without running any simulations","none"}
+  {"write all necessary parameter files without running any simulations","none"},
+  {"run analysis using any existing spec files from reloaded runs","none"}
 };
 
 
@@ -101,7 +104,7 @@ static run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdmaplg:r:n:R:bG", long_options, &option_index);
+    tmp = getopt_long(argc, argv, "hdmaplwbGg:r:n:R:", long_options, &option_index);
     if (tmp == -1)
       break;
     switch (tmp) {
@@ -148,6 +151,9 @@ static run_options parse_opts(int argc, char *argv[]) {
       case 'b':
         run_opts.blank_flag = 1;
         break;
+      case 'w':
+        run_opts.with_reloads = 1;
+        break;
       case '?':
         exit(1);
       default:
@@ -173,24 +179,29 @@ static run_options parse_opts(int argc, char *argv[]) {
   if (run_opts.make_movie) {
     printf("  Making movies");
     if (run_opts.use_posits) {
-      printf(" using posit files.");
+      printf(" using posit files");
     }
+    if (run_opts.with_reloads) {
+      printf(" with available reloads.");
+    }
+    putchar('\n');
   }
-  putchar('\n');
   if (run_opts.analysis_flag) {
     printf("  Running analyses");
     if (run_opts.use_posits) {
-      printf(" using posit files.");
+      printf(" using posit files");
     }
+    if (run_opts.with_reloads) {
+      printf(" with available reloads.");
+    }
+    putchar('\n');
   }
-  putchar('\n');
   if (run_opts.reduce_flag) {
     printf("  Reducing output file resolution by a factor of %d\n",run_opts.reduce_factor);
   }
   if (run_opts.blank_flag) {
-    printf("  Doing a blank run -- generating parameter files without running simulation.");
+    printf("  Doing a blank run -- generating parameter files without running simulation.\n");
   }
-  putchar('\n');
   return run_opts;
 }
 

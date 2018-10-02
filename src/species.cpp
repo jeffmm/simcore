@@ -56,13 +56,70 @@ void SpeciesBase::InitSpecFile(std::string run_name) {
   ospec_file_.write(reinterpret_cast<char*> (&params_->delta), sizeof(double));
 }
 
-void SpeciesBase::InitSpecFileInput(std::string run_name) {
-  std::string sid_str = sid_._to_string();
-  std::string spec_file_name = run_name + "_" + sid_str + ".spec";
+bool SpeciesBase::HandleEOF() {
+  printf("Handing an EOF\n");
+  if (++spec_file_iterator_) {
+    printf(" Got here\n");
+    params_->i_step = 0;
+    params_->n_steps_equil = 0;
+    std::ostringstream file_name, nload;
+    std::string sid_str = sid_._to_string();
+    file_name << params_->run_name;
+    nload << std::setw(3) << std::setfill('0') << spec_file_iterator_;
+    size_t pos;
+    if ((pos = file_name.str().find("reload")) == std::string::npos) {
+      // This is not a reload file currently
+      printf(" This is not a reload file currently\n");
+      if (params_->reduced) {
+        /* The file is either a reduced file, or we are currently reducing */ 
+        
+        printf("The file is either a reduced file, or we are currently reducing \n");
+        if ((pos = file_name.str().find("_reduced")) == std::string::npos) {
+        /* we are currently reducing, so input file does not have reduce in name */
+          printf("this file is not a reduced file\n");
+          pos = file_name.tellp();
+          file_name << "_reload" <<nload.str();
+        } else {
+          if (!params_->reload_reduce_switch) {
+        /* need to (probably) prefix with reload, assuming the reduction came
+           after the reload (most typical case) */
+          printf("this file is a reduced file, need to (probably) prefix with reload, assuming the reduction came after the reload (most typical case) \n");
+          file_name.seekp(pos);
+          file_name << "_reload" << nload.str();
+          file_name << "_reduced" << params_->reduced;
+          } else {
+            printf("Treat this same as a not-reduced file\n");
+            file_name << "_reload" <<nload.str();
+          }
+        }
+      } else {
+        printf("this file is not a reduced file\n");
+        file_name << "_reload" <<nload.str();
+      }
+    } else {
+      // The file is currently a reload file, simply seek to beginning of substring "reload"
+      printf(" The file is currently a reload file, simply seek to beginning of substring 'reload'\n");
+      file_name.seekp(pos);
+      file_name << "_reload" << nload.str();
+      if (params_->reduced) {
+        file_name << "_reduced" << params_->reduced;
+      }
+    }
+    file_name << "_" << sid_str << ".spec";
+    if (ispec_file_.is_open()) {
+      ispec_file_.close();
+    }
+    printf(" Initializing file name %s\n",file_name.str().c_str());
+    return InitSpecFileInputFromFile(file_name.str());
+  } else {
+    return false;
+  }
+}
+
+bool SpeciesBase::InitSpecFileInputFromFile(std::string spec_file_name) {
   ispec_file_.open(spec_file_name, std::ios::in | std::ios::binary ); 
   if (!ispec_file_.is_open()) {
-    std::cout<<"ERROR: Input file "<< spec_file_name <<" did not open\n";
-    exit(1);
+    return false;
   }
   //long n_steps;
   int n_spec,n_steps;
@@ -71,10 +128,23 @@ void SpeciesBase::InitSpecFileInput(std::string run_name) {
   ispec_file_.read(reinterpret_cast<char*> (&n_spec), sizeof(int));
   ispec_file_.read(reinterpret_cast<char*> (&delta), sizeof(double));
   if (n_steps != params_->n_steps || n_spec != sparams_->n_spec || delta != params_->delta) {
-    std::cout<< "ERROR: Input file " << spec_file_name << " does not match parameter file\n";
+    printf("\n%d %d\n",n_steps,params_->n_steps);
+    printf("%d %d\n",n_spec,sparams_->n_spec);
+    printf("%d %d\n",delta,params_->delta);
+    error_exit("Input file %s does not match parameter file",spec_file_name.c_str());
     exit(1);
   }
   ReadSpecs();
+  return true;
+}
+
+void SpeciesBase::InitSpecFileInput(std::string run_name) {
+  std::string sid_str = sid_._to_string();
+  std::string spec_file_name = run_name + "_" + sid_str + ".spec";
+  if (!InitSpecFileInputFromFile(spec_file_name)) {
+    error_exit("Input file %s did not open",spec_file_name.c_str());
+    exit(1);
+  }
 }
 
 void SpeciesBase::InitOutputFiles(std::string run_name) {
@@ -82,9 +152,8 @@ void SpeciesBase::InitOutputFiles(std::string run_name) {
     InitPositFile(run_name);
   if (sparams_->spec_flag) 
     InitSpecFile(run_name);
-  if (sparams_->checkpoint_flag) {
+  if (sparams_->checkpoint_flag)
     InitCheckpoints(run_name);
-  }
 }
 
 void SpeciesBase::InitCheckpoints(std::string run_name) {
@@ -103,11 +172,15 @@ void SpeciesBase::LoadFromCheckpoints(std::string run_name, std::string checkpoi
   InitOutputFiles(run_name);
 }
 
-void SpeciesBase::InitInputFiles(std::string run_name, bool posits_only) {
-  if (posits_only && sparams_->posit_flag) 
+void SpeciesBase::InitInputFiles(std::string run_name, bool posits_only, bool with_reloads) {
+  if (posits_only && sparams_->posit_flag)  {
     InitPositFileInput(run_name);
-  else if (sparams_->spec_flag)
+  } else if (sparams_->spec_flag && with_reloads) {
+    spec_file_iterator_ = 0;
     InitSpecFileInput(run_name);
+  } else if (sparams_->spec_flag) {
+    InitSpecFileInput(run_name);
+  }
 }
 
 void SpeciesBase::CloseFiles() { 

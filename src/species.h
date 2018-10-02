@@ -9,7 +9,8 @@ class SpeciesBase {
   private:
     species_id sid_;
   protected:
-    int n_members_ = 0;
+    int n_members_ = 0,
+        spec_file_iterator_ = -1;
     std::string spec_name_;
     system_parameters *params_;
     species_parameters *sparams_;
@@ -20,6 +21,7 @@ class SpeciesBase {
     std::fstream ospec_file_;
     std::fstream ispec_file_;
     std::string checkpoint_file_;
+    std::vector<std::string> spec_file_names_;
 
   public:
     SpeciesBase() {}
@@ -69,7 +71,9 @@ class SpeciesBase {
     virtual void InitSpecFile(std::string run_name);
     virtual void InitPositFileInput(std::string run_name);
     virtual void InitSpecFileInput(std::string run_name);
-    virtual void InitInputFiles(std::string run_name, bool posits_only);
+    virtual bool InitSpecFileInputFromFile(std::string run_name);
+    virtual bool HandleEOF();
+    virtual void InitInputFiles(std::string run_name, bool posits_only, bool with_reloads);
     virtual void InitCheckpoints(std::string run_name);
     virtual void LoadFromCheckpoints(std::string run_name,std::string checkpoint_run_name);
     virtual int OutputIsOpen(){ return oposit_file_.is_open(); }

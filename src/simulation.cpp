@@ -357,8 +357,8 @@ void Simulation::InitOutputs() {
   }
 }
 
-void Simulation::InitInputs(bool posits_only, int reduce_factor) {
-  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_, true, posits_only, reduce_factor);
+void Simulation::InitInputs(run_options run_opts) {
+  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_, true, run_opts.use_posits, run_opts.with_reloads, run_opts.reduce_flag, run_opts.reduce_factor);
 }
 
 void Simulation::WriteOutputs() {
@@ -382,7 +382,7 @@ void Simulation::ProcessOutputs(system_parameters params, run_options run_opts) 
   // Ensure that we are not trying to load any checkpoints when processing outputs
   params_.load_checkpoint = 0;
   InitProcessing(run_opts);
-  RunProcessing(run_opts.analysis_flag);
+  RunProcessing(run_opts);
   ClearSimulation();
 }
 
@@ -396,12 +396,7 @@ void Simulation::InitProcessing(run_options run_opts) {
   if (run_opts.analysis_flag) {
     iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_, true);
   }
-  if (run_opts.reduce_flag) {
-    InitInputs(run_opts.use_posits,run_opts.reduce_factor);
-  }
-  else {
-    InitInputs(run_opts.use_posits, 1);
-  }
+  InitInputs(run_opts);
   if (run_opts.graphics_flag || run_opts.make_movie) {
     params_.graph_flag = 1;
     if (run_opts.use_posits && params_.n_graph < output_mgr_.GetNPosit()) {
@@ -425,11 +420,14 @@ void Simulation::InitProcessing(run_options run_opts) {
   //}
 }
 
-void Simulation::RunProcessing(int run_analyses) {
+void Simulation::RunProcessing(run_options run_opts) {
   std::cout << "Processing outputs for: " << run_name_ << std::endl;
   bool local_order = (params_.local_order_analysis || params_.polar_order_analysis || params_.overlap_analysis);
   // Only step to n_steps-1 since we already read in one input at initialization
-  for (i_step_ = 0; i_step_<params_.n_steps-1; ++i_step_) { 
+  int last_step = (run_opts.with_reloads ? params_.n_steps-1 : 2*params_.n_steps);
+  bool run_analyses = run_opts.analysis_flag;
+  for (params_.i_step = 0; true; ++params_.i_step) { 
+    i_step_ = params_.i_step;
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
     output_mgr_.ReadInputs(); 

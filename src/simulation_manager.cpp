@@ -361,6 +361,7 @@ void SimulationManager::WriteParams() {
       if (run_opts_.reduce_flag) {
         std::string red_file_name = file_name.str() + "_reduced" + std::to_string(run_opts_.reduce_factor);
         pvector_[i_var]["run_name"] = red_file_name;
+        pvector_[i_var]["reduced"] = run_opts_.reduce_factor;
         red_file_name = red_file_name + "_params.yaml";
         std::ofstream pfile(red_file_name, std::ios_base::out);
         YAML::Emitter out;
@@ -372,13 +373,16 @@ void SimulationManager::WriteParams() {
         int n_load = pvector_[i_var]["n_load"].as<int>() + 1;
         pvector_[i_var]["n_load"] = n_load;
         pvector_[i_var]["checkpoint_run_name"] = file_name.str();
+        if (file_name.str().find("reduce") != std::string::npos) {
+          pvector_[i_var]["reload_reduce_switch"] = 1;
+        }
         std::ostringstream nload;
         nload << std::setw(3) << std::setfill('0') << n_load;
         if (file_name.str().find("reload") == std::string::npos) {
           file_name << "_reload" << nload.str();
         }
         else {
-          long pos = file_name.tellp();
+          size_t pos = file_name.tellp();
           file_name.seekp(pos-3);
           file_name << nload.str();
         }
