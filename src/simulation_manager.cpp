@@ -361,7 +361,9 @@ void SimulationManager::WriteParams() {
       if (run_opts_.reduce_flag) {
         std::string red_file_name = file_name.str() + "_reduced" + std::to_string(run_opts_.reduce_factor);
         pvector_[i_var]["run_name"] = red_file_name;
-        pvector_[i_var]["reduced"] = run_opts_.reduce_factor;
+        if (pvector_[i_var]["reduced"] == 0) {
+          pvector_[i_var]["reduced"] = run_opts_.reduce_factor;
+        }
         red_file_name = red_file_name + "_params.yaml";
         std::ofstream pfile(red_file_name, std::ios_base::out);
         YAML::Emitter out;

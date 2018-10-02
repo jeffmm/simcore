@@ -58,8 +58,12 @@ void SpeciesBase::InitSpecFile(std::string run_name) {
 
 bool SpeciesBase::HandleEOF() {
   if (++spec_file_iterator_) {
+    if (params_->i_step < params_->n_steps_equil) {
+      params_->n_steps_equil -= params_->i_step;
+    } else {
+      params_->n_steps_equil = 0;
+    }
     params_->i_step = 0;
-    params_->n_steps_equil = 0;
     std::ostringstream file_name, nload;
     std::string sid_str = sid_._to_string();
     file_name << params_->run_name;

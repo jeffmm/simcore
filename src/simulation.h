@@ -22,7 +22,8 @@ class Simulation {
 
   private:
     int i_step_ = 0,
-        n_steps_;
+        n_steps_,
+        frame_num_ = 0;
     double time_,
            cpu_init_time_;
     std::string run_name_;
