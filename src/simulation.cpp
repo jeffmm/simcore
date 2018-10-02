@@ -337,7 +337,7 @@ void Simulation::Draw() {
     if (params_.movie_flag) {
       // Record bmp image of frame 
       grabber(graphics_.windx_, graphics_.windy_,
-              params_.movie_directory, (int) i_step_/params_.n_graph);
+              params_.movie_directory, frame_num_++);
     }
   }
   #endif
