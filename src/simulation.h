@@ -51,7 +51,7 @@ class Simulation {
     void RunSimulation();
     void RunMovie();
     void ClearSimulation();
-    void Draw();
+    void Draw(bool single_frame = false);
     void WriteOutputs();
     void GetGraphicsStructure();
     void Integrate();

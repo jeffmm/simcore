@@ -191,7 +191,7 @@ class system_parameters {
     std::string insertion_type = "species";
     int movie_flag = 0;
     std::string movie_directory = "frames";
-    int time_flag = 0;
+    int time_analysis = 0;
     double bud_height = 680;
     double bud_radius = 300;
     double lj_epsilon = 1;
