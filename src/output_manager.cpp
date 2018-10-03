@@ -210,7 +210,7 @@ void OutputManager::Close() {
       othermo_file_.close();
     }
   }
-  if (params_->time_flag) {
+  if (params_->time_analysis) {
     WriteTime();
   }
 }

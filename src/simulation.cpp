@@ -329,7 +329,7 @@ void Simulation::ClearSimulation() {
   std::cout << "  Simulation complete" << std::endl;
 }
 
-void Simulation::Draw() {
+void Simulation::Draw(bool single_frame) {
   #ifndef NOGRAPH
   if (params_.graph_flag && i_step_%params_.n_graph==0) {
     GetGraphicsStructure();
@@ -337,7 +337,8 @@ void Simulation::Draw() {
     if (params_.movie_flag) {
       // Record bmp image of frame 
       grabber(graphics_.windx_, graphics_.windy_,
-              params_.movie_directory, frame_num_++);
+              params_.movie_directory, 
+              (single_frame ? 0 : frame_num_++));
     }
   }
   #endif
@@ -352,7 +353,7 @@ void Simulation::GetGraphicsStructure() {
 
 void Simulation::InitOutputs() {
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_);
-  if (params_.time_flag) {
+  if (params_.time_analysis) {
     cpu_init_time_ = cpu_time();
   }
 }
@@ -366,7 +367,7 @@ void Simulation::WriteOutputs() {
   if (i_step_ == 0) {
     return; // skip first step
   }
-  if (params_.time_flag && i_step_ == params_.n_steps-1) {
+  if (params_.time_analysis && i_step_ == params_.n_steps-1) {
     double cpu_final_time = cpu_time();
     double cpu_time = cpu_final_time - cpu_init_time_;
     std::cout << "CPU Time for Initialization: " <<  cpu_init_time_ << "\n";
@@ -441,7 +442,7 @@ void Simulation::RunProcessing(run_options run_opts) {
       }
       return;
     }
-    Draw();
+    Draw(run_opts.single_frame);
     if (i_step_ < params_.n_steps_equil) continue;
     else if (i_step_ == params_.n_steps_equil && run_analyses) {
       // InitAnalysis initalizes and runs the first batch of analyses
