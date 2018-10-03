@@ -905,8 +905,8 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("movie_directory")==0) {
         params->movie_directory = it->second.as<std::string>();
       }
-      else if (param_name.compare("time_flag")==0) {
-        params->time_flag = it->second.as<int>();
+      else if (param_name.compare("time_analysis")==0) {
+        params->time_analysis = it->second.as<int>();
       }
       else if (param_name.compare("bud_height")==0) {
         params->bud_height = it->second.as<double>();
