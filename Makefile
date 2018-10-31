@@ -1,5 +1,5 @@
-CC = gcc-6
-CXX = g++-6
+CC = gcc-7
+CXX = g++-7
 
 SRCDIR = src
 OBJDIR = obj
@@ -24,7 +24,7 @@ endif
 UNAME_S:=$(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
-	INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/include -I/usr/local/include -I/usr/local/include/gsl
+	INCLUDES = -I/opt/X11/include -I/usr/X11R6/include -I/usr/local/include -I/usr/local/include/gsl
 	GLXLIBS = -L/opt/X11/lib -L/usr/local/lib -lglfw3 -framework OpenGL -lglew -framework Cocoa -framework IOKit -framework CoreVideo
 	GSLLIBS = -lgsl -lgslcblas
 	FFTLIBS = -lfftw3

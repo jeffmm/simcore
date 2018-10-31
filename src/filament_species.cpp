@@ -111,7 +111,8 @@ void FilamentSpecies::RunOrientationCorrelationAnalysis() {
     sem += avg_var.second;
   }
   avg/=n_members_;
-  sem = sqrt(sem/(n_members_*members_[0].GetNBonds()));
+  sem = sem / n_members_; // This calculates the pooled variance
+  sem = sqrt(sem/(n_members_*members_[0].GetNBonds())); // """ standard error
   orientation_corr_file_ << time_%orientation_corr_n_steps_ << " " << avg << " " << sem << "\n";
 }
 
