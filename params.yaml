@@ -1,4 +1,5 @@
-seed: 12252588513455
+seed: 18591845184
+#seed: 12252588513455
 
 run_name: fjj
 n_dim: 2
@@ -9,7 +10,7 @@ boundary: 0
 n_update_cells: -1
 cell_length: 5
 
-graph_flag: 1
+graph_flag: 0
 n_graph: 100
 graph_background: 0
 print_complete: 0
@@ -27,10 +28,13 @@ local_order_bin_width: 0.5
 local_order_width: 40
 local_order_average: 1
 interaction_flag: 1
-overlap_analysis: 1
+overlap_analysis: 0
+density_analysis: 1
+density_com_only: 0
+density_bin_width: 0.1
 
 filament:
-  num: 2
+  num: 1
   packing_fraction: 0.01
   overlap: 1
   insertion_type: random

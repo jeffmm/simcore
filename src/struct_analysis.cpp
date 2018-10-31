@@ -1,6 +1,6 @@
 #include "struct_analysis.h"
 
-// Assumes structure for now. In the future, could do 2d projections of 3d data
+// Assumes 2d for now. In the future, could do 2d projections of 3d data
 void StructAnalysis::Init(system_parameters * params, int * i_step) {
   count_ = 0;
   n_objs_ = 0;
@@ -12,17 +12,20 @@ void StructAnalysis::Init(system_parameters * params, int * i_step) {
   local_order_analysis_ = params_->local_order_analysis;
   polar_order_analysis_ = params_->polar_order_analysis;
   overlap_analysis_ = params_->overlap_analysis;
+  density_analysis_ = params_->density_analysis;
   i_step_ = i_step;
   if (n_dim_ != 2) {
     error_exit("3D structure analysis is not yet implemented");
   }
   average_structure_ = params_->local_order_average;
-  bin_width_ = params_->local_order_bin_width;
+  local_bin_width_ = params_->local_order_bin_width;
+  density_bin_width_ = params_->density_bin_width;
   if (local_order_analysis_) {
     /* Array width is the width of the pdf (etc) histograms in units of sigma
        and the bin width is also in units of sigma, the smaller, the higher the
        total resolution */
-    n_bins_1d_ = (int) params_->local_order_width / bin_width_;
+    local_bins_1d_ = (int) params_->local_order_width / local_bin_width_;
+    n_bins_1d_ = local_bins_1d_;
     // Guarantee n_bins_1d_ is even, for sanity sake
     if (n_bins_1d_%2 != 0) {
       n_bins_1d_++;
@@ -45,6 +48,25 @@ void StructAnalysis::Init(system_parameters * params, int * i_step) {
     std::fill(pdf_array_temp_,pdf_array_temp_+n_bins_,0.0);
     std::fill(nematic_array_temp_,nematic_array_temp_+n_bins_,0.0);
     std::fill(polar_array_temp_,polar_array_temp_+n_bins_,0.0);
+  }
+  if (density_analysis_) {
+    /* Array width is the width of the pdf (etc) histograms in units of sigma
+       and the bin width is also in units of sigma, the smaller, the higher the
+       total resolution */
+    density_bins_1d_ = (int) 2.0 * params_->system_radius / density_bin_width_;
+    n_bins_1d_ = density_bins_1d_;
+    // Guarantee n_bins_1d_ is even, for sanity sake
+    if (n_bins_1d_%2 != 0) {
+      n_bins_1d_++;
+    }
+    n_bins_ = n_bins_1d_*n_bins_1d_;
+    /* Issue a RAM warning if the arrays are very large */
+    if (6.0*n_bins_*4.0/1e9 > 1) {
+      warning("Local structure content to exceed %2.2f GB of RAM!",6.0*n_bins_*4.0/1e9);
+    }
+    /* initialize arrays */
+    density_array_ = new float[n_bins_];
+    std::fill(density_array_,density_array_+n_bins_,0.0);
   }
   if (overlap_analysis_) {
     std::string overlap_file_name = params_->run_name + ".overlaps";
@@ -70,9 +92,16 @@ void StructAnalysis::Clear() {
     delete[] pdf_array_;
     delete[] nematic_array_;
     delete[] polar_array_;
-  }
+    delete[] pdf_array_temp_;
+    delete[] nematic_array_temp_;
+    delete[] polar_array_temp_;
+}
   if (overlap_file_.is_open()) {
     overlap_file_.close();
+  }
+  if (density_analysis_) {
+    WriteDensityData();
+    delete[] density_array_;
   }
 
   //if (n_objs_ > 0) {
@@ -95,6 +124,7 @@ void StructAnalysis::WriteStructData() {
   }
   float vol = 4*params_->system_radius*params_->system_radius;
   float rhoNinv = vol/(n_objs_*n_objs_);
+  n_bins_1d_ = local_bins_1d_;
   for (int i=0; i<n_bins_1d_;++i) {
     for (int j=0; j<n_bins_1d_; ++j) {
       pdf_file_ << " " << rhoNinv*pdf_array_[i*n_bins_1d_+j]/count_;
@@ -133,6 +163,24 @@ void StructAnalysis::WriteStructData() {
   polar_file_.close();
 }
 
+void StructAnalysis::WriteDensityData() {
+  if (count_ < 1 || n_objs_ < 1) {
+    warning("Time average count and/or object number not initialized\
+        in StructAnalysis. Skipping density output.");
+    return;
+  }
+  std::string density_file_name = params_->run_name + ".density";
+  density_file_.open(density_file_name, std::ios::out);
+  n_bins_1d_ = density_bins_1d_;
+  for (int i=0; i<n_bins_1d_;++i) {
+    for (int j=0; j<n_bins_1d_; ++j) {
+      density_file_ << " " << density_array_[i*n_bins_1d_+j]/n_objs_/count_;
+    }
+    density_file_ << "\n";
+  }
+  density_file_.close();
+}
+
 void StructAnalysis::CalculateStructurePair(std::vector<pair_interaction>::iterator pix) {
   if (local_order_analysis_) {
     CalculateLocalOrderPair(pix);
@@ -166,6 +214,33 @@ void StructAnalysis::CalculatePolarOrderPair(std::vector<pair_interaction>::iter
   //obj2->AddPolarOrder(u1_dot_u2*expdr2);
   //obj1->AddContactNumber(expdr2);
   //obj2->AddContactNumber(expdr2);
+}
+
+void StructAnalysis::BinDensity(Object * obj) {
+  double const * const r1 = obj->GetInteractorScaledPosition();
+  double const * const u1 = obj->GetInteractorOrientation();
+  double const l1 = obj->GetInteractorLength();
+
+  /* Check to see if we are only interested in COMs of objects */
+  if (params_->density_com_only) {
+    int index[2];
+    for (int i=0;i<2; ++i) {
+      index[i] = (int) (floor(r1[i]/density_bin_width_)+0.5*density_bins_1d_);
+    }
+    BinArray(index[0] ,index[1], 0, false);
+  }
+
+  /* Otherwise, we want to bin the entire length of the object, assuming linear shape */
+  else {
+    double site1[2] = {0,0};
+    double site2[2] = {0,0};
+
+    for (int i=0;i<n_dim_; ++i) {
+      site1[i] = 2.0*params_->system_radius*r1[i] - 0.5*l1*u1[i];
+      site2[i] = 2.0*params_->system_radius*r1[i] + 0.5*l1*u1[i];
+    }
+    PopulateLineDensity(site1,site2);
+  }
 }
 
 void StructAnalysis::CalculateLocalOrderPair(std::vector<pair_interaction>::iterator pix) {
@@ -233,7 +308,7 @@ void StructAnalysis::CalculateLocalOrderPair(std::vector<pair_interaction>::iter
      that contain the line joining site21 and site22 in the
      reference frame of object 1 when aligned along the
      y-axis */
-  PopulateLine(site21,site22,u1_dot_u2);
+  PopulateLineLocal(site21,site22,u1_dot_u2);
 
   /* Need to rotate object 1 sites about origin by 
      rotation angle 2 */
@@ -253,45 +328,58 @@ void StructAnalysis::CalculateLocalOrderPair(std::vector<pair_interaction>::iter
   /* Populate the bins that contain line joining site 11 
      and site 12 in reference frame of object 2 when 
      aligned along y-axis */
-  PopulateLine(site11,site12,u1_dot_u2);
+  PopulateLineLocal(site11,site12,u1_dot_u2);
 }
 
 /* PopulateLine uses Bresenham line drawing algorithm to 
    populate the bins that define a line joining site1 and 
    site2 in a discretized (pixelized) space */
-void StructAnalysis::PopulateLine(double * site1, double * site2, double dotprod) {
+void StructAnalysis::PopulateLineLocal(double * site1, double * site2, double dotprod) {
   // Convert positions into bin numbers
   int index1[2],index2[2];
   for (int i=0;i<2; ++i) {
-    index1[i] = (int) (floor(site1[i]/bin_width_)+0.5*n_bins_1d_);
-    index2[i] = (int) (floor(site2[i]/bin_width_)+0.5*n_bins_1d_);
+    index1[i] = (int) (floor(site1[i]/local_bin_width_)+0.5*local_bins_1d_);
+    index2[i] = (int) (floor(site2[i]/local_bin_width_)+0.5*local_bins_1d_);
   }
-  BinLine(index1[0],index1[1],index2[0],index2[1], dotprod);
+  BinLine(index1[0],index1[1],index2[0],index2[1], dotprod, true);
+}
+
+/* PopulateLine uses Bresenham line drawing algorithm to 
+   populate the bins that define a line joining site1 and 
+   site2 in a discretized (pixelized) space */
+void StructAnalysis::PopulateLineDensity(double * site1, double * site2) {
+  // Convert positions into bin numbers
+  int index1[2],index2[2];
+  for (int i=0;i<2; ++i) {
+    index1[i] = (int) (floor(site1[i]/density_bin_width_)+0.5*density_bins_1d_);
+    index2[i] = (int) (floor(site2[i]/density_bin_width_)+0.5*density_bins_1d_);
+  }
+  BinLine(index1[0],index1[1],index2[0],index2[1], 0.0, false);
 }
 
 /* Draw line using Bresenham line drawing algorithm 
    using integer algebra. Only draws line upward and 
    to the right, so we need to reorient the line 
    accordingly */
-void StructAnalysis::BinLine(int x0, int y0, int x1, int y1, double dotprod) {
+void StructAnalysis::BinLine(int x0, int y0, int x1, int y1, double dotprod, bool is_local) {
   /* Checks if line is less than 45 degrees */
   if (ABS(y1 - y0) < ABS(x1 - x0)) {
     /* Ensures that slope is only increasing */
     if (x0 > x1) {
-      BinLineLow(x1, y1, x0, y0, dotprod);
+      BinLineLow(x1, y1, x0, y0, dotprod, is_local);
     }
     else {
-      BinLineLow(x0, y0, x1, y1, dotprod);
+      BinLineLow(x0, y0, x1, y1, dotprod, is_local);
     }
   }
   else {
     /* If line is more than 45 degrees, switch x and y axis */
     if (y0 > y1) {
       /* Ensures that slope is only increasing */
-      BinLineHigh(x1, y1, x0, y0, dotprod);
+      BinLineHigh(x1, y1, x0, y0, dotprod, is_local);
     }
     else {
-      BinLineHigh(x0, y0, x1, y1, dotprod);
+      BinLineHigh(x0, y0, x1, y1, dotprod, is_local);
     }
   }
 }
@@ -299,7 +387,7 @@ void StructAnalysis::BinLine(int x0, int y0, int x1, int y1, double dotprod) {
 /* The simple Bresenham line algorithm using integer algebra. 
    Assumes that the line is less than 45 degrees and the site 
    positions are integers */
-void StructAnalysis::BinLineLow(int x0,int y0, int x1,int y1, double dotprod) {
+void StructAnalysis::BinLineLow(int x0,int y0, int x1,int y1, double dotprod, bool is_local) {
   int dx = x1 - x0;
   int dy = y1 - y0;
   int yi = 1;
@@ -310,7 +398,7 @@ void StructAnalysis::BinLineLow(int x0,int y0, int x1,int y1, double dotprod) {
   int D = 2*dy - dx;
   int y = y0;
   for (int x=x0; x<x1; ++x) {
-    BinArray(x,y, dotprod);
+    BinArray(x,y, dotprod, is_local);
     if (D > 0) {
        y = y + yi;
        D = D - 2*dx;
@@ -322,7 +410,7 @@ void StructAnalysis::BinLineLow(int x0,int y0, int x1,int y1, double dotprod) {
 /* The Bresenham line drawing algorithm with inverted x and y 
    axes, for the case that the line slope is greater than 45 
    degrees */
-void StructAnalysis::BinLineHigh(int x0, int y0, int x1, int y1, double dotprod) {
+void StructAnalysis::BinLineHigh(int x0, int y0, int x1, int y1, double dotprod, bool is_local) {
   int dx = x1 - x0;
   int dy = y1 - y0;
   int xi = 1;
@@ -333,7 +421,7 @@ void StructAnalysis::BinLineHigh(int x0, int y0, int x1, int y1, double dotprod)
   int D = 2*dx - dy;
   int x = x0;
   for (int y=y0; y<y1; ++y) { 
-    BinArray(x,y, dotprod);
+    BinArray(x,y, dotprod, is_local);
     if (D > 0) {
        x = x + xi;
        D = D - 2*dy;
@@ -345,17 +433,28 @@ void StructAnalysis::BinLineHigh(int x0, int y0, int x1, int y1, double dotprod)
 /* Increments x,y bin of the pdf histograms. Converts x,y to a 
    1d coordinate and incorporates the dotproduct alignment of the 
    two objects for nematic and polar order */
-void StructAnalysis::BinArray(int x, int y, double dotprod) {
+void StructAnalysis::BinArray(int x, int y, double dotprod, bool is_local) {
   /* If the coordinate is out of range of our region of interest
      for whatever reason, ignore the coordinate */
+  n_bins_1d_ = (is_local ? local_bins_1d_ : density_bins_1d_);
+  if (x < 0) x += n_bins_1d_;
+  if (y < 0) y += n_bins_1d_;
+  if (x > n_bins_1d_-1) x -= n_bins_1d_;
+  if (y > n_bins_1d_-1) y -= n_bins_1d_;
   if (x < 0 || y < 0 || x > n_bins_1d_-1 || y > n_bins_1d_-1) {
+    warning("Invalid value found in BinArray in struct_analysis.cpp");
     return;
   }
   int index = n_bins_1d_*y+x;
   std::lock_guard<std::mutex> lk(mtx_);
-  pdf_array_temp_[index] += 1.0;
-  nematic_array_temp_[index] += (2*dotprod*dotprod - 1);
-  polar_array_temp_[index] += dotprod;
+  if (is_local) {
+    pdf_array_temp_[index] += 1.0;
+    nematic_array_temp_[index] += (2*dotprod*dotprod - 1);
+    polar_array_temp_[index] += dotprod;
+  }
+  else {
+    density_array_[index] += 1.0;
+  }
 }
 
 void StructAnalysis::AverageStructure() {

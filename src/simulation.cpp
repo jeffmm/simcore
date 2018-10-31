@@ -423,7 +423,7 @@ void Simulation::InitProcessing(run_options run_opts) {
 
 void Simulation::RunProcessing(run_options run_opts) {
   std::cout << "Processing outputs for: " << run_name_ << std::endl;
-  bool local_order = (params_.local_order_analysis || params_.polar_order_analysis || params_.overlap_analysis);
+  bool local_order = (params_.local_order_analysis || params_.polar_order_analysis || params_.overlap_analysis || params_.density_analysis);
   // Only step to n_steps-1 since we already read in one input at initialization
   int last_step = (run_opts.with_reloads ? params_.n_steps-1 : 2*params_.n_steps);
   bool run_analyses = run_opts.analysis_flag;

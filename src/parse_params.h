@@ -1013,6 +1013,15 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("local_order_n_analysis")==0) {
         params->local_order_n_analysis = it->second.as<int>();
       }
+      else if (param_name.compare("density_analysis")==0) {
+        params->density_analysis = it->second.as<int>();
+      }
+      else if (param_name.compare("density_bin_width")==0) {
+        params->density_bin_width = it->second.as<double>();
+      }
+      else if (param_name.compare("density_com_only")==0) {
+        params->density_com_only = it->second.as<int>();
+      }
       else if (param_name.compare("polar_order_analysis")==0) {
         params->polar_order_analysis = it->second.as<int>();
       }
@@ -1021,6 +1030,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("polar_order_contact_cutoff")==0) {
         params->polar_order_contact_cutoff = it->second.as<double>();
+      }
+      else if (param_name.compare("polar_order_color")==0) {
+        params->polar_order_color = it->second.as<int>();
       }
       else if (param_name.compare("overlap_analysis")==0) {
         params->overlap_analysis = it->second.as<int>();
