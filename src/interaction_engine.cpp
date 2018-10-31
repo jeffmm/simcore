@@ -22,7 +22,7 @@ void InteractionEngine::Init(system_parameters *params,
   i_update_ = -1;
   n_objs_ = 0;
   //clist_.Init(n_dim_,n_periodic_,params_->cell_length,space_->radius);
-  bool local_order = (params_->local_order_analysis || params_->polar_order_analysis || params_->overlap_analysis);
+  bool local_order = (params_->local_order_analysis || params_->polar_order_analysis || params_->overlap_analysis || params_->density_analysis);
   if (processing && local_order) {
     params_->cell_length = 0.5*params_->local_order_width;
   }
@@ -72,6 +72,7 @@ void InteractionEngine::UpdateInteractors() {
 }
 
 void InteractionEngine::UpdateInteractions() {
+  if (no_interactions_) return;
   //clist_.LoadInteractors(interactors_);
   ptracker_.AssignCells();
   //pair_interactions_ = clist_.GetPairInteractions();
@@ -394,38 +395,40 @@ void InteractionEngine::CalculateStructure() {
       (*it)->ZeroPolarOrder();
     }
   }
+  if (!no_interactions_) {
 #ifdef ENABLE_OPENMP
-  int max_threads = omp_get_max_threads();
-  std::vector<std::pair<std::vector<pair_interaction>::iterator, std::vector<pair_interaction>::iterator> > chunks;
-  chunks.reserve(max_threads); 
-  size_t chunk_size= pair_interactions_.size() / max_threads;
-  auto cur_iter = pair_interactions_.begin();
-  for(int i = 0; i < max_threads - 1; ++i) {
-    auto last_iter = cur_iter;
-    std::advance(cur_iter, chunk_size);
-    chunks.push_back(std::make_pair(last_iter, cur_iter));
-  }
-  chunks.push_back(std::make_pair(cur_iter, pair_interactions_.end()));
+    int max_threads = omp_get_max_threads();
+    std::vector<std::pair<std::vector<pair_interaction>::iterator, std::vector<pair_interaction>::iterator> > chunks;
+    chunks.reserve(max_threads); 
+    size_t chunk_size= pair_interactions_.size() / max_threads;
+    auto cur_iter = pair_interactions_.begin();
+    for(int i = 0; i < max_threads - 1; ++i) {
+      auto last_iter = cur_iter;
+      std::advance(cur_iter, chunk_size);
+      chunks.push_back(std::make_pair(last_iter, cur_iter));
+    }
+    chunks.push_back(std::make_pair(cur_iter, pair_interactions_.end()));
 #pragma omp parallel shared(chunks)
-  {
+    {
 #pragma omp for 
-    for(int i = 0; i < max_threads; ++i) {
-      for(auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
-        if (params_->polar_order_analysis || params_->overlap_analysis) {
-          mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
+      for(int i = 0; i < max_threads; ++i) {
+        for(auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
+          if (params_->polar_order_analysis || params_->overlap_analysis) {
+            mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
+          }
+          struct_analysis_.CalculateStructurePair(pix);
         }
-        struct_analysis_.CalculateStructurePair(pix);
       }
     }
-  }
 #else
-  for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
-    if (params_->polar_order_analysis || params_->overlap_analysis) {
-      mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
+    for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
+      if (params_->polar_order_analysis || params_->overlap_analysis) {
+        mindist_.ObjectObject(pix->first.first,pix->first.second,&(pix->second));
+      }
+      struct_analysis_.CalculateStructurePair(pix);
     }
-    struct_analysis_.CalculateStructurePair(pix);
-  }
 #endif
+  }
   //if (params_->overlap_analysis) {
     //for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end(); ++pix) {
       //struct_analysis_.CountOverlap(pix);
@@ -445,12 +448,17 @@ void InteractionEngine::CalculateStructure() {
       (*it)->CalcPolarOrder();
     }
   }
+  if (params_->density_analysis) {
+    for (auto it=interactors_.begin(); it!=interactors_.end(); ++it) {
+      struct_analysis_.BinDensity(*it);
+    }
+  }
 }
 
 void InteractionEngine::Clear() {
   if (no_init_) return;
   ptracker_.Clear();
-  bool local_order = (params_->local_order_analysis || params_->polar_order_analysis || params_->overlap_analysis);
+  bool local_order = (params_->local_order_analysis || params_->polar_order_analysis || params_->overlap_analysis || params_->density_analysis);
   if (local_order && processing_) {
     struct_analysis_.Clear();
   }

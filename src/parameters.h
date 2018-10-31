@@ -227,9 +227,13 @@ class system_parameters {
     int local_order_average = 1;
     int local_order_analysis = 0;
     int local_order_n_analysis = 100;
+    int density_analysis = 0;
+    double density_bin_width = 0.1;
+    int density_com_only = 0;
     int polar_order_analysis = 0;
     int polar_order_n_bins = 100;
     double polar_order_contact_cutoff = 3;
+    int polar_order_color = 0;
     int overlap_analysis = 0;
     int highlight_overlaps = 0;
     int reduced = 0;
