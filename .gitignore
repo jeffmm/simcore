@@ -35,3 +35,4 @@ octave-workspace
 nohup.out
 *.tar.gz
 *.local_*
+*.density

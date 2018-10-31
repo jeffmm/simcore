@@ -56,9 +56,9 @@ void StructAnalysis::Init(system_parameters * params, int * i_step) {
     density_bins_1d_ = (int) 2.0 * params_->system_radius / density_bin_width_;
     n_bins_1d_ = density_bins_1d_;
     // Guarantee n_bins_1d_ is even, for sanity sake
-    if (n_bins_1d_%2 != 0) {
-      n_bins_1d_++;
-    }
+    //if (n_bins_1d_%2 != 0) {
+      //n_bins_1d_++;
+    //}
     n_bins_ = n_bins_1d_*n_bins_1d_;
     /* Issue a RAM warning if the arrays are very large */
     if (6.0*n_bins_*4.0/1e9 > 1) {

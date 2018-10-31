@@ -449,9 +449,32 @@ void InteractionEngine::CalculateStructure() {
     }
   }
   if (params_->density_analysis) {
+#ifdef ENABLE_OPENMP
+    int max_threads = omp_get_max_threads();
+    std::vector<std::pair<std::vector<Object*>::iterator, std::vector<Object*>::iterator> > chunks;
+    chunks.reserve(max_threads); 
+    size_t chunk_size= interactors_.size() / max_threads;
+    auto cur_iter = interactors_.begin();
+    for(int i = 0; i < max_threads - 1; ++i) {
+      auto last_iter = cur_iter;
+      std::advance(cur_iter, chunk_size);
+      chunks.push_back(std::make_pair(last_iter, cur_iter));
+    }
+    chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
+#pragma omp parallel shared(chunks)
+    {
+#pragma omp for 
+      for(int i = 0; i < max_threads; ++i) {
+        for(auto it = chunks[i].first; it != chunks[i].second; ++it) {
+          struct_analysis_.BinDensity(*it);
+        }
+      }
+    }
+#else
     for (auto it=interactors_.begin(); it!=interactors_.end(); ++it) {
       struct_analysis_.BinDensity(*it);
     }
+#endif
   }
 }
 
