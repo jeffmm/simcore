@@ -1,4 +1,5 @@
 *.swp
+*.swo
 /simcore
 /simcore_config
 /src/*.o
@@ -36,3 +37,4 @@ nohup.out
 *.tar.gz
 *.local_*
 *.density
+*.structure

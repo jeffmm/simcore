@@ -6,6 +6,7 @@
 #include "object.h"
 #include "neighbor_list.h"
 #include <mutex>
+#include <fftw3.h>
 
 class StructAnalysis {
   private:
@@ -28,6 +29,10 @@ class StructAnalysis {
         n_crossings_init_,
         n_crossings_complete_;
 
+    fftw_complex * density_array_,
+                 * fft_array_;
+    fftw_plan fft_plan;
+
     NeighborList crossing_list_;
     double local_bin_width_,
            density_bin_width_;
@@ -37,11 +42,12 @@ class StructAnalysis {
           * pdf_array_temp_,
           * nematic_array_temp_,
           * polar_array_temp_,
-          * density_array_;
+          * structure_array_;
+
     std::fstream pdf_file_;
     std::fstream nematic_file_;
     std::fstream polar_file_;
-    std::fstream density_file_;
+    std::fstream structure_file_;
     std::fstream overlap_file_;
     void WriteStructData();
     void WriteDensityData();
@@ -57,6 +63,7 @@ class StructAnalysis {
     void AddCrossingComplete();
     void AddCrossingInit();
     void AddOverlap();
+    void ZeroDensityArray();
 
   public:
     void Init(system_parameters *params, int *i_step);
