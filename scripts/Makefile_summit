@@ -37,11 +37,13 @@ else
 	# The CURC_GSL env variables should be set to your gsl library/include locations
 	GSLINCS = -I/$(CURC_GSL_INC)
 	GSLLIBS = -L/$(CURC_GSL_LIB) -lgsl -lgslcblas -lm
+	FFTWINCS = -I/$(CURC_FFTW_INC)
+	FFTWLIBS = -L/$(CURC_FFTW_LIB) -lfftw3
 	# These should change to the build directory of your local yaml build
 	YAMLINCS = -I/projects/jemo9179/build/yaml-cpp-master/include -I/$(CURC_BOOST_INC)
 	YAMLLIBS = -L/projects/jemo9179/build/yaml-cpp-master/build -lyaml-cpp
-	INCLUDES = $(GLFW3INCS) $(YAMLINCS) $(GSLINCS)
-	LIBS = $(GLFW3LIBS) $(YAMLLIBS) $(GSLLIBS)
+	INCLUDES = $(GLFW3INCS) $(YAMLINCS) $(GSLINCS) $(FFTWINCS)
+	LIBS = $(GLFW3LIBS) $(YAMLLIBS) $(GSLLIBS) $(FFTWLIBS)
 endif
 
 print-%: ; @echo $*=$($*)
