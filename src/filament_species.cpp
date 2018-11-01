@@ -53,8 +53,12 @@ void FilamentSpecies::InitPolarOrderAnalysis() {
   std::string fname = params_->run_name;
   fname.append("_filament.polar_order");
   polar_order_file_.open(fname, std::ios::out);
-  polar_order_file_ << "polar_order_analysis_file, contact number cutoff = " << contact_cut_ << "\n";
+  fname = params_->run_name;
+  fname.append("_filament.polar_order_avg");
+  polar_order_file_.open(fname, std::ios::out);
+  polar_order_avg_file_ << "polar_order_avg_file\n";
   polar_order_file_ << "contact_number local_polar_order\n";
+  polar_order_avg_file_ << "time avg_polar_order\n";
 }
 
 void FilamentSpecies::RunPolarOrderAnalysis() {
@@ -67,7 +71,9 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
   if (po.size() != cn.size()) {
     error_exit("Number of polar order parameters and contact numbers not equal");
   }
+  po_avg_ = 0;
   for (int i=0; i<po.size(); ++i) {
+    po_avg_ += po[i];
     if (cn[i] > contact_cut_) {
       continue;
     }
@@ -84,6 +90,8 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
     }
     polar_order_histogram_[n_bins_1d_ * y + x]++;
   }
+  po_avg_ /= po.size();
+  polar_order_avg_file_ << time_ << " " << po_avg_ << "\n";
 }
 
 void FilamentSpecies::InitOrientationCorrelationAnalysis() {
@@ -418,6 +426,7 @@ void FilamentSpecies::FinalizeAnalysis() {
   if (polar_order_file_.is_open()) {
     FinalizePolarOrderAnalysis();
     polar_order_file_.close();
+    polar_order_avg_file_.close();
   }
   if (orientation_corr_file_.is_open()) {
     FinalizeOrientationCorrelationAnalysis();

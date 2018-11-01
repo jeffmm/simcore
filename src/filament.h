@@ -169,6 +169,7 @@ class FilamentSpecies : public Species<Filament> {
            polar_bin_width_,
            contact_bin_width_,
            contact_cut_,
+           po_avg_,
            * nematic_order_tensor_,
            * polar_order_vector_;
     int **theta_histogram_;
@@ -184,7 +185,8 @@ class FilamentSpecies : public Species<Filament> {
                  global_order_file_,
                  local_order_file_,
                  polar_order_file_,
-                 orientation_corr_file_;
+                 orientation_corr_file_,
+                 polar_order_avg_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(species_id::filament);
