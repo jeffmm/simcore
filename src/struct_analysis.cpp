@@ -65,13 +65,28 @@ void StructAnalysis::Init(system_parameters * params, int * i_step) {
       warning("Local structure content to exceed %2.2f GB of RAM!",6.0*n_bins_*4.0/1e9);
     }
     /* initialize arrays */
-    density_array_ = new float[n_bins_];
-    std::fill(density_array_,density_array_+n_bins_,0.0);
+    density_array_ = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*n_bins_);
+    fft_array_ = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*n_bins_);
+    ZeroDensityArray();
+    fft_plan = fftw_plan_dft_2d(density_bins_1d_, density_bins_1d_,
+                                density_array_, fft_array_, 
+                                FFTW_FORWARD, FFTW_MEASURE);
+    structure_array_ = new float[n_bins_];
+    std::fill(structure_array_, structure_array_+n_bins_, 0.0);
   }
   if (overlap_analysis_) {
     std::string overlap_file_name = params_->run_name + ".overlaps";
     overlap_file_.open(overlap_file_name, std::ios::out);
     overlap_file_ << "time n_instant_bond_overlaps n_total_crossings_init n_total_crossings_complete\n";
+  }
+}
+
+void StructAnalysis::ZeroDensityArray() {
+  for (int i=0; i<density_bins_1d_; ++i) {
+    for (int j=0; j<density_bins_1d_; ++j) {
+      density_array_[i*density_bins_1d_+j][0] = 0; // real value
+      density_array_[i*density_bins_1d_+j][1] = 0; // complex value
+    }
   }
 }
 
@@ -101,7 +116,10 @@ void StructAnalysis::Clear() {
   }
   if (density_analysis_) {
     WriteDensityData();
-    delete[] density_array_;
+    delete[] structure_array_;
+    fftw_destroy_plan(fft_plan);
+    fftw_free(density_array_);
+    fftw_free(fft_array_);
   }
 
   //if (n_objs_ > 0) {
@@ -169,16 +187,16 @@ void StructAnalysis::WriteDensityData() {
         in StructAnalysis. Skipping density output.");
     return;
   }
-  std::string density_file_name = params_->run_name + ".density";
-  density_file_.open(density_file_name, std::ios::out);
+  std::string structure_file_name = params_->run_name + ".structure";
+  structure_file_.open(structure_file_name, std::ios::out);
   n_bins_1d_ = density_bins_1d_;
   for (int i=0; i<n_bins_1d_;++i) {
     for (int j=0; j<n_bins_1d_; ++j) {
-      density_file_ << " " << density_array_[i*n_bins_1d_+j]/n_objs_/count_;
+      structure_file_ << " " << structure_array_[i*n_bins_1d_+j]/SQR(n_objs_)/count_;
     }
-    density_file_ << "\n";
+    structure_file_ << "\n";
   }
-  density_file_.close();
+  structure_file_.close();
 }
 
 void StructAnalysis::CalculateStructurePair(std::vector<pair_interaction>::iterator pix) {
@@ -453,7 +471,7 @@ void StructAnalysis::BinArray(int x, int y, double dotprod, bool is_local) {
     polar_array_temp_[index] += dotprod;
   }
   else {
-    density_array_[index] += 1.0;
+    density_array_[index][0] += 1.0;
   }
 }
 
@@ -474,6 +492,23 @@ void StructAnalysis::AverageStructure() {
     crossing_list_.CompareLists(&n_crossings_init_, &n_crossings_complete_);
     overlap_file_ << ((*i_step_)*params_->delta) << " " << n_overlaps_ << " " << 0.5*n_crossings_init_ << " " << 0.5*n_crossings_complete_ << "\n";
     n_overlaps_ = 0;
+  }
+  if (density_analysis_) {
+    // Turn the histogram into a density by averaging by the number of objects in the system
+    for (int i=0; i<density_bins_1d_; ++i) {
+      for (int j=0; j<density_bins_1d_; ++j) {
+        density_array_[i*density_bins_1d_+j][0] /= n_objs_;
+      }
+    }
+    // Get the fft of the instantaneous density
+    fftw_execute(fft_plan);
+    for (int i=0; i<density_bins_1d_; ++i) {
+      for (int j=0; j<density_bins_1d_; ++j) {
+        structure_array_[i*density_bins_1d_+j] += (SQR(fft_array_[i*density_bins_1d_+j][0])
+                                                 + SQR(fft_array_[i*density_bins_1d_+j][1]));
+      }
+    }
+    ZeroDensityArray();
   }
 }
 
