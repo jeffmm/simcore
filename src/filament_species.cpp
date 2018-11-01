@@ -55,7 +55,7 @@ void FilamentSpecies::InitPolarOrderAnalysis() {
   polar_order_file_.open(fname, std::ios::out);
   fname = params_->run_name;
   fname.append("_filament.polar_order_avg");
-  polar_order_file_.open(fname, std::ios::out);
+  polar_order_avg_file_.open(fname, std::ios::out);
   polar_order_avg_file_ << "polar_order_avg_file\n";
   polar_order_file_ << "contact_number local_polar_order\n";
   polar_order_avg_file_ << "time avg_polar_order\n";
