@@ -186,6 +186,7 @@ class FilamentSpecies : public Species<Filament> {
                  local_order_file_,
                  polar_order_file_,
                  orientation_corr_file_,
+                 crossing_file_,
                  polar_order_avg_file_;
   public:
     FilamentSpecies() : Species() {
@@ -219,6 +220,10 @@ class FilamentSpecies : public Species<Filament> {
     void InitSpiralAnalysis();
     void RunSpiralAnalysis();
     //void FinalizeSpiralAnalysis();
+
+    void InitCrossingAnalysis();
+    void RunCrossingAnalysis();
+    void FinalizeCrossingAnalysis();
 
     void InitThetaAnalysis();
     void RunThetaAnalysis();
