@@ -11,6 +11,10 @@ void FilamentSpecies::InitAnalysis() {
     }
     InitThetaAnalysis();
   }
+  //if (params_->filament.crossing_analysis) {
+  if (params_->filament.crossing_analysis) {
+    InitCrossingAnalysis();
+  }
   if (params_->filament.lp_analysis) {
     InitMse2eAnalysis();
   }
@@ -126,6 +130,34 @@ void FilamentSpecies::RunOrientationCorrelationAnalysis() {
 
 void FilamentSpecies::FinalizeOrientationCorrelationAnalysis() {
 
+}
+
+void FilamentSpecies::InitCrossingAnalysis() {
+  std::string fname = params_->run_name;
+  fname.append("_filament.crossing");
+  crossing_file_.open(fname, std::ios::out);
+  crossing_file_ << "crossing_analysis\n";
+  crossing_file_ << "sp lp dr\n";
+  crossing_file_ << params_->soft_potential_mag << " " << params_->filament.perlen_ratio << " " << params_->filament.driving_factor <<"\n";
+  double avg_u[3] = {0,0,0};
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    it->GetAvgOrientation(avg_u);
+    crossing_file_ << acos(avg_u[1]) << " ";
+  }
+  crossing_file_ << "\n";
+}
+
+void FilamentSpecies::RunCrossingAnalysis() {
+
+}
+
+void FilamentSpecies::FinalizeCrossingAnalysis() {
+  double avg_pos[3] = {0,0,0};
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    it->GetAvgPosition(avg_pos);
+    crossing_file_ << (avg_pos[0] > 2 ? 1 : 0) << " ";
+  }
+  crossing_file_ << "\n";
 }
 
 void FilamentSpecies::InitMse2eAnalysis() {
@@ -414,6 +446,10 @@ void FilamentSpecies::FinalizeAnalysis() {
   if (theta_file_.is_open()) {
     FinalizeThetaAnalysis();
     theta_file_.close();
+  }
+  if (crossing_file_.is_open()) {
+    FinalizeCrossingAnalysis();
+    crossing_file_.close();
   }
   if (mse2e_file_.is_open()) {
     FinalizeMse2eAnalysis();

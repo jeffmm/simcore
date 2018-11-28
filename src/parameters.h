@@ -57,6 +57,7 @@ class filament_parameters : public species_parameters {
     int n_equil = 0;
     int orientation_corr_analysis = 0;
     int orientation_corr_n_steps = 1000;
+    int crossing_analysis = 0;
 };
 
 class passive_filament_parameters : public species_parameters {
