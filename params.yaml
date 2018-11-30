@@ -3,9 +3,9 @@ seed: 18591845184
 
 run_name: fjj
 n_dim: 2
-n_periodic: 0
+n_periodic: 2
 delta: 0.0001
-n_steps: 8000
+n_steps: 80000000
 boundary: 0
 n_update_cells: -1
 cell_length: 5
@@ -15,11 +15,11 @@ n_graph: 100
 graph_background: 0
 print_complete: 0
 
-system_radius: 50
+system_radius: 100
 potential: soft
-soft_potential_mag: 100
-like_like_interactions: 0
-stoch_flag: 0
+soft_potential_mag: 50
+like_like_interactions: 1
+stoch_flag: 1
 f_cutoff: 10000
 n_thermo: 100
 thermo_flag: 1
@@ -29,20 +29,21 @@ local_order_width: 40
 local_order_average: 1
 interaction_flag: 1
 overlap_analysis: 0
-density_analysis: 1
+density_analysis: 0
 density_com_only: 0
 density_bin_width: 0.1
 
 filament:
-  num: 13
-  packing_fraction: -1
+  num: 1
+  packing_fraction: 0.1
   overlap: 1
-  insertion_type: custom
-  insert_file: filament_crossing_13.yaml
+  insertion_type: random
+  #insert_file: filament_crossing_13.yaml
   diameter: 1
-  length: 50
-  perlen_ratio: 500
-  n_bonds: 17
+  length: 30
+  perlen_ratio: 100
+  intrinsic_curvature: 0.02
+  n_bonds: 10
   posit_flag: 0
   spec_flag: 1
   checkpoint_flag: 1
@@ -54,7 +55,7 @@ filament:
   global_order_analysis: 0
 
 passive_filament:
-  num: 1
+  num: 0
   diameter: 1
   length: 115
   draw_type: bw

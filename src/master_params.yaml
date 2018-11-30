@@ -123,6 +123,7 @@ filament:
   orientation_corr_analysis: [0, int]
   orientation_corr_n_steps: [1000,int]
   crossing_analysis: [0, int]
+  intrinsic_curvature: [0, double]
 passive_filament:
   diameter: [1, double]
   length: [-1, double]
