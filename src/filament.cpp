@@ -52,6 +52,7 @@ void Filament::SetParameters() {
   if (params_->filament.spiral_number_fail_condition <= 0) {
     params_->filament.spiral_number_fail_condition = 1e-6;
   }
+  curvature_ = 0.5*params_->filament.intrinsic_curvature;
 }
 
 void Filament::SetAnchor(Anchor * a) {
@@ -671,25 +672,40 @@ void Filament::CalculateBendingForces() {
   // See Pasquali and Morse, J. Chem. Phys. Vol 116, No 5 (2002)
   double f_site[3] = {0, 0, 0};
   if (n_dim_ == 2) {
+    double zvec[3] = {0, 0, 1};
+    double u1[3] = {0, 0, 0};
+    double u2[3] = {0, 0, 0};
     for (int k_site=0; k_site<n_sites_; ++k_site) {
       std::fill(f_site,f_site+3,0.0);
       if (k_site>1) {
-        double const * const u1 = sites_[k_site-2].GetOrientation();
-        double const * const u2 = sites_[k_site-1].GetOrientation();
+        double const * const u1_temp = sites_[k_site-2].GetOrientation();
+        double const * const u2_temp = sites_[k_site-1].GetOrientation();
+        std::copy(u1_temp, u1_temp+3, u1);
+        std::copy(u2_temp, u2_temp+3, u2);
+        rotate_vector(u1, zvec, curvature_);
+        rotate_vector(u2, zvec, -curvature_);
         f_site[0] += k_eff_[k_site-2] * ( (1-SQR(u2[0]))*u1[0] - u2[0]*u2[1]*u1[1] );
         f_site[1] += k_eff_[k_site-2] * ( (1-SQR(u2[1]))*u1[1] - u2[0]*u2[1]*u1[0] );
       }
       if (k_site>0 && k_site<n_sites_-1) {
-        double const * const u1 = sites_[k_site-1].GetOrientation();
-        double const * const u2 = sites_[k_site].GetOrientation();
+        double const * const u1_temp = sites_[k_site-1].GetOrientation();
+        double const * const u2_temp = sites_[k_site].GetOrientation();
+        std::copy(u1_temp, u1_temp+3, u1);
+        std::copy(u2_temp, u2_temp+3, u2);
+        rotate_vector(u1, zvec, curvature_);
+        rotate_vector(u2, zvec, -curvature_);
         f_site[0] += k_eff_[k_site-1] * ( (1-SQR(u1[0]))*u2[0] - u1[0]*u1[1]*u2[1]
                         -((1-SQR(u2[0]))*u1[0] - u2[0]*u2[1]*u1[1]) );
         f_site[1] += k_eff_[k_site-1] * ( (1-SQR(u1[1]))*u2[1] - u1[0]*u1[1]*u2[0]
                         -((1-SQR(u2[1]))*u1[1] - u2[0]*u2[1]*u1[0]) );
       }
       if (k_site<n_sites_-2) {
-        double const * const u1 = sites_[k_site].GetOrientation();
-        double const * const u2 = sites_[k_site+1].GetOrientation();
+        double const * const u1_temp = sites_[k_site].GetOrientation();
+        double const * const u2_temp = sites_[k_site+1].GetOrientation();
+        std::copy(u1_temp, u1_temp+3, u1);
+        std::copy(u2_temp, u2_temp+3, u2);
+        rotate_vector(u1, zvec, curvature_);
+        rotate_vector(u2, zvec, -curvature_);
         f_site[0] -= k_eff_[k_site] * ( (1-SQR(u1[0]))*u2[0] - u1[0]*u1[1]*u2[1] );
         f_site[1] -= k_eff_[k_site] * ( (1-SQR(u1[1]))*u2[1] - u1[0]*u1[1]*u2[0] );
       }

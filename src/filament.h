@@ -46,6 +46,7 @@ class Filament : public Mesh {
            p_g2p_,
            driving_factor_,
            fic_factor_,
+           curvature_ = 0,
            // TEMPORARY FIXME
            motor_velocity_,
            k_on_,
