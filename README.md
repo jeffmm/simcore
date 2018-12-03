@@ -4,12 +4,6 @@ A modular, object-oriented program for coarse-grained physics simulations, using
 
 Updated: 11/30/2018.
 
-## Disclaimer
-
-simcore was written for my personal academic use and in its current state is not intended to be used by the general public. If you are insane (and somehow also patient) and would like to run simcore for whatever reason, you can contact me for help and (if I have time) I will do what I can to offer assistance. In addition, the README provided here is in no way a complete documentation of the software. Without further ado:
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 ## About simcore
 
 simcore is written in c++ and designed for coarse-grained physics simulations with modularity and scalability in mind. All objects in the simulation are representable as a composite of what I call "simple" objects (points, spheres, rigid cylinders, and 2d polygon surfaces would all qualify). For short-range interactions, simcore uses cell and neighbor lists for improved performance and OpenMP for parallelization.
@@ -22,7 +16,7 @@ Although simcore is meant to be a generalized molecular/Brownian dynamics simula
 
 For successful installation, make sure you have the following libraries/binaries installed:
 
-  * g++-6 
+  * your favorite c++ compiler
   * yaml-cpp (https://github.com/jbeder/yaml-cpp)
   * openGL
   * gsl
@@ -31,16 +25,14 @@ For successful installation, make sure you have the following libraries/binaries
   * openmp
   * fftw
 
-The command 'make simcore' will build the simcore binary in the local directory in debug mode. You can use the commands 'make CFG=release THREADING=eomp simcore' to use optimization flags and enable parallel processing using openmp. You also have the option to compile without graphics enabled using the NOGRAPH=true option, and you can set the number of cores to use for openmp with the environment variable OMP_NUM_THREADS=4.
-
-Note that the graphics are almost guaranteed to give some trouble, since almost all the libraries are at this point deprecated (especially since Apple recently decided that OpenGL itself should be deprecated).
+Once appropriate compiler and library paths are defined in the Makefile, the command 'make simcore' will build the simcore binary in the local directory in debug mode. You can add options such as CFG=release, THREADING=eomp, or NOGRAPH=true, to change optimization flags, toggle OpenMP for parallelization, or disable graphics. Note that the graphics are almost guaranteed to give some trouble, since almost all the libraries are at this point deprecated (especially since Apple recently declared OpenGL deprecated entirely).
 
 ## Running simcore
 
 The simcore binary is run with
 
 ```
-./simcore params_file --flag1 option1 --flag2 ...
+./simcore --flag1 --flag2 ... params_file 
 ```
 
 The following flags are available:
@@ -74,10 +66,11 @@ The following flags are available:
 
 ## Parameters
 
-There are three types of parameters, but only two are necessary: global and species. Global parameters are seen by the entire system and species parameters are unique to the specified species. There is also an optional "global species" parameter type that affects every species.
+There are three parameter types, but only two are necessary: global and species. Global parameters are seen by the entire system and species parameters are unique to the specified species. There is also an optional "global species" parameter type that affects every species.
+
+What do I mean by species? simcore assumes that any given simulation will likely have many copies of one kind of thing, which I call a species, perhaps interacting with other species of other kinds. In a system of interacting spheres, the species is 'sphere.' In a system of interacting semiflexible filaments, the species is 'filament.' Simulations can have many types of species all interacting with each other with different species-species interaction potentials.
   
-The parameter file must be in the YAML file format and is set up in
-the following way:
+The parameter file must be in the YAML file format and is set up in the following way:
 
 ```
 global_param_1: gp1_value
@@ -130,17 +123,17 @@ Some important species parameters to consider are:
 * checkpoint_flag: whether to output checkpoint files
 * n_checkpoint: how often to output checkpoint files
 
-All parameters used in the simulation and their default values are specified in the master_params.yaml file in the src folder.
+All parameters used in the simulation, along with their default values and data types, are specified in the master_params.yaml file in the src folder.
 
 ## Adding new parameters
 
-simcore comes with it's own parameter initialization tool, simcore_config, which can be installed by following the above installation instructions for simcore and then doing 'make simcore_config'.  simcore_config makes it easy to add new parameters to the simulation without mucking around in the source code. Just add your new parameter to the _master_params.yaml_ file using the following format: 
+simcore comes with it's own parameter initialization tool, simcore_config, which can be installed by following the above installation instructions for simcore and then doing 'make simcore_config'.  simcore_config makes it easy to add new parameters to the simulation without mucking around in the source code. Just add your new parameter to the master_params.yaml file using the following format: 
 
 ```
 new_parameter_name: [default_parameter_value, parameter_type] 
 ```
  
-Running simcore_config will look at all the parameters in the master_params.yaml file and add them seamlessly to the proper simcore files, and you can begin using them in your classes right away after recompiling simcore. NOTE: for some reason, yaml-cpp is inconsistent about its treatment of boolean values. For type-safety reasons, it's best to use integers instead of bools when adding flag parameters.  
+Running simcore_config will look at all the parameters in the master_params.yaml file and add them seamlessly to the proper simcore files, and you can begin using them in your classes right away after recompiling simcore. NOTE: At the time of this writing (12/3/2017), yaml-cpp is inconsistent about its treatment of boolean values. For type-safety reasons, it's best to use integers instead of bools when adding flag parameters.  
 
 ### Parameter sets
 
@@ -274,7 +267,16 @@ Anaylses are run by running simcore in the following way:
   
 NOTE: It is important to keep in mind that the parameter_file should be identical to the parameter file used to generate the outputs. There are a few exceptions that only affect post-processing, such as analysis flags, but this is true in general.
 
-The way inputs and outputs are meant to work in simcore is such that during a simulation, output data is generated in the posit, spec, and checkpoint formats, and during analysis, the same output data are read back into the data structures in simcore for processing. The .posit files just contain bare-bones information that allow many types of simple analyses, but .spec files should in general contain all the necessary information to recreate the trajectory for a member of a species. 
+The way inputs and outputs are meant to work in simcore is such that during a simulation, output data are generated in the posit, spec, and checkpoint formats, and during analysis, the same output data are read back into the data structures in simcore for processing. The .posit files just contain bare-bones information that allow many types of simple analyses, but .spec files should in general contain all the necessary information to recreate the trajectory for a member of a species. 
 
-For new analyses of different species, the analysis routine should be defined in the species container class, rather than the species member class. For example, the RunSpiralAnalysis routine is defined in FilamentSpecies, which uses the positions, etc defined in each Filament member. See Filament and FilamentSpecies for examples of how analyses can be initialized, processed, etc.
+For a new species analysis method, the analysis routines should be defined in the species container class, rather than the species member class, and called by the inherited RunAnalysis method of the SpeciesBase class (and likewise for analysis initialization and finalization, see examples for details).
+
+For example, the RunSpiralAnalysis routine is called by the RunAnalysis method in FilamentSpecies, which uses the Filament .spec file as an input to do the necessary analysis, whose results are placed into a new file ending in filament.spiral. See Filament and FilamentSpecies for examples of how analyses can be initialized, processed, etc.
+
+## Disclaimer
+
+simcore was written for my personal academic use and in its current state is not intended to be used by the general public. If you are insane (and somehow also patient) and would like to run simcore for whatever reason, you can contact me for help and (if I have time) I will do what I can to offer assistance. In addition, the README provided here is in no way a complete documentation of the software. Without further ado:
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
