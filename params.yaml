@@ -1,5 +1,5 @@
 seed: 18591845184
-#seed: 12252588513455
+#seed: 3021514973417
 
 run_name: fjj
 n_dim: 2
@@ -8,7 +8,7 @@ delta: 0.0001
 n_steps: 80000000
 boundary: 0
 n_update_cells: -1
-cell_length: 5
+cell_length: 4
 
 graph_flag: 1
 n_graph: 100
@@ -35,15 +35,15 @@ density_bin_width: 0.1
 
 filament:
   num: 1
-  packing_fraction: 0.1
+  packing_fraction: 0.15
   overlap: 1
-  insertion_type: random
+  insertion_type: random_polar
   #insert_file: filament_crossing_13.yaml
   diameter: 1
   length: 30
   perlen_ratio: 100
-  intrinsic_curvature: 0.02
-  n_bonds: 10
+  intrinsic_curvature: 0.01
+  n_bonds: 8
   posit_flag: 0
   spec_flag: 1
   checkpoint_flag: 1
