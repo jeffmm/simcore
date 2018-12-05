@@ -59,6 +59,10 @@ class filament_parameters : public species_parameters {
     int orientation_corr_n_steps = 1000;
     int crossing_analysis = 0;
     double intrinsic_curvature = 0;
+    int flagella_flag = 0;
+    double flagella_freq = 1;
+    double flagella_period = 2;
+    double flagella_amplitude = 1;
 };
 
 class passive_filament_parameters : public species_parameters {
