@@ -176,6 +176,18 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("intrinsic_curvature")==0) {
             params->filament.intrinsic_curvature = jt->second.as<double>();
           }
+          else if (param_name.compare("flagella_flag")==0) {
+            params->filament.flagella_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("flagella_freq")==0) {
+            params->filament.flagella_freq = jt->second.as<double>();
+          }
+          else if (param_name.compare("flagella_period")==0) {
+            params->filament.flagella_period = jt->second.as<double>();
+          }
+          else if (param_name.compare("flagella_amplitude")==0) {
+            params->filament.flagella_amplitude = jt->second.as<double>();
+          }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
           }

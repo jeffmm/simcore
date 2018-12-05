@@ -52,7 +52,16 @@ void Filament::SetParameters() {
   if (params_->filament.spiral_number_fail_condition <= 0) {
     params_->filament.spiral_number_fail_condition = 1e-6;
   }
+  /* Assume that intrinsic curvature is given in the format of 
+     d_theta/d_s where s is the arc length, then the angle between each bond
+     must be d_theta/d_s * bond_length_. The additional factor of 1/2 is due to
+     the fact that curvature is the adjusted angle for each bond when
+     calculating the bending forces */
   curvature_ = 0.5*params_->filament.intrinsic_curvature;
+  flagella_flag_ = params_->filament.flagella_flag;
+  flagella_freq_ = params_->filament.flagella_freq;
+  flagella_period_ = params_->filament.flagella_period;
+  flagella_amplitude_ = params_->filament.flagella_amplitude;
 }
 
 void Filament::SetAnchor(Anchor * a) {
@@ -675,37 +684,56 @@ void Filament::CalculateBendingForces() {
     double zvec[3] = {0, 0, 1};
     double u1[3] = {0, 0, 0};
     double u2[3] = {0, 0, 0};
+    double curve_mag = 0.5*flagella_amplitude_*M_PI/length_;
+    double theta_t = 2*M_PI*n_step_*delta_/flagella_freq_;
+    double theta_x = 2*M_PI*flagella_period_*bond_length_/length_;
+    double curve = curvature_;
     for (int k_site=0; k_site<n_sites_; ++k_site) {
       std::fill(f_site,f_site+3,0.0);
       if (k_site>1) {
+        if (flagella_flag_) {
+          curve = curve_mag * sin(theta_x*(k_site-1) - theta_t);
+        }
         double const * const u1_temp = sites_[k_site-2].GetOrientation();
         double const * const u2_temp = sites_[k_site-1].GetOrientation();
         std::copy(u1_temp, u1_temp+3, u1);
         std::copy(u2_temp, u2_temp+3, u2);
-        rotate_vector(u1, zvec, curvature_);
-        rotate_vector(u2, zvec, -curvature_);
+        if (curvature_ != 0 || flagella_flag_) {
+          rotate_vector(u1, zvec, curve*bond_length_);
+          rotate_vector(u2, zvec, -curve*bond_length_);
+        }
         f_site[0] += k_eff_[k_site-2] * ( (1-SQR(u2[0]))*u1[0] - u2[0]*u2[1]*u1[1] );
         f_site[1] += k_eff_[k_site-2] * ( (1-SQR(u2[1]))*u1[1] - u2[0]*u2[1]*u1[0] );
       }
       if (k_site>0 && k_site<n_sites_-1) {
+        if (flagella_flag_) {
+          curve = curve_mag * sin(theta_x*(k_site) - theta_t);
+        }
         double const * const u1_temp = sites_[k_site-1].GetOrientation();
         double const * const u2_temp = sites_[k_site].GetOrientation();
         std::copy(u1_temp, u1_temp+3, u1);
         std::copy(u2_temp, u2_temp+3, u2);
-        rotate_vector(u1, zvec, curvature_);
-        rotate_vector(u2, zvec, -curvature_);
+        if (curvature_ != 0 || flagella_flag_) {
+          rotate_vector(u1, zvec, curve*bond_length_);
+          rotate_vector(u2, zvec, -curve*bond_length_);
+        }
         f_site[0] += k_eff_[k_site-1] * ( (1-SQR(u1[0]))*u2[0] - u1[0]*u1[1]*u2[1]
                         -((1-SQR(u2[0]))*u1[0] - u2[0]*u2[1]*u1[1]) );
         f_site[1] += k_eff_[k_site-1] * ( (1-SQR(u1[1]))*u2[1] - u1[0]*u1[1]*u2[0]
                         -((1-SQR(u2[1]))*u1[1] - u2[0]*u2[1]*u1[0]) );
       }
       if (k_site<n_sites_-2) {
+        if (flagella_flag_) {
+          curve = curve_mag * sin(theta_x*(k_site+1) - theta_t);
+        }
         double const * const u1_temp = sites_[k_site].GetOrientation();
         double const * const u2_temp = sites_[k_site+1].GetOrientation();
         std::copy(u1_temp, u1_temp+3, u1);
         std::copy(u2_temp, u2_temp+3, u2);
-        rotate_vector(u1, zvec, curvature_);
-        rotate_vector(u2, zvec, -curvature_);
+        if (curvature_ != 0 || flagella_flag_) {
+          rotate_vector(u1, zvec, curve*bond_length_);
+          rotate_vector(u2, zvec, -curve*bond_length_);
+        }
         f_site[0] -= k_eff_[k_site] * ( (1-SQR(u1[0]))*u2[0] - u1[0]*u1[1]*u2[1] );
         f_site[1] -= k_eff_[k_site] * ( (1-SQR(u1[1]))*u2[1] - u1[0]*u1[1]*u2[0] );
       }
