@@ -20,6 +20,7 @@ class Filament : public Mesh {
         spiral_flag_,
         shuffle_flag_,
         stoch_flag_,
+        flagella_flag_,
         metric_forces_,
         // TEMPORARY FIXME
         n_step_ = 0,
@@ -36,6 +37,9 @@ class Filament : public Mesh {
            friction_perp_,
            rand_sigma_par_,
            rand_sigma_perp_,
+           flagella_freq_,
+           flagella_period_,
+           flagella_amplitude_,
            v_poly_,
            v_depoly_,
            p_s2g_,

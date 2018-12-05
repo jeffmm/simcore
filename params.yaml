@@ -1,11 +1,11 @@
 seed: 18591845184
-#seed: 3021514973417
+#seed: 97763026622289
 
 run_name: fjj
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 80000000
+n_steps: 800000
 boundary: 0
 n_update_cells: -1
 cell_length: 4
@@ -18,8 +18,8 @@ print_complete: 0
 system_radius: 100
 potential: soft
 soft_potential_mag: 50
-like_like_interactions: 1
-stoch_flag: 1
+like_like_interactions: 0
+stoch_flag: 0
 f_cutoff: 10000
 n_thermo: 100
 thermo_flag: 1
@@ -33,26 +33,34 @@ density_analysis: 0
 density_com_only: 0
 density_bin_width: 0.1
 
-filament:
+centrosome:
   num: 1
-  packing_fraction: 0.15
+  n_filaments_min: 1
+  n_filaments_max: 1
+  alignment_potential: 1
+  k_align: 1000
+  checkpoint_flag: 1
+
+filament:
+  num: 0
+  packing_fraction: -1
   overlap: 1
-  insertion_type: random_polar
+  insertion_type: centered_oriented
   #insert_file: filament_crossing_13.yaml
   diameter: 1
-  length: 30
-  perlen_ratio: 100
-  intrinsic_curvature: 0.01
-  n_bonds: 8
-  posit_flag: 0
+  length: 100
+  perlen_ratio: 1000
+  intrinsic_curvature: .0628
+  n_bonds: 20
+  driving_factor: 0
+  n_spec: 1000
+  n_checkpoint: 100
   spec_flag: 1
   checkpoint_flag: 1
-  n_posit: 10
-  n_spec: 10
-  n_checkpoint: 100
-  driving_factor: 30
-  lp_analysis: 0
-  global_order_analysis: 0
+  flagella_flag: 1
+  flagella_freq: 0.1
+  flagella_period: 2
+  flagella_amplitude: 3
 
 passive_filament:
   num: 0

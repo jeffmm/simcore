@@ -124,6 +124,10 @@ filament:
   orientation_corr_n_steps: [1000,int]
   crossing_analysis: [0, int]
   intrinsic_curvature: [0, double]
+  flagella_flag: [0, int]
+  flagella_freq: [1, double]
+  flagella_period: [2, double]
+  flagella_amplitude: [1, double]
 passive_filament:
   diameter: [1, double]
   length: [-1, double]
