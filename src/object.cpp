@@ -187,6 +187,7 @@ void Object::SetSID(species_id sid) {
 }
 
 // Virtual functions
+// Returns true if object is out of bounds
 bool Object::CheckBounds(double buffer) {
   if (space_->type == +boundary_type::none) return false;
   double const * const r = GetInteractorPosition();
