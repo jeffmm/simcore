@@ -1,26 +1,26 @@
 seed: 18591845184
 #seed: 97763026622289
 
-run_name: fjj
+run_name: bead_crossing
 n_dim: 2
 n_periodic: 2
-delta: 0.0001
-n_steps: 800000
+delta: 0.0000001
+n_steps: 800000000
 boundary: 0
 n_update_cells: -1
 cell_length: 4
 movie_flag: 1
 
-graph_flag: 1
+graph_flag: 0
 n_graph: 100
 graph_background: 0
-print_complete: 0
+print_complete: 1
 
-system_radius: 100
+system_radius: 10
 potential: soft
-soft_potential_mag: 1000
+soft_potential_mag: 10.12
 like_like_interactions: 1
-stoch_flag: 1
+stoch_flag: 0
 f_cutoff: 10000
 n_thermo: 100
 thermo_flag: 1
@@ -43,33 +43,40 @@ centrosome:
   checkpoint_flag: 1
 
 filament:
-  num: 20
+  num: 0
   packing_fraction: -1
   overlap: 0
-  insertion_type: random_nematic
-  #insert_file: filament_crossing_13.yaml
+  insertion_type: custom
+  insert_file: filament_crossing.yaml
   diameter: 1
-  length: 100
+  length: 10
   perlen_ratio: 1000
-  intrinsic_curvature: .0628
-  n_bonds: 20
-  driving_factor: -100
+  #intrinsic_curvature: .0628
+  n_bonds: 3
+  driving_factor: 3
   n_spec: 1000
   n_checkpoint: 100
   spec_flag: 1
   checkpoint_flag: 1
-  flagella_flag: 1
+  flagella_flag: 0
   flagella_freq: 0.1
   flagella_period: 2
   flagella_amplitude: 3
 
-passive_filament:
-  num: 0
+br_bead:
+  num: 1
   diameter: 1
-  length: 115
+  driving_factor: 30
+  insertion_type: custom
+  insert_file: bead_crossing.yaml
+
+passive_filament:
+  num: 1
+  diameter: 1
+  length: 10
   draw_type: bw
   insertion_type: custom
-  insert_file: filament_crossing_13.yaml
+  insert_file: bead_crossing.yaml
   perlen_ratio: 100 
   n_bonds: 3
   posit_flag: 0
