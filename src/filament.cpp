@@ -685,7 +685,10 @@ void Filament::CalculateBendingForces() {
     double u1[3] = {0, 0, 0};
     double u2[3] = {0, 0, 0};
     double curve_mag = 0.5*flagella_amplitude_*M_PI/length_;
-    double theta_t = 2*M_PI*n_step_*delta_/flagella_freq_;
+    double theta_t = 0;
+    if (flagella_freq_ != 0) {
+      theta_t = 2*M_PI*n_step_*delta_/flagella_freq_;
+    }
     double theta_x = 2*M_PI*flagella_period_*bond_length_/length_;
     double curve = curvature_;
     for (int k_site=0; k_site<n_sites_; ++k_site) {

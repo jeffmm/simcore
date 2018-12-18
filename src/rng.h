@@ -4,7 +4,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <math.h>
-#include "definitions.h"
+//#include "definitions.h"
 
 class RNG { 
   private:
