@@ -9,6 +9,7 @@ n_steps: 800000
 boundary: 0
 n_update_cells: -1
 cell_length: 4
+movie_flag: 1
 
 graph_flag: 1
 n_graph: 100
@@ -17,9 +18,9 @@ print_complete: 0
 
 system_radius: 100
 potential: soft
-soft_potential_mag: 50
-like_like_interactions: 0
-stoch_flag: 0
+soft_potential_mag: 1000
+like_like_interactions: 1
+stoch_flag: 1
 f_cutoff: 10000
 n_thermo: 100
 thermo_flag: 1
@@ -34,7 +35,7 @@ density_com_only: 0
 density_bin_width: 0.1
 
 centrosome:
-  num: 1
+  num: 0
   n_filaments_min: 1
   n_filaments_max: 1
   alignment_potential: 1
@@ -42,17 +43,17 @@ centrosome:
   checkpoint_flag: 1
 
 filament:
-  num: 0
+  num: 20
   packing_fraction: -1
-  overlap: 1
-  insertion_type: centered_oriented
+  overlap: 0
+  insertion_type: random_nematic
   #insert_file: filament_crossing_13.yaml
   diameter: 1
   length: 100
   perlen_ratio: 1000
   intrinsic_curvature: .0628
   n_bonds: 20
-  driving_factor: 0
+  driving_factor: -100
   n_spec: 1000
   n_checkpoint: 100
   spec_flag: 1
