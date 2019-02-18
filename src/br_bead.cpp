@@ -86,7 +86,7 @@ void BrBead::Translate() {
     dr[i] = force_[i] * delta_ * gamma_trans_;
     position_[i] += dr[i];
   }
-  printf("tot force: %2.2f\n", sqrt(fmag));
+  //printf("tot force: %2.6f\n", sqrt(fmag));
 }
 
 void BrBead::Rotate() {
