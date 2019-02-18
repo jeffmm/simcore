@@ -2,9 +2,7 @@
 
 A modular, object-oriented program for coarse-grained physics simulations, using something I call **SIM**ple-**C**omposite **O**bject **RE**presentation.
 
-[![DOI](https://zenodo.org/badge/78224592.svg)](https://zenodo.org/badge/latestdoi/78224592)
-
-Updated: 11/30/2018.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2571982.svg)](https://doi.org/10.5281/zenodo.2571982)
 
 ## About simcore
 
