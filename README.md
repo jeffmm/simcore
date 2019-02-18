@@ -2,6 +2,8 @@
 
 A modular, object-oriented program for coarse-grained physics simulations, using something I call **SIM**ple-**C**omposite **O**bject **RE**presentation.
 
+[![DOI](https://zenodo.org/badge/78224592.svg)](https://zenodo.org/badge/latestdoi/78224592)
+
 Updated: 11/30/2018.
 
 ## About simcore
@@ -275,8 +277,7 @@ For example, the RunSpiralAnalysis routine is called by the RunAnalysis method i
 
 ## Disclaimer
 
-simcore was written for my personal academic use and in its current state is not intended to be used by the general public. If you are insane (and somehow also patient) and would like to run simcore for whatever reason, you can contact me for help and (if I have time) I will do what I can to offer assistance. In addition, the README provided here is in no way a complete documentation of the software. Without further ado:
+simcore was written for my personal academic use and in its current state is not intended to be used by the general public. If you are insane (and somehow also patient) and would like to run simcore for whatever reason, you can contact me for help and (if I have time) I will do what I can to offer assistance. In addition, the README provided here is in no way a complete documentation of the software. The simcore software is covered by the MIT license.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
