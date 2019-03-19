@@ -28,8 +28,8 @@ class SoftPotential : public PotentialBase {
         ix->force[i] = ffac*dr[i];
         fmag += ix->force[i] * ix->force[i];
       }
-      printf("%2.2f %2.2f %2.2f\n", dr[0], dr[1], dr[2]);
-      printf("%2.2f\n", sqrt(fmag));
+      //printf("%2.2f %2.2f %2.2f\n", dr[0], dr[1], dr[2]);
+      //printf("%2.2f\n", sqrt(fmag));
       for (int i=0; i<n_dim_; ++i)
         for (int j=0; j<n_dim_; ++j)
           ix->stress[n_dim_*i+j] = -dr[i]*ix->force[j];
