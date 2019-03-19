@@ -63,6 +63,7 @@ class filament_parameters : public species_parameters {
     double flagella_freq = 1;
     double flagella_period = 2;
     double flagella_amplitude = 1;
+    int flocking_analysis = 0;
 };
 
 class passive_filament_parameters : public species_parameters {
@@ -244,6 +245,11 @@ class system_parameters {
     int highlight_overlaps = 0;
     int reduced = 0;
     int reload_reduce_switch = 0;
+    double flock_polar_min = 0.5;
+    double flock_contact_min = 5;
+    int highlight_flock = 0;
+    double flock_color_ext = 0;
+    double flock_color_int = 3.14;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;

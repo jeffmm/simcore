@@ -123,6 +123,7 @@ class Filament : public Mesh {
     double const GetDriving() {return driving_factor_;}
     double const GetPersistenceLength() {return persistence_length_;}
     double const GetBondLength() {return bond_length_;}
+    void CheckFlocking();
     int const GetNBonds() {return n_bonds_;}
     std::vector<double> const * const GetThetas() {
       return &cos_thetas_;
@@ -175,6 +176,7 @@ class FilamentSpecies : public Species<Filament> {
            contact_bin_width_,
            contact_cut_,
            po_avg_,
+           cn_avg_,
            * nematic_order_tensor_,
            * polar_order_vector_;
     int **theta_histogram_;
@@ -185,6 +187,7 @@ class FilamentSpecies : public Species<Filament> {
         n_samples_,
         orientation_corr_n_steps_;
     std::fstream spiral_file_,
+                 flock_file_,
                  theta_file_,
                  mse2e_file_,
                  global_order_file_,
@@ -254,6 +257,10 @@ class FilamentSpecies : public Species<Filament> {
     void InitOrientationCorrelationAnalysis();
     void RunOrientationCorrelationAnalysis();
     void FinalizeOrientationCorrelationAnalysis();
+
+    void InitFlockingAnalysis();
+    void RunFlockingAnalysis();
+    void FinalizeFlockingAnalysis();
 
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP

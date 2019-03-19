@@ -1171,8 +1171,37 @@ void Filament::UpdatePolyState() {
     poly_ = poly_state::shrink;
 }
 
+void Filament::CheckFlocking() {
+  double avg_polar_order = 0;
+  double avg_contact_number = 0;
+  for (auto bond=bonds_.begin(); bond!= bonds_.end(); ++bond) {
+    /* Check if filament satisfies the flock condition by checking whether
+       the average bond polar order is above cutoff. Also see whether the
+       average contact number exceeds the cutoff for interior/exterior
+       filament. */
+    avg_polar_order += bond->GetPolarOrder();
+    avg_contact_number += bond->GetContactNumber();
+  }
+  avg_polar_order /= n_bonds_;
+  avg_contact_number /= n_bonds_;
+
+  in_flock_ = 0;
+  if (avg_polar_order >= params_->flock_polar_min) {
+    // Filament is in a flock
+    if (avg_contact_number >= params_->flock_contact_min) {
+      // Filament is in flock interior
+      in_flock_ = 1;
+    }
+    else {
+      // Filament is in flock exterior
+      in_flock_ = 2;
+    }
+  }
+}
+
 void Filament::Draw(std::vector<graph_struct*> * graph_array) {
   for (auto bond=bonds_.begin(); bond!= bonds_.end(); ++bond) {
+    bond->SetFlockType(in_flock_);
     bond->Draw(graph_array);
   }
   // FIXME temporary

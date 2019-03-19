@@ -22,7 +22,8 @@ class Object {
     graph_struct g_;
     RNG rng_;
     draw_type draw_;
-    int n_contact_;
+    int n_contact_,
+        in_flock_; // 0 if not in flock, 1 if interior, 2 if exterior
     double position_[3],
            prev_position_[3],
            prev_orientation_[3],
@@ -41,6 +42,7 @@ class Object {
     bool interacting_,
          is_mesh_,
          has_overlap_;
+
     std::vector<Object*> interactors_;
     std::vector<Interaction*> ixs_;
   public:
@@ -93,6 +95,8 @@ class Object {
     bool const IsInteractor();
     bool const IsMesh();
     void HasOverlap(bool overlap);
+    void SetFlockType(int in_flock);
+    int GetFlockType();
     void SetMeshID(int mid);
 
     // Virtual functions

@@ -101,6 +101,23 @@ void Bond::Draw(std::vector<graph_struct*> * graph_array) {
     g_.draw = draw_type::bw;
     g_.diameter = 2*diameter_;
   }
+  int flock_type = GetFlockType();
+  if ( flock_type && params_->highlight_flock) {
+    g_.draw = draw_type::fixed;
+    if (flock_type == 1) {
+      // Part of flock interior
+      g_.color = params_->flock_color_int;
+    }
+    else if (flock_type == 2) {
+      // Part of flock exterior
+      g_.color = params_->flock_color_ext;
+    }
+    else {
+      warning("Unexpected flock parameter value in Bond::Draw");
+    }
+    g_.diameter = 2*diameter_;
+    SetFlockType(0);
+  }
   graph_array->push_back(&g_);
   HasOverlap(false);
 }

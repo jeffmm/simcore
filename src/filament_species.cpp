@@ -27,6 +27,13 @@ void FilamentSpecies::InitAnalysis() {
   if (params_->filament.orientation_corr_analysis) {
     InitOrientationCorrelationAnalysis();
   }
+  if (params_->filament.flocking_analysis) {
+    if (!params_->polar_order_analysis) {
+      warning("Flocking analysis enabled polar order analysis in FilamentSpecies::InitAnalysis\n");
+      params_->polar_order_analysis = 1;
+    }
+    InitFlockingAnalysis();
+  }
   RunAnalysis();
 }
 
@@ -35,12 +42,14 @@ void FilamentSpecies::InitGlobalOrderAnalysis() {
   fname.append("_filament.global_order");
   global_order_file_.open(fname, std::ios::out);
   global_order_file_ << "global_order_analysis_file\n";
-  global_order_file_ << "time polar_order_x polar_order_y polar_order_z nematic_order_xx nematic_order_xy nematic_order_xz nematic_order_yx nematic_order_yy nematic_order_yz nematic_order_zx nematic_order_zy nematic_order_zz spiral_order signed_spiral_order\n";
+  global_order_file_ << "time polar_order_x polar_order_y polar_order_z nematic_order_xx nematic_order_xy nematic_order_xz nematic_order_yx nematic_order_yy nematic_order_yz nematic_order_zx nematic_order_zy nematic_order_zz spiral_order signed_spiral_order n_spooling avg_spool_spiral_number\n";
   nematic_order_tensor_ = new double[9];
   polar_order_vector_ = new double[3];
   std::fill(nematic_order_tensor_, nematic_order_tensor_+9, 0.0);
   std::fill(polar_order_vector_, polar_order_vector_+3, 0.0);
 }
+
+
 
 void FilamentSpecies::InitPolarOrderAnalysis() {
   n_bins_1d_ = params_->polar_order_n_bins;
@@ -62,7 +71,7 @@ void FilamentSpecies::InitPolarOrderAnalysis() {
   polar_order_avg_file_.open(fname, std::ios::out);
   polar_order_avg_file_ << "polar_order_avg_file\n";
   polar_order_file_ << "contact_number local_polar_order\n";
-  polar_order_avg_file_ << "time avg_polar_order\n";
+  polar_order_avg_file_ << "time avg_polar_order avg_contact_number\n";
 }
 
 void FilamentSpecies::RunPolarOrderAnalysis() {
@@ -76,8 +85,10 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
     error_exit("Number of polar order parameters and contact numbers not equal");
   }
   po_avg_ = 0;
+  cn_avg_ = 0;
   for (int i=0; i<po.size(); ++i) {
     po_avg_ += po[i];
+    cn_avg_ += cn[i];
     if (cn[i] > contact_cut_) {
       continue;
     }
@@ -95,7 +106,8 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
     polar_order_histogram_[n_bins_1d_ * y + x]++;
   }
   po_avg_ /= po.size();
-  polar_order_avg_file_ << time_ << " " << po_avg_ << "\n";
+  cn_avg_ /= cn.size();
+  polar_order_avg_file_ << time_ << " " << po_avg_ << " " << cn_avg_ << "\n";
 }
 
 void FilamentSpecies::InitOrientationCorrelationAnalysis() {
@@ -261,12 +273,17 @@ void FilamentSpecies::RunAnalysis() {
   if (params_->filament.orientation_corr_analysis) {
     RunOrientationCorrelationAnalysis();
   }
+  if (params_->filament.flocking_analysis) {
+    RunFlockingAnalysis();
+  }
   time_++;
 }
-
+ 
 void FilamentSpecies::RunGlobalOrderAnalysis() {
   double sn_tot = 0.0;
   double sn_mag = 0.0;
+  double sn_spools = 0;
+  int n_spooling = 0;
   double sn;
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
     it->CalculateSpiralNumber();
@@ -275,9 +292,19 @@ void FilamentSpecies::RunGlobalOrderAnalysis() {
     it->GetNematicOrder(nematic_order_tensor_);
     sn_mag += ABS(sn);
     sn_tot += sn;
+    if (sn > 0.7) {
+      sn_spools += sn;
+      n_spooling++;
+    }
   }
   sn_mag /= n_members_;
   sn_tot /= n_members_;
+  if (n_spooling > 0) {
+    sn_spools /= n_spooling;
+  }
+  else {
+    sn_spools = 0;
+  }
   for (int i=0; i<3; ++i) {
     polar_order_vector_[i]/=n_members_;
   }
@@ -285,7 +312,7 @@ void FilamentSpecies::RunGlobalOrderAnalysis() {
     nematic_order_tensor_[i]/=n_members_;
   }
   if (global_order_file_.is_open()) {
-    global_order_file_ << time_ << " " << polar_order_vector_[0] << " " << polar_order_vector_[1] << " " << polar_order_vector_[2] << " " << nematic_order_tensor_[0] << " " << nematic_order_tensor_[1] << " " << nematic_order_tensor_[2] << " " << nematic_order_tensor_[3] << " " << nematic_order_tensor_[4] << " " << nematic_order_tensor_[5] << " " << nematic_order_tensor_[6] << " " << nematic_order_tensor_[7] << " " << nematic_order_tensor_[8] << " " << sn_mag << " " << sn_tot << "\n";
+    global_order_file_ << time_ << " " << polar_order_vector_[0] << " " << polar_order_vector_[1] << " " << polar_order_vector_[2] << " " << nematic_order_tensor_[0] << " " << nematic_order_tensor_[1] << " " << nematic_order_tensor_[2] << " " << nematic_order_tensor_[3] << " " << nematic_order_tensor_[4] << " " << nematic_order_tensor_[5] << " " << nematic_order_tensor_[6] << " " << nematic_order_tensor_[7] << " " << nematic_order_tensor_[8] << " " << sn_mag << " " << sn_tot << " " << n_spooling << " " << sn_spools << "\n";
   }
   else {
     early_exit = true;
@@ -468,6 +495,10 @@ void FilamentSpecies::FinalizeAnalysis() {
     FinalizeOrientationCorrelationAnalysis();
     orientation_corr_file_.close();
   }
+  if (flock_file_.is_open()) {
+    FinalizeFlockingAnalysis();
+    flock_file_.close();
+  }
 }
 
 void FilamentSpecies::FinalizeGlobalOrderAnalysis() {
@@ -520,3 +551,52 @@ void FilamentSpecies::FinalizeThetaAnalysis() {
   delete[] theta_histogram_;
 }
 
+void FilamentSpecies::InitFlockingAnalysis() {
+  std::string fname = params_->run_name;
+  fname.append("_filament.flock");
+  flock_file_.open(fname, std::ios::out);
+  flock_file_ << "flock_analysis_file\n";
+  flock_file_ << "length diameter bond_length persistence_length umax driving nsteps nspec delta\n";
+  auto it=members_.begin(); 
+  double l = it->GetLength();
+  double d = it->GetDiameter();
+  double cl = it->GetBondLength();
+  double pl = it->GetPersistenceLength();
+  double dr = it->GetDriving();
+  double nspec = GetNSpec();
+  flock_file_ << l << " " << d << " " << cl << " " << pl << " " << params_->soft_potential_mag <<  " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
+  flock_file_ << "time n_flocking n_interior n_exterior\n";
+}
+
+void FilamentSpecies::RunFlockingAnalysis() {
+  int n_flocking = 0;
+  int n_interior = 0;
+  int n_exterior = 0;
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    it->CheckFlocking();
+    int flock_type = it->GetFlockType();
+    if (flock_type) {
+      n_flocking++;
+      if (flock_type == 1) {
+        n_interior++;
+      }
+      else if (flock_type == 2) {
+        n_exterior++;
+      }
+      else {
+        warning("Flock type not recognized in FilamentSpecies::RunFlockingAnalysis");
+      }
+    }
+  }
+  if (flock_file_.is_open()) {
+    flock_file_ << time_ << " " << n_flocking << " " << n_interior << " " << n_exterior <<"\n";
+  }
+  else {
+    early_exit = true;
+    std::cout << "ERROR: Problem opening file in RunFlockingAnalysis! Exiting.\n";
+  }
+}
+
+void FilamentSpecies::FinalizeFlockingAnalysis() {
+
+}

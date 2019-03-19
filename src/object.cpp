@@ -170,6 +170,12 @@ bool const Object::IsMesh() {
 void Object::HasOverlap(bool overlap) {
   has_overlap_=overlap;
 }
+void Object::SetFlockType(int in_flock) {
+  in_flock_ = in_flock;
+}
+int Object::GetFlockType() {
+  return in_flock_;
+}
 int const Object::GetMeshID() const {
   return mesh_id_;
 }

@@ -188,6 +188,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("flagella_amplitude")==0) {
             params->filament.flagella_amplitude = jt->second.as<double>();
           }
+          else if (param_name.compare("flocking_analysis")==0) {
+            params->filament.flocking_analysis = jt->second.as<int>();
+          }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
           }
@@ -1063,6 +1066,21 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("reload_reduce_switch")==0) {
         params->reload_reduce_switch = it->second.as<int>();
+      }
+      else if (param_name.compare("flock_polar_min")==0) {
+        params->flock_polar_min = it->second.as<double>();
+      }
+      else if (param_name.compare("flock_contact_min")==0) {
+        params->flock_contact_min = it->second.as<double>();
+      }
+      else if (param_name.compare("highlight_flock")==0) {
+        params->highlight_flock = it->second.as<int>();
+      }
+      else if (param_name.compare("flock_color_ext")==0) {
+        params->flock_color_ext = it->second.as<double>();
+      }
+      else if (param_name.compare("flock_color_int")==0) {
+        params->flock_color_int = it->second.as<double>();
       }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";

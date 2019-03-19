@@ -39,3 +39,6 @@ nohup.out
 *.density
 *.structure
 *.crossing
+*.polar_order
+*.polar_order_avg
+*.flock

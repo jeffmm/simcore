@@ -442,8 +442,10 @@ void Simulation::RunProcessing(run_options run_opts) {
       }
       return;
     }
-    Draw(run_opts.single_frame);
-    if (i_step_ < params_.n_steps_equil) continue;
+    if (i_step_ < params_.n_steps_equil) {
+      Draw(run_opts.single_frame);
+      continue;
+    }
     else if (i_step_ == params_.n_steps_equil && run_analyses) {
       // InitAnalysis initalizes and runs the first batch of analyses
       for (auto it=species_.begin(); it!=species_.end(); ++it) {
@@ -456,17 +458,27 @@ void Simulation::RunProcessing(run_options run_opts) {
     }
     if (run_analyses) {
       bool struct_update = false;
+      // Check if we are running any species analysis to determine whether we
+      // run structure analysis
+      for (auto it=species_.begin(); it!=species_.end(); ++it) {
+        if ( ((*it)->GetPositFlag() && i_step_%(*it)->GetNPosit()==0) 
+            || ((*it)->GetSpecFlag() && i_step_%(*it)->GetNSpec()==0) ) {
+          struct_update = true;
+        }
+      }
+      // Do structure analysis first
+      if (struct_update && local_order && i_step_%params_.local_order_n_analysis==0) {
+        iengine_.StructureAnalysis();
+      }
+      // Now do species analyses
       for (auto it=species_.begin(); it!=species_.end(); ++it) {
         if ( ((*it)->GetPositFlag() && i_step_%(*it)->GetNPosit()==0) 
             || ((*it)->GetSpecFlag() && i_step_%(*it)->GetNSpec()==0) ) {
           (*it)->RunAnalysis();
-          struct_update = true;
         }
       }
-      if (struct_update && local_order && i_step_%params_.local_order_n_analysis==0) {
-        iengine_.StructureAnalysis();
-      }
     }
+    Draw(run_opts.single_frame);
   }
   if (run_analyses) {
     for (auto it=species_.begin(); it!=species_.end(); ++it) {
