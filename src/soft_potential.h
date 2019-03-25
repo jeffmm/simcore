@@ -62,6 +62,12 @@ class SoftPotential : public PotentialBase {
       if (params->soft_potential_mag_target > 0) {
         eps_target_ = params->soft_potential_mag_target;
       }
+      /* WARNING: THE FOLLOWING TWO LINES ARE FOR CONSISTENCY WITH
+       * LEGACY SIMULATION PARAMETERS ONLY. REMOVE AFTER WRAPPING UP
+       * FIRST PAPER. */
+      eps_ = 0.8*eps_; //XXX
+      eps_target_ = 0.8*eps_target_; //XXX
+
       target_step_ = (eps_target_ - eps_)/params->n_steps_target;
       i_step_ = &(params->i_step);
       current_step_ = 0;
