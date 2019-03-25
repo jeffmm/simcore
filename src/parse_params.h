@@ -155,6 +155,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("perlen_ratio")==0) {
             params->filament.perlen_ratio = jt->second.as<double>();
           }
+          else if (param_name.compare("perlen_ratio_target")==0) {
+            params->filament.perlen_ratio_target = jt->second.as<double>();
+          }
           else if (param_name.compare("n_bonds")==0) {
             params->filament.n_bonds = jt->second.as<int>();
           }
@@ -1001,6 +1004,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("n_steps_equil")==0) {
         params->n_steps_equil = it->second.as<int>();
       }
+      else if (param_name.compare("n_steps_target")==0) {
+        params->n_steps_target = it->second.as<int>();
+      }
       else if (param_name.compare("static_particle_number")==0) {
         params->static_particle_number = it->second.as<int>();
       }
@@ -1012,6 +1018,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("soft_potential_mag")==0) {
         params->soft_potential_mag = it->second.as<double>();
+      }
+      else if (param_name.compare("soft_potential_mag_target")==0) {
+        params->soft_potential_mag_target = it->second.as<double>();
       }
       else if (param_name.compare("like_like_interactions")==0) {
         params->like_like_interactions = it->second.as<int>();

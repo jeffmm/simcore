@@ -52,6 +52,7 @@ class filament_parameters : public species_parameters {
     double shuffle_factor = 10;
     double shuffle_frequency = 0.001;
     double perlen_ratio = -1;
+    double perlen_ratio_target = -1;
     int n_bonds = -1;
     int driving_method = 0;
     int n_equil = 0;
@@ -223,10 +224,12 @@ class system_parameters {
     int species_insertion_reattempt_threshold = 10;
     int uniform_crystal = 0;
     int n_steps_equil = 0;
+    int n_steps_target = 100000;
     int static_particle_number = 0;
     int checkpoint_from_spec = 0;
     std::string potential = "wca";
     double soft_potential_mag = 10;
+    double soft_potential_mag_target = -1;
     int like_like_interactions = 1;
     int auto_graph = 0;
     double local_order_width = 50;
@@ -248,8 +251,8 @@ class system_parameters {
     double flock_polar_min = 0.5;
     double flock_contact_min = 5;
     int highlight_flock = 0;
-    double flock_color_ext = 0;
-    double flock_color_int = 3.14;
+    double flock_color_ext = 1.57;
+    double flock_color_int = 4.71;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;

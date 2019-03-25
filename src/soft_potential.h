@@ -7,10 +7,16 @@
 
 class SoftPotential : public PotentialBase {
   protected:
-    double eps_;
+    double eps_,
+           eps_target_,
+           target_step_;
   public:
     SoftPotential() {}
     void CalcPotential(Interaction *ix) {
+      if (ABS(eps_ - eps_target_) > 0.5*ABS(target_step_)) {
+        eps_ += target_step_;
+        printf("%2.6f\n",eps_);
+      }
       double rmag = sqrt(ix->dr_mag2);
       double r6 = pow(rmag,6);
       double r8 = r6*rmag*rmag;
@@ -41,6 +47,11 @@ class SoftPotential : public PotentialBase {
       n_dim_  = params->n_dim;
       eps_    = params->soft_potential_mag;
       fcut_   = params->f_cutoff;
+      eps_target_ = eps_;
+      if (params->soft_potential_mag_target > 0) {
+        eps_target_ = params->soft_potential_mag_target;
+      }
+      target_step_ = (eps_target_ - eps_)/params->n_steps_target;
 
       // For SoftPotential potentials, the rcutoff is
       // restricted to be at 2^(1/6)sigma

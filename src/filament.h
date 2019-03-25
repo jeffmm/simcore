@@ -32,6 +32,8 @@ class Filament : public Mesh {
            max_bond_length_,
            min_bond_length_,
            persistence_length_,
+           persistence_length_target_,
+           target_step_,
            friction_ratio_, // friction_par/friction_perp
            friction_par_,
            friction_perp_,

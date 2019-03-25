@@ -9,8 +9,14 @@ void Filament::SetParameters() {
   draw_ = draw_type::_from_string(params_->filament.draw_type.c_str());
   length_ = params_->filament.length;
   persistence_length_ = params_->filament.persistence_length;
+  persistence_length_target_ = persistence_length_;
+  target_step_ = 0;
   if (params_->filament.perlen_ratio > 0) {
     persistence_length_ = length_ * params_->filament.perlen_ratio;
+    if (params_->filament.perlen_ratio_target > 0) {
+      persistence_length_target_ = length_ * params_->filament.perlen_ratio_target;
+      target_step_ = (persistence_length_target_ - persistence_length_)/params_->n_steps_target;
+    }
   }
   diameter_ = params_->filament.diameter;
   // TODO JMM: add subdivisions of bonds for interactions, 
@@ -650,6 +656,11 @@ void Filament::AddRandomForces() {
 }
 
 void Filament::CalculateBendingForces() {
+  if (ABS(persistence_length_ - persistence_length_target_) > ABS(0.5*target_step_)) {
+    // Adiabatically change the persistence length to target
+    persistence_length_ += target_step_;
+  }
+  /* Metric forces give the appropriate equilibrium behavior at zero persistence length: all angles have an equal probability of being sampled */
   if (metric_forces_) {
     det_t_mat_[0] = 1;
     det_t_mat_[1] = 2;
@@ -673,12 +684,22 @@ void Filament::CalculateBendingForces() {
   for (int i=0; i<n_sites_-2; ++i) {
     k_eff_[i] = (persistence_length_ + bond_length_ * g_mat_inverse_[i])/SQR(bond_length_);
   }
-  // Using these, we can calculate the forces on each of the sites
-  // These calculations were done by hand and are not particularly readable,
-  // but are more efficient than doing it explicitly in the code for readability
-  // If this ever needs fixed, you need to either check the indices very carefully
-  // or redo the calculation by hand! 
-  // See Pasquali and Morse, J. Chem. Phys. Vol 116, No 5 (2002)
+  /* The following algorithm calculates the bending forces on each of
+   * the sites. 
+   *
+   * These calculations were done by hand in order to be expressed in
+   * a form that is efficient to compute, but is not human readable.
+   * The correct equilibrium behavior has been verified for low
+   * persistence lengths by sampling of bond angle probabilities and
+   * at high persistence lengths by looking at the filament
+   * mean-square end-to-end distances (before the implicit curvature
+   * code was added). 
+   *
+   * WARNING: Be very careful when changing the following code. If
+   * this code ever breaks, you need to either check through the
+   * indices very carefully or completely redo the calculation by
+   * hand! See Pasquali and Morse, J. Chem. Phys. Vol 116, No 5
+   * (2002) */
   double f_site[3] = {0, 0, 0};
   if (n_dim_ == 2) {
     double zvec[3] = {0, 0, 1};
