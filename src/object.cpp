@@ -28,6 +28,8 @@ Object::Object() {
   contact_number_ = 0;
   n_contact_ = 0;
   has_overlap_ = false;
+  in_flock_ = 0;
+  flock_change_state_ = 0;
 }
 
 int Object::next_oid_ = 0;
@@ -175,6 +177,12 @@ void Object::SetFlockType(int in_flock) {
 }
 int Object::GetFlockType() {
   return in_flock_;
+}
+void Object::SetFlockChangeState(int fcs) {
+  flock_change_state_ = fcs;
+}
+int Object::GetFlockChangeState() {
+  return flock_change_state_;
 }
 int const Object::GetMeshID() const {
   return mesh_id_;

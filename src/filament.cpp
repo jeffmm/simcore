@@ -1185,9 +1185,15 @@ void Filament::CheckFlocking() {
   avg_polar_order /= n_bonds_;
   avg_contact_number /= n_bonds_;
 
+  int in_flock_prev = in_flock_;
   in_flock_ = 0;
+  flock_change_state_ = 0;
   if (avg_polar_order >= params_->flock_polar_min) {
     // Filament is in a flock
+    if (in_flock_prev == 0) {
+      // Filament joined flock this timestep
+      flock_change_state_ = 1;
+    }
     if (avg_contact_number >= params_->flock_contact_min) {
       // Filament is in flock interior
       in_flock_ = 1;
@@ -1196,6 +1202,10 @@ void Filament::CheckFlocking() {
       // Filament is in flock exterior
       in_flock_ = 2;
     }
+  }
+  else if (in_flock_prev > 0) {
+    // Filament left flock this timestep
+    flock_change_state_ = 2;
   }
 }
 

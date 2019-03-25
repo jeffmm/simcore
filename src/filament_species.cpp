@@ -565,16 +565,19 @@ void FilamentSpecies::InitFlockingAnalysis() {
   double dr = it->GetDriving();
   double nspec = GetNSpec();
   flock_file_ << l << " " << d << " " << cl << " " << pl << " " << params_->soft_potential_mag <<  " " << dr << " " << params_->n_steps << " " << nspec << " " << params_->delta << "\n";
-  flock_file_ << "time n_flocking n_interior n_exterior\n";
+  flock_file_ << "time n_flocking n_interior n_exterior n_joined n_left\n";
 }
 
 void FilamentSpecies::RunFlockingAnalysis() {
   int n_flocking = 0;
   int n_interior = 0;
   int n_exterior = 0;
+  int n_joined = 0;
+  int n_left = 0;
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
     it->CheckFlocking();
     int flock_type = it->GetFlockType();
+    int flock_change_state = it->GetFlockChangeState();
     if (flock_type) {
       n_flocking++;
       if (flock_type == 1) {
@@ -587,9 +590,20 @@ void FilamentSpecies::RunFlockingAnalysis() {
         warning("Flock type not recognized in FilamentSpecies::RunFlockingAnalysis");
       }
     }
+    if (flock_change_state) {
+      if (flock_change_state == 1) {
+        n_joined++;
+      }
+      else if (flock_change_state == 2) {
+        n_left++;
+      }
+      else {
+        warning("Flock change state not recognized in FilamentSpecies::RunFlockingAnalysis");
+      }
+    }
   }
   if (flock_file_.is_open()) {
-    flock_file_ << time_ << " " << n_flocking << " " << n_interior << " " << n_exterior <<"\n";
+    flock_file_ << time_ << " " << n_flocking << " " << n_interior << " " << n_exterior << " " << n_joined << " " << n_left << "\n";
   }
   else {
     early_exit = true;

@@ -427,8 +427,9 @@ void Simulation::RunProcessing(run_options run_opts) {
   // Only step to n_steps-1 since we already read in one input at initialization
   int last_step = (run_opts.with_reloads ? params_.n_steps-1 : 2*params_.n_steps);
   bool run_analyses = run_opts.analysis_flag;
-  for (params_.i_step = 0; true; ++params_.i_step) { 
-    i_step_ = params_.i_step;
+  for (i_step_ = 0; true; ++i_step_) { 
+    params_.i_step = i_step_;
+    //i_step_ = params_.i_step_;
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
     output_mgr_.ReadInputs(); 
@@ -485,7 +486,5 @@ void Simulation::RunProcessing(run_options run_opts) {
       (*it)->FinalizeAnalysis();
     }
   }
-  // ClearSimulation will run CloseFiles which runs
-  // FinalizeAnalysis for each species
 }
 

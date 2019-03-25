@@ -35,9 +35,8 @@ void SpeciesBase::InitPositFileInput(std::string run_name) {
   iposit_file_.read(reinterpret_cast<char*> (&n_posit), sizeof(int));
   iposit_file_.read(reinterpret_cast<char*> (&delta), sizeof(double));
   if (n_steps != params_->n_steps || n_posit != sparams_->n_posit || delta != params_->delta) {
-    std::cout << "ERROR: Input file " << posit_file_name << " does not match parameter file\n";
+    warning("Input file %s does not match parameter file\n",  posit_file_name.c_str());
     printf("%d %d, %d %d, %2.5f %2.5f\n",n_steps, params_->n_steps, n_posit, sparams_->n_posit, delta, params_->delta);
-    exit(1);
   }
   ReadPosits();
 }
@@ -123,11 +122,10 @@ bool SpeciesBase::InitSpecFileInputFromFile(std::string spec_file_name) {
   ispec_file_.read(reinterpret_cast<char*> (&n_spec), sizeof(int));
   ispec_file_.read(reinterpret_cast<char*> (&delta), sizeof(double));
   if (n_steps != params_->n_steps || n_spec != sparams_->n_spec || delta != params_->delta) {
-    printf("\n%d %d, ",n_steps,params_->n_steps);
-    printf("%d %d, ",n_spec,sparams_->n_spec);
-    printf("%d %d ",delta,params_->delta);
-    error_exit("Input file %s does not match parameter file",spec_file_name.c_str());
-    exit(1);
+    printf("\nn_steps: %d %d, ",n_steps,params_->n_steps);
+    printf("n_spec: %d %d, ",n_spec,sparams_->n_spec);
+    printf("delta: %d %d\n",delta,params_->delta);
+    warning("Input file %s does not match parameter file\n",  spec_file_name.c_str());
   }
   ReadSpecs();
   return true;

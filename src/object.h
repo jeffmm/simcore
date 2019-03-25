@@ -23,7 +23,8 @@ class Object {
     RNG rng_;
     draw_type draw_;
     int n_contact_,
-        in_flock_; // 0 if not in flock, 1 if interior, 2 if exterior
+        in_flock_, // 0 if not in flock, 1 if interior, 2 if exterior
+        flock_change_state_; // 0 if same as previous step, 1 if joined flock, 2 if left flock
     double position_[3],
            prev_position_[3],
            prev_orientation_[3],
@@ -96,7 +97,9 @@ class Object {
     bool const IsMesh();
     void HasOverlap(bool overlap);
     void SetFlockType(int in_flock);
+    void SetFlockChangeState(int fcs);
     int GetFlockType();
+    int GetFlockChangeState();
     void SetMeshID(int mid);
 
     // Virtual functions
