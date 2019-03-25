@@ -6,7 +6,7 @@ n_dim: 2
 n_periodic: 2
 delta: 0.0001
 n_steps: 800000
-n_steps_target: 1000
+n_steps_target: 100000
 boundary: 0
 n_update_cells: -1
 cell_length: 4
@@ -19,8 +19,8 @@ print_complete: 1
 
 system_radius: 20
 potential: soft
-soft_potential_mag: 100
-soft_potential_mag_target: 1
+soft_potential_mag: 1
+soft_potential_mag_target: 100
 like_like_interactions: 1
 stoch_flag: 0
 f_cutoff: 10000
@@ -54,7 +54,7 @@ filament:
   diameter: 1
   length: 20
   perlen_ratio: 1
-  perlen_ratio_target: 100
+  perlen_ratio_target: 1
   #intrinsic_curvature: .0628
   n_bonds: 5
   driving_factor: 20

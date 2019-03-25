@@ -14,6 +14,7 @@ void Simulation::Run(system_parameters params) {
 void Simulation::RunSimulation() {
   std::cout << "  Running simulation" << std::endl;
   for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
+    params_.i_step = i_step_;
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
     ZeroForces();
