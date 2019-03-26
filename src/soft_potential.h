@@ -34,14 +34,17 @@ class SoftPotential : public PotentialBase {
       double R = 0.85*ix->buffer_mag;
       double R8inv = 1.0/pow(R,8);
       double exp1 = eps_ * exp(-r8*R8inv);
+      /* Note that I am intentionally leaving off one factor of dr in
+       * the equation for the force here */
       double ffac = -8.0 * r6 * (exp1*R8inv);
       double *dr = ix->dr;
-      // Cut off the force at fcut
+      /* Cut off the force at a maximum of fcut */
       if (ABS(ffac) > fcut_) {
         ffac = SIGNOF(ffac) * fcut_;
       }
       double fmag = 0.0;
       for (int i = 0; i < n_dim_; ++i) {
+        /* The final factor of dr is applied HERE */
         ix->force[i] = ffac*dr[i];
         fmag += ix->force[i] * ix->force[i];
       }

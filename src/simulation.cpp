@@ -120,7 +120,8 @@ void Simulation::InitGraphics() {
   // If NOGRAPH is defined, skip drawing and grabbing
   #ifndef NOGRAPH
   // Initialize graphics structures
-  graphics_.Init(&graph_array, space_.GetStruct(), background_color, params_.draw_boundary, params_.auto_graph);
+  graphics_.Init(&graph_array, space_.GetStruct(), background_color, 
+      params_.draw_boundary, params_.auto_graph);
   graphics_.DrawLoop();
   #endif
   // Initialize directory for grabbed images
@@ -192,14 +193,16 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       while(num != inserted) {
         (*spec)->AddMember();
         // First check that we are respecting boundary conditions
-        if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
+        if (params_.boundary != 0 && !processing && 
+            iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
           (*spec)->PopMember();
           //num_failures++;
           // We are not counting boundary condition failures in insertion
           // failures, since insertion failures are for packing issues
         }
         // Check if we have an overlap of objects
-        else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
+        else if (!force_overlap && !(*spec)->CanOverlap() && !processing && 
+            iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
           (*spec)->PopMember();
           num_failures++;
         }
@@ -251,13 +254,15 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           (*spec)->AddMember();
           (*spec)->SetLastMemberPosition(pos);
           // First check that we are respecting boundary conditions
-          if (params_.boundary != 0 && !processing && iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
+          if (params_.boundary != 0 && !processing && 
+              iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
             (*spec)->PopMember();
             // We are not counting boundary condition failures in insertion
             // failures, since insertion failures are for packing issues
           }
           // Check if we have an overlap of objects
-          else if (!force_overlap && !(*spec)->CanOverlap() && !processing && iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
+          else if (!force_overlap && !(*spec)->CanOverlap() && !processing && 
+              iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
             (*spec)->PopMember();
             num_failures++;
           }
@@ -282,12 +287,14 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       }
       putchar('\n');
       if (num != inserted) {
-        printf("  Species insertion failure threshold of %d reached. Reattempting insertion.\n",params_.species_insertion_failure_threshold);
+        printf("  Species insertion failure threshold of %d reached. "
+            "Reattempting insertion.\n",params_.species_insertion_failure_threshold);
         (*spec)->PopAll();
         iengine_.Reset();
       }
       if (++num_attempts > params_.species_insertion_reattempt_threshold) {
-        error_exit("Unable to insert species randomly within the reattempt threshold of %d.\n",params_.species_insertion_reattempt_threshold);
+        error_exit("Unable to insert species randomly within the reattempt "
+            "threshold of %d.\n",params_.species_insertion_reattempt_threshold);
       }
     }
     if (!processing) {
@@ -424,7 +431,8 @@ void Simulation::InitProcessing(run_options run_opts) {
 
 void Simulation::RunProcessing(run_options run_opts) {
   std::cout << "Processing outputs for: " << run_name_ << std::endl;
-  bool local_order = (params_.local_order_analysis || params_.polar_order_analysis || params_.overlap_analysis || params_.density_analysis);
+  bool local_order = (params_.local_order_analysis || params_.polar_order_analysis 
+      || params_.overlap_analysis || params_.density_analysis);
   // Only step to n_steps-1 since we already read in one input at initialization
   int last_step = (run_opts.with_reloads ? params_.n_steps-1 : 2*params_.n_steps);
   bool run_analyses = run_opts.analysis_flag;
@@ -460,8 +468,8 @@ void Simulation::RunProcessing(run_options run_opts) {
     }
     if (run_analyses) {
       bool struct_update = false;
-      // Check if we are running any species analysis to determine whether we
-      // run structure analysis
+      /* Check if we are running any species analysis to determine whether we
+       * run structure analysis */
       for (auto it=species_.begin(); it!=species_.end(); ++it) {
         if ( ((*it)->GetPositFlag() && i_step_%(*it)->GetNPosit()==0) 
             || ((*it)->GetSpecFlag() && i_step_%(*it)->GetNSpec()==0) ) {

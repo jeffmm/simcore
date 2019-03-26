@@ -5,7 +5,7 @@ Object::Object() {
   oid_ = ++next_oid_;
   // Initialize RNG and set new object seed
   rng_.Init(_seed_);
-  _seed_ = 1000*gsl_rng_get(rng_.r)-gsl_rng_get(rng_.r);//gsl_rng_get(rng_.r);
+  _seed_ = 1000*gsl_rng_get(rng_.r)-gsl_rng_get(rng_.r);
   // Set some defaults
   std::fill(position_,position_+3,0.0);
   std::fill(prev_position_,prev_position_+3,0.0);
@@ -224,7 +224,8 @@ bool Object::CheckBounds(double buffer) {
     }
     return false;
   }
-  if (space_->type == +boundary_type::budding && r[n_dim_-1] > space_->bud_neck_height) {
+  if (space_->type == +boundary_type::budding && 
+      r[n_dim_-1] > space_->bud_neck_height) {
     z0 = space_->bud_height;
     r_boundary = space_->bud_radius;
   }
@@ -284,7 +285,8 @@ void Object::InsertRandom() {
   double R = space_->radius;
   // XXX Check to make sure object fits inside unit cell if non-periodic
   if (R - buffer < 0) {
-    error_exit("Object #%d is too large to place in system.\n system radius: %2.2f, buffer: %2.2f",GetOID(), R, buffer);
+    error_exit("Object #%d is too large to place in system.\n system radius: "
+        "%2.2f, buffer: %2.2f", GetOID(), R, buffer);
   }
   switch (space_->type) {
     // If no boundary, insert wherever
@@ -385,7 +387,9 @@ void Object::InsertAt(double *pos, double *u) {
       error_exit("ERROR: Boundary type not recognized.\n");
   }
   if (out_of_bounds) {
-    error_exit("Object %d placed outside of system unit cell! System radius: %2.2f, pos: {%2.2f %2.2f %2.2f}\n",GetOID(),R,pos[0],pos[1],pos[2]);
+    error_exit("Object %d placed outside of system unit cell! System radius: " 
+        "%2.2f, pos: {%2.2f %2.2f %2.2f}\n", GetOID(), R, pos[0], pos[1],
+        pos[2]);
   }
   SetPosition(pos);
   normalize_vector(u,n_dim_);
@@ -416,7 +420,8 @@ void Object::Draw(std::vector<graph_struct*> * graph_array) {
 void Object::UpdatePeriodic() {
   double s[3], r[3];
   std::copy(scaled_position_, scaled_position_+3, s);
-  periodic_boundary_conditions(space_->n_dim, space_->n_periodic, space_->unit_cell, space_->unit_cell_inv, position_, s);
+  periodic_boundary_conditions(space_->n_dim, space_->n_periodic, 
+      space_->unit_cell, space_->unit_cell_inv, position_, s);
   SetScaledPosition(s);
 }
 void Object::UpdatePositionMP() {
@@ -561,8 +566,10 @@ void Object::SetRNGState(const std::string& filename) {
 
 void Object::Report() {
   fprintf(stderr, "    OID: %d\n",GetOID());
-  fprintf(stderr, "      r: {%2.2f %2.2f %2.2f}\n",position_[0],position_[1],position_[2]);
-  fprintf(stderr, "      u: {%2.2f %2.2f %2.2f}\n",orientation_[0],orientation_[1],orientation_[2]);
+  fprintf(stderr, "      r: {%2.2f %2.2f %2.2f}\n", position_[0], 
+      position_[1], position_[2]);
+  fprintf(stderr, "      u: {%2.2f %2.2f %2.2f}\n", orientation_[0], 
+      orientation_[1], orientation_[2]);
   fprintf(stderr, "      l: %2.2f\n",length_);
   fprintf(stderr, "      d: %2.2f\n",diameter_);
 }
