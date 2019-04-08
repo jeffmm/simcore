@@ -1091,6 +1091,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("flock_color_int")==0) {
         params->flock_color_int = it->second.as<double>();
       }
+      else if (param_name.compare("in_out_flag")==0) {
+        params->in_out_flag = it->second.as<int>();
+      }
       else {
         std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";
       }

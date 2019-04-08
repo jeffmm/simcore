@@ -79,6 +79,7 @@ flock_contact_min: [1.5, double]
 highlight_flock: [0, int]
 flock_color_ext: [1.57, double]
 flock_color_int: [4.71, double]
+in_out_flag: [0, int]
 species:
   num: [0, int]
   insertion_type: [random, string]

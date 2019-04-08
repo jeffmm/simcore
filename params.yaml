@@ -1,26 +1,26 @@
 seed: 18591845184
 #seed: 97763026622289
 
-run_name: bead_crossing
+run_name: in_out
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 800000
+n_steps: 25000
 n_steps_target: 100000
 boundary: 0
 n_update_cells: -1
 cell_length: 4
 movie_flag: 1
 
-graph_flag: 1
+graph_flag: 0
 n_graph: 100
 graph_background: 0
 print_complete: 1
 
-system_radius: 20
+system_radius: 100
 potential: soft
-soft_potential_mag: 1
-soft_potential_mag_target: 100
+soft_potential_mag: [15, 25, 50, 100]
+soft_potential_mag_target: -1
 like_like_interactions: 1
 stoch_flag: 0
 f_cutoff: 10000
@@ -35,6 +35,7 @@ overlap_analysis: 0
 density_analysis: 0
 density_com_only: 0
 density_bin_width: 0.1
+in_out_flag: 1
 
 centrosome:
   num: 0
@@ -48,16 +49,15 @@ filament:
   num: 2
   packing_fraction: -1
   overlap: 0
-  insertion_type: random
-  #insertion_type: custom
-  #insert_file: filament_crossing.yaml
+  insertion_type: custom
+  insert_file: [io_fil_00.yaml, io_fil_01.yaml, io_fil_02.yaml, io_fil_03.yaml, io_fil_04.yaml, io_fil_05.yaml, io_fil_06.yaml, io_fil_07.yaml, io_fil_08.yaml, io_fil_09.yaml, io_fil_10.yaml, io_fil_11.yaml, io_fil_12.yaml, io_fil_13.yaml, io_fil_14.yaml, io_fil_15.yaml, io_fil_16.yaml, io_fil_17.yaml, io_fil_18.yaml, io_fil_19.yaml]
   diameter: 1
-  length: 20
-  perlen_ratio: 1
-  perlen_ratio_target: 1
+  length: 50
+  perlen_ratio: [20, 50, 100]
+  perlen_ratio_target: -1
   #intrinsic_curvature: .0628
-  n_bonds: 5
-  driving_factor: 20
+  n_bonds: 17
+  driving_factor: 30
   n_spec: 100
   n_checkpoint: 100
   spec_flag: 1

@@ -249,10 +249,11 @@ class system_parameters {
     int reduced = 0;
     int reload_reduce_switch = 0;
     double flock_polar_min = 0.5;
-    double flock_contact_min = 5;
+    double flock_contact_min = 1.5;
     int highlight_flock = 0;
     double flock_color_ext = 1.57;
     double flock_color_int = 4.71;
+    int in_out_flag = 0;
     species_parameters species;
     filament_parameters filament;
     passive_filament_parameters passive_filament;

@@ -35,6 +35,21 @@ void FilamentSpecies::InitAnalysis() {
     InitFlockingAnalysis();
   }
   RunAnalysis();
+  if (params_->in_out_flag) {
+    std::string fname = params_->run_name;
+    fname.append("_filament.in_out");
+    in_out_file_.open(fname, std::ios::out);
+    in_out_file_ << "angle_in: ";
+    if (members_.size() < 2) {
+      error_exit("Error in in-out analysis in FilamentSpecies::InitAnalysis");
+    }
+    double u1[3] = {0,0,0};
+    double u2[3] = {0,0,0};
+    members_[0].GetAvgOrientation(u1);
+    members_[1].GetAvgOrientation(u2);
+    double dp = dot_product(params_->n_dim,u1,u2);
+    in_out_file_ << acos(dp) <<"\n";
+  }
 }
 
 void FilamentSpecies::InitGlobalOrderAnalysis() {
@@ -498,6 +513,19 @@ void FilamentSpecies::FinalizeAnalysis() {
   if (flock_file_.is_open()) {
     FinalizeFlockingAnalysis();
     flock_file_.close();
+  }
+  if (in_out_file_.is_open()) {
+    in_out_file_ << "angle_out: ";
+    if (members_.size() < 2) {
+      error_exit("Error in in-out analysis in FilamentSpecies::FinalizeAnalysis");
+    }
+    double u1[3] = {0,0,0};
+    double u2[3] = {0,0,0};
+    members_[0].GetAvgOrientation(u1);
+    members_[1].GetAvgOrientation(u2);
+    double dp = dot_product(params_->n_dim,u1,u2);
+    in_out_file_ << acos(dp) <<"\n";
+    in_out_file_.close();
   }
 }
 

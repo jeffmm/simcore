@@ -42,6 +42,7 @@ void InteractionEngine::Init(system_parameters *params,
 *****************************************/
 
 void InteractionEngine::Interact() {
+  n_interactions_ = 0;
   // First check if we need to interact
   if (no_interactions_ && space_->type == +boundary_type::none) return;
   // Check if we need to update cell list
@@ -56,6 +57,17 @@ void InteractionEngine::Interact() {
     ApplyPairInteractions();
   }
   ApplyBoundaryInteractions();
+
+  if (params_->in_out_flag) {
+    if (n_interactions_ == 0 && in_out_flag_) {
+      early_exit = true;
+    }
+    else if (n_interactions_ > 0 && !in_out_flag_) {
+      in_out_flag_ = true;
+    }
+  }
+
+
 }
 
 void InteractionEngine::ForceUpdate() {
@@ -90,6 +102,7 @@ void InteractionEngine::UpdateInteractions() {
       boundary_interactions_.push_back(std::make_pair(*ixor,ix));
     }
   }
+
 }
 
 int InteractionEngine::CountSpecies() {
@@ -179,6 +192,10 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
 
   if (params_->filament.spiral_flag == 1 && obj1->GetMeshID() != obj2->GetMeshID()) {
     return;
+  }
+  // We have an interaction:
+  if ( obj1->GetMeshID() != obj2->GetMeshID() ) {
+    n_interactions_++;
   }
 
   mindist_.ObjectObject(obj1,obj2,ix);

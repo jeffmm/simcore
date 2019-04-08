@@ -22,7 +22,10 @@ class InteractionEngine {
     bool overlap_,
          no_interactions_,
          no_init_ = true,
-         processing_ = false;
+         processing_ = false,
+         in_out_flag_ = false; // For measuring incoming and 
+                               // outgoing angles of crossing filaments
+
     int n_dim_,
         n_periodic_,
         i_update_,
@@ -30,7 +33,8 @@ class InteractionEngine {
         n_objs_,
         n_thermo_,
         static_pnumber_,
-        *i_step_;
+        *i_step_,
+        n_interactions_;
     system_parameters *params_;
     space_struct *space_;
     std::vector<SpeciesBase*> *species_;

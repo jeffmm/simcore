@@ -197,7 +197,8 @@ class FilamentSpecies : public Species<Filament> {
                  polar_order_file_,
                  orientation_corr_file_,
                  crossing_file_,
-                 polar_order_avg_file_;
+                 polar_order_avg_file_,
+                 in_out_file_;
   public:
     FilamentSpecies() : Species() {
       SetSID(species_id::filament);
