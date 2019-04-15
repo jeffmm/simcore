@@ -39,6 +39,8 @@ void FilamentSpecies::InitAnalysis() {
     std::string fname = params_->run_name;
     fname.append("_filament.in_out");
     in_out_file_.open(fname, std::ios::out);
+    in_out_file_ << "perlen: " << params_->filament.perlen_ratio << "\n";
+    in_out_file_ << "umax: " << params_->soft_potential_mag << "\n";
     in_out_file_ << "angle_in: ";
     if (members_.size() < 2) {
       error_exit("Error in in-out analysis in FilamentSpecies::InitAnalysis");
