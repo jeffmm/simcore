@@ -183,20 +183,35 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   if (!params_->like_like_interactions && obj1->GetSID() == obj2->GetSID()) {
     return;
   }
+  // Check that objects are not both motors, which do not interact
+  if (obj1->GetSID() == +species_id::motor && obj2->GetSID() == +species_id::motor) {
+    return;
+  }
+
   // Check that object 1 is part of a mesh, in which case...
   // ...check that object 1 is of the same mesh of object 2, in which case...
-  // ...check if object 2 is a neighbor of object 1, in which case: do not interact
-  if (obj1->GetMeshID() > 0 && obj1->GetMeshID() == obj2->GetMeshID() && obj1->HasNeighbor(obj2->GetOID())) {
-    return;
+  if (obj1->GetMeshID() > 0 && obj1->GetMeshID() == obj2->GetMeshID()) {
+    // ..check if object 1 or object 2 are motors, in which case: do not interact
+    if (obj1->GetSID() == +species_id::motor || obj2->GetSID() == +species_id::motor) {
+      return;
+    }
+
+    // ...check if object 2 is a neighbor of object 1, in which case: do not interact
+    if (obj1->HasNeighbor(obj2->GetOID())) {
+      return;
+    }
   }
 
   if (params_->filament.spiral_flag == 1 && obj1->GetMeshID() != obj2->GetMeshID()) {
     return;
   }
+
+
   // We have an interaction:
   if ( obj1->GetMeshID() != obj2->GetMeshID() ) {
     n_interactions_++;
   }
+
 
   mindist_.ObjectObject(obj1,obj2,ix);
 

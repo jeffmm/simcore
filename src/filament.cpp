@@ -444,6 +444,7 @@ void Filament::BindMotor() {
   motors_.push_back(m);
   motors_.back().Init();
   int i_bond = gsl_rng_uniform_int(rng_.r,n_bonds_);
+  motors_.back().SetMeshID(GetMeshID())
   motors_.back().AttachBondRandom(&bonds_[i_bond],i_bond*bond_length_);
   n_motors_bound_++;
   motor_concentration_ -= 1.0/space_->volume;
@@ -1519,3 +1520,12 @@ void Filament::ReadCheckpoint(std::fstream &icheck) {
   cos_thetas_.resize(n_sites_-2); //max_sites-2
 }
 
+std::vector<Object*> Filament::GetInteractors() {
+  interactors_.clear();
+  UpdateInteractors();
+  for (auto it=motors_.begin(); it!=motors_.end(); ++it) {
+    interactors_.push_back(&(*it));
+  }
+  return interactors_;
+}
+ 

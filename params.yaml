@@ -1,7 +1,7 @@
 seed: 18591845184
 #seed: 97763026622289
 
-run_name: in_out
+run_name: motor_test
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
@@ -19,8 +19,7 @@ print_complete: 1
 
 system_radius: 100
 potential: soft
-soft_potential_mag: [15, 25, 50, 100]
-#soft_potential_mag: 15
+soft_potential_mag: 15
 soft_potential_mag_target: -1
 like_like_interactions: 1
 stoch_flag: 0
@@ -38,30 +37,19 @@ density_com_only: 0
 density_bin_width: 0.1
 in_out_flag: 1
 
-centrosome:
-  num: 0
-  n_filaments_min: 1
-  n_filaments_max: 1
-  alignment_potential: 1
-  k_align: 1000
-  checkpoint_flag: 1
-
 filament:
   num: 2
   packing_fraction: -1
   overlap: 0
   insertion_type: custom
-  #insert_file: [io_fil_00.yaml, io_fil_01.yaml, io_fil_02.yaml, io_fil_03.yaml, io_fil_04.yaml, io_fil_05.yaml, io_fil_06.yaml, io_fil_07.yaml, io_fil_08.yaml, io_fil_09.yaml, io_fil_10.yaml, io_fil_11.yaml, io_fil_12.yaml, io_fil_13.yaml, io_fil_14.yaml, io_fil_15.yaml, io_fil_16.yaml, io_fil_17.yaml, io_fil_18.yaml, io_fil_19.yaml]
-  insert_file: [io_fil_th_0.10_a_00.yaml, io_fil_th_0.10_a_01.yaml, io_fil_th_0.10_a_02.yaml, io_fil_th_0.10_a_03.yaml, io_fil_th_0.10_a_04.yaml, io_fil_th_0.10_a_05.yaml, io_fil_th_0.10_a_06.yaml, io_fil_th_0.10_a_07.yaml, io_fil_th_0.10_a_08.yaml, io_fil_th_0.10_a_09.yaml, io_fil_th_0.10_a_10.yaml, io_fil_th_0.16_a_00.yaml, io_fil_th_0.16_a_01.yaml, io_fil_th_0.16_a_02.yaml, io_fil_th_0.16_a_03.yaml, io_fil_th_0.16_a_04.yaml, io_fil_th_0.16_a_05.yaml, io_fil_th_0.16_a_06.yaml, io_fil_th_0.16_a_07.yaml, io_fil_th_0.16_a_08.yaml, io_fil_th_0.16_a_09.yaml, io_fil_th_0.16_a_10.yaml, io_fil_th_0.21_a_00.yaml, io_fil_th_0.21_a_01.yaml, io_fil_th_0.21_a_02.yaml, io_fil_th_0.21_a_03.yaml, io_fil_th_0.21_a_04.yaml, io_fil_th_0.21_a_05.yaml, io_fil_th_0.21_a_06.yaml, io_fil_th_0.21_a_07.yaml, io_fil_th_0.21_a_08.yaml, io_fil_th_0.21_a_09.yaml, io_fil_th_0.21_a_10.yaml, io_fil_th_0.27_a_00.yaml, io_fil_th_0.27_a_01.yaml, io_fil_th_0.27_a_02.yaml, io_fil_th_0.27_a_03.yaml, io_fil_th_0.27_a_04.yaml, io_fil_th_0.27_a_05.yaml, io_fil_th_0.27_a_06.yaml, io_fil_th_0.27_a_07.yaml, io_fil_th_0.27_a_08.yaml, io_fil_th_0.27_a_09.yaml, io_fil_th_0.27_a_10.yaml, io_fil_th_0.33_a_00.yaml, io_fil_th_0.33_a_01.yaml, io_fil_th_0.33_a_02.yaml, io_fil_th_0.33_a_03.yaml, io_fil_th_0.33_a_04.yaml, io_fil_th_0.33_a_05.yaml, io_fil_th_0.33_a_06.yaml, io_fil_th_0.33_a_07.yaml, io_fil_th_0.33_a_08.yaml, io_fil_th_0.33_a_09.yaml, io_fil_th_0.33_a_10.yaml, io_fil_th_0.39_a_00.yaml, io_fil_th_0.39_a_01.yaml, io_fil_th_0.39_a_02.yaml, io_fil_th_0.39_a_03.yaml, io_fil_th_0.39_a_04.yaml, io_fil_th_0.39_a_05.yaml, io_fil_th_0.39_a_06.yaml, io_fil_th_0.39_a_07.yaml, io_fil_th_0.39_a_08.yaml, io_fil_th_0.39_a_09.yaml, io_fil_th_0.39_a_10.yaml, io_fil_th_0.44_a_00.yaml, io_fil_th_0.44_a_01.yaml, io_fil_th_0.44_a_02.yaml, io_fil_th_0.44_a_03.yaml, io_fil_th_0.44_a_04.yaml, io_fil_th_0.44_a_05.yaml, io_fil_th_0.44_a_06.yaml, io_fil_th_0.44_a_07.yaml, io_fil_th_0.44_a_08.yaml, io_fil_th_0.44_a_09.yaml, io_fil_th_0.44_a_10.yaml, io_fil_th_0.50_a_00.yaml, io_fil_th_0.50_a_01.yaml, io_fil_th_0.50_a_02.yaml, io_fil_th_0.50_a_03.yaml, io_fil_th_0.50_a_04.yaml, io_fil_th_0.50_a_05.yaml, io_fil_th_0.50_a_06.yaml, io_fil_th_0.50_a_07.yaml, io_fil_th_0.50_a_08.yaml, io_fil_th_0.50_a_09.yaml, io_fil_th_0.50_a_10.yaml, io_fil_th_0.56_a_00.yaml, io_fil_th_0.56_a_01.yaml, io_fil_th_0.56_a_02.yaml, io_fil_th_0.56_a_03.yaml, io_fil_th_0.56_a_04.yaml, io_fil_th_0.56_a_05.yaml, io_fil_th_0.56_a_06.yaml, io_fil_th_0.56_a_07.yaml, io_fil_th_0.56_a_08.yaml, io_fil_th_0.56_a_09.yaml, io_fil_th_0.56_a_10.yaml, io_fil_th_0.61_a_00.yaml, io_fil_th_0.61_a_01.yaml, io_fil_th_0.61_a_02.yaml, io_fil_th_0.61_a_03.yaml, io_fil_th_0.61_a_04.yaml, io_fil_th_0.61_a_05.yaml, io_fil_th_0.61_a_06.yaml, io_fil_th_0.61_a_07.yaml, io_fil_th_0.61_a_08.yaml, io_fil_th_0.61_a_09.yaml, io_fil_th_0.61_a_10.yaml, io_fil_th_0.67_a_00.yaml, io_fil_th_0.67_a_01.yaml, io_fil_th_0.67_a_02.yaml, io_fil_th_0.67_a_03.yaml, io_fil_th_0.67_a_04.yaml, io_fil_th_0.67_a_05.yaml, io_fil_th_0.67_a_06.yaml, io_fil_th_0.67_a_07.yaml, io_fil_th_0.67_a_08.yaml, io_fil_th_0.67_a_09.yaml, io_fil_th_0.67_a_10.yaml, io_fil_th_0.73_a_00.yaml, io_fil_th_0.73_a_01.yaml, io_fil_th_0.73_a_02.yaml, io_fil_th_0.73_a_03.yaml, io_fil_th_0.73_a_04.yaml, io_fil_th_0.73_a_05.yaml, io_fil_th_0.73_a_06.yaml, io_fil_th_0.73_a_07.yaml, io_fil_th_0.73_a_08.yaml, io_fil_th_0.73_a_09.yaml, io_fil_th_0.73_a_10.yaml, io_fil_th_0.79_a_00.yaml, io_fil_th_0.79_a_01.yaml, io_fil_th_0.79_a_02.yaml, io_fil_th_0.79_a_03.yaml, io_fil_th_0.79_a_04.yaml, io_fil_th_0.79_a_05.yaml, io_fil_th_0.79_a_06.yaml, io_fil_th_0.79_a_07.yaml, io_fil_th_0.79_a_08.yaml, io_fil_th_0.79_a_09.yaml, io_fil_th_0.79_a_10.yaml, io_fil_th_0.84_a_00.yaml, io_fil_th_0.84_a_01.yaml, io_fil_th_0.84_a_02.yaml, io_fil_th_0.84_a_03.yaml, io_fil_th_0.84_a_04.yaml, io_fil_th_0.84_a_05.yaml, io_fil_th_0.84_a_06.yaml, io_fil_th_0.84_a_07.yaml, io_fil_th_0.84_a_08.yaml, io_fil_th_0.84_a_09.yaml, io_fil_th_0.84_a_10.yaml, io_fil_th_0.90_a_00.yaml, io_fil_th_0.90_a_01.yaml, io_fil_th_0.90_a_02.yaml, io_fil_th_0.90_a_03.yaml, io_fil_th_0.90_a_04.yaml, io_fil_th_0.90_a_05.yaml, io_fil_th_0.90_a_06.yaml, io_fil_th_0.90_a_07.yaml, io_fil_th_0.90_a_08.yaml, io_fil_th_0.90_a_09.yaml, io_fil_th_0.90_a_10.yaml, io_fil_th_0.96_a_00.yaml, io_fil_th_0.96_a_01.yaml, io_fil_th_0.96_a_02.yaml, io_fil_th_0.96_a_03.yaml, io_fil_th_0.96_a_04.yaml, io_fil_th_0.96_a_05.yaml, io_fil_th_0.96_a_06.yaml, io_fil_th_0.96_a_07.yaml, io_fil_th_0.96_a_08.yaml, io_fil_th_0.96_a_09.yaml, io_fil_th_0.96_a_10.yaml, io_fil_th_1.01_a_00.yaml, io_fil_th_1.01_a_01.yaml, io_fil_th_1.01_a_02.yaml, io_fil_th_1.01_a_03.yaml, io_fil_th_1.01_a_04.yaml, io_fil_th_1.01_a_05.yaml, io_fil_th_1.01_a_06.yaml, io_fil_th_1.01_a_07.yaml, io_fil_th_1.01_a_08.yaml, io_fil_th_1.01_a_09.yaml, io_fil_th_1.01_a_10.yaml, io_fil_th_1.07_a_00.yaml, io_fil_th_1.07_a_01.yaml, io_fil_th_1.07_a_02.yaml, io_fil_th_1.07_a_03.yaml, io_fil_th_1.07_a_04.yaml, io_fil_th_1.07_a_05.yaml, io_fil_th_1.07_a_06.yaml, io_fil_th_1.07_a_07.yaml, io_fil_th_1.07_a_08.yaml, io_fil_th_1.07_a_09.yaml, io_fil_th_1.07_a_10.yaml, io_fil_th_1.13_a_00.yaml, io_fil_th_1.13_a_01.yaml, io_fil_th_1.13_a_02.yaml, io_fil_th_1.13_a_03.yaml, io_fil_th_1.13_a_04.yaml, io_fil_th_1.13_a_05.yaml, io_fil_th_1.13_a_06.yaml, io_fil_th_1.13_a_07.yaml, io_fil_th_1.13_a_08.yaml, io_fil_th_1.13_a_09.yaml, io_fil_th_1.13_a_10.yaml, io_fil_th_1.19_a_00.yaml, io_fil_th_1.19_a_01.yaml, io_fil_th_1.19_a_02.yaml, io_fil_th_1.19_a_03.yaml, io_fil_th_1.19_a_04.yaml, io_fil_th_1.19_a_05.yaml, io_fil_th_1.19_a_06.yaml, io_fil_th_1.19_a_07.yaml, io_fil_th_1.19_a_08.yaml, io_fil_th_1.19_a_09.yaml, io_fil_th_1.19_a_10.yaml, io_fil_th_1.24_a_00.yaml, io_fil_th_1.24_a_01.yaml, io_fil_th_1.24_a_02.yaml, io_fil_th_1.24_a_03.yaml, io_fil_th_1.24_a_04.yaml, io_fil_th_1.24_a_05.yaml, io_fil_th_1.24_a_06.yaml, io_fil_th_1.24_a_07.yaml, io_fil_th_1.24_a_08.yaml, io_fil_th_1.24_a_09.yaml, io_fil_th_1.24_a_10.yaml, io_fil_th_1.30_a_00.yaml, io_fil_th_1.30_a_01.yaml, io_fil_th_1.30_a_02.yaml, io_fil_th_1.30_a_03.yaml, io_fil_th_1.30_a_04.yaml, io_fil_th_1.30_a_05.yaml, io_fil_th_1.30_a_06.yaml, io_fil_th_1.30_a_07.yaml, io_fil_th_1.30_a_08.yaml, io_fil_th_1.30_a_09.yaml, io_fil_th_1.30_a_10.yaml, io_fil_th_1.36_a_00.yaml, io_fil_th_1.36_a_01.yaml, io_fil_th_1.36_a_02.yaml, io_fil_th_1.36_a_03.yaml, io_fil_th_1.36_a_04.yaml, io_fil_th_1.36_a_05.yaml, io_fil_th_1.36_a_06.yaml, io_fil_th_1.36_a_07.yaml, io_fil_th_1.36_a_08.yaml, io_fil_th_1.36_a_09.yaml, io_fil_th_1.36_a_10.yaml, io_fil_th_1.41_a_00.yaml, io_fil_th_1.41_a_01.yaml, io_fil_th_1.41_a_02.yaml, io_fil_th_1.41_a_03.yaml, io_fil_th_1.41_a_04.yaml, io_fil_th_1.41_a_05.yaml, io_fil_th_1.41_a_06.yaml, io_fil_th_1.41_a_07.yaml, io_fil_th_1.41_a_08.yaml, io_fil_th_1.41_a_09.yaml, io_fil_th_1.41_a_10.yaml, io_fil_th_1.47_a_00.yaml, io_fil_th_1.47_a_01.yaml, io_fil_th_1.47_a_02.yaml, io_fil_th_1.47_a_03.yaml, io_fil_th_1.47_a_04.yaml, io_fil_th_1.47_a_05.yaml, io_fil_th_1.47_a_06.yaml, io_fil_th_1.47_a_07.yaml, io_fil_th_1.47_a_08.yaml, io_fil_th_1.47_a_09.yaml, io_fil_th_1.47_a_10.yaml]
-  #insert_file: io_fil_39.yaml
+  insert_file: crosslink_test.yaml
   diameter: 1
   length: 50
-  perlen_ratio: [20, 50, 100]
-  #perlen_ratio: 100
+  perlen_ratio: 100
   perlen_ratio_target: -1
   #intrinsic_curvature: .0628
   n_bonds: 17
-  driving_factor: 30
+  driving_factor: 0
   n_spec: 100
   n_checkpoint: 100
   spec_flag: 1
@@ -71,27 +59,23 @@ filament:
   flagella_period: 2
   flagella_amplitude: 3
 
-br_bead:
-  num: 0
-  diameter: 1
-  driving_factor: 30
-  insertion_type: custom
-  insert_file: bead_crossing.yaml
-
-passive_filament:
-  num: 0
-  diameter: 1
-  length: 10
+motor:
   draw_type: bw
-  insertion_type: custom
-  insert_file: bead_crossing.yaml
-  perlen_ratio: 100 
-  n_bonds: 3
-  posit_flag: 0
-  spec_flag: 0
+  diameter: 2
+  walker: 1
+  step_direction: 1
+  k_off: 0.1
+  k_on: 10
+  concentration: 0.01
+  velocity: 0
+  diffusion_flag: 1
+  k_spring: 1000
+  f_spring_max: 500
+# Outputs
+  posit_flag: 1
+  spec_flag: 1
   checkpoint_flag: 1
-  n_posit: 100
-  n_spec: 100
-  n_checkpoint: 100
-
+  n_posit: 1000
+  n_spec: 1000
+  n_checkpoint: 1000
 

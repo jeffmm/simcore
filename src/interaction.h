@@ -1,17 +1,20 @@
 #ifndef _SIMCORE_INTERACTION_H_
 #define _SIMCORE_INTERACTION_H_
 #include <tuple>
+#include "definitions.h"
 
 class Object;
 
 typedef std::pair<int,int> oid_pair;
 typedef std::pair<int,int> mesh_pair;
+typedef std::pair<species_id, species_id> sid_pair;
 
 class Interaction {
   public:
     Interaction() {}
     oid_pair oids;
     mesh_pair mids;
+    sid_pair sids;
     bool boundary = false; // true if boundary interaction
     double force[3] = {0}, // force acting on obj1 due to obj2
            t1[3] = {0}, // torque acting on obj1

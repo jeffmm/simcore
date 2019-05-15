@@ -118,6 +118,7 @@ class Filament : public Mesh {
     virtual bool CheckBounds(double buffer = 0);
     //void DiffusionValidationInit();
     virtual void Integrate();
+    std::vector<Object*> GetInteractors();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePosition() {}
     virtual void UpdatePosition(bool midstep);

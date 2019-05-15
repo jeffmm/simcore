@@ -57,6 +57,9 @@ class MotorSpecies : public Species<Motor> {
   protected:
     void CalculateBinding();
   public:
+    MotorSpecies() : Species() {
+      SetSID(species_id::motor);
+    }
     void UpdatePositions() {
 #ifdef ENABLE_OPENMP
       int max_threads = omp_get_max_threads();

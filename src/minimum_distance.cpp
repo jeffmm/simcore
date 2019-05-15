@@ -29,8 +29,9 @@ void MinimumDistance::ObjectObject(Object* o1, Object* o2, Interaction *ix) {
   double const * const u2 = o2->GetInteractorOrientation();
   double const l2 = o2->GetInteractorLength();
   double const d2 = o2->GetInteractorDiameter();
-  ix->oids = std::make_pair(o1->GetOID(),o2->GetOID());
-  ix->mids = std::make_pair(o1->GetMeshID(),o2->GetMeshID());
+  ix->oids = std::make_pair(o1->GetOID(), o2->GetOID());
+  ix->mids = std::make_pair(o1->GetMeshID(), o2->GetMeshID());
+  ix->sids = std::make_pair(o1->GetSID(), o2->GetSID());
   ix->dr_mag2 = 0;
   std::fill(ix->dr, ix->dr+3, 0.0);
   std::fill(ix->contact1, ix->contact1+3, 0.0);
