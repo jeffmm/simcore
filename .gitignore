@@ -44,4 +44,4 @@ nohup.out
 *.flock
 *.in_out
 *.mov
-
+build*

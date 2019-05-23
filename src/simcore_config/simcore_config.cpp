@@ -11,7 +11,7 @@ class Configurator {
     YAML::Node node_;
     YAML::const_iterator subnode_;
 
-    std::string master_ = "src/master_params.yaml",
+    std::string config_file_ = "src/config_params.yaml",
                 pfile_,
                 pname_,
                 pvalue_,
@@ -34,9 +34,9 @@ class Configurator {
 
   public:
     Configurator() : 
-        parse_params_("src/parse_params.h", std::ios_base::out),
-        parameters_("src/parameters.h", std::ios_base::out) 
-      {node_ = YAML::LoadFile(master_);}
+        parse_params_("src/simcore/parse_params.h", std::ios_base::out),
+        parameters_("src/simcore/parameters.h", std::ios_base::out) 
+      {node_ = YAML::LoadFile(config_file_);}
 
     void ConfigureSimcore();
 };
@@ -73,6 +73,8 @@ void Configurator::WriteParameters() {
   }
   // Then parse remaining system parameters
   parameters_ << "class system_parameters {\n  public:\n";
+  // Write default param file parameter (same as config_file_)
+  parameters_ << "    std::string default_param_file" << " = \"" << config_file_ << "\";\n";
   for (subnode_ = node_.begin(); subnode_!=node_.end(); ++subnode_)
     if (subnode_->second.IsSequence() && subnode_->second.size() == 2)
       WriteParam();
