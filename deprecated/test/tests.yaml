@@ -1,5 +1,0 @@
-seed: 100
-#TestXlinkKMC: test/testxlinkkmc.yaml
-#TestXlinkKMCMoves: test/test_xlink_kmc_moves.yaml
-#TestLookupTable: test/testlookuptable.yaml
-TestInteractionEngine: test/testinteractionengine.yaml

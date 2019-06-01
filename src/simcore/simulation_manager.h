@@ -15,8 +15,7 @@ class SimulationManager {
     int n_runs_ = 1, //Number of runs per parameters set
                  n_var_ = 1, //Number of parameter variations
                  n_random_ = 1; //Number of random params
-    std::string default_param_file_ = params_.default_param_file, 
-                run_name_ = "sc"; // simulation batch name
+    std::string run_name_ = "sc"; // simulation batch name
     std::vector<std::string> pfiles_;
     Simulation *sim_; //New sim created and destroyed for every set of parameters
     YAML::Node pnode_; // Main node to initialize pvector

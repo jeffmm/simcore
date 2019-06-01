@@ -44,3 +44,8 @@ add_executable(simcore  bead_spring.cpp
                         writebmp.cpp
 )
 target_link_libraries(simcore ${LIBS})
+#if(MSVC)
+  #target_compile_options(simcore PRIVATE /W4 /WX)
+#else()
+target_compile_options(simcore PRIVATE -Wno-parentheses -Wno-return-type -Wno-deprecated-declarations)
+#endif()

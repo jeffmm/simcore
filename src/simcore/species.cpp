@@ -124,7 +124,7 @@ bool SpeciesBase::InitSpecFileInputFromFile(std::string spec_file_name) {
   if (n_steps != params_->n_steps || n_spec != sparams_->n_spec || delta != params_->delta) {
     printf("\nn_steps: %d %d, ",n_steps,params_->n_steps);
     printf("n_spec: %d %d, ",n_spec,sparams_->n_spec);
-    printf("delta: %d %d\n",delta,params_->delta);
+    printf("delta: %2.2f %2.2f\n",delta,params_->delta);
     warning("Input file %s does not match parameter file\n",  spec_file_name.c_str());
   }
   ReadSpecs();

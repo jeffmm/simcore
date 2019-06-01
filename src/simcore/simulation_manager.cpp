@@ -133,7 +133,7 @@ void SimulationManager::AppendParams(YAML::Node app_node) {
    initialized a value.
    *************************************/
 void SimulationManager::LoadDefaultParams() {
-  YAML::Node defaults = YAML::LoadFile(default_param_file_);
+  YAML::Node defaults = YAML::LoadFile(params_.default_param_file);
   for (YAML::const_iterator it=defaults.begin(); it!=defaults.end(); ++it) {
     std::string param_name = it->first.as<std::string>();
     if (!pnode_[param_name] && it->second.IsSequence()) {
