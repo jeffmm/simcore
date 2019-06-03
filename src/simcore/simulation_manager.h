@@ -6,6 +6,7 @@
 //#include "analysis_manager.h"
 //#include "auxiliary.h"
 #include "yaml-cpp/yaml.h"
+#include <kmcx.hpp>
 
 class SimulationManager {
 

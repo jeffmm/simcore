@@ -8,7 +8,7 @@ find_package(OpenGL REQUIRED)
 find_package(FFTW REQUIRED)
 
 include_directories(${GSL_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIR} ${OPENGL_INCLUDE_DIRS})
-set(LIBS ${YAML_CPP_LIBRARIES} ${GSL_LIBRARIES} GLEW::GLEW ${GLFW3_LIBRARIES} ${FFTW_LIBRARIES} ${OPENGL_gl_LIBRARY} glfw)
+set(LIBS ${YAML_CPP_LIBRARIES} ${GSL_LIBRARIES} GLEW::GLEW ${GLFW3_LIBRARIES} ${FFTW_LIBRARIES} ${OPENGL_gl_LIBRARY} glfw kmcx)
 add_executable(simcore  bead_spring.cpp
                         bond.cpp
                         br_bead.cpp
