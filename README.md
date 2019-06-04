@@ -115,7 +115,7 @@ specific_species_name:
 
 The "global species" parameter type houses parameters that are shared by every species, such as "num" which specifies how many items of each species to insert into the system, "insertion_type" which specifies how to insert them, "posit_flag" which instructs whether to output position files, etc. These do not have to be specified using the global species parameter, however, and may instead be specified by each specific species.  
 
-If any parameter is not specified in the parameter file, any instance of that parameter in the simulation will assume its default value specified in the master_params.yaml file.
+If any parameter is not specified in the parameter file, any instance of that parameter in the simulation will assume its default value specified in the config_params.yaml file.
 
 Some important global parameters to consider are:
 
@@ -153,17 +153,17 @@ Some important species parameters to consider are:
 * checkpoint_flag: whether to output checkpoint files
 * n_checkpoint: how often to output checkpoint files
 
-All parameters used in the simulation, along with their default values and data types, are specified in the master_params.yaml file in the src folder.
+All parameters used in the simulation, along with their default values and data types, are specified in the config_params.yaml file in the src folder.
 
 ## Adding new parameters
 
-simcore comes with it's own parameter initialization tool, simcore_config, which can be installed by following the above installation instructions for simcore and then doing 'make simcore_config'.  simcore_config makes it easy to add new parameters to the simulation without mucking around in the source code. Just add your new parameter to the master_params.yaml file using the following format: 
+simcore comes with it's own parameter initialization tool, simcore_config, which can be installed by following the above installation instructions for simcore and then doing 'make simcore_config'.  simcore_config makes it easy to add new parameters to the simulation without mucking around in the source code. Just add your new parameter to the config_params.yaml file using the following format: 
 
 ```
 new_parameter_name: [default_parameter_value, parameter_type] 
 ```
  
-Running simcore_config will look at all the parameters in the master_params.yaml file and add them seamlessly to the proper simcore files, and you can begin using them in your classes right away after recompiling simcore. NOTE: At the time of this writing (12/3/2017), yaml-cpp is inconsistent about its treatment of boolean values. For type-safety reasons, it's best to use integers instead of bools when adding flag parameters.  
+Running simcore_config will look at all the parameters in the config_params.yaml file and add them seamlessly to the proper simcore files, and you can begin using them in your classes right away after recompiling simcore. NOTE: At the time of this writing (12/3/2017), yaml-cpp is inconsistent about its treatment of boolean values. For type-safety reasons, it's best to use integers instead of bools when adding flag parameters.  
 
 ### Parameter sets
 
