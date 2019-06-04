@@ -6,26 +6,43 @@ A modular, object-oriented program for coarse-grained physics simulations, using
 
 ## About simcore
 
-simcore is written in c++ and designed for coarse-grained physics simulations with modularity and scalability in mind. All objects in the simulation are representable as a composite of what I call "simple" objects (points, spheres, rigid cylinders, and 2d polygon surfaces would all qualify). For short-range interactions, simcore uses cell and neighbor lists for improved performance and OpenMP for parallelization.
+simcore is written in C++ and designed for coarse-grained physics simulations with modularity and scalability in mind. All objects in the simulation are representable as a composite of what I call "simple" objects (points, spheres, rigid cylinders, and 2d polygon surfaces would all qualify). For short-range interactions, simcore uses cell and neighbor lists for improved performance and OpenMP for parallelization.
 
 Although simcore is meant to be a generalized molecular/Brownian dynamics simulation engine, thanks to the narrow focus of my PhD research, it has up until now almost exclusively been used to model semiflexible filaments, and for that reason has come closer to resembling single-purpose software. It's still quite easy, for example, to use simcore for basic molecular dynamics simulations of interacting point-like particles. Modularity is still there in the basic design, so in the future I may add more object types, but as far as pre-written object types go, _it's all about the filaments_.
 
 ![A simulation using simcore](figs/simcore_snapshot.png "A simulation using simcore")
 
-## Installation
+## Running with Docker 
 
-For successful installation, make sure you have the following libraries/binaries installed:
+Simcore can run in a Docker container. You can simply do
+```
+docker pull jeffmm/simcore:latest
+./run_docker.sh <optional parameter files>
+```
+which will run simcore in a container and generate any output files into a timestamped directory. The addition of parameter files are optional, but necessary for generating outputs. If parameter files require additional parameters, such as customized initalization routines, those must be included as well.
 
-  * your favorite c++ compiler
+## Installation using cmake
+
+For manual installation, make sure you have the following installed:
+
+  * cmake
+  * your favorite C++11 compiler
   * yaml-cpp (https://github.com/jbeder/yaml-cpp)
-  * openGL
   * gsl
-  * glew
-  * glfw3
   * openmp
   * fftw
+  * boost
+  * openGL (if you want graphics)
+  * glew (if you want graphics)
+  * glfw3 (if you want graphics)
 
-Once appropriate compiler and library paths are defined in the Makefile, the command 'make simcore' will build the simcore binary in the local directory in debug mode. You can add options such as CFG=release, THREADING=eomp, or NOGRAPH=true, to change optimization flags, toggle OpenMP for parallelization, or disable graphics. Note that the graphics are almost guaranteed to give some trouble, since almost all the libraries are at this point deprecated (especially since Apple recently declared OpenGL deprecated entirely).
+Included is a handy bash script for building simcore with cmake. Simply call
+
+```
+bash ./install.sh build
+```
+
+Running install.sh without the build variable will list other installation options, such as debug mode, compiling graphics (not recommended due to cross-platform compatibility issues), etc.
 
 ## Running simcore
 
