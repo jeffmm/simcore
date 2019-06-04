@@ -12,16 +12,29 @@ Although simcore is meant to be a generalized molecular/Brownian dynamics simula
 
 ![A simulation using simcore](figs/simcore_snapshot.png "A simulation using simcore")
 
-## Running with Docker 
+## Installation
 
-Simcore can run in a Docker container. You can simply do
+First clone the repo, and initialize the external submodules.
+```
+git clone https://github.com/jeffmm/simcore
+cd simcore
+git submodule update --init --recursive
+```
+Simcore can either be run in a container using Docker, or be built manually using CMake.
+
+### Running with Docker 
+
+To run simcore in Docker, one can do
 ```
 docker pull jeffmm/simcore:latest
-./run_docker.sh <optional parameter files>
+bash run_docker.sh <optional parameter files>
 ```
-which will run simcore in a container and generate any output files into a timestamped directory. The addition of parameter files are optional, but necessary for generating outputs. If parameter files require additional parameters, such as customized initalization routines, those must be included as well.
+which will run simcore in a container and generate any output files into a timestamped directory. The addition of parameter files are optional, but necessary for generating outputs. If parameter files require additional parameters, such as customized initalization routines, those must be included as well. You may also build the image locally by running
+```
+bash build_docker.sh
+```
 
-## Installation using cmake
+### Manual installation with cmake
 
 For manual installation, make sure you have the following installed:
 
