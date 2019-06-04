@@ -4,7 +4,7 @@ COPY CMakeLists.txt /app/CMakeLists.txt
 COPY src /app/src
 COPY docs /app/docs
 COPY extern /app/extern
-COPY cmake.sh /app/cmake.sh
+COPY install.sh /app/install.sh
 COPY .CMake_FFTW /app/.CMake_FFTW
 
 RUN apk add --no-cache --virtual=.build_dependencies build-base &&\
@@ -18,8 +18,8 @@ RUN apk add --no-cache --virtual=.build_dependencies build-base &&\
                     doxygen \
                     boost-dev &&\
     cd /app && \
-    bash ./cmake.sh clean &&\
-    bash ./cmake.sh build &&\
+    bash ./install.sh clean &&\
+    bash ./install.sh build &&\
     apk del .build_dependencies &&\
     mkdir /app/run &&\
     mkdir /app/run/outputs &&\
@@ -31,4 +31,4 @@ RUN apk add --no-cache --virtual=.build_dependencies build-base &&\
 
 WORKDIR /app/run
 
-CMD ["sh", "-c", "./simcore params.yaml && mv *.[^y]* outputs && cp *.y* outputs"]
+CMD ["bash", "-c", "./simcore params.yaml && cp *.y* outputs && if ls *.[^y]* 1> /dev/null 2>&1; then mv *.[^y]* outputs; fi"]
