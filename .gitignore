@@ -46,3 +46,4 @@ nohup.out
 *.mov
 build*
 201*
+!CMake*
