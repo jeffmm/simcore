@@ -1,7 +1,7 @@
 seed: 18591845184
 #seed: 97763026622289
 
-run_name: motor_test
+run_name: crosslink_test
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
@@ -42,7 +42,7 @@ filament:
   packing_fraction: -1
   overlap: 0
   insertion_type: custom
-  insert_file: crosslink_test.yaml
+  insert_file: crosslink_filament.yaml
   diameter: 1
   length: 50
   perlen_ratio: 100

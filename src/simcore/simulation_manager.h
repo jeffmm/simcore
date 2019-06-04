@@ -2,11 +2,7 @@
 #define _SIMCORE_SIMULATION_MANAGER_H_
 
 #include "simulation.h"
-//#include "parse_flags.h"
-//#include "analysis_manager.h"
-//#include "auxiliary.h"
 #include "yaml-cpp/yaml.h"
-#include <kmcx.hpp>
 
 class SimulationManager {
 
@@ -36,18 +32,11 @@ class SimulationManager {
     void RunSimulations();
     void ParseParams(std::string file_name);
     void ProcessOutputs();
-    //AnalysisManager analyzer_;
 
   public:
     SimulationManager() { debug_trace = false; early_exit = false;}
     void InitManager(run_options run_opts);
     void RunManager();
-    //void RunManager(std::vector<std::string> posit_files);
-    //void RunMovieManager(std::vector<std::string> posit_files);
-    //void RunAnalyses(std::vector<std::string> pfiles);
-    //void RunAnalysis() { run_analysis_ = true; }
-    //void MakeMovie() { make_movie_ = true; }
 };
-
 
 #endif // _SIMCORE_SIMULATION_MANAGER_H_ 
