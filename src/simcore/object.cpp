@@ -465,10 +465,19 @@ double const Object::GetInteractorLength() {
 }
 double const Object::GetVolume() {
   if (n_dim_ == 2) {
-    return 0.25*M_PI*diameter_*diameter_;
+    if (length_ == 0) {
+      return 0.25*M_PI*diameter_*diameter_;
+    }
+    else {
+      return length_*diameter_+0.25*M_PI*diameter_*diameter_;
+    }
   }
   if (n_dim_ == 3) {
-    return 1.0/6.0 * M_PI * diameter_*diameter_*diameter_;
+    if (length_ == 0) {
+      return 1.0/6.0 * M_PI * diameter_*diameter_*diameter_;
+    }
+    else {
+      return 1.0/6.0 * M_PI * diameter_*diameter_*diameter_ + 0.25*M_PI*length_*diameter_*diameter_;
   }
   return -1;
 }

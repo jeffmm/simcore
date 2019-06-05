@@ -48,35 +48,6 @@ struct graph_struct {
   draw_type draw;
 };
 
-// Harmonic anchor structure
-class Anchor {
-  public:
-    bool alignment_potential_;
-    double position_[3],
-           orientation_[3],
-           force_[3],
-           torque_[3],
-           k_spring_,
-           k_align_,
-           theta_, //euler angles
-           phi_, //euler angles
-           spring_length_;
-    Anchor() {
-      std::fill(position_,position_+3,0.0);
-      std::fill(orientation_,orientation_+3,0.0);
-      std::fill(force_,force_+3,0.0);
-      std::fill(torque_,torque_+3,0.0);
-      alignment_potential_ = false;
-      k_spring_ = 0;
-      k_align_ = 0;
-      spring_length_ = 0;
-    }
-    void ZeroForce() {
-      std::fill(force_,force_+3,0.0);
-      std::fill(torque_,torque_+3,0.0);
-    }
-};
-
-typedef std::vector<Anchor>::iterator anchor_iterator;
+#include "anchor.h"
 
 #endif

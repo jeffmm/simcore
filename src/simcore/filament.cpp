@@ -425,38 +425,6 @@ void Filament::Integrate() {
   UpdateSiteOrientations();
 }
 
-//  FIXME move this out of filament!
-void Filament::CalculateBinding() {
-  if (++n_step_ % 100 != 0) return;
-  double vol = GetVolume();
-  // Check motor unbinding
-  if (gsl_rng_uniform_pos(rng_.r) <= k_off_*n_motors_bound_*100*delta_) {
-    UnbindMotor();
-  }
-  // Check motor binding
-  if (gsl_rng_uniform_pos(rng_.r) <= motor_concentration_*vol*k_on_*100*delta_) {
-    BindMotor();
-  }
-}
-
-void Filament::BindMotor() {
-  Motor m;
-  motors_.push_back(m);
-  motors_.back().Init();
-  int i_bond = gsl_rng_uniform_int(rng_.r,n_bonds_);
-  motors_.back().SetMeshID(GetMeshID());
-  motors_.back().AttachBondRandom(&bonds_[i_bond],i_bond*bond_length_);
-  n_motors_bound_++;
-  motor_concentration_ -= 1.0/space_->volume;
-}
-
-void Filament::UnbindMotor() {
-  int i_motor = gsl_rng_uniform_int(rng_.r,n_motors_bound_);
-  motors_.erase(motors_.begin()+i_motor);
-  n_motors_bound_--;
-  motor_concentration_ += 1.0/space_->volume;
-}
-
 void Filament::UpdateSiteOrientations() {
   for (int i=0; i<n_sites_-1; ++i) {
     sites_[i].SetOrientation(bonds_[i].GetOrientation());

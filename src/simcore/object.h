@@ -132,6 +132,8 @@ class Object {
     virtual std::vector<Interaction*> * GetInteractions();
     virtual void ClearInteractions();
     virtual void Cleanup();
+    virtual void BindAnchor(anchor *ix);
+    virtual void UnbindAnchor();
 
     // I/O functions
     virtual void Report();

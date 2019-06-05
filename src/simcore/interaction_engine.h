@@ -9,6 +9,7 @@
 #include "minimum_distance.h"
 #include "particle_tracker.h"
 #include "struct_analysis.h"
+#include "crosslink_manager.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -49,6 +50,7 @@ class InteractionEngine {
     //CellList clist_;
     ParticleTracker ptracker_;
     PotentialManager potentials_;
+    CrosslinkManager xlink_;
 
     void CheckUpdate();
     void UpdateInteractors();
