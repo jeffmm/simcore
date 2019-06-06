@@ -1,7 +1,7 @@
 #ifndef _SIMCORE_MESH_H_
 #define _SIMCORE_MESH_H_
 
-#include "bond.h"
+#include "anchor.h"
 
 typedef std::vector<Bond>::iterator bond_iterator;
 typedef std::vector<Site>::iterator site_iterator;
@@ -18,6 +18,7 @@ class Mesh : public Object {
         n_bonds_max_;
     std::vector<Site> sites_;
     std::vector<Bond> bonds_;
+    std::vector<Anchor> anchors_;
     double bond_length_;
     Bond * GetRandomBond();
     void UpdateInteractors();

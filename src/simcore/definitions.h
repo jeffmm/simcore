@@ -48,6 +48,4 @@ struct graph_struct {
   draw_type draw;
 };
 
-#include "anchor.h"
-
 #endif
