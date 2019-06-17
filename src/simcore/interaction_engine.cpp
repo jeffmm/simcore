@@ -66,8 +66,6 @@ void InteractionEngine::Interact() {
       in_out_flag_ = true;
     }
   }
-
-
 }
 
 void InteractionEngine::ForceUpdate() {
@@ -79,8 +77,11 @@ void InteractionEngine::UpdateInteractors() {
   interactors_.clear();
   for (auto spec_it= species_->begin(); spec_it!=species_->end(); ++spec_it) {
     std::vector<Object*> ixs = (*spec_it)->GetInteractors();
-    interactors_.insert(interactors_.end(),ixs.begin(),ixs.end());
+    interactors_.insert(interactors_.end(), ixs.begin(), ixs.end());
   }
+  // Add crosslinks as interactors
+  std::vector<Object*> xlinks = xlink_->GetInteractors();
+  interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
 }
 
 void InteractionEngine::UpdateInteractions() {

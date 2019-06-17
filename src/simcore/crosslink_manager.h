@@ -1,23 +1,7 @@
 #ifndef _SIMCORE_CROSSLINK_MANAGER_H_
 #define _SIMCORE_CROSSLINK_MANAGER_H_
 
-#include "species.h"
-#include "auxiliary.h"
-#include "minimum_distance.h"
-
-class Crosslink {
-  private:
-    double k_on_,
-           k_off_,
-           bond_length_;
-    std::vector<Anchor*> anchors_;
-  public:
-    void UnbindAnchor(int i_anchor) {
-      auto it = anchors_.begin() + i_anchor;
-      *(it)->Unbind();
-      anchors_.erase(it);
-    }
-};
+#include "crosslink.h"
 
 class CrosslinkManager {
   private:
@@ -37,8 +21,7 @@ class CrosslinkManager {
     void UnbindCrosslink();
     void DoublyToSingly();
     void RemoveCrosslink(int i_xlink);
+    std::vector<Object*> GetInteractors();
 };
-
-
 
 #endif

@@ -73,3 +73,11 @@ void CrosslinkManager::DoublyToSingly(int i_doubly) {
     xlinks_doubly_.clear();
   }
 }
+
+std::vector<Object*> CrosslinkManager::GetInteractors() {
+  std::vector<Object*> interactors;
+  for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end(); ++it) {
+    interactors.push_back(xlink->GetBoundPtr());
+  }
+  return interactors;
+}

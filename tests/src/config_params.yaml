@@ -189,6 +189,11 @@ motor:
   diffusion_flag: [1, int]
   k_spring: [1000, double]
   f_spring_max: [100, double]
+crosslink:
+  rest_length: [0, double]
+  k_spring: [10, double]
+  k_on: [10 double]
+  k_off: [2, double]
 bead_spring:
   diameter: [1, double]
   length: [40, double]
