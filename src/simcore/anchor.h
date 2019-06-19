@@ -31,18 +31,18 @@ class Anchor : public Object {
     //void DiffuseBound();
     void Activate();
     void Deactivate();
-    void CheckNearBoundary();
-    void CheckNearBuddingBoundary();
-    void AnchorBoundary(double * anchor_point);
-    void DetachBoundary();
-    void ApplyAnchorForces();
+    //void CheckNearBoundary();
+    //void CheckNearBuddingBoundary();
+    //void AnchorBoundary(double * anchor_point);
+    //void DetachBoundary();
+    //void ApplyAnchorForces();
     void AttachToBond(directed_bond, double lambda, double mesh_lambda);
     bool SwitchBonds(bool next_bond, double lambda);
     void UpdateAnchorPosition() {}
     void SetDiffusion();
     void SetWalker(int dir,double walk_v);
     void Walk();
-    void AttachBondRandom(Bond * b, double mesh_lambda);
+    void AttachBondRandom(Bond * b);
     double const GetMeshLambda();
     void Clear();
 };

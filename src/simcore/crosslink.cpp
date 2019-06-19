@@ -1,6 +1,6 @@
 #include "crosslink.h"
 
-void Crosslink::UnbindAnchor(bool second=false) {
+void Crosslink::UnbindAnchor(bool second) {
   // If singly bound, we have to determine which anchor is bound
   if (!doubly_bound_) {
     if (anchors_.first.IsBound()) {

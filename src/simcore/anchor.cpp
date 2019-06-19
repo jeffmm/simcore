@@ -322,10 +322,16 @@ bool Anchor::SwitchBonds(bool next_bond, double dr_mag) {
 }
 
 void Anchor::AttachBondRandom(Bond * b) {
-  double l = b->GetLength()*gsl_rng_uniform_pos(rng_.r);
-  mesh_lambda_ = mesh_lambda + l;
+  double bond_length = b->GetLength();
+  bond_lambda_ = bond_length*gsl_rng_uniform_pos(rng_.r);
+  /* First bond has bond number of zero */
+  int bond_number = b->GetBondNumber();
+  /* Distance anchor is relative to entire mesh length */
+  mesh_lambda_ = bond_number*bond_length + lambda;
   directed_bond db = std::make_pair(b,OUTGOING);
-  AttachToBond(db,l,mesh_lambda_);
+  /* Passing these is redundant, but perhaps it is important for
+     AttachToBond to take these arguments as a public method? */
+  AttachToBond(db,bond_lambda_,mesh_lambda_);
 }
 
 bool Anchor::IsBound() {
