@@ -847,6 +847,87 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
         }
       }
+      else if (struct_name.compare("crosslink") == 0) {
+        for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
+          param_name = jt->first.as<std::string>();
+          if (false) {}
+          else if (param_name.compare("concentration")==0) {
+            params->crosslink.concentration = jt->second.as<double>();
+          }
+          else if (param_name.compare("diameter")==0) {
+            params->crosslink.diameter = jt->second.as<double>();
+          }
+          else if (param_name.compare("walker")==0) {
+            params->crosslink.walker = jt->second.as<int>();
+          }
+          else if (param_name.compare("velocity")==0) {
+            params->crosslink.velocity = jt->second.as<double>();
+          }
+          else if (param_name.compare("diffusion_flag")==0) {
+            params->crosslink.diffusion_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("k_on")==0) {
+            params->crosslink.k_on = jt->second.as<double>();
+          }
+          else if (param_name.compare("k_off")==0) {
+            params->crosslink.k_off = jt->second.as<double>();
+          }
+          else if (param_name.compare("k_spring")==0) {
+            params->crosslink.k_spring = jt->second.as<double>();
+          }
+          else if (param_name.compare("f_spring_max")==0) {
+            params->crosslink.f_spring_max = jt->second.as<double>();
+          }
+          else if (param_name.compare("k_align")==0) {
+            params->crosslink.k_align = jt->second.as<double>();
+          }
+          else if (param_name.compare("rest_length")==0) {
+            params->crosslink.rest_length = jt->second.as<double>();
+          }
+          else if (param_name.compare("step_direction")==0) {
+            params->crosslink.step_direction = jt->second.as<int>();
+          }
+          else if (param_name.compare("num")==0) {
+            params->crosslink.num = jt->second.as<int>();
+          }
+          else if (param_name.compare("insertion_type")==0) {
+            params->crosslink.insertion_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("insert_file")==0) {
+            params->crosslink.insert_file = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("overlap")==0) {
+            params->crosslink.overlap = jt->second.as<int>();
+          }
+          else if (param_name.compare("draw_type")==0) {
+            params->crosslink.draw_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("color")==0) {
+            params->crosslink.color = jt->second.as<double>();
+          }
+          else if (param_name.compare("posit_flag")==0) {
+            params->crosslink.posit_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("spec_flag")==0) {
+            params->crosslink.spec_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("checkpoint_flag")==0) {
+            params->crosslink.checkpoint_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_posit")==0) {
+            params->crosslink.n_posit = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_spec")==0) {
+            params->crosslink.n_spec = jt->second.as<int>();
+          }
+          else if (param_name.compare("n_checkpoint")==0) {
+            params->crosslink.n_checkpoint = jt->second.as<int>();
+          }
+          else {
+            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+          }
+        }
+      }
       else {
         std::cout << "  WARNING! Unrecognized struct parameter '" << struct_name << "'\n";
       }

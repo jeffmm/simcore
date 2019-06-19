@@ -15,13 +15,16 @@ else()
   add_definitions(-DNOGRAPH=TRUE)
 endif()
 include_directories(${INCLUDES})
-add_executable(simcore  bead_spring.cpp
+add_executable(simcore  anchor.cpp 
+                        bead_spring.cpp
                         bond.cpp
                         br_bead.cpp
                         cell_list.cpp
-                        centrosome.cpp
+                        #centrosome.cpp
                         cpu.cpp
                         cpu_time.cpp
+                        crosslink.cpp
+                        crosslink_manager.cpp
                         error_exit.cpp
                         filament.cpp
                         filament_species.cpp
@@ -32,7 +35,7 @@ add_executable(simcore  bead_spring.cpp
                         linear_algebra.cpp
                         mesh.cpp
                         minimum_distance.cpp
-                        motor.cpp
+                        #motor.cpp
                         object.cpp
                         output_manager.cpp
                         particle_tracker.cpp
@@ -45,7 +48,7 @@ add_executable(simcore  bead_spring.cpp
                         space.cpp
                         species.cpp
                         spherocylinder.cpp
-                        spindle.cpp
+                        #spindle.cpp
                         struct_analysis.cpp
                         writebmp.cpp
 )

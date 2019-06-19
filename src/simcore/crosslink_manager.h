@@ -11,17 +11,22 @@ class CrosslinkManager {
            xlink_concentration_,
            k_on_,
            k_off_;
+    RNG rng_;
+    space_struct * space_;
     std::vector<Crosslink> xlinks_doubly_;
     std::vector<Crosslink> xlinks_singly_;
     std::vector<Object*> * objs_;
     system_parameters * params_;
     void UpdateObjsVolume();
-    void CalculateBindingProbability();
+    void CalculateBindingFree();
     void BindCrosslink();
     void UnbindCrosslink();
-    void DoublyToSingly();
+    void DoublyToSingly(int i_doubly);
     void RemoveCrosslink(int i_xlink);
+  public:
+    void Init(system_parameters *params, std::vector<Object*> * objs);
     std::vector<Object*> GetInteractors();
+    void UpdateCrosslinks();
 };
 
 #endif

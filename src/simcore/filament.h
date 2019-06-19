@@ -3,7 +3,7 @@
 
 #include "species.h"
 #include "mesh.h"
-#include "motor.h"
+//#include "motor.h"
 
 #ifdef ENABLE_OPENMP
 #include "omp.h"
@@ -54,10 +54,10 @@ class Filament : public Mesh {
            fic_factor_,
            curvature_ = 0,
            // TEMPORARY FIXME
-           motor_velocity_,
-           k_on_,
-           k_off_,
-           motor_concentration_,
+           //motor_velocity_,
+           //k_on_,
+           //k_off_,
+           //motor_concentration_,
            shuffle_factor_,
            shuffle_frequency_,
            spiral_number_,
@@ -89,7 +89,7 @@ class Filament : public Mesh {
     void UpdateSitePositions();
     void UpdateSiteOrientations();
     void ApplyForcesTorques();
-    void ApplyAnchorForces(); // FIXME temporary
+    //void ApplyAnchorForces(); // FIXME temporary
     void ApplyInteractionForces();
     void SetParameters();
     void InitElements();
@@ -102,19 +102,19 @@ class Filament : public Mesh {
     void RescaleBonds();
     void InitSpiral2D();
     void ReportAll();
-    std::vector<Motor> motors_; //FIXME temporary
-    Anchor * anchor_; //FIXME temporary? 
-    void UnbindMotor();
-    void BindMotor();
+    //std::vector<Motor> motors_; //FIXME temporary
+    //Anchor * anchor_; //FIXME temporary? 
+    //void UnbindMotor();
+    //void BindMotor();
     void CalculateBinding();
-    void RebindMotors();
+    //void RebindMotors();
     bool CheckBondLengths();
 
   public:
     Filament();
     virtual void Init(bool force_overlap = false);
     virtual void InsertAt(double *pos, double *u);
-    virtual void SetAnchor(Anchor * a);
+    //virtual void SetAnchor(Anchor * a);
     virtual bool CheckBounds(double buffer = 0);
     //void DiffusionValidationInit();
     virtual void Integrate();

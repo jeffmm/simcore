@@ -12,10 +12,14 @@ class Crosslink {
     double k_on_,
            k_off_,
            k_spring_,
+           k_align_,
            rest_length_;
     std::pair<Anchor, Anchor> anchors_;
+
   public:
-    void UnbindAnchor(bool second);
+    void Init(system_parameters *params, long seed);
+    void UpdateCrosslink();
+    void UnbindAnchor(bool second=false);
     Anchor * GetBoundPtr();
 };
 

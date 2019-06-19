@@ -48,10 +48,10 @@ void Filament::SetParameters() {
   eq_steps_count_ = 0;
   fic_factor_ = params_->filament.fic_factor;
   tip_force_ = 0.0;
-  k_off_ = params_->motor.k_off;
-  k_on_ = params_->motor.k_on;
-  motor_concentration_ = params_->motor.concentration;
-  n_motors_bound_ = 0;
+  //k_off_ = params_->motor.k_off;
+  //k_on_ = params_->motor.k_on;
+  //motor_concentration_ = params_->motor.concentration;
+  //n_motors_bound_ = 0;
   shuffle_flag_ = params_->filament.shuffle;
   shuffle_factor_ = params_->filament.shuffle_factor;
   shuffle_frequency_ = params_->filament.shuffle_frequency;
@@ -70,10 +70,10 @@ void Filament::SetParameters() {
   flagella_amplitude_ = params_->filament.flagella_amplitude;
 }
 
-void Filament::SetAnchor(Anchor * a) {
-  anchor_ = a;
-  anchored_ = true;
-}
+//void Filament::SetAnchor(Anchor * a) {
+  //anchor_ = a;
+  //anchored_ = true;
+//}
 
 bool Filament::CheckBounds(double buffer) {
   for (auto site=sites_.begin();site!=sites_.end(); ++site) {
@@ -138,13 +138,14 @@ void Filament::InitElements() {
 }
 
 bool Filament::InsertFirstBond() {
-  if (anchored_) {
-    InitSiteAt(anchor_->position_,diameter_);
-    std::copy(anchor_->orientation_,anchor_->orientation_+3,orientation_);
-    GenerateProbableOrientation();
-    AddBondToTip(orientation_,bond_length_);
-  }
-  else if (params_->filament.insertion_type.compare("random") == 0) {
+  //if (anchored_) {
+    //InitSiteAt(anchor_->position_,diameter_);
+    //std::copy(anchor_->orientation_,anchor_->orientation_+3,orientation_);
+    //GenerateProbableOrientation();
+    //AddBondToTip(orientation_,bond_length_);
+  //}
+  //else if (params_->filament.insertion_type.compare("random") == 0) {
+  if (params_->filament.insertion_type.compare("random") == 0) {
     InitRandomSite(diameter_);
     AddRandomBondToTip(bond_length_);
   }
@@ -391,10 +392,10 @@ double const Filament::GetVolume() {
 void Filament::UpdatePosition(bool midstep) {
   midstep_ = midstep;
   if (!midstep_) {
-    CalculateBinding();
-    for (auto it=motors_.begin(); it!= motors_.end(); ++it) {
-      it->UpdatePosition();
-    }
+    //CalculateBinding();
+    //for (auto it=motors_.begin(); it!= motors_.end(); ++it) {
+      //it->UpdatePosition();
+    //}
   }
   ApplyForcesTorques();
   Integrate();
@@ -446,7 +447,7 @@ void Filament::CalculateAngles(bool rescale) {
   }
   if (rescale && sharp_angle && midstep_ && length_/(n_bonds_+1) > min_bond_length_) {
     DoubleGranularityLinear();
-    RebindMotors();
+    //RebindMotors();
     UpdateSiteOrientations();
     CalculateAngles(false);
   }
@@ -920,7 +921,7 @@ void Filament::UpdateAvgPosition() {
 
 void Filament::ApplyForcesTorques() {
   ApplyInteractionForces();
-  if (anchored_) ApplyAnchorForces();
+  //if (anchored_) ApplyAnchorForces();
 }
 
 void Filament::ApplyInteractionForces() {
@@ -988,38 +989,38 @@ void Filament::ApplyInteractionForces() {
   }
 }
 
-void Filament::ApplyAnchorForces() {
-  double const * const tail_pos = sites_[0].GetPosition();
-  double dr[3] = {0,0,0};
-  double dr_mag=0.0;
-  for (int i=0;i<n_dim_;++i) {
-    dr[i] = tail_pos[i] - anchor_->position_[i];
-    dr_mag += SQR(dr[i]);
-  }
-  dr_mag = sqrt(dr_mag);
-  if (dr_mag < 1e-12) {
-    std::fill(anchor_->force_,anchor_->force_+3,0.0);
-  }
-  else {
-    for (int i=0;i<n_dim_;++i) {
-      anchor_->force_[i] = anchor_->k_spring_*(dr_mag - anchor_->spring_length_)*dr[i]/dr_mag;
-    }
-  }
-  sites_[0].SubForce(anchor_->force_);
+//void Filament::ApplyAnchorForces() {
+  //double const * const tail_pos = sites_[0].GetPosition();
+  //double dr[3] = {0,0,0};
+  //double dr_mag=0.0;
+  //for (int i=0;i<n_dim_;++i) {
+    //dr[i] = tail_pos[i] - anchor_->position_[i];
+    //dr_mag += SQR(dr[i]);
+  //}
+  //dr_mag = sqrt(dr_mag);
+  //if (dr_mag < 1e-12) {
+    //std::fill(anchor_->force_,anchor_->force_+3,0.0);
+  //}
+  //else {
+    //for (int i=0;i<n_dim_;++i) {
+      //anchor_->force_[i] = anchor_->k_spring_*(dr_mag - anchor_->spring_length_)*dr[i]/dr_mag;
+    //}
+  //}
+  //sites_[0].SubForce(anchor_->force_);
 
-  if (anchor_->alignment_potential_) {
-    double const * const tail_u = bonds_[0].GetOrientation();
-    double cos_theta = dot_product(n_dim_,tail_u,anchor_->orientation_);
-    double factor = anchor_->k_align_* sqrt(persistence_length_)*0.5*ABS(1-cos_theta);
-    double temp[3] = {0,0,0};
-    cross_product(anchor_->orientation_, tail_u, temp, 3);
-    normalize_vector(temp, 3);
-    for (int i=0;i<3;++i) {
-      anchor_->torque_[i] = factor * temp[i]; 
-    }
-    bonds_[0].SubTorque(anchor_->torque_);
-  }
-}
+  //if (anchor_->alignment_potential_) {
+    //double const * const tail_u = bonds_[0].GetOrientation();
+    //double cos_theta = dot_product(n_dim_,tail_u,anchor_->orientation_);
+    //double factor = anchor_->k_align_* sqrt(persistence_length_)*0.5*ABS(1-cos_theta);
+    //double temp[3] = {0,0,0};
+    //cross_product(anchor_->orientation_, tail_u, temp, 3);
+    //normalize_vector(temp, 3);
+    //for (int i=0;i<3;++i) {
+      //anchor_->torque_[i] = factor * temp[i]; 
+    //}
+    //bonds_[0].SubTorque(anchor_->torque_);
+  //}
+//}
 
 void Filament::DynamicInstability() {
   if (midstep_ || !dynamic_instability_flag_) return;
@@ -1043,12 +1044,12 @@ void Filament::GrowFilament() {
   RescaleBonds();
   if (bond_length_ > max_bond_length_) {
     DoubleGranularityLinear();
-    RebindMotors();
+    //RebindMotors();
     UpdateSiteOrientations();
   }
   else if (bond_length_ < min_bond_length_ && n_bonds_ > 2) {
     HalfGranularityLinear();
-    RebindMotors();
+    //RebindMotors();
     UpdateSiteOrientations();
   }
 }
@@ -1205,9 +1206,9 @@ void Filament::Draw(std::vector<graph_struct*> * graph_array) {
     bond->Draw(graph_array);
   }
   // FIXME temporary
-  for (auto motor=motors_.begin(); motor!= motors_.end(); ++motor) {
-    motor->Draw(graph_array);
-  }
+  //for (auto motor=motors_.begin(); motor!= motors_.end(); ++motor) {
+    //motor->Draw(graph_array);
+  //}
 }
 
 // Scale bond and site positions from new unit cell
@@ -1234,24 +1235,24 @@ void Filament::ScalePosition() {
   UpdateBondPositions();
 }
 
-void Filament::RebindMotors() {
-  for (motor_iterator it=motors_.begin(); it!=motors_.end(); ++it) {
-    double mesh_lambda = it->GetMeshLambda();
-    int i_site = (int) floor(mesh_lambda/bond_length_);
-    double bond_lambda = mesh_lambda - i_site*bond_length_;
-    if (i_site > n_sites_-2) {
-      i_site = n_sites_-2;
-      mesh_lambda = length_;
-      bond_lambda = bond_length_;
-    }
-    if (i_site < 0) {
-      i_site = 0;
-      mesh_lambda = 0;
-      bond_lambda = 0;
-    }
-    it->AttachToBond(sites_[i_site].GetOutgoingBond(),bond_lambda,mesh_lambda);
-  }
-}
+//void Filament::RebindMotors() {
+  //for (motor_iterator it=motors_.begin(); it!=motors_.end(); ++it) {
+    //double mesh_lambda = it->GetMeshLambda();
+    //int i_site = (int) floor(mesh_lambda/bond_length_);
+    //double bond_lambda = mesh_lambda - i_site*bond_length_;
+    //if (i_site > n_sites_-2) {
+      //i_site = n_sites_-2;
+      //mesh_lambda = length_;
+      //bond_lambda = bond_length_;
+    //}
+    //if (i_site < 0) {
+      //i_site = 0;
+      //mesh_lambda = 0;
+      //bond_lambda = 0;
+    //}
+    //it->AttachToBond(sites_[i_site].GetOutgoingBond(),bond_lambda,mesh_lambda);
+  //}
+//}
 
 void Filament::ReportAll() {
   printf("tensions:\n  {");
@@ -1491,9 +1492,9 @@ void Filament::ReadCheckpoint(std::fstream &icheck) {
 std::vector<Object*> Filament::GetInteractors() {
   interactors_.clear();
   UpdateInteractors();
-  for (auto it=motors_.begin(); it!=motors_.end(); ++it) {
-    interactors_.push_back(&(*it));
-  }
+  //for (auto it=motors_.begin(); it!=motors_.end(); ++it) {
+    //interactors_.push_back(&(*it));
+  //}
   return interactors_;
 }
  

@@ -52,7 +52,7 @@ class PassiveFilament : public Mesh {
     void UpdateSitePositions();
     void UpdateSiteOrientations();
     void ApplyForcesTorques();
-    void ApplyAnchorForces(); // FIXME temporary
+    //void ApplyAnchorForces(); // FIXME temporary
     void ApplyInteractionForces();
     void SetParameters();
     void InitElements();
@@ -60,14 +60,14 @@ class PassiveFilament : public Mesh {
     bool InsertFirstBond();
     void UpdateAvgPosition();
     void ReportAll();
-    Anchor * anchor_; //FIXME temporary? 
+    //Anchor * anchor_; //FIXME temporary? 
     bool CheckBondLengths();
 
   public:
     PassiveFilament();
     virtual void Init(bool force_overlap = false);
     virtual void InsertAt(double *pos, double *u);
-    virtual void SetAnchor(Anchor * a);
+    //virtual void SetAnchor(Anchor * a);
     virtual bool CheckBounds(double buffer = 0);
     //void DiffusionValidationInit();
     virtual void Integrate();

@@ -216,4 +216,18 @@ spindle:
   k_align: [0, double]
   spring_length: [0,double]
   spb_diameter: [5, double]
+crosslink:
+  concentration: [0, double]
+  diameter: [1, double]
+  walker: [0, int]
+  velocity: [1, double]
+  diffusion_flag: [0, int]
+  k_on: [10, double]
+  k_off: [2, double]
+  k_spring: [100, double]
+  f_spring_max: [100, double]
+  k_align: [0, double]
+  rest_length: [0, double]
+  step_direction: [0, int]
+
 

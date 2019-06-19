@@ -478,8 +478,9 @@ double const Object::GetVolume() {
     }
     else {
       return 1.0/6.0 * M_PI * diameter_*diameter_*diameter_ + 0.25*M_PI*length_*diameter_*diameter_;
+    }
+    return -1;
   }
-  return -1;
 }
 double const Object::GetDrTot() {
   return dr_tot_;

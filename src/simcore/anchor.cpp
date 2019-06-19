@@ -3,19 +3,19 @@
 Anchor::Anchor() : Object() {}
 
 void Anchor::Init() {
-  diameter_ = params_->anchor.diameter;
-  color_ = params_->anchor.color;
-  draw_ = draw_type::_from_string(params_->anchor.draw_type.c_str());
+  diameter_ = params_->crosslink.diameter;
+  color_ = params_->crosslink.color;
+  draw_ = draw_type::_from_string(params_->crosslink.draw_type.c_str());
   bound_ = false;
-  walker_ = (params_->anchor.walker ? true : false);
-  step_direction_ = (params_->anchor.step_direction == 0 ? 0 : SIGNOF(params_->anchor.step_direction));
+  walker_ = (params_->crosslink.walker ? true : false);
+  step_direction_ = (params_->crosslink.step_direction == 0 ? 0 : SIGNOF(params_->crosslink.step_direction));
   velocity_ = params_->crosslink.velocity;
   max_velocity_ = velocity_;
   bond_lambda_ = 0;
   mesh_lambda_ = 0;
   active_ = false;
   diffuse_ = (params_->crosslink.diffusion_flag ? true : false);
-  f_spring_max_ = params_->anchor.f_spring_max;
+  f_spring_max_ = params_->crosslink.f_spring_max;
   SetDiffusion();
 }
 
@@ -41,12 +41,12 @@ void Anchor::UpdatePosition() {
   if (!bound_) return;
   ZeroForce();
   // Update orientation based on bond if bound
-  double const * const bond_orientation = bond_.first->GetOrientation();
+  double const * const bond_orientation = bond_->GetOrientation();
   std::copy(bond_orientation, bond_orientation+3, orientation_);
   // Check for dynamic instability FIXME
-  bond_length_ = bond_.first->GetLength();
-  bond_lambda_ = mesh_lambda_ - bond_.first->GetBondNumber()*bond_length_ ;
-  double const * const bond_position = bond_.first->GetPosition();
+  bond_length_ = bond_->GetLength();
+  bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber()*bond_length_ ;
+  double const * const bond_position = bond_->GetPosition();
   for (int i=0; i<n_dim_; ++i) {
     orientation_[i] = bond_orientation[i];
     position_[i] = bond_position[i] - (0.5*bond_length_ - bond_lambda_)*orientation_[i];
@@ -178,7 +178,7 @@ void Anchor::Deactivate() {
 void Anchor::Walk() {
   double dr[3] = {0,0,0};
   double dr_mag = velocity_*delta_;
-  double const * const pos0 = bond_.first->GetPosition();
+  double const * const pos0 = bond_->GetPosition();
   for (int i = 0; i < n_dim_; ++i) {
     dr[i] = step_direction_ * dr_mag * orientation_[i];
   }
@@ -245,7 +245,7 @@ void Anchor::Diffuse() {
   double dr[3] = {0,0,0};
   double dr_mag = 0;
   double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
-  double const * const pos0 = bond_.first->GetPosition();
+  double const * const pos0 = bond_->GetPosition();
   for (int i=0; i<n_dim_; ++i) {
     force_[i] = kick*diffusion_*orientation_[i];
   }
@@ -264,7 +264,7 @@ void Anchor::Diffuse() {
       bond_lambda_ = 0.0;
     }
   }
-  else if (kick > 0 && bond_lambda_ + dr_mag > (bond_length_ = bond_.first->GetLength()) && kick>0) {
+  else if (kick > 0 && bond_lambda_ + dr_mag > (bond_length_ = bond_->GetLength()) && kick>0) {
     //Move to next bond if it's there
     if (same_bond = !SwitchBonds(true, dr_mag - (bond_length_-bond_lambda_))) {
       // Otherwise move to head of bond
@@ -321,9 +321,13 @@ bool Anchor::SwitchBonds(bool next_bond, double dr_mag) {
   return true;
 }
 
-void Anchor::AttachBondRandom(Bond * b, double mesh_lambda) {
+void Anchor::AttachBondRandom(Bond * b) {
   double l = b->GetLength()*gsl_rng_uniform_pos(rng_.r);
   mesh_lambda_ = mesh_lambda + l;
   directed_bond db = std::make_pair(b,OUTGOING);
   AttachToBond(db,l,mesh_lambda_);
+}
+
+bool Anchor::IsBound() {
+  return bound_;
 }

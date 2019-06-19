@@ -80,7 +80,7 @@ void InteractionEngine::UpdateInteractors() {
     interactors_.insert(interactors_.end(), ixs.begin(), ixs.end());
   }
   // Add crosslinks as interactors
-  std::vector<Object*> xlinks = xlink_->GetInteractors();
+  std::vector<Object*> xlinks = xlink_.GetInteractors();
   interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
 }
 

@@ -28,10 +28,10 @@ void PassiveFilament::SetParameters() {
   stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
 }
 
-void PassiveFilament::SetAnchor(Anchor * a) {
-  anchor_ = a;
-  anchored_ = true;
-}
+//void PassiveFilament::SetAnchor(Anchor * a) {
+  ////anchor_ = a;
+  ////anchored_ = true;
+//}
 
 bool PassiveFilament::CheckBounds(double buffer) {
   for (auto site=sites_.begin();site!=sites_.end(); ++site) {
@@ -91,13 +91,14 @@ void PassiveFilament::InitElements() {
 }
 
 bool PassiveFilament::InsertFirstBond() {
-  if (anchored_) {
-    InitSiteAt(anchor_->position_,diameter_);
-    std::copy(anchor_->orientation_,anchor_->orientation_+3,orientation_);
-    GenerateProbableOrientation();
-    AddBondToTip(orientation_,bond_length_);
-  }
-  else if (params_->passive_filament.insertion_type.compare("random") == 0) {
+  //if (anchored_) {
+    //InitSiteAt(anchor_->position_,diameter_);
+    //std::copy(anchor_->orientation_,anchor_->orientation_+3,orientation_);
+    //GenerateProbableOrientation();
+    //AddBondToTip(orientation_,bond_length_);
+  //}
+  //else if (params_->passive_filament.insertion_type.compare("random") == 0) {
+  if (params_->passive_filament.insertion_type.compare("random") == 0) {
     InitRandomSite(diameter_);
     AddRandomBondToTip(bond_length_);
   }
@@ -692,7 +693,7 @@ void PassiveFilament::UpdateAvgPosition() {
 
 void PassiveFilament::ApplyForcesTorques() {
   ApplyInteractionForces();
-  if (anchored_) ApplyAnchorForces();
+  //if (anchored_) ApplyAnchorForces();
 }
 
 void PassiveFilament::ApplyInteractionForces() {
@@ -721,38 +722,38 @@ void PassiveFilament::ApplyInteractionForces() {
   }
 }
 
-void PassiveFilament::ApplyAnchorForces() {
-  double const * const tail_pos = sites_[0].GetPosition();
-  double dr[3] = {0,0,0};
-  double dr_mag=0.0;
-  for (int i=0;i<n_dim_;++i) {
-    dr[i] = tail_pos[i] - anchor_->position_[i];
-    dr_mag += SQR(dr[i]);
-  }
-  dr_mag = sqrt(dr_mag);
-  if (dr_mag < 1e-12) {
-    std::fill(anchor_->force_,anchor_->force_+3,0.0);
-  }
-  else {
-    for (int i=0;i<n_dim_;++i) {
-      anchor_->force_[i] = anchor_->k_spring_*(dr_mag - anchor_->spring_length_)*dr[i]/dr_mag;
-    }
-  }
-  sites_[0].SubForce(anchor_->force_);
+//void PassiveFilament::ApplyAnchorForces() {
+  //double const * const tail_pos = sites_[0].GetPosition();
+  //double dr[3] = {0,0,0};
+  //double dr_mag=0.0;
+  //for (int i=0;i<n_dim_;++i) {
+    //dr[i] = tail_pos[i] - anchor_->position_[i];
+    //dr_mag += SQR(dr[i]);
+  //}
+  //dr_mag = sqrt(dr_mag);
+  //if (dr_mag < 1e-12) {
+    //std::fill(anchor_->force_,anchor_->force_+3,0.0);
+  //}
+  //else {
+    //for (int i=0;i<n_dim_;++i) {
+      //anchor_->force_[i] = anchor_->k_spring_*(dr_mag - anchor_->spring_length_)*dr[i]/dr_mag;
+    //}
+  //}
+  //sites_[0].SubForce(anchor_->force_);
 
-  if (anchor_->alignment_potential_) {
-    double const * const tail_u = bonds_[0].GetOrientation();
-    double cos_theta = dot_product(n_dim_,tail_u,anchor_->orientation_);
-    double factor = anchor_->k_align_* sqrt(persistence_length_)*0.5*ABS(1-cos_theta);
-    double temp[3] = {0,0,0};
-    cross_product(anchor_->orientation_, tail_u, temp, 3);
-    normalize_vector(temp, 3);
-    for (int i=0;i<3;++i) {
-      anchor_->torque_[i] = factor * temp[i]; 
-    }
-    bonds_[0].SubTorque(anchor_->torque_);
-  }
-}
+  //if (anchor_->alignment_potential_) {
+    //double const * const tail_u = bonds_[0].GetOrientation();
+    //double cos_theta = dot_product(n_dim_,tail_u,anchor_->orientation_);
+    //double factor = anchor_->k_align_* sqrt(persistence_length_)*0.5*ABS(1-cos_theta);
+    //double temp[3] = {0,0,0};
+    //cross_product(anchor_->orientation_, tail_u, temp, 3);
+    //normalize_vector(temp, 3);
+    //for (int i=0;i<3;++i) {
+      //anchor_->torque_[i] = factor * temp[i]; 
+    //}
+    //bonds_[0].SubTorque(anchor_->torque_);
+  //}
+//}
 
 void PassiveFilament::Draw(std::vector<graph_struct*> * graph_array) {
   for (auto bond=bonds_.begin(); bond!= bonds_.end(); ++bond) {

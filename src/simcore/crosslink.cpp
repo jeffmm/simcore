@@ -31,3 +31,19 @@ Anchor * Crosslink::GetBoundPtr() {
     return &(anchors_.second);
   }
 }
+
+void Crosslink::UpdateCrosslink() {
+  if (doubly_bound_) {
+    anchors_.first.UpdatePosition();
+    anchors_.second.UpdatePosition();
+  }
+  else {
+    if (anchors_.first.IsBound()) {
+      anchors_.first.UpdatePosition();
+    }
+    else {
+      anchors_.second.UpdatePosition();
+    }
+  }
+  // TODO Apply tether forces, torques
+}

@@ -25,6 +25,7 @@ class Anchor : public Object {
   public:
     Anchor();
     void Init();
+    bool IsBound();
     void UpdatePosition();
     void Diffuse();
     //void DiffuseBound();

@@ -141,12 +141,12 @@ void Simulation::InitSpecies() {
 
   /* Factories for creating and initializing registered species with their
      assigned species id */
-  REGISTER_SPECIES(CentrosomeSpecies,centrosome);
+  //REGISTER_SPECIES(CentrosomeSpecies,centrosome);
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(PassiveFilamentSpecies,passive_filament);
   REGISTER_SPECIES(BeadSpringSpecies,bead_spring);
   REGISTER_SPECIES(SpherocylinderSpecies,spherocylinder);
-  REGISTER_SPECIES(SpindleSpecies,spindle);
+  //REGISTER_SPECIES(SpindleSpecies,spindle);
   //REGISTER_SPECIES(MDBeadSpecies,md_bead);
   //REGISTER_SPECIES(HardRodSpecies,hard_rod);
   REGISTER_SPECIES(BrBeadSpecies,br_bead);

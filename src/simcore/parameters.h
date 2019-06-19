@@ -172,6 +172,22 @@ class spindle_parameters : public species_parameters {
     double spb_diameter = 5;
 };
 
+class crosslink_parameters : public species_parameters {
+  public:
+    double concentration = 0;
+    double diameter = 1;
+    int walker = 0;
+    double velocity = 1;
+    int diffusion_flag = 0;
+    double k_on = 10;
+    double k_off = 2;
+    double k_spring = 100;
+    double f_spring_max = 100;
+    double k_align = 0;
+    double rest_length = 0;
+    int step_direction = 0;
+};
+
 class system_parameters {
   public:
     std::string default_param_file = "src/config_params.yaml";
@@ -266,6 +282,7 @@ class system_parameters {
     bead_spring_parameters bead_spring;
     spherocylinder_parameters spherocylinder;
     spindle_parameters spindle;
+    crosslink_parameters crosslink;
 };
 
 #endif // _SIMCORE_PARAMETERS_H_

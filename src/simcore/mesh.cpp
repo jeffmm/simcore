@@ -42,10 +42,12 @@ void Mesh::AddBond(Bond b) {
     std::cerr << "ERROR! Attempting to add bond beyond allocated maximum.\n";
     exit(1);
   }
+  int bond_order = bonds_.back().GetOrder() + 1;
   bonds_.push_back(b);
   bonds_.back().SetColor(color_,draw_);
   bonds_.back().SetMeshID(GetMeshID());
   bonds_.back().SetSID(GetSID());
+  bonds_.back().SetOrder(bond_order);
   n_bonds_++;
 }
 
