@@ -37,6 +37,9 @@ density_com_only: 0
 density_bin_width: 0.1
 in_out_flag: 1
 
+crosslink:
+  concentration: 0.1
+
 filament:
   num: 2
   packing_fraction: -1

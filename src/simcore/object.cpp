@@ -444,8 +444,9 @@ void Object::ScalePosition() {
 int Object::GetCount() {
   return 1;
 }
-std::vector<Object*> Object::GetInteractors() {
-  return interactors_;
+void Object::GetInteractors(std::vector<Object*> * ix) {
+  ix->clear();
+  ix->insert(ix->end(), interactors_.begin(), interactors_.end());
 }
 double const * const Object::GetInteractorPosition() {
   return GetPosition();

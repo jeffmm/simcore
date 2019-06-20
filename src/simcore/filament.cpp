@@ -1489,12 +1489,3 @@ void Filament::ReadCheckpoint(std::fstream &icheck) {
   cos_thetas_.resize(n_sites_-2); //max_sites-2
 }
 
-std::vector<Object*> Filament::GetInteractors() {
-  interactors_.clear();
-  UpdateInteractors();
-  //for (auto it=motors_.begin(); it!=motors_.end(); ++it) {
-    //interactors_.push_back(&(*it));
-  //}
-  return interactors_;
-}
- 

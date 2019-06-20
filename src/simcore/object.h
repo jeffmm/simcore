@@ -117,7 +117,7 @@ class Object {
     virtual void SetColor(double const c, draw_type dtype);
     virtual void ScalePosition();
     virtual int GetCount();
-    virtual std::vector<Object*> GetInteractors();
+    virtual void GetInteractors(std::vector<Object*> * ix);
     virtual double const * const GetInteractorPosition();
     virtual double const * const GetInteractorPrevPosition();
     virtual double const * const GetInteractorScaledPosition();

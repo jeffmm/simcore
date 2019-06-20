@@ -118,10 +118,9 @@ void BrBead::Integrate() {
   //Rotate();
 }
 
-std::vector<Object*> BrBead::GetInteractors() {
-  interactors_.clear();
-  interactors_.push_back(this);
-  return interactors_;
+void BrBead::GetInteractors(std::vector<Object*> * ix) {
+  ix->clear();
+  ix->push_back(this);
 }
 
 void BrBead::Draw(std::vector<graph_struct*> * graph_array) {

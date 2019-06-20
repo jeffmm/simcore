@@ -287,6 +287,7 @@ void Mesh::ZeroForce() {
   }
 }
 void Mesh::UpdateInteractors() {
+  interactors_.clear();
   if (posits_only_) {
     double pos[3] = {0,0,0};
     double u[3] = {0,0,0};
@@ -305,10 +306,10 @@ void Mesh::UpdateInteractors() {
   }
 }
 
-std::vector<Object*> Mesh::GetInteractors() {
-  interactors_.clear();
+void Mesh::GetInteractors(std::vector<Object*> * ix) {
+  ix->clear();
   UpdateInteractors();
-  return interactors_;
+  ix->insert(ix->end(), interactors_.begin(), interactors_.end());
 }
 
 int Mesh::GetCount() {

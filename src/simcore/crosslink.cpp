@@ -5,7 +5,7 @@ void Crosslink::Init(system_parameters * params) {
 }
 
 void Crosslink::UnbindAnchor(bool second) {
-  // If singly bound, we have to determine which anchor is bound
+  /* If singly bound, we have to determine which anchor is bound */
   if (!doubly_bound_) {
     if (anchors_.first.IsBound()) {
       anchors_.first.Clear();
@@ -22,7 +22,8 @@ void Crosslink::UnbindAnchor(bool second) {
   }
 }
 
-// Get pointer to anchor that is bound. Should only be used for singly bound xlinks.
+/* Get pointer to anchor that is bound. Should only be used for singly bound
+ * xlinks. */
 Anchor * Crosslink::GetBoundPtr() {
   if (doubly_bound_) {
     warning("GetBoundPtr() called on doubly bound crosslink. This function"
@@ -52,7 +53,8 @@ void Crosslink::UpdateCrosslink() {
   // TODO Apply tether forces, torques
 }
 
-/* Attach a crosslink anchor to object in a random fashion. Currently only bonds are used, but can be extended to sites (sphere-like objects) */
+/* Attach a crosslink anchor to object in a random fashion. Currently only
+ * bonds are used, but can be extended to sites (sphere-like objects) */
 void Crosslink::AttachObjRandom(Object * obj) {
   /* Attaching to random bond implies first anchor binding from solution, so
    * this crosslink should be new and should not be singly or doubly bound */

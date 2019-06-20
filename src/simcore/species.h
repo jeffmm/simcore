@@ -31,8 +31,8 @@ class SpeciesBase {
     virtual void Draw(std::vector<graph_struct*> * graph_array) {}
     virtual void Init(system_parameters *params, space_struct *space, long seed);
     virtual void ZeroForces() {}
-    virtual std::vector<Object*> GetInteractors();
-    virtual std::vector<Object*> GetLastInteractors();
+    virtual void GetInteractors(std::vector<Object*> * ix) {}
+    virtual void GetLastInteractors(std::vector<Object*> * ix) {}
     virtual double GetPotentialEnergy() {return 0;}
     virtual void ScalePositions() {}
     virtual void AddMember() {}
@@ -109,8 +109,8 @@ class Species : public SpeciesBase {
     void SetLastMemberPosition(double const * const pos);
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void UpdatePositions();
-    virtual std::vector<Object*> GetInteractors();
-    virtual std::vector<Object*> GetLastInteractors();
+    virtual void GetInteractors(std::vector<Object*> * ix);
+    virtual void GetLastInteractors(std::vector<Object*> * ix);
     virtual double GetPotentialEnergy();
     virtual void ZeroForces();
     virtual void Report();

@@ -192,16 +192,18 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       while(num != inserted) {
         (*spec)->AddMember();
         // First check that we are respecting boundary conditions
+        std::vector<Object*> last_ixors;
+        (*spec)->GetLastInteractors(&last_ixors);
         if (params_.boundary != 0 && !processing && 
-            iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
+            iengine_.CheckBoundaryConditions(last_ixors)) {
           (*spec)->PopMember();
+          /* We are not counting boundary condition failures in insertion
+           failures, since insertion failures are for packing issues */
           //num_failures++;
-          // We are not counting boundary condition failures in insertion
-          // failures, since insertion failures are for packing issues
         }
         // Check if we have an overlap of objects
         else if (!force_overlap && !(*spec)->CanOverlap() && !processing && 
-            iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
+            iengine_.CheckOverlap(last_ixors)) {
           (*spec)->PopMember();
           num_failures++;
         }
@@ -209,7 +211,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         else {
           inserted++;
           if (!force_overlap && !processing) {
-            iengine_.AddInteractors((*spec)->GetLastInteractors());
+            iengine_.AddInteractors(last_ixors);
           }
           int insert_percentage = (int)(100 * (float)inserted / (float)num);
           if (params_.print_complete) {
@@ -253,22 +255,24 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           (*spec)->AddMember();
           (*spec)->SetLastMemberPosition(pos);
           // First check that we are respecting boundary conditions
+          std::vector<Object*> last_ixors;
+          (*spec)->GetLastInteractors(&last_ixors);
           if (params_.boundary != 0 && !processing && 
-              iengine_.CheckBoundaryConditions((*spec)->GetLastInteractors())) {
+              iengine_.CheckBoundaryConditions(last_ixors)) {
             (*spec)->PopMember();
             // We are not counting boundary condition failures in insertion
             // failures, since insertion failures are for packing issues
           }
           // Check if we have an overlap of objects
           else if (!force_overlap && !(*spec)->CanOverlap() && !processing && 
-              iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
+              iengine_.CheckOverlap(last_ixors)) {
             (*spec)->PopMember();
             num_failures++;
           }
           // Otherwise update display of percentage of species inserted
           else {
             inserted++;
-            iengine_.AddInteractors((*spec)->GetLastInteractors());
+            iengine_.AddInteractors(last_ixors);
             int insert_percentage = (int)(100 * (float)inserted / (float)num);
             if (params_.print_complete) {
               if (insert_percentage % 10 == 0) {

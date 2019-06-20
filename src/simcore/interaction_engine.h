@@ -24,9 +24,8 @@ class InteractionEngine {
          no_interactions_,
          no_init_ = true,
          processing_ = false,
-         in_out_flag_ = false; // For measuring incoming and 
-                               // outgoing angles of crossing filaments
-
+    /* For measuring incoming and outgoing angles of crossing filaments */
+         in_out_flag_ = false; 
     int n_dim_,
         n_periodic_,
         i_update_,
@@ -46,6 +45,8 @@ class InteractionEngine {
 
     std::vector<pair_interaction> pair_interactions_;
     std::vector<boundary_interaction> boundary_interactions_;
+    std::vector<Object*> ix_objects_;
+    std::vector<Object*> anchors_;
     std::vector<Object*> interactors_;
     //CellList clist_;
     ParticleTracker ptracker_;

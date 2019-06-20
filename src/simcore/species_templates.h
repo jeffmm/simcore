@@ -77,21 +77,21 @@ void Species<T>::UpdatePositions() {
 }
 
 template <typename T> 
-std::vector<Object*> Species<T>::GetInteractors() {
-  std::vector<Object*> interactors;
+void Species<T>::GetInteractors(std::vector<Object*> * ix) {
+  ix->clear();
+  std::vector<Object*> ix_vec;
   for (auto it=members_.begin(); it!=members_.end(); ++it) {
-    std::vector<Object*> ix_vec = it->GetInteractors();
-    interactors.insert(interactors.end(), ix_vec.begin(), ix_vec.end());
+    it->GetInteractors(&ix_vec);
+    ix->insert(ix->end(), ix_vec.begin(), ix_vec.end());
   }
-  return interactors;
 }
 
 template <typename T> 
-std::vector<Object*> Species<T>::GetLastInteractors() {
+void Species<T>::GetLastInteractors(std::vector<Object*> * ix) {
   if (members_.size() == 0) {
     error_exit("Called for last interactors of species, but species has zero members\n");
   }
-  return members_.back().GetInteractors();
+  members_.back().GetInteractors(ix);
 }
 
 template <typename T> 

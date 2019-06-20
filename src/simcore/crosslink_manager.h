@@ -5,6 +5,7 @@
 
 class CrosslinkManager {
   private:
+    bool update_;
     int n_xlinks_,
         n_anchors_bound_;
     double obj_volume_,
@@ -25,8 +26,9 @@ class CrosslinkManager {
     void RemoveCrosslink(int i_xlink);
   public:
     void Init(system_parameters *params, std::vector<Object*> * objs);
-    std::vector<Object*> GetInteractors();
+    void GetInteractors(std::vector<Object*> * ixors);
     void UpdateCrosslinks();
+    bool CheckUpdate();
     void Clear();
 };
 

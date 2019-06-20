@@ -24,7 +24,7 @@ class BrBead : public Object {
     BrBead();
     void Init();
     void UpdatePosition();
-    virtual std::vector<Object*> GetInteractors();
+    virtual void GetInteractors(std::vector<Object*> * ix);
     virtual int GetCount();
     virtual void Draw(std::vector<graph_struct*> * graph_array);
     virtual void ZeroForce();

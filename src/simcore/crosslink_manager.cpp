@@ -11,6 +11,7 @@ void CrosslinkManager::Init(system_parameters *params, std::vector<Object*> * ob
   obj_volume_ = 0;
   n_xlinks_ = 0;
   n_anchors_bound_ = 0;
+  update_ = false;
 }
 
 /* Keep track of volume of objects in the system. Affects the
@@ -24,6 +25,15 @@ void CrosslinkManager::UpdateObjsVolume() {
    * which would end up being individual object volume/total
    * object volume. For now, will work correctly with equally-sized
    * objects. */
+}
+
+/* Whether to reinsert anchors into the interactors list */
+bool CrosslinkManager::CheckUpdate() {
+  if (update_) {
+    update_ = false;
+    return true;
+  }
+  return false;
 }
 
 void CrosslinkManager::CalculateBindingFree() {
@@ -108,12 +118,11 @@ void CrosslinkManager::DoublyToSingly(int i_doubly) {
   }
 }
 
-std::vector<Object*> CrosslinkManager::GetInteractors() {
-  std::vector<Object*> interactors;
+void CrosslinkManager::GetInteractors(std::vector<Object*> * ixors) {
+  ixors->clear();
   for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end(); ++xlink) {
-    interactors.push_back(xlink->GetBoundPtr());
+    ixors->push_back(xlink->GetBoundPtr());
   }
-  return interactors;
 }
 
 void CrosslinkManager::UpdateCrosslinks() {

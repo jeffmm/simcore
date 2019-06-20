@@ -50,7 +50,7 @@ class Mesh : public Object {
     Site * GetSite(int i);
     Bond * GetBond(int i);
     virtual void ZeroForce();
-    std::vector<Object*> GetInteractors();
+    virtual void GetInteractors(std::vector<Object*> * ix);
     virtual int GetCount();
     virtual void ReadPosit(std::fstream &ip);
     virtual void WritePosit(std::fstream &op);
