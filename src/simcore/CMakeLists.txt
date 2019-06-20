@@ -41,6 +41,7 @@ add_executable(simcore  anchor.cpp
                         particle_tracker.cpp
                         passive_filament.cpp
                         rigid_mesh.cpp
+                        rng.cpp
                         simcore_main.cpp
                         simulation.cpp
                         simulation_manager.cpp

@@ -3,9 +3,8 @@
 Object::Object() {
   // Initialize object ID
   oid_ = ++next_oid_;
-  // Initialize RNG and set new object seed
-  rng_.Init(_seed_);
-  _seed_ = 1000*gsl_rng_get(rng_.r)-gsl_rng_get(rng_.r);
+  // Initialize RNG
+  rng_.Init();
   // Set some defaults
   std::fill(position_,position_+3,0.0);
   std::fill(prev_position_,prev_position_+3,0.0);
@@ -16,6 +15,7 @@ Object::Object() {
   std::fill(torque_, torque_+3, 0.0);
   std::fill(dr_zero_, dr_zero_+3, 0.0);
   draw_ = draw_type::orientation;
+  type_ = obj_type::generic;
   color_ = 0;
   diameter_ = 1;
   length_ = 0;
@@ -33,15 +33,11 @@ Object::Object() {
 }
 
 int Object::next_oid_ = 0;
-long Object::_seed_ = 7777777;
 system_parameters * Object::params_ = nullptr;
 space_struct * Object::space_ = nullptr;
 int Object::n_dim_ = 0;
 double Object::delta_ = 0;
 
-void Object::SetSeed(long seed) {
-  _seed_ = seed;
-}
 void Object::SetParams(system_parameters * params) {
   params_ = params;
 }
@@ -193,8 +189,14 @@ void Object::SetMeshID(int mid) {
 void Object::ToggleIsMesh() {
   is_mesh_ = !is_mesh_;
 }
+obj_type const Object::GetType() {
+  return type_;
+}
 species_id const Object::GetSID() {
   return sid_;
+}
+void Object::SetType(obj_type type) {
+  type_ = type;
 }
 void Object::SetSID(species_id sid) {
   sid_ = sid;

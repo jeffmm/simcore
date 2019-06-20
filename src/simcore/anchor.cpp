@@ -68,8 +68,8 @@ void Anchor::UpdatePosition() {
 }
 
 //void Anchor::ApplyAnchorForces() {
-  //double dr[3] = {0,0,0};
-  //double temp[3] = {0,0,0};
+  //double dr[3] = {0, 0, 0};
+  //double temp[3] = {0, 0, 0};
   //double f_mag = 0.0;
   //for (int i=0;i<n_dim_; ++i) {
     //dr[i] = position_[i] - anchor_.position_[i];
@@ -82,10 +82,10 @@ void Anchor::UpdatePosition() {
     //return;
   //}
   //f_mag = sqrt(f_mag);
-  //cross_product(temp,anchor_.force_,anchor_.torque_,n_dim_);
+  //cross_product(temp, anchor_.force_, anchor_.torque_, n_dim_);
   //bonds_[0].first->AddForce(anchor_.force_);
   //bonds_[0].first->AddTorque(anchor_.torque_);
-  //velocity_ = max_velocity_ * exp(-pow(f_mag/f_spring_max_,4));
+  //velocity_ = max_velocity_ * exp(-pow(f_mag/f_spring_max_, 4));
 //}
 
 //void Anchor::CheckNearBoundary() {
@@ -107,7 +107,7 @@ void Anchor::UpdatePosition() {
 // Copy of MinimumDistance::PointBuddingBC (see for comments/notes)
 //void Anchor::CheckNearBuddingBoundary() {
   //double const * const r = position_;
-  //double dr[3] = {0,0,0};
+  //double dr[3] = {0, 0, 0};
   //double dr_mag2 = 0;
   //bool in_mother = (r[n_dim_-1] < space_->bud_neck_height);
   //bool in_cone_region = !( r[n_dim_-1] < 0 || r[n_dim_-1] > space_->bud_height );
@@ -176,7 +176,7 @@ void Anchor::Deactivate() {
 }
 
 void Anchor::Walk() {
-  double dr[3] = {0,0,0};
+  double dr[3] = {0, 0, 0};
   double dr_mag = velocity_*delta_;
   double const * const pos0 = bond_->GetPosition();
   for (int i = 0; i < n_dim_; ++i) {
@@ -242,7 +242,7 @@ void Anchor::Clear() {
 }
 
 void Anchor::Diffuse() {
-  double dr[3] = {0,0,0};
+  double dr[3] = {0, 0, 0};
   double dr_mag = 0;
   double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
   double const * const pos0 = bond_->GetPosition();
@@ -317,21 +317,26 @@ bool Anchor::SwitchBonds(bool next_bond, double dr_mag) {
   if (db.first==nullptr) {
     return false;
   }
-  AttachToBond(db, dr_mag,mesh_lambda_);
+  AttachToBond(db, dr_mag, mesh_lambda_);
   return true;
 }
 
-void Anchor::AttachBondRandom(Bond * b) {
-  double bond_length = b->GetLength();
-  bond_lambda_ = bond_length*gsl_rng_uniform_pos(rng_.r);
+void Anchor::AttachObjRandom(Object * o) {
+  if (o->GetType() != +obj_type::bond) {
+    error_exit("Crosslink binding to non-bond objects not yet implemented.");
+  }
+  bond_ = dynamic_cast<Bond*>(o);
+  bond_length_ = bond_->GetLength();
+  bond_lambda_ = bond_length_*gsl_rng_uniform_pos(rng_.r);
   /* First bond has bond number of zero */
-  int bond_number = b->GetBondNumber();
+  int bond_number = bond_->GetBondNumber();
   /* Distance anchor is relative to entire mesh length */
-  mesh_lambda_ = bond_number*bond_length + lambda;
-  directed_bond db = std::make_pair(b,OUTGOING);
+  mesh_lambda_ = bond_number*bond_length_ + bond_lambda_;
+  directed_bond db = std::make_pair(bond_, OUTGOING);
   /* Passing these is redundant, but perhaps it is important for
      AttachToBond to take these arguments as a public method? */
-  AttachToBond(db,bond_lambda_,mesh_lambda_);
+  AttachToBond(db, bond_lambda_, mesh_lambda_);
+  SetMeshID(bond_->GetMeshID());
 }
 
 bool Anchor::IsBound() {

@@ -47,7 +47,8 @@ void SimulationManager::InitManager(run_options run_opts) {
   if (run_opts_.auto_graph) {
     pnode_["auto_graph"] = 1;
   }
-  rng_.Init(seed);
+  RNG::SetSeed(seed);
+  rng_.Init();
 }
 
 /****************************************

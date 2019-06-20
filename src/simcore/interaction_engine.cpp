@@ -518,6 +518,7 @@ void InteractionEngine::Clear() {
   if (local_order && processing_) {
     struct_analysis_.Clear();
   }
+  xlink_.Clear();
 }
 
 void InteractionEngine::Reset() {

@@ -3,8 +3,8 @@
 void CrosslinkManager::Init(system_parameters *params, std::vector<Object*> * objs) {
   params_ = params;
   objs_ = objs;
-  //TODO Fix this
-  rng_.Init((long) params_->seed/2);
+  /*TODO RNG should be initialized from a passed seed value */
+  rng_.Init();
   k_on_ = params_->crosslink.k_on;
   k_off_ = params_->crosslink.k_off;
   xlink_concentration_ = params_->crosslink.concentration;
@@ -13,40 +13,58 @@ void CrosslinkManager::Init(system_parameters *params, std::vector<Object*> * ob
   n_anchors_bound_ = 0;
 }
 
+/* Keep track of volume of objects in the system. Affects the
+ * probability of a free crosslink binding to an object. */
 void CrosslinkManager::UpdateObjsVolume() {
   obj_volume_ = 0;
   for (auto it=objs_->begin(); it!=objs_->end(); ++it) {
     obj_volume_ += (*it)->GetVolume();
   }
+  /* TODO, keep track of individual object binding probabilities,
+   * which would end up being individual object volume/total
+   * object volume. For now, will work correctly with equally-sized
+   * objects. */
 }
 
 void CrosslinkManager::CalculateBindingFree() {
   // Check crosslink unbinding
-  if (gsl_rng_uniform_pos(rng_.r) <= k_off_*n_xlinks_bound_*delta_) {
-    // Remove a random anchor from the system
+  if (gsl_rng_uniform_pos(rng_.r) <= k_off_*n_anchors_bound_*params_->delta) {
+    /* Remove a random anchor from the system */
     UnbindCrosslink();
   }
-  // Check crosslink binding
+  /* Check crosslink binding */
   if (gsl_rng_uniform_pos(rng_.r) <= xlink_concentration_*obj_volume_*k_on_*params_->delta) {
-    // Create a new crosslink and bind an anchor to a random object in the system
+    /* Create a new crosslink and bind an anchor to a random object
+     * in the system */
     BindCrosslink();
   }
 }
 
+/* A crosslink binds to an object from solution */
 void CrosslinkManager::BindCrosslink() {
+  /* Create crosslink object and initialize. Crosslink will
+   * initially be singly-bound. */
   Crosslink xl;
   xlinks_singly_.push_back(xl);
-  xlinks_singly_.back().Init(params_, gsl_rng_get(rng_.r));
-  int i_obj = gsl_rng_uniform_int(rng_.r, objs_.size());
-  xlinks_.back().SetMeshID(GetMeshID());
-  xlinks_.back().AttachBondRandom(objs_[i_obj]);
+  xlinks_singly_.back().Init(params_);
+  /* Attach to random object in system */
+  /* TODO Should weight probability of selecting object
+     by object volume in the case of different sized
+     objects */
+  int i_obj = gsl_rng_uniform_int(rng_.r, objs_->size());
+  xlinks_singly_.back().AttachObjRandom((*objs_)[i_obj]);
+  /* Keep track of bound bound anchors, bound crosslinks, and
+   * concentration of free crosslinks */
   n_anchors_bound_++;
   n_xlinks_++;
   xlink_concentration_ -= 1.0/space_->volume;
 }
 
+/* An unbinding event for a single, random anchor in the system */
 void CrosslinkManager::UnbindCrosslink() {
   int i_anchor = gsl_rng_uniform_int(rng_.r, n_anchors_bound_);
+  /* If i_anchor < the number of singly-bound anchors, unbind a
+   * singly-bound anchor */
   int n_singly = xlinks_singly_.size();
   if (i_anchor < n_singly) {
     RemoveCrosslink(i_anchor);
@@ -111,3 +129,7 @@ void CrosslinkManager::UpdateCrosslinks() {
   CalculateBindingFree();
 }
 
+void CrosslinkManager::Clear() {
+  xlinks_singly_.clear();
+  xlinks_doubly_.clear();
+}

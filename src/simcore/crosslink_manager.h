@@ -27,6 +27,7 @@ class CrosslinkManager {
     void Init(system_parameters *params, std::vector<Object*> * objs);
     std::vector<Object*> GetInteractors();
     void UpdateCrosslinks();
+    void Clear();
 };
 
 #endif

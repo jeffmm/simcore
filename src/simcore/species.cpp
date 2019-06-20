@@ -4,7 +4,7 @@ void SpeciesBase::Init(system_parameters *params, space_struct *space, long seed
   params_ = params;
   sparams_ = &(params->species);
   space_ = space;
-  rng_.Init(seed);
+  rng_.Init();
 }
 
 void SpeciesBase::InitPositFile(std::string run_name) {

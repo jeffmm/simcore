@@ -12,13 +12,13 @@ class Object {
     int oid_;
     int mesh_id_;
     static int next_oid_;
-    static long _seed_;
   protected:
     static system_parameters * params_;
     static space_struct * space_;
     static int n_dim_;
     static double delta_;
     species_id sid_;
+    obj_type type_;
     graph_struct g_;
     RNG rng_;
     draw_type draw_;
@@ -49,13 +49,13 @@ class Object {
   public:
     Object();
     // Static functions
-    static void SetSeed(long seed);
     static void SetParams(system_parameters * params);
     static void SetSpace(space_struct * space);
     static void SetNDim(int n_dim);
     static void SetDelta(double delta);
     // Trivial Set/Get functions
     void SetSID(species_id sid);
+    void SetType(obj_type type);
     void SetPosition(double const *const pos);
     void SetScaledPosition(double const *const spos);
     void SetOrientation(double const * const u);
@@ -77,6 +77,7 @@ class Object {
     void CalcPolarOrder();
     void ZeroPolarOrder();
     species_id const GetSID();
+    obj_type const GetType();
     int const GetOID() const;
     int const GetMeshID() const;
     double const * const GetPosition();

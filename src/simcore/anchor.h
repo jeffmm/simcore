@@ -42,7 +42,7 @@ class Anchor : public Object {
     void SetDiffusion();
     void SetWalker(int dir,double walk_v);
     void Walk();
-    void AttachBondRandom(Bond * b);
+    void AttachObjRandom(Object * o);
     double const GetMeshLambda();
     void Clear();
 };

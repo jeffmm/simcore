@@ -94,7 +94,7 @@ void Simulation::ScaleSpeciesPositions() {
 
 void Simulation::InitSimulation() {
   std::cout << "  Initializing simulation" << std::endl;
-  rng_.Init(params_.seed);
+  rng_.Init();
   space_.Init(&params_);
   InitObjects();
   InitSpecies();
@@ -110,7 +110,6 @@ void Simulation::InitObjects() {
   Object::SetParams(&params_);
   Object::SetNDim(params_.n_dim);
   Object::SetDelta(params_.delta);
-  Object::SetSeed(gsl_rng_get(rng_.r));
   Object::SetSpace(space_.GetStruct());
 }
 
@@ -397,7 +396,7 @@ void Simulation::ProcessOutputs(system_parameters params, run_options run_opts) 
 
 // Initialize everything we need for processing
 void Simulation::InitProcessing(run_options run_opts) {
-  rng_.Init(params_.seed);
+  rng_.Init();
   space_.Init(&params_);
   InitObjects();
   InitSpecies();

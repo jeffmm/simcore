@@ -3,7 +3,9 @@
 /**************************
 ** Bond member functions **
 **************************/
-Bond::Bond() : Object() {}
+Bond::Bond() : Object() {
+  type_ = obj_type::bond;
+}
 void Bond::Init(Site * s1, Site * s2) {
   s1->AddBond(this,OUTGOING);
   s2->AddBond(this,INCOMING);

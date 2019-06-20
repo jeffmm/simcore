@@ -15,6 +15,7 @@ BETTER_ENUM(draw_type, unsigned char, fixed, orientation, bw, none);
 BETTER_ENUM(potential_type, unsigned char, none, wca, soft);
 BETTER_ENUM(boundary_type, unsigned char, none=0, box=1, sphere=2, budding=3);
 BETTER_ENUM(poly_state, unsigned char, grow, shrink, pause);
+BETTER_ENUM(obj_type, unsigned char, generic, bond, site);
 
 struct space_struct {
   int n_dim;
