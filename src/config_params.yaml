@@ -232,5 +232,5 @@ crosslink:
   tether_draw_type: [orientation, string]
   tether_diameter: [0.5, double]
   tether_color: [3.1416, double]
-
-
+  end_pausing: [0, int]
+  r_capture: [5, double]

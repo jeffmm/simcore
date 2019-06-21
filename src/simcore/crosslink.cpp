@@ -16,8 +16,7 @@ void Crosslink::Init(MinimumDistance * mindist) {
   k_spring_ = params_->crosslink.k_spring;
   k_align_ = params_->crosslink.k_align;
   f_spring_max_ = params_->crosslink.f_spring_max;
-
-  doubly_bound_ = false;
+  rcapture_ = params_->crosslink.r_capture;
   /* TODO generalize crosslinks to more than two anchors */
   Anchor anchor1, anchor2;
   anchors_.push_back(anchor1);
@@ -25,6 +24,7 @@ void Crosslink::Init(MinimumDistance * mindist) {
   anchors_[0].Init();
   anchors_[1].Init();
   SetSID(species_id::crosslink);
+  SetSingly();
 }
 
 void Crosslink::UpdatePosition() {
@@ -69,10 +69,41 @@ void Crosslink::UpdateCrosslink() {
   nlist_.clear();
   anchors_[0].UpdatePosition();
   anchors_[1].UpdatePosition();
+  /* Check if any of our doubly-bound anchors became unbound */
+  if (doubly_bound_) {
+    /* If our second anchor became unbound */
+    if (!anchors_[1].IsBound()) {
+      anchors_[1].Clear();
+      SetSingly();
+    }
+    /* If our first anchor became unbound */
+    if (!anchors_[0].IsBound()) {
+      /* Swap anchors so that anchor[0] remains the one singly bound
+       * anchor. If anchor 2 became unbound also, we'll
+         catch that in a moment */
+      anchors_[0] = anchors_[1];
+      anchors_[1].Clear();
+      SetSingly();
+    }
+    /* If both anchors became unbound */
+    if (!anchors_[0].IsBound() && !anchors_[1].IsBound()) {
+      SetUnbound();
+      return;
+    }
+  }
+  /* Check if our singly-bound anchor became unbound */
+  else if (!anchors_[0].IsBound()) {
+    SetUnbound();
+    anchors_[0].Clear();
+    return;
+  }
+  /* If we are doubly-bound, calculate tether forces */
   if (doubly_bound_) {
     /* This function can change the value of doubly_bound_ */
     CalculateTetherForces();
   }
+  /* Otherwise, update the position of the crosslinker to reflect the
+   * singly-bound anchor position for interaction purposes */
   if (!doubly_bound_) {
     UpdatePosition();
   }
@@ -85,11 +116,14 @@ void Crosslink::AttemptCrosslink() {
   }
   /* Do stupidest possible thing, and bind to whatever with some probability
    * and in a random fashion */
-  double p_bind = 0.01;
+  double p_bind = k_on_*delta_;
   if (gsl_rng_uniform_pos(rng_.r) < p_bind) {
     int i_bind = gsl_rng_uniform_int(rng_.r, n_neighbors);
-
     Object * obj = nlist_[i_bind];
+    mindist_->ObjectObject(&(anchors_[0]), obj, &ix);
+    if (ix.dr_mag2 > SQR(rcapture_)) {
+      return;
+    }
     if (obj->GetType() == +obj_type::bond) {
       anchors_[1].AttachObjRandom(obj);
     }
@@ -115,7 +149,7 @@ void Crosslink::CalculateTetherForces() {
   }
   if (stretch > 0) {
     double f_mag = k_spring_ * stretch;
-    if (f_mag > f_spring_max_) {
+    if (stretch > rcapture_ || f_mag > f_spring_max_) {
       /* Designate the survivor of the crosslink breaking */
       int which = gsl_rng_uniform_int(rng_.r, 2);
       anchors_[0] = anchors_[which];
@@ -176,15 +210,26 @@ void Crosslink::AddNeighbor(Object * neighbor) {
 }
 
 void Crosslink::SetDoubly() {
+  state_ = bind_state::doubly;
   doubly_bound_ = true;
   SetMeshID(0);
 }
 
 void Crosslink::SetSingly() {
+  state_ = bind_state::singly;
   doubly_bound_ = false;
   SetMeshID(anchors_[0].GetMeshID());
 }
 
+void Crosslink::SetUnbound() {
+  state_ = bind_state::unbound;
+  SetMeshID(0);
+}
+
 bool Crosslink::IsDoubly() {
   return doubly_bound_;
+}
+
+bind_state Crosslink::GetState() {
+  return state_;
 }

@@ -896,6 +896,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("tether_color")==0) {
             params->crosslink.tether_color = jt->second.as<double>();
           }
+          else if (param_name.compare("end_pausing")==0) {
+            params->crosslink.end_pausing = jt->second.as<int>();
+          }
+          else if (param_name.compare("r_capture")==0) {
+            params->crosslink.r_capture = jt->second.as<double>();
+          }
           else if (param_name.compare("num")==0) {
             params->crosslink.num = jt->second.as<int>();
           }

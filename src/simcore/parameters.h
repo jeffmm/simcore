@@ -189,6 +189,8 @@ class crosslink_parameters : public species_parameters {
     std::string tether_draw_type = "orientation";
     double tether_diameter = 0.5;
     double tether_color = 3.1416;
+    int end_pausing = 0;
+    double r_capture = 5;
 };
 
 class system_parameters {

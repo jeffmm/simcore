@@ -8,7 +8,8 @@ class Anchor : public Object {
     bool bound_,
          walker_,
          diffuse_,
-         active_;
+         active_,
+         end_pausing_;
 
     int step_direction_;
 
@@ -18,7 +19,8 @@ class Anchor : public Object {
            velocity_,
            max_velocity_,
            diffusion_,
-           f_spring_max_;
+           f_spring_max_,
+           k_off_;
 
     Bond * bond_;
 

@@ -14,6 +14,8 @@ void Anchor::Init() {
   bond_lambda_ = 0;
   mesh_lambda_ = 0;
   active_ = false;
+  k_off_ = params_->crosslink.k_off;
+  end_pausing_ = (params_->crosslink.end_pausing ? true : false);
   diffuse_ = (params_->crosslink.diffusion_flag ? true : false);
   f_spring_max_ = params_->crosslink.f_spring_max;
   SetDiffusion();
@@ -40,6 +42,11 @@ void Anchor::SetWalker(int dir, double walk_v) {
 
 void Anchor::UpdatePosition() {
   if (!bound_) return;
+  // Check for unbinding
+  if (gsl_rng_uniform_pos(rng_.r) <= k_off_ * delta_) {
+    bound_ = false;
+    return;
+  }
   ZeroForce();
   // Update orientation based on bond if bound
   double const * const bond_orientation = bond_->GetOrientation();
@@ -52,9 +59,6 @@ void Anchor::UpdatePosition() {
     orientation_[i] = bond_orientation[i];
     position_[i] = bond_position[i] - (0.5*bond_length_ - bond_lambda_)*orientation_[i];
   }
-  if (walker_) {
-    Walk();
-  }
   //if (!anchored_) {
     //// This can change anchored_
     //CheckNearBoundary();
@@ -65,6 +69,9 @@ void Anchor::UpdatePosition() {
   if (diffuse_) {
     Diffuse();
   }
+  if (walker_) {
+    Walk();
+  }
   /* Clear forces, since they will be used for storing crosslink tether 
    * forces */
   ZeroForce();
@@ -72,6 +79,7 @@ void Anchor::UpdatePosition() {
 }
 
 void Anchor::ApplyAnchorForces() {
+  if (!bound_) return;
   /* TODO add torques */
   bond_->AddForce(force_);
 }
@@ -205,8 +213,15 @@ void Anchor::Walk() {
     //Move to next bond if it's there
     if (same_bond = !SwitchBonds(true, dr_mag - (bond_length_-bond_lambda_))) {
       // Otherwise move to head of bond
-      mesh_lambda_ += bond_length_ - bond_lambda_;
-      bond_lambda_ = bond_length_;
+      if (end_pausing_) {
+        mesh_lambda_ += bond_length_ - bond_lambda_;
+        bond_lambda_ = bond_length_;
+      }
+      else {
+        mesh_lambda_ += bond_length_ - bond_lambda_;
+        bond_lambda_ = bond_length_;
+        bound_ = false;
+      }
     }
   }
   else {

@@ -42,13 +42,14 @@ bool CrosslinkManager::CheckUpdate() {
 
 void CrosslinkManager::CalculateBindingFree() {
   // Check crosslink unbinding
-  if (gsl_rng_uniform_pos(rng_.r) <= k_off_*n_anchors_bound_*params_->delta) {
-    /* Remove a random anchor from the system */
-    UnbindCrosslink();
-    update_ = true;
-  }
+  //if (gsl_rng_uniform_pos(rng_.r) <= k_off_*n_anchors_bound_*params_->delta) {
+    //[> Remove a random anchor from the system <]
+    //UnbindCrosslink();
+    //update_ = true;
+  //}
   /* Check crosslink binding */
-  if (gsl_rng_uniform_pos(rng_.r) <= xlink_concentration_*obj_volume_*k_on_*params_->delta) {
+  double concentration = xlink_concentration_ - n_xlinks_/space_->volume;
+  if (gsl_rng_uniform_pos(rng_.r) <= concentration*obj_volume_*k_on_*params_->delta) {
     /* Create a new crosslink and bind an anchor to a random object
      * in the system */
     BindCrosslink();
@@ -73,7 +74,6 @@ void CrosslinkManager::BindCrosslink() {
    * concentration of free crosslinks */
   n_anchors_bound_++;
   n_xlinks_++;
-  xlink_concentration_ -= 1.0/space_->volume;
   //printf("%d \n", n_anchors_bound_);
 }
 
@@ -94,7 +94,6 @@ void CrosslinkManager::UnbindCrosslink() {
     DoublyToSingly(i_doubly);
   }
   n_anchors_bound_--;
-  xlink_concentration_ += 1.0/space_->volume;
 }
 
 void CrosslinkManager::RemoveCrosslink(int i_xlink) {
@@ -111,6 +110,7 @@ void CrosslinkManager::RemoveCrosslink(int i_xlink) {
     xlinks_singly_.clear();
   }
   n_xlinks_--;
+  update_ = true;
 }
 
 void CrosslinkManager::DoublyToSingly(int i_doubly) {
@@ -154,6 +154,15 @@ void CrosslinkManager::UpdateCrosslinks() {
       update_ = true;
       n_anchors_bound_++;
     }
+    else if (xlink->GetState() == +bind_state::unbound) {
+      auto it = xlink;
+      std::iter_swap(it, xlinks_singly_.end()-1);
+      xlinks_singly_.pop_back();
+      xlink--;
+      update_ = true;
+      n_anchors_bound_--;
+      n_xlinks_--;
+    }
   }
   /* Check if we had any crosslinks break */
   for (auto xlink = xlinks_doubly_.begin(); xlink != xlinks_doubly_.end(); ++xlink) {
@@ -165,6 +174,15 @@ void CrosslinkManager::UpdateCrosslinks() {
       xlink--;
       update_ = true;
       n_anchors_bound_--;
+    }
+    else if (xlink->GetState() == +bind_state::unbound) {
+      auto it = xlink;
+      std::iter_swap(it, xlinks_singly_.end()-1);
+      xlinks_singly_.pop_back();
+      xlink--;
+      update_ = true;
+      n_anchors_bound_ -= 2;
+      n_xlinks_ --;
     }
   }
 
