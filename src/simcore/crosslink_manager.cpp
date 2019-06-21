@@ -45,12 +45,14 @@ void CrosslinkManager::CalculateBindingFree() {
   if (gsl_rng_uniform_pos(rng_.r) <= k_off_*n_anchors_bound_*params_->delta) {
     /* Remove a random anchor from the system */
     UnbindCrosslink();
+    update_ = true;
   }
   /* Check crosslink binding */
   if (gsl_rng_uniform_pos(rng_.r) <= xlink_concentration_*obj_volume_*k_on_*params_->delta) {
     /* Create a new crosslink and bind an anchor to a random object
      * in the system */
     BindCrosslink();
+    update_ = true;
   }
 }
 
@@ -126,9 +128,11 @@ void CrosslinkManager::DoublyToSingly(int i_doubly) {
 
 void CrosslinkManager::GetInteractors(std::vector<Object*> * ixors) {
   ixors->clear();
+  std::vector<Object *> ix;
   for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end(); ++xlink) {
-    ixors->push_back(&(*xlink));
+    ix.push_back(&(*xlink));
   }
+  ixors->insert(ixors->end(), ix.begin(), ix.end());
 }
 
 void CrosslinkManager::UpdateCrosslinks() {
@@ -139,6 +143,31 @@ void CrosslinkManager::UpdateCrosslinks() {
   for (auto xlink = xlinks_doubly_.begin(); xlink != xlinks_doubly_.end(); ++xlink) {
     xlink->UpdateCrosslink();
   }
+  /* Check if we had any crosslinking events */
+  for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end(); ++xlink) {
+    if (xlink->IsDoubly()) {
+      auto it = xlink;
+      std::iter_swap(it, xlinks_singly_.end()-1);
+      xlinks_doubly_.push_back(*(xlinks_singly_.end()-1));
+      xlinks_singly_.pop_back();
+      xlink--;
+      update_ = true;
+      n_anchors_bound_++;
+    }
+  }
+  /* Check if we had any crosslinks break */
+  for (auto xlink = xlinks_doubly_.begin(); xlink != xlinks_doubly_.end(); ++xlink) {
+    if (!xlink->IsDoubly()) {
+      auto it = xlink;
+      std::iter_swap(it, xlinks_doubly_.end()-1);
+      xlinks_singly_.push_back(*(xlinks_doubly_.end()-1));
+      xlinks_doubly_.pop_back();
+      xlink--;
+      update_ = true;
+      n_anchors_bound_--;
+    }
+  }
+
   /* Calculate binding of free crosslinks (in solution)
      and unbinding of bound crosslinks */
   CalculateBindingFree();
@@ -158,7 +187,11 @@ void CrosslinkManager::Draw(std::vector<graph_struct*> * graph_array) {
   }
 }
 
-void CrosslinkManager::BindCrosslinkObj(Object * obj) {
-
-
+void CrosslinkManager::AddNeighborToXlink(Object * xlink, Object * neighbor) {
+  if (xlink->GetSID() != +species_id::crosslink) {
+    error_exit("BindCrosslinkObj expected crosslink object, got generic object.");
+  }
+  Crosslink * xl = dynamic_cast<Crosslink*>(xlink);
+  xl->AddNeighbor(neighbor);
 }
+

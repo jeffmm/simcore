@@ -229,5 +229,8 @@ crosslink:
   k_align: [0, double]
   rest_length: [0, double]
   step_direction: [0, int]
+  tether_draw_type: [orientation, string]
+  tether_diameter: [0.5, double]
+  tether_color: [3.1416, double]
 
 

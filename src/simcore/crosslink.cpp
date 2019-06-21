@@ -7,9 +7,16 @@ Crosslink::Crosslink() : Object() {
 void Crosslink::Init(MinimumDistance * mindist) {
   mindist_ = mindist;
   length_ = -1;
-  diameter_ = params_->crosslink.diameter;
-  color_ = params_->crosslink.color;
-  draw_ = draw_type::_from_string(params_->crosslink.draw_type.c_str());
+  diameter_ = params_->crosslink.tether_diameter;
+  color_ = params_->crosslink.tether_color;
+  draw_ = draw_type::_from_string(params_->crosslink.tether_draw_type.c_str());
+  rest_length_ = params_->crosslink.rest_length;
+  k_on_ = params_->crosslink.k_on;
+  k_off_ = params_->crosslink.k_off;
+  k_spring_ = params_->crosslink.k_spring;
+  k_align_ = params_->crosslink.k_align;
+  f_spring_max_ = params_->crosslink.f_spring_max;
+
   doubly_bound_ = false;
   /* TODO generalize crosslinks to more than two anchors */
   Anchor anchor1, anchor2;
@@ -17,6 +24,7 @@ void Crosslink::Init(MinimumDistance * mindist) {
   anchors_.push_back(anchor2);
   anchors_[0].Init();
   anchors_[1].Init();
+  SetSID(species_id::crosslink);
 }
 
 void Crosslink::UpdatePosition() {
@@ -55,13 +63,41 @@ Anchor * Crosslink::GetBoundPtr() {
 }
 
 void Crosslink::UpdateCrosslink() {
+  if (!doubly_bound_) {
+    AttemptCrosslink();
+  }
+  nlist_.clear();
   anchors_[0].UpdatePosition();
   anchors_[1].UpdatePosition();
   if (doubly_bound_) {
+    /* This function can change the value of doubly_bound_ */
     CalculateTetherForces();
   }
-  else {
+  if (!doubly_bound_) {
     UpdatePosition();
+  }
+}
+
+void Crosslink::AttemptCrosslink() {
+  int n_neighbors = nlist_.size();
+  if (n_neighbors == 0) {
+    return;
+  }
+  /* Do stupidest possible thing, and bind to whatever with some probability
+   * and in a random fashion */
+  double p_bind = 0.01;
+  if (gsl_rng_uniform_pos(rng_.r) < p_bind) {
+    int i_bind = gsl_rng_uniform_int(rng_.r, n_neighbors);
+
+    Object * obj = nlist_[i_bind];
+    if (obj->GetType() == +obj_type::bond) {
+      anchors_[1].AttachObjRandom(obj);
+    }
+    else {
+      /* TODO: add binding to sphere or site-like objects */
+      error_exit("Crosslink binding to non-bond objects not yet implemented.");
+    }
+    SetDoubly();
   }
 }
 
@@ -78,14 +114,23 @@ void Crosslink::CalculateTetherForces() {
     position_[i] = ix.midpoint[i];
   }
   if (stretch > 0) {
+    double f_mag = k_spring_ * stretch;
+    if (f_mag > f_spring_max_) {
+      /* Designate the survivor of the crosslink breaking */
+      int which = gsl_rng_uniform_int(rng_.r, 2);
+      anchors_[0] = anchors_[which];
+      SetSingly();
+      return;
+    }
     for (int i=0; i<params_->n_dim; ++i) {
-      force_[i] = k_spring_ * stretch * orientation_[i];
+      force_[i] = f_mag * orientation_[i];
     }
     anchors_[0].AddForce(force_);
     anchors_[1].SubForce(force_);
+    anchors_[0].ApplyAnchorForces();
+    anchors_[1].ApplyAnchorForces();
   }
   /* TODO Apply torques on crosslinks if necessary */
-  
 }
 
 /* Attach a crosslink anchor to object in a random fashion. Currently only
@@ -95,6 +140,7 @@ void Crosslink::AttachObjRandom(Object * obj) {
    * this crosslink should be new and should not be singly or doubly bound */
   if (obj->GetType() == +obj_type::bond) {
     anchors_[0].AttachObjRandom(obj);
+    SetMeshID(obj->GetMeshID());
   }
   else {
     /* TODO: add binding to sphere or site-like objects */
@@ -123,10 +169,22 @@ void Crosslink::Draw(std::vector<graph_struct*> * graph_array) {
   }
 }
 
+void Crosslink::AddNeighbor(Object * neighbor) {
+  //std::lock_guard<std::mutex> lk(xlink_mtx_);
+  nlist_.push_back(neighbor);
+  //printf("n_neighbors: %lu\n", nlist_.size());
+}
+
 void Crosslink::SetDoubly() {
   doubly_bound_ = true;
+  SetMeshID(0);
 }
 
 void Crosslink::SetSingly() {
   doubly_bound_ = false;
+  SetMeshID(anchors_[0].GetMeshID());
+}
+
+bool Crosslink::IsDoubly() {
+  return doubly_bound_;
 }

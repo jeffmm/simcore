@@ -47,9 +47,9 @@ void InteractionEngine::Interact() {
   // First check if we need to interact
   if (no_interactions_ && space_->type == +boundary_type::none) return;
   // Check if we need to update cell list
+  xlink_.UpdateCrosslinks();
   CheckUpdate();
   /* Update anchors and crosslinks */
-  xlink_.UpdateCrosslinks();
   // Loop through and calculate interactions
   if (! no_interactions_ ) {
     CalculatePairInteractions();
@@ -80,7 +80,6 @@ void InteractionEngine::ForceUpdate() {
 void InteractionEngine::UpdateInteractors() {
   ix_objects_.clear();
   interactors_.clear();
-  anchors_.clear();
   std::vector<Object*> ixs;
   for (auto spec_it= species_->begin(); spec_it!=species_->end(); ++spec_it) {
     (*spec_it)->GetInteractors(&ixs);
@@ -88,8 +87,9 @@ void InteractionEngine::UpdateInteractors() {
   }
   interactors_.insert(interactors_.end(), ix_objects_.begin(), ix_objects_.end());
   // Add crosslinks as interactors
-  xlink_.GetInteractors(&anchors_);
-  interactors_.insert(interactors_.end(), anchors_.begin(), anchors_.end());
+  std::vector<Object*> xlinks;
+  xlink_.GetInteractors(&xlinks);
+  interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
 }
 
 void InteractionEngine::UpdateInteractions() {
@@ -157,12 +157,15 @@ void InteractionEngine::CheckUpdate() {
 
   /* If we need to update crosslinks */
   if (xlink_.CheckUpdate()) {
-    /* TODO This might be too frequent: can I do this better? */
-    interactors_.clear();
-    interactors_.insert(interactors_.end(), ix_objects_.begin(), ix_objects_.end());
+    /*TODO This might be too frequent: can I do this better?*/
+    ForceUpdate();
+    /*TODO Figure out why the below code leads to memory leaks */
+    //interactors_.clear();
+    //interactors_.insert(interactors_.end(), ix_objects_.begin(), ix_objects_.end());
     /* Add crosslinks as interactors */
-    xlink_.GetInteractors(&anchors_);
-    interactors_.insert(interactors_.end(), anchors_.begin(), anchors_.end());
+    //std::vector<Object*> xlinks;
+    //xlink_.GetInteractors(&xlinks);
+    //interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
   }
 }
 
@@ -196,7 +199,7 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   // Composite objects do self interact if they want to
   // Check to make sure we aren't self-interacting at the simple object level
   if (obj1->GetOID() == obj2->GetOID()) {
-    error_exit("Object %d attempted self-interaction!", obj1->GetOID());
+    //error_exit("Object %d attempted self-interaction!", obj1->GetOID());
   }
   // If we are disallowing like-like interactions, then similar species do not interact...
   // ...so do not interact if same species
@@ -205,7 +208,6 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   }
   // Check that objects are not both motors, which do not interact
   if (obj1->GetSID() == +species_id::crosslink && obj2->GetSID() == +species_id::crosslink) {
-    printf("Crosslink pair not interacting\n");
     return;
   }
 
@@ -227,11 +229,24 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
     return;
   }
 
+  /* If one object is a crosslink, add object to crosslink neighbor list */
+  if (obj1->GetSID() == +species_id::crosslink) {
+    xlink_.AddNeighborToXlink(obj1, obj2);
+    return;
+  }
+  else if (obj2->GetSID() == +species_id::crosslink) {
+    xlink_.AddNeighborToXlink(obj2, obj1);
+    return;
+  }
+
   // We have an interaction:
   if ( obj1->GetMeshID() != obj2->GetMeshID() ) {
     n_interactions_++;
   }
-
+  if (obj1->GetSID() == +species_id::crosslink || obj2->GetSID() == +species_id::crosslink) {
+    //printf("Crosslink interacting\n");
+    //printf("   with: %s and %s \n", obj1->GetSID()._to_string(), obj2->GetSID()._to_string());
+  }
 
   mindist_.ObjectObject(obj1, obj2, ix);
 
@@ -550,7 +565,6 @@ void InteractionEngine::Reset() {
   pair_interactions_.clear();
   ix_objects_.clear();
   interactors_.clear();
-  anchors_.clear();
   ptracker_.ClearCells();
 }
 

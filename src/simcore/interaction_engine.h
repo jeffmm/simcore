@@ -46,7 +46,6 @@ class InteractionEngine {
     std::vector<pair_interaction> pair_interactions_;
     std::vector<boundary_interaction> boundary_interactions_;
     std::vector<Object*> ix_objects_;
-    std::vector<Object*> anchors_;
     std::vector<Object*> interactors_;
     //CellList clist_;
     ParticleTracker ptracker_;

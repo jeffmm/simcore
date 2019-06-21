@@ -887,6 +887,15 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("step_direction")==0) {
             params->crosslink.step_direction = jt->second.as<int>();
           }
+          else if (param_name.compare("tether_draw_type")==0) {
+            params->crosslink.tether_draw_type = jt->second.as<std::string>();
+          }
+          else if (param_name.compare("tether_diameter")==0) {
+            params->crosslink.tether_diameter = jt->second.as<double>();
+          }
+          else if (param_name.compare("tether_color")==0) {
+            params->crosslink.tether_color = jt->second.as<double>();
+          }
           else if (param_name.compare("num")==0) {
             params->crosslink.num = jt->second.as<int>();
           }

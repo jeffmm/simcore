@@ -46,6 +46,8 @@ crosslink:
   step_direction: 1
   diffusion_flag: 1
   velocity: 10
+  rest_length: 0
+  k_spring: 10
 
 filament:
   num: 2

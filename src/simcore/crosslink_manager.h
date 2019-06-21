@@ -34,6 +34,7 @@ class CrosslinkManager {
     void Clear();
     void Draw(std::vector<graph_struct*> * graph_array);
     void BindCrosslinkObj(Object * obj);
+    void AddNeighborToXlink(Object * xlink, Object * neighbor);
 };
 
 #endif

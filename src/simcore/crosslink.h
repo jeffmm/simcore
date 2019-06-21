@@ -4,6 +4,7 @@
 //#include "species.h"
 #include "anchor.h"
 #include "minimum_distance.h"
+//#include <mutex>
 
 class Crosslink : public Object {
   private:
@@ -15,9 +16,14 @@ class Crosslink : public Object {
            k_off_,
            k_spring_,
            k_align_,
+           f_spring_max_,
            rest_length_;
     std::vector<Anchor> anchors_;
+    std::vector<Object*> nlist_;
     void CalculateTetherForces();
+    void AttemptCrosslink();
+    /* TODO, get rid of racy neighborlist additions */
+    //std::mutex xlink_mtx_;
 
   public:
     Crosslink();
@@ -29,7 +35,9 @@ class Crosslink : public Object {
     void Draw(std::vector<graph_struct*> * graph_array);
     void SetDoubly();
     void SetSingly();
+    bool IsDoubly();
     void UpdatePosition();
+    void AddNeighbor(Object * neighbor);
 };
 
 #endif

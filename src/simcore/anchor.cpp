@@ -71,6 +71,11 @@ void Anchor::UpdatePosition() {
   UpdatePeriodic();
 }
 
+void Anchor::ApplyAnchorForces() {
+  /* TODO add torques */
+  bond_->AddForce(force_);
+}
+
 //void Anchor::ApplyAnchorForces() {
   //double dr[3] = {0, 0, 0};
   //double temp[3] = {0, 0, 0};

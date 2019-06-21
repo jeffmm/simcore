@@ -35,7 +35,7 @@ class Anchor : public Object {
     //void CheckNearBuddingBoundary();
     //void AnchorBoundary(double * anchor_point);
     //void DetachBoundary();
-    //void ApplyAnchorForces();
+    void ApplyAnchorForces();
     void AttachToBond(directed_bond, double lambda, double mesh_lambda);
     bool SwitchBonds(bool next_bond, double lambda);
     void UpdateAnchorPosition() {}
