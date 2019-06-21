@@ -17,6 +17,7 @@ void Anchor::Init() {
   diffuse_ = (params_->crosslink.diffusion_flag ? true : false);
   f_spring_max_ = params_->crosslink.f_spring_max;
   SetDiffusion();
+  SetSID(species_id::crosslink);
 }
 
 double const Anchor::GetMeshLambda() {
@@ -64,6 +65,9 @@ void Anchor::UpdatePosition() {
   if (diffuse_) {
     Diffuse();
   }
+  /* Clear forces, since they will be used for storing crosslink tether 
+   * forces */
+  ZeroForce();
   UpdatePeriodic();
 }
 
@@ -302,6 +306,25 @@ void Anchor::AttachToBond(directed_bond db, double lambda, double mesh_lambda) {
   bound_ = true;
   UpdatePeriodic();
 }
+
+void Anchor::Draw(std::vector<graph_struct*> * graph_array) {
+  if (!bound_) return;
+  std::copy(scaled_position_, scaled_position_+3, g_.r);
+  for (int i=space_->n_periodic; i<n_dim_; ++i) {
+    g_.r[i] = position_[i];
+  }
+  std::copy(orientation_, orientation_+3, g_.u);
+  g_.color = color_;
+  g_.diameter = diameter_;
+  g_.length = length_;
+  g_.draw = draw_;
+  graph_array->push_back(&g_);
+  //printf("%2.2f %2.2f %2.2f\n", g_.r[0], g_.r[1], g_.r[2]);
+  //printf("%2.2f %2.2f %2.2f\n", g_.u[0], g_.u[1], g_.u[2]);
+  //printf("%2.2f %2.2f\n\n", g_.length, g_.diameter);
+}
+
+
 
 // Returns true if switch allowed, false otherwise
 bool Anchor::SwitchBonds(bool next_bond, double dr_mag) {

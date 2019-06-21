@@ -83,6 +83,8 @@ class InteractionEngine {
     void StructureAnalysis();
     void CalculateStructure();
     void ForceUpdate();
+    bool CountAndUpdate();
+    void DrawInteractions(std::vector<graph_struct*> * graph_array);
 };
 
 #endif

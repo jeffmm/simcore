@@ -20,7 +20,7 @@ void InteractionEngine::Init(system_parameters *params,
   n_thermo_ = params_->n_thermo;
   no_interactions_ = !(params_->interaction_flag);
   i_update_ = -1;
-  n_objs_ = 0;
+  n_objs_ = -1;
   //clist_.Init(n_dim_, n_periodic_, params_->cell_length, space_->radius);
   bool local_order = (params_->local_order_analysis || params_->polar_order_analysis || params_->overlap_analysis || params_->density_analysis);
   if (processing && local_order) {
@@ -34,7 +34,7 @@ void InteractionEngine::Init(system_parameters *params,
   if (local_order && processing) {
     struct_analysis_.Init(params, i_step);
   }
-  xlink_.Init(params_, &ix_objects_);
+  xlink_.Init(params_, space_, &mindist_, &ix_objects_);
 }
 
 /****************************************
@@ -48,6 +48,8 @@ void InteractionEngine::Interact() {
   if (no_interactions_ && space_->type == +boundary_type::none) return;
   // Check if we need to update cell list
   CheckUpdate();
+  /* Update anchors and crosslinks */
+  xlink_.UpdateCrosslinks();
   // Loop through and calculate interactions
   if (! no_interactions_ ) {
     CalculatePairInteractions();
@@ -58,6 +60,7 @@ void InteractionEngine::Interact() {
     ApplyPairInteractions();
   }
   ApplyBoundaryInteractions();
+
 
   if (params_->in_out_flag) {
     if (n_interactions_ == 0 && in_out_flag_) {
@@ -117,20 +120,25 @@ int InteractionEngine::CountSpecies() {
   return obj_count;
 }
 
+bool InteractionEngine::CountAndUpdate() {
+  int obj_count = CountSpecies();
+  if (obj_count != n_objs_) {
+    // reset update count and update number of objects to track
+    i_update_ = 0; 
+    n_objs_ = obj_count;
+    ForceUpdate();
+    xlink_.UpdateObjsVolume();
+    return true;
+  }
+  return false;
+}
+
 void InteractionEngine::CheckUpdate() {
   /* First check to see if any objects were added to the system;
      If static_pnumber_ is flagged, we know that particle numbers
      never change, so we don't bother counting particles and move on */
   if (!static_pnumber_) {
-    int obj_count = CountSpecies();
-    if (obj_count != n_objs_) {
-      // reset update count and update number of objects to track
-      i_update_ = 0; 
-      n_objs_ = obj_count;
-      UpdateInteractors();
-      UpdateInteractions();
-      return;
-    }
+    if (CountAndUpdate()) return;
   }
 
   /* If n_update_ <=0, we update nearest neighbors if any particle 
@@ -196,15 +204,16 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
     return;
   }
   // Check that objects are not both motors, which do not interact
-  if (obj1->GetSID() == +species_id::motor && obj2->GetSID() == +species_id::motor) {
+  if (obj1->GetSID() == +species_id::crosslink && obj2->GetSID() == +species_id::crosslink) {
+    printf("Crosslink pair not interacting\n");
     return;
   }
 
   // Check that object 1 is part of a mesh, in which case...
   // ...check that object 1 is of the same mesh of object 2, in which case...
   if (obj1->GetMeshID() > 0 && obj1->GetMeshID() == obj2->GetMeshID()) {
-    // ..check if object 1 or object 2 are motors, in which case: do not interact
-    if (obj1->GetSID() == +species_id::motor || obj2->GetSID() == +species_id::motor) {
+    // ..check if object 1 or object 2 are crosslinks, in which case: do not interact
+    if (obj1->GetSID() == +species_id::crosslink || obj2->GetSID() == +species_id::crosslink) {
       return;
     }
 
@@ -217,7 +226,6 @@ void InteractionEngine::ProcessPairInteraction(std::vector<pair_interaction>::it
   if (params_->filament.spiral_flag == 1 && obj1->GetMeshID() != obj2->GetMeshID()) {
     return;
   }
-
 
   // We have an interaction:
   if ( obj1->GetMeshID() != obj2->GetMeshID() ) {
@@ -550,4 +558,8 @@ void InteractionEngine::Reset() {
 void InteractionEngine::AddInteractors(std::vector<Object*> ixs) {
   ptracker_.AddToCellList(ixs, ix_objects_.size());
   ix_objects_.insert(ix_objects_.end(), ixs.begin(), ixs.end());
+}
+
+void InteractionEngine::DrawInteractions(std::vector<graph_struct*> * graph_array) {
+  xlink_.Draw(graph_array);
 }

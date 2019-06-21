@@ -45,7 +45,7 @@ void MinimumDistance::ObjectObject(Object* o1, Object* o2, Interaction *ix) {
 
   if (l1 == 0 && l2 == 0) {
     /* When we have two point-like particles interacting. */
-    PointPoint(r1, s1, r2, s2, ix->dr, &ix->dr_mag2);
+    PointPoint(r1, s1, r2, s2, ix->dr, &ix->dr_mag2, ix->midpoint);
   }
   else if (l1 == 0 && l2 > 0) {
     /* The case where obj1 is a point-like particle and obj2 is an
@@ -76,7 +76,7 @@ void MinimumDistance::ObjectObject(Object* o1, Object* o2, Interaction *ix) {
  * and s2 in periodic subspace) */
 void MinimumDistance::PointPoint(double const * const r1, double const * const s1, 
                                  double const * const r2, double const * const s2, 
-                                 double *dr, double *dr_mag2) {
+                                 double *dr, double *dr_mag2, double * midpoint) {
   // First handle periodic subspace
   double ds[3];
   for (int i = 0; i < n_periodic_; ++i) {
@@ -92,8 +92,11 @@ void MinimumDistance::PointPoint(double const * const r1, double const * const s
   for (int i = n_periodic_; i < n_dim_; ++i) 
       dr[i] = r2[i] - r1[i];
   *dr_mag2 = 0.0;
-  for (int i=0; i<n_dim_; ++i) 
+  for (int i=0; i<n_dim_; ++i) {
       *dr_mag2 += SQR(dr[i]);
+      midpoint[i] = s1[i] + 0.5*ds[i];
+      midpoint[i] -= NINT(midpoint[i]);
+  }
   return;
 }
 

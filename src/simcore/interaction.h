@@ -20,6 +20,7 @@ class Interaction {
            t1[3] = {0}, // torque acting on obj1
            t2[3] = {0}, // torque acting on obj2
            dr[3] = {0}, // vector from obj1 to obj2
+           midpoint[3] = {0},
            contact1[3] = {0}, // vector from obj1 COM along obj1 to intersection with dr
            contact2[3] = {0}, // vector from obj2 COM along obj2 to intersection with dr
            buffer_mag = 0, // sum of object radii

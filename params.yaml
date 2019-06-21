@@ -38,7 +38,14 @@ density_bin_width: 0.1
 in_out_flag: 1
 
 crosslink:
-  concentration: 0.1
+  concentration: 0.01
+  diameter: 1.5
+  draw_type: fixed
+  color: 3.14
+  walker: 1
+  step_direction: 1
+  diffusion_flag: 1
+  velocity: 10
 
 filament:
   num: 2

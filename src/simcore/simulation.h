@@ -60,7 +60,7 @@ class Simulation {
     void ZeroForces();
     void Statistics();
     void ScaleSpeciesPositions();
-    std::vector<graph_struct*> graph_array;
+    std::vector<graph_struct*> graph_array_;
     void PrintComplete();
     void InsertSpecies(bool force_overlap = false, bool processing = false);
     void RunProcessing(run_options run_opts);

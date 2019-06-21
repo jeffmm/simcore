@@ -119,7 +119,7 @@ void Simulation::InitGraphics() {
   // If NOGRAPH is defined, skip drawing and grabbing
   #ifndef NOGRAPH
   // Initialize graphics structures
-  graphics_.Init(&graph_array, space_.GetStruct(), background_color, 
+  graphics_.Init(&graph_array_, space_.GetStruct(), background_color, 
       params_.draw_boundary, params_.auto_graph);
   graphics_.DrawLoop();
   #endif
@@ -315,9 +315,11 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       }
     }
   }
-  if (params_.load_checkpoint) {
-    iengine_.ForceUpdate();
-  }
+  /* Should do this all the time to force object counting */
+  //if (params_.load_checkpoint) {
+  //iengine_.ForceUpdate();
+  //}
+  iengine_.CountAndUpdate(); // Forces update as well
 }
 
 void Simulation::ClearSpecies() {
@@ -356,10 +358,11 @@ void Simulation::Draw(bool single_frame) {
 }
 
 void Simulation::GetGraphicsStructure() {
-  graph_array.clear();
+  graph_array_.clear();
   for (auto it=species_.begin(); it!=species_.end(); ++it) {
-    (*it)->Draw(&graph_array);
+    (*it)->Draw(&graph_array_);
   }
+  iengine_.DrawInteractions(&graph_array_);
 }
 
 void Simulation::InitOutputs() {

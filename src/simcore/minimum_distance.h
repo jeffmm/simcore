@@ -14,7 +14,7 @@ class MinimumDistance {
     static space_struct * space_;
     void PointPoint(double const * const r1, double const * const s1, 
                     double const * const r2, double const * const s2, 
-                    double *dr, double *dr_mag2);
+                    double *dr, double *dr_mag2, double * midpoint);
     void PointCarrierLineInf(double *r_point, double *s_point,
                              double *r_line, double *s_line, double *u_line,
                              double length, double *dr, double *mu);

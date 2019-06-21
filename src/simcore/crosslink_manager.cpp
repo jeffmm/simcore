@@ -1,7 +1,11 @@
 #include "crosslink_manager.h"
 
-void CrosslinkManager::Init(system_parameters *params, std::vector<Object*> * objs) {
+void CrosslinkManager::Init(system_parameters *params, 
+    space_struct * space, MinimumDistance * mindist,
+    std::vector<Object*> * objs) {
   params_ = params;
+  space_ = space;
+  mindist_ = mindist;
   objs_ = objs;
   /*TODO RNG should be initialized from a passed seed value */
   rng_.Init();
@@ -56,7 +60,7 @@ void CrosslinkManager::BindCrosslink() {
    * initially be singly-bound. */
   Crosslink xl;
   xlinks_singly_.push_back(xl);
-  xlinks_singly_.back().Init(params_);
+  xlinks_singly_.back().Init(mindist_);
   /* Attach to random object in system */
   /* TODO Should weight probability of selecting object
      by object volume in the case of different sized
@@ -68,6 +72,7 @@ void CrosslinkManager::BindCrosslink() {
   n_anchors_bound_++;
   n_xlinks_++;
   xlink_concentration_ -= 1.0/space_->volume;
+  //printf("%d \n", n_anchors_bound_);
 }
 
 /* An unbinding event for a single, random anchor in the system */
@@ -116,12 +121,13 @@ void CrosslinkManager::DoublyToSingly(int i_doubly) {
     xlinks_singly_.push_back(*(xlinks_doubly_.begin()));
     xlinks_doubly_.clear();
   }
+  xlinks_singly_.back().SetSingly();
 }
 
 void CrosslinkManager::GetInteractors(std::vector<Object*> * ixors) {
   ixors->clear();
   for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end(); ++xlink) {
-    ixors->push_back(xlink->GetBoundPtr());
+    ixors->push_back(&(*xlink));
   }
 }
 
@@ -141,4 +147,18 @@ void CrosslinkManager::UpdateCrosslinks() {
 void CrosslinkManager::Clear() {
   xlinks_singly_.clear();
   xlinks_doubly_.clear();
+}
+
+void CrosslinkManager::Draw(std::vector<graph_struct*> * graph_array) {
+  for (auto it=xlinks_singly_.begin(); it!=xlinks_singly_.end(); ++it) {
+    it->Draw(graph_array);
+  }
+  for (auto it=xlinks_doubly_.begin(); it!=xlinks_doubly_.end(); ++it) {
+    it->Draw(graph_array);
+  }
+}
+
+void CrosslinkManager::BindCrosslinkObj(Object * obj) {
+
+
 }
