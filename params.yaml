@@ -4,8 +4,8 @@ seed: 18591845184
 run_name: crosslink_test
 n_dim: 2
 n_periodic: 2
-delta: 0.0001
-n_steps: 50000
+delta: 0.00001
+n_steps: 500000
 n_steps_target: 100000
 boundary: 0
 n_update_cells: 50
@@ -17,9 +17,9 @@ n_graph: 100
 graph_background: 0
 print_complete: 1
 
-system_radius: 50
-potential: soft
-soft_potential_mag: 100
+system_radius: 20
+potential: wca
+soft_potential_mag: 300
 soft_potential_mag_target: -1
 like_like_interactions: 1
 stoch_flag: 1
@@ -35,40 +35,42 @@ overlap_analysis: 0
 density_analysis: 0
 density_com_only: 0
 density_bin_width: 0.1
-in_out_flag: 1
+in_out_flag: 0
 
 crosslink:
-  concentration: 0.01
+  concentration: 0.1
   diameter: 0.5
   draw_type: bw
   color: 1.55
   walker: 1
   step_direction: 1
   diffusion_flag: 1
-  velocity: 10
+  velocity: 50
   rest_length: 1
-  r_capture_: 5
-  k_spring: 30
+  r_capture: 5
+  k_spring: 100
   k_on: 10
   k_off: 1
-  f_spring_max: 1000
+  f_spring_max: 2000
   tether_draw_type: bw
   tether_color: 3.14
   tether_diameter: 0.25
 
 filament:
-  num: 100
+  num: 30
+  #num: 2
   packing_fraction: -1
   overlap: 0
   insertion_type: random_nematic
+  #insertion_type: custom
   #insert_file: crosslink_filament.yaml
   diameter: 1
   length: 20
-  perlen_ratio: 100
+  perlen_ratio: 200
   perlen_ratio_target: -1
   #intrinsic_curvature: .0628
   n_bonds: 5
-  driving_factor: 10
+  driving_factor: 0
   n_spec: 100
   n_checkpoint: 100
   spec_flag: 1

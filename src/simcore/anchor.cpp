@@ -82,6 +82,12 @@ void Anchor::ApplyAnchorForces() {
   if (!bound_) return;
   /* TODO add torques */
   bond_->AddForce(force_);
+  double dlambda[3] = {0};
+  for (int i=0; i<n_dim_; ++i) {
+    dlambda[i] = (bond_lambda_ - 0.5*bond_length_) * orientation_[i];
+  }
+  cross_product(dlambda, force_, torque_, 3);
+  bond_->AddTorque(torque_);
 }
 
 //void Anchor::ApplyAnchorForces() {

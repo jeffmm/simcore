@@ -319,7 +319,9 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   //if (params_.load_checkpoint) {
   //iengine_.ForceUpdate();
   //}
-  iengine_.CountAndUpdate(); // Forces update as well
+  if (!processing) {
+    iengine_.CountAndUpdate(); // Forces update as well
+  }
 }
 
 void Simulation::ClearSpecies() {
