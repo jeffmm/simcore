@@ -54,8 +54,8 @@ class Object {
     int gid;
     double length,
            radius,
-           *pos,
-           *direction;
+           pos[3],
+           direction[3];
 
     // Static functions
     static void SetParams(system_parameters * params);

@@ -16,7 +16,9 @@ void CrosslinkManager::Init(system_parameters *params,
   n_anchors_bound_ = 0;
   update_ = false;
   /* TODO Lookup table only works for filament objects. Generalize? */
-  lut_.Init(1, params_->crosslink.rest_length, params_->filament.diameter);
+  lut_.Init(params_->crosslink.k_spring/2,
+            params_->crosslink.rest_length,
+            params_->filament.diameter);
 }
 
 /* Keep track of volume of objects in the system. Affects the

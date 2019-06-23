@@ -11,6 +11,8 @@ Object::Object() {
   std::fill(prev_orientation_,prev_orientation_+3,0.0);
   std::fill(scaled_position_,scaled_position_+3,0.0);
   std::fill(orientation_,orientation_+3,0.0);
+  std::fill(pos, pos+3, 0.0);
+  std::fill(direction, direction+3, 0.0);
   std::fill(force_,force_+3,0.0);
   std::fill(torque_, torque_+3, 0.0);
   std::fill(dr_zero_, dr_zero_+3, 0.0);
@@ -30,8 +32,6 @@ Object::Object() {
   has_overlap_ = false;
   in_flock_ = 0;
   flock_change_state_ = 0;
-  direction = &(orientation_[0]);
-  pos = &(position_[0]);
   gid = oid_;
 }
 
@@ -430,10 +430,21 @@ void Object::UpdatePeriodic() {
   SetScaledPosition(s);
   UpdateKMC();
 }
+
 void Object::UpdateKMC() {
   radius = 0.5*diameter_;
-  length = length_; // yep, that's all
+  length = length_; 
+  for (int i=0; i<space_->n_periodic; ++i) {
+    pos[i] = space_->unit_cell[n_dim_*i+i]*scaled_position_[i];
+  }
+  for (int i=space_->n_periodic; i<n_dim_; ++i) {
+    pos[i] = position_[i];
+  }
+  for (int i=0; i<n_dim_; ++i) {
+    direction[i] = orientation_[i];
+  }
 }
+
 void Object::UpdatePositionMP() {
   error_exit("UpdatePositionMP() needs to be overwritten. Exiting!");
 }

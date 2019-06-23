@@ -401,7 +401,7 @@ void Anchor::AttachObjLambda(Object * o, double lambda) {
   }
   bond_ = dynamic_cast<Bond*>(o);
   bond_length_ = bond_->GetLength();
-  bond_lambda_ = lambda;
+  bond_lambda_ = 0.5*bond_length_ + lambda;
   /* First bond has bond number of zero */
   int bond_number = bond_->GetBondNumber();
   /* Distance anchor is relative to entire mesh length */

@@ -76,13 +76,31 @@ void Crosslink::SinglyKMC() {
   int head_bound = 0;
   // Set up KMC objects and calculate probabilities
   double unbind_prob = k_off_ * delta_;
-  KMC<Object> kmc_bind(anchors_[0].GetPosition(), nlist_.size(), 
+  int n_neighbors = nlist_.size();
+  //for (int i=0; i<n_dim_; ++i) {
+    //printf("%2.2f, ", anchors_[0].GetPosition()[i]);
+  //}
+  //printf("\n");
+  //for (int i=0; i<n_dim_; ++i) {
+    //printf("%2.2f, ", anchors_[0].pos[i]);
+  //}
+  //printf("\n");
+  //printf("%d\n", anchors_[0].GetBoundOID());
+  KMC<Object> kmc_bind(anchors_[0].pos, nlist_.size(), 
                      rcapture_, lut_);
-  kmc_bind.CalcTotProbsSD(&(nlist_[0]), kmc_filter_, anchors_[0].GetBoundOID(),
-                          0, k_spring_, 1.0, rest_length_,
-                          k_on_sd_*delta_);
-  // Get total probability of changing protein state
-  double totProb = kmc_bind.getTotProb() + unbind_prob;
+  //KMC<Object> kmc_bind(anchors_[0].GetPosition(), nlist_.size(), rcapture_);
+  double kmc_bind_prob = 0;
+  if (n_neighbors > 0) {
+    kmc_bind.CalcTotProbsSD(&(nlist_[0]), kmc_filter_, anchors_[0].GetBoundOID(),
+                            0, k_spring_, 1.0, rest_length_,
+                            k_on_sd_*delta_);
+    kmc_bind_prob = kmc_bind.getTotProb();
+  }
+  // Get total probability of changing protein statek
+
+  double totProb = kmc_bind_prob + unbind_prob;
+  //printf("BindProb: %2.8f\n", kmc_bind_prob);
+  //printf("BindProb: %2.2f", kmc_bind_prob;
 
   int head_activate = -1; // No head activated
   if (totProb > 1.0) {    
@@ -121,7 +139,6 @@ void Crosslink::SinglyKMC() {
     anchors_[1].AttachObjLambda(nlist_[i_bind], bind_lambda);
     SetDoubly();
   }
-  return;
 }
 
 /* Perform kinetic monte carlo step of protein with 2 heads of protein 
@@ -166,11 +183,11 @@ void Crosslink::DoublyKMC() {
   if (head_activate == 0) {
     anchors_[0] = anchors_[1];
     anchors_[1].Clear();
-    IsSingly();
+    SetSingly();
   }
   else {
     anchors_[1].Clear();
-    IsSingly();
+    SetSingly();
   }
 }
 
@@ -184,46 +201,46 @@ void Crosslink::CalculateBinding() {
   nlist_.clear();
   kmc_filter_.clear();
 }
-//void Crosslink::CalcBinding() {
-  //if (IsDoubly()) {
+void Crosslink::CalcBinding() {
+  if (IsDoubly()) {
     //[> If our second anchor became unbound <]
-    //if (length_ > rcapture_ || tether_force_ > f_spring_max_) {
+    if (length_ > rcapture_ || tether_force_ > f_spring_max_) {
       //[> Designate the survivor of the crosslink breaking <]
-      //int which = gsl_rng_uniform_int(rng_.r, 2);
-      //anchors_[0] = anchors_[which];
-      //anchors_[1].Clear();
-      //SetSingly();
-      //return;
-    //}
-    //if (!anchors_[1].IsBound()) {
-      //anchors_[1].Clear();
-      //SetSingly();
-    //}
+      int which = gsl_rng_uniform_int(rng_.r, 2);
+      anchors_[0] = anchors_[which];
+      anchors_[1].Clear();
+      SetSingly();
+      return;
+    }
+    if (!anchors_[1].IsBound()) {
+      anchors_[1].Clear();
+      SetSingly();
+    }
     //[> If our first anchor became unbound <]
-    //if (!anchors_[0].IsBound()) {
+    if (!anchors_[0].IsBound()) {
       //[> Swap anchors so that anchor[0] remains the one singly bound
        //* anchor. If anchor 2 became unbound also, we'll
          //catch that in a moment */
-      //anchors_[0] = anchors_[1];
-      //anchors_[1].Clear();
-      //SetSingly();
-    //}
+      anchors_[0] = anchors_[1];
+      anchors_[1].Clear();
+      SetSingly();
+    }
     //[> If both anchors became unbound <]
-    //if (!anchors_[0].IsBound() && !anchors_[1].IsBound()) {
-      //SetUnbound();
-    //}
-  //}
+    if (!anchors_[0].IsBound() && !anchors_[1].IsBound()) {
+      SetUnbound();
+    }
+  }
   //[> Check if our singly-bound anchor became unbound <]
-  //else if (!anchors_[0].IsBound()) {
-    //SetUnbound();
-    //anchors_[0].Clear();
-  //}
-  //else if (IsSingly()) {
-    //AttemptCrosslink();
-  //}
-  //nlist_.clear();
-  //kmc_filter_.clear();
-//}
+  else if (!anchors_[0].IsBound()) {
+    SetUnbound();
+    anchors_[0].Clear();
+  }
+  else if (IsSingly()) {
+    AttemptCrosslink();
+  }
+  nlist_.clear();
+  kmc_filter_.clear();
+}
 
 void Crosslink::UpdateCrosslink() {
   /* If we are doubly-bound, calculate tether forces */
@@ -233,7 +250,8 @@ void Crosslink::UpdateCrosslink() {
   anchors_[0].UpdatePosition();
   anchors_[1].UpdatePosition();
   /* Check if any of our doubly-bound anchors became unbound */
-  CalculateBinding();
+  CalculateBinding(); // Using KMC
+  //CalcBinding(); // Using naive binding rules
   /* If we are singly bound, update the position of the crosslinker
    * to reflect the singly-bound anchor position for interaction
    * purposes */

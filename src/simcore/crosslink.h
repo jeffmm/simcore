@@ -36,6 +36,7 @@ class Crosslink : public Object {
     void CalculateTetherForces();
     void AttemptCrosslink();
     void CalculateBinding();
+    void CalcBinding();
     void SinglyKMC();
     void DoublyKMC();
     /* TODO, get rid of racy neighborlist additions */
