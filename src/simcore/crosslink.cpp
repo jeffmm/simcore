@@ -87,7 +87,8 @@ void Crosslink::SinglyKMC() {
   //printf("\n");
   //printf("%d\n", anchors_[0].GetBoundOID());
   KMC<Object> kmc_bind(anchors_[0].pos, nlist_.size(), 
-                     rcapture_, lut_);
+                     rcapture_, lut_, n_dim_,
+                     space_->n_periodic, space_->unit_cell);
   //KMC<Object> kmc_bind(anchors_[0].GetPosition(), nlist_.size(), rcapture_);
   double kmc_bind_prob = 0;
   if (n_neighbors > 0) {

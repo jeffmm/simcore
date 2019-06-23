@@ -435,7 +435,8 @@ void Object::UpdateKMC() {
   radius = 0.5*diameter_;
   length = length_; 
   for (int i=0; i<space_->n_periodic; ++i) {
-    pos[i] = space_->unit_cell[n_dim_*i+i]*scaled_position_[i];
+    //pos[i] = space_->unit_cell[n_dim_*i+i]*scaled_position_[i];
+    pos[i] = scaled_position_[i];
   }
   for (int i=space_->n_periodic; i<n_dim_; ++i) {
     pos[i] = position_[i];
