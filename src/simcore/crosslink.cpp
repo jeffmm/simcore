@@ -383,3 +383,113 @@ bool Crosslink::IsUnbound() {
   return state_ == +bind_state::unbound;
 }
 
+void Crosslink::WriteSpec(std::fstream &ospec) {
+  if (IsUnbound()) {
+    warning("Unbound crosslink tried to WriteSpec!");
+    return;
+  }
+  bool is_doubly = IsDoubly();
+  ospec.write(reinterpret_cast<char*>(&is_doubly), sizeof(bool));
+  ospec.write(reinterpret_cast<char*>(&diameter_), sizeof(double));
+  ospec.write(reinterpret_cast<char*>(&length_), sizeof(double));
+  double temp[3];
+  std::copy(position_, position_+3, temp);
+  for (int i=0; i<3; ++i) {
+    ospec.write(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  std::copy(orientation_, orientation_+3, temp);
+  for (int i=0; i<3; ++i) {
+    ospec.write(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  double const * const r0 = anchors_[0].GetPosition();
+  std::copy(r0, r0+3, temp);
+  for (int i=0; i<3; ++i) {
+    ospec.write(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  double const * const u0 = anchors_[0].GetOrientation();
+  std::copy(u0, u0+3, temp);
+  for (int i=0; i<3; ++i) {
+    ospec.write(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  double lambda = anchors_[0].GetBondLambda();
+  ospec.write(reinterpret_cast<char*>(&lambda), sizeof(double));
+  double const * const r1 = anchors_[1].GetPosition();
+  std::copy(r1, r1+3, temp);
+  for (int i=0; i<3; ++i) {
+    ospec.write(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  double const * const u1 = anchors_[1].GetOrientation();
+  std::copy(u1, u1+3, temp);
+  for (int i=0; i<3; ++i) {
+    ospec.write(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  lambda = anchors_[1].GetBondLambda();
+  ospec.write(reinterpret_cast<char*>(&lambda), sizeof(double));
+}
+
+void Crosslink::ReadSpec(std::fstream &ispec) {
+  if (ispec.eof()) return;
+  bool is_doubly;
+  ispec.read(reinterpret_cast<char*>(&is_doubly), sizeof(bool));
+  ispec.read(reinterpret_cast<char*>(&diameter_), sizeof(double));
+  ispec.read(reinterpret_cast<char*>(&length_), sizeof(double));
+  double temp[3];
+  for (int i=0; i<3; ++i) {
+    ispec.read(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  SetPosition(temp);
+  for (int i=0; i<3; ++i) {
+    ispec.read(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  SetOrientation(temp);
+  for (int i=0; i<3; ++i) {
+    ispec.read(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  anchors_[0].SetPosition(temp);
+  for (int i=0; i<3; ++i) {
+    ispec.read(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  anchors_[0].SetOrientation(temp);
+  double lambda;
+  ispec.read(reinterpret_cast<char*>(&lambda), sizeof(double));
+  anchors_[0].SetBondLambda(lambda);
+  for (int i=0; i<3; ++i) {
+    ispec.read(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  anchors_[1].SetPosition(temp);
+  for (int i=0; i<3; ++i) {
+    ispec.read(reinterpret_cast<char*>(&temp[i]), sizeof(double));
+  }
+  anchors_[1].SetOrientation(temp);
+  ispec.read(reinterpret_cast<char*>(&lambda), sizeof(double));
+  anchors_[1].SetBondLambda(lambda);
+  anchors_[0].UpdatePeriodic();
+  anchors_[1].UpdatePeriodic();
+  anchors_[0].SetBound();
+  if (is_doubly) {
+    SetDoubly();
+    UpdatePeriodic();
+    anchors_[1].SetBound();
+  }
+  else {
+    UpdatePosition();
+  }
+}
+
+void Crosslink::WriteCheckpoint(std::fstream &ocheck) {
+  void * rng_state = gsl_rng_state(rng_.r);
+  size_t rng_size = gsl_rng_size(rng_.r);
+  ocheck.write(reinterpret_cast<char*>(&rng_size), sizeof(size_t));
+  ocheck.write(reinterpret_cast<char*>(rng_state), rng_size);
+  WriteSpec(ocheck);
+}
+
+void Crosslink::ReadCheckpoint(std::fstream &icheck) {
+  if (icheck.eof()) return;
+  void * rng_state = gsl_rng_state(rng_.r);
+  size_t rng_size;
+  icheck.read(reinterpret_cast<char*>(&rng_size), sizeof(size_t));
+  icheck.read(reinterpret_cast<char*>(rng_state), rng_size);
+  ReadSpec(icheck);
+}
+

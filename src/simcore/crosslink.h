@@ -58,6 +58,10 @@ class Crosslink : public Object {
     bool IsSingly();
     void UpdatePosition();
     void AddNeighbor(Object * neighbor);
+    void WriteSpec(std::fstream &ospec);
+    void WriteCheckpoint(std::fstream &ocheck);
+    void ReadSpec(std::fstream &ispec);
+    void ReadCheckpoint(std::fstream &icheck);
 };
 
 #endif

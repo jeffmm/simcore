@@ -578,3 +578,18 @@ void InteractionEngine::AddInteractors(std::vector<Object*> ixs) {
 void InteractionEngine::DrawInteractions(std::vector<graph_struct*> * graph_array) {
   xlink_.Draw(graph_array);
 }
+
+void InteractionEngine::WriteOutputs() {
+  xlink_.WriteOutputs();
+}
+
+void InteractionEngine::InitOutputs(bool reading_inputs, bool reduce_flag, bool with_reloads) {
+  xlink_.InitOutputs(reading_inputs, reduce_flag, with_reloads);
+  if (params_->load_checkpoint) {
+    /* TODO Run minimum distance to determine which anchor belongs to which bond */ 
+  }
+}
+
+void InteractionEngine::ReadInputs() {
+  xlink_.ReadInputs();
+}

@@ -84,6 +84,12 @@ class InteractionEngine {
     void ForceUpdate();
     bool CountAndUpdate();
     void DrawInteractions(std::vector<graph_struct*> * graph_array);
+    void WriteOutputs();
+    void InitOutputs(bool reading_inputs = false,
+                     bool reduce_flag = false, 
+                     bool with_reloads = false);
+    void ReadInputs();
+
 };
 
 #endif

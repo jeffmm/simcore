@@ -26,6 +26,14 @@ double const Anchor::GetMeshLambda() {
   return mesh_lambda_;
 }
 
+double const Anchor::GetBondLambda() {
+  return bond_lambda_;
+}
+
+void Anchor::SetBondLambda(double l) {
+  bond_lambda_ = l;
+}
+
 void Anchor::SetDiffusion() {
   diffusion_ = sqrt(24.0*diameter_/delta_);
 }
@@ -420,4 +428,11 @@ bool Anchor::IsBound() {
 int const Anchor::GetBoundOID() {
   if (!bound_) return 0;
   return bond_->GetOID();
+}
+
+/* Temporary function for setting bound state for singly-bound crosslinks,
+   in order to get them to draw while not technically bound to a bond
+   ( e.g. bond_ -> null ) */
+void Anchor::SetBound() {
+  bound_ = true;
 }

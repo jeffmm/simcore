@@ -47,6 +47,9 @@ class Anchor : public Object {
     void AttachObjRandom(Object * o);
     void AttachObjLambda(Object * o, double lambda);
     double const GetMeshLambda();
+    double const GetBondLambda();
+    void SetBondLambda(double l);
+    void SetBound();
     void Clear();
     int const GetBoundOID();
     void Draw(std::vector<graph_struct*> * graph_array);

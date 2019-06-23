@@ -369,6 +369,7 @@ void Simulation::GetGraphicsStructure() {
 
 void Simulation::InitOutputs() {
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_);
+  iengine_.InitOutputs();
   if (params_.time_analysis) {
     cpu_init_time_ = cpu_time();
   }
@@ -376,10 +377,12 @@ void Simulation::InitOutputs() {
 
 void Simulation::InitInputs(run_options run_opts) {
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_, true, run_opts.use_posits, run_opts.with_reloads, run_opts.reduce_flag, run_opts.reduce_factor);
+  iengine_.InitOutputs(true, run_opts.with_reloads, run_opts.reduce_flag);
 }
 
 void Simulation::WriteOutputs() {
   output_mgr_.WriteOutputs();
+  iengine_.WriteOutputs();
   if (i_step_ == 0) {
     return; // skip first step
   }
@@ -410,9 +413,9 @@ void Simulation::InitProcessing(run_options run_opts) {
   InitObjects();
   InitSpecies();
   InsertSpecies(true, true);
-  if (run_opts.analysis_flag) {
-    iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_, true);
-  }
+  //if (run_opts.analysis_flag) {
+  iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_, true);
+  //}
   InitInputs(run_opts);
   if (run_opts.graphics_flag || run_opts.make_movie) {
     params_.graph_flag = 1;
@@ -450,6 +453,7 @@ void Simulation::RunProcessing(run_options run_opts) {
     time_ = (i_step_+1) * params_.delta; 
     PrintComplete();
     output_mgr_.ReadInputs(); 
+    iengine_.ReadInputs();
     if (early_exit) {
       early_exit = false;
       std::cout << "  Early exit triggered. Ending simulation.\n";
