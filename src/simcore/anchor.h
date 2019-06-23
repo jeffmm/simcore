@@ -45,8 +45,10 @@ class Anchor : public Object {
     void SetWalker(int dir,double walk_v);
     void Walk();
     void AttachObjRandom(Object * o);
+    void AttachObjLambda(Object * o, double lambda);
     double const GetMeshLambda();
     void Clear();
+    int const GetBoundOID();
     void Draw(std::vector<graph_struct*> * graph_array);
 };
 

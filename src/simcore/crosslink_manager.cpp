@@ -7,7 +7,6 @@ void CrosslinkManager::Init(system_parameters *params,
   space_ = space;
   mindist_ = mindist;
   objs_ = objs;
-  /*TODO RNG should be initialized from a passed seed value */
   rng_.Init();
   k_on_ = params_->crosslink.k_on;
   k_off_ = params_->crosslink.k_off;
@@ -16,6 +15,8 @@ void CrosslinkManager::Init(system_parameters *params,
   n_xlinks_ = 0;
   n_anchors_bound_ = 0;
   update_ = false;
+  /* TODO Lookup table only works for filament objects. Generalize? */
+  lut_.Init(1, params_->crosslink.rest_length, params_->filament.diameter);
 }
 
 /* Keep track of volume of objects in the system. Affects the
@@ -63,7 +64,7 @@ void CrosslinkManager::BindCrosslink() {
    * initially be singly-bound. */
   Crosslink xl;
   xlinks_singly_.push_back(xl);
-  xlinks_singly_.back().Init(mindist_);
+  xlinks_singly_.back().Init(mindist_, &lut_);
   /* Attach to random object in system */
   /* TODO Should weight probability of selecting object
      by object volume in the case of different sized
@@ -154,7 +155,7 @@ void CrosslinkManager::UpdateCrosslinks() {
       update_ = true;
       n_anchors_bound_++;
     }
-    else if (xlink->GetState() == +bind_state::unbound) {
+    else if (xlink->IsUnbound()) {
       auto it = xlink;
       std::iter_swap(it, xlinks_singly_.end()-1);
       xlinks_singly_.pop_back();
@@ -166,7 +167,7 @@ void CrosslinkManager::UpdateCrosslinks() {
   }
   /* Check if we had any crosslinks break */
   for (auto xlink = xlinks_doubly_.begin(); xlink != xlinks_doubly_.end(); ++xlink) {
-    if (!xlink->IsDoubly()) {
+    if (xlink->IsSingly()) {
       auto it = xlink;
       std::iter_swap(it, xlinks_doubly_.end()-1);
       xlinks_singly_.push_back(*(xlinks_doubly_.end()-1));
@@ -175,7 +176,7 @@ void CrosslinkManager::UpdateCrosslinks() {
       update_ = true;
       n_anchors_bound_--;
     }
-    else if (xlink->GetState() == +bind_state::unbound) {
+    else if (xlink->IsUnbound()) {
       auto it = xlink;
       std::iter_swap(it, xlinks_singly_.end()-1);
       xlinks_singly_.pop_back();

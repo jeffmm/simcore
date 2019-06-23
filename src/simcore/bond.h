@@ -13,6 +13,7 @@ class Bond : public Object {
            k_spring_,
            body_frame_[6],
            orientation_0_[3];
+
   public:
     Bond();
     void Init(Site * s1, Site * s2);

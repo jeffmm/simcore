@@ -872,6 +872,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("k_off")==0) {
             params->crosslink.k_off = jt->second.as<double>();
           }
+          else if (param_name.compare("k_on_sd")==0) {
+            params->crosslink.k_on_sd = jt->second.as<double>();
+          }
+          else if (param_name.compare("force_dep_factor")==0) {
+            params->crosslink.force_dep_factor = jt->second.as<double>();
+          }
           else if (param_name.compare("k_spring")==0) {
             params->crosslink.k_spring = jt->second.as<double>();
           }

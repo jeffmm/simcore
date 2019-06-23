@@ -181,6 +181,8 @@ class crosslink_parameters : public species_parameters {
     int diffusion_flag = 0;
     double k_on = 10;
     double k_off = 2;
+    double k_on_sd = 10;
+    double force_dep_factor = 1;
     double k_spring = 100;
     double f_spring_max = 100;
     double k_align = 0;

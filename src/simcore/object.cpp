@@ -30,6 +30,9 @@ Object::Object() {
   has_overlap_ = false;
   in_flock_ = 0;
   flock_change_state_ = 0;
+  direction = &(orientation_[0]);
+  pos = &(position_[0]);
+  gid = oid_;
 }
 
 int Object::next_oid_ = 0;
@@ -425,6 +428,11 @@ void Object::UpdatePeriodic() {
   periodic_boundary_conditions(space_->n_dim, space_->n_periodic, 
       space_->unit_cell, space_->unit_cell_inv, position_, s);
   SetScaledPosition(s);
+  UpdateKMC();
+}
+void Object::UpdateKMC() {
+  radius = 0.5*diameter_;
+  length = length_; // yep, that's all
 }
 void Object::UpdatePositionMP() {
   error_exit("UpdatePositionMP() needs to be overwritten. Exiting!");

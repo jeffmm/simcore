@@ -15,6 +15,7 @@ class CrosslinkManager {
            k_off_;
     RNG rng_;
     space_struct * space_;
+    LookupTable lut_;
     std::vector<Crosslink> xlinks_doubly_;
     std::vector<Crosslink> xlinks_singly_;
     std::vector<Object*> * objs_;

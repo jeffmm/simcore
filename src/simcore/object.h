@@ -46,8 +46,17 @@ class Object {
 
     std::vector<Object*> interactors_;
     std::vector<Interaction*> ixs_;
+    void UpdateKMC();
   public:
     Object();
+
+    // kmcx parameter
+    int gid;
+    double length,
+           radius,
+           *pos,
+           *direction;
+
     // Static functions
     static void SetParams(system_parameters * params);
     static void SetSpace(space_struct * space);

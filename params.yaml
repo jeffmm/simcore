@@ -15,10 +15,10 @@ movie_flag: 0
 graph_flag: 1
 n_graph: 100
 graph_background: 0
-print_complete: 1
+print_complete: 0
 
 system_radius: 20
-potential: wca
+potential: soft
 soft_potential_mag: 300
 soft_potential_mag_target: -1
 like_like_interactions: 1
@@ -47,26 +47,28 @@ crosslink:
   diffusion_flag: 1
   velocity: 50
   rest_length: 1
-  r_capture: 5
-  k_spring: 100
+  r_capture: 6
+  k_spring: 10
   k_on: 10
   k_off: 1
   f_spring_max: 2000
   tether_draw_type: bw
   tether_color: 3.14
   tether_diameter: 0.25
+  end_pausing: 0
+  force_dep_factor: 0.01
 
 filament:
-  num: 30
-  #num: 2
+  #num: 10
+  num: 2
   packing_fraction: -1
   overlap: 0
-  insertion_type: random_nematic
-  #insertion_type: custom
-  #insert_file: crosslink_filament.yaml
+  #insertion_type: random_nematic
+  insertion_type: custom
+  insert_file: crosslink_filament.yaml
   diameter: 1
   length: 20
-  perlen_ratio: 200
+  perlen_ratio: 20
   perlen_ratio_target: -1
   #intrinsic_curvature: .0628
   n_bonds: 5

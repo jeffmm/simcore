@@ -211,8 +211,15 @@ void Anchor::Walk() {
     //Move to previous bond if it's there
     if (same_bond = !SwitchBonds(false, dr_mag-bond_lambda_)) {
       // Otherwise move to tail of bond
-      mesh_lambda_ -= bond_lambda_;
-      bond_lambda_ = 0.0;
+      if (end_pausing_) {
+        mesh_lambda_ -= bond_lambda_;
+        bond_lambda_ = 0.0;
+      }
+      else {
+        mesh_lambda_ -= bond_lambda_;
+        bond_lambda_ = 0.0;
+        bound_ = false;
+      }
     }
   }
   else if (bond_lambda_ + dr_mag > bond_length_ && step_direction_>0) {
@@ -382,12 +389,35 @@ void Anchor::AttachObjRandom(Object * o) {
   /* Distance anchor is relative to entire mesh length */
   mesh_lambda_ = bond_number*bond_length_ + bond_lambda_;
   directed_bond db = std::make_pair(bond_, OUTGOING);
-  /* Passing these is redundant, but perhaps it is important for
-     AttachToBond to take these arguments as a public method? */
+  /* Passing these is redundant here, but more important
+  for the SwitchBond method */
+  AttachToBond(db, bond_lambda_, mesh_lambda_);
+  SetMeshID(bond_->GetMeshID());
+}
+
+void Anchor::AttachObjLambda(Object * o, double lambda) {
+  if (o->GetType() != +obj_type::bond) {
+    error_exit("Crosslink binding to non-bond objects not yet implemented.");
+  }
+  bond_ = dynamic_cast<Bond*>(o);
+  bond_length_ = bond_->GetLength();
+  bond_lambda_ = lambda;
+  /* First bond has bond number of zero */
+  int bond_number = bond_->GetBondNumber();
+  /* Distance anchor is relative to entire mesh length */
+  mesh_lambda_ = bond_number*bond_length_ + bond_lambda_;
+  directed_bond db = std::make_pair(bond_, OUTGOING);
+  /* Passing these is redundant here, but more important
+  for the SwitchBond method */
   AttachToBond(db, bond_lambda_, mesh_lambda_);
   SetMeshID(bond_->GetMeshID());
 }
 
 bool Anchor::IsBound() {
   return bound_;
+}
+
+int const Anchor::GetBoundOID() {
+  if (!bound_) return 0;
+  return bond_->GetOID();
 }
