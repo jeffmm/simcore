@@ -424,6 +424,9 @@ void CrosslinkManager::LoadFromCheckpoints() {
 
 void CrosslinkManager::InitOutputs(bool reading_inputs, bool reduce_flag, bool with_reloads) {
   if (params_->load_checkpoint) {
+    /* Load Checkpoint not implemented yet for crosslinks */
+    error_exit("Checkpoint loading functionality not yet implemented for crosslinks.");
+    /* TODO Initialize anchors in crosslinks with their bond attachment using mindist */
     LoadFromCheckpoints();
   } else if (reading_inputs) {
     if (with_reloads) {
