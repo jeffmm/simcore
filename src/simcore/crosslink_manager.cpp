@@ -263,6 +263,7 @@ void CrosslinkManager::ReadSpecs() {
   }
   else if (size_singly != xlinks_singly_.size()) {
     Crosslink xlink;
+    xlink.Init(mindist_, &lut_);
     xlinks_singly_.resize(size_singly, xlink);
   }
   if (size_doubly == 0) {
@@ -270,18 +271,19 @@ void CrosslinkManager::ReadSpecs() {
   }
   else if (size_doubly != xlinks_doubly_.size()) {
     Crosslink xlink;
+    xlink.Init(mindist_, &lut_);
     xlinks_doubly_.resize(size_doubly, xlink);
   }
   n_xlinks_ = 0;
   n_anchors_bound_ = 0;
   for (auto it=xlinks_singly_.begin(); it!=xlinks_singly_.end(); ++it) {
-    it->Init(mindist_, &lut_);
+    //it->Init(mindist_, &lut_);
     it->ReadSpec(ispec_file_);
     n_xlinks_++;
     n_anchors_bound_++;
   }
   for (auto it=xlinks_doubly_.begin(); it!=xlinks_doubly_.end(); ++it) {
-    it->Init(mindist_, &lut_);
+    //it->Init(mindist_, &lut_);
     it->ReadSpec(ispec_file_);
     n_xlinks_++;
     n_anchors_bound_+=2;
@@ -340,18 +342,19 @@ void CrosslinkManager::ReadCheckpoints() {
 
   /* Prepare the xlink vectors */
   Crosslink xlink;
+  xlink.Init(mindist_, &lut_);
   xlinks_singly_.resize(size_singly, xlink);
-  xlinks_doubly_.resize(size_singly, xlink);
+  xlinks_doubly_.resize(size_doubly, xlink);
 
   /* Read the crosslink checkpoints */
   for (auto it=xlinks_singly_.begin(); it!=xlinks_singly_.end(); ++it) {
-    it->Init(mindist_, &lut_);
+    //it->Init(mindist_, &lut_);
     it->ReadCheckpoint(icheck_file);
     n_xlinks_++;
     n_anchors_bound_++;
   }
   for (auto it=xlinks_doubly_.begin(); it!=xlinks_doubly_.end(); ++it) {
-    it->Init(mindist_, &lut_);
+    //it->Init(mindist_, &lut_);
     it->ReadCheckpoint(icheck_file);
     n_xlinks_++;
     n_anchors_bound_+=2;

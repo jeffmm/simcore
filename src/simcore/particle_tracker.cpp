@@ -150,6 +150,7 @@ void ParticleTracker::CreatePairsCellList() {
               }
             }
             if (n_dim_<3) continue;
+            if (jj < 0) continue;
             for (int k=0; k<n_cells_1d_; ++k) {
               for (int kprime=k; kprime<k+2; ++kprime) {
                 int kk = kprime;
@@ -196,6 +197,7 @@ void ParticleTracker::CreatePairsCellList() {
             }
           }
           if (n_dim_<3) continue;
+          if (jj < 0) continue;
           for (int k=0; k<n_cells_1d_; ++k) {
             for (int kprime=k; kprime<k+2; ++kprime) {
               int kk = kprime;
