@@ -22,6 +22,7 @@ class Filament : public Mesh {
         stoch_flag_,
         flagella_flag_,
         metric_forces_,
+        optical_trap_flag_,
         // TEMPORARY FIXME
         n_step_ = 0,
         n_motors_bound_,
@@ -61,7 +62,9 @@ class Filament : public Mesh {
            shuffle_factor_,
            shuffle_frequency_,
            spiral_number_,
-           tip_force_;
+           tip_force_,
+           optical_trap_spring_,
+           optical_trap_pos_[3];
     std::vector<double> gamma_inverse_,
                         tensions_, //n_sites-1
                         g_mat_lower_, //n_sites-2

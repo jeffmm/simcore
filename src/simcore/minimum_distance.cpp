@@ -78,24 +78,29 @@ void MinimumDistance::PointPoint(double const * const r1, double const * const s
                                  double const * const r2, double const * const s2, 
                                  double *dr, double *dr_mag2, double * midpoint) {
   // First handle periodic subspace
-  double ds[3];
+  double ds[3], mp[3];
   for (int i = 0; i < n_periodic_; ++i) {
     ds[i] = s2[i] - s1[i];
     ds[i] -= NINT(ds[i]);
+    mp[i] = s1[i] + 0.5*ds[i];
+    mp[i] -= NINT(mp[i]);
   }
   for (int i = 0; i < n_periodic_; ++i) {
     dr[i] = 0.0;
-    for (int j = 0; j < n_periodic_; ++j)
+    midpoint[i] = 0.0;
+    for (int j = 0; j < n_periodic_; ++j) {
       dr[i] += unit_cell_[n_dim_*i+j] * ds[j];
+      midpoint[i] += unit_cell_[n_dim_*i+j] * mp[j];
+    }
   }
   // Then handle free subspace
-  for (int i = n_periodic_; i < n_dim_; ++i) 
+  for (int i = n_periodic_; i < n_dim_; ++i) {
       dr[i] = r2[i] - r1[i];
+      midpoint[i] = r1[i] + 0.5*dr[i];
+  }
   *dr_mag2 = 0.0;
   for (int i=0; i<n_dim_; ++i) {
       *dr_mag2 += SQR(dr[i]);
-      midpoint[i] = s1[i] + 0.5*ds[i];
-      midpoint[i] -= NINT(midpoint[i]);
   }
   return;
 }

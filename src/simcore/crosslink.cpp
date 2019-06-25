@@ -309,6 +309,7 @@ void Crosslink::CalculateTetherForces() {
     anchors_[0].ApplyAnchorForces();
     anchors_[1].ApplyAnchorForces();
   }
+  UpdatePeriodic();
   /* TODO Apply torques on crosslinks if necessary */
 }
 
@@ -333,7 +334,11 @@ void Crosslink::Draw(std::vector<graph_struct*> * graph_array) {
   anchors_[1].Draw(graph_array);
   /* Draw tether */
   if (IsDoubly() && length_ > 0) {
-    std::copy(position_, position_+3, g_.r);
+    std::copy(scaled_position_,scaled_position_+3, g_.r);
+    for (int i=space_->n_periodic; i<n_dim_; ++i) {
+      g_.r[i] = position_[i];
+    }
+    //std::copy(position_, position_+3, g_.r);
     std::copy(orientation_, orientation_+3, g_.u);
     g_.color = color_;
     if (params_->graph_diameter > 0) {

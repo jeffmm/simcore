@@ -46,12 +46,10 @@ void Filament::SetParameters() {
   stoch_flag_ = params_->stoch_flag; // determines whether we are using stochastic forces
   eq_steps_ = params_->filament.n_equil;
   eq_steps_count_ = 0;
+  optical_trap_spring_ = params_->filament.optical_trap_spring;
+  optical_trap_flag_ = params_->filament.optical_trap_flag;
   fic_factor_ = params_->filament.fic_factor;
   tip_force_ = 0.0;
-  //k_off_ = params_->motor.k_off;
-  //k_on_ = params_->motor.k_on;
-  //motor_concentration_ = params_->motor.concentration;
-  //n_motors_bound_ = 0;
   shuffle_flag_ = params_->filament.shuffle;
   shuffle_factor_ = params_->filament.shuffle_factor;
   shuffle_frequency_ = params_->filament.shuffle_frequency;
@@ -92,6 +90,11 @@ void Filament::Init(bool force_overlap) {
   UpdatePrevPositions();
   CalculateAngles();
   SetDiffusion();
+
+  if (optical_trap_flag_) {
+    double const * const r0 = sites_[0].GetPosition();
+    std::copy(r0, r0+3, optical_trap_pos_);
+  }
   poly_ = poly_state::grow;
 }
 
@@ -291,6 +294,10 @@ void Filament::InsertAt(double *pos, double *u) {
   UpdatePrevPositions();
   CalculateAngles();
   SetDiffusion();
+  if (optical_trap_flag_) {
+    double const * const r0 = sites_[0].GetPosition();
+    std::copy(r0, r0+3, optical_trap_pos_);
+  }
   poly_ = poly_state::grow;
 }
 
@@ -921,6 +928,14 @@ void Filament::UpdateAvgPosition() {
 
 void Filament::ApplyForcesTorques() {
   ApplyInteractionForces();
+  if (optical_trap_flag_) {
+    double f_trap[3] = {0};
+    double const * const r0 = sites_[0].GetPosition();
+    for (int i=0; i<n_dim_; ++i) {
+      f_trap[i] = optical_trap_spring_ * (optical_trap_pos_[i] - r0[i]);
+    }
+    sites_[0].AddForce(f_trap);
+  }
   //if (anchored_) ApplyAnchorForces();
 }
 

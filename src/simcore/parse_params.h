@@ -101,6 +101,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("force_induced_catastrophe_flag")==0) {
             params->filament.force_induced_catastrophe_flag = jt->second.as<int>();
           }
+          else if (param_name.compare("optical_trap_flag")==0) {
+            params->filament.optical_trap_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("optical_trap_spring")==0) {
+            params->filament.optical_trap_spring = jt->second.as<double>();
+          }
           else if (param_name.compare("fic_factor")==0) {
             params->filament.fic_factor = jt->second.as<double>();
           }

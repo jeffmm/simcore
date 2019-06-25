@@ -107,6 +107,8 @@ filament:
   friction_ratio: [2, double]
   dynamic_instability_flag : [0,int]
   force_induced_catastrophe_flag : [0,int]
+  optical_trap_flag: [0, int]
+  optical_trap_spring: [20, double]
   fic_factor: [0.828,double]
   f_shrink_to_grow : [0.017,double] # Frequencies for dynamic instability
   f_shrink_to_pause : [0.0,double]

@@ -1,22 +1,22 @@
-seed: 1318162878220
+seed: 292392146817731
 
-run_name: crosslink_io_test
-n_dim: 3
-n_periodic: 3
+run_name: long_filament_crosslinks
+n_dim: 2
+n_periodic: 2
 delta: 0.0001
 n_steps: 1000000
 n_steps_target: 100000
 boundary: 0
 n_update_cells: 50
-cell_length: 4
+cell_length: 10
 movie_flag: 0
 
 graph_flag: 1
-n_graph: 100
+n_graph: 300
 graph_background: 0
 print_complete: 0
 
-system_radius: 20
+system_radius: 100
 potential: soft
 soft_potential_mag: 300
 soft_potential_mag_target: -1
@@ -37,25 +37,25 @@ density_bin_width: 0.1
 in_out_flag: 0
 
 crosslink:
-  concentration: 0.3
+  concentration: 0.2
   diameter: 0.5
   draw_type: bw
   color: 1.55
   walker: 1
   step_direction: 1
   diffusion_flag: 1
-  velocity: 50
-  rest_length: 2
-  r_capture: 6
-  k_spring: 10
+  velocity: 30
+  rest_length: 3
+  r_capture: 10
+  k_spring: 50
   k_on: 20
-  k_on_sd: 20
-  k_off: 5
+  k_on_sd: 50
+  k_off: 1
   #f_spring_max: 2000
   tether_draw_type: bw
   tether_color: 3.14
   tether_diameter: 0.25
-  end_pausing: 1
+  end_pausing: 0
   force_dep_factor: 0.01
   spec_flag: 1
   checkpoint_flag: 1
@@ -69,13 +69,16 @@ filament:
   overlap: 0
   insertion_type: random
   #insertion_type: custom
-  #insert_file: crosslink_filament.yaml
+  #insert_file: optical_trap.yaml
   diameter: 1
-  length: 10
-  perlen_ratio: 100
+  length: 50
+  perlen_ratio: 300
   perlen_ratio_target: -1
+  dynamic_instability_flag: 0
+  #optical_trap_flag: 1
+  #optical_trap_spring: 500
   #intrinsic_curvature: .0628
-  n_bonds: 4
+  n_bonds: 10
   driving_factor: 0
   n_spec: 100
   n_checkpoint: 100
