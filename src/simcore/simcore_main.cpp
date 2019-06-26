@@ -4,7 +4,7 @@
 #include "simulation_manager.h"
 
 /* For testing kmcx integration */
-#include "kmcx_test.h"
+//#include "kmcx_test.h"
 
 
 /*************************
