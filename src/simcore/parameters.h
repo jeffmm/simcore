@@ -36,6 +36,7 @@ class filament_parameters : public species_parameters {
     int force_induced_catastrophe_flag = 0;
     int optical_trap_flag = 0;
     double optical_trap_spring = 20;
+    int optical_trap_fixed = 0;
     int cilia_trap_flag = 0;
     double fic_factor = 0.828;
     double f_shrink_to_grow = 0.017;

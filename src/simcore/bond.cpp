@@ -77,6 +77,7 @@ void Bond::Report() {
   fprintf(stderr, "  Bond:\n");
   Object::Report();
 }
+
 void Bond::ReportSites() {
   Report();
   fprintf(stderr,"    Reporting sites:\n");

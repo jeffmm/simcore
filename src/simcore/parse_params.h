@@ -107,6 +107,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("optical_trap_spring")==0) {
             params->filament.optical_trap_spring = jt->second.as<double>();
           }
+          else if (param_name.compare("optical_trap_fixed")==0) {
+            params->filament.optical_trap_fixed = jt->second.as<int>();
+          }
           else if (param_name.compare("cilia_trap_flag")==0) {
             params->filament.cilia_trap_flag = jt->second.as<int>();
           }

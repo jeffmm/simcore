@@ -48,6 +48,7 @@ void Filament::SetParameters() {
   eq_steps_count_ = 0;
   optical_trap_spring_ = params_->filament.optical_trap_spring;
   optical_trap_flag_ = params_->filament.optical_trap_flag;
+  optical_trap_fixed_ = params_->filament.optical_trap_fixed;
   cilia_trap_flag_ = params_->filament.cilia_trap_flag;
   fic_factor_ = params_->filament.fic_factor;
   tip_force_ = 0.0;
@@ -954,10 +955,14 @@ void Filament::ApplyForcesTorques() {
     double const * const r1 = sites_[trap2].GetPosition();
     for (int i=0; i<n_dim_; ++i) {
       f_trap1[i] = optical_trap_spring_ * (optical_trap_pos_[i] - r0[i]);
-      f_trap2[i] = optical_trap_spring_ * (optical_trap_pos2_[i] - r1[i]);
+      if (optical_trap_fixed_) {
+        f_trap2[i] = optical_trap_spring_ * (optical_trap_pos2_[i] - r1[i]);
+      }
     }
     sites_[trapped_site_].AddForce(f_trap1);
-    sites_[trap2].AddForce(f_trap2);
+    if (optical_trap_fixed_) {
+      sites_[trap2].AddForce(f_trap2);
+    }
   }
   //if (anchored_) ApplyAnchorForces();
 }

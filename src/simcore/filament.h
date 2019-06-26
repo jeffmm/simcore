@@ -24,12 +24,13 @@ class Filament : public Mesh {
         metric_forces_,
         optical_trap_flag_,
         cilia_trap_flag_,
+        optical_trap_fixed_,
+        trapped_site_,
         // TEMPORARY FIXME
         n_step_ = 0,
         n_motors_bound_,
         eq_steps_,
-        eq_steps_count_ = 0,
-        trapped_site_;
+        eq_steps_count_ = 0;
     double max_length_,
            min_length_,
            max_bond_length_,
