@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
   sim.RunManager();
 
   // Temporary, for checking KMCX-simcore integration
-  test_kmcx();
+  //test_kmcx();
   return 0;
 }
 
