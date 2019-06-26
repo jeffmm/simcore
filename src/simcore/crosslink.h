@@ -29,7 +29,8 @@ class Crosslink : public Object {
            rest_length_,
            rcapture_,
            tether_force_,
-           fdep_factor_;
+           fdep_factor_,
+           polar_affinity_;
     std::vector<Anchor> anchors_;
     std::vector<Object*> nlist_;
     std::vector<int> kmc_filter_;

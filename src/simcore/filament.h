@@ -23,11 +23,13 @@ class Filament : public Mesh {
         flagella_flag_,
         metric_forces_,
         optical_trap_flag_,
+        cilia_trap_flag_,
         // TEMPORARY FIXME
         n_step_ = 0,
         n_motors_bound_,
         eq_steps_,
-        eq_steps_count_ = 0;
+        eq_steps_count_ = 0,
+        trapped_site_;
     double max_length_,
            min_length_,
            max_bond_length_,
@@ -64,7 +66,8 @@ class Filament : public Mesh {
            spiral_number_,
            tip_force_,
            optical_trap_spring_,
-           optical_trap_pos_[3];
+           optical_trap_pos_[3],
+           optical_trap_pos2_[3];
     std::vector<double> gamma_inverse_,
                         tensions_, //n_sites-1
                         g_mat_lower_, //n_sites-2

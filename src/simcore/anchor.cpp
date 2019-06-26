@@ -14,10 +14,13 @@ void Anchor::Init() {
   bond_lambda_ = 0;
   mesh_lambda_ = 0;
   active_ = false;
+  //fdep_factor_ = params_->crosslink.force_dep_vel_factor;
   k_off_ = params_->crosslink.k_off;
   end_pausing_ = (params_->crosslink.end_pausing ? true : false);
   diffuse_ = (params_->crosslink.diffusion_flag ? true : false);
   f_spring_max_ = params_->crosslink.f_spring_max;
+  f_stall_ = params_->crosslink.f_stall;
+  force_dep_vel_flag_ = params_->crosslink.force_dep_vel_flag;
   SetDiffusion();
   SetSID(species_id::crosslink);
 }
@@ -55,7 +58,7 @@ void Anchor::UpdatePosition() {
     bound_ = false;
     return;
   }
-  ZeroForce();
+  //ZeroForce();
   // Update orientation based on bond if bound
   double const * const bond_orientation = bond_->GetOrientation();
   std::copy(bond_orientation, bond_orientation+3, orientation_);
@@ -208,6 +211,21 @@ void Anchor::Deactivate() {
 
 void Anchor::Walk() {
   double dr[3] = {0, 0, 0};
+  if (force_dep_vel_flag_) {
+    double fmag = 0.0;
+    for (int i=0; i<n_dim_; ++i) {
+      fmag += force_[i]*force_[i];
+    }
+    fmag = sqrt(fmag);
+    // Linear force-velocity relationship
+    double fdep = 1 - fmag / f_stall_;
+    if (fdep > 1) {
+      fdep = 1;
+    } else if (fdep < 0) {
+      fdep = 0;
+    }
+    velocity_ = max_velocity_ * fdep;
+  }
   double dr_mag = velocity_*delta_;
   double const * const pos0 = bond_->GetPosition();
   for (int i = 0; i < n_dim_; ++i) {

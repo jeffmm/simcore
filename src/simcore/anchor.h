@@ -20,7 +20,9 @@ class Anchor : public Object {
            max_velocity_,
            diffusion_,
            f_spring_max_,
-           k_off_;
+           k_off_,
+           f_stall_,
+           force_dep_vel_flag_;
 
     Bond * bond_;
 

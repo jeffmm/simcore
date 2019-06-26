@@ -36,6 +36,7 @@ class filament_parameters : public species_parameters {
     int force_induced_catastrophe_flag = 0;
     int optical_trap_flag = 0;
     double optical_trap_spring = 20;
+    int cilia_trap_flag = 0;
     double fic_factor = 0.828;
     double f_shrink_to_grow = 0.017;
     double f_shrink_to_pause = 0.0;
@@ -185,8 +186,11 @@ class crosslink_parameters : public species_parameters {
     double k_off = 2;
     double k_on_sd = 10;
     double force_dep_factor = 1;
-    double k_spring = 100;
-    double f_spring_max = 100;
+    double polar_affinity = 0;
+    double k_spring = 10;
+    double f_spring_max = 1000;
+    double f_stall = 100;
+    int force_dep_vel_flag = 1;
     double k_align = 0;
     double rest_length = 0;
     int step_direction = 0;

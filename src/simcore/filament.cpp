@@ -48,6 +48,7 @@ void Filament::SetParameters() {
   eq_steps_count_ = 0;
   optical_trap_spring_ = params_->filament.optical_trap_spring;
   optical_trap_flag_ = params_->filament.optical_trap_flag;
+  cilia_trap_flag_ = params_->filament.cilia_trap_flag;
   fic_factor_ = params_->filament.fic_factor;
   tip_force_ = 0.0;
   shuffle_flag_ = params_->filament.shuffle;
@@ -66,6 +67,7 @@ void Filament::SetParameters() {
   flagella_freq_ = params_->filament.flagella_freq;
   flagella_period_ = params_->filament.flagella_period;
   flagella_amplitude_ = params_->filament.flagella_amplitude;
+  trapped_site_ = 0;
 }
 
 //void Filament::SetAnchor(Anchor * a) {
@@ -94,6 +96,8 @@ void Filament::Init(bool force_overlap) {
   if (optical_trap_flag_) {
     double const * const r0 = sites_[0].GetPosition();
     std::copy(r0, r0+3, optical_trap_pos_);
+    double const * const r1 = sites_[1].GetPosition();
+    std::copy(r1, r1+3, optical_trap_pos2_);
   }
   poly_ = poly_state::grow;
 }
@@ -295,8 +299,22 @@ void Filament::InsertAt(double *pos, double *u) {
   CalculateAngles();
   SetDiffusion();
   if (optical_trap_flag_) {
-    double const * const r0 = sites_[0].GetPosition();
+    trapped_site_ = 0;
+    /* For cilia flag, if filament is oriented along a negative
+     * dimension, assume the filament needs to be fixed at the plus
+     * end */
+    if (cilia_trap_flag_) {
+      for (int i=0; i<n_dim_; ++i) {
+        if (u[i] < 0) {
+          trapped_site_ = n_sites_-1;
+        }
+      }
+    }
+    int trapped_2 = (trapped_site_ == 0 ? 1 : n_sites_-2);
+    double const * const r0 = sites_[trapped_site_].GetPosition();
+    double const * const r1 = sites_[trapped_2].GetPosition();
     std::copy(r0, r0+3, optical_trap_pos_);
+    std::copy(r1, r1+3, optical_trap_pos2_);
   }
   poly_ = poly_state::grow;
 }
@@ -929,12 +947,17 @@ void Filament::UpdateAvgPosition() {
 void Filament::ApplyForcesTorques() {
   ApplyInteractionForces();
   if (optical_trap_flag_) {
-    double f_trap[3] = {0};
-    double const * const r0 = sites_[0].GetPosition();
+    double f_trap1[3] = {0};
+    double f_trap2[3] = {0};
+    double const * const r0 = sites_[trapped_site_].GetPosition();
+    int trap2 = (trapped_site_ == 0 ? 1 : n_sites_-2);
+    double const * const r1 = sites_[trap2].GetPosition();
     for (int i=0; i<n_dim_; ++i) {
-      f_trap[i] = optical_trap_spring_ * (optical_trap_pos_[i] - r0[i]);
+      f_trap1[i] = optical_trap_spring_ * (optical_trap_pos_[i] - r0[i]);
+      f_trap2[i] = optical_trap_spring_ * (optical_trap_pos2_[i] - r1[i]);
     }
-    sites_[0].AddForce(f_trap);
+    sites_[trapped_site_].AddForce(f_trap1);
+    sites_[trap2].AddForce(f_trap2);
   }
   //if (anchored_) ApplyAnchorForces();
 }

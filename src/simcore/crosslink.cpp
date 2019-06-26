@@ -20,6 +20,7 @@ void Crosslink::Init(MinimumDistance * mindist, LookupTable * lut) {
   f_spring_max_ = params_->crosslink.f_spring_max;
   rcapture_ = params_->crosslink.r_capture;
   fdep_factor_ = params_->crosslink.force_dep_factor;
+  polar_affinity_ = params_->crosslink.polar_affinity;
   /* TODO generalize crosslinks to more than two anchors */
   Anchor anchor1, anchor2;
   anchors_.push_back(anchor1);
@@ -162,11 +163,40 @@ void Crosslink::DoublyKMC() {
     SetSingly();
     return;
   }
+  /* Check for polar affinities */
+  double affinity = 0;
+  if (ABS(polar_affinity_) > 1e-8) {
+    /* Check whether crosslink is linking two polar or antipolar bonds */
+    int po = SIGNOF(dot_product(n_dim_, anchors_[0].GetOrientation(), anchors_[1].GetOrientation()));
+    /* polar_affinity_ should range from -1 to 1, with the interval [-1, 0]
+     * corresponding to the affinity (between 0 and 1) of binding to antipolar
+     * filaments and the interval [0, 1] corresponding to polar aligned
+     * filaments. Affinity = 0 means there is no preference, whereas affinity
+     * approx 1 means there is a very strong preference for polar filaments and
+     * thus a strong likelihood of unbinding from antipolar filaments */
+    /* antipolar case */
+    if (po < 0 && polar_affinity_ > 0) {
+      affinity = polar_affinity_;
+    }
+    /* polar case */
+    else if (po > 0 && polar_affinity_ < 0) {
+      affinity = ABS(polar_affinity_);
+    }
+    if (affinity > 1 ) {
+      affinity = 1;
+    }
+  }
   /* Calculate force-dependent unbinding for each head */
   double tether_stretch = length_ - rest_length_;
   tether_stretch = (tether_stretch > 0 ? tether_stretch : 0);
   double fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
-  double totProb = 2 * k_off_ * delta_ * exp(fdep);
+  double totProb;
+  if (1 - affinity < 1e-4) {
+    totProb = 1;
+  }
+  else {
+    totProb = 2 * k_off_ * delta_ * exp(fdep) / (1-affinity);
+  }
   double roll = gsl_rng_uniform_pos(rng_.r);
   int head_activate = -1; // No head activated
   if (totProb > 1.0) {    // Probability of KMC is greater than one, normalize

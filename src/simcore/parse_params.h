@@ -107,6 +107,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("optical_trap_spring")==0) {
             params->filament.optical_trap_spring = jt->second.as<double>();
           }
+          else if (param_name.compare("cilia_trap_flag")==0) {
+            params->filament.cilia_trap_flag = jt->second.as<int>();
+          }
           else if (param_name.compare("fic_factor")==0) {
             params->filament.fic_factor = jt->second.as<double>();
           }
@@ -884,11 +887,20 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("force_dep_factor")==0) {
             params->crosslink.force_dep_factor = jt->second.as<double>();
           }
+          else if (param_name.compare("polar_affinity")==0) {
+            params->crosslink.polar_affinity = jt->second.as<double>();
+          }
           else if (param_name.compare("k_spring")==0) {
             params->crosslink.k_spring = jt->second.as<double>();
           }
           else if (param_name.compare("f_spring_max")==0) {
             params->crosslink.f_spring_max = jt->second.as<double>();
+          }
+          else if (param_name.compare("f_stall")==0) {
+            params->crosslink.f_stall = jt->second.as<double>();
+          }
+          else if (param_name.compare("force_dep_vel_flag")==0) {
+            params->crosslink.force_dep_vel_flag = jt->second.as<int>();
           }
           else if (param_name.compare("k_align")==0) {
             params->crosslink.k_align = jt->second.as<double>();
