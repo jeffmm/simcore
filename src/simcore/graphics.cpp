@@ -296,7 +296,8 @@ void Graphics::Init2dWindow() {
         (GLdouble) (xmax + 0.05 * unit_cell_[0]),
         (GLdouble) (ymin - 0.05 * unit_cell_[3]),
         (GLdouble) (ymax + 0.05 * unit_cell_[3])); //deprecated, but annoying to implement
-
+  /* JMM attempting to fix Mac resize issues */
+  glfwGetFramebufferSize(window_, &windx_, &windy_);
   /* establish initial viewport */
   glViewport(0, 0, windx_, windy_);
 }
@@ -319,7 +320,7 @@ void Graphics::Init3dWindow() {
   cFar_ = 2.0 * a_perp_max; // clipping plane far
   cxAngle_ = cyAngle_ = 0; // plane angles
 
-  windx_ = windy_ = 800; // window size in pixels
+  windx_ = windy_ = 400; // window size in pixels
 
   { // Make dummy window so we can get GL extensions 
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE); 
@@ -332,7 +333,9 @@ void Graphics::Init3dWindow() {
       glfwTerminate();
       error_exit("Failed to create display window\n");
     }
-    
+    /* JMM - attempting to fix window size issue with mac Retina display */
+    glfwGetFramebufferSize(window_, &windx_, &windy_);
+    glViewport(0, 0, windx_, windy_);
     /* Wrangle in GL function pointers for GL version > 2.0 */
     glewInit();
     glfwDestroyWindow(window_);
@@ -402,6 +405,7 @@ void Graphics::Init3dWindow() {
   gluPerspective(-60.0, 1.0, 1.5 * unit_cell_[8] / 2.0, 10.0 * 1.5 * unit_cell_[8] / 2.0); // deprecated
 
   /* establish initial viewport */
+  glfwGetFramebufferSize(window_, &windx_, &windy_);
   glViewport(0, 0, windx_, windy_);
 }
 
