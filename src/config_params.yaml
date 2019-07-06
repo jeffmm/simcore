@@ -1,64 +1,83 @@
-# params_master.yaml file
+# config_params.yaml file: When simcore_config is run, this file is read to generate 
+# system_parameters structure as well as code for parsing parameters in parameter yaml file.
 
-seed : [7859459105545,long] # seed for random number generator
-n_runs: [1, int]
-n_random: [1, int]
-run_name: [sc,string]
-n_dim : [3,int]
-n_periodic : [0,int]
-boundary : [0,int]
-system_radius : [100,double] # radius of system
-n_steps : [1000000,int]
-i_step: [0, int]
-delta : [0.001,double] # time duration between each simulation step
-cell_length: [10, double]
-n_update_cells: [0, int] # used if >0, otherwise simcore uses dr_tot
-graph_flag : [0, int] 
-n_graph : [1000,int] # number of frames between refreshing graphics
-graph_diameter : [0,double]
-graph_background : [1,int]
-draw_boundary: [1, int]
-load_checkpoint: [0, int]
-checkpoint_run_name: [sc, string]
-n_load: [0, int]
-print_complete: [0, int]
-insertion_type: [species, string]
-movie_flag : [0, int]
-movie_directory : [frames,string]
-time_analysis : [0,int]
-bud_height : [680,double] # distance between mother-daughter cell centers
-bud_radius : [300,double] # radius of daughter cell
-lj_epsilon: [1, double]
-wca_eps: [1,double]
-wca_sig: [1,double]
-ss_a: [1,double]
-ss_rs: [1.5,double]
-ss_eps: [1,double]
-f_cutoff: [100,double]
-max_overlap: [100000,int]
-constant_pressure: [0, int]
-constant_volume: [0, int]
-target_pressure: [0, double]
-target_radius: [100, double]
-pressure_time: [100, int]
-compressibility: [1, double]
-stoch_flag: [1, int]
-thermo_flag: [0, int]
-n_thermo: [1000, int]
-interaction_flag: [1, int]
-species_insertion_failure_threshold: [10000,int]
-species_insertion_reattempt_threshold: [10, int]
-uniform_crystal: [0, int]
-n_steps_equil: [0, int]
-n_steps_target: [100000, int]
-static_particle_number: [0, int]
-checkpoint_from_spec: [0, int]
-potential: [wca, string]
-soft_potential_mag: [10, double]
-soft_potential_mag_target: [-1, double]
-like_like_interactions: [1,int]
-auto_graph: [0,int]
-local_order_width: [50, double]
+seed : [7859459105545,long]          # Seed for random number generator, sets initial conditions.
+n_runs: [1, int]                     # Number of simulations to perform using identical parameters
+                                     # with unique initial conditions (new seed).
+n_random: [1, int]                   # Number of samples when using randomly-sampled parameters.
+run_name: [sc,string]                # Prefix used to label output files.
+n_dim : [3,int]                      # Dimensionality of system. 2 or 3.
+n_periodic : [0,int]                 # Number of periodic dimensions. Should be <= n_dim.
+boundary : [0,int]                   # 0: No boundary condition constraints.
+                                     # 1: Box-like boundary condition.
+                                     # 2: Spherical BC with radius of system_radius.
+                                     # 3: Budding-yeast BC with mother and daughter cell.
+system_radius : [100,double]         # Sets system volume. 1D system length is 2 x system_radius.
+n_steps : [1000000,int]              # Number of steps to run simulation before completion.
+i_step: [0, int]                     # Internal parameter used for tracking simulation iteration.
+delta : [0.001,double]               # Simulation time duration between each simulation step.
+cell_length: [10, double]            # Default width of cells used in cell list. Should be set 
+                                     # internally based on other system parameters.
+n_update_cells: [0, int]             # If > 0, updates cell list every n_update_cells steps.
+                                     # Otherwise, updates when particles move a fraction of the
+                                     # cell length.
+graph_flag : [0, int]                # Whether to run simulation with live graphics.
+n_graph : [1000,int]                 # Number of simulation steps between refreshing graphics.
+graph_diameter : [0,double]          # If > 0, draws particles with a diameter of graph_diameter.
+graph_background : [1,int]           # If zero, black background, if 1, white background.
+draw_boundary: [1, int]              # If set to zero, does not draw system boundary conditions.
+load_checkpoint: [0, int]            # Flag for reading checkpoint file corresponding to
+                                     # input parameter file. Equiv to "./simcore -l params.yaml"
+checkpoint_run_name: [sc, string]    # Internal parameter for tracking checkpoint file run name.
+n_load: [0, int]                     # Internal parameter for keeping track of reload numbers
+print_complete: [0, int]             # 0, redraw text to update sim complete percentage,
+                                     # >0, print new line for each percentage update.
+insertion_type: [species, string]    # Deprecated
+movie_flag : [0, int]                # Generate bitmaps of graphics window to movie_directory
+movie_directory : [frames,string]    # Directory to output graphics bitmaps
+time_analysis : [0,int]              # Generate output file with simulation runtime data
+bud_height : [680,double]            # center separation of mother and daughter cells
+bud_radius : [300,double]            # radius of daughter cell
+lj_epsilon: [1, double]              # Energy scaling factor for Lennard-Jones potential
+wca_eps: [1,double]                  # Energy scaling factor for WCA potential
+wca_sig: [1,double]                  # Distance scaling factor for WCA potential
+ss_a: [1,double]                     # Soft shoulder potential parameter.
+ss_rs: [1.5,double]                  # Soft shoulder potential distance scaling parameter.
+ss_eps: [1,double]                   # Soft shoulder potential energy scaling parameter.
+f_cutoff: [2000,double]              # Maximum force generated by interaction potentials
+max_overlap: [100000,int]            # Deprecated.
+constant_pressure: [0, int]          # Flag to maintain constant pressure: system volume may vary.
+constant_volume: [0, int]            # Flag to adiabatically resize system volume to target volume.
+target_pressure: [0, double]         # Target pressure for constant pressure.
+target_radius: [100, double]         # Target volume for constant volume.
+pressure_time: [100, int]            # No. steps to reach target pressure in constant pressure sim.
+compressibility: [1, double]         # Scaling param for unit cell updates for constant pressure.
+stoch_flag: [1, int]                 # Flag for toggling Brownian motion in various species.
+thermo_flag: [0, int]                # Output stress tensor and pressure/volume information every
+                                     # n_thermo steps
+n_thermo: [1000, int]                # How often to output thermo info.
+interaction_flag: [1, int]           # If zero, skips checking for particle interactions.
+species_insertion_failure_threshold: [10000,int] # Threshold used during species insertion for
+                                                 # triggering a re-insertion of all species
+species_insertion_reattempt_threshold: [10, int] # Maximum number of attempts to reinsert all
+                                                 # species. May need to set higher for high
+                                                 # densities with randomized insertion.
+uniform_crystal: [0, int]            # Insert species onto uniform crystal lattice.
+n_steps_equil: [0, int]              # Used for species with active dynamics to equilibriate for
+                                     # n_steps_equil steps before beginning activity.        
+n_steps_target: [100000, int]        # Used for adiabatically varying parameters, parameters will
+                                     # reach their target parameter in n_steps_target steps.
+static_particle_number: [0, int]     # Tells interaction engine that particle number will never
+                                     # change, circumventing certain book-keeping functions.
+checkpoint_from_spec: [0, int]       # Generate a checkpoint file from an existing spec file.
+potential: [wca, string]             # Specifies interaction potential between all particles.
+soft_potential_mag: [10, double]     # Energy scaling parameter for GEM-8 potential.
+soft_potential_mag_target: [-1, double] # If >= 0, rescales GEM-8 energy to meet target in 
+                                        # n_steps_target steps.
+like_like_interactions: [1,int]      # If zero, particles of the same species do not interact.
+auto_graph: [0,int]                  # If > 0 and graph_flag > 0, graphics window does not wait
+                                     # for user to hit ESC before running. Useful for movies.
+local_order_width: [50, double]      
 local_order_bin_width: [0.5, double]
 local_order_average: [1, int]
 local_order_analysis: [0, int]
