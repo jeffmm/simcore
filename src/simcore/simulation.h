@@ -66,6 +66,7 @@ class Simulation {
     void RunProcessing(run_options run_opts);
     void InitGraphics();
     void InitProcessing(run_options run_opts);
+    UNIT_TESTER;
 
   public:
     Simulation() {}

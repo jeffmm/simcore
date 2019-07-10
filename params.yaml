@@ -70,11 +70,11 @@ filament:
   num: 6
   packing_fraction: -1
   overlap: 0
-  #insertion_type: random
-  insertion_type: custom
-  insert_file: cilia_bundle.yaml
+  insertion_type: random
+  #insertion_type: custom
+  #insert_file: params/cilia_bundle.yaml
   diameter: 1
-  length: 50
+  length: 10
   perlen_ratio: 300
   perlen_ratio_target: -1
   dynamic_instability_flag: 0
@@ -83,7 +83,7 @@ filament:
   optical_trap_spring: 10000
   optical_trap_fixed: 1
   #intrinsic_curvature: .0628
-  n_bonds: 10
+  n_bonds: 3
   driving_factor: 0
   n_spec: 100
   n_checkpoint: 100

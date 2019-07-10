@@ -50,4 +50,12 @@ struct graph_struct {
   draw_type draw;
 };
 
+/* For unit testing */
+
+//namespace unit_test {
+  //class Tester;
+//}
+
+#define UNIT_TESTER friend class Tester
+
 #endif

@@ -46,6 +46,7 @@ endif()
 # Add executables
 
 # Reset build output directory to default
+add_subdirectory("extern")
 
 # Configure unit tests
 if (TESTS)
@@ -53,7 +54,7 @@ if (TESTS)
   enable_testing()
   add_subdirectory("tests")
 else()
-  add_subdirectory("extern")
+  #add_subdirectory("extern")
   add_subdirectory("src")
 endif(TESTS)
 

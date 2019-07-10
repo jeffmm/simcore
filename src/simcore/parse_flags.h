@@ -23,6 +23,7 @@ struct run_options {
   int with_reloads = 0;
   int single_frame = 0;
   std::string param_file;
+  std::string default_param_file = "src/config_params.yaml";
   std::string run_name = "sc";
 };
 

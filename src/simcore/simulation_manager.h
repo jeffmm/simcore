@@ -32,11 +32,14 @@ class SimulationManager {
     void RunSimulations();
     void ParseParams(std::string file_name);
     void ProcessOutputs();
+    UNIT_TESTER;
 
   public:
     SimulationManager() { debug_trace = false; early_exit = false;}
     void InitManager(run_options run_opts);
     void RunManager();
+    //template <class T> struct access_by;
+    //template <class T> friend struct access_by;
 };
 
 #endif // _SIMCORE_SIMULATION_MANAGER_H_ 

@@ -21,13 +21,9 @@ do_test_build() {
   cd build
   cmake -DTESTS=1 ..
   make -j8
-  if (make test)
-  then
-    cd ..
-  else 
-    ./tests/test_simcore
-    cd ..
-  fi
+  make test
+  cd tests
+  ./test_simcore
 }
 
 do_debug_build() {

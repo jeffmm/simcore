@@ -3,10 +3,6 @@
 #include <stdlib.h>
 #include "simulation_manager.h"
 
-/* For testing kmcx integration */
-//#include "kmcx_test.h"
-
-
 /*************************
    ::SimCORE Main::
    Parse commandline flags and start simulation manager
@@ -23,8 +19,6 @@ int main(int argc, char *argv[]) {
   // Main control function
   sim.RunManager();
 
-  // Temporary, for checking KMCX-simcore integration
-  //test_kmcx();
   return 0;
 }
 

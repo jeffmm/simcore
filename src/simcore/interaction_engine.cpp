@@ -121,7 +121,7 @@ int InteractionEngine::CountSpecies() {
 }
 
 bool InteractionEngine::CountAndUpdate() {
-  if (processing_) return;
+  if (processing_) return false;
   int obj_count = CountSpecies();
   if (obj_count != n_objs_) {
     // reset update count and update number of objects to track

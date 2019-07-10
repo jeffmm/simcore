@@ -3,37 +3,57 @@
 
 #define REGISTER_SPECIES(n,m) species_factory_.register_class<n>(#m);
 
+/* Initialize simulation parameters and run simulation */
 void Simulation::Run(system_parameters params) {
   params_ = params;
   run_name_ = params.run_name;
+  // Initialize simulation data structures
   InitSimulation();
+  // Begin simulation
   RunSimulation();
+  // Tear down data structures (e.g. cell lists, etc) 
   ClearSimulation();
 }
 
+/* Continuously loop over object data structures, solving their equations of
+ * motion using Runge-Kutta-like integration schemes for n_steps time steps. */
 void Simulation::RunSimulation() {
   std::cout << "  Running simulation" << std::endl;
+  /* Solve equations of motion for all objects */
   for (i_step_ = 0; i_step_<params_.n_steps; ++i_step_) {
     params_.i_step = i_step_;
     time_ = (i_step_+1) * params_.delta; 
+    // Output progress
     PrintComplete();
-    ZeroForces();
+    /* Zero the force_ array on all objects for bookkeeping */
+      ZeroForces();
+    /* Calculate forces between objects in system */
     Interact();
+    /* Integrate EOM on all objects to update positions, etc */
     Integrate();
+    /* Update system pressure, volume, etc if necessary */
     Statistics();
+    /* Draw the particles in graphics window, if using graphics */
     Draw();
+    /* Catch soft exceptions and terminate the simulation early */
     if (early_exit) {
       early_exit = false;
       std::cout << "  Early exit triggered. Ending simulation.\n";
       return;
     }
+    /* Generate all output files */
     WriteOutputs();
   }
 }
 
+/* Print simulation progress as a percentage. If the print_complete parameter
+ * evaluates to true, this will print a new line for each progress update,
+ * which can be useful for logging. Otherwise, the progress will be refreshed
+ * in a single line printed to standard output. */
 void Simulation::PrintComplete() {
   int it,steps;
-  if (params_.n_steps > 100000) {// && i_step_ >= 100) {
+  // Avoid weird issues with longs
+  if (params_.n_steps > 100000) {
     it = i_step_/100;
     steps = params_.n_steps/10000;
   }
@@ -54,44 +74,58 @@ void Simulation::PrintComplete() {
 }
 
 
+/* Update the positions of all objects in the system using numerical
+ * integration for one time step defined by the delta parameter. */
 void Simulation::Integrate() {
   for (auto it=species_.begin(); it!=species_.end(); ++it) {
     (*it)->UpdatePositions();
   }
 }
 
+/* Calculate interaction forces between all objects if necessary. */
 void Simulation::Interact() {
   iengine_.Interact();
 }
 
+/* Remove forces on all objects. Objects with inertia that use higher order RK
+ * schemes with dependence on previous forces need to save their forces in
+ * prev_forces_ arrays. */
 void Simulation::ZeroForces() {
   for (auto it=species_.begin(); it != species_.end(); ++it) {
     (*it)->ZeroForces();
   }
 }
 
+/* Update system pressure, volume and rescale system size if necessary,
+ * handling periodic boundaries in a sane way. */
 void Simulation::Statistics() {
   if (i_step_ % params_.n_thermo == 0 && i_step_ > 0) {
+    /* Calculate system pressure from stress tensor */
     iengine_.CalculatePressure();
     if (params_.constant_pressure) {
       space_.ConstantPressure();
     }
+    /* Constant volume is used to adiabatically adjust the system size to
+     achieve high densities from random insertions. */
     else if (params_.constant_volume) {
       space_.ConstantVolume();
     }
   }
+  /* Update object positions, etc and handle periodic BCs */
   if (space_.GetUpdate()) {
     space_.UpdateSpace();
     ScaleSpeciesPositions();
   }
 }
 
+/* Update object positions in periodic space if the system size changed. */
 void Simulation::ScaleSpeciesPositions() {
   for (auto spec : species_) {
     spec->ScalePositions();
   }
 }
 
+/* Initialize all the data structures in the simulation */
 void Simulation::InitSimulation() {
   std::cout << "  Initializing simulation" << std::endl;
   rng_.Init();
@@ -106,6 +140,7 @@ void Simulation::InitSimulation() {
   }
 }
 
+/* Initialize static object parameters that are used everywhere */
 void Simulation::InitObjects() {
   Object::SetParams(&params_);
   Object::SetNDim(params_.n_dim);
@@ -113,6 +148,7 @@ void Simulation::InitObjects() {
   Object::SetSpace(space_.GetStruct());
 }
 
+/* Generate graphics window and draw initial simulation setup */
 void Simulation::InitGraphics() {
   GetGraphicsStructure();
   double background_color = (params_.graph_background == 0 ? 0.1 : 1);
@@ -136,18 +172,14 @@ void Simulation::InitGraphics() {
   #endif
 }
 
+/* Initialize object types */ 
 void Simulation::InitSpecies() {
-
   /* Factories for creating and initializing registered species with their
      assigned species id */
-  //REGISTER_SPECIES(CentrosomeSpecies,centrosome);
   REGISTER_SPECIES(FilamentSpecies,filament);
   REGISTER_SPECIES(PassiveFilamentSpecies,passive_filament);
   REGISTER_SPECIES(BeadSpringSpecies,bead_spring);
   REGISTER_SPECIES(SpherocylinderSpecies,spherocylinder);
-  //REGISTER_SPECIES(SpindleSpecies,spindle);
-  //REGISTER_SPECIES(MDBeadSpecies,md_bead);
-  //REGISTER_SPECIES(HardRodSpecies,hard_rod);
   REGISTER_SPECIES(BrBeadSpecies,br_bead);
 
   /* Search the species_factory_ for any registered species,
@@ -164,6 +196,7 @@ void Simulation::InitSpecies() {
   }
 }
 
+/* Initialize object positions and orientations.*/
 void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   if (params_.print_complete) {
     printf("  Inserting species: 0%% complete\n");
@@ -316,22 +349,13 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
     }
   }
   /* Should do this all the time to force object counting */
-  //if (params_.load_checkpoint) {
-  //iengine_.ForceUpdate();
-  //}
   if (!processing) {
     iengine_.CountAndUpdate(); // Forces update as well
   }
 }
 
-void Simulation::ClearSpecies() {
-  for (auto it=species_.begin(); it!=species_.end(); ++it) {
-    (*it)->CleanUp();
-    delete (*it);
-  }
-  species_factory_.clear();
-}
-
+/* Tear down data structures, e.g. cell lists, and close graphics window if
+ * necessary. */
 void Simulation::ClearSimulation() {
   output_mgr_.Close();
   ClearSpecies();
@@ -344,13 +368,25 @@ void Simulation::ClearSimulation() {
   std::cout << "  Simulation complete" << std::endl;
 }
 
+
+/* Tear down object type data structures */
+void Simulation::ClearSpecies() {
+  for (auto it=species_.begin(); it!=species_.end(); ++it) {
+    (*it)->CleanUp();
+    delete (*it);
+  }
+  species_factory_.clear();
+}
+
+/* Update the OpenGL graphics window */
 void Simulation::Draw(bool single_frame) {
   #ifndef NOGRAPH
   if (params_.graph_flag && i_step_%params_.n_graph==0) {
+    /* Get updated object positions and orientations */
     GetGraphicsStructure();
     graphics_.Draw();
     if (params_.movie_flag) {
-      // Record bmp image of frame 
+      /* Record bmp image of frame */
       grabber(graphics_.windx_, graphics_.windy_,
               params_.movie_directory, 
               (single_frame ? 0 : frame_num_++));
@@ -359,33 +395,43 @@ void Simulation::Draw(bool single_frame) {
   #endif
 }
 
+/* Loop through objects in simulation to update their positions and
+ * orientations in the graphics window */
 void Simulation::GetGraphicsStructure() {
   graph_array_.clear();
   for (auto it=species_.begin(); it!=species_.end(); ++it) {
     (*it)->Draw(&graph_array_);
   }
+  /* Visualize interaction forces, crosslinks, etc */
   iengine_.DrawInteractions(&graph_array_);
 }
 
+/* Initialize output files */
 void Simulation::InitOutputs() {
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_);
   iengine_.InitOutputs();
+  /* If analyzing run time, record cpu time here */
   if (params_.time_analysis) {
     cpu_init_time_ = cpu_time();
   }
 }
 
+/* Determine which output files we are reading */
 void Simulation::InitInputs(run_options run_opts) {
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_, true, run_opts.use_posits, run_opts.with_reloads, run_opts.reduce_flag, run_opts.reduce_factor);
   iengine_.InitOutputs(true, run_opts.with_reloads, run_opts.reduce_flag);
 }
 
+/* Write object positions, etc if necessary */
 void Simulation::WriteOutputs() {
   output_mgr_.WriteOutputs();
+  /* Write interaction information/crosslink positions, etc */
   iengine_.WriteOutputs();
   if (i_step_ == 0) {
     return; // skip first step
   }
+  /* If we are analyzing run time and this is the last step, record final time
+   * here. */
   if (params_.time_analysis && i_step_ == params_.n_steps-1) {
     double cpu_final_time = cpu_time();
     double cpu_time = cpu_final_time - cpu_init_time_;
@@ -396,6 +442,7 @@ void Simulation::WriteOutputs() {
   }
 }
 
+/* Run the steps we need for post-processing output files */
 void Simulation::ProcessOutputs(system_parameters params, run_options run_opts) {
   params_ = params;
   run_name_ = params.run_name;
@@ -406,7 +453,7 @@ void Simulation::ProcessOutputs(system_parameters params, run_options run_opts) 
   ClearSimulation();
 }
 
-// Initialize everything we need for processing
+// Initialize data structures for post-processing
 void Simulation::InitProcessing(run_options run_opts) {
   rng_.Init();
   space_.Init(&params_);
@@ -440,6 +487,8 @@ void Simulation::InitProcessing(run_options run_opts) {
   //}
 }
 
+/* Post-processing on simulation outputs for movie generation, analysis output
+ * generation, etc. */
 void Simulation::RunProcessing(run_options run_opts) {
   std::cout << "Processing outputs for: " << run_name_ << std::endl;
   bool local_order = (params_.local_order_analysis || params_.polar_order_analysis 

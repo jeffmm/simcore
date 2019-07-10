@@ -10,6 +10,9 @@ bool early_exit;
 void SimulationManager::InitManager(run_options run_opts) {
   run_opts_ = run_opts;
   pnode_ = YAML::LoadFile(run_opts_.param_file);
+  params_.default_param_file = run_opts_.default_param_file;
+
+  // Load parameter file specified run options and flags
   if (pnode_["n_runs"] && pnode_["n_runs"].size()==0) {
     n_runs_ = pnode_["n_runs"].as<int>();
   }
@@ -27,7 +30,8 @@ void SimulationManager::InitManager(run_options run_opts) {
     std::cout << "  WARNING: Default seed not overwritten!\n";
   }
 
-  // Prefer command-line options over param values for n_runs, run_name
+  // Check command-line flags and run options.
+  // Prefer command-line options over param file values.
   if (run_opts_.debug) {
     debug_trace = true;
   }
@@ -49,13 +53,7 @@ void SimulationManager::InitManager(run_options run_opts) {
   }
   RNG::SetSeed(seed);
   rng_.Init();
-}
 
-/****************************************
-   ::RunManaager::
-   Main control sequence for SimulationManager
-   *************************************/
-void SimulationManager::RunManager() {
   // Check for appendable parameter files
   CheckAppendParams();
   // Load default parameters
@@ -66,8 +64,16 @@ void SimulationManager::RunManager() {
   CountVariations();
   // Generate n_var_ parameter nodes of unique parameter combinations
   GenerateParameters();
+}
+
+/****************************************
+   ::RunManaager::
+   Main control sequence for SimulationManager
+   *************************************/
+void SimulationManager::RunManager() {
   // Write parameters to individual files
   WriteParams();
+
   if (run_opts_.blank_flag) {
     // Blank run -- we only write the parameter files without running a simulation.
     return;
