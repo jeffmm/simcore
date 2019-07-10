@@ -1,6 +1,3 @@
-[submodule "kmcx"]
-	path = kmcx
-	url = https://github.com/jeffmm/kmcx.git
 [submodule "extern/kmcx"]
 	path = extern/kmcx
 	url = https://github.com/jeffmm/kmcx.git
