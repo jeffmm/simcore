@@ -580,10 +580,12 @@ void InteractionEngine::DrawInteractions(std::vector<graph_struct*> * graph_arra
 }
 
 void InteractionEngine::WriteOutputs() {
+  if (params_->crosslink.concentration < 1e-12) return;
   xlink_.WriteOutputs();
 }
 
 void InteractionEngine::InitOutputs(bool reading_inputs, bool reduce_flag, bool with_reloads) {
+  if (params_->crosslink.concentration < 1e-12) return;
   xlink_.InitOutputs(reading_inputs, reduce_flag, with_reloads);
   if (params_->load_checkpoint) {
     /* TODO Run minimum distance to determine which anchor belongs to which bond */ 
@@ -591,5 +593,6 @@ void InteractionEngine::InitOutputs(bool reading_inputs, bool reduce_flag, bool 
 }
 
 void InteractionEngine::ReadInputs() {
+  if (params_->crosslink.concentration < 1e-12) return;
   xlink_.ReadInputs();
 }

@@ -27,7 +27,7 @@ Simcore can either be run in a container using Docker, or be built manually usin
 To run simcore in Docker, one can do
 ```
 docker pull jeffmm/simcore:latest
-bash run_docker.sh <optional parameter files>
+bash run_docker.sh <optional flags> <optional parameter files> <optional post-processing files>
 ```
 which will run simcore in a container and generate any output files into a timestamped directory. The addition of parameter files are optional, but necessary for generating outputs. If parameter files require additional parameters, such as customized initalization routines, those must be included as well. You may also build the image locally by running
 ```

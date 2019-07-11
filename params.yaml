@@ -1,96 +1,42 @@
 seed: 23767273664791
 
-run_name: cilia_bundle
+run_name: filament_test
 n_dim: 3
-n_periodic: 0
+n_periodic: 3
 delta: 0.0001
-n_steps: 10000000
-n_steps_target: 100000
+n_steps: 100000
+n_steps_target: 10000
 boundary: 0
 n_update_cells: 50
-cell_length: 10
-movie_flag: 0
+cell_length: 5
 
 graph_flag: 1
 n_graph: 1000
 graph_background: 0
-print_complete: 0
+movie_flag: 0
 
-system_radius: 35
+system_radius: 50
 potential: soft
 soft_potential_mag: 300
-soft_potential_mag_target: -1
-like_like_interactions: 1
 stoch_flag: 1
 f_cutoff: 10000
 n_thermo: 100
 thermo_flag: 1
-local_order_analysis: 0
-local_order_bin_width: 0.5
-local_order_width: 40
-local_order_average: 1
-interaction_flag: 1
-overlap_analysis: 0
-density_analysis: 0
-density_com_only: 0
-density_bin_width: 0.1
-in_out_flag: 0
-
-crosslink:
-  concentration: 0.03
-  diameter: 0.5
-  draw_type: bw
-  color: 1.55
-  walker: 1
-  step_direction: -1
-  diffusion_flag: 1
-  velocity: 50
-  rest_length: 1
-  r_capture: 2
-  k_spring: 20
-  k_on: 40
-  k_on_sd: 40
-  k_off: 1
-  f_spring_max: 300
-  force_dep_vel_flag: 1
-  f_stall: 500
-  tether_draw_type: bw
-  tether_color: 3.14
-  tether_diameter: 0.25
-  end_pausing: 0
-  polar_affinity: -1
-  force_dep_factor: 0.1
-  spec_flag: 1
-  checkpoint_flag: 1
-  n_spec: 100
-  n_checkpoint: 100
+interaction_flag: 0
 
 filament:
-  #num: 100
-  num: 6
+  num: 20
   packing_fraction: -1
-  overlap: 0
   insertion_type: random
-  #insertion_type: custom
-  #insert_file: params/cilia_bundle.yaml
   diameter: 1
-  length: 10
-  perlen_ratio: 300
-  perlen_ratio_target: -1
-  dynamic_instability_flag: 0
-  cilia_trap_flag: 1
-  optical_trap_flag: 1
-  optical_trap_spring: 10000
-  optical_trap_fixed: 1
-  #intrinsic_curvature: .0628
-  n_bonds: 3
+  length: 20
+  perlen_ratio: 5
+  n_bonds: 10
   driving_factor: 0
   n_spec: 100
   n_checkpoint: 100
   spec_flag: 1
   checkpoint_flag: 1
-  flagella_flag: 0
-  flagella_freq: 0.1
-  flagella_period: 2
-  flagella_amplitude: 3
+  theta_analysis: 1
+  lp_analysis: 1
 
