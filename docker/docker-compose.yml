@@ -1,0 +1,30 @@
+version: '3'
+services:
+
+  notebook-server:
+    build:
+      context: .
+      args:
+        - GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
+    ports:
+       - "127.0.0.1::8888"
+    volumes:
+       - ../:/mnt
+    entrypoint: bash -c "cd /mnt && jupyter notebook --NotebookApp.token='' --ip=0.0.0.0 --allow-root && /bin/bash" 
+    stdin_open: true
+    tty: true
+    env_file:
+      - ../.env 
+
+  bash-executer:
+    build:
+      context: .
+      args:
+        - GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
+    volumes:
+       - ../:/mnt
+    entrypoint: "/bin/bash" 
+    stdin_open: true
+    tty: true
+    env_file:
+      - ../.env 
