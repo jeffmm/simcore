@@ -1,0 +1,6 @@
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+find_package(yaml-cpp REQUIRED)
+include_directories(${YAML_CPP_INCLUDE_DIR})
+add_executable(configure_simcore.exe simcore_config.cpp)
+target_link_libraries(configure_simcore.exe ${YAML_CPP_LIBRARIES})

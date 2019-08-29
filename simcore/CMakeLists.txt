@@ -1,0 +1,2 @@
+add_subdirectory(configurator)
+add_subdirectory(simulation)

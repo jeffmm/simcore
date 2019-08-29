@@ -55,7 +55,7 @@ if (TESTS)
   add_subdirectory("tests")
 else()
   #add_subdirectory("extern")
-  add_subdirectory("src")
+  add_subdirectory("simcore")
 endif(TESTS)
 
 # Build the documentation

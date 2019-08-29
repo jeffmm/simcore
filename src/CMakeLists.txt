@@ -1,2 +1,0 @@
-add_subdirectory(simcore_config)
-add_subdirectory(simcore)
