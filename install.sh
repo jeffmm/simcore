@@ -23,7 +23,7 @@ do_test_build() {
   make -j8
   make test
   cd tests
-  ./test_simcore
+  ./test_simcore.exe
 }
 
 do_debug_build() {
@@ -64,7 +64,7 @@ do_usage() {
   echo "arg must be one of:"
   echo "  clean   - remove temporary installation files"
   echo "  build   - build simcore without graphics"
-  echo "  gbuild   - build simcore with graphics"
+  echo "  gbuild  - build simcore with graphics"
   echo "  debug   - build simcore in debug mode without graphics"
   echo "  gdebug  - build simcore in debug mode with graphics"
   echo "  test    - build simcore and run unit tests"

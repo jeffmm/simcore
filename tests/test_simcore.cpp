@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
+#include <simcore.hpp>
 
-#include "../src/simcore/simulation_manager.h"
 class Tester {
   public:
     static bool TestMngrInit(SimulationManager & mngr, run_options run_opts) {
@@ -38,7 +38,7 @@ class Tester {
 TEST_CASE("Simulation manager") {
   run_options run_opts;
   run_opts.param_file = "../../tests/test_params.yaml";
-  run_opts.default_param_file = "../../src/config_params.yaml";
+  run_opts.default_param_file = "../../config/default_config.yaml";
   SimulationManager mngr;
   Tester test;
   SECTION("Simulation manager initialization") {

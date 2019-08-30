@@ -6,38 +6,62 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
+int parse_error() {
+  fprintf(stderr, "You must provide a valid YAML file to the configurator!\n");
+  return 1;
+}
+
 class Configurator {
 private:
   YAML::Node node_;
   YAML::const_iterator subnode_;
 
-  std::string config_file_ = "config/default_config.yaml", pfile_, pname_,
-              pvalue_, ptype_, subname_, struct_name_, whitespace_;
+  std::string pfile_;
+  std::string pname_;
+  std::string pvalue_;
+  std::string ptype_;
+  std::string subname_;
+  std::string struct_name_;
+  std::string whitespace_;
   std::vector<std::string> pfiles_;
 
-  std::ofstream parse_params_, parameters_, sub_parameters_;
+  std::ofstream parse_params_;
+  std::ofstream parameters_;
+  std::ofstream default_config_;
 
   void WriteParameters();
   void WriteParam();
   void WriteParseParams();
   void WriteParseStructParams();
   void WriteParseSystemParams();
+  void WriteDefParam(std::string parent);
+  void WriteDefaultParams();
   void ParseParam(std::string iterator);
 
 public:
-  Configurator()
+  Configurator(std::string default_config_file)
       : parse_params_("simcore/simulation/parse_params.hpp",
                       std::ios_base::out),
-        parameters_("simcore/simulation/parameters.hpp", std::ios_base::out) {
-    node_ = YAML::LoadFile(config_file_);
+        parameters_("simcore/simulation/parameters.hpp", std::ios_base::out),
+        default_config_("simcore/simulation/default_params.hpp",
+                      std::ios_base::out) {
+    node_ = YAML::LoadFile(default_config_file);
   }
 
   void ConfigureSimcore();
 };
 
-int main() {
-  Configurator config;
-  config.ConfigureSimcore();
+int main(int argc, char *argv[]) {
+  if (argc == 1) {
+    return parse_error();
+  }
+  try {
+    Configurator config(argv[1]);
+    config.ConfigureSimcore();
+  } catch (std::exception &e) {
+    std::cerr << e.what() << std::endl;
+    return parse_error();
+  }
   return 0;
 }
 
@@ -49,7 +73,7 @@ void Configurator::ConfigureSimcore() {
 void Configurator::WriteParameters() {
   // Write header
   parameters_ << "#ifndef _SIMCORE_PARAMETERS_H_\n#define "
-                 "_SIMCORE_PARAMETERS_H_\n\n#include \"<string>\"\n\n"
+                 "_SIMCORE_PARAMETERS_H_\n\n#include <string>\n\n"
                  "class species_parameters;\n\n";
   // First parse sub parameters (species params, etc)
   std::vector<std::string> subparams;
@@ -73,9 +97,6 @@ void Configurator::WriteParameters() {
   }
   // Then parse remaining system parameters
   parameters_ << "class system_parameters {\n  public:\n";
-  // Write default param file parameter (same as config_file_)
-  parameters_ << "    std::string default_param_file"
-              << " = \"" << config_file_ << "\";\n";
   for (subnode_ = node_.begin(); subnode_ != node_.end(); ++subnode_)
     if (subnode_->second.IsSequence() && subnode_->second.size() == 2)
       WriteParam();
@@ -105,12 +126,47 @@ void Configurator::WriteParam() {
   }
 }
 
+void Configurator::WriteDefParam(std::string parent = "") {
+  if (parent.empty()) {
+    pname_ = subnode_->first.as<std::string>();
+    pvalue_ = subnode_->second[0].as<std::string>();
+    default_config_ << "  default_config[\"" << pname_ << "\"] = \"" << pvalue_ << "\";\n";
+  } else {
+    pname_ = subnode_->first.as<std::string>();
+    pvalue_ = subnode_->second[0].as<std::string>();
+    default_config_ << "  default_config[\"" << parent << "\"][\"" << pname_ << "\"] = \""
+                  << pvalue_ << "\"\n";
+  }
+}
+
+void Configurator::WriteDefaultParams() {
+  default_config_ << "  YAML::Node default_config;\n";
+  std::vector<std::string> subparams;
+  // First parse system subparameters
+  for (YAML::const_iterator it = node_.begin(); it != node_.end(); ++it) {
+    if (it->second.IsMap()) {
+      std::string parent = it->first.as<std::string>();
+      for (subnode_ = it->second.begin(); subnode_ != it->second.end();
+           ++subnode_) {
+        WriteDefParam(parent);
+      }
+    }
+  }
+  // Then parse remaining system parameters
+  for (subnode_ = node_.begin(); subnode_ != node_.end(); ++subnode_) {
+    if (subnode_->second.IsSequence() && subnode_->second.size() == 2) {
+      WriteDefParam("");
+    }
+  }
+  default_config_.close();
+}
+
 void Configurator::WriteParseParams() {
   // Write header
   parse_params_ << "#ifndef _SIMCORE_PARSE_PARAMS_H_\n#define "
                    "_SIMCORE_PARSE_PARAMS_H_\n\n#include <iostream>\n#include "
                    "<string>\n#include \"yaml-cpp/yaml.h\"\n#include "
-                   "\"parameters.h\"\n\nvoid parse_params(YAML::Node node, "
+                   "\"parameters.hpp\"\n\nvoid parse_params(YAML::Node node, "
                    "system_parameters *params) {\n\n  std::string param_name, "
                    "param_value, struct_name;\n  for (YAML::const_iterator "
                    "it=node.begin(); it!= node.end(); ++it) {\n    if "

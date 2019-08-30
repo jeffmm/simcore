@@ -1,7 +1,8 @@
 
 #include <stdlib.h>
 #include <iostream>
-#include "simulation_manager.hpp"
+//#include "simulation_manager.hpp"
+#include <simcore.hpp>
 
 /*************************
    ::SimCORE Main::
