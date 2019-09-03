@@ -1,99 +1,98 @@
 #!/bin/bash
 
 do_build() {
-  mkdir build
-  cd build
-  cmake ..
-  make -j8
-  cd ..
+    mkdir build
+    cd build || exit 1
+    cmake ..
+    make -j8
+    cd ..
 }
 
 do_graph_build() {
-  mkdir build
-  cd build
-  cmake -DGRAPH=1 ..
-  make -j8
-  cd ..
+    mkdir build
+    cd build || exit 1
+    cmake -DGRAPH=1 ..
+    make -j8
+    cd ..
 }
 
 do_test_build() {
-  mkdir build
-  cd build
-  cmake -DTESTS=1 ..
-  make -j8
-  make test
-  cd tests
-  ./test_simcore.exe
+    mkdir build
+    cd build || exit 1
+    cmake ..
+    make -j8
+    make test
+    cd ..
 }
 
 do_debug_build() {
-  mkdir build
-  cd build
-  cmake -DDEBUG=1 ..
-  make -j8
-  cd ..
+    mkdir build
+    cd build || exit 1
+    cmake -DDEBUG=1 ..
+    make -j8
+    cd ..
 }
 
 do_debug_graph_build() {
-  mkdir build
-  cd build
-  cmake -DDEBUG=1 -DGRAPH=1 ..
-  make -j8
-  cd ..
+    mkdir build
+    cd build || exit 1
+    cmake -DDEBUG=1 -DGRAPH=1 ..
+    make -j8
+    cd ..
 }
 
 do_docs_build() {
-  mkdir build
-  cd build
-  cmake ..
-  make docs
-  cd ..
+    mkdir build
+    cd build || exit 1
+    cmake ..
+    make docs
+    cd ..
 }
 
 do_clean() {
-  rm -rf build/CMake*
-  rm -rf build/Makefile
-  rm -rf build/cmake_install.cmake
-  rm -rf build/src
-  rm -rf build/Doxyfile
-  rm -rf build/tests
+    rm -rf build/CMake*
+    rm -rf build/Makefile
+    rm -rf build/cmake_install.cmake
+    rm -rf build/src
+    rm -rf build/Doxyfile
+    rm -rf build/tests
 }
 
 do_usage() {
-  echo "Usage: $0 [arg]"
-  echo "arg must be one of:"
-  echo "  clean   - remove temporary installation files"
-  echo "  build   - build simcore without graphics"
-  echo "  gbuild  - build simcore with graphics"
-  echo "  debug   - build simcore in debug mode without graphics"
-  echo "  gdebug  - build simcore in debug mode with graphics"
-  echo "  test    - build simcore and run unit tests"
-  echo "  docs    - build Doxygen documentation"
+    echo "Usage: $0 [arg]"
+    echo "arg must be one of:"
+    echo "  clean   - remove temporary installation files"
+    echo "  build   - build simcore without graphics"
+    echo "  gbuild  - build simcore with graphics"
+    echo "  debug   - build simcore in debug mode without graphics"
+    echo "  gdebug  - build simcore in debug mode with graphics"
+    echo "  test    - build simcore and run unit tests"
+    echo "  docs    - build Doxygen documentation"
 }
 
 case $1 in
-  clean)
+clean)
     do_clean
     ;;
-  build)
+build)
     do_build
     ;;
-  debug)
+debug)
     do_debug_build
     ;;
-  gbuild)
+gbuild)
     do_graph_build
     ;;
-  gdebug)
+gdebug)
     do_debug_graph_build
     ;;
-  test)
+test)
     do_test_build
     ;;
-  docs)
+docs)
     do_docs_build
     ;;
-  *)
+*)
     do_usage
     ;;
 esac

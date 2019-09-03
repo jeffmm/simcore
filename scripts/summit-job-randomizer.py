@@ -1,3 +1,7 @@
+"""Module writes num_cores summit batch files with approx num_jobs/num_cores jobs to run
+on each core. Assumes parameter files exist with format <run_name>_v<run_number>.yaml.
+"""
+
 import random
 import sys
 import numpy as np

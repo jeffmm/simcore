@@ -43,20 +43,15 @@ if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
-# Add executables
-
-# Reset build output directory to default
+# Add external libraries
 add_subdirectory("extern")
 
+# Compile simcore library
+add_subdirectory("simcore")
+
 # Configure unit tests
-if (TESTS)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-  enable_testing()
-  add_subdirectory("tests")
-else()
-  #add_subdirectory("extern")
-  add_subdirectory("simcore")
-endif(TESTS)
+enable_testing()
+add_subdirectory("tests")
 
 # Build the documentation
 # check if Doxygen is installed
