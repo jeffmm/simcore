@@ -6,11 +6,7 @@ services:
 
 before_script:
   - docker build -t jeffmm/simcore docker
-  - docker run --rm -it -v ${PWD}:/mnt jeffmm/simcore
 
 script:
-  - ./install.sh test
-
-after_script:
-  - exit
+  - docker run --rm -v ${PWD}:/mnt jeffmm/simcore bash -c "install.sh test"
 ...
