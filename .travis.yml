@@ -5,7 +5,7 @@ services:
 
 before_install:
 - docker build -t jeffmm/simcore docker
-- docker run --rm -v ${PWD}:/mnt jeffmm/simcore /bin/bash -c "install.sh test"
+- docker run --rm -v ${PWD}:/mnt jeffmm/simcore install.sh test
 
 script:
 - install.sh test
