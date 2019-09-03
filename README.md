@@ -2,6 +2,8 @@
 
 A modular, object-oriented program for coarse-grained physics simulations, using something I call **SIM**ple-**C**omposite **O**bject **RE**presentation.
 
+[![Build Status](https://travis-ci.com/jeffmm/simcore.svg?branch=master)](https://travis-ci.com/jeffmm/simcore)
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2571982.svg)](https://doi.org/10.5281/zenodo.2571982)
 
 ## About simcore
