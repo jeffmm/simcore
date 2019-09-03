@@ -8,5 +8,5 @@ before_script:
   - docker build -t jeffmm/simcore docker
 
 script:
-  - docker run --rm -v ${PWD}:/mnt jeffmm/simcore bash -c "install.sh test"
+  - docker run --rm -v ${PWD}:/mnt jeffmm/simcore bash -c "./install.sh test"
 ...
