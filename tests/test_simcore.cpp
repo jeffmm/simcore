@@ -57,8 +57,3 @@ TEST_CASE("Simulation") {
   }
 }
 
-TEST_CASE("CI Test") {
-  SECTION("A test guaranteed to fail") {
-    REQUIRE(1 == 2);
-  }
-}
