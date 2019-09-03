@@ -8,3 +8,5 @@ RUN apt-get install -qqy \
         libfftw3-dev \
         libboost-math1.67-dev &&\
     rm -rf ~/.cache
+
+ENTRYPOINT []
