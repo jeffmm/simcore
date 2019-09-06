@@ -9,4 +9,4 @@ RUN apt-get install -qqy \
         libboost-math1.67-dev &&\
     rm -rf ~/.cache
 
-ENTRYPOINT ["bash"]
+ENTRYPOINT []

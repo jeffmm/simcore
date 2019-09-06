@@ -15,9 +15,7 @@ ci_cpp() {
     cd build || exit 1
     cmake ..
     make -j8
-    make test
-    cd ..
+    make test && cd ..
 }
 
-ci_python
-ci_cpp
+ci_python && ci_cpp 

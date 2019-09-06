@@ -46,3 +46,4 @@ nohup.out
 build*
 201*
 !CMake*
+*__pycache__*
