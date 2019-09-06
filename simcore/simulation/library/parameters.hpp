@@ -206,7 +206,6 @@ class crosslink_parameters : public species_parameters {
 
 class system_parameters {
   public:
-    std::string default_param_file = "config/default_config.yaml";
     long seed = 7859459105545;
     int n_runs = 1;
     int n_random = 1;

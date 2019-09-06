@@ -38,7 +38,6 @@ class Tester {
 TEST_CASE("Simulation manager") {
   run_options run_opts;
   run_opts.param_file = "../../tests/test_params.yaml";
-  run_opts.default_param_file = "../../config/default_config.yaml";
   SimulationManager mngr;
   Tester test;
   SECTION("Simulation manager initialization") {

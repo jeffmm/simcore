@@ -40,10 +40,10 @@ private:
 
 public:
   Configurator(std::string default_config_file)
-      : parse_params_("simcore/simulation/parse_params.hpp",
+      : parse_params_("simcore/simulation/library/parse_params.hpp",
                       std::ios_base::out),
-        parameters_("simcore/simulation/parameters.hpp", std::ios_base::out),
-        default_config_("simcore/simulation/default_params.hpp",
+        parameters_("simcore/simulation/library/parameters.hpp", std::ios_base::out),
+        default_config_("simcore/simulation/library/default_params.hpp",
                       std::ios_base::out) {
     node_ = YAML::LoadFile(default_config_file);
   }
@@ -68,6 +68,7 @@ int main(int argc, char *argv[]) {
 void Configurator::ConfigureSimcore() {
   WriteParameters();
   WriteParseParams();
+  WriteDefaultParams();
 }
 
 void Configurator::WriteParameters() {
@@ -135,7 +136,7 @@ void Configurator::WriteDefParam(std::string parent = "") {
     pname_ = subnode_->first.as<std::string>();
     pvalue_ = subnode_->second[0].as<std::string>();
     default_config_ << "  default_config[\"" << parent << "\"][\"" << pname_ << "\"] = \""
-                  << pvalue_ << "\"\n";
+                  << pvalue_ << "\";\n";
   }
 }
 

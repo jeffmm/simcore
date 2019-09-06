@@ -10,7 +10,6 @@ bool early_exit;
 void SimulationManager::InitManager(run_options run_opts) {
   run_opts_ = run_opts;
   pnode_ = YAML::LoadFile(run_opts_.param_file);
-  params_.default_param_file = run_opts_.default_param_file;
 
   // Load parameter file specified run options and flags
   if (pnode_["n_runs"] && pnode_["n_runs"].size() == 0) {
@@ -143,8 +142,9 @@ void SimulationManager::AppendParams(YAML::Node app_node) {
    not already initialized a value.
    *************************************/
 void SimulationManager::LoadDefaultParams() {
-  YAML::Node defaults = YAML::LoadFile(params_.default_param_file);
-  for (YAML::const_iterator it = defaults.begin(); it != defaults.end(); ++it) {
+  //YAML::Node defaults = YAML::LoadFile(params_.default_param_file);
+#include "default_params.hpp"
+  for (YAML::const_iterator it = default_config.begin(); it != default_config.end(); ++it) {
     std::string param_name = it->first.as<std::string>();
     if (!pnode_[param_name] && it->second.IsSequence()) {
       pnode_[param_name] = it->second[0];
