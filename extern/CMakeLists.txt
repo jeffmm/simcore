@@ -1,1 +1,1 @@
-add_subdirectory(kmcx)
+add_subdirectory(KMC)

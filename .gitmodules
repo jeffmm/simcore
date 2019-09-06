@@ -1,0 +1,3 @@
+[submodule "extern/KMC"]
+	path = extern/KMC
+	url = git@github.com:lambsoa729/KMC.git

@@ -86,17 +86,18 @@ void Crosslink::SinglyKMC() {
   //}
   // printf("\n");
   // printf("%d\n", anchors_[0].GetBoundOID());
-  KMC<Object> kmc_bind(anchors_[0].pos, nlist_.size(), rcapture_, lut_, n_dim_,
-                       space_->n_periodic, space_->unit_cell);
+  KMC<Object> kmc_bind(anchors_[0].pos, nlist_.size(), rcapture_, delta_, lut_);
+  kmc_bind.SetPBCs(n_dim_, space_->n_periodic, space_->unit_cell);
   // KMC<Object> kmc_bind(anchors_[0].GetPosition(), nlist_.size(), rcapture_);
   double kmc_bind_prob = 0;
+  std::vector<double> kmc_bind_factor(n_neighbors, k_on_sd_);
   if (n_neighbors > 0) {
     kmc_bind.CalcTotProbsSD(&(nlist_[0]), kmc_filter_,
                             anchors_[0].GetBoundOID(), 0, k_spring_, 1.0,
-                            rest_length_, k_on_sd_ * delta_);
+                            rest_length_, kmc_bind_factor);
     kmc_bind_prob = kmc_bind.getTotProb();
   }
-  // Get total probability of changing protein statek
+  // Get total probability of changing protein state
 
   double totProb = kmc_bind_prob + unbind_prob;
   // printf("BindProb: %2.8f\n", kmc_bind_prob);

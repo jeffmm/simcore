@@ -2,7 +2,7 @@
 #define _SIMCORE_CROSSLINK_H_
 
 //#include "species.hpp"
-#include <kmcx.hpp>
+#include <kmc.hpp>
 #include "anchor.hpp"
 #include "minimum_distance.hpp"
 //#include <mutex>

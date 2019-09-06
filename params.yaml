@@ -4,20 +4,20 @@ run_name: filament_test
 n_dim: 3
 n_periodic: 3
 delta: 0.0001
-n_steps: 100000
-n_steps_target: 10000
+n_steps: 1000
+n_steps_target: 0
 boundary: 0
 n_update_cells: 50
 cell_length: 5
 
 graph_flag: 1
-n_graph: 1000
+n_graph: 10
 graph_background: 0
 movie_flag: 0
 
-system_radius: 50
+system_radius: 150
 potential: soft
-soft_potential_mag: 300
+soft_potential_mag: 10
 stoch_flag: 1
 f_cutoff: 10000
 n_thermo: 100
@@ -25,10 +25,11 @@ thermo_flag: 1
 interaction_flag: 0
 
 filament:
-  num: 20
+  num: 100
   packing_fraction: -1
   insertion_type: random
   diameter: 1
+  overlap: 1
   length: 20
   perlen_ratio: 5
   n_bonds: 10
