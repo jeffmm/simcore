@@ -142,18 +142,19 @@ void SimulationManager::AppendParams(YAML::Node app_node) {
    not already initialized a value.
    *************************************/
 void SimulationManager::LoadDefaultParams() {
-  //YAML::Node defaults = YAML::LoadFile(params_.default_param_file);
+  // YAML::Node defaults = YAML::LoadFile(params_.default_param_file);
 #include "default_params.hpp"
-  for (YAML::const_iterator it = default_config.begin(); it != default_config.end(); ++it) {
+  for (YAML::const_iterator it = default_config.begin();
+       it != default_config.end(); ++it) {
     std::string param_name = it->first.as<std::string>();
-    if (!pnode_[param_name] && it->second.IsSequence()) {
-      pnode_[param_name] = it->second[0];
+    if (!pnode_[param_name]) {
+      pnode_[param_name] = default_config[param_name];
     } else if (it->second.IsMap()) {
       for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
            ++jt) {
-        if (!pnode_[param_name][jt->first.as<std::string>()] &&
-            jt->second.IsSequence()) {
-          pnode_[param_name][jt->first.as<std::string>()] = jt->second[0];
+        std::string sub_param = jt->first.as<std::string>();
+        if (!pnode_[param_name][sub_param]) {
+          pnode_[param_name][sub_param] = default_config[param_name][sub_param];
         }
       }
     }

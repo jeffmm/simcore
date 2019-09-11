@@ -62,7 +62,7 @@ void Simulation::PrintComplete() {
   }
   if (params_.print_complete && it % steps == 0) {
     printf("    %d%% complete\n", it / steps);
-  } else if (!params_.print_complete && it % (steps / 10) == 0) {
+  } else if (!params_.print_complete && it % steps == 0) {
     printf("    %2.1f%% complete\r", (double)it / steps);
     fflush(stdout);
   }

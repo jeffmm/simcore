@@ -1,10 +1,10 @@
-seed: 23767273664791
+seed: 27343246018894
 
 run_name: filament_test
 n_dim: 3
 n_periodic: 3
 delta: 0.0001
-n_steps: 1000
+n_steps: 20000
 n_steps_target: 0
 boundary: 0
 n_update_cells: 50
@@ -30,8 +30,8 @@ filament:
   insertion_type: random
   diameter: 1
   overlap: 1
-  length: 20
-  perlen_ratio: 5
+  length: 50
+  perlen_ratio: 1000
   n_bonds: 10
   driving_factor: 0
   n_spec: 100
@@ -40,4 +40,6 @@ filament:
   checkpoint_flag: 1
   theta_analysis: 1
   lp_analysis: 1
+  posit_flag: 1
+  n_posit: 200
 

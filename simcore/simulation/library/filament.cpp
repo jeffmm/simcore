@@ -430,6 +430,7 @@ double const Filament::GetVolume() {
 }
 
 void Filament::UpdatePosition(bool midstep) {
+  //Report();
   midstep_ = midstep;
   if (!midstep_) {
     // CalculateBinding();
@@ -1431,6 +1432,17 @@ void Filament::WriteSpec(std::fstream &ospec) {
   return;
 }
 
+/* double diameter
+   double length
+   double persistence length
+   double friction_par
+   double friction_perp
+   double bond_length
+   double n_bonds
+   double[3] pos_tail
+   double[3] pos_head
+   double[n_bonds*3] bond_orientations
+*/
 void Filament::ReadSpec(std::fstream &ispec) {
   if (ispec.eof()) return;
   double r0[3], rf[3], u_bond[3];
@@ -1481,6 +1493,12 @@ void Filament::ReadSpec(std::fstream &ispec) {
   CalculateAngles();
 }
 
+/* double[3] avg_pos
+   double[3] avg_scaled_pos
+   double[3] avg_orientation
+   double diameter
+   double length
+*/
 void Filament::WritePosit(std::fstream &oposit) {
   double avg_pos[3], avg_u[3];
   GetAvgPosition(avg_pos);
@@ -1496,6 +1514,12 @@ void Filament::WritePosit(std::fstream &oposit) {
   oposit.write(reinterpret_cast<char *>(&length_), sizeof(length_));
 }
 
+/* double[3] avg_pos
+   double[3] avg_scaled_pos
+   double[3] avg_orientation
+   double diameter
+   double length
+*/
 void Filament::ReadPosit(std::fstream &iposit) {
   if (iposit.eof()) return;
   posits_only_ = true;

@@ -30,43 +30,38 @@ class Filament : public Mesh {
   int n_motors_bound_;
   int eq_steps_;
   int eq_steps_count_ = 0;
-  int min_length_;
-  int max_bond_length_;
-  int min_bond_length_;
-  int persistence_length_;
-  int persistence_length_target_;
-  int target_step_;
-  int friction_ratio_;  // friction_par/friction_perp
-  int friction_par_;
-  int friction_perp_;
-  int rand_sigma_par_;
-  int rand_sigma_perp_;
-  int flagella_freq_;
-  int flagella_period_;
-  int flagella_amplitude_;
-  int v_poly_;
-  int v_depoly_;
-  int p_s2g_;
-  int p_s2p_;
-  int p_p2s_;
-  int p_p2g_;
-  int p_g2s_;
-  int p_g2p_;
-  int driving_factor_;
-  int fic_factor_;
-  int curvature_ = 0;
-  // TEMPORARY FIXME
-  // int motor_velocity_,
-  // int k_on_,
-  // int k_off_,
-  // int motor_concentration_,
-  int shuffle_factor_;
-  int shuffle_frequency_;
-  int spiral_number_;
-  int tip_force_;
-  int optical_trap_spring_;
-  int optical_trap_pos_[3];
-  int optical_trap_pos2_[3];
+  double min_length_;
+  double max_bond_length_;
+  double min_bond_length_;
+  double persistence_length_;
+  double persistence_length_target_;
+  double target_step_;
+  double friction_ratio_;  // friction_par/friction_perp
+  double friction_par_;
+  double friction_perp_;
+  double rand_sigma_par_;
+  double rand_sigma_perp_;
+  double flagella_freq_;
+  double flagella_period_;
+  double flagella_amplitude_;
+  double v_poly_;
+  double v_depoly_;
+  double p_s2g_;
+  double p_s2p_;
+  double p_p2s_;
+  double p_p2g_;
+  double p_g2s_;
+  double p_g2p_;
+  double driving_factor_;
+  double fic_factor_;
+  double curvature_ = 0;
+  double shuffle_factor_;
+  double shuffle_frequency_;
+  double spiral_number_;
+  double tip_force_;
+  double optical_trap_spring_;
+  double optical_trap_pos_[3];
+  double optical_trap_pos2_[3];
   double max_length_;
   std::vector<double> gamma_inverse_;
   std::vector<double> tensions_;       // n_sites-1

@@ -43,6 +43,7 @@ nohup.out
 *.flock
 *.in_out
 *.mov
+*.hr
 build*
 201*
 !CMake*
