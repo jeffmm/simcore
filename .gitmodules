@@ -1,3 +1,3 @@
 [submodule "extern/KMC"]
 	path = extern/KMC
-	url = git@github.com:lamsoa729/KMC.git
+	url = https://github.com/lamsoa729/KMC.git
