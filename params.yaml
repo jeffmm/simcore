@@ -1,10 +1,10 @@
-seed: 27343246018894
+seed: 26304121762361
 
-run_name: filament_test
-n_dim: 3
-n_periodic: 3
-delta: 0.0001
-n_steps: 20000
+run_name: motor_test
+n_dim: 2
+n_periodic: 2
+delta: 0.0003
+n_steps: 2000000
 n_steps_target: 0
 boundary: 0
 n_update_cells: 50
@@ -15,25 +15,25 @@ n_graph: 10
 graph_background: 0
 movie_flag: 0
 
-system_radius: 150
+system_radius: 200
 potential: soft
-soft_potential_mag: 10
+soft_potential_mag: 300
 stoch_flag: 1
 f_cutoff: 10000
 n_thermo: 100
 thermo_flag: 1
-interaction_flag: 0
+interaction_flag: 1
 
 filament:
-  num: 100
-  packing_fraction: -1
+  num: 1
+  packing_fraction: 0.1
   insertion_type: random
   diameter: 1
-  overlap: 1
+  overlap: 0
   length: 50
-  perlen_ratio: 1000
+  perlen_ratio: 500
   n_bonds: 10
-  driving_factor: 0
+  driving_factor: 10
   n_spec: 100
   n_checkpoint: 100
   spec_flag: 1
@@ -42,4 +42,28 @@ filament:
   lp_analysis: 1
   posit_flag: 1
   n_posit: 200
+
+crosslink:
+  concentration: 0.3
+  diameter: 0.1
+  walker: 0
+  velocity: 1
+  diffusion_flag: 1
+  k_on: 20
+  k_off: 2
+  k_on_sd: 20
+  force_dep_factor: 0
+  polar_affinity: 0
+  k_spring: 100
+  f_spring_max: 100000
+  f_stall: 100000
+  force_dep_vel_flag: 1
+  k_align: 0
+  rest_length: 8
+  step_direction: 0
+  tether_draw_type: orientation
+  tether_diameter: 0.3
+  tether_color: 3.1416
+  end_pausing: 0
+  r_capture: 100
 
