@@ -25,11 +25,11 @@ void Filament::SetParameters() {
   min_length_ = params_->filament.min_length;
   max_bond_length_ = params_->filament.max_bond_length;
   min_bond_length_ = params_->filament.min_bond_length;
-  if (length_ > 0 && params_->filament.n_bonds > 0) {
+  dynamic_instability_flag_ = params_->filament.dynamic_instability_flag;
+  if (length_ > 0 && params_->filament.n_bonds > 0 && !dynamic_instability_flag_) {
     min_bond_length_ = length_ / params_->filament.n_bonds + 1e-6;
     max_bond_length_ = length_ / params_->filament.n_bonds - 1e-6;
   }
-  dynamic_instability_flag_ = params_->filament.dynamic_instability_flag;
   spiral_flag_ = params_->filament.spiral_flag;
   force_induced_catastrophe_flag_ =
       params_->filament.force_induced_catastrophe_flag;
@@ -1146,6 +1146,9 @@ void Filament::GrowFilament() {
   if (poly_ == +poly_state::grow) {
     delta_length = v_poly_ * delta_;
   } else if (poly_ == +poly_state::shrink) {
+    if (n_bonds_ == 2 && bond_length_ <= min_bond_length_) {
+      return;
+    }
     delta_length = -v_depoly_ * delta_;
   }
   length_ += delta_length;

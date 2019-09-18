@@ -1,7 +1,7 @@
 #ifndef _SIMCORE_MESH_H_
 #define _SIMCORE_MESH_H_
 
-#include "anchor.hpp"
+#include "bond.hpp"
 
 typedef std::vector<Bond>::iterator bond_iterator;
 typedef std::vector<Site>::iterator site_iterator;
@@ -15,7 +15,6 @@ class Mesh : public Object {
   int n_sites_, n_bonds_, n_bonds_max_;
   std::vector<Site> sites_;
   std::vector<Bond> bonds_;
-  std::vector<Anchor> anchors_;
   double bond_length_;
   Bond *GetRandomBond();
   void UpdateInteractors();
@@ -45,6 +44,8 @@ class Mesh : public Object {
   void Clear();
   void DoubleGranularityLinear();
   void HalfGranularityLinear();
+  int GetNBonds() {return n_bonds_;}
+  Bond *GetBondAtLambda(double lambda);
   Site *GetSite(int i);
   Bond *GetBond(int i);
   virtual void ZeroForce();

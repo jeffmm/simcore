@@ -3,8 +3,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 find_package(yaml-cpp REQUIRED)
 find_package(GSL REQUIRED)
 find_package(FFTW REQUIRED)
-set(INCLUDES ${GSL_INCLUDE_DIRS} ${FFTW_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIR})
+
 set(LIB ${YAML_CPP_LIBRARIES} ${GSL_LIBRARIES}  ${FFTW_LIBRARIES} KMC)
+
+# If we aren't compiling on local machines, use openmp
+if (NOT APPLE)
+    find_package(OpenMP REQUIRED)
+    set(LIB ${LIB} OpenMP::OpenMP_CXX)
+endif()
+
 if (GRAPH)
   find_package(glfw3 REQUIRED)
   find_package(glew REQUIRED)

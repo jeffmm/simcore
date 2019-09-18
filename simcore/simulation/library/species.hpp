@@ -44,8 +44,8 @@ class SpeciesBase {
   virtual void SetLastMemberPosition(double const *const pos) {}
   virtual void PopMember() {}
   virtual void PopAll() {}
-  virtual double GetSpecLength() {}
-  virtual double GetSpecDiameter() {}
+  virtual double GetSpecLength() {return 0;}
+  virtual double GetSpecDiameter() {return 0;}
   virtual void ArrangeMembers() {}
   virtual int CanOverlap() { return sparams_->overlap; }
   species_id const GetSID() { return sid_; }
@@ -88,8 +88,8 @@ class SpeciesBase {
   virtual void CloseFiles();
   virtual void CleanUp() {}
   virtual void Reserve() {}
-  virtual double const GetVolume() {}
-  virtual double const GetDrMax() {}
+  virtual double const GetVolume() {return 0;}
+  virtual double const GetDrMax() {return 0;}
   virtual void ZeroDrTot() {}
   virtual void CustomInsert() {}
 };

@@ -36,6 +36,16 @@ void Crosslink::UpdatePosition() {
   length_ = 0;
 }
 
+void Crosslink::GetAnchors(std::vector<Object *> *ixors) {
+  if (IsUnbound()) return;
+  std::vector<Object *> ix;
+  ix.push_back(&(anchors_[0]));
+  if (IsDoubly()) {
+    ix.push_back(&(anchors_[1]));
+  }
+  ixors->insert(ixors->end(), ix.begin(), ix.end());
+}
+
 void Crosslink::UnbindAnchor(bool second) {
   /* If singly bound, just clear both */
   if (IsSingly()) {
@@ -77,18 +87,8 @@ void Crosslink::SinglyKMC() {
   // Set up KMC objects and calculate probabilities
   double unbind_prob = k_off_ * delta_;
   int n_neighbors = nlist_.size();
-  // for (int i=0; i<n_dim_; ++i) {
-  // printf("%2.2f, ", anchors_[0].GetPosition()[i]);
-  //}
-  // printf("\n");
-  // for (int i=0; i<n_dim_; ++i) {
-  // printf("%2.2f, ", anchors_[0].pos[i]);
-  //}
-  // printf("\n");
-  // printf("%d\n", anchors_[0].GetBoundOID());
   KMC<Object> kmc_bind(anchors_[0].pos, nlist_.size(), rcapture_, delta_, lut_);
   kmc_bind.SetPBCs(n_dim_, space_->n_periodic, space_->unit_cell);
-  // KMC<Object> kmc_bind(anchors_[0].GetPosition(), nlist_.size(), rcapture_);
   double kmc_bind_prob = 0;
   std::vector<double> kmc_bind_factor(n_neighbors, k_on_sd_);
   if (n_neighbors > 0) {
@@ -107,10 +107,10 @@ void Crosslink::SinglyKMC() {
   if (totProb > 1.0) {
     // Probability of KMC is greater than one, normalize
     head_activate = (roll < (unbind_prob / totProb)) ? 0 : 1;
-    warning(
-        "Probability of head binding or unbinding in SinglyKMC()"
-        " is >1 (%2.2f). Change time step to prevent this!",
-        totProb);
+    //warning(
+        //"Probability of head binding or unbinding in SinglyKMC()"
+        //" is >1 (%2.2f). Change time step to prevent this!",
+        //totProb);
   } else if (roll < totProb) {
     // Choose which action to perform, bind or unbind
     head_activate = (roll < unbind_prob) ? 0 : 1;
@@ -198,11 +198,11 @@ void Crosslink::DoublyKMC() {
   int head_activate = -1;  // No head activated
   if (totProb > 1.0) {     // Probability of KMC is greater than one, normalize
     head_activate = (roll < 0.5) ? 0 : 1;
-    warning(
-        "Probability of head binding or unbinding in DoublyKMC()"
-        " is >1 (%2.2f). Change time step to prevent this!",
-        totProb);
-    printf("tether length: %2.2f\nfdep: %6.2f\n", length_, fdep);
+    //warning(
+        //"Probability of head binding or unbinding in DoublyKMC()"
+        //" is >1 (%2.2f). Change time step to prevent this!",
+        //totProb);
+    //printf("tether length: %2.2f\nfdep: %6.2f\n", length_, fdep);
   } else if (roll < totProb) {  // Choose which head to unbind
     head_activate = (roll < 0.5) ? 0 : 1;
   } else {  // No head unbinds

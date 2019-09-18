@@ -49,7 +49,8 @@ void InteractionEngine::Init(system_parameters *params,
 void InteractionEngine::Interact() {
   n_interactions_ = 0;
   // First check if we need to interact
-  if (no_interactions_ && space_->type == +boundary_type::none) return;
+  if (no_interactions_ && space_->type == +boundary_type::none)
+    return;
   // Check if we need to update cell list
   xlink_.UpdateCrosslinks();
   CheckUpdate();
@@ -96,8 +97,90 @@ void InteractionEngine::UpdateInteractors() {
   interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
 }
 
+/* Checks whether or not the given anchor is supposed to be attached to the
+   given bond by checking minimum distance between anchor and bond as well as
+   where the anchor's bond_lambda. Returns true if the pair was a match, false
+   otherwise. */
+#define SMALL_DISTANCE 1e-4
+bool InteractionEngine::CheckBondAnchorPair(Object *anchor, Object *bond) {
+  // Check that minimum distance between bond and anchor is small.
+  Interaction ix;
+  Anchor *a = dynamic_cast<Anchor *>(anchor);
+  if (a == nullptr) {
+    error_exit("Object pointer was unsuccessfully dynamically cast to an "
+               "Anchor pointer in CheckBondAnchorPair!");
+  }
+  if (bond->GetType() != +obj_type::bond) {
+    error_exit("CheckBondAnchorPair expected Bond object pointer, but object"
+               " pointer does not have bond obj_type!");
+  }
+  mindist_.ObjectObject(anchor, bond, &ix);
+  if (ix.dr_mag2 > SMALL_DISTANCE)
+    return false;
+  // Check that the point of minimum distance between the bond and anchor
+  // matches the anchor's bond_lambda
+  double contact_lambda = 0.0;
+  double const *const u_bond = bond->GetOrientation();
+  double const bond_length = bond->GetLength();
+  // Create vector from tail of bond to point of contact with bond and find
+  // magnitude, contact_lambda
+  for (int i = 0; i < n_dim_; ++i) {
+    double dlambda = ix.contact2[i] + 0.5 * bond_length * u_bond[i];
+    contact_lambda += SQR(dlambda);
+  }
+  contact_lambda = sqrt(contact_lambda);
+  double bond_lambda = a->GetBondLambda();
+  // Find the square distance between anchor's bond lambda and contact lambda
+  double sqr_lambda_diff = SQR(contact_lambda - bond_lambda);
+  // If this is also a very small value, then we have found the anchor's bond.
+  if (sqr_lambda_diff < SMALL_DISTANCE) {
+    a->AttachObjLambda(bond, bond_lambda);
+    return true;
+  }
+  return false;
+}
+
+void InteractionEngine::PairBondCrosslinks() {
+  ix_objects_.clear();
+  interactors_.clear();
+  std::vector<Object *> ixs;
+  for (auto spec_it = species_->begin(); spec_it != species_->end();
+       ++spec_it) {
+    (*spec_it)->GetInteractors(&ixs);
+    ix_objects_.insert(ix_objects_.end(), ixs.begin(), ixs.end());
+  }
+  interactors_.insert(interactors_.end(), ix_objects_.begin(),
+                      ix_objects_.end());
+  // Add crosslinks as interactors
+  std::vector<Object *> anchors;
+  xlink_.GetAnchorInteractors(&anchors);
+  interactors_.insert(interactors_.end(), anchors.begin(), anchors.end());
+
+  ptracker_.AssignCells();
+  ptracker_.CreatePairsCellList();
+  int n_anchors_attached = 0;
+  for (auto pair = nlist_.begin(); pair != nlist_.end(); ++pair) {
+    Object *obj1 = &*interactors_[pair->first];
+    Object *obj2 = &*interactors_[pair->second];
+    if (obj1->GetSID() == +species_id::crosslink &&
+        obj2->GetType() == +obj_type::bond) {
+      if (CheckBondAnchorPair(obj1, obj2)) n_anchors_attached++;
+    } else if (obj2->GetSID() == +species_id::crosslink &&
+               obj1->GetType() == +obj_type::bond) {
+      if (CheckBondAnchorPair(obj2, obj1)) n_anchors_attached++;
+    }
+  }
+  /* Check that all anchors found their bond attachments */
+  if (n_anchors_attached != anchors.size()) {
+    printf("n_anchors_attached: %d\nn_anchors: %d\n", n_anchors_attached,
+           anchors.size());
+    error_exit("Not all anchors have found their bond!\n");
+  }
+}
+
 void InteractionEngine::UpdateInteractions() {
-  if (no_interactions_) return;
+  if (no_interactions_)
+    return;
   ptracker_.AssignCells();
   ptracker_.CreatePairsCellList();
   pair_interactions_.clear();
@@ -126,7 +209,8 @@ int InteractionEngine::CountSpecies() {
 }
 
 bool InteractionEngine::CountAndUpdate() {
-  if (processing_) return false;
+  if (processing_)
+    return false;
   int obj_count = CountSpecies();
   if (obj_count != n_objs_) {
     // reset update count and update number of objects to track
@@ -144,7 +228,8 @@ void InteractionEngine::CheckUpdate() {
      If static_pnumber_ is flagged, we know that particle numbers
      never change, so we don't bother counting particles and move on */
   if (!static_pnumber_) {
-    if (CountAndUpdate()) return;
+    if (CountAndUpdate())
+      return;
   }
 
   /* If n_update_ <=0, we update nearest neighbors if any particle
@@ -272,7 +357,8 @@ void InteractionEngine::ProcessPairInteraction(
     overlap_ = true;
   }
   /* Check to see if particles are not close enough to interact */
-  if (ix->dr_mag2 > potentials_.GetRCut2()) return;
+  if (ix->dr_mag2 > potentials_.GetRCut2())
+    return;
   /* Calculates forces from the potential defined during initialization */
   potentials_.CalcPotential(ix);
 }
@@ -286,7 +372,8 @@ void InteractionEngine::ProcessBoundaryInteraction(
   if (ix->dr_mag2 < 0.25 * SQR(bix->first->GetDiameter())) {
     overlap_ = true;
   }
-  if (ix->dr_mag2 > potentials_.GetRCut2()) return;
+  if (ix->dr_mag2 > potentials_.GetRCut2())
+    return;
   potentials_.CalcPotential(ix);
 }
 
@@ -297,7 +384,7 @@ void InteractionEngine::CalculateBoundaryInteractions() {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
   std::vector<std::pair<std::vector<boundary_interaction>::iterator,
-                        std::vector<boundary_interaction>::iterator> >
+                        std::vector<boundary_interaction>::iterator>>
       chunks;
   chunks.reserve(max_threads);
   size_t chunk_size = boundary_interactions_.size() / max_threads;
@@ -335,7 +422,7 @@ void InteractionEngine::CalculatePairInteractions() {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
   std::vector<std::pair<std::vector<pair_interaction>::iterator,
-                        std::vector<pair_interaction>::iterator> >
+                        std::vector<pair_interaction>::iterator>>
       chunks;
   chunks.reserve(max_threads);
   size_t chunk_size = pair_interactions_.size() / max_threads;
@@ -499,7 +586,7 @@ void InteractionEngine::CalculateStructure() {
 #ifdef ENABLE_OPENMP
     int max_threads = omp_get_max_threads();
     std::vector<std::pair<std::vector<pair_interaction>::iterator,
-                          std::vector<pair_interaction>::iterator> >
+                          std::vector<pair_interaction>::iterator>>
         chunks;
     chunks.reserve(max_threads);
     size_t chunk_size = pair_interactions_.size() / max_threads;
@@ -558,7 +645,7 @@ void InteractionEngine::CalculateStructure() {
 #ifdef ENABLE_OPENMP
     int max_threads = omp_get_max_threads();
     std::vector<std::pair<std::vector<Object *>::iterator,
-                          std::vector<Object *>::iterator> >
+                          std::vector<Object *>::iterator>>
         chunks;
     chunks.reserve(max_threads);
     size_t chunk_size = ix_objects_.size() / max_threads;
@@ -587,7 +674,8 @@ void InteractionEngine::CalculateStructure() {
 }
 
 void InteractionEngine::Clear() {
-  if (no_init_) return;
+  if (no_init_)
+    return;
   ptracker_.Clear();
   bool local_order =
       (params_->local_order_analysis || params_->polar_order_analysis ||
@@ -618,21 +706,23 @@ void InteractionEngine::DrawInteractions(
 }
 
 void InteractionEngine::WriteOutputs() {
-  if (params_->crosslink.concentration < 1e-12) return;
+  if (params_->crosslink.concentration < 1e-12)
+    return;
   xlink_.WriteOutputs();
 }
 
 void InteractionEngine::InitOutputs(bool reading_inputs, bool reduce_flag,
                                     bool with_reloads) {
-  if (params_->crosslink.concentration < 1e-12) return;
+  if (params_->crosslink.concentration < 1e-12)
+    return;
   xlink_.InitOutputs(reading_inputs, reduce_flag, with_reloads);
   if (params_->load_checkpoint) {
-    /* TODO Run minimum distance to determine which anchor belongs to which bond
-     */
+    PairBondCrosslinks();
   }
 }
 
 void InteractionEngine::ReadInputs() {
-  if (params_->crosslink.concentration < 1e-12) return;
+  if (params_->crosslink.concentration < 1e-12)
+    return;
   xlink_.ReadInputs();
 }

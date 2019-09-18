@@ -53,6 +53,7 @@ class CrosslinkManager {
   void ReadInputs();
   void InitOutputs(bool reading_inputs = false, bool reduce_flag = false,
                    bool with_reloads = false);
+  void GetAnchorInteractors(std::vector<Object *> *ixors);
 };
 
 #endif

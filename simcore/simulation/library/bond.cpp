@@ -43,6 +43,10 @@ void Bond::ReInit() {
   UpdatePeriodic();
 }
 
+void Bond::SetMeshPtr(Object * obj_ptr) {
+  mesh_ptr_ = obj_ptr;
+}
+
 void Bond::SetBondNumber(int bnum) { bond_number_ = bnum; }
 
 int const Bond::GetBondNumber() { return bond_number_; }

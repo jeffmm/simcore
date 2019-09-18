@@ -18,7 +18,12 @@ void Simulation::Run(system_parameters params) {
 /* Continuously loop over object data structures, solving their equations of
  * motion using Runge-Kutta-like integration schemes for n_steps time steps. */
 void Simulation::RunSimulation() {
+#ifdef  ENABLE_OPENMP
+  std::cout << "  Running simulation on " << omp_get_max_threads() << " threads"
+    << std::endl;
+#else
   std::cout << "  Running simulation" << std::endl;
+#endif
   /* Solve equations of motion for all objects */
   for (i_step_ = 0; i_step_ < params_.n_steps; ++i_step_) {
     params_.i_step = i_step_;

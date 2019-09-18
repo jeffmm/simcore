@@ -20,8 +20,8 @@ void Mesh::Reserve(int n_bonds) {
   n_bonds_max_ = n_bonds;
 }
 
-Site* Mesh::GetSite(int i) { return &(sites_[i]); }
-Bond* Mesh::GetBond(int i) { return &(bonds_[i]); }
+Site *Mesh::GetSite(int i) { return &(sites_[i]); }
+Bond *Mesh::GetBond(int i) { return &(bonds_[i]); }
 void Mesh::AddSite(Site s) {
   if (n_sites_ == n_bonds_max_ + 1) {
     std::cerr << "ERROR! Attempting to add site beyond allocated maximum.\n";
@@ -43,6 +43,7 @@ void Mesh::AddBond(Bond b) {
   bonds_.back().SetColor(color_, draw_);
   bonds_.back().SetMeshID(GetMeshID());
   bonds_.back().SetSID(GetSID());
+  bonds_.back().SetMeshPtr(this);
   n_bonds_++;
 }
 
@@ -53,7 +54,8 @@ void Mesh::Clear() {
 }
 
 void Mesh::RemoveBondFromTip() {
-  if (n_bonds_ == 0) return;
+  if (n_bonds_ == 0)
+    return;
   sites_.pop_back();
   n_sites_--;
   sites_.back().RemoveBond(bonds_.back().GetOID());
@@ -118,19 +120,19 @@ void Mesh::UpdatePrevPositions() {
   }
 }
 
-void Mesh::InitSiteAt(double* pos, double d) {
+void Mesh::InitSiteAt(double *pos, double d) {
   Site s;
   s.SetPosition(pos);
   s.SetDiameter(d);
   AddSite(s);
 }
 
-void Mesh::SetPosition(double const* const pos) {
+void Mesh::SetPosition(double const *const pos) {
   std::fill(position_, position_ + 3, 0.0);
   std::fill(orientation_, orientation_ + 3, 0.0);
   for (auto site_it = sites_.begin(); site_it != sites_.end(); ++site_it) {
-    double const* const site_pos = site_it->GetPosition();
-    double const* const site_u = site_it->GetOrientation();
+    double const *const site_pos = site_it->GetPosition();
+    double const *const site_u = site_it->GetOrientation();
     for (int i = 0; i < n_dim_; ++i) {
       position_[i] += site_pos[i];
       orientation_[i] += site_u[i];
@@ -146,7 +148,7 @@ void Mesh::SetPosition(double const* const pos) {
   }
   for (auto site_it = sites_.begin(); site_it != sites_.end(); ++site_it) {
     double new_pos[3] = {0, 0, 0};
-    double const* const site_pos = site_it->GetPosition();
+    double const *const site_pos = site_it->GetPosition();
     for (int i = 0; i < n_dim_; ++i) {
       new_pos[i] = site_pos[i] + dr[i];
     }
@@ -155,7 +157,7 @@ void Mesh::SetPosition(double const* const pos) {
   UpdateBondPositions();
 }
 
-void Mesh::InitBondAt(double* pos, double* u, double l, double d) {
+void Mesh::InitBondAt(double *pos, double *u, double l, double d) {
   Site s1;
   Site s2;
   s1.SetDiameter(d);
@@ -194,7 +196,7 @@ void Mesh::AddRandomBondToSite(double l, int i_site) {
     exit(1);
   }
   double const d = sites_[i_site].GetDiameter();
-  double const* const pos0 = sites_[i_site].GetPosition();
+  double const *const pos0 = sites_[i_site].GetPosition();
   double pos[3] = {0, 0, 0};
   generate_random_unit_vector(n_dim_, pos, rng_.r);
   for (int i = 0; i < n_dim_; ++i) {
@@ -210,17 +212,17 @@ void Mesh::AddRandomBondToTip(double l) {
   AddRandomBondToSite(l, n_sites_ - 1);
 }
 
-void Mesh::AddBondToTip(double* u, double l) {
+void Mesh::AddBondToTip(double *u, double l) {
   AddBondToSite(u, l, n_sites_ - 1);
 }
 
-void Mesh::AddBondToSite(double* u, double l, int i_site) {
+void Mesh::AddBondToSite(double *u, double l, int i_site) {
   if (i_site > n_sites_ || i_site < 0) {
     std::cerr << "ERROR! Site index out of range in AddBondToSite!\n";
     exit(1);
   }
   double const d = sites_[i_site].GetDiameter();
-  double const* const pos0 = sites_[i_site].GetPosition();
+  double const *const pos0 = sites_[i_site].GetPosition();
   double pos[3];
   for (int i = 0; i < n_dim_; ++i) {
     pos[i] = pos0[i] + l * u[i];
@@ -267,7 +269,7 @@ void Mesh::SubReport() {
   }
 }
 void Mesh::SetBondLength(double l) { bond_length_ = l; }
-void Mesh::Draw(std::vector<graph_struct*>* graph_array) {
+void Mesh::Draw(std::vector<graph_struct *> *graph_array) {
   for (bond_iterator it = bonds_.begin(); it != bonds_.end(); ++it) {
     it->Draw(graph_array);
   }
@@ -303,7 +305,7 @@ void Mesh::UpdateInteractors() {
   }
 }
 
-void Mesh::GetInteractors(std::vector<Object*>* ix) {
+void Mesh::GetInteractors(std::vector<Object *> *ix) {
   ix->clear();
   UpdateInteractors();
   ix->insert(ix->end(), interactors_.begin(), interactors_.end());
@@ -314,57 +316,65 @@ int Mesh::GetCount() {
   return interactors_.size();
 }
 
-void Mesh::ReadPosit(std::fstream& ip) {
+void Mesh::ReadPosit(std::fstream &ip) {
   int size;
   Site s;
   Bond b;
-  ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+  ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   sites_.resize(size, s);
-  ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+  ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   bonds_.resize(size, b);
-  for (auto& s : sites_) s.ReadPosit(ip);
-  for (auto& b : bonds_) b.ReadPosit(ip);
+  for (auto &s : sites_)
+    s.ReadPosit(ip);
+  for (auto &b : bonds_)
+    b.ReadPosit(ip);
 }
 
-void Mesh::WritePosit(std::fstream& op) {
+void Mesh::WritePosit(std::fstream &op) {
   int size;
   size = sites_.size();
-  op.write(reinterpret_cast<char*>(&size), sizeof(size));
+  op.write(reinterpret_cast<char *>(&size), sizeof(size));
   size = bonds_.size();
-  op.write(reinterpret_cast<char*>(&size), sizeof(size));
-  for (auto& s : sites_) s.WritePosit(op);
-  for (auto& b : bonds_) b.WritePosit(op);
+  op.write(reinterpret_cast<char *>(&size), sizeof(size));
+  for (auto &s : sites_)
+    s.WritePosit(op);
+  for (auto &b : bonds_)
+    b.WritePosit(op);
 }
 
-void Mesh::ReadSpec(std::fstream& ip) {
+void Mesh::ReadSpec(std::fstream &ip) {
   int size;
   Site s;
   Bond b;
-  ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+  ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   sites_.resize(size, s);
-  ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+  ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   bonds_.resize(size, b);
-  for (auto& s : sites_) s.ReadSpec(ip);
-  for (auto& b : bonds_) b.ReadSpec(ip);
+  for (auto &s : sites_)
+    s.ReadSpec(ip);
+  for (auto &b : bonds_)
+    b.ReadSpec(ip);
 }
 
-void Mesh::WriteSpec(std::fstream& op) {
+void Mesh::WriteSpec(std::fstream &op) {
   int size;
   size = sites_.size();
-  op.write(reinterpret_cast<char*>(&size), sizeof(size));
+  op.write(reinterpret_cast<char *>(&size), sizeof(size));
   size = bonds_.size();
-  op.write(reinterpret_cast<char*>(&size), sizeof(size));
-  for (auto& s : sites_) s.WriteSpec(op);
-  for (auto& b : bonds_) b.WriteSpec(op);
+  op.write(reinterpret_cast<char *>(&size), sizeof(size));
+  for (auto &s : sites_)
+    s.WriteSpec(op);
+  for (auto &b : bonds_)
+    b.WriteSpec(op);
 }
 
-void Mesh::ReadCheckpoint(std::fstream& ip) {
+void Mesh::ReadCheckpoint(std::fstream &ip) {
   int size;
   Site s;
   Bond b;
-  ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+  ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   sites_.resize(size, s);
-  ip.read(reinterpret_cast<char*>(&size), sizeof(size));
+  ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   bonds_.resize(size, b);
   for (site_iterator site = sites_.begin(); site != sites_.end(); ++site) {
     site->ReadCheckpoint(ip);
@@ -374,12 +384,12 @@ void Mesh::ReadCheckpoint(std::fstream& ip) {
   }
 }
 
-void Mesh::WriteCheckpoint(std::fstream& op) {
+void Mesh::WriteCheckpoint(std::fstream &op) {
   int size;
   size = sites_.size();
-  op.write(reinterpret_cast<char*>(&size), sizeof(size));
+  op.write(reinterpret_cast<char *>(&size), sizeof(size));
   size = bonds_.size();
-  op.write(reinterpret_cast<char*>(&size), sizeof(size));
+  op.write(reinterpret_cast<char *>(&size), sizeof(size));
   for (site_iterator site = sites_.begin(); site != sites_.end(); ++site) {
     site->WriteCheckpoint(op);
   }
@@ -397,7 +407,7 @@ void Mesh::ScalePosition() {
   }
 }
 
-Bond* Mesh::GetRandomBond() {
+Bond *Mesh::GetRandomBond() {
   if (n_bonds_ == 0) {
     return nullptr;
   }
@@ -430,9 +440,9 @@ double const Mesh::GetDrTot() {
   return dr_tot_;
 }
 
-std::vector<Interaction*>* Mesh::GetInteractions() {
+std::vector<Interaction *> *Mesh::GetInteractions() {
   for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
-    std::vector<Interaction*>* bond_ixs = bond->GetInteractions();
+    std::vector<Interaction *> *bond_ixs = bond->GetInteractions();
     ixs_.insert(ixs_.end(), bond_ixs->begin(), bond_ixs->end());
   }
   return &ixs_;
@@ -444,25 +454,29 @@ void Mesh::ClearInteractions() {
   }
 }
 
-void Mesh::GetAvgPosition(double* ap) {
+void Mesh::GetAvgPosition(double *ap) {
   double avg_p[3] = {0.0, 0.0, 0.0};
   int size = 0;
   for (auto it = sites_.begin(); it != sites_.end(); ++it) {
-    double const* const p = it->GetPosition();
-    for (int i = 0; i < n_dim_; ++i) avg_p[i] += p[i];
+    double const *const p = it->GetPosition();
+    for (int i = 0; i < n_dim_; ++i)
+      avg_p[i] += p[i];
     size++;
   }
-  if (size == 0) error_exit("Something went wrong in GetAvgPosition!");
-  for (int i = 0; i < n_dim_; ++i) avg_p[i] /= size;
+  if (size == 0)
+    error_exit("Something went wrong in GetAvgPosition!");
+  for (int i = 0; i < n_dim_; ++i)
+    avg_p[i] /= size;
   std::copy(avg_p, avg_p + 3, ap);
 }
 
-void Mesh::GetAvgOrientation(double* au) {
+void Mesh::GetAvgOrientation(double *au) {
   double avg_u[3] = {0.0, 0.0, 0.0};
   int size = 0;
   for (auto it = sites_.begin(); it != sites_.end(); ++it) {
-    double const* const u = it->GetOrientation();
-    for (int i = 0; i < n_dim_; ++i) avg_u[i] += u[i];
+    double const *const u = it->GetOrientation();
+    for (int i = 0; i < n_dim_; ++i)
+      avg_u[i] += u[i];
   }
   normalize_vector(avg_u, n_dim_);
   std::copy(avg_u, avg_u + 3, au);
@@ -498,13 +512,13 @@ void Mesh::SetAvgPosition() {
   UpdatePeriodic();
 }
 
-void Mesh::GetContactNumbers(std::vector<double>* cn) {
+void Mesh::GetContactNumbers(std::vector<double> *cn) {
   for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
     cn->push_back(it->GetContactNumber());
   }
 }
 
-void Mesh::GetPolarOrders(std::vector<double>* po) {
+void Mesh::GetPolarOrders(std::vector<double> *po) {
   for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
     po->push_back(it->GetPolarOrder());
   }
@@ -523,6 +537,16 @@ std::pair<double, double> Mesh::GetAvgOrientationCorrelation() {
   corr_err.second /= n_bonds_;
   corr_err.second = corr_err.second - SQR(corr_err.first);
   return corr_err;
+}
+
+Bond * Mesh::GetBondAtLambda(double lambda) {
+  if (lambda < 0) {
+    return GetBond(0);
+  }
+  if (lambda >= n_bonds_ * bond_length_) {
+    return GetBond(n_bonds_-1);
+  }
+  return GetBond((int) floor(lambda / bond_length_));
 }
 
 void Mesh::ZeroOrientationCorrelations() {

@@ -2,22 +2,30 @@
 #define _SIMCORE_CROSSLINK_H_
 
 //#include "species.hpp"
-#include <kmc.hpp>
 #include "anchor.hpp"
 #include "minimum_distance.hpp"
+#include <kmc.hpp>
 //#include <mutex>
 
 enum xstate { unbound, singly, doubly };
 
 class Crosslink : public Object {
- private:
+private:
   Interaction ix;
   MinimumDistance *mindist_;
   draw_type draw_;
   bind_state state_;
   LookupTable *lut_;
-  double k_on_, k_on_sd_, k_off_, k_spring_, k_align_, f_spring_max_,
-      rest_length_, rcapture_, tether_force_, fdep_factor_, polar_affinity_;
+  double k_on_;
+  double k_on_sd_;
+  double k_off_;
+  double k_spring_;
+  double k_align_;
+  double f_spring_max_, rest_length_;
+  double rcapture_;
+  double tether_force_;
+  double fdep_factor_;
+  double polar_affinity_;
   std::vector<Anchor> anchors_;
   std::vector<Object *> nlist_;
   std::vector<int> kmc_filter_;
@@ -30,13 +38,14 @@ class Crosslink : public Object {
   /* TODO, get rid of racy neighborlist additions */
   // std::mutex xlink_mtx_;
 
- public:
+public:
   Crosslink();
   void Init(MinimumDistance *mindist, LookupTable *lut);
   void UnbindAnchor(bool second = false);
   void AttachObjRandom(Object *obj);
   void UpdateCrosslink();
   Anchor *GetBoundPtr();
+  void GetAnchors(std::vector<Object *> *ixors);
   void Draw(std::vector<graph_struct *> *graph_array);
   void SetDoubly();
   void SetSingly();

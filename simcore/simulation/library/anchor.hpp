@@ -1,20 +1,35 @@
 #ifndef _SIMCORE_ANCHOR_H_
 #define _SIMCORE_ANCHOR_H_
 
-#include "bond.hpp"
+#include "mesh.hpp"
 
 class Anchor : public Object {
- private:
-  bool bound_, walker_, diffuse_, active_, end_pausing_;
+private:
+  bool bound_;
+  bool walker_;
+  bool diffuse_;
+  bool active_;
+  bool end_pausing_;
 
   int step_direction_;
 
-  double bond_length_, bond_lambda_, mesh_lambda_, velocity_, max_velocity_,
-      diffusion_, f_spring_max_, k_off_, f_stall_, force_dep_vel_flag_;
+  double bond_length_;
+  double bond_lambda_;
+  double mesh_lambda_;
+  double velocity_;
+  double max_velocity_, diffusion_;
+  double f_spring_max_;
+  double k_off_;
+  double f_stall_;
+  double force_dep_vel_flag_;
 
-  Bond* bond_;
+  Bond *bond_;
+  Mesh *mesh_;
 
- public:
+  int bond_oid_;
+  int mesh_n_bonds_;
+
+public:
   Anchor();
   void Init();
   bool IsBound();
@@ -34,15 +49,15 @@ class Anchor : public Object {
   void SetDiffusion();
   void SetWalker(int dir, double walk_v);
   void Walk();
-  void AttachObjRandom(Object* o);
-  void AttachObjLambda(Object* o, double lambda);
+  void AttachObjRandom(Object *o);
+  void AttachObjLambda(Object *o, double lambda);
   double const GetMeshLambda();
   double const GetBondLambda();
   void SetBondLambda(double l);
   void SetBound();
   void Clear();
   int const GetBoundOID();
-  void Draw(std::vector<graph_struct*>* graph_array);
+  void Draw(std::vector<graph_struct *> *graph_array);
 };
 
 #endif

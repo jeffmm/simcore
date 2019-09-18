@@ -1,6 +1,6 @@
 #include "anchor.hpp"
 
-Anchor::Anchor() : Object() {}
+Anchor::Anchor() : Object() { SetSID(species_id::crosslink); }
 
 void Anchor::Init() {
   diameter_ = params_->crosslink.diameter;
@@ -15,6 +15,11 @@ void Anchor::Init() {
   max_velocity_ = velocity_;
   bond_lambda_ = 0;
   mesh_lambda_ = 0;
+  bond_length_ = 0;
+  bond_ = nullptr;
+  mesh_ = nullptr;
+  bond_oid_ = -1;
+  mesh_n_bonds_ = 0;
   active_ = false;
   // fdep_factor_ = params_->crosslink.force_dep_vel_factor;
   k_off_ = params_->crosslink.k_off;
@@ -53,13 +58,64 @@ void Anchor::UpdatePosition() {
     return;
   }
   // ZeroForce();
-  // Update orientation based on bond if bound
-  double const* const bond_orientation = bond_->GetOrientation();
-  std::copy(bond_orientation, bond_orientation + 3, orientation_);
+  // Check that the number of bonds has not changed
+  if (mesh_n_bonds_ != mesh_->GetNBonds()) {
+    // The number of bonds have changed, so we need to reattach to a valid bond
+    bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
+    mesh_n_bonds_ = mesh_->GetNBonds();
+  }
   // Check for dynamic instability FIXME
   bond_length_ = bond_->GetLength();
+  // Check if the anchor fell off the mesh due to dynamic instability
+  if (mesh_lambda_ < 0) {
+    if (end_pausing_) {
+      mesh_lambda_ = 0;
+    }
+    else {
+      bound_ = false;
+      return;
+    }
+  }
+  else if (mesh_lambda_ > bond_length_ * mesh_n_bonds_) {
+    if (end_pausing_) {
+      mesh_lambda_ = bond_length_ * mesh_n_bonds_;
+    }
+    else {
+      bound_ = false;
+      return;
+    }
+  }
   bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber() * bond_length_;
+  if (bond_lambda_ < 0) {
+    // Move to previous bond if it's there
+    if (!SwitchBonds(false, bond_length_ + bond_lambda_)) {
+      // No previous bond: move to tail of bond if end pausing
+      if (end_pausing_) {
+        mesh_lambda_ = 0.0;
+        bond_lambda_ = 0.0;
+      } else {
+        // Otherwise fall off the mesh
+        bound_ = false;
+        return;
+      }
+    }
+  } else if (bond_lambda_ > bond_length_) {
+    // Move to next bond if it's there
+    if (!SwitchBonds(true, bond_length_ - bond_lambda_)) {
+      // No next bond: move to head of bond if end pausing
+      if (end_pausing_) {
+        mesh_lambda_ = mesh_n_bonds_*bond_length_;
+        bond_lambda_ = bond_length_;
+      } else {
+        // Otherwise fall off the mesh
+        bound_ = false;
+        return;
+      }
+    }
+  }
   double const* const bond_position = bond_->GetPosition();
+  // Update orientation based on bond if bound
+  double const* const bond_orientation = bond_->GetOrientation();
   for (int i = 0; i < n_dim_; ++i) {
     orientation_[i] = bond_orientation[i];
     position_[i] = bond_position[i] -
@@ -286,6 +342,9 @@ void Anchor::Walk() {
 void Anchor::Clear() {
   bound_ = false;
   bond_ = nullptr;
+  mesh_ = nullptr;
+  mesh_n_bonds_ = -1;
+  bond_oid_ = -1;
   bond_length_ = -1;
   bond_lambda_ = -1;
   mesh_lambda_ = -1;
@@ -395,6 +454,16 @@ void Anchor::AttachObjRandom(Object* o) {
     error_exit("Crosslink binding to non-bond objects not yet implemented.");
   }
   bond_ = dynamic_cast<Bond*>(o);
+  if (bond_ == nullptr) {
+    error_exit("Object ptr passed to anchor was not referencing a bond!");
+  }
+  mesh_ = dynamic_cast<Mesh*>(bond_->GetMeshPtr());
+  if (mesh_ == nullptr) {
+    error_exit("Object ptr passed to anchor was not referencing a mesh!");
+  }
+  bond_oid_ = bond_->GetOID();
+  mesh_n_bonds_ = mesh_->GetNBonds();
+
   bond_length_ = bond_->GetLength();
   bond_lambda_ = bond_length_ * gsl_rng_uniform_pos(rng_.r);
   /* First bond has bond number of zero */
@@ -413,6 +482,16 @@ void Anchor::AttachObjLambda(Object* o, double lambda) {
     error_exit("Crosslink binding to non-bond objects not yet implemented.");
   }
   bond_ = dynamic_cast<Bond*>(o);
+  if (bond_ == nullptr) {
+    error_exit("Object ptr passed to anchor was not referencing a bond!");
+  }
+  mesh_ = dynamic_cast<Mesh*>(bond_->GetMeshPtr());
+  if (mesh_ == nullptr) {
+    error_exit("Object ptr passed to anchor was not referencing a mesh!");
+  }
+  bond_oid_ = bond_->GetOID();
+  mesh_n_bonds_ = mesh_->GetNBonds();
+
   bond_length_ = bond_->GetLength();
   bond_lambda_ = 0.5 * bond_length_ + lambda;
   /* First bond has bond number of zero */

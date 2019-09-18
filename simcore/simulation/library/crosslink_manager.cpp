@@ -141,6 +141,20 @@ void CrosslinkManager::GetInteractors(std::vector<Object *> *ixors) {
   ixors->insert(ixors->end(), ix.begin(), ix.end());
 }
 
+void CrosslinkManager::GetAnchorInteractors(std::vector<Object *> *ixors) {
+  ixors->clear();
+  std::vector<Object *> ix;
+  for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end();
+       ++xlink) {
+    xlink->GetAnchors(&ix);
+  }
+  for (auto xlink = xlinks_doubly_.begin(); xlink != xlinks_doubly_.end();
+       ++xlink) {
+    xlink->GetAnchors(&ix);
+  }
+  ixors->insert(ixors->end(), ix.begin(), ix.end());
+}
+
 void CrosslinkManager::UpdateCrosslinks() {
   /* First update bound crosslinks, then update binding */
   for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end();
@@ -272,6 +286,7 @@ void CrosslinkManager::ReadSpecs() {
   } else if (size_doubly != xlinks_doubly_.size()) {
     Crosslink xlink;
     xlink.Init(mindist_, &lut_);
+    xlink.SetDoubly();
     xlinks_doubly_.resize(size_doubly, xlink);
   }
   n_xlinks_ = 0;
@@ -427,11 +442,6 @@ void CrosslinkManager::LoadFromCheckpoints() {
 void CrosslinkManager::InitOutputs(bool reading_inputs, bool reduce_flag,
                                    bool with_reloads) {
   if (params_->load_checkpoint) {
-    /* Load Checkpoint not implemented yet for crosslinks */
-    error_exit(
-        "Checkpoint loading functionality not yet implemented for crosslinks.");
-    /* TODO Initialize anchors in crosslinks with their bond attachment using
-     * mindist */
     LoadFromCheckpoints();
   } else if (reading_inputs) {
     if (with_reloads) {

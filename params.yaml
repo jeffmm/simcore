@@ -1,10 +1,10 @@
-seed: 26304121762361
+seed: 768954916214
 
-run_name: motor_test
+run_name: anchor_ds
 n_dim: 2
 n_periodic: 2
 delta: 0.0003
-n_steps: 2000000
+n_steps: 5000
 n_steps_target: 0
 boundary: 0
 n_update_cells: 50
@@ -15,7 +15,7 @@ n_graph: 10
 graph_background: 0
 movie_flag: 0
 
-system_radius: 200
+system_radius: 50
 potential: soft
 soft_potential_mag: 300
 stoch_flag: 1
@@ -25,45 +25,61 @@ thermo_flag: 1
 interaction_flag: 1
 
 filament:
-  num: 1
-  packing_fraction: 0.1
+  num: 8
+  packing_fraction: 0.2
   insertion_type: random
+  #insert_file: anchor_ds_insert.yaml
   diameter: 1
-  overlap: 0
-  length: 50
-  perlen_ratio: 500
-  n_bonds: 10
-  driving_factor: 10
+  overlap: 1
+  length: 30
+  perlen_ratio: 100
+  n_bonds: 5
+  driving_factor: 0
   n_spec: 100
   n_checkpoint: 100
   spec_flag: 1
   checkpoint_flag: 1
   theta_analysis: 1
   lp_analysis: 1
-  posit_flag: 1
+  posit_flag: 0
   n_posit: 200
+  dynamic_instability_flag: 1
+  min_bond_length: 3
+  max_bond_length: 6
+  v_poly: 20
+  v_depoly: 20
+  f_grow_to_shrink: 10
+  f_grow_to_pause: 0
+  f_pause_to_shrink: 0
+  f_pause_to_grow: 0
+  f_shrink_to_pause: 0
+  f_shrink_to_grow: 20
 
 crosslink:
-  concentration: 0.3
+  concentration: 0.01
   diameter: 0.1
   walker: 0
   velocity: 1
-  diffusion_flag: 1
+  diffusion_flag: 0
   k_on: 20
   k_off: 2
   k_on_sd: 20
   force_dep_factor: 0
   polar_affinity: 0
-  k_spring: 100
+  k_spring: 20
   f_spring_max: 100000
   f_stall: 100000
   force_dep_vel_flag: 1
   k_align: 0
-  rest_length: 8
+  rest_length: 2
   step_direction: 0
   tether_draw_type: orientation
   tether_diameter: 0.3
   tether_color: 3.1416
-  end_pausing: 0
+  end_pausing: 1
   r_capture: 100
+  spec_flag: 1
+  n_spec: 100
+  checkpoint_flag: 1
+  n_checkpoint: 100
 
