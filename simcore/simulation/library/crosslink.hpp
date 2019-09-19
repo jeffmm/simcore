@@ -5,9 +5,37 @@
 #include "anchor.hpp"
 #include "minimum_distance.hpp"
 #include <kmc.hpp>
-//#include <mutex>
+#include <mutex>
 
 enum xstate { unbound, singly, doubly };
+
+class Neighbors {
+private:
+  std::mutex mtx_;
+  std::vector<Object *> nlist_;
+
+public:
+  Neighbors() {}
+  ~Neighbors() { Clear(); }
+  Neighbors(const Neighbors &that) { this->nlist_ = that.nlist_; }
+  Neighbors &operator=(Neighbors const &that) {
+    this->nlist_ = that.nlist_;
+    return *this;
+  }
+  void AddNeighbor(Object *obj) {
+    std::lock_guard<std::mutex> lk(mtx_);
+    nlist_.push_back(obj);
+  }
+  const Object *const *GetNeighborsMem() { return &nlist_[0]; }
+  void Clear() { nlist_.clear(); }
+  int NNeighbors() { return nlist_.size(); }
+  Object *GetNeighbor(int i_neighbor) {
+    if (i_neighbor >= nlist_.size()) {
+      error_exit("Invalid index received in class Neighbor");
+    }
+    return nlist_[i_neighbor];
+  }
+};
 
 class Crosslink : public Object {
 private:
@@ -27,7 +55,7 @@ private:
   double fdep_factor_;
   double polar_affinity_;
   std::vector<Anchor> anchors_;
-  std::vector<Object *> nlist_;
+  Neighbors neighbors_;
   std::vector<int> kmc_filter_;
   void CalculateTetherForces();
   void AttemptCrosslink();
@@ -35,8 +63,6 @@ private:
   void CalcBinding();
   void SinglyKMC();
   void DoublyKMC();
-  /* TODO, get rid of racy neighborlist additions */
-  // std::mutex xlink_mtx_;
 
 public:
   Crosslink();

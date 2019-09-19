@@ -10,7 +10,9 @@ class Object {
  private:
   int oid_;
   int mesh_id_;
-  static int next_oid_;
+  static int _next_oid_;
+  static std::mutex _obj_mtx_;
+  void InitOID();
 
  protected:
   static system_parameters *params_;
@@ -38,7 +40,6 @@ class Object {
 
  public:
   Object();
-
   // kmcx parameter
   int gid;
   double length, radius, pos[3], direction[3];

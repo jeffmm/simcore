@@ -7,7 +7,6 @@ void CrosslinkManager::Init(system_parameters *params, space_struct *space,
   space_ = space;
   mindist_ = mindist;
   objs_ = objs;
-  rng_.Init();
   k_on_ = params_->crosslink.k_on;
   k_off_ = params_->crosslink.k_off;
   xlink_concentration_ = params_->crosslink.concentration;

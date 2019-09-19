@@ -15,6 +15,7 @@ private:
 
   double bond_length_;
   double bond_lambda_;
+  double mesh_length_;
   double mesh_lambda_;
   double velocity_;
   double max_velocity_, diffusion_;
@@ -29,26 +30,21 @@ private:
   int bond_oid_;
   int mesh_n_bonds_;
 
+  void UpdateAnchorPositionToBond();
+  void Diffuse();
+  void Walk();
+  bool CheckMesh();
+
 public:
   Anchor();
   void Init();
   bool IsBound();
   void UpdatePosition();
-  void Diffuse();
-  // void DiffuseBound();
   void Activate();
   void Deactivate();
-  // void CheckNearBoundary();
-  // void CheckNearBuddingBoundary();
-  // void AnchorBoundary(double * anchor_point);
-  // void DetachBoundary();
   void ApplyAnchorForces();
-  void AttachToBond(directed_bond, double lambda, double mesh_lambda);
-  bool SwitchBonds(bool next_bond, double lambda);
-  void UpdateAnchorPosition() {}
   void SetDiffusion();
   void SetWalker(int dir, double walk_v);
-  void Walk();
   void AttachObjRandom(Object *o);
   void AttachObjLambda(Object *o, double lambda);
   double const GetMeshLambda();

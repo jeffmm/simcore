@@ -71,6 +71,7 @@ class Mesh : public Object {
   virtual void GetPolarOrders(std::vector<double> *po);
   std::pair<double, double> GetAvgOrientationCorrelation();
   virtual void ZeroOrientationCorrelations();
+  virtual double const GetBondLength();
 };
 
 #endif  // _SIMCORE_MESH_H_

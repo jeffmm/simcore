@@ -128,7 +128,6 @@ void Simulation::ScaleSpeciesPositions() {
 /* Initialize all the data structures in the simulation */
 void Simulation::InitSimulation() {
   std::cout << "  Initializing simulation" << std::endl;
-  rng_.Init();
   space_.Init(&params_);
   InitObjects();
   InitSpecies();
@@ -466,7 +465,6 @@ void Simulation::ProcessOutputs(system_parameters params,
 
 // Initialize data structures for post-processing
 void Simulation::InitProcessing(run_options run_opts) {
-  rng_.Init();
   space_.Init(&params_);
   InitObjects();
   InitSpecies();

@@ -172,7 +172,7 @@ void InteractionEngine::PairBondCrosslinks() {
   }
   /* Check that all anchors found their bond attachments */
   if (n_anchors_attached != anchors.size()) {
-    printf("n_anchors_attached: %d\nn_anchors: %d\n", n_anchors_attached,
+    printf("n_anchors_attached: %d\nn_anchors: %lu\n", n_anchors_attached,
            anchors.size());
     error_exit("Not all anchors have found their bond!\n");
   }

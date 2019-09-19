@@ -11,7 +11,7 @@ void Crosslink::Init(MinimumDistance *mindist, LookupTable *lut) {
   draw_ = draw_type::_from_string(params_->crosslink.tether_draw_type.c_str());
   rest_length_ = params_->crosslink.rest_length;
   k_on_ = params_->crosslink.k_on;
-  k_on_sd_ = params_->crosslink.k_on_sd;  // k_on for singly to doubly
+  k_on_sd_ = params_->crosslink.k_on_sd; // k_on for singly to doubly
   k_off_ = params_->crosslink.k_off;
   k_spring_ = params_->crosslink.k_spring;
   k_align_ = params_->crosslink.k_align;
@@ -20,7 +20,8 @@ void Crosslink::Init(MinimumDistance *mindist, LookupTable *lut) {
   fdep_factor_ = params_->crosslink.force_dep_factor;
   polar_affinity_ = params_->crosslink.polar_affinity;
   /* TODO generalize crosslinks to more than two anchors */
-  Anchor anchor1, anchor2;
+  Anchor anchor1;
+  Anchor anchor2;
   anchors_.push_back(anchor1);
   anchors_.push_back(anchor2);
   anchors_[0].Init();
@@ -37,7 +38,8 @@ void Crosslink::UpdatePosition() {
 }
 
 void Crosslink::GetAnchors(std::vector<Object *> *ixors) {
-  if (IsUnbound()) return;
+  if (IsUnbound())
+    return;
   std::vector<Object *> ix;
   ix.push_back(&(anchors_[0]));
   if (IsDoubly()) {
@@ -67,9 +69,8 @@ void Crosslink::UnbindAnchor(bool second) {
  * xlinks. */
 Anchor *Crosslink::GetBoundPtr() {
   if (IsDoubly()) {
-    warning(
-        "GetBoundPtr() called on doubly bound crosslink. This function"
-        "should only be called on crosslinks with a free anchor!");
+    warning("GetBoundPtr() called on doubly bound crosslink. This function"
+            "should only be called on crosslinks with a free anchor!");
   }
   /* Only first anchor should be bound in the case of singly bound */
   return &(anchors_[0]);
@@ -78,7 +79,6 @@ Anchor *Crosslink::GetBoundPtr() {
 /* Perform kinetic monte carlo step of protein with 1 head attached. */
 void Crosslink::SinglyKMC() {
   if (!anchors_[0].IsBound()) {
-    anchors_[0].Clear();
     SetUnbound();
     return;
   }
@@ -86,13 +86,14 @@ void Crosslink::SinglyKMC() {
   int head_bound = 0;
   // Set up KMC objects and calculate probabilities
   double unbind_prob = k_off_ * delta_;
-  int n_neighbors = nlist_.size();
-  KMC<Object> kmc_bind(anchors_[0].pos, nlist_.size(), rcapture_, delta_, lut_);
+  // int n_neighbors = nlist_.size();
+  int n_neighbors = neighbors_.NNeighbors();
+  KMC<Object> kmc_bind(anchors_[0].pos, n_neighbors, rcapture_, delta_, lut_);
   kmc_bind.SetPBCs(n_dim_, space_->n_periodic, space_->unit_cell);
   double kmc_bind_prob = 0;
   std::vector<double> kmc_bind_factor(n_neighbors, k_on_sd_);
   if (n_neighbors > 0) {
-    kmc_bind.CalcTotProbsSD(&(nlist_[0]), kmc_filter_,
+    kmc_bind.CalcTotProbsSD(neighbors_.GetNeighborsMem(), kmc_filter_,
                             anchors_[0].GetBoundOID(), 0, k_spring_, 1.0,
                             rest_length_, kmc_bind_factor);
     kmc_bind_prob = kmc_bind.getTotProb();
@@ -103,18 +104,18 @@ void Crosslink::SinglyKMC() {
   // printf("BindProb: %2.8f\n", kmc_bind_prob);
   // printf("BindProb: %2.2f", kmc_bind_prob;
 
-  int head_activate = -1;  // No head activated
+  int head_activate = -1; // No head activated
   if (totProb > 1.0) {
     // Probability of KMC is greater than one, normalize
     head_activate = (roll < (unbind_prob / totProb)) ? 0 : 1;
-    //warning(
-        //"Probability of head binding or unbinding in SinglyKMC()"
-        //" is >1 (%2.2f). Change time step to prevent this!",
-        //totProb);
+    // warning(
+    //"Probability of head binding or unbinding in SinglyKMC()"
+    //" is >1 (%2.2f). Change time step to prevent this!",
+    // totProb);
   } else if (roll < totProb) {
     // Choose which action to perform, bind or unbind
     head_activate = (roll < unbind_prob) ? 0 : 1;
-  } else {  // No head binds or unbinds
+  } else { // No head binds or unbinds
     return;
   }
   // Change status of activated head
@@ -125,19 +126,30 @@ void Crosslink::SinglyKMC() {
   } else if (head_activate == 1) {
     // Bind unbound head
     roll = roll - unbind_prob;
-    /* Position on rod where protein will bind, passed by reference */
+    /* Position on rod where protein will bind with respect to center of rod,
+     * passed by reference */
     double bind_lambda;
     /* Pick rod to bind to. Should not give -1 since roll is within the
      * total binding probability. If failure, make sure rolls are shifted
      * properly. */
     int i_bind = kmc_bind.whichRodBindSD(bind_lambda, roll);
-    if (i_bind < 0) {  // || bind_lambda < 0) {
+    if (i_bind < 0) { // || bind_lambda < 0) {
       printf("i_bind = %d\nbind_lambda = %2.2f\n", i_bind, bind_lambda);
-      error_exit(
-          "kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
-          " returned an invalid result!");
+      error_exit("kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
+                 " returned an invalid result!");
     }
-    anchors_[1].AttachObjLambda(nlist_[i_bind], bind_lambda);
+    /* KMC returns bind_lambda to be with respect to center of rod. We want it
+       to be specified from the tail of the rod to be consistent */
+    Object *obj = neighbors_.GetNeighbor(i_bind);
+    bind_lambda += 0.5 * obj->GetLength();
+    /* KMC can return values that deviate a very small amount from the true rod
+       length. Bind to ends if lambda < 0 or lambda > bond_length. */
+    if (bind_lambda > obj->GetLength()) {
+      bind_lambda = obj->GetLength();
+    } else if (bind_lambda < 0) {
+      bind_lambda = 0;
+    }
+    anchors_[1].AttachObjLambda(obj, bind_lambda);
     SetDoubly();
   }
 }
@@ -195,17 +207,17 @@ void Crosslink::DoublyKMC() {
     totProb = 2 * k_off_ * delta_ * exp(fdep) / (1 - affinity);
   }
   double roll = gsl_rng_uniform_pos(rng_.r);
-  int head_activate = -1;  // No head activated
-  if (totProb > 1.0) {     // Probability of KMC is greater than one, normalize
+  int head_activate = -1; // No head activated
+  if (totProb > 1.0) {    // Probability of KMC is greater than one, normalize
     head_activate = (roll < 0.5) ? 0 : 1;
-    //warning(
-        //"Probability of head binding or unbinding in DoublyKMC()"
-        //" is >1 (%2.2f). Change time step to prevent this!",
-        //totProb);
-    //printf("tether length: %2.2f\nfdep: %6.2f\n", length_, fdep);
-  } else if (roll < totProb) {  // Choose which head to unbind
+    // warning(
+    //"Probability of head binding or unbinding in DoublyKMC()"
+    //" is >1 (%2.2f). Change time step to prevent this!",
+    // totProb);
+    // printf("tether length: %2.2f\nfdep: %6.2f\n", length_, fdep);
+  } else if (roll < totProb) { // Choose which head to unbind
     head_activate = (roll < 0.5) ? 0 : 1;
-  } else {  // No head unbinds
+  } else { // No head unbinds
     return;
   }
   if (head_activate == 0) {
@@ -224,7 +236,7 @@ void Crosslink::CalculateBinding() {
   } else if (IsDoubly()) {
     DoublyKMC();
   }
-  nlist_.clear();
+  neighbors_.Clear();
   kmc_filter_.clear();
 }
 void Crosslink::CalcBinding() {
@@ -263,7 +275,7 @@ void Crosslink::CalcBinding() {
   } else if (IsSingly()) {
     AttemptCrosslink();
   }
-  nlist_.clear();
+  neighbors_.Clear();
   kmc_filter_.clear();
 }
 
@@ -275,7 +287,7 @@ void Crosslink::UpdateCrosslink() {
   anchors_[0].UpdatePosition();
   anchors_[1].UpdatePosition();
   /* Check if any of our doubly-bound anchors became unbound */
-  CalculateBinding();  // Using KMC
+  CalculateBinding(); // Using KMC
   // CalcBinding(); // Using naive binding rules
   /* If we are singly bound, update the position of the crosslinker
    * to reflect the singly-bound anchor position for interaction
@@ -286,7 +298,7 @@ void Crosslink::UpdateCrosslink() {
 }
 
 void Crosslink::AttemptCrosslink() {
-  int n_neighbors = nlist_.size();
+  int n_neighbors = neighbors_.NNeighbors();
   if (n_neighbors == 0) {
     return;
   }
@@ -295,7 +307,8 @@ void Crosslink::AttemptCrosslink() {
   double p_bind = k_on_ * delta_;
   if (gsl_rng_uniform_pos(rng_.r) < p_bind) {
     int i_bind = gsl_rng_uniform_int(rng_.r, n_neighbors);
-    Object *obj = nlist_[i_bind];
+    // Object *obj = nlist_[i_bind];
+    Object *obj = neighbors_.GetNeighbor(i_bind);
     mindist_->ObjectObject(&(anchors_[0]), obj, &ix);
     if (ix.dr_mag2 > SQR(rcapture_)) {
       return;
@@ -374,9 +387,7 @@ void Crosslink::Draw(std::vector<graph_struct *> *graph_array) {
 }
 
 void Crosslink::AddNeighbor(Object *neighbor) {
-  /* TODO Prevent racy conditions */
-  // std::lock_guard<std::mutex> lk(xlink_mtx_);
-  nlist_.push_back(neighbor);
+  neighbors_.AddNeighbor(neighbor);
   /* Must populate filter with 1 for every neighbor, since KMC
   expects a mask. We already guarantee uniqueness, so we won't overcount. */
   kmc_filter_.push_back(1);
@@ -448,7 +459,8 @@ void Crosslink::WriteSpec(std::fstream &ospec) {
 }
 
 void Crosslink::ReadSpec(std::fstream &ispec) {
-  if (ispec.eof()) return;
+  if (ispec.eof())
+    return;
   bool is_doubly;
   ispec.read(reinterpret_cast<char *>(&is_doubly), sizeof(bool));
   ispec.read(reinterpret_cast<char *>(&diameter_), sizeof(double));
@@ -504,7 +516,8 @@ void Crosslink::WriteCheckpoint(std::fstream &ocheck) {
 }
 
 void Crosslink::ReadCheckpoint(std::fstream &icheck) {
-  if (icheck.eof()) return;
+  if (icheck.eof())
+    return;
   void *rng_state = gsl_rng_state(rng_.r);
   size_t rng_size;
   icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));

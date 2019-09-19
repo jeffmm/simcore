@@ -543,7 +543,7 @@ Bond * Mesh::GetBondAtLambda(double lambda) {
   if (lambda < 0) {
     return GetBond(0);
   }
-  if (lambda >= n_bonds_ * bond_length_) {
+  if (lambda >= length_) {
     return GetBond(n_bonds_-1);
   }
   return GetBond((int) floor(lambda / bond_length_));
@@ -553,4 +553,8 @@ void Mesh::ZeroOrientationCorrelations() {
   for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
     it->ZeroOrientationCorrelation();
   }
+}
+
+double const Mesh::GetBondLength() {
+  return bond_length_;
 }

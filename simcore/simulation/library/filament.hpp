@@ -125,7 +125,6 @@ class Filament : public Mesh {
   double const GetLength() { return length_; }
   double const GetDriving() { return driving_factor_; }
   double const GetPersistenceLength() { return persistence_length_; }
-  double const GetBondLength() { return bond_length_; }
   void CheckFlocking();
   int const GetNBonds() { return n_bonds_; }
   std::vector<double> const *const GetThetas() { return &cos_thetas_; }

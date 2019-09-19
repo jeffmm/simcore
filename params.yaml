@@ -4,7 +4,7 @@ run_name: anchor_ds
 n_dim: 2
 n_periodic: 2
 delta: 0.0003
-n_steps: 5000
+n_steps: 50000
 n_steps_target: 0
 boundary: 0
 n_update_cells: 50
@@ -15,7 +15,7 @@ n_graph: 10
 graph_background: 0
 movie_flag: 0
 
-system_radius: 50
+system_radius: 100
 potential: soft
 soft_potential_mag: 300
 stoch_flag: 1
@@ -26,14 +26,14 @@ interaction_flag: 1
 
 filament:
   num: 8
-  packing_fraction: 0.2
+  packing_fraction: 0.1
   insertion_type: random
   #insert_file: anchor_ds_insert.yaml
   diameter: 1
   overlap: 1
   length: 30
   perlen_ratio: 100
-  n_bonds: 5
+  n_bonds: 6
   driving_factor: 0
   n_spec: 100
   n_checkpoint: 100
@@ -56,11 +56,13 @@ filament:
   f_shrink_to_grow: 20
 
 crosslink:
-  concentration: 0.01
+  concentration: 0.1
   diameter: 0.1
   walker: 0
   velocity: 1
-  diffusion_flag: 0
+  diffusion_flag: 1
+  draw_type: fixed
+  color: 0
   k_on: 20
   k_off: 2
   k_on_sd: 20

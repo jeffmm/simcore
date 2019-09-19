@@ -5,20 +5,20 @@
 #include "yaml-cpp/yaml.h"
 
 class SimulationManager {
- private:
+private:
   bool make_movie_ = false, run_analysis_ = false;
-  int n_runs_ = 1,               // Number of runs per parameters set
-      n_var_ = 1,                // Number of parameter variations
-      n_random_ = 1;             // Number of random params
-  std::string run_name_ = "sc";  // simulation batch name
+  int n_runs_ = 1,              // Number of runs per parameters set
+      n_var_ = 1,               // Number of parameter variations
+      n_random_ = 1;            // Number of random params
+  std::string run_name_ = "sc"; // simulation batch name
   std::vector<std::string> pfiles_;
   Simulation *sim_;  // New sim created and destroyed for every set of
                      // parameters
-  YAML::Node pnode_;  // Main node to initialize pvector
+  YAML::Node pnode_; // Main node to initialize pvector
   std::vector<YAML::Node> pvector_;
   system_parameters params_;
   run_options run_opts_;
-  RNG rng_;
+  RNG *rng_ = nullptr;
   void CheckAppendParams();
   void AppendParams(YAML::Node app_node);
   void LoadDefaultParams();
@@ -33,10 +33,15 @@ class SimulationManager {
   void ProcessOutputs();
   UNIT_TESTER;
 
- public:
+public:
   SimulationManager() {
     debug_trace = false;
     early_exit = false;
+  }
+  ~SimulationManager() {
+    if (rng_ != nullptr) {
+      delete rng_;
+    }
   }
   void InitManager(run_options run_opts);
   void RunManager();
@@ -44,4 +49,4 @@ class SimulationManager {
   // template <class T> friend struct access_by;
 };
 
-#endif  // _SIMCORE_SIMULATION_MANAGER_H_
+#endif // _SIMCORE_SIMULATION_MANAGER_H_

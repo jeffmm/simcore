@@ -1,10 +1,8 @@
 #include "object.hpp"
 
 Object::Object() {
-  // Initialize object ID
-  oid_ = ++next_oid_;
-  // Initialize RNG
-  rng_.Init();
+  // Initialize object ID, guaranteeing thread safety
+  InitOID();
   // Set some defaults
   std::fill(position_, position_ + 3, 0.0);
   std::fill(prev_position_, prev_position_ + 3, 0.0);
@@ -35,7 +33,14 @@ Object::Object() {
   gid = oid_;
 }
 
-int Object::next_oid_ = 0;
+// Set the object OID in a thread-safe way
+void Object::InitOID() {
+  std::lock_guard<std::mutex> lk(_obj_mtx_);
+  oid_ = ++_next_oid_;
+}
+
+int Object::_next_oid_ = 0;
+std::mutex Object::_obj_mtx_;
 system_parameters *Object::params_ = nullptr;
 space_struct *Object::space_ = nullptr;
 int Object::n_dim_ = 0;
@@ -65,28 +70,32 @@ void Object::SetPrevOrientation(double const *const pu) {
 void Object::SetDiameter(double new_diameter) { diameter_ = new_diameter; }
 void Object::SetLength(double new_length) { length_ = new_length; }
 void Object::AddForce(double const *const f) {
-  for (int i = 0; i < n_dim_; ++i) force_[i] += f[i];
+  for (int i = 0; i < n_dim_; ++i)
+    force_[i] += f[i];
 }
 void Object::SubForce(double const *const f) {
-  for (int i = 0; i < n_dim_; ++i) force_[i] -= f[i];
+  for (int i = 0; i < n_dim_; ++i)
+    force_[i] -= f[i];
 }
 void Object::SetForce(double const *const f) {
   std::copy(f, f + n_dim_, force_);
 }
 void Object::AddTorque(double const *const t) {
-  for (int i = 0; i < 3; ++i) torque_[i] += t[i];
+  for (int i = 0; i < 3; ++i)
+    torque_[i] += t[i];
 }
 void Object::SubTorque(double const *const t) {
-  for (int i = 0; i < 3; ++i) torque_[i] -= t[i];
+  for (int i = 0; i < 3; ++i)
+    torque_[i] -= t[i];
 }
 void Object::SetTorque(double const *const t) { std::copy(t, t + 3, torque_); }
 void Object::AddPotential(double const p) { p_energy_ += p; }
 void Object::AddPolarOrder(double const po) {
-  // std::lock_guard<std::mutex> lk(mtx_);
+  std::lock_guard<std::mutex> lk(_obj_mtx_);
   polar_order_ += po;
 }
 void Object::AddContactNumber(double const cn) {
-  // std::lock_guard<std::mutex> lk(mtx_);
+  std::lock_guard<std::mutex> lk(_obj_mtx_);
   contact_number_ += cn;
 }
 void Object::CalcPolarOrder() {
@@ -133,7 +142,8 @@ void Object::SetSID(species_id sid) { sid_ = sid; }
 // Virtual functions
 // Returns true if object is out of bounds
 bool Object::CheckBounds(double buffer) {
-  if (space_->type == +boundary_type::none) return false;
+  if (space_->type == +boundary_type::none)
+    return false;
   double const *const r = GetInteractorPosition();
   double const *const u = GetInteractorOrientation();
   double const l = GetInteractorLength();
@@ -147,10 +157,12 @@ bool Object::CheckBounds(double buffer) {
   }
   int sign = (l > 0 ? SIGNOF(dot_product(n_dim_, r, u)) : 0);
   if (space_->type == +boundary_type::box) {
-    if (space_->n_periodic == n_dim_) return false;
+    if (space_->n_periodic == n_dim_)
+      return false;
     for (int j = space_->n_periodic; j < n_dim_; ++j) {
       double r_far = r[j] + sign * 0.5 * l * u[j];
-      if (ABS(r_far) > (r_boundary - buffer)) return true;
+      if (ABS(r_far) > (r_boundary - buffer))
+        return true;
     }
     return false;
   }
@@ -210,66 +222,66 @@ bool Object::CheckBounds(double buffer) {
 void Object::InsertRandom() {
   double mag;
   double buffer = diameter_;
-  if (space_->n_periodic == n_dim_) buffer = 0;
+  if (space_->n_periodic == n_dim_)
+    buffer = 0;
   double R = space_->radius;
   // XXX Check to make sure object fits inside unit cell if non-periodic
   if (R - buffer < 0) {
-    error_exit(
-        "Object #%d is too large to place in system.\n system radius: "
-        "%2.2f, buffer: %2.2f",
-        GetOID(), R, buffer);
+    error_exit("Object #%d is too large to place in system.\n system radius: "
+               "%2.2f, buffer: %2.2f",
+               GetOID(), R, buffer);
   }
   switch (space_->type) {
-    // If no boundary, insert wherever
-    case +boundary_type::none:  // none
-      for (int i = 0; i < n_dim_; ++i) {
-        position_[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
-      }
-      break;
-    // box type boundary
-    case +boundary_type::box:  // box
-      for (int i = 0; i < n_dim_; ++i) {
-        position_[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
-      }
-      break;
-    // spherical boundary
-    case +boundary_type::sphere:  // sphere
-      generate_random_unit_vector(n_dim_, position_, rng_.r);
-      mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer);
+  // If no boundary, insert wherever
+  case +boundary_type::none: // none
+    for (int i = 0; i < n_dim_; ++i) {
+      position_[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
+    }
+    break;
+  // box type boundary
+  case +boundary_type::box: // box
+    for (int i = 0; i < n_dim_; ++i) {
+      position_[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
+    }
+    break;
+  // spherical boundary
+  case +boundary_type::sphere: // sphere
+    generate_random_unit_vector(n_dim_, position_, rng_.r);
+    mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer);
+    for (int i = 0; i < n_dim_; ++i) {
+      position_[i] *= mag;
+    }
+    break;
+  // budding yeast boundary type
+  case +boundary_type::budding: // budding
+  {
+    double r = space_->bud_radius;
+    double roll = gsl_rng_uniform_pos(rng_.r);
+    double v_ratio = 0;
+    if (n_dim_ == 2) {
+      v_ratio = SQR(r) / (SQR(r) + SQR(R));
+    } else {
+      v_ratio = CUBE(r) / (CUBE(r) + CUBE(R));
+    }
+    mag = gsl_rng_uniform_pos(rng_.r);
+    generate_random_unit_vector(n_dim_, position_, rng_.r);
+    if (roll < v_ratio) {
+      // Place coordinate in daughter cell
+      mag *= (r - buffer);
       for (int i = 0; i < n_dim_; ++i) {
         position_[i] *= mag;
       }
-      break;
-    // budding yeast boundary type
-    case +boundary_type::budding:  // budding
-    {
-      double r = space_->bud_radius;
-      double roll = gsl_rng_uniform_pos(rng_.r);
-      double v_ratio = 0;
-      if (n_dim_ == 2) {
-        v_ratio = SQR(r) / (SQR(r) + SQR(R));
-      } else {
-        v_ratio = CUBE(r) / (CUBE(r) + CUBE(R));
+      position_[n_dim_ - 1] += space_->bud_height;
+    } else {
+      mag *= (R - buffer);
+      for (int i = 0; i < n_dim_; ++i) {
+        position_[i] *= mag;
       }
-      mag = gsl_rng_uniform_pos(rng_.r);
-      generate_random_unit_vector(n_dim_, position_, rng_.r);
-      if (roll < v_ratio) {
-        // Place coordinate in daughter cell
-        mag *= (r - buffer);
-        for (int i = 0; i < n_dim_; ++i) {
-          position_[i] *= mag;
-        }
-        position_[n_dim_ - 1] += space_->bud_height;
-      } else {
-        mag *= (R - buffer);
-        for (int i = 0; i < n_dim_; ++i) {
-          position_[i] *= mag;
-        }
-      }
-      break;
     }
-    default:
-      error_exit("ERROR: Boundary type unrecognized!\n");
+    break;
+  }
+  default:
+    error_exit("ERROR: Boundary type unrecognized!\n");
   }
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   UpdatePeriodic();
@@ -286,40 +298,39 @@ void Object::InsertAt(double *pos, double *u) {
   double R = space_->radius;
   bool out_of_bounds = false;
   switch (space_->type._to_integral()) {
-    case 0:  // none
-      break;
-    case 2:  // sphere
-    {
-      double rsq = 0;
-      for (int i = 0; i < n_dim_; ++i) {
-        rsq += pos[i] * pos[i];
-      }
-      // Check that r^2 <= R^2
-      if (rsq > R * R) {
+  case 0: // none
+    break;
+  case 2: // sphere
+  {
+    double rsq = 0;
+    for (int i = 0; i < n_dim_; ++i) {
+      rsq += pos[i] * pos[i];
+    }
+    // Check that r^2 <= R^2
+    if (rsq > R * R) {
+      out_of_bounds = true;
+    }
+    break;
+  }
+  case 1: // box
+    // Make sure each dimension of position, x, y etc is within the box radius
+    for (int i = 0; i < n_dim_; ++i) {
+      if (ABS(pos[i]) > R) {
         out_of_bounds = true;
       }
-      break;
     }
-    case 1:  // box
-      // Make sure each dimension of position, x, y etc is within the box radius
-      for (int i = 0; i < n_dim_; ++i) {
-        if (ABS(pos[i]) > R) {
-          out_of_bounds = true;
-        }
-      }
-      break;
-    case 3:  // budding
-      // FIXME Add checks to make sure object is placed within budding
-      // boundary... right now, just trust user knows what they are doing.
-      break;
-    default:
-      error_exit("ERROR: Boundary type not recognized.\n");
+    break;
+  case 3: // budding
+    // FIXME Add checks to make sure object is placed within budding
+    // boundary... right now, just trust user knows what they are doing.
+    break;
+  default:
+    error_exit("ERROR: Boundary type not recognized.\n");
   }
   if (out_of_bounds) {
-    error_exit(
-        "Object %d placed outside of system unit cell! System radius: "
-        "%2.2f, pos: {%2.2f %2.2f %2.2f}\n",
-        GetOID(), R, pos[0], pos[1], pos[2]);
+    error_exit("Object %d placed outside of system unit cell! System radius: "
+               "%2.2f, pos: {%2.2f %2.2f %2.2f}\n",
+               GetOID(), R, pos[0], pos[1], pos[2]);
   }
   SetPosition(pos);
   normalize_vector(u, n_dim_);
@@ -451,7 +462,8 @@ void Object::WriteCheckpoint(std::fstream &ocheck) {
   WriteSpec(ocheck);
 }
 void Object::ReadCheckpoint(std::fstream &icheck) {
-  if (icheck.eof()) return;
+  if (icheck.eof())
+    return;
   void *rng_state = gsl_rng_state(rng_.r);
   size_t rng_size;
   icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
@@ -469,7 +481,8 @@ void Object::WritePosit(std::fstream &oposit) {
   oposit.write(reinterpret_cast<char *>(&length_), sizeof(length_));
 }
 void Object::ReadPosit(std::fstream &iposit) {
-  if (iposit.eof()) return;
+  if (iposit.eof())
+    return;
   for (auto &pos : position_)
     iposit.read(reinterpret_cast<char *>(&pos), sizeof(pos));
   for (auto &spos : scaled_position_)
