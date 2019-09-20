@@ -251,7 +251,7 @@ void InteractionEngine::CheckUpdateObjects() {
     n_objs_ = obj_count;
     ForceUpdate();
     xlink_.UpdateObjsVolume();
-    printf("Forcing interactor update, i_step: %d\n", params_->i_step);
+    //printf("Forcing interactor update, i_step: %d\n", params_->i_step);
   }
 }
 

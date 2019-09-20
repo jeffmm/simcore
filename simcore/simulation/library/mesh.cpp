@@ -82,8 +82,8 @@ void Mesh::DoubleGranularityLinear() {
   }
   // Then update bond positions
   UpdateBondPositions();
-  printf("Doubling mesh granularity of mesh_id: %d, i_step: %d\n", GetMeshID(),
-      params_->i_step);
+  //printf("Doubling mesh granularity of mesh_id: %d, i_step: %d\n", GetMeshID(),
+      //params_->i_step);
 }
 
 // Halves number of bonds in graph while attempting to keep same shape,
@@ -113,10 +113,10 @@ void Mesh::HalfGranularityLinear() {
   }
   // Then update bond positions
   UpdateBondPositions();
-  printf("Halving mesh granularity of mesh_id: %d, i_step: %d\n", GetMeshID(),
-      params_->i_step);
+  //printf("Halving mesh granularity of mesh_id: %d, i_step: %d\n", GetMeshID(),
+      //params_->i_step);
 
-  printf("n_bonds: %d, n_interactors: %d\n", n_bonds_, GetCount());
+  //printf("n_bonds: %d, n_interactors: %d\n", n_bonds_, GetCount());
 }
 
 void Mesh::UpdatePrevPositions() {

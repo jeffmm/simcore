@@ -65,35 +65,23 @@ void Crosslink::UnbindAnchor(bool second) {
   }
 }
 
-/* Get pointer to anchor that is bound. Should only be used for singly bound
- * xlinks. */
-Anchor *Crosslink::GetBoundPtr() {
-  if (IsDoubly()) {
-    warning("GetBoundPtr() called on doubly bound crosslink. This function"
-            "should only be called on crosslinks with a free anchor!");
-  }
-  /* Only first anchor should be bound in the case of singly bound */
-  return &(anchors_[0]);
-}
-
 /* Perform kinetic monte carlo step of protein with 1 head attached. */
 void Crosslink::SinglyKMC() {
-  if (!anchors_[0].IsBound()) {
-    SetUnbound();
-    return;
-  }
-  /* Must populate filter with 1 for every neighbor, since KMC
-  expects a mask. We already guarantee uniqueness, so we won't overcount. */
-
   double roll = gsl_rng_uniform_pos(rng_.r);
   int head_bound = 0;
   // Set up KMC objects and calculate probabilities
   double unbind_prob = k_off_ * delta_;
-  // int n_neighbors = nlist_.size();
+  /* Must populate filter with 1 for every neighbor, since KMC
+  expects a mask. We already guarantee uniqueness, so we won't overcount. */
   int n_neighbors = neighbors_.NNeighbors();
   std::vector<int> kmc_filter(n_neighbors, 1);
+  /* Initialize KMC calculation */
   KMC<Object> kmc_bind(anchors_[0].pos, n_neighbors, rcapture_, delta_, lut_);
+
+  /* Initialize periodic boundary conditions */
   kmc_bind.SetPBCs(n_dim_, space_->n_periodic, space_->unit_cell);
+
+  /* Calculate probability to bind */
   double kmc_bind_prob = 0;
   std::vector<double> kmc_bind_factor(n_neighbors, k_on_sd_);
   if (n_neighbors > 0) {
@@ -102,26 +90,24 @@ void Crosslink::SinglyKMC() {
                             rest_length_, kmc_bind_factor);
     kmc_bind_prob = kmc_bind.getTotProb();
   }
-  // Get total probability of changing protein state
+  // Find out whether we bind, unbind, or neither.
+  int head_activate = choose_kmc_double(unbind_prob, kmc_bind_prob, roll);
+  //double totProb = kmc_bind_prob + unbind_prob;
 
-  double totProb = kmc_bind_prob + unbind_prob;
-  // printf("BindProb: %2.8f\n", kmc_bind_prob);
-  // printf("BindProb: %2.2f", kmc_bind_prob;
-
-  int head_activate = -1; // No head activated
-  if (totProb > 1.0) {
+  //int head_activate = -1; // No head activated
+  //if (totProb > 1.0) {
     // Probability of KMC is greater than one, normalize
-    head_activate = (roll < (unbind_prob / totProb)) ? 0 : 1;
+    //head_activate = (roll < (unbind_prob / totProb)) ? 0 : 1;
     // warning(
     //"Probability of head binding or unbinding in SinglyKMC()"
     //" is >1 (%2.2f). Change time step to prevent this!",
     // totProb);
-  } else if (roll < totProb) {
+  //} else if (roll < totProb) {
     // Choose which action to perform, bind or unbind
-    head_activate = (roll < unbind_prob) ? 0 : 1;
-  } else { // No head binds or unbinds
-    return;
-  }
+    //head_activate = (roll < unbind_prob) ? 0 : 1;
+  //} else { // No head binds or unbinds
+    //return;
+  //}
   // Change status of activated head
   if (head_activate == 0) {
     // Unbind bound head
@@ -129,31 +115,29 @@ void Crosslink::SinglyKMC() {
     SetUnbound();
   } else if (head_activate == 1) {
     // Bind unbound head
-    roll = roll - unbind_prob;
     /* Position on rod where protein will bind with respect to center of rod,
      * passed by reference */
     double bind_lambda;
-    /* Pick rod to bind to. Should not give -1 since roll is within the
-     * total binding probability. If failure, make sure rolls are shifted
-     * properly. */
+    /* Find out which rod we are binding to */
     int i_bind = kmc_bind.whichRodBindSD(bind_lambda, roll);
     if (i_bind < 0) { // || bind_lambda < 0) {
       printf("i_bind = %d\nbind_lambda = %2.2f\n", i_bind, bind_lambda);
       error_exit("kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
                  " returned an invalid result!");
     }
+    Object *bind_obj = neighbors_.GetNeighbor(i_bind);
+    double obj_length = bind_obj->GetLength();
     /* KMC returns bind_lambda to be with respect to center of rod. We want it
        to be specified from the tail of the rod to be consistent */
-    Object *obj = neighbors_.GetNeighbor(i_bind);
-    bind_lambda += 0.5 * obj->GetLength();
+    bind_lambda += 0.5 * obj_length;
     /* KMC can return values that deviate a very small amount from the true rod
        length. Bind to ends if lambda < 0 or lambda > bond_length. */
-    if (bind_lambda > obj->GetLength()) {
-      bind_lambda = obj->GetLength();
+    if (bind_lambda > obj_length) {
+      bind_lambda = obj_length;
     } else if (bind_lambda < 0) {
       bind_lambda = 0;
     }
-    anchors_[1].AttachObjLambda(obj, bind_lambda);
+    anchors_[1].AttachObjLambda(bind_obj, bind_lambda);
     SetDoubly();
   }
   kmc_filter.clear();
@@ -264,7 +248,7 @@ void Crosslink::ApplyTetherForcesToMesh() {
 void Crosslink::UpdateCrosslink() {
   /* Update anchor positions in space to calculate tether forces */
   UpdateAnchorsToMesh();
-  /* Check if an anchor became unbound */
+  /* Check if an anchor became unbound due to diffusion, etc */
   UpdateXlinkState();
   /* If we are doubly-bound, calculate tether forces */
   CalculateTetherForces();
@@ -272,6 +256,7 @@ void Crosslink::UpdateCrosslink() {
   ApplyTetherForcesToMesh();
   /* Have anchors diffuse/walk along mesh */
   UpdateAnchorPositions();
+  /* Check if an anchor became unbound do to diffusion, etc */
   UpdateXlinkState();
   /* Check for binding/unbinding events using KMC */
   CalculateBinding();
@@ -308,6 +293,7 @@ void Crosslink::CalculateTetherForces() {
   ZeroForce();
   if (!IsDoubly())
     return;
+  Interaction ix;
   mindist_->ObjectObject(&(anchors_[0]), &(anchors_[1]), &ix);
   /* Check stretch of tether. No penalty for having a stretch < rest_length. ie
    * the spring does not resist compression. */

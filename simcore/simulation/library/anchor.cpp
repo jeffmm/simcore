@@ -96,13 +96,13 @@ void Anchor::UpdatePosition() {
   }
   if (walker_) {
     Walk();
-    if (!CheckMesh())
-      return;
+    CheckMesh();
   }
+  // This occurs in UpdateAnchorPositionToMesh now
   // Now figure out which bond we are on in the mesh according to mesh_lambda
-  bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
+  //bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
   // Figure out how far we are from the bond tail: bond_lambda
-  bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber() * bond_length_;
+  //bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber() * bond_length_;
 
   // assert(bond_lambda_ >= 0 && bond_lambda_ <= bond_length_);
   //if (bond_lambda_ < 0 || bond_lambda_ > bond_length_ + 1e-4) {
@@ -115,7 +115,7 @@ void Anchor::UpdatePosition() {
   //}
 
   // Update anchor position based on current bond attachment
-  UpdateAnchorPositionToBond();
+  //UpdateAnchorPositionToBond();
 }
 
 void Anchor::ApplyAnchorForces() {

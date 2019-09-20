@@ -5,6 +5,7 @@
 #include "anchor.hpp"
 #include "minimum_distance.hpp"
 #include <kmc.hpp>
+#include <kmc_choose.hpp>
 #include <mutex>
 
 enum xstate { unbound, singly, doubly };
@@ -39,11 +40,11 @@ public:
 
 class Crosslink : public Object {
 private:
-  Interaction ix;
   MinimumDistance *mindist_;
   draw_type draw_;
   bind_state state_;
   LookupTable *lut_;
+  std::vector<int> kmc_filter_;
   double k_on_;
   double k_on_sd_;
   double k_off_;
@@ -71,7 +72,6 @@ public:
   void UnbindAnchor(bool second = false);
   void AttachObjRandom(Object *obj);
   void UpdateCrosslink();
-  Anchor *GetBoundPtr();
   void GetAnchors(std::vector<Object *> *ixors);
   void Draw(std::vector<graph_struct *> *graph_array);
   void SetDoubly();
