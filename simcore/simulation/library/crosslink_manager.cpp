@@ -131,10 +131,12 @@ void CrosslinkManager::DoublyToSingly(int i_doubly) {
 }
 
 void CrosslinkManager::GetInteractors(std::vector<Object *> *ixors) {
-  ixors->clear();
   std::vector<Object *> ix;
+  /* Clear the crosslink neighbors as we go, since we need to repopulate the
+     neighbor lists if we are repopulating the interactor vector */
   for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end();
        ++xlink) {
+    xlink->ClearNeighbors();
     ix.push_back(&(*xlink));
   }
   ixors->insert(ixors->end(), ix.begin(), ix.end());

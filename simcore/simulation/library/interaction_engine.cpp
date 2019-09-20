@@ -51,9 +51,14 @@ void InteractionEngine::Interact() {
   // First check if we need to interact
   if (no_interactions_ && space_->type == +boundary_type::none)
     return;
-  // Check if we need to update cell list
+  // Check if we need to update objects in cell list
+  CheckUpdateObjects();
+  // Update crosslinks
   xlink_.UpdateCrosslinks();
-  CheckUpdate();
+  // Check if we need to update crosslink interactors
+  CheckUpdateXlinks();
+  CheckUpdateInteractions();
+
   /* Update anchors and crosslinks */
   // Loop through and calculate interactions
   if (!no_interactions_) {
@@ -75,6 +80,29 @@ void InteractionEngine::Interact() {
   }
 }
 
+void InteractionEngine::CheckUpdateXlinks() {
+  /* If we need to update crosslinks */
+  if (xlink_.CheckUpdate()) {
+    /*TODO This might be too frequent: can I do this better?*/
+    // ForceUpdate();
+    // i_update_ = 0;
+    // return;
+    /*TODO Figure out why the below code leads to memory leaks */
+    interactors_.clear();
+    interactors_.insert(interactors_.end(), ix_objects_.begin(),
+                        ix_objects_.end());
+    // Add crosslinks as interactors
+    std::vector<Object *> xlinks;
+    xlink_.GetInteractors(&xlinks);
+    interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
+    UpdateInteractions();
+    i_update_ = 0;
+    if (n_update_ <= 0) {
+      ZeroDrTot();
+    }
+    return;
+  }
+}
 void InteractionEngine::ForceUpdate() {
   UpdateInteractors();
   UpdateInteractions();
@@ -83,15 +111,13 @@ void InteractionEngine::ForceUpdate() {
 void InteractionEngine::UpdateInteractors() {
   ix_objects_.clear();
   interactors_.clear();
-  std::vector<Object *> ixs;
   for (auto spec_it = species_->begin(); spec_it != species_->end();
        ++spec_it) {
-    (*spec_it)->GetInteractors(&ixs);
-    ix_objects_.insert(ix_objects_.end(), ixs.begin(), ixs.end());
+    (*spec_it)->GetInteractors(&ix_objects_);
   }
+  // Add crosslinks as interactors
   interactors_.insert(interactors_.end(), ix_objects_.begin(),
                       ix_objects_.end());
-  // Add crosslinks as interactors
   std::vector<Object *> xlinks;
   xlink_.GetInteractors(&xlinks);
   interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
@@ -143,15 +169,15 @@ bool InteractionEngine::CheckBondAnchorPair(Object *anchor, Object *bond) {
 void InteractionEngine::PairBondCrosslinks() {
   ix_objects_.clear();
   interactors_.clear();
-  std::vector<Object *> ixs;
+  // First get object interactors (non-crosslinks)
   for (auto spec_it = species_->begin(); spec_it != species_->end();
        ++spec_it) {
-    (*spec_it)->GetInteractors(&ixs);
-    ix_objects_.insert(ix_objects_.end(), ixs.begin(), ixs.end());
+    (*spec_it)->GetInteractors(&ix_objects_);
   }
   interactors_.insert(interactors_.end(), ix_objects_.begin(),
                       ix_objects_.end());
-  // Add crosslinks as interactors
+
+  // Add anchors as interactors
   std::vector<Object *> anchors;
   xlink_.GetAnchorInteractors(&anchors);
   interactors_.insert(interactors_.end(), anchors.begin(), anchors.end());
@@ -164,10 +190,12 @@ void InteractionEngine::PairBondCrosslinks() {
     Object *obj2 = &*interactors_[pair->second];
     if (obj1->GetSID() == +species_id::crosslink &&
         obj2->GetType() == +obj_type::bond) {
-      if (CheckBondAnchorPair(obj1, obj2)) n_anchors_attached++;
+      if (CheckBondAnchorPair(obj1, obj2))
+        n_anchors_attached++;
     } else if (obj2->GetSID() == +species_id::crosslink &&
                obj1->GetType() == +obj_type::bond) {
-      if (CheckBondAnchorPair(obj2, obj1)) n_anchors_attached++;
+      if (CheckBondAnchorPair(obj2, obj1))
+        n_anchors_attached++;
     }
   }
   /* Check that all anchors found their bond attachments */
@@ -208,9 +236,14 @@ int InteractionEngine::CountSpecies() {
   return obj_count;
 }
 
-bool InteractionEngine::CountAndUpdate() {
+void InteractionEngine::CheckUpdateObjects() {
+  /* First check to see if any objects were added to the system;
+     If static_pnumber_ is flagged, we know that particle numbers
+     never change, so we don't bother counting particles and move on */
   if (processing_)
-    return false;
+    return;
+  if (static_pnumber_)
+    return;
   int obj_count = CountSpecies();
   if (obj_count != n_objs_) {
     // reset update count and update number of objects to track
@@ -218,20 +251,11 @@ bool InteractionEngine::CountAndUpdate() {
     n_objs_ = obj_count;
     ForceUpdate();
     xlink_.UpdateObjsVolume();
-    return true;
+    printf("Forcing interactor update, i_step: %d\n", params_->i_step);
   }
-  return false;
 }
 
-void InteractionEngine::CheckUpdate() {
-  /* First check to see if any objects were added to the system;
-     If static_pnumber_ is flagged, we know that particle numbers
-     never change, so we don't bother counting particles and move on */
-  if (!static_pnumber_) {
-    if (CountAndUpdate())
-      return;
-  }
-
+void InteractionEngine::CheckUpdateInteractions() {
   /* If n_update_ <=0, we update nearest neighbors if any particle
      has moved a distance further than dr_update_ */
   if (n_update_ <= 0 && GetDrMax() > dr_update_) {
@@ -239,25 +263,10 @@ void InteractionEngine::CheckUpdate() {
     UpdateInteractions();
     ZeroDrTot();
   }
-
   /* If n_update_ > 0, we use that number as an update frequency,
      and update nearest neighbors every n_update_ steps */
   else if (n_update_ > 0 && (++i_update_) % n_update_ == 0) {
     UpdateInteractions();
-  }
-
-  /* If we need to update crosslinks */
-  if (xlink_.CheckUpdate()) {
-    /*TODO This might be too frequent: can I do this better?*/
-    ForceUpdate();
-    /*TODO Figure out why the below code leads to memory leaks */
-    // interactors_.clear();
-    // interactors_.insert(interactors_.end(), ix_objects_.begin(),
-    // ix_objects_.end());
-    /* Add crosslinks as interactors */
-    // std::vector<Object*> xlinks;
-    // xlink_.GetInteractors(&xlinks);
-    // interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
   }
 }
 
@@ -285,8 +294,8 @@ void InteractionEngine::ZeroDrTot() {
 void InteractionEngine::ProcessPairInteraction(
     std::vector<pair_interaction>::iterator pix) {
   // Avoid certain types of interactions
-  auto obj1 = pix->first.first;
-  auto obj2 = pix->first.second;
+  Object *obj1 = pix->first.first;
+  Object *obj2 = pix->first.second;
   Interaction *ix = &(pix->second);
   // Rigid objects don't self interact
   // if (obj1->GetRID() == obj2->GetRID())  return;

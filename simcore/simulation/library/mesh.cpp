@@ -82,6 +82,8 @@ void Mesh::DoubleGranularityLinear() {
   }
   // Then update bond positions
   UpdateBondPositions();
+  printf("Doubling mesh granularity of mesh_id: %d, i_step: %d\n", GetMeshID(),
+      params_->i_step);
 }
 
 // Halves number of bonds in graph while attempting to keep same shape,
@@ -97,6 +99,8 @@ void Mesh::HalfGranularityLinear() {
   int n_bonds_new = n_bonds_ / 2;
   bond_length_ *= 2;
   // First record positions of currently existing graph
+  // Note: this is fine, since UpdatePrevPositions is just going to be called
+  // again by the filament's Integrate step before prev positions are used
   UpdatePrevPositions();
   // Update first half of current site positions based on old graph positions
   for (int i_bond_new = 0; i_bond_new < n_bonds_new; ++i_bond_new) {
@@ -109,6 +113,10 @@ void Mesh::HalfGranularityLinear() {
   }
   // Then update bond positions
   UpdateBondPositions();
+  printf("Halving mesh granularity of mesh_id: %d, i_step: %d\n", GetMeshID(),
+      params_->i_step);
+
+  printf("n_bonds: %d, n_interactors: %d\n", n_bonds_, GetCount());
 }
 
 void Mesh::UpdatePrevPositions() {
@@ -286,34 +294,22 @@ void Mesh::ZeroForce() {
     it->ZeroForce();
   }
 }
+
 void Mesh::UpdateInteractors() {
   interactors_.clear();
-  if (posits_only_) {
-    double pos[3] = {0, 0, 0};
-    double u[3] = {0, 0, 0};
-    GetAvgPosition(pos);
-    GetAvgOrientation(u);
-    bonds_[0].SetLength(length_);
-    bonds_[0].SetPosition(pos);
-    bonds_[0].SetOrientation(u);
-    bonds_[0].UpdatePeriodic();
-    interactors_.push_back(&(bonds_[0]));
-  } else {
-    for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
-      interactors_.push_back(&(*it));
-    }
+  for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+    interactors_.push_back(&(*it));
   }
 }
 
 void Mesh::GetInteractors(std::vector<Object *> *ix) {
-  ix->clear();
+  //ix->clear();
   UpdateInteractors();
   ix->insert(ix->end(), interactors_.begin(), interactors_.end());
 }
 
 int Mesh::GetCount() {
-  UpdateInteractors();
-  return interactors_.size();
+  return n_bonds_;
 }
 
 void Mesh::ReadPosit(std::fstream &ip) {

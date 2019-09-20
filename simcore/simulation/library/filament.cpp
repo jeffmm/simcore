@@ -432,12 +432,12 @@ double const Filament::GetVolume() {
 void Filament::UpdatePosition(bool midstep) {
   //Report();
   midstep_ = midstep;
-  if (!midstep_) {
+  //if (!midstep_) {
     // CalculateBinding();
     // for (auto it=motors_.begin(); it!= motors_.end(); ++it) {
     // it->UpdatePosition();
     //}
-  }
+  //}
   ApplyForcesTorques();
   Integrate();
   // FIXME temporary

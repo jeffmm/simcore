@@ -355,7 +355,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   }
   /* Should do this all the time to force object counting */
   if (!processing) {
-    iengine_.CountAndUpdate();  // Forces update as well
+    iengine_.CheckUpdateObjects();  // Forces update as well
   }
 }
 

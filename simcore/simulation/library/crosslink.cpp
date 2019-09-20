@@ -239,6 +239,8 @@ void Crosslink::CalculateBinding() {
   neighbors_.Clear();
   kmc_filter_.clear();
 }
+
+void Crosslink::ClearNeighbors() { neighbors_.Clear(); }
 void Crosslink::CalcBinding() {
   if (IsDoubly()) {
     //[> If our second anchor became unbound <]
@@ -281,11 +283,22 @@ void Crosslink::CalcBinding() {
 
 void Crosslink::UpdateCrosslink() {
   /* If we are doubly-bound, calculate tether forces */
-  if (IsDoubly()) {
-    CalculateTetherForces();
-  }
-  anchors_[0].UpdatePosition();
-  anchors_[1].UpdatePosition();
+  // anchors_[0].UpdateAnchorPositionToMesh();
+  // anchors_[1].UpdateAnchorPositionToMesh();
+  // SHOULD DO THIS OVERHAUL:
+  UpdateAnchorsToMesh();
+  CalculateTetherForces();
+  UpdateAnchorPositions();
+  ApplyTetherForcesToMesh();
+  //anchors_[0].UpdatePosition();
+  //anchors_[1].UpdatePosition();
+  /* Apply anchor forces AFTER updating position, to give anchors a chance to
+     update their position on the bond in case of dynamic instability */
+  //if (IsDoubly()) {
+    //anchors_[0].ApplyAnchorForces();
+    //anchors_[1].ApplyAnchorForces();
+  //}
+
   /* Check if any of our doubly-bound anchors became unbound */
   CalculateBinding(); // Using KMC
   // CalcBinding(); // Using naive binding rules
@@ -323,13 +336,21 @@ void Crosslink::AttemptCrosslink() {
   }
 }
 
+void Crosslink::ZeroForce() {
+  std::fill(force_, force_ + 3, 0.0);
+  anchors_[0].ZeroForce();
+  anchors_[1].ZeroForce();
+}
+
 void Crosslink::CalculateTetherForces() {
+  ZeroForce();
+  if (!IsDoubly())
+    return;
   mindist_->ObjectObject(&(anchors_[0]), &(anchors_[1]), &ix);
   /* Check stretch of tether. No penalty for having a stretch < rest_length. ie
    * the spring does not resist compression. */
   length_ = sqrt(ix.dr_mag2);
   double stretch = length_ - rest_length_;
-  std::fill(force_, force_ + 3, 0.0);
   for (int i = 0; i < params_->n_dim; ++i) {
     orientation_[i] = ix.dr[i] / length_;
     position_[i] = ix.midpoint[i];
@@ -341,8 +362,6 @@ void Crosslink::CalculateTetherForces() {
     }
     anchors_[0].AddForce(force_);
     anchors_[1].SubForce(force_);
-    anchors_[0].ApplyAnchorForces();
-    anchors_[1].ApplyAnchorForces();
   }
   UpdatePeriodic();
   /* TODO Apply torques on crosslinks if necessary */

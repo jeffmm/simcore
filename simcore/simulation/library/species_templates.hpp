@@ -77,13 +77,13 @@ void Species<T>::UpdatePositions() {
 }
 
 template <typename T>
-void Species<T>::GetInteractors(std::vector<Object *> *ix) {
-  ix->clear();
-  std::vector<Object *> ix_vec;
+void Species<T>::GetInteractors(std::vector<Object *> *ixors) {
+  //ix->clear();
+  std::vector<Object *> ix;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
-    it->GetInteractors(&ix_vec);
-    ix->insert(ix->end(), ix_vec.begin(), ix_vec.end());
+    it->GetInteractors(&ix);
   }
+  ixors->insert(ixors->end(), ix.begin(), ix.end());
 }
 
 template <typename T>

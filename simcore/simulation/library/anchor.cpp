@@ -92,8 +92,6 @@ void Anchor::UpdatePosition() {
   }
   // Update anchor position based on current bond attachment
   UpdateAnchorPositionToBond();
-  // Clear forces, since they will be used for storing crosslink tether forces
-  ZeroForce();
 }
 
 void Anchor::ApplyAnchorForces() {

@@ -85,6 +85,7 @@ public:
   void WriteCheckpoint(std::fstream &ocheck);
   void ReadSpec(std::fstream &ispec);
   void ReadCheckpoint(std::fstream &icheck);
+  void ClearNeighbors();
 };
 
 #endif
