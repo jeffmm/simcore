@@ -41,16 +41,16 @@ void Anchor::SetWalker(int dir, double walk_v) {
   step_direction_ = dir;
 }
 
-void Anchor::UpdatePosition() {
-  // Currently only bound anchors diffuse/walk (no explicit unbound anchors)
-  if (!bound_) {
+void Anchor::UpdateAnchorPositionToMesh() {
+  if (!bound_)
     return;
-  }
-  // Check for unbinding of anchor
+
+  // Check for unbinding of anchor from mesh
   if (gsl_rng_uniform_pos(rng_.r) <= k_off_ * delta_) {
     Clear();
     return;
   }
+
   // Check that the number of bonds has not changed due to dynamic instability
   if (mesh_n_bonds_ != mesh_->GetNBonds()) {
     // The number of bonds have changed, so we need to reattach to a valid bond
@@ -65,7 +65,30 @@ void Anchor::UpdatePosition() {
      anchor fell off the mesh due to dynamic instability */
   if (!CheckMesh())
     return;
-  // Diffuse or walk along the mesh
+  // Now figure out which bond we are on in the mesh according to mesh_lambda
+  bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
+  // Figure out how far we are from the bond tail: bond_lambda
+  bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber() * bond_length_;
+// assert(bond_lambda_ >= 0 && bond_lambda_ <= bond_length_);
+  if (bond_lambda_ < 0 || bond_lambda_ > bond_length_ + 1e-4) {
+    printf("bond_num: %d\n", bond_->GetBondNumber());
+    printf("mesh lambda: %2.8f\n", mesh_lambda_);
+    printf("mesh length: %2.8f\n", mesh_length_);
+    printf("bond lambda: %2.8f\n", bond_lambda_);
+    printf("bond length: %2.8f\n", bond_length_);
+    error_exit("Graargh!!!\n");
+  }
+
+  // Update anchor position with respect to bond
+  UpdateAnchorPositionToBond();
+}
+
+void Anchor::UpdatePosition() {
+  // Currently only bound anchors diffuse/walk (no explicit unbound anchors)
+  if (!bound_ || (!diffuse_ && !walker_)) {
+    return;
+  }
+  // Diffuse or walk along the mesh, updating mesh_lambda
   if (diffuse_) {
     Diffuse();
     if (!CheckMesh())
@@ -82,14 +105,15 @@ void Anchor::UpdatePosition() {
   bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber() * bond_length_;
 
   // assert(bond_lambda_ >= 0 && bond_lambda_ <= bond_length_);
-  if (bond_lambda_ < 0 || bond_lambda_ > bond_length_ + 1e-4) {
-    printf("bond_num: %d\n", bond_->GetBondNumber());
-    printf("mesh lambda: %2.8f\n", mesh_lambda_);
-    printf("mesh length: %2.8f\n", mesh_length_);
-    printf("bond lambda: %2.8f\n", bond_lambda_);
-    printf("bond length: %2.8f\n", bond_length_);
-    error_exit("Graargh!\n");
-  }
+  //if (bond_lambda_ < 0 || bond_lambda_ > bond_length_ + 1e-4) {
+    //printf("bond_num: %d\n", bond_->GetBondNumber());
+    //printf("mesh lambda: %2.8f\n", mesh_lambda_);
+    //printf("mesh length: %2.8f\n", mesh_length_);
+    //printf("bond lambda: %2.8f\n", bond_lambda_);
+    //printf("bond length: %2.8f\n", bond_length_);
+    //error_exit("Graargh!\n");
+  //}
+
   // Update anchor position based on current bond attachment
   UpdateAnchorPositionToBond();
 }
@@ -213,17 +237,12 @@ void Anchor::AttachObjRandom(Object *o) {
   AttachObjLambda(o, lambda);
 }
 
-void breakpoint() {
-  printf("This looks like a good place to put a breakpoint!\n");
-}
-
 void Anchor::AttachObjLambda(Object *o, double lambda) {
   if (o->GetType() != +obj_type::bond) {
     error_exit("Crosslink binding to non-bond objects not yet implemented.");
   }
   bond_ = dynamic_cast<Bond *>(o);
   if (bond_ == nullptr) {
-    breakpoint();
     error_exit("Object ptr passed to anchor was not referencing a bond!");
   }
   mesh_ = dynamic_cast<Mesh *>(bond_->GetMeshPtr());

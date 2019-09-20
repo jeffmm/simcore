@@ -241,98 +241,56 @@ void Crosslink::CalculateBinding() {
 }
 
 void Crosslink::ClearNeighbors() { neighbors_.Clear(); }
-void Crosslink::CalcBinding() {
-  if (IsDoubly()) {
-    //[> If our second anchor became unbound <]
-    if (length_ > rcapture_ || tether_force_ > f_spring_max_) {
-      //[> Designate the survivor of the crosslink breaking <]
-      int which = gsl_rng_uniform_int(rng_.r, 2);
-      anchors_[0] = anchors_[which];
-      anchors_[1].Clear();
-      SetSingly();
-      return;
-    }
-    if (!anchors_[1].IsBound()) {
-      anchors_[1].Clear();
-      SetSingly();
-    }
-    //[> If our first anchor became unbound <]
-    if (!anchors_[0].IsBound()) {
-      //[> Swap anchors so that anchor[0] remains the one singly bound
-      //* anchor. If anchor 2 became unbound also, we'll
-      // catch that in a moment */
-      anchors_[0] = anchors_[1];
-      anchors_[1].Clear();
-      SetSingly();
-    }
-    //[> If both anchors became unbound <]
-    if (!anchors_[0].IsBound() && !anchors_[1].IsBound()) {
-      SetUnbound();
-    }
-  }
-  //[> Check if our singly-bound anchor became unbound <]
-  else if (!anchors_[0].IsBound()) {
-    SetUnbound();
-    anchors_[0].Clear();
-  } else if (IsSingly()) {
-    AttemptCrosslink();
-  }
-  neighbors_.Clear();
-  kmc_filter_.clear();
+
+void Crosslink::UpdateAnchorsToMesh() {
+  anchors_[0].UpdateAnchorPositionToMesh();
+  anchors_[1].UpdateAnchorPositionToMesh();
+}
+
+void Crosslink::UpdateAnchorPositions() {
+  anchors_[0].UpdatePosition();
+  anchors_[1].UpdatePosition();
+}
+
+void Crosslink::ApplyTetherForcesToMesh() {
+  anchors_[0].ApplyAnchorForces();
+  anchors_[1].ApplyAnchorForces();
 }
 
 void Crosslink::UpdateCrosslink() {
-  /* If we are doubly-bound, calculate tether forces */
-  // anchors_[0].UpdateAnchorPositionToMesh();
-  // anchors_[1].UpdateAnchorPositionToMesh();
-  // SHOULD DO THIS OVERHAUL:
+  /* Update anchor positions in space to calculate tether forces */
   UpdateAnchorsToMesh();
+  /* Check if an anchor became unbound */
+  UpdateXlinkState();
+  /* If we are doubly-bound, calculate tether forces */
   CalculateTetherForces();
-  UpdateAnchorPositions();
+  /* Transfer tether forces to mesh */
   ApplyTetherForcesToMesh();
-  //anchors_[0].UpdatePosition();
-  //anchors_[1].UpdatePosition();
-  /* Apply anchor forces AFTER updating position, to give anchors a chance to
-     update their position on the bond in case of dynamic instability */
-  //if (IsDoubly()) {
-    //anchors_[0].ApplyAnchorForces();
-    //anchors_[1].ApplyAnchorForces();
-  //}
-
-  /* Check if any of our doubly-bound anchors became unbound */
-  CalculateBinding(); // Using KMC
-  // CalcBinding(); // Using naive binding rules
-  /* If we are singly bound, update the position of the crosslinker
-   * to reflect the singly-bound anchor position for interaction
-   * purposes */
+  /* Have anchors diffuse/walk along mesh */
+  UpdateAnchorPositions();
+  UpdateXlinkState();
+  /* Check for binding/unbinding events using KMC */
+  CalculateBinding();
+  /* If we are singly bound, update the position of the crosslinker to reflect
+   * the singly-bound anchor position for interaction purposes. TODO: Refactor
+   * this to use anchors for interactions. */
   if (IsSingly()) {
     UpdatePosition();
   }
 }
 
-void Crosslink::AttemptCrosslink() {
-  int n_neighbors = neighbors_.NNeighbors();
-  if (n_neighbors == 0) {
-    return;
+/* This function ensures that singly-bound crosslinks have anchor[0] bound and
+   anchor[1] unbound. */
+void Crosslink::UpdateXlinkState() {
+  if (IsDoubly() && !anchors_[1].IsBound()) {
+    SetSingly();
+  } else if (IsDoubly() && !anchors_[0].IsBound()) {
+    anchors_[0] = anchors_[1];
+    SetSingly();
   }
-  /* Do stupidest possible thing, and bind to whatever with some probability
-   * and in a random fashion */
-  double p_bind = k_on_ * delta_;
-  if (gsl_rng_uniform_pos(rng_.r) < p_bind) {
-    int i_bind = gsl_rng_uniform_int(rng_.r, n_neighbors);
-    // Object *obj = nlist_[i_bind];
-    Object *obj = neighbors_.GetNeighbor(i_bind);
-    mindist_->ObjectObject(&(anchors_[0]), obj, &ix);
-    if (ix.dr_mag2 > SQR(rcapture_)) {
-      return;
-    }
-    if (obj->GetType() == +obj_type::bond) {
-      anchors_[1].AttachObjRandom(obj);
-    } else {
-      /* TODO: add binding to sphere or site-like objects */
-      error_exit("Crosslink binding to non-bond objects not yet implemented.");
-    }
-    SetDoubly();
+  if (IsSingly() && !anchors_[0].IsBound()) {
+    SetUnbound();
+    return;
   }
 }
 

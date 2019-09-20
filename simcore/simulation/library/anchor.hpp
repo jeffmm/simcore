@@ -43,6 +43,7 @@ public:
   void Activate();
   void Deactivate();
   void ApplyAnchorForces();
+  void UpdateAnchorPositionToMesh();
   void SetDiffusion();
   void SetWalker(int dir, double walk_v);
   void AttachObjRandom(Object *o);

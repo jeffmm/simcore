@@ -58,11 +58,13 @@ private:
   Neighbors neighbors_;
   std::vector<int> kmc_filter_;
   void CalculateTetherForces();
-  void AttemptCrosslink();
   void CalculateBinding();
-  void CalcBinding();
   void SinglyKMC();
   void DoublyKMC();
+  void UpdateAnchorsToMesh();
+  void UpdateAnchorPositions();
+  void ApplyTetherForcesToMesh();
+  void UpdateXlinkState();
 
 public:
   Crosslink();
@@ -86,6 +88,7 @@ public:
   void ReadSpec(std::fstream &ispec);
   void ReadCheckpoint(std::fstream &icheck);
   void ClearNeighbors();
+  void ZeroForce();
 };
 
 #endif
