@@ -56,7 +56,6 @@ private:
   double polar_affinity_;
   std::vector<Anchor> anchors_;
   Neighbors neighbors_;
-  std::vector<int> kmc_filter_;
   void CalculateTetherForces();
   void CalculateBinding();
   void SinglyKMC();

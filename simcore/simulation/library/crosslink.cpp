@@ -82,18 +82,22 @@ void Crosslink::SinglyKMC() {
     SetUnbound();
     return;
   }
+  /* Must populate filter with 1 for every neighbor, since KMC
+  expects a mask. We already guarantee uniqueness, so we won't overcount. */
+
   double roll = gsl_rng_uniform_pos(rng_.r);
   int head_bound = 0;
   // Set up KMC objects and calculate probabilities
   double unbind_prob = k_off_ * delta_;
   // int n_neighbors = nlist_.size();
   int n_neighbors = neighbors_.NNeighbors();
+  std::vector<int> kmc_filter(n_neighbors, 1);
   KMC<Object> kmc_bind(anchors_[0].pos, n_neighbors, rcapture_, delta_, lut_);
   kmc_bind.SetPBCs(n_dim_, space_->n_periodic, space_->unit_cell);
   double kmc_bind_prob = 0;
   std::vector<double> kmc_bind_factor(n_neighbors, k_on_sd_);
   if (n_neighbors > 0) {
-    kmc_bind.CalcTotProbsSD(neighbors_.GetNeighborsMem(), kmc_filter_,
+    kmc_bind.CalcTotProbsSD(neighbors_.GetNeighborsMem(), kmc_filter,
                             anchors_[0].GetBoundOID(), 0, k_spring_, 1.0,
                             rest_length_, kmc_bind_factor);
     kmc_bind_prob = kmc_bind.getTotProb();
@@ -152,6 +156,7 @@ void Crosslink::SinglyKMC() {
     anchors_[1].AttachObjLambda(obj, bind_lambda);
     SetDoubly();
   }
+  kmc_filter.clear();
 }
 
 /* Perform kinetic monte carlo step of protein with 2 heads of protein
@@ -237,7 +242,6 @@ void Crosslink::CalculateBinding() {
     DoublyKMC();
   }
   neighbors_.Clear();
-  kmc_filter_.clear();
 }
 
 void Crosslink::ClearNeighbors() { neighbors_.Clear(); }
@@ -365,9 +369,6 @@ void Crosslink::Draw(std::vector<graph_struct *> *graph_array) {
 
 void Crosslink::AddNeighbor(Object *neighbor) {
   neighbors_.AddNeighbor(neighbor);
-  /* Must populate filter with 1 for every neighbor, since KMC
-  expects a mask. We already guarantee uniqueness, so we won't overcount. */
-  kmc_filter_.push_back(1);
 }
 
 void Crosslink::SetDoubly() {
