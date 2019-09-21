@@ -1,14 +1,14 @@
 #! /bin/bash
 #
-# Run to start up docker containers. Use argument 'build' to force rebuild of images.
-# ./run.sh build
+# Run to start up docker container. Use argument 'build' to force rebuild of images.
+# ./run_docker.sh build
 
 # If 'build' argument was provided, rebuild images
 if [ "$1" == "build" ]; then
-  echo "Building images with docker-compose"
-  docker-compose -f docker/docker-compose.yml --project-name simcore up -d --build
+  echo "Building docker image"
+  docker build -t jeffmm/simcore docker
 # Otherwise, just start up the containers
 else
-  echo "Running containers with docker-compose"
-  docker-compose -f docker/docker-compose.yml --project-name simcore up -d
+  echo "Running docker container"
+  docker run --rm -itd -v ${PWD}:/mnt --name "simcore-executer" jeffmm/simcore bash
 fi
