@@ -10,5 +10,5 @@ if [ "$1" == "build" ]; then
 # Otherwise, just start up the containers
 else
   echo "Running docker container"
-  docker run --rm -itd -v ${PWD}:/mnt --name "simcore-executer" jeffmm/simcore bash
+  docker run --rm -itd -v "${PWD}":/mnt --name "simcore-executer" jeffmm/simcore bash
 fi

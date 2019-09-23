@@ -29,11 +29,18 @@ Simcore can either be run in a container using Docker, or be built manually usin
 To run simcore in Docker, one can do
 ```
 docker pull jeffmm/simcore:latest
-bash run_docker.sh <optional flags> <optional parameter files> <optional post-processing files>
+bash run_docker.sh
 ```
-which will run simcore in a container and generate any output files into a timestamped directory. The addition of parameter files are optional, but necessary for generating outputs. If parameter files require additional parameters, such as customized initalization routines, those must be included as well. You may also build the image locally by running
+which will mount the simcore directory into a container named `simcore-executer` that will run in the background. To build simcore, run
+
 ```
-bash build_docker.sh
+docker exec simcore-executer bash install.sh build
+```
+
+and to submit simcore jobs, run
+
+```
+docker exec simcore-executer ./simcore.exe [additional-flags] [parameter-files]
 ```
 
 ### Manual installation with cmake
@@ -64,7 +71,7 @@ Running install.sh without the build variable will list other installation optio
 The simcore binary is run with
 
 ```
-./simcore --flag1 --flag2 ... params_file 
+./simcore.exe --flag1 --flag2 ... params_file 
 ```
 
 The following flags are available:
@@ -155,17 +162,23 @@ Some important species parameters to consider are:
 * checkpoint_flag: whether to output checkpoint files
 * n_checkpoint: how often to output checkpoint files
 
-All parameters used in the simulation, along with their default values and data types, are specified in the config_params.yaml file in the src folder.
+All parameters used in the simulation, along with their default values and data types, are specified in the `default_config.yaml` file in the `config` folder.
 
 ## Adding new parameters
 
-simcore comes with it's own parameter initialization tool, simcore_config, which can be installed by following the above installation instructions for simcore and then doing 'make simcore_config'.  simcore_config makes it easy to add new parameters to the simulation without mucking around in the source code. Just add your new parameter to the config_params.yaml file using the following format: 
+simcore comes with it's own parameter initialization tool, `configure_simcore.exe`, which is installed automatically along with the simcore binary using CMake. The configurator makes it easy to add new parameters to the simulation without mucking around in the source code. Just add your new parameter to `config/default_config.yaml` file using the following format: 
 
 ```
 new_parameter_name: [default_parameter_value, parameter_type] 
 ```
  
-Running simcore_config will look at all the parameters in the config_params.yaml file and add them seamlessly to the proper simcore files, and you can begin using them in your classes right away after recompiling simcore. NOTE: At the time of this writing (12/3/2017), yaml-cpp is inconsistent about its treatment of boolean values. For type-safety reasons, it's best to use integers instead of bools when adding flag parameters.  
+Then run the configurator using
+
+```
+./configure_simcore.exe config/default_config.yaml
+```
+
+Running simcore_config will look at all the parameters in the default config file and add them seamlessly to the proper simcore headers, and you can begin using them after recompiling simcore using CMake.
 
 ### Parameter sets
 
@@ -308,6 +321,3 @@ For example, the RunSpiralAnalysis routine is called by the RunAnalysis method i
 ## Disclaimer
 
 simcore was written for my personal academic use and in its current state is not intended to be used by the general public. If you are insane (and somehow also patient) and would like to run simcore for whatever reason, you can contact me for help and (if I have time) I will do what I can to offer assistance. In addition, the README provided here is in no way a complete documentation of the software. The simcore software is covered by the MIT license.
-
-
-
