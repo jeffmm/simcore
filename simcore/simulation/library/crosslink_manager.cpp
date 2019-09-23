@@ -30,10 +30,6 @@ void CrosslinkManager::UpdateObjsVolume() {
   for (auto it = objs_->begin(); it != objs_->end(); ++it) {
     obj_volume_ += (*it)->GetVolume();
   }
-  /* TODO, keep track of individual object binding probabilities,
-   * which would end up being individual object volume/total
-   * object volume. For now, will work correctly with equally-sized
-   * objects. */
 }
 
 /* Whether to reinsert anchors into the interactors list */
@@ -46,14 +42,8 @@ bool CrosslinkManager::CheckUpdate() {
 }
 
 void CrosslinkManager::CalculateBindingFree() {
-  // Check crosslink unbinding
-  // if (gsl_rng_uniform_pos(rng_.r) <= k_off_*n_anchors_bound_*params_->delta)
-  // {
-  //[> Remove a random anchor from the system <]
-  // UnbindCrosslink();
-  // update_ = true;
-  //}
   /* Check crosslink binding */
+  UpdateObjsVolume();
   double concentration = xlink_concentration_ - n_xlinks_ / space_->volume;
   if (gsl_rng_uniform_pos(rng_.r) <=
       concentration * obj_volume_ * k_on_ * params_->delta) {
@@ -64,191 +54,126 @@ void CrosslinkManager::CalculateBindingFree() {
   }
 }
 
+/* Returns a random object with selection probability proportional to object
+   volume */
+Object *CrosslinkManager::GetRandomObject() {
+  double roll = obj_volume_ * gsl_rng_uniform_pos(rng_.r);
+  double vol = 0;
+  for (auto obj = objs_->begin(); obj != objs_->end(); ++obj) {
+    vol += (*obj)->GetVolume();
+    if (vol > roll)
+      return *obj;
+  }
+  error_exit("CrosslinkManager::GetRandomObject should never get here!");
+}
+
 /* A crosslink binds to an object from solution */
 void CrosslinkManager::BindCrosslink() {
   /* Create crosslink object and initialize. Crosslink will
    * initially be singly-bound. */
   Crosslink xl;
-  xlinks_singly_.push_back(xl);
-  xlinks_singly_.back().Init(mindist_, &lut_);
-  /* Attach to random object in system */
-  /* TODO Should weight probability of selecting object
-     by object volume in the case of different sized
-     objects */
-  int i_obj = gsl_rng_uniform_int(rng_.r, objs_->size());
-  xlinks_singly_.back().AttachObjRandom((*objs_)[i_obj]);
+  xlinks_.push_back(xl);
+  xlinks_.back().Init(mindist_, &lut_);
+  xlinks_.back().AttachObjRandom(GetRandomObject());
   /* Keep track of bound bound anchors, bound crosslinks, and
    * concentration of free crosslinks */
   n_anchors_bound_++;
   n_xlinks_++;
-  // printf("%d \n", n_anchors_bound_);
-}
-
-/* An unbinding event for a single, random anchor in the system */
-void CrosslinkManager::UnbindCrosslink() {
-  int i_anchor = gsl_rng_uniform_int(rng_.r, n_anchors_bound_);
-  /* If i_anchor < the number of singly-bound anchors, unbind a
-   * singly-bound anchor */
-  int n_singly = xlinks_singly_.size();
-  if (i_anchor < n_singly) {
-    RemoveCrosslink(i_anchor);
-  } else {
-    i_anchor -= n_singly;
-    int i_doubly = i_anchor / 2;
-    int i_which = i_anchor % 2;
-    xlinks_doubly_[i_doubly].UnbindAnchor(i_which);
-    DoublyToSingly(i_doubly);
-  }
-  n_anchors_bound_--;
-}
-
-void CrosslinkManager::RemoveCrosslink(int i_xlink) {
-  if (xlinks_singly_.empty()) {
-    return;
-  }
-  if (xlinks_singly_.size() > 1) {
-    auto it = (xlinks_singly_.begin() + i_xlink);
-    it->UnbindAnchor();
-    std::iter_swap(xlinks_singly_.begin() + i_xlink, xlinks_singly_.end() - 1);
-    xlinks_singly_.pop_back();
-  } else {
-    xlinks_singly_.clear();
-  }
-  n_xlinks_--;
-  update_ = true;
-}
-
-void CrosslinkManager::DoublyToSingly(int i_doubly) {
-  if (xlinks_doubly_.size() > 1) {
-    std::iter_swap(xlinks_doubly_.begin() + i_doubly, xlinks_doubly_.end() - 1);
-    xlinks_singly_.push_back(*(xlinks_doubly_.end() - 1));
-    xlinks_doubly_.pop_back();
-  } else {
-    xlinks_singly_.push_back(*(xlinks_doubly_.begin()));
-    xlinks_doubly_.clear();
-  }
-  xlinks_singly_.back().SetSingly();
 }
 
 void CrosslinkManager::GetInteractors(std::vector<Object *> *ixors) {
   std::vector<Object *> ix;
   /* Clear the crosslink neighbors as we go, since we need to repopulate the
      neighbor lists if we are repopulating the interactor vector */
-  for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end();
-       ++xlink) {
-    xlink->ClearNeighbors();
-    ix.push_back(&(*xlink));
+  for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
+    xlink->GetInteractors(&ix);
   }
   ixors->insert(ixors->end(), ix.begin(), ix.end());
 }
 
 void CrosslinkManager::GetAnchorInteractors(std::vector<Object *> *ixors) {
-  ixors->clear();
   std::vector<Object *> ix;
-  for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end();
-       ++xlink) {
-    xlink->GetAnchors(&ix);
-  }
-  for (auto xlink = xlinks_doubly_.begin(); xlink != xlinks_doubly_.end();
-       ++xlink) {
+  for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
     xlink->GetAnchors(&ix);
   }
   ixors->insert(ixors->end(), ix.begin(), ix.end());
 }
 
 void CrosslinkManager::UpdateCrosslinks() {
-  /* First update bound crosslinks, then update binding */
-  for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end();
-       ++xlink) {
-    xlink->UpdateCrosslink();
+  update_ = false;
+  /* Only do this every other step (assuming flexible filaments with midstep) */
+  if (params_->i_step % 2 == 0) {
+    /* First update bound crosslinks state and positions */
+    UpdateBoundCrosslinks();
+    /* Calculate implicit binding of crosslinks from solution */
+    CalculateBindingFree();
+  } else {
+    /* Apply tether forces from doubly-bound crosslinks onto anchored objects.
+       We do this every half step only, because the fullstep tether forces are
+       handled by the crosslink update on even steps */
+    ApplyCrosslinkTetherForces();
   }
-  for (auto xlink = xlinks_doubly_.begin(); xlink != xlinks_doubly_.end();
-       ++xlink) {
-    xlink->UpdateCrosslink();
+}
+
+void CrosslinkManager::ApplyCrosslinkTetherForces() {
+  for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
+    xlink->ApplyTetherForces();
   }
-  /* Check if we had any crosslinking events */
-  for (auto xlink = xlinks_singly_.begin(); xlink != xlinks_singly_.end();
-       ++xlink) {
-    if (xlink->IsDoubly()) {
-      auto it = xlink;
-      std::iter_swap(it, xlinks_singly_.end() - 1);
-      xlinks_doubly_.push_back(*(xlinks_singly_.end() - 1));
-      xlinks_singly_.pop_back();
-      xlink--;
+}
+
+void CrosslinkManager::UpdateBoundCrosslinks() {
+  n_anchors_bound_ = 0;
+  n_xlinks_ = 0;
+  for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
+    bool init_state = xlink->IsSingly();
+    n_xlinks_++;
+    xlink->UpdateCrosslink();
+    /* Xlink is no longer bound, return to solution */
+    if (xlink->IsUnbound()) {
       update_ = true;
+      n_xlinks_--;
+    } else if (xlink->IsSingly()) {
       n_anchors_bound_++;
-    } else if (xlink->IsUnbound()) {
-      auto it = xlink;
-      std::iter_swap(it, xlinks_singly_.end() - 1);
-      xlinks_singly_.pop_back();
-      xlink--;
-      update_ = true;
-      n_anchors_bound_--;
-      n_xlinks_--;
+    } else if (xlink->IsDoubly()) {
+      n_anchors_bound_ += 2;
     }
-  }
-  /* Check if we had any crosslinks break */
-  for (auto xlink = xlinks_doubly_.begin(); xlink != xlinks_doubly_.end();
-       ++xlink) {
-    if (xlink->IsSingly()) {
-      auto it = xlink;
-      std::iter_swap(it, xlinks_doubly_.end() - 1);
-      xlinks_singly_.push_back(*(xlinks_doubly_.end() - 1));
-      xlinks_doubly_.pop_back();
-      xlink--;
+    /* If a crosslink enters or leaves the singly state, we need to update
+     * xlink interactors */
+    if (xlink->IsSingly() != init_state) {
       update_ = true;
-      n_anchors_bound_--;
-    } else if (xlink->IsUnbound()) {
-      auto it = xlink;
-      std::iter_swap(it, xlinks_singly_.end() - 1);
-      xlinks_singly_.pop_back();
-      xlink--;
-      update_ = true;
-      n_anchors_bound_ -= 2;
-      n_xlinks_--;
     }
   }
 
-  /* Calculate binding of free crosslinks (in solution)
-     and unbinding of bound crosslinks */
-  CalculateBindingFree();
+  /* Remove unbound crosslinks */
+  xlinks_.erase(std::remove_if(xlinks_.begin(), xlinks_.end(),
+                               [](Crosslink x) { return x.IsUnbound(); }),
+                xlinks_.end());
 }
 
-void CrosslinkManager::Clear() {
-  xlinks_singly_.clear();
-  xlinks_doubly_.clear();
-}
+void CrosslinkManager::Clear() { xlinks_.clear(); }
 
 void CrosslinkManager::Draw(std::vector<graph_struct *> *graph_array) {
-  for (auto it = xlinks_singly_.begin(); it != xlinks_singly_.end(); ++it) {
-    it->Draw(graph_array);
-  }
-  for (auto it = xlinks_doubly_.begin(); it != xlinks_doubly_.end(); ++it) {
+  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
     it->Draw(graph_array);
   }
 }
 
-void CrosslinkManager::AddNeighborToXlink(Object *xlink, Object *neighbor) {
-  if (xlink->GetSID() != +species_id::crosslink) {
+void CrosslinkManager::AddNeighborToAnchor(Object *anchor, Object *neighbor) {
+  if (anchor->GetSID() != +species_id::crosslink) {
     error_exit(
         "BindCrosslinkObj expected crosslink object, got generic object.");
   }
-  Crosslink *xl = dynamic_cast<Crosslink *>(xlink);
-  xl->AddNeighbor(neighbor);
+  Anchor *a = dynamic_cast<Anchor *>(anchor);
+  a->AddNeighbor(neighbor);
 }
 
 void CrosslinkManager::WriteSpecs() {
   /* Write the vector sizes, singly then doubly */
-  int size_singly = xlinks_singly_.size();
-  int size_doubly = xlinks_doubly_.size();
-  ospec_file_.write(reinterpret_cast<char *>(&size_singly), sizeof(int));
-  ospec_file_.write(reinterpret_cast<char *>(&size_doubly), sizeof(int));
+  n_xlinks_ = xlinks_.size();
+  ospec_file_.write(reinterpret_cast<char *>(&n_xlinks_), sizeof(int));
 
   /* Write individual crosslink specs, first singly then doubly */
-  for (auto it = xlinks_singly_.begin(); it != xlinks_singly_.end(); ++it) {
-    it->WriteSpec(ospec_file_);
-  }
-  for (auto it = xlinks_doubly_.begin(); it != xlinks_doubly_.end(); ++it) {
+  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
     it->WriteSpec(ospec_file_);
   }
 }
@@ -264,45 +189,29 @@ void CrosslinkManager::ReadSpecs() {
     early_exit = true;
     return;
   }
-  int size_singly = -1;
-  int size_doubly = -1;
-  ispec_file_.read(reinterpret_cast<char *>(&size_singly), sizeof(int));
-  ispec_file_.read(reinterpret_cast<char *>(&size_doubly), sizeof(int));
+  n_xlinks_ = -1;
+  ispec_file_.read(reinterpret_cast<char *>(&n_xlinks_), sizeof(int));
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
-  if (size_singly == -1 || size_doubly == -1) {
+  if (n_xlinks_ == -1) {
     printf("  EOF reached in species\n");
     early_exit = true;
     return;
   }
-  if (size_singly == 0) {
-    xlinks_singly_.clear();
-  } else if (size_singly != xlinks_singly_.size()) {
+  if (n_xlinks_ == 0) {
+    xlinks_.clear();
+  } else if (n_xlinks_ != xlinks_.size()) {
     Crosslink xlink;
     xlink.Init(mindist_, &lut_);
-    xlinks_singly_.resize(size_singly, xlink);
+    xlinks_.resize(n_xlinks_, xlink);
   }
-  if (size_doubly == 0) {
-    xlinks_doubly_.clear();
-  } else if (size_doubly != xlinks_doubly_.size()) {
-    Crosslink xlink;
-    xlink.Init(mindist_, &lut_);
-    xlink.SetDoubly();
-    xlinks_doubly_.resize(size_doubly, xlink);
-  }
-  n_xlinks_ = 0;
   n_anchors_bound_ = 0;
-  for (auto it = xlinks_singly_.begin(); it != xlinks_singly_.end(); ++it) {
-    // it->Init(mindist_, &lut_);
+  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
     it->ReadSpec(ispec_file_);
-    n_xlinks_++;
     n_anchors_bound_++;
-  }
-  for (auto it = xlinks_doubly_.begin(); it != xlinks_doubly_.end(); ++it) {
-    // it->Init(mindist_, &lut_);
-    it->ReadSpec(ispec_file_);
-    n_xlinks_++;
-    n_anchors_bound_ += 2;
+    if (it->IsDoubly()) {
+      n_anchors_bound_++;
+    }
   }
 }
 
@@ -320,16 +229,11 @@ void CrosslinkManager::WriteCheckpoints() {
   ocheck_file.write(reinterpret_cast<char *>(rng_state), rng_size);
 
   /* Write crosslink vector sizes, singly then doubly */
-  int size_singly = xlinks_singly_.size();
-  int size_doubly = xlinks_doubly_.size();
-  ocheck_file.write(reinterpret_cast<char *>(&size_singly), sizeof(int));
-  ocheck_file.write(reinterpret_cast<char *>(&size_doubly), sizeof(int));
+  n_xlinks_ = xlinks_.size();
+  ocheck_file.write(reinterpret_cast<char *>(&n_xlinks_), sizeof(int));
 
   /* Write crosslink checkpoints, singly then doubly */
-  for (auto it = xlinks_singly_.begin(); it != xlinks_singly_.end(); ++it) {
-    it->WriteCheckpoint(ocheck_file);
-  }
-  for (auto it = xlinks_doubly_.begin(); it != xlinks_doubly_.end(); ++it) {
+  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
     it->WriteCheckpoint(ocheck_file);
   }
 
@@ -351,37 +255,32 @@ void CrosslinkManager::ReadCheckpoints() {
   icheck_file.read(reinterpret_cast<char *>(rng_state), rng_size);
 
   /* Read xlink vector sizes, first singly then doubly */
-  int size_singly = 0;
-  int size_doubly = 0;
-  icheck_file.read(reinterpret_cast<char *>(&size_singly), sizeof(int));
-  icheck_file.read(reinterpret_cast<char *>(&size_doubly), sizeof(int));
+  n_xlinks_ = -1;
+  icheck_file.read(reinterpret_cast<char *>(&n_xlinks_), sizeof(int));
 
   /* Prepare the xlink vectors */
   Crosslink xlink;
   xlink.Init(mindist_, &lut_);
-  xlinks_singly_.resize(size_singly, xlink);
-  xlinks_doubly_.resize(size_doubly, xlink);
+  xlinks_.resize(n_xlinks_, xlink);
 
   /* Read the crosslink checkpoints */
-  for (auto it = xlinks_singly_.begin(); it != xlinks_singly_.end(); ++it) {
-    // it->Init(mindist_, &lut_);
+  n_anchors_bound_ = 0;
+  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
     it->ReadCheckpoint(icheck_file);
-    n_xlinks_++;
     n_anchors_bound_++;
-  }
-  for (auto it = xlinks_doubly_.begin(); it != xlinks_doubly_.end(); ++it) {
-    // it->Init(mindist_, &lut_);
-    it->ReadCheckpoint(icheck_file);
-    n_xlinks_++;
-    n_anchors_bound_ += 2;
+    if (it->IsDoubly()) {
+      n_anchors_bound_++;
+    }
   }
   /* Close the file */
   icheck_file.close();
 }
 
 void CrosslinkManager::InitOutputFiles() {
-  if (params_->crosslink.spec_flag) InitSpecFile();
-  if (params_->crosslink.checkpoint_flag) InitCheckpoints();
+  if (params_->crosslink.spec_flag)
+    InitSpecFile();
+  if (params_->crosslink.checkpoint_flag)
+    InitCheckpoints();
 }
 
 void CrosslinkManager::InitSpecFile() {

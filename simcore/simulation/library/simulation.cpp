@@ -18,14 +18,22 @@ void Simulation::Run(system_parameters params) {
 /* Continuously loop over object data structures, solving their equations of
  * motion using Runge-Kutta-like integration schemes for n_steps time steps. */
 void Simulation::RunSimulation() {
-#ifdef  ENABLE_OPENMP
+#ifdef ENABLE_OPENMP
   std::cout << "  Running simulation on " << omp_get_max_threads() << " threads"
-    << std::endl;
+            << std::endl;
 #else
   std::cout << "  Running simulation" << std::endl;
 #endif
   /* Solve equations of motion for all objects */
-  for (i_step_ = 0; i_step_ < params_.n_steps; ++i_step_) {
+
+  /* Note that we are beginning with i_step = 1 here as a convention. This is
+   because filaments use a midstep method, so that at the end of step 1 and
+   every odd step, they will be in a midstep configuration, whereas at the end
+   of every even step, they will be in the fullstep configuration. Since most
+   sane step frequency functions (e.g. n_graph, n_thermo, etc) are even numbers,
+   we want these to represent filaments in their fullstep configurations. We
+   also update other objects' positions on every even step too (e.g. xlinks). */
+  for (i_step_ = 1; i_step_ < params_.n_steps + 1; ++i_step_) {
     params_.i_step = i_step_;
     time_ = (i_step_ + 1) * params_.delta;
     // Output progress
@@ -262,7 +270,8 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       }
       if (num != inserted) {
         // Attempt a lattice-based insertion strategy (only 2d for now)
-        if (params_.n_dim == 3) continue;
+        if (params_.n_dim == 3)
+          continue;
         double pos[3] = {0, 0, 0};
         pos[0] = -params_.system_radius;
         pos[1] = -params_.system_radius;
@@ -316,24 +325,23 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
               fflush(stdout);
             }
           }
-          if (inserted == num) break;
+          if (inserted == num)
+            break;
         }
         delete[] grid_index;
       }
       putchar('\n');
       if (num != inserted) {
-        printf(
-            "  Species insertion failure threshold of %d reached. "
-            "Reattempting insertion.\n",
-            params_.species_insertion_failure_threshold);
+        printf("  Species insertion failure threshold of %d reached. "
+               "Reattempting insertion.\n",
+               params_.species_insertion_failure_threshold);
         (*spec)->PopAll();
         iengine_.Reset();
       }
       if (++num_attempts > params_.species_insertion_reattempt_threshold) {
-        error_exit(
-            "Unable to insert species randomly within the reattempt "
-            "threshold of %d.\n",
-            params_.species_insertion_reattempt_threshold);
+        error_exit("Unable to insert species randomly within the reattempt "
+                   "threshold of %d.\n",
+                   params_.species_insertion_reattempt_threshold);
       }
     }
     if (!processing) {
@@ -355,7 +363,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   }
   /* Should do this all the time to force object counting */
   if (!processing) {
-    iengine_.CheckUpdateObjects();  // Forces update as well
+    iengine_.CheckUpdateObjects(); // Forces update as well
   }
 }
 
@@ -433,12 +441,9 @@ void Simulation::WriteOutputs() {
   output_mgr_.WriteOutputs();
   /* Write interaction information/crosslink positions, etc */
   iengine_.WriteOutputs();
-  if (i_step_ == 0) {
-    return;  // skip first step
-  }
   /* If we are analyzing run time and this is the last step, record final time
    * here. */
-  if (params_.time_analysis && i_step_ == params_.n_steps - 1) {
+  if (params_.time_analysis && i_step_ == params_.n_steps) {
     double cpu_final_time = cpu_time();
     double cpu_time = cpu_final_time - cpu_init_time_;
     std::cout << "CPU Time for Initialization: " << cpu_init_time_ << "\n";
@@ -506,10 +511,10 @@ void Simulation::RunProcessing(run_options run_opts) {
   int last_step =
       (run_opts.with_reloads ? params_.n_steps - 1 : 2 * params_.n_steps);
   bool run_analyses = run_opts.analysis_flag;
-  for (i_step_ = 0; true; ++i_step_) {
+  for (i_step_ = 1; true; ++i_step_) {
     params_.i_step = i_step_;
     // i_step_ = params_.i_step_;
-    time_ = (i_step_ + 1) * params_.delta;
+    time_ = (i_step_)*params_.delta;
     PrintComplete();
     output_mgr_.ReadInputs();
     iengine_.ReadInputs();
@@ -523,17 +528,17 @@ void Simulation::RunProcessing(run_options run_opts) {
       }
       return;
     }
-    if (i_step_ < params_.n_steps_equil) {
+    if (i_step_ <= params_.n_steps_equil) {
       Draw(run_opts.single_frame);
       continue;
-    } else if (i_step_ == params_.n_steps_equil && run_analyses) {
+    } else if (i_step_ == params_.n_steps_equil + 1 && run_analyses) {
       // InitAnalysis initalizes and runs the first batch of analyses
       for (auto it = species_.begin(); it != species_.end(); ++it) {
         (*it)->InitAnalysis();
       }
-      if (local_order && i_step_ % params_.local_order_n_analysis == 0) {
-        iengine_.StructureAnalysis();
-      }
+      // if (local_order && i_step_ % params_.local_order_n_analysis == 0) {
+      // iengine_.StructureAnalysis();
+      //}
       continue;
     }
     if (run_analyses) {

@@ -1409,6 +1409,8 @@ void Filament::ReportAll() {
     */
 
 void Filament::WriteSpec(std::fstream &ospec) {
+  int mid = GetMeshID();
+  ospec.write(reinterpret_cast<char *>(&mid), sizeof(mid));
   ospec.write(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   ospec.write(reinterpret_cast<char *>(&length_), sizeof(length_));
   ospec.write(reinterpret_cast<char *>(&persistence_length_),
@@ -1449,6 +1451,9 @@ void Filament::WriteSpec(std::fstream &ospec) {
 void Filament::ReadSpec(std::fstream &ispec) {
   if (ispec.eof()) return;
   double r0[3], rf[3], u_bond[3];
+  int mid;
+  ispec.read(reinterpret_cast<char *>(&mid), sizeof(mid));
+  SetMeshID(mid);
   ispec.read(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   ispec.read(reinterpret_cast<char *>(&length_), sizeof(length_));
   ispec.read(reinterpret_cast<char *>(&persistence_length_),
@@ -1479,6 +1484,7 @@ void Filament::ReadSpec(std::fstream &ispec) {
     bonds_[i_bond].SetOrientation(u_bond);
     bonds_[i_bond].SetDiameter(diameter_);
     bonds_[i_bond].SetLength(bond_length_);
+    bonds_[i_bond].SetMeshID(GetMeshID());
     bonds_[i_bond].UpdatePeriodic();
   }
   sites_[n_bonds_].SetOrientation(sites_[n_bonds_ - 1].GetOrientation());

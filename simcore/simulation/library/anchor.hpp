@@ -2,7 +2,10 @@
 #define _SIMCORE_ANCHOR_H_
 
 #include "mesh.hpp"
+#include "neighbor_list.hpp"
 
+/* Class for bound crosslink heads (called anchors). Tracks and updates its
+   absolute position in space and relative position to its bound object. */
 class Anchor : public Object {
 private:
   bool bound_;
@@ -24,10 +27,11 @@ private:
   double f_stall_;
   double force_dep_vel_flag_;
 
+  NeighborList neighbors_;
+
   Bond *bond_;
   Mesh *mesh_;
 
-  int bond_oid_;
   int mesh_n_bonds_;
 
   void UpdateAnchorPositionToBond();
@@ -48,13 +52,20 @@ public:
   void SetWalker(int dir, double walk_v);
   void AttachObjRandom(Object *o);
   void AttachObjLambda(Object *o, double lambda);
+  void AttachObjMeshLambda(Object *o, double mesh_lambda);
   double const GetMeshLambda();
   double const GetBondLambda();
   void SetBondLambda(double l);
+  void SetMeshLambda(double ml);
   void SetBound();
-  void Clear();
+  void Unbind();
   int const GetBoundOID();
   void Draw(std::vector<graph_struct *> *graph_array);
+  void AddNeighbor(Object *neighbor);
+  void ClearNeighbors();
+  const Object *const *GetNeighborListMem();
+  Object *GetNeighbor(int i_neighbor);
+  int GetNNeighbors();
 };
 
 #endif

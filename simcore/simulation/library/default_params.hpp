@@ -135,7 +135,8 @@
   default_config["crosslink"]["diffusion_flag"] = "0";
   default_config["crosslink"]["k_on"] = "10";
   default_config["crosslink"]["k_off"] = "2";
-  default_config["crosslink"]["k_on_sd"] = "10";
+  default_config["crosslink"]["k_on_d"] = "10";
+  default_config["crosslink"]["k_off_d"] = "2";
   default_config["crosslink"]["force_dep_factor"] = "1";
   default_config["crosslink"]["polar_affinity"] = "0";
   default_config["crosslink"]["k_spring"] = "10";

@@ -6,7 +6,7 @@ void Anchor::Init() {
   diameter_ = params_->crosslink.diameter;
   color_ = params_->crosslink.color;
   draw_ = draw_type::_from_string(params_->crosslink.draw_type.c_str());
-  Clear();
+  Unbind();
   walker_ = (params_->crosslink.walker ? true : false);
   step_direction_ = (params_->crosslink.step_direction == 0
                          ? 0
@@ -28,6 +28,7 @@ double const Anchor::GetMeshLambda() { return mesh_lambda_; }
 double const Anchor::GetBondLambda() { return bond_lambda_; }
 
 void Anchor::SetBondLambda(double l) { bond_lambda_ = l; }
+void Anchor::SetMeshLambda(double ml) { mesh_lambda_ = ml; }
 
 void Anchor::SetDiffusion() { diffusion_ = sqrt(24.0 * diameter_ / delta_); }
 
@@ -44,12 +45,6 @@ void Anchor::SetWalker(int dir, double walk_v) {
 void Anchor::UpdateAnchorPositionToMesh() {
   if (!bound_)
     return;
-
-  // Check for unbinding of anchor from mesh
-  if (gsl_rng_uniform_pos(rng_.r) <= k_off_ * delta_) {
-    Clear();
-    return;
-  }
 
   // Check that the number of bonds has not changed due to dynamic instability
   if (mesh_n_bonds_ != mesh_->GetNBonds()) {
@@ -69,14 +64,15 @@ void Anchor::UpdateAnchorPositionToMesh() {
   bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
   // Figure out how far we are from the bond tail: bond_lambda
   bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber() * bond_length_;
-// assert(bond_lambda_ >= 0 && bond_lambda_ <= bond_length_);
+  // assert(bond_lambda_ >= 0 && bond_lambda_ <= bond_length_);
   if (bond_lambda_ < 0 || bond_lambda_ > bond_length_ + 1e-4) {
     printf("bond_num: %d\n", bond_->GetBondNumber());
     printf("mesh lambda: %2.8f\n", mesh_lambda_);
     printf("mesh length: %2.8f\n", mesh_length_);
     printf("bond lambda: %2.8f\n", bond_lambda_);
     printf("bond length: %2.8f\n", bond_length_);
-    error_exit("Graargh!!!\n");
+    error_exit(
+        "Bond lambda out of expected range in UpdateAnchorPositionToMesh\n");
   }
 
   // Update anchor position with respect to bond
@@ -98,24 +94,6 @@ void Anchor::UpdatePosition() {
     Walk();
     CheckMesh();
   }
-  // This occurs in UpdateAnchorPositionToMesh now
-  // Now figure out which bond we are on in the mesh according to mesh_lambda
-  //bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
-  // Figure out how far we are from the bond tail: bond_lambda
-  //bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber() * bond_length_;
-
-  // assert(bond_lambda_ >= 0 && bond_lambda_ <= bond_length_);
-  //if (bond_lambda_ < 0 || bond_lambda_ > bond_length_ + 1e-4) {
-    //printf("bond_num: %d\n", bond_->GetBondNumber());
-    //printf("mesh lambda: %2.8f\n", mesh_lambda_);
-    //printf("mesh length: %2.8f\n", mesh_length_);
-    //printf("bond lambda: %2.8f\n", bond_lambda_);
-    //printf("bond length: %2.8f\n", bond_length_);
-    //error_exit("Graargh!\n");
-  //}
-
-  // Update anchor position based on current bond attachment
-  //UpdateAnchorPositionToBond();
 }
 
 void Anchor::ApplyAnchorForces() {
@@ -171,7 +149,7 @@ bool Anchor::CheckMesh() {
       mesh_lambda_ = 0;
     } else {
       // Otherwise, unbind
-      Clear();
+      Unbind();
       return false;
     }
   } else if (mesh_lambda_ > mesh_length_) {
@@ -179,24 +157,25 @@ bool Anchor::CheckMesh() {
     if (end_pausing_) {
       mesh_lambda_ = mesh_length_;
     } else {
-      Clear();
+      Unbind();
       return false;
     }
   }
   return true;
 }
 
-void Anchor::Clear() {
+void Anchor::Unbind() {
   bound_ = false;
   bond_ = nullptr;
   mesh_ = nullptr;
   mesh_n_bonds_ = -1;
-  bond_oid_ = -1;
   bond_length_ = -1;
   bond_lambda_ = -1;
   mesh_lambda_ = -1;
   active_ = false;
+  ClearNeighbors();
   ZeroForce();
+  SetMeshID(-1);
 }
 
 void Anchor::Diffuse() {
@@ -249,7 +228,6 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
   if (mesh_ == nullptr) {
     error_exit("Object ptr passed to anchor was not referencing a mesh!");
   }
-  bond_oid_ = bond_->GetOID();
   mesh_n_bonds_ = mesh_->GetNBonds();
   bond_length_ = mesh_->GetBondLength();
   mesh_length_ = mesh_n_bonds_ * bond_length_;
@@ -275,6 +253,29 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
   bound_ = true;
 }
 
+void Anchor::AttachObjMeshLambda(Object *o, double mesh_lambda) {
+  if (o->GetType() != +obj_type::bond) {
+    error_exit("Crosslink binding to non-bond objects not yet implemented.");
+  }
+  bond_ = dynamic_cast<Bond *>(o);
+  if (bond_ == nullptr) {
+    error_exit("Object ptr passed to anchor was not referencing a bond!");
+  }
+  mesh_ = dynamic_cast<Mesh *>(bond_->GetMeshPtr());
+  if (mesh_ == nullptr) {
+    error_exit("Object ptr passed to anchor was not referencing a mesh!");
+  }
+  bound_ = true;
+  mesh_lambda_ = mesh_lambda;
+  mesh_n_bonds_ = -1;
+  UpdateAnchorPositionToMesh();
+  if (!bound_) {
+    error_exit("Updating anchor to mesh from checkpoint resulted in an unbound "
+               "anchor");
+  }
+  SetMeshID(bond_->GetMeshID());
+}
+
 bool Anchor::IsBound() { return bound_; }
 
 int const Anchor::GetBoundOID() {
@@ -288,3 +289,17 @@ int const Anchor::GetBoundOID() {
    in order to get them to draw while not technically bound to a bond
    ( e.g. bond_ -> null ) */
 void Anchor::SetBound() { bound_ = true; }
+
+void Anchor::AddNeighbor(Object *neighbor) { neighbors_.AddNeighbor(neighbor); }
+
+void Anchor::ClearNeighbors() { neighbors_.Clear(); }
+
+const Object *const *Anchor::GetNeighborListMem() {
+  return neighbors_.GetNeighborListMem();
+}
+
+Object *Anchor::GetNeighbor(int i_neighbor) {
+  return neighbors_.GetNeighbor(i_neighbor);
+}
+
+int Anchor::GetNNeighbors() { return neighbors_.NNeighbors(); }

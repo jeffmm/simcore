@@ -6,38 +6,12 @@
 #include "minimum_distance.hpp"
 #include <kmc.hpp>
 #include <kmc_choose.hpp>
-#include <mutex>
 
 enum xstate { unbound, singly, doubly };
 
-class Neighbors {
-private:
-  std::mutex mtx_;
-  std::vector<Object *> nlist_;
-
-public:
-  Neighbors() {}
-  ~Neighbors() { Clear(); }
-  Neighbors(const Neighbors &that) { this->nlist_ = that.nlist_; }
-  Neighbors &operator=(Neighbors const &that) {
-    this->nlist_ = that.nlist_;
-    return *this;
-  }
-  void AddNeighbor(Object *obj) {
-    std::lock_guard<std::mutex> lk(mtx_);
-    nlist_.push_back(obj);
-  }
-  const Object *const *GetNeighborsMem() { return &nlist_[0]; }
-  void Clear() { nlist_.clear(); }
-  int NNeighbors() { return nlist_.size(); }
-  Object *GetNeighbor(int i_neighbor) {
-    if (i_neighbor >= nlist_.size()) {
-      error_exit("Invalid index received in class Neighbor");
-    }
-    return nlist_[i_neighbor];
-  }
-};
-
+/* Class that represents a two-headed crosslink that can create tethers between
+ * two objects in the simulation. Governs binding and unbinding of crosslink
+ * heads, and tether forces between bound heads. */
 class Crosslink : public Object {
 private:
   MinimumDistance *mindist_;
@@ -46,33 +20,33 @@ private:
   LookupTable *lut_;
   std::vector<int> kmc_filter_;
   double k_on_;
-  double k_on_sd_;
+  double k_on_d_;
   double k_off_;
+  double k_off_d_;
   double k_spring_;
   double k_align_;
-  double f_spring_max_, rest_length_;
+  double f_spring_max_;
+  double rest_length_;
   double rcapture_;
   double tether_force_;
   double fdep_factor_;
   double polar_affinity_;
   std::vector<Anchor> anchors_;
-  Neighbors neighbors_;
   void CalculateTetherForces();
   void CalculateBinding();
   void SinglyKMC();
   void DoublyKMC();
   void UpdateAnchorsToMesh();
   void UpdateAnchorPositions();
-  void ApplyTetherForcesToMesh();
   void UpdateXlinkState();
 
 public:
   Crosslink();
   void Init(MinimumDistance *mindist, LookupTable *lut);
-  void UnbindAnchor(bool second = false);
   void AttachObjRandom(Object *obj);
   void UpdateCrosslink();
   void GetAnchors(std::vector<Object *> *ixors);
+  void GetInteractors(std::vector<Object *> *ixors);
   void Draw(std::vector<graph_struct *> *graph_array);
   void SetDoubly();
   void SetSingly();
@@ -81,13 +55,13 @@ public:
   bool IsUnbound();
   bool IsSingly();
   void UpdatePosition();
-  void AddNeighbor(Object *neighbor);
   void WriteSpec(std::fstream &ospec);
   void WriteCheckpoint(std::fstream &ocheck);
   void ReadSpec(std::fstream &ispec);
   void ReadCheckpoint(std::fstream &icheck);
   void ClearNeighbors();
   void ZeroForce();
+  void ApplyTetherForces();
 };
 
 #endif

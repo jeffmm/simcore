@@ -5,7 +5,7 @@
 #include <mutex>
 #include "auxiliary.hpp"
 #include "interaction.hpp"
-#include "neighbor_list.hpp"
+#include "verlet_list.hpp"
 #include "object.hpp"
 
 class StructAnalysis {
@@ -20,7 +20,7 @@ class StructAnalysis {
   fftw_complex *density_array_, *fft_array_;
   fftw_plan fft_plan;
 
-  NeighborList crossing_list_;
+  VerletList crossing_list_;
   double local_bin_width_, density_bin_width_;
   float *pdf_array_, *nematic_array_, *polar_array_, *pdf_array_temp_,
       *nematic_array_temp_, *polar_array_temp_, *structure_array_;

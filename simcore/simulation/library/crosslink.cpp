@@ -10,9 +10,10 @@ void Crosslink::Init(MinimumDistance *mindist, LookupTable *lut) {
   color_ = params_->crosslink.tether_color;
   draw_ = draw_type::_from_string(params_->crosslink.tether_draw_type.c_str());
   rest_length_ = params_->crosslink.rest_length;
-  k_on_ = params_->crosslink.k_on;
-  k_on_sd_ = params_->crosslink.k_on_sd; // k_on for singly to doubly
-  k_off_ = params_->crosslink.k_off;
+  k_on_ = params_->crosslink.k_on;       // k_on for unbound to singly
+  k_off_ = params_->crosslink.k_off;     // k_off for singly to unbound
+  k_on_d_ = params_->crosslink.k_on_d;   // k_on for singly to doubly
+  k_off_d_ = params_->crosslink.k_off_d; // k_off for doubly to singly
   k_spring_ = params_->crosslink.k_spring;
   k_align_ = params_->crosslink.k_align;
   f_spring_max_ = params_->crosslink.f_spring_max;
@@ -30,38 +31,15 @@ void Crosslink::Init(MinimumDistance *mindist, LookupTable *lut) {
   SetSingly();
 }
 
-void Crosslink::UpdatePosition() {
-  SetPosition(anchors_[0].GetPosition());
-  SetScaledPosition(anchors_[0].GetScaledPosition());
-  SetOrientation(anchors_[0].GetOrientation());
-  length_ = 0;
-}
+/* Function used to set anchor[0] position etc to xlink position etc */
+void Crosslink::UpdatePosition() {}
 
 void Crosslink::GetAnchors(std::vector<Object *> *ixors) {
   if (IsUnbound())
     return;
-  std::vector<Object *> ix;
-  ix.push_back(&(anchors_[0]));
+  ixors->push_back(&anchors_[0]);
   if (IsDoubly()) {
-    ix.push_back(&(anchors_[1]));
-  }
-  ixors->insert(ixors->end(), ix.begin(), ix.end());
-}
-
-void Crosslink::UnbindAnchor(bool second) {
-  /* If singly bound, just clear both */
-  if (IsSingly()) {
-    anchors_[0].Clear();
-    anchors_[1].Clear();
-    return;
-  }
-  if (second) {
-    anchors_[1].Clear();
-  }
-  /* When singly bound, only consider first anchor populated */
-  else {
-    anchors_[0] = anchors_[1];
-    anchors_[1].Clear();
+    ixors->push_back(&anchors_[1]);
   }
 }
 
@@ -73,7 +51,7 @@ void Crosslink::SinglyKMC() {
   double unbind_prob = k_off_ * delta_;
   /* Must populate filter with 1 for every neighbor, since KMC
   expects a mask. We already guarantee uniqueness, so we won't overcount. */
-  int n_neighbors = neighbors_.NNeighbors();
+  int n_neighbors = anchors_[0].GetNNeighbors();
   std::vector<int> kmc_filter(n_neighbors, 1);
   /* Initialize KMC calculation */
   KMC<Object> kmc_bind(anchors_[0].pos, n_neighbors, rcapture_, delta_, lut_);
@@ -83,35 +61,19 @@ void Crosslink::SinglyKMC() {
 
   /* Calculate probability to bind */
   double kmc_bind_prob = 0;
-  std::vector<double> kmc_bind_factor(n_neighbors, k_on_sd_);
+  std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_);
   if (n_neighbors > 0) {
-    kmc_bind.CalcTotProbsSD(neighbors_.GetNeighborsMem(), kmc_filter,
+    kmc_bind.CalcTotProbsSD(anchors_[0].GetNeighborListMem(), kmc_filter,
                             anchors_[0].GetBoundOID(), 0, k_spring_, 1.0,
                             rest_length_, kmc_bind_factor);
     kmc_bind_prob = kmc_bind.getTotProb();
   }
   // Find out whether we bind, unbind, or neither.
   int head_activate = choose_kmc_double(unbind_prob, kmc_bind_prob, roll);
-  //double totProb = kmc_bind_prob + unbind_prob;
-
-  //int head_activate = -1; // No head activated
-  //if (totProb > 1.0) {
-    // Probability of KMC is greater than one, normalize
-    //head_activate = (roll < (unbind_prob / totProb)) ? 0 : 1;
-    // warning(
-    //"Probability of head binding or unbinding in SinglyKMC()"
-    //" is >1 (%2.2f). Change time step to prevent this!",
-    // totProb);
-  //} else if (roll < totProb) {
-    // Choose which action to perform, bind or unbind
-    //head_activate = (roll < unbind_prob) ? 0 : 1;
-  //} else { // No head binds or unbinds
-    //return;
-  //}
   // Change status of activated head
   if (head_activate == 0) {
     // Unbind bound head
-    anchors_[0].Clear();
+    anchors_[0].Unbind();
     SetUnbound();
   } else if (head_activate == 1) {
     // Bind unbound head
@@ -125,7 +87,7 @@ void Crosslink::SinglyKMC() {
       error_exit("kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
                  " returned an invalid result!");
     }
-    Object *bind_obj = neighbors_.GetNeighbor(i_bind);
+    Object *bind_obj = anchors_[0].GetNeighbor(i_bind);
     double obj_length = bind_obj->GetLength();
     /* KMC returns bind_lambda to be with respect to center of rod. We want it
        to be specified from the tail of the rod to be consistent */
@@ -146,75 +108,21 @@ void Crosslink::SinglyKMC() {
 /* Perform kinetic monte carlo step of protein with 2 heads of protein
  * object attached. */
 void Crosslink::DoublyKMC() {
-  if (!anchors_[0].IsBound() && !anchors_[1].IsBound()) {
-    anchors_[0].Clear();
-    anchors_[1].Clear();
-    SetUnbound();
-    return;
-  } else if (!anchors_[1].IsBound()) {
-    anchors_[1].Clear();
-    SetSingly();
-    return;
-  } else if (!anchors_[0].IsBound()) {
-    anchors_[0] = anchors_[1];
-    anchors_[1].Clear();
-    SetSingly();
-    return;
-  }
-  /* Check for polar affinities */
-  double affinity = 0;
-  if (ABS(polar_affinity_) > 1e-8) {
-    /* Check whether crosslink is linking two polar or antipolar bonds */
-    int po = SIGNOF(dot_product(n_dim_, anchors_[0].GetOrientation(),
-                                anchors_[1].GetOrientation()));
-    /* polar_affinity_ should range from -1 to 1, with the interval [-1, 0]
-     * corresponding to the affinity (between 0 and 1) of binding to antipolar
-     * filaments and the interval [0, 1] corresponding to polar aligned
-     * filaments. Affinity = 0 means there is no preference, whereas affinity
-     * approx 1 means there is a very strong preference for polar filaments and
-     * thus a strong likelihood of unbinding from antipolar filaments */
-    /* antipolar case */
-    if (po < 0 && polar_affinity_ > 0) {
-      affinity = polar_affinity_;
-    }
-    /* polar case */
-    else if (po > 0 && polar_affinity_ < 0) {
-      affinity = ABS(polar_affinity_);
-    }
-    if (affinity > 1) {
-      affinity = 1;
-    }
-  }
   /* Calculate force-dependent unbinding for each head */
   double tether_stretch = length_ - rest_length_;
   tether_stretch = (tether_stretch > 0 ? tether_stretch : 0);
   double fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
-  double totProb;
-  if (1 - affinity < 1e-4) {
-    totProb = 1;
-  } else {
-    totProb = 2 * k_off_ * delta_ * exp(fdep) / (1 - affinity);
-  }
+  double unbind_prob = k_off_d_ * delta_ * exp(fdep);
   double roll = gsl_rng_uniform_pos(rng_.r);
-  int head_activate = -1; // No head activated
-  if (totProb > 1.0) {    // Probability of KMC is greater than one, normalize
-    head_activate = (roll < 0.5) ? 0 : 1;
-    // warning(
-    //"Probability of head binding or unbinding in DoublyKMC()"
-    //" is >1 (%2.2f). Change time step to prevent this!",
-    // totProb);
-    // printf("tether length: %2.2f\nfdep: %6.2f\n", length_, fdep);
-  } else if (roll < totProb) { // Choose which head to unbind
-    head_activate = (roll < 0.5) ? 0 : 1;
-  } else { // No head unbinds
-    return;
-  }
+  // Each head has an equal likelihood to unbind (half the total probability)
+  int head_activate =
+      choose_kmc_double(0.5 * unbind_prob, 0.5 * unbind_prob, roll);
   if (head_activate == 0) {
     anchors_[0] = anchors_[1];
-    anchors_[1].Clear();
+    anchors_[1].Unbind();
     SetSingly();
-  } else {
-    anchors_[1].Clear();
+  } else if (head_activate == 1) {
+    anchors_[1].Unbind();
     SetSingly();
   }
 }
@@ -225,10 +133,18 @@ void Crosslink::CalculateBinding() {
   } else if (IsDoubly()) {
     DoublyKMC();
   }
-  neighbors_.Clear();
+  ClearNeighbors();
 }
 
-void Crosslink::ClearNeighbors() { neighbors_.Clear(); }
+/* Only singly-bound crosslinks interact */
+void Crosslink::GetInteractors(std::vector<Object *> *ixors) {
+  ClearNeighbors();
+  if (IsSingly()) {
+    ixors->push_back(&anchors_[0]);
+  }
+}
+
+void Crosslink::ClearNeighbors() { anchors_[0].ClearNeighbors(); }
 
 void Crosslink::UpdateAnchorsToMesh() {
   anchors_[0].UpdateAnchorPositionToMesh();
@@ -240,7 +156,9 @@ void Crosslink::UpdateAnchorPositions() {
   anchors_[1].UpdatePosition();
 }
 
-void Crosslink::ApplyTetherForcesToMesh() {
+void Crosslink::ApplyTetherForces() {
+  if (!IsDoubly())
+    return;
   anchors_[0].ApplyAnchorForces();
   anchors_[1].ApplyAnchorForces();
 }
@@ -250,36 +168,32 @@ void Crosslink::UpdateCrosslink() {
   UpdateAnchorsToMesh();
   /* Check if an anchor became unbound due to diffusion, etc */
   UpdateXlinkState();
-  /* If we are doubly-bound, calculate tether forces */
+  /* If we are doubly-bound, calculate and apply tether forces */
   CalculateTetherForces();
-  /* Transfer tether forces to mesh */
-  ApplyTetherForcesToMesh();
+  ApplyTetherForces();
   /* Have anchors diffuse/walk along mesh */
   UpdateAnchorPositions();
   /* Check if an anchor became unbound do to diffusion, etc */
   UpdateXlinkState();
   /* Check for binding/unbinding events using KMC */
   CalculateBinding();
-  /* If we are singly bound, update the position of the crosslinker to reflect
-   * the singly-bound anchor position for interaction purposes. TODO: Refactor
-   * this to use anchors for interactions. */
-  if (IsSingly()) {
-    UpdatePosition();
-  }
 }
 
 /* This function ensures that singly-bound crosslinks have anchor[0] bound and
    anchor[1] unbound. */
 void Crosslink::UpdateXlinkState() {
+  if (!anchors_[0].IsBound() && !anchors_[1].IsBound()) {
+    SetUnbound();
+    return;
+  }
   if (IsDoubly() && !anchors_[1].IsBound()) {
     SetSingly();
   } else if (IsDoubly() && !anchors_[0].IsBound()) {
     anchors_[0] = anchors_[1];
     SetSingly();
   }
-  if (IsSingly() && !anchors_[0].IsBound()) {
-    SetUnbound();
-    return;
+  if (IsSingly() && anchors_[1].IsBound()) {
+    SetDoubly();
   }
 }
 
@@ -299,6 +213,7 @@ void Crosslink::CalculateTetherForces() {
    * the spring does not resist compression. */
   length_ = sqrt(ix.dr_mag2);
   double stretch = length_ - rest_length_;
+  // We also update the tether's position etc, stored in the xlink position etc
   for (int i = 0; i < params_->n_dim; ++i) {
     orientation_[i] = ix.dr[i] / length_;
     position_[i] = ix.midpoint[i];
@@ -311,8 +226,8 @@ void Crosslink::CalculateTetherForces() {
     anchors_[0].AddForce(force_);
     anchors_[1].SubForce(force_);
   }
+  // Update xlink's position (for drawing)
   UpdatePeriodic();
-  /* TODO Apply torques on crosslinks if necessary */
 }
 
 /* Attach a crosslink anchor to object in a random fashion. Currently only
@@ -353,24 +268,11 @@ void Crosslink::Draw(std::vector<graph_struct *> *graph_array) {
   }
 }
 
-void Crosslink::AddNeighbor(Object *neighbor) {
-  neighbors_.AddNeighbor(neighbor);
-}
+void Crosslink::SetDoubly() { state_ = bind_state::doubly; }
 
-void Crosslink::SetDoubly() {
-  state_ = bind_state::doubly;
-  SetMeshID(0);
-}
+void Crosslink::SetSingly() { state_ = bind_state::singly; }
 
-void Crosslink::SetSingly() {
-  state_ = bind_state::singly;
-  SetMeshID(anchors_[0].GetMeshID());
-}
-
-void Crosslink::SetUnbound() {
-  state_ = bind_state::unbound;
-  SetMeshID(0);
-}
+void Crosslink::SetUnbound() { state_ = bind_state::unbound; }
 
 bool Crosslink::IsDoubly() { return state_ == +bind_state::doubly; }
 
@@ -396,6 +298,9 @@ void Crosslink::WriteSpec(std::fstream &ospec) {
   for (int i = 0; i < 3; ++i) {
     ospec.write(reinterpret_cast<char *>(&temp[i]), sizeof(double));
   }
+  int mid1 = anchors_[0].GetMeshID();
+  int mid2 = anchors_[1].GetMeshID();
+  ospec.write(reinterpret_cast<char *>(&mid1), sizeof(int));
   double const *const r0 = anchors_[0].GetPosition();
   std::copy(r0, r0 + 3, temp);
   for (int i = 0; i < 3; ++i) {
@@ -406,8 +311,9 @@ void Crosslink::WriteSpec(std::fstream &ospec) {
   for (int i = 0; i < 3; ++i) {
     ospec.write(reinterpret_cast<char *>(&temp[i]), sizeof(double));
   }
-  double lambda = anchors_[0].GetBondLambda();
+  double lambda = anchors_[0].GetMeshLambda();
   ospec.write(reinterpret_cast<char *>(&lambda), sizeof(double));
+  ospec.write(reinterpret_cast<char *>(&mid2), sizeof(int));
   double const *const r1 = anchors_[1].GetPosition();
   std::copy(r1, r1 + 3, temp);
   for (int i = 0; i < 3; ++i) {
@@ -418,13 +324,15 @@ void Crosslink::WriteSpec(std::fstream &ospec) {
   for (int i = 0; i < 3; ++i) {
     ospec.write(reinterpret_cast<char *>(&temp[i]), sizeof(double));
   }
-  lambda = anchors_[1].GetBondLambda();
+  lambda = anchors_[1].GetMeshLambda();
   ospec.write(reinterpret_cast<char *>(&lambda), sizeof(double));
 }
 
 void Crosslink::ReadSpec(std::fstream &ispec) {
   if (ispec.eof())
     return;
+  SetSingly();
+  anchors_[1].Unbind();
   bool is_doubly;
   ispec.read(reinterpret_cast<char *>(&is_doubly), sizeof(bool));
   ispec.read(reinterpret_cast<char *>(&diameter_), sizeof(double));
@@ -438,6 +346,9 @@ void Crosslink::ReadSpec(std::fstream &ispec) {
     ispec.read(reinterpret_cast<char *>(&temp[i]), sizeof(double));
   }
   SetOrientation(temp);
+  int mid;
+  ispec.read(reinterpret_cast<char *>(&mid), sizeof(int));
+  anchors_[0].SetMeshID(mid);
   for (int i = 0; i < 3; ++i) {
     ispec.read(reinterpret_cast<char *>(&temp[i]), sizeof(double));
   }
@@ -448,7 +359,9 @@ void Crosslink::ReadSpec(std::fstream &ispec) {
   anchors_[0].SetOrientation(temp);
   double lambda;
   ispec.read(reinterpret_cast<char *>(&lambda), sizeof(double));
-  anchors_[0].SetBondLambda(lambda);
+  anchors_[0].SetMeshLambda(lambda);
+  ispec.read(reinterpret_cast<char *>(&mid), sizeof(int));
+  anchors_[1].SetMeshID(mid);
   for (int i = 0; i < 3; ++i) {
     ispec.read(reinterpret_cast<char *>(&temp[i]), sizeof(double));
   }
@@ -458,7 +371,7 @@ void Crosslink::ReadSpec(std::fstream &ispec) {
   }
   anchors_[1].SetOrientation(temp);
   ispec.read(reinterpret_cast<char *>(&lambda), sizeof(double));
-  anchors_[1].SetBondLambda(lambda);
+  anchors_[1].SetMeshLambda(lambda);
   anchors_[0].UpdatePeriodic();
   anchors_[1].UpdatePeriodic();
   anchors_[0].SetBound();
@@ -466,8 +379,6 @@ void Crosslink::ReadSpec(std::fstream &ispec) {
     SetDoubly();
     UpdatePeriodic();
     anchors_[1].SetBound();
-  } else {
-    UpdatePosition();
   }
 }
 

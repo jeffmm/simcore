@@ -479,6 +479,7 @@ void Object::WritePosit(std::fstream &oposit) {
   oposit.write(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   oposit.write(reinterpret_cast<char *>(&length_), sizeof(length_));
 }
+
 void Object::ReadPosit(std::fstream &iposit) {
   if (iposit.eof())
     return;

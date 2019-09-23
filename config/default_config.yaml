@@ -308,7 +308,8 @@ crosslink:                          # Parameters specific to crosslinks.
   diffusion_flag: [0, int]          # Flag allowing bound crosslink heads to diffuse.
   k_on: [10, double]                # On-rate for binding crosslinks from solution to bonds.
   k_off: [2, double]                # Off-rate for bound crosslinks to go from bound to solution.
-  k_on_sd: [10, double]             # On-rate for singly bound to doubly bound crosslinks.
+  k_on_d: [10, double]              # On-rate for singly bound to doubly bound crosslinks.
+  k_off_d: [2, double]              # Off-rate for doubly bound to singly bound crosslinks.
   force_dep_factor: [1, double]     # Scalar in exponential force-dependent off-rate of doubly-
                                     # bound crosslinks when under a load.
   polar_affinity: [0, double]       # Affinity for crosslinks to remain bound to aligned filaments.

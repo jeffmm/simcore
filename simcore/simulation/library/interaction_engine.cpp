@@ -83,11 +83,6 @@ void InteractionEngine::Interact() {
 void InteractionEngine::CheckUpdateXlinks() {
   /* If we need to update crosslinks */
   if (xlink_.CheckUpdate()) {
-    /*TODO This might be too frequent: can I do this better?*/
-    // ForceUpdate();
-    // i_update_ = 0;
-    // return;
-    /*TODO Figure out why the below code leads to memory leaks */
     interactors_.clear();
     interactors_.insert(interactors_.end(), ix_objects_.begin(),
                         ix_objects_.end());
@@ -124,44 +119,27 @@ void InteractionEngine::UpdateInteractors() {
 }
 
 /* Checks whether or not the given anchor is supposed to be attached to the
-   given bond by checking minimum distance between anchor and bond as well as
-   where the anchor's bond_lambda. Returns true if the pair was a match, false
-   otherwise. */
-#define SMALL_DISTANCE 1e-4
+   given bond by checking mesh_id of both the bond and the anchor. If they
+   match, the anchor is attached to the mesh using the anchor mesh_lambda */
 bool InteractionEngine::CheckBondAnchorPair(Object *anchor, Object *bond) {
-  // Check that minimum distance between bond and anchor is small.
-  Interaction ix;
-  Anchor *a = dynamic_cast<Anchor *>(anchor);
-  if (a == nullptr) {
-    error_exit("Object pointer was unsuccessfully dynamically cast to an "
-               "Anchor pointer in CheckBondAnchorPair!");
-  }
-  if (bond->GetType() != +obj_type::bond) {
-    error_exit("CheckBondAnchorPair expected Bond object pointer, but object"
-               " pointer does not have bond obj_type!");
-  }
-  mindist_.ObjectObject(anchor, bond, &ix);
-  if (ix.dr_mag2 > SMALL_DISTANCE)
-    return false;
-  // Check that the point of minimum distance between the bond and anchor
-  // matches the anchor's bond_lambda
-  double contact_lambda = 0.0;
-  double const *const u_bond = bond->GetOrientation();
-  double const bond_length = bond->GetLength();
-  // Create vector from tail of bond to point of contact with bond and find
-  // magnitude, contact_lambda
-  for (int i = 0; i < n_dim_; ++i) {
-    double dlambda = ix.contact2[i] + 0.5 * bond_length * u_bond[i];
-    contact_lambda += SQR(dlambda);
-  }
-  contact_lambda = sqrt(contact_lambda);
-  double bond_lambda = a->GetBondLambda();
-  // Find the square distance between anchor's bond lambda and contact lambda
-  double sqr_lambda_diff = SQR(contact_lambda - bond_lambda);
-  // If this is also a very small value, then we have found the anchor's bond.
-  if (sqr_lambda_diff < SMALL_DISTANCE) {
-    a->AttachObjLambda(bond, bond_lambda);
-    return true;
+  // Check that the bond and anchor share a mesh_id
+  printf("anchor_mid: %d, bond_mid: %d\n", anchor->GetMeshID(),
+      bond->GetMeshID());
+  if (anchor->GetMeshID() == bond->GetMeshID()) {
+    Anchor *a = dynamic_cast<Anchor *>(anchor);
+    if (a == nullptr) {
+      error_exit("Object pointer was unsuccessfully dynamically cast to an "
+                 "Anchor pointer in CheckBondAnchorPair!");
+    }
+    if (bond->GetType() != +obj_type::bond) {
+      error_exit("CheckBondAnchorPair expected Bond object pointer, but object"
+                 " pointer does not have bond obj_type!");
+    }
+    // Check that the anchor isn't already attached
+    if (a->GetBondLambda() < 0) {
+      a->AttachObjMeshLambda(bond, a->GetMeshLambda());
+      return true;
+    }
   }
   return false;
 }
@@ -194,8 +172,9 @@ void InteractionEngine::PairBondCrosslinks() {
         n_anchors_attached++;
     } else if (obj2->GetSID() == +species_id::crosslink &&
                obj1->GetType() == +obj_type::bond) {
-      if (CheckBondAnchorPair(obj2, obj1))
+      if (CheckBondAnchorPair(obj2, obj1)) {
         n_anchors_attached++;
+      }
     }
   }
   /* Check that all anchors found their bond attachments */
@@ -251,7 +230,7 @@ void InteractionEngine::CheckUpdateObjects() {
     n_objs_ = obj_count;
     ForceUpdate();
     xlink_.UpdateObjsVolume();
-    //printf("Forcing interactor update, i_step: %d\n", params_->i_step);
+    // printf("Forcing interactor update, i_step: %d\n", params_->i_step);
   }
 }
 
@@ -340,10 +319,10 @@ void InteractionEngine::ProcessPairInteraction(
 
   /* If one object is a crosslink, add object to crosslink neighbor list */
   if (obj1->GetSID() == +species_id::crosslink) {
-    xlink_.AddNeighborToXlink(obj1, obj2);
+    xlink_.AddNeighborToAnchor(obj1, obj2);
     return;
   } else if (obj2->GetSID() == +species_id::crosslink) {
-    xlink_.AddNeighborToXlink(obj2, obj1);
+    xlink_.AddNeighborToAnchor(obj2, obj1);
     return;
   }
 
