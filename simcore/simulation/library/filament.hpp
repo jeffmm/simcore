@@ -8,10 +8,11 @@
 #ifdef ENABLE_OPENMP
 #include "omp.h"
 #endif
+#include "flory_schulz.hpp"
 #include "minimum_distance.hpp"
 
 class Filament : public Mesh {
- private:
+private:
   int dynamic_instability_flag_;
   int force_induced_catastrophe_flag_;
   int theta_validation_run_flag_;
@@ -30,13 +31,15 @@ class Filament : public Mesh {
   int n_motors_bound_;
   int eq_steps_;
   int eq_steps_count_ = 0;
+  int polydispersity_flag_ = 0;
+  int polydispersity_warn_on_truncate_ = 0;
   double min_length_;
   double max_bond_length_;
   double min_bond_length_;
   double persistence_length_;
   double persistence_length_target_;
   double target_step_;
-  double friction_ratio_;  // friction_par/friction_perp
+  double friction_ratio_; // friction_par/friction_perp
   double friction_par_;
   double friction_perp_;
   double rand_sigma_par_;
@@ -63,18 +66,19 @@ class Filament : public Mesh {
   double optical_trap_pos_[3];
   double optical_trap_pos2_[3];
   double max_length_;
+  double polydispersity_factor_;
   std::vector<double> gamma_inverse_;
-  std::vector<double> tensions_;       // n_sites-1
-  std::vector<double> g_mat_lower_;    // n_sites-2
-  std::vector<double> g_mat_upper_;    // n_sites-2
-  std::vector<double> g_mat_diag_;     // n_sites-1
-  std::vector<double> det_t_mat_;      // n_sites+1
-  std::vector<double> det_b_mat_;      // n_sites+1
-  std::vector<double> g_mat_inverse_;  // n_sites-2
-  std::vector<double> k_eff_;          // n_sites-2
-  std::vector<double> h_mat_diag_;     // n_sites-1
-  std::vector<double> h_mat_upper_;    // n_sites-2
-  std::vector<double> h_mat_lower_;    // n_sites-2
+  std::vector<double> tensions_;      // n_sites-1
+  std::vector<double> g_mat_lower_;   // n_sites-2
+  std::vector<double> g_mat_upper_;   // n_sites-2
+  std::vector<double> g_mat_diag_;    // n_sites-1
+  std::vector<double> det_t_mat_;     // n_sites+1
+  std::vector<double> det_b_mat_;     // n_sites+1
+  std::vector<double> g_mat_inverse_; // n_sites-2
+  std::vector<double> k_eff_;         // n_sites-2
+  std::vector<double> h_mat_diag_;    // n_sites-1
+  std::vector<double> h_mat_upper_;   // n_sites-2
+  std::vector<double> h_mat_lower_;   // n_sites-2
   std::vector<double> cos_thetas_;
   poly_state poly_;
   void UpdateSiteBondPositions();
@@ -111,7 +115,7 @@ class Filament : public Mesh {
   // void RebindMotors();
   bool CheckBondLengths();
 
- public:
+public:
   Filament();
   virtual void Init(bool force_overlap = false);
   virtual void InsertAt(double *pos, double *u);
@@ -158,7 +162,7 @@ typedef std::vector<
     filament_chunk_vector;
 
 class FilamentSpecies : public Species<Filament> {
- protected:
+protected:
   bool midstep_;
   // Analysis structures
   MinimumDistance mindist_;
@@ -173,7 +177,7 @@ class FilamentSpecies : public Species<Filament> {
       orientation_corr_file_, crossing_file_, polar_order_avg_file_,
       in_out_file_;
 
- public:
+public:
   FilamentSpecies() : Species() {
     SetSID(species_id::filament);
     midstep_ = true;
@@ -277,4 +281,4 @@ class FilamentSpecies : public Species<Filament> {
   virtual void CenteredOrientedArrangement() {}
 };
 
-#endif  // _SIMCORE_FILAMENT_H_
+#endif // _SIMCORE_FILAMENT_H_

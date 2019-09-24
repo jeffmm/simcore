@@ -27,7 +27,6 @@ class filament_parameters : public species_parameters {
     double length = -1;
     double persistence_length = 400;
     double max_length = 500;
-    double min_length = 1;
     double max_bond_length = 5;
     double min_bond_length = 1.5;
     int spiral_flag = 0;
@@ -71,6 +70,9 @@ class filament_parameters : public species_parameters {
     double flagella_period = 2;
     double flagella_amplitude = 1;
     int flocking_analysis = 0;
+    int polydispersity_flag = 0;
+    double polydispersity_factor = 0.03;
+    int polydispersity_warn_on_truncate = 0;
 };
 
 class passive_filament_parameters : public species_parameters {

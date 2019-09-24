@@ -15,7 +15,7 @@ n_graph: 100
 graph_background: 0
 movie_flag: 0
 
-system_radius: 50
+system_radius: 200
 potential: soft
 soft_potential_mag: 300
 stoch_flag: 1
@@ -25,19 +25,22 @@ n_thermo: 100
 interaction_flag: 1
 
 filament:
-  num: 20
-  packing_fraction: -1
+  num: 1
+  packing_fraction: 0.2
   insertion_type: random
   #insert_file: anchor_ds_insert.yaml
   diameter: 1
-  overlap: 1
+  overlap: 0
   length: 50
   perlen_ratio: 200
   n_bonds: 6
   driving_factor: 0
   dynamic_instability_flag: 1
-  min_bond_length: 4
-  max_bond_length: 8
+  min_bond_length: 3
+  max_bond_length: 6
+  polydispersity_flag: 1
+  polydispersity_factor: 0.03
+  polydispersity_warn_on_truncate: 1
   v_poly: 10
   v_depoly: 20
   f_grow_to_shrink: 100

@@ -15,7 +15,6 @@
   default_config["filament"]["length"] = "-1";
   default_config["filament"]["persistence_length"] = "400";
   default_config["filament"]["max_length"] = "500";
-  default_config["filament"]["min_length"] = "1";
   default_config["filament"]["max_bond_length"] = "5";
   default_config["filament"]["min_bond_length"] = "1.5";
   default_config["filament"]["spiral_flag"] = "0";
@@ -59,6 +58,9 @@
   default_config["filament"]["flagella_period"] = "2";
   default_config["filament"]["flagella_amplitude"] = "1";
   default_config["filament"]["flocking_analysis"] = "0";
+  default_config["filament"]["polydispersity_flag"] = "0";
+  default_config["filament"]["polydispersity_factor"] = "0.03";
+  default_config["filament"]["polydispersity_warn_on_truncate"] = "0";
   default_config["passive_filament"]["diameter"] = "1";
   default_config["passive_filament"]["length"] = "-1";
   default_config["passive_filament"]["persistence_length"] = "400";

@@ -74,9 +74,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("max_length")==0) {
             params->filament.max_length = jt->second.as<double>();
           }
-          else if (param_name.compare("min_length")==0) {
-            params->filament.min_length = jt->second.as<double>();
-          }
           else if (param_name.compare("max_bond_length")==0) {
             params->filament.max_bond_length = jt->second.as<double>();
           }
@@ -205,6 +202,15 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("flocking_analysis")==0) {
             params->filament.flocking_analysis = jt->second.as<int>();
+          }
+          else if (param_name.compare("polydispersity_flag")==0) {
+            params->filament.polydispersity_flag = jt->second.as<int>();
+          }
+          else if (param_name.compare("polydispersity_factor")==0) {
+            params->filament.polydispersity_factor = jt->second.as<double>();
+          }
+          else if (param_name.compare("polydispersity_warn_on_truncate")==0) {
+            params->filament.polydispersity_warn_on_truncate = jt->second.as<int>();
           }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();

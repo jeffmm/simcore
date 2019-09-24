@@ -143,7 +143,6 @@ filament:                            # Parameters unique to filament class of ob
                                      # assigned to each filament between min_length and max_length.
   persistence_length: [400, double]  # Persistence length of filament.
   max_length: [500,double]           # Maximum filament length. Also used for dynamic instability.
-  min_length: [1, double]            # Minimum filament length. Also used for dynamic instability.
   max_bond_length: [5, double]       # Maximum bond length. When using dynamic instability, the
                                      # number of bonds used to discretize filament may change while
                                      # filament is growing or shrinking to stay in range.
@@ -222,6 +221,12 @@ filament:                            # Parameters unique to filament class of ob
   flocking_analysis: [0, int]       # Post-process analysis of measuring flocking filaments.
                                     # Generates output file giving number of flocking filaments as
                                     # well as number of exterior and interior flocking filaments.
+  polydispersity_flag: [0, int]     # If > 0, assign length from Flory-Schulz distribution
+  polydispersity_factor: [0.03, double]  # Factor to use in Flory-Schulz distribution. A sane
+                                         # polydispersity factor should be between 0.001 and 0.5.
+  polydispersity_warn_on_truncate: [0, int]  # whether to warn when polydispersity distribution is 
+                                             # truncated due to min_bond_length or max_length
+
 passive_filament:                   # Filament that stays fixed after simulation initialization.
   diameter: [1, double]
   length: [-1, double]
