@@ -163,15 +163,16 @@ void Crosslink::ApplyTetherForces() {
   anchors_[1].ApplyAnchorForces();
 }
 
-void Crosslink::UpdateCrosslink() {
+void Crosslink::UpdateCrosslinkForces() {
   /* Update anchor positions in space to calculate tether forces */
   UpdateAnchorsToMesh();
   /* Check if an anchor became unbound due to diffusion, etc */
   UpdateXlinkState();
   /* If we are doubly-bound, calculate and apply tether forces */
   CalculateTetherForces();
-  /* TODO NEED TO DO THIS IN A THREAD-SAFE WAY */
-  ApplyTetherForces();
+}
+
+void Crosslink::UpdateCrosslinkPositions() {
   /* Have anchors diffuse/walk along mesh */
   UpdateAnchorPositions();
   /* Check if an anchor became unbound do to diffusion, etc */

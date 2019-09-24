@@ -44,7 +44,8 @@ public:
   Crosslink();
   void Init(MinimumDistance *mindist, LookupTable *lut);
   void AttachObjRandom(Object *obj);
-  void UpdateCrosslink();
+  void UpdateCrosslinkForces();
+  void UpdateCrosslinkPositions();
   void GetAnchors(std::vector<Object *> *ixors);
   void GetInteractors(std::vector<Object *> *ixors);
   void Draw(std::vector<graph_struct *> *graph_array);

@@ -2,12 +2,19 @@
 #define _SIMCORE_CROSSLINK_MANAGER_H_
 
 #include "crosslink.hpp"
+#ifdef ENABLE_OPENMP
+#include "omp.h"
+#endif
+
+typedef std::vector<
+    std::pair<std::vector<Crosslink>::iterator, std::vector<Crosslink>::iterator>>
+    xlink_chunk_vector;
+typedef std::vector<Crosslink>::iterator xlink_iterator;
 
 class CrosslinkManager {
 private:
   bool update_;
   int n_xlinks_;
-  int n_anchors_bound_;
   int n_spec_;
   int n_checkpoint_;
   int spec_flag_;
@@ -31,6 +38,8 @@ private:
   void CalculateBindingFree();
   void BindCrosslink();
   void UpdateBoundCrosslinks();
+  void UpdateBoundCrosslinkForces();
+  void UpdateBoundCrosslinkPositions();
   void ApplyCrosslinkTetherForces();
   Object *GetRandomObject();
 
