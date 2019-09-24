@@ -155,6 +155,8 @@ void Species<T>::WriteCheckpoints() {
     std::cout << "ERROR: Output " << checkpoint_file_ << " file did not open\n";
     exit(1);
   }
+  long seed = rng_.GetSeed();
+  ocheck_file.write(reinterpret_cast<char *>(&seed), sizeof(seed));
   ocheck_file.write(reinterpret_cast<char *>(&size), sizeof(size));
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->WriteCheckpoint(ocheck_file);
@@ -208,12 +210,15 @@ void Species<T>::ReadCheckpoints() {
     exit(1);
   }
   int size = 0;
+  long seed = -1;
+  icheck_file.read(reinterpret_cast<char *>(&seed), sizeof(seed));
   icheck_file.read(reinterpret_cast<char *>(&size), sizeof(size));
   T member;
   members_.resize(size, member);
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->ReadCheckpoint(icheck_file);
   icheck_file.close();
+  rng_.SetSeed(seed);
 }
 
 template <typename T>

@@ -223,6 +223,8 @@ void CrosslinkManager::WriteCheckpoints() {
   }
 
   /* Write RNG state */
+  long seed = rng_.GetSeed();
+  ocheck_file.write(reinterpret_cast<char *>(&seed), sizeof(long));
   void *rng_state = gsl_rng_state(rng_.r);
   size_t rng_size = gsl_rng_size(rng_.r);
   ocheck_file.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
@@ -251,9 +253,10 @@ void CrosslinkManager::ReadCheckpoints() {
   /* Read RNG state */
   void *rng_state = gsl_rng_state(rng_.r);
   size_t rng_size;
+  long seed = -1;
+  icheck_file.read(reinterpret_cast<char *>(&seed), sizeof(long));
   icheck_file.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   icheck_file.read(reinterpret_cast<char *>(rng_state), rng_size);
-
   /* Read xlink vector sizes, first singly then doubly */
   n_xlinks_ = -1;
   icheck_file.read(reinterpret_cast<char *>(&n_xlinks_), sizeof(int));
@@ -274,6 +277,7 @@ void CrosslinkManager::ReadCheckpoints() {
   }
   /* Close the file */
   icheck_file.close();
+  rng_.SetSeed(seed);
 }
 
 void CrosslinkManager::InitOutputFiles() {

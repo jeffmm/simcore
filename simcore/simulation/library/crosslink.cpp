@@ -170,6 +170,7 @@ void Crosslink::UpdateCrosslink() {
   UpdateXlinkState();
   /* If we are doubly-bound, calculate and apply tether forces */
   CalculateTetherForces();
+  /* TODO NEED TO DO THIS IN A THREAD-SAFE WAY */
   ApplyTetherForces();
   /* Have anchors diffuse/walk along mesh */
   UpdateAnchorPositions();

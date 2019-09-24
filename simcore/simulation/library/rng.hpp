@@ -27,9 +27,8 @@ public:
   RNG() { Init(); }
   ~RNG() { Clear(); }
   static void SetSeed(long seed) { _seed_ = seed; }
-  RNG(const RNG &that) : RNG() { 
-    gsl_rng_memcpy(this->r, that.r);
-  }
+  static long GetSeed() { return _seed_; }
+  RNG(const RNG &that) : RNG() { gsl_rng_memcpy(this->r, that.r); }
   RNG &operator=(RNG const &that) {
     gsl_rng_memcpy(this->r, that.r);
     return *this;
