@@ -19,12 +19,15 @@ class FlorySchulz {
 private:
   double a_ = 0.03;       // polydispersity parameter, must be between 0 and 1
   double epsilon_ = 1e-3; // level of precision to use in our root-finder
+  double min_roll_ = 0;   // smallest allowed roll for lowest allowed value of k
   /* The cumulative distribution function of the Flory-Schulz distribution */
   double CDF(double k) { return 1 - pow(1 - a_, k) * (1 + a_ * k); }
   /* Function we are minimizing in our root-finder */
   double Func(double k, double roll) { return CDF(k) - roll; }
   /* Lower and upper bounds for the Flory-Schulz distribution */
   double upper_bound_ = 1000;
+  /* If we truncate the distribution for small bonds, get the minimum roll
+     acceptable to be above the cutoff */
   /* Root finder that effectively finds the inverse of the CDF to map a uniform
      random number between 0 and 1 to the Flory-Schulz distribution */
   double Bisection(double roll) {
@@ -60,14 +63,15 @@ public:
      parameter is the polydispersity parameter, which is a sane value in the
      range of 0.001 and 0.5 for the purposes of this simulation, but more
      realistically it should be in the range of 0.01 and 0.1 */
-  void Init(double a, double epsilon = 1e-3, double ub = 1000) {
+  void Init(double a, double k_min = 0, double epsilon = 1e-3,
+            double ub = 1000) {
     a_ = a;
     upper_bound_ = ub;
     if (ub < 0) {
       error_exit("The upper bound provided to the Flory-Schulz distribution "
                  "should be a positive number");
     }
-    epsilon = epsilon_;
+    epsilon_ = epsilon;
     if (a_ > 0.5 || a < 0.001) {
       error_exit("Flory-Schulz given off-base parameters. If you /really/ want"
                  " these polydispersity parameters, you'll have to remove this "
@@ -78,10 +82,27 @@ public:
       error_exit("You have provided the Flory-Schulz generator with an "
                  "unreasonable precision tolerance. Lower your expectations.");
     }
+    if (k_min < 0) {
+      error_exit("FlorySchulz expects a non-negative minimum k value");
+    } else if (k_min > 0 && k_min > Bisection(1 - epsilon_)) {
+      error_exit("Value for k_min is too large for the polydispersity "
+                 "parameter");
+    } else if (k_min > 0) {
+      min_roll_ = CDF(k_min);
+    }
   }
   /* Given a uniform random number in the range of 0 and 1 (roll), return its
      corresponding Flory-Schulz distribution random value */
-  double Rand(double roll) { return Bisection(roll); }
+  double Rand(double roll) {
+    /* If we reject values less than some number (because of a minimum length
+       requirement) then renormalize the roll to be within the acceptable range.
+       Note, we only do this for the lower bound, since FS distribution prefers
+       small values. */
+    if (min_roll_ > 0) {
+      roll = (1 - min_roll_) * roll + min_roll_;
+    }
+    return Bisection(roll);
+  }
 };
 
 #endif

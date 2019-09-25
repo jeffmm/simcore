@@ -26,8 +26,13 @@ void Filament::SetParameters() {
   min_bond_length_ = params_->filament.min_bond_length;
   min_length_ = 2 * min_bond_length_;
   dynamic_instability_flag_ = params_->filament.dynamic_instability_flag;
+  polydispersity_flag_ = params_->filament.polydispersity_flag;
+  polydispersity_factor_ = params_->filament.polydispersity_factor;
+  polydispersity_warn_on_truncate_ = params_->filament.polydispersity_warn_on_truncate;
+  /* Fix min and max bond length if we expect the length to be fixed and not
+     changing */
   if (length_ > 0 && params_->filament.n_bonds > 0 &&
-      !dynamic_instability_flag_) {
+      !dynamic_instability_flag_ && !polydispersity_flag_) {
     min_bond_length_ = length_ / params_->filament.n_bonds + 1e-6;
     max_bond_length_ = length_ / params_->filament.n_bonds - 1e-6;
   }
@@ -55,9 +60,6 @@ void Filament::SetParameters() {
   cilia_trap_flag_ = params_->filament.cilia_trap_flag;
   fic_factor_ = params_->filament.fic_factor;
   tip_force_ = 0.0;
-  polydispersity_flag_ = params_->filament.polydispersity_flag;
-  polydispersity_factor_ = params_->filament.polydispersity_factor;
-  polydispersity_warn_on_truncate_ = params_->filament.polydispersity_warn_on_truncate;
   shuffle_flag_ = params_->filament.shuffle;
   shuffle_factor_ = params_->filament.shuffle_factor;
   shuffle_frequency_ = params_->filament.shuffle_frequency;
@@ -218,20 +220,10 @@ bool Filament::InsertFirstBond() {
 }
 
 void Filament::InsertFilament(bool force_overlap) {
-  // if (params_->filament.insertion_type.compare("custom") == 0) {
-  // return;
-  //}
   bool out_of_bounds = true;
   int n_bonds;
-  bool polydisperse = (length_ <= 0);
   do {
     out_of_bounds = false;
-    // Polydisperse filaments
-    if (polydisperse) {
-      length_ = min_length_ +
-                (max_length_ - min_length_) * gsl_rng_uniform_pos(rng_.r);
-    }
-    // do {
     n_bonds = floor(length_ / max_bond_length_);
     if (dynamic_instability_flag_) {
       n_bonds = 2;
@@ -243,17 +235,6 @@ void Filament::InsertFilament(bool force_overlap) {
         bond_length_ = length_ / n_bonds;
       }
     }
-    // if (n_bonds == 2 && bond_length_ <= diameter_) {
-    // error_exit("bond_length <= diameter despite minimum number of
-    // bonds.\nTry reducing filament diameter or increasing filament
-    // length.");
-    //}
-    // if (bond_length_ <= diameter_) {
-    // max_bond_length_ += 0.1*max_bond_length_;
-    // warning("bond_length <= diameter, increasing max_bond_length to
-    // %2.2f",max_bond_length_);
-    //}
-    //} while (bond_length_ <= diameter_);
     Clear();
     force_overlap = !InsertFirstBond();
     if (!force_overlap && (out_of_bounds = sites_[n_sites_ - 1].CheckBounds()))

@@ -26,3 +26,7 @@ void warning(const char *warning_msg, ...) {
   fprintf(stderr, "\n");
   va_end(args);
 }
+
+void break_here() {
+  printf("This is a good place to put a breakpoint!\n");
+}

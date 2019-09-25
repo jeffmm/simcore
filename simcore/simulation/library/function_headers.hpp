@@ -19,3 +19,4 @@ void invert_sym_2d_matrix(double *a, double *b);
 void invert_sym_3d_matrix(double *a, double *b);
 void periodic_boundary_conditions(int n_dim, int n_periodic, double *h,
                                   double *h_inv, double *r, double *s);
+void break_here();

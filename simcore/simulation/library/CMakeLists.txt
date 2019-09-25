@@ -7,7 +7,7 @@ find_package(FFTW REQUIRED)
 set(LIB ${YAML_CPP_LIBRARIES} ${GSL_LIBRARIES}  ${FFTW_LIBRARIES} KMC)
 
 # If we aren't compiling on local machines, use openmp
-if (NOT APPLE)
+if (OMP)
     find_package(OpenMP REQUIRED)
     set(LIB ${LIB} OpenMP::OpenMP_CXX)
 endif()

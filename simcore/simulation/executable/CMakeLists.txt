@@ -10,7 +10,7 @@ set(LIB ${YAML_CPP_LIBRARIES} ${GSL_LIBRARIES}  ${FFTW_LIBRARIES} KMC)
 set(INCLUDES ${GSL_INCLUDE_DIRS} ${FFTW_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIR})
 
 # If we aren't compiling on local machines, use openmp
-if (NOT APPLE)
+if (OMP)
     find_package(OpenMP REQUIRED)
     set(LIB ${LIB} OpenMP::OpenMP_CXX)
 endif()

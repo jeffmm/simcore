@@ -3,7 +3,6 @@
 
 #include "mesh.hpp"
 #include "species.hpp"
-//#include "motor.hpp"
 
 #ifdef ENABLE_OPENMP
 #include "omp.h"
@@ -107,21 +106,14 @@ private:
   void RescaleBonds();
   void InitSpiral2D();
   void ReportAll();
-  // std::vector<Motor> motors_; //FIXME temporary
-  // Anchor * anchor_; //FIXME temporary?
-  // void UnbindMotor();
-  // void BindMotor();
   void CalculateBinding();
-  // void RebindMotors();
   bool CheckBondLengths();
 
 public:
   Filament();
   virtual void Init(bool force_overlap = false);
   virtual void InsertAt(double *pos, double *u);
-  // virtual void SetAnchor(Anchor * a);
   virtual bool CheckBounds(double buffer = 0);
-  // void DiffusionValidationInit();
   virtual void Integrate();
   virtual void Draw(std::vector<graph_struct *> *graph_array);
   virtual void UpdatePosition() {}
@@ -166,16 +158,37 @@ protected:
   bool midstep_;
   // Analysis structures
   MinimumDistance mindist_;
-  double e_bend_, tot_angle_, mse2e_, mse2e2_, polar_bin_width_,
-      contact_bin_width_, contact_cut_, po_avg_, cn_avg_,
-      *nematic_order_tensor_, *polar_order_vector_;
+  double fill_volume_;
+  double packing_fraction_;
+  double e_bend_;
+  double tot_angle_;
+  double mse2e_;
+  double mse2e2_;
+  double polar_bin_width_;
+  double contact_bin_width_;
+  double contact_cut_;
+  double po_avg_;
+  double cn_avg_;
+  double *nematic_order_tensor_;
+  double *polar_order_vector_;
   int **theta_histogram_;
   int *polar_order_histogram_;
-  int time_, n_bins_, n_bins_1d_, n_samples_, orientation_corr_n_steps_;
-  std::fstream spiral_file_, flock_file_, theta_file_, mse2e_file_,
-      global_order_file_, local_order_file_, polar_order_file_,
-      orientation_corr_file_, crossing_file_, polar_order_avg_file_,
-      in_out_file_;
+  int time_;
+  int n_bins_;
+  int n_bins_1d_;
+  int n_samples_;
+  int orientation_corr_n_steps_;
+  std::fstream spiral_file_;
+  std::fstream flock_file_;
+  std::fstream theta_file_;
+  std::fstream mse2e_file_;
+  std::fstream global_order_file_;
+  std::fstream local_order_file_;
+  std::fstream polar_order_file_;
+  std::fstream orientation_corr_file_;
+  std::fstream crossing_file_;
+  std::fstream polar_order_avg_file_;
+  std::fstream in_out_file_;
 
 public:
   FilamentSpecies() : Species() {
@@ -185,30 +198,49 @@ public:
   void Init(system_parameters *params, space_struct *space, long seed) {
     Species::Init(params, space, seed);
     sparams_ = &(params_->filament);
-    if (params_->filament.packing_fraction > 0) {
-      if (params_->filament.length <= 0) {
-        error_exit(
-            "Packing fraction with polydisperse lengths not implemented yet\n");
+    fill_volume_ = 0;
+    packing_fraction_ = params_->filament.packing_fraction;
+  }
+
+  void PopMember() {
+    if (packing_fraction_ > 0) {
+      double vol = members_.back().GetVolume();
+      fill_volume_ -= vol;
+    }
+    Species::PopMember();
+  }
+
+  void AddMember() {
+    Species::AddMember();
+    if (packing_fraction_ > 0) {
+      double vol = members_.back().GetVolume();
+      fill_volume_ += vol;
+      /* if we are still short on volume for the target packing fraction, then
+         request more members */
+      if (fill_volume_ < packing_fraction_ * space_->volume &&
+          members_.size() == sparams_->num) {
+        sparams_->num++;
       }
-      double fil_vol;
-      if (params_->n_dim == 2) {
-        fil_vol = params_->filament.length * params_->filament.diameter +
-                  0.25 * M_PI * SQR(params_->filament.diameter);
-        sparams_->num =
-            params_->filament.packing_fraction * space_->volume / fil_vol;
-      } else {
-        fil_vol = 0.25 * M_PI * SQR(params_->filament.diameter) *
-                      params_->filament.length +
-                  M_PI * CUBE(params_->filament.diameter) / 6.0;
-        sparams_->num =
-            params_->filament.packing_fraction * space_->volume / fil_vol;
-      }
-      // DPRINTF("  filament_num: %d\n  sys_volume: %2.2f\n  fil_volume: %2.2f\n
-      // packing_fraction: %2.2f\n",sparams_->num, space_->volume, fil_vol,
-      // params_->filament.packing_fraction);
     }
   }
 
+  void Reserve() {
+    int max_insert = GetNInsert();
+    if (packing_fraction_ > 0) {
+      double min_length = 2 * params_->filament.min_bond_length;
+      double diameter = params_->filament.diameter;
+      double min_vol = 0;
+      if (params_->n_dim == 2) {
+        min_vol = diameter * min_length + 0.25 * M_PI * diameter * diameter;
+      }
+      if (params_->n_dim == 3) {
+        min_vol = 0.25 * M_PI * diameter * diameter * min_length +
+                  1.0 / 6.0 * M_PI * diameter * diameter * diameter;
+      }
+      max_insert = (int) ceil(packing_fraction_ * space_->volume / min_vol);
+    }
+    members_.reserve(max_insert);
+  }
   void InitAnalysis();
   void RunAnalysis();
   void FinalizeAnalysis();

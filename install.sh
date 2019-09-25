@@ -8,6 +8,22 @@ do_build() {
     cd ..
 }
 
+do_omp_build() {
+    mkdir build
+    cd build || exit 1
+    cmake -DOMP=1 ..
+    make -j8
+    cd ..
+}
+
+do_graph_omp_build() {
+    mkdir build
+    cd build || exit 1
+    cmake -DGRAPH=1 -DOMP=1 ..
+    make -j8
+    cd ..
+}
+
 do_graph_build() {
     mkdir build
     cd build || exit 1
@@ -64,6 +80,8 @@ do_usage() {
     echo "  clean   - remove temporary installation files"
     echo "  build   - build simcore without graphics"
     echo "  gbuild  - build simcore with graphics"
+    echo "  omp     - build simcore with openmp without graphics"
+    echo "  gomp    - build simcore with openmp with graphics"
     echo "  debug   - build simcore in debug mode without graphics"
     echo "  gdebug  - build simcore in debug mode with graphics"
     echo "  test    - build simcore and run unit tests"
@@ -79,6 +97,12 @@ build)
     ;;
 debug)
     do_debug_build
+    ;;
+omp)
+    do_omp_build
+    ;;
+gomp)
+    do_graph_omp_build
     ;;
 gbuild)
     do_graph_build

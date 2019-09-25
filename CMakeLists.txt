@@ -24,6 +24,13 @@ if(TESTS)
   set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
+if (OMP AND APPLE)
+  set(ENV{CC} "/usr/local/opt/llvm/bin/clang")
+  set(ENV{CXX} "/usr/local/opt/llvm/bin/clang++")
+  set(ENV{LDFLAGS} "-L/usr/local/opt/llvm/lib")
+  set(ENV{CPPFLAGS} "-I/usr/local/opt/llvm/include")
+endif()
+
 if(CMAKE_BUILD_TYPE MATCHES "^[Dd]ebug")
   # if debug mode, do tests
   if(TESTS)

@@ -267,11 +267,15 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         if (num_failures > params_.species_insertion_failure_threshold) {
           break;
         }
+        /* Update the number of particles we need to insert, in case a species
+           needs to have a certain packing fraction */
+        num = (*spec)->GetNInsert();
       }
       if (num != inserted) {
         // Attempt a lattice-based insertion strategy (only 2d for now)
         if (params_.n_dim == 3)
           continue;
+        warning("Attempting lattice-based insertion strategy");
         double pos[3] = {0, 0, 0};
         pos[0] = -params_.system_radius;
         pos[1] = -params_.system_radius;
@@ -325,6 +329,9 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
               fflush(stdout);
             }
           }
+          /* Update the number of particles we need to insert, in case a species
+             needs to have a certain packing fraction */
+          num = (*spec)->GetNInsert();
           if (inserted == num)
             break;
         }
