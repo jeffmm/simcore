@@ -84,7 +84,7 @@ void Crosslink::SinglyKMC() {
     int i_bind = kmc_bind.whichRodBindSD(bind_lambda, roll);
     if (i_bind < 0) { // || bind_lambda < 0) {
       printf("i_bind = %d\nbind_lambda = %2.2f\n", i_bind, bind_lambda);
-      error_exit("kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
+      Logger::Error("kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
                  " returned an invalid result!");
     }
     Object *bind_obj = anchors_[0].GetNeighbor(i_bind);
@@ -242,7 +242,7 @@ void Crosslink::AttachObjRandom(Object *obj) {
     SetMeshID(obj->GetMeshID());
   } else {
     /* TODO: add binding to sphere or site-like objects */
-    error_exit("Crosslink binding to non-bond objects not yet implemented.");
+    Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
   }
 }
 
@@ -284,7 +284,7 @@ bool Crosslink::IsUnbound() { return state_ == +bind_state::unbound; }
 
 void Crosslink::WriteSpec(std::fstream &ospec) {
   if (IsUnbound()) {
-    warning("Unbound crosslink tried to WriteSpec!");
+    Logger::Warning("Unbound crosslink tried to WriteSpec!");
     return;
   }
   bool is_doubly = IsDoubly();

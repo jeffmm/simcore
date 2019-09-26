@@ -34,7 +34,7 @@ void Spherocylinder::InsertSpherocylinder() {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
   } else {
-    error_exit("Spherocylinder insertion type not recognized!");
+    Logger::Error("Spherocylinder insertion type not recognized!");
   }
 }
 
@@ -173,7 +173,7 @@ void SpherocylinderSpecies::FinalizeAnalysis() {
 
 void SpherocylinderSpecies::InitDiffusionAnalysis() {
   if (n_members_ == 1) {
-    warning(
+    Logger::Warning(
         "Diffusion analysis incompatible with simulations of 1 species member. "
         "Aborting diffusion analysis");
     params_->spherocylinder.diffusion_analysis = 0;
@@ -184,7 +184,7 @@ void SpherocylinderSpecies::InitDiffusionAnalysis() {
   int n_data = params_->n_steps / params_->spherocylinder.n_posit;
   time_avg_interval_ = n_data / n_samples_;
   if (time_avg_interval_ < 1) {
-    error_exit("Something went wrong in InitDiffusionAnalysis!");
+    Logger::Error("Something went wrong in InitDiffusionAnalysis!");
   }
   pos0_ = new double*[n_members_];
   u0_ = new double*[n_members_];
@@ -241,7 +241,7 @@ void SpherocylinderSpecies::CalculateMSD() {
   avg_sqr_dist_sqr /= n_members_;
   double stdev2 = avg_sqr_dist_sqr - SQR(avg_sqr_dist);
   if (stdev2 < 0) {
-    error_exit(
+    Logger::Error(
         "Something was negative in diffusion analysis when it shouldn't have "
         "been!\n");
   }

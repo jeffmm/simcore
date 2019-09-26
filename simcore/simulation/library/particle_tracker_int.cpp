@@ -15,7 +15,8 @@ void ParticleTracker::Init(system_parameters *p, std::vector<Object *> *o,
 }
 
 void ParticleTracker::AllocateCellList() {
-  Logger::Debug("Allocating cell lists");
+  Logger::Debug("Allocating cell lists\n");
+  // printf("Cell length: %2.2f\n",cell_length_1d_);
   int third_dim = (n_dim_ == 3 ? n_cells_1d_ : 1);
   clist_ = new Cell **[n_cells_1d_];
   for (int i = 0; i < n_cells_1d_; ++i) {
@@ -37,7 +38,7 @@ void ParticleTracker::DeallocateCellList() {
 }
 
 void ParticleTracker::ClearCells() {
-  Logger::Debug("Clearing cells");
+  Logger::Debug("Clearing cells\n");
 #ifdef ENABLE_OPENMP
 #pragma omp parallel
   {
@@ -69,7 +70,7 @@ void ParticleTracker::ClearCells() {
 void ParticleTracker::AssignCells() {
   ClearCells();
   int n_objs_ = objs_->size();
-  Logger::Debug("Assigning cells");
+  Logger::Debug("Assigning cells\n");
 #ifdef ENABLE_OPENMP
 #pragma omp parallel
   {
@@ -109,12 +110,15 @@ void ParticleTracker::AssignCells() {
       if (t == n_cells_1d_)
         t -= 1;
     }
+    if (r < 0 || s < 0) {
+      printf("x, r, y, s = %2.2f, %d, %2.2f, %d\n", x, r, y, s);
+    }
     // Catch NaN values to avoid segfault
     if (x != x || y != y) {
       double const *const pos = (*objs_)[i]->GetPosition();
-      Logger::Error("Something blew up in particle tracker:\n"
-                    "Object position: {%2.2f, %2.2f, %2.2f}",
-                    pos[0], pos[1], pos[2]);
+      std::cout << "Something blew up in particle tracker\n";
+      std::cout << pos[0] << " " << pos[1] << " " << pos[2] << "\n";
+      exit(1);
     }
     clist_[r][s][t].AddObj(i);
   }
@@ -122,7 +126,7 @@ void ParticleTracker::AssignCells() {
 }
 
 void ParticleTracker::CreatePairsCellList() {
-  Logger::Debug("Creating pairs");
+  Logger::Debug("Creating pairs\n");
   nlist_->clear();
 #ifdef ENABLE_OPENMP
 #pragma omp parallel
@@ -354,3 +358,5 @@ void ParticleTracker::AddToCellList(std::vector<Object *> ixs,
     clist_[r][s][t].AddObj(n_interactors++);
   }
 }
+
+void ParticleTracker::CreatePairs() {}

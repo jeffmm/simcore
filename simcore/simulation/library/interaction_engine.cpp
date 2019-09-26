@@ -129,11 +129,11 @@ bool InteractionEngine::CheckBondAnchorPair(Object *anchor, Object *bond) {
   if (anchor->GetMeshID() == bond->GetMeshID()) {
     Anchor *a = dynamic_cast<Anchor *>(anchor);
     if (a == nullptr) {
-      error_exit("Object pointer was unsuccessfully dynamically cast to an "
+      Logger::Error("Object pointer was unsuccessfully dynamically cast to an "
                  "Anchor pointer in CheckBondAnchorPair!");
     }
     if (bond->GetType() != +obj_type::bond) {
-      error_exit("CheckBondAnchorPair expected Bond object pointer, but object"
+      Logger::Error("CheckBondAnchorPair expected Bond object pointer, but object"
                  " pointer does not have bond obj_type!");
     }
     // Check that the anchor isn't already attached
@@ -182,7 +182,7 @@ void InteractionEngine::PairBondCrosslinks() {
   if (n_anchors_attached != anchors.size()) {
     printf("n_anchors_attached: %d\nn_anchors: %lu\n", n_anchors_attached,
            anchors.size());
-    error_exit("Not all anchors have found their bond!\n");
+    Logger::Error("Not all anchors have found their bond!\n");
   }
 }
 
@@ -282,7 +282,7 @@ void InteractionEngine::ProcessPairInteraction(
   // Composite objects do self interact if they want to
   // Check to make sure we aren't self-interacting at the simple object level
   if (obj1->GetOID() == obj2->GetOID()) {
-    // error_exit("Object %d attempted self-interaction!", obj1->GetOID());
+    // Logger::Error("Object %d attempted self-interaction!", obj1->GetOID());
   }
   // If we are disallowing like-like interactions, then similar species do not
   // interact...

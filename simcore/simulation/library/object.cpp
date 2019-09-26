@@ -153,7 +153,7 @@ bool Object::CheckBounds(double buffer) {
   double r_boundary = space_->radius;
   buffer += 0.5 * diameter_;
   if (buffer > r_boundary) {
-    error_exit("Cannot insert object into system!\n");
+    Logger::Error("Cannot insert object into system!");
   }
   int sign = (l > 0 ? SIGNOF(dot_product(n_dim_, r, u)) : 0);
   if (space_->type == +boundary_type::box) {
@@ -178,47 +178,6 @@ bool Object::CheckBounds(double buffer) {
   return (r_mag > SQR(r_boundary - buffer));
 }
 
-// bool Object::CheckBounds() {
-// double const * const pos = GetPosition();
-// double buffer = diameter_;
-// if (space_->n_periodic == n_dim_)
-// buffer = 0;
-// double R = space_->radius;
-// bool out_of_bounds = false;
-// switch (space_->type._to_integral()) {
-// case 0: // none
-// break;
-// case 2: // sphere
-//{
-// double rmag = 0;
-// for (int i=0; i<n_dim_; ++i) {
-// rmag += pos[i]*pos[i];
-//}
-//// Check that r^2 <= R^2
-// rmag=sqrt(rmag);
-// if (rmag+buffer>R) {
-// out_of_bounds = true;
-//}
-// break;
-//}
-// case 1: // box
-//// Make sure each dimension of position, x, y etc is within the box radius
-// for (int i=0; i<n_dim_; ++i) {
-// if (ABS(pos[i]) + buffer > R) {
-// out_of_bounds = true;
-//}
-//}
-// break;
-// case 3: // budding
-//// FIXME Add checks to make sure object is placed within budding boundary...
-//// right now, just trust user knows what they are doing.
-// break;
-// default:
-// error_exit("ERROR: Boundary type not recognized.\n");
-//}
-// return out_of_bounds;
-//}
-
 void Object::InsertRandom() {
   double mag;
   double buffer = diameter_;
@@ -227,7 +186,7 @@ void Object::InsertRandom() {
   double R = space_->radius;
   // XXX Check to make sure object fits inside unit cell if non-periodic
   if (R - buffer < 0) {
-    error_exit("Object #%d is too large to place in system.\n system radius: "
+    Logger::Error("Object #%d is too large to place in system.\n system radius: "
                "%2.2f, buffer: %2.2f",
                GetOID(), R, buffer);
   }
@@ -281,7 +240,7 @@ void Object::InsertRandom() {
     break;
   }
   default:
-    error_exit("ERROR: Boundary type unrecognized!\n");
+    Logger::Error("Boundary type unrecognized!");
   }
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   UpdatePeriodic();
@@ -325,11 +284,11 @@ void Object::InsertAt(double *pos, double *u) {
     // boundary... right now, just trust user knows what they are doing.
     break;
   default:
-    error_exit("ERROR: Boundary type not recognized.\n");
+    Logger::Error("Boundary type not recognized.");
   }
   if (out_of_bounds) {
-    error_exit("Object %d placed outside of system unit cell! System radius: "
-               "%2.2f, pos: {%2.2f %2.2f %2.2f}\n",
+    Logger::Error("Object %d placed outside of system unit cell! System radius: "
+               "%2.2f, pos: {%2.2f %2.2f %2.2f}",
                GetOID(), R, pos[0], pos[1], pos[2]);
   }
   SetPosition(pos);
@@ -383,9 +342,6 @@ void Object::UpdateKMC() {
   }
 }
 
-void Object::UpdatePositionMP() {
-  error_exit("UpdatePositionMP() needs to be overwritten. Exiting!");
-}
 void Object::SetColor(double const c, draw_type dtype) {
   color_ = c;
   draw_ = dtype;

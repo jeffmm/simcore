@@ -14,7 +14,7 @@ void Space::Init(system_parameters *params) {
   if (n_periodic_ > n_dim_) n_periodic_ = params_->n_periodic = n_dim_;
   radius_ = params_->system_radius;
   if (radius_ <= 0) {
-    error_exit("System radius is not a positive number!");
+    Logger::Error("System radius is not a positive number!");
   }
   bud_radius_ = 0;
   bud_height_ = 0;
@@ -43,27 +43,27 @@ void Space::Init(system_parameters *params) {
       bud_radius_ = params_->bud_radius;
       bud_height_ = params_->bud_height;
       if (bud_radius_ > radius_) {
-        error_exit("Bud radius larger than parent cell radius!");
+        Logger::Error("Bud radius larger than parent cell radius!");
       }
       if (bud_radius_ <= 0 || bud_height_ <= 0) {
-        error_exit(
+        Logger::Error(
             "Budding yeast boundary type selected but either bud radius\n\
             or bud height is not a positive number!");
       }
       if (bud_height_ >= bud_radius_ + radius_) {
-        error_exit(
+        Logger::Error(
             "Budding cell is not attached to mother cell.\
             Check bud height or boundary type!\n");
       }
       if (bud_height_ <= radius_ - bud_radius_) {
-        error_exit(
+        Logger::Error(
             "Budding cell is enclosed by mother cell.\
             Check bud height or boundary type!\n");
       }
       boundary_ = boundary_type::budding;
       break;
     default:
-      error_exit("Boundary type %d not recognized!", params_->boundary);
+      Logger::Error("Boundary type %d not recognized!", params_->boundary);
   }
   InitUnitCell();
   CalculateVolume();
@@ -225,11 +225,11 @@ void Space::UpdateVolume() {
       CalculateRadius();
       break;
     case 2:
-      error_exit(
+      Logger::Error(
           "Updating volume for spherical boundary types not implemented.");
       break;
     case 3:
-      error_exit(
+      Logger::Error(
           "Updating volume for budding yeast boundary types not implemented.");
       break;
     default:

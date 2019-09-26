@@ -89,7 +89,7 @@ void Species<T>::GetInteractors(std::vector<Object *> *ixors) {
 template <typename T>
 void Species<T>::GetLastInteractors(std::vector<Object *> *ix) {
   if (members_.size() == 0) {
-    error_exit(
+    Logger::Error(
         "Called for last interactors of species, but species has zero "
         "members\n");
   }
@@ -152,8 +152,7 @@ void Species<T>::WriteCheckpoints() {
   int size = members_.size();
   std::fstream ocheck_file(checkpoint_file_, std::ios::out | std::ios::binary);
   if (!ocheck_file.is_open()) {
-    std::cout << "ERROR: Output " << checkpoint_file_ << " file did not open\n";
-    exit(1);
+    Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
   }
   long seed = rng_.GetSeed();
   ocheck_file.write(reinterpret_cast<char *>(&seed), sizeof(seed));
@@ -166,12 +165,12 @@ void Species<T>::WriteCheckpoints() {
 template <typename T>
 void Species<T>::ReadPosits() {
   if (iposit_file_.eof()) {
-    printf("  EOF reached\n");
+    Logger::Info("EOF reached while reading posits");
     early_exit = true;
     return;
   }
   if (!iposit_file_.is_open()) {
-    printf(" ERROR: Posit file unexpectedly not open! Exiting.\n");
+    Logger::Warning("ERROR Posit file unexpectedly not open! Exiting early.");
     early_exit = true;
     return;
   }
@@ -205,9 +204,7 @@ template <typename T>
 void Species<T>::ReadCheckpoints() {
   std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
   if (!icheck_file.is_open()) {
-    std::cout << "  ERROR: Output " << checkpoint_file_
-              << " file did not open\n";
-    exit(1);
+    Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
   }
   int size = 0;
   long seed = -1;
@@ -225,16 +222,16 @@ template <typename T>
 void Species<T>::ReadSpecs() {
   if (ispec_file_.eof()) {
     if (HandleEOF()) {
-      printf("  Switching to new spec file\n");
+      Logger::Info("Switching to new spec file");
       return;
     } else {
-      printf("  EOF reached\n");
+      Logger::Info("EOF reached in species ReadSpecs");
       early_exit = true;
       return;
     }
   }
   if (!ispec_file_.is_open()) {
-    printf(" ERROR: Spec file unexpectedly not open! Exiting early.\n");
+    Logger::Warning("ERROR: Spec file unexpectedly not open! Exiting early.");
     early_exit = true;
     return;
   }
@@ -245,10 +242,10 @@ void Species<T>::ReadSpecs() {
      we caught a EOF here */
   if (size == -1) {
     if (HandleEOF()) {
-      printf("  Switching to new spec file\n");
+      Logger::Info("Switching to new spec file");
       return;
     } else {
-      printf("  EOF reached in species\n");
+      Logger::Info("EOF reached in species");
       early_exit = true;
       return;
     }
@@ -282,7 +279,7 @@ void Species<T>::ArrangeMembers() {
   else if (GetInsertionType().compare("centered_oriented") == 0)
     CenteredOrientedArrangement();
   else
-    warning(
+    Logger::Warning(
         "Arrangement not recognized and ArrangeMembers not overwritten by "
         "species!\n");
 }
@@ -336,7 +333,7 @@ void Species<T>::CrystalArrangement() {
   double nZ_max = (n_dim == 3 ? nX_max : 1);
   double N = nX_max * nY_max * nZ_max;
   if (n_members_ > N) {
-    error_exit(
+    Logger::Error(
         "Number of members in species exceeds maximum possible for crystal in "
         "system radius! Max possible: %d",
         (int)N);
@@ -397,7 +394,7 @@ void Species<T>::CrystalArrangement() {
       pos[0] += d + diff_x;
       if (++insert_x == nX_max) {
         if (inserted < n_members_ && n_dim == 2) {
-          error_exit(
+          Logger::Error(
               "Ran out of room while arranging crystal in 2D! Arranged %d/%d",
               inserted, n_members_);
         } else if (n_dim == 2)
@@ -406,7 +403,7 @@ void Species<T>::CrystalArrangement() {
         pos[0] = -R + 0.5 * d;
         pos[1] += d + diff_z;
         if (++insert_z == nZ_max && inserted < n_members_) {
-          error_exit(
+          Logger::Error(
               "Ran out of room while arranging crystal in 3D! Arranged %d/%d",
               inserted, n_members_);
         }
@@ -423,7 +420,7 @@ void Species<T>::CustomInsert() {
   } catch (...) {
     std::cout << "Failed to load custom insert file " << sparams_->insert_file
               << " for species " << spec_name_ << "\n";
-    error_exit("");
+    Logger::Error("");
   }
   if (!inode[spec_name_] || inode[spec_name_].size() != n_members_) {
     std::cout << "Custom insert file for species " << spec_name_
@@ -435,22 +432,22 @@ void Species<T>::CustomInsert() {
                 << " positions specified for " << n_members_
                 << " species members\n";
     }
-    error_exit("");
+    Logger::Error("");
   }
   for (YAML::const_iterator it = inode.begin(); it != inode.end(); ++it) {
     if (it->first.as<std::string>().compare(spec_name_) != 0) continue;
     if (!it->second.IsSequence()) {
-      error_exit("Custom insert file positions not specified as sequence");
+      Logger::Error("Custom insert file positions not specified as sequence");
     }
     int i_member = 0;
     for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
          ++jt) {
       double pos[3], u[3];
       if (!jt->IsSequence()) {
-        error_exit("Custom insert position not specified as sequence");
+        Logger::Error("Custom insert position not specified as sequence");
       }
       if (jt->size() != 2 || (*jt)[0].size() != 3 || (*jt)[1].size() != 3) {
-        error_exit(
+        Logger::Error(
             "Custom insert position not in format "
             "[[pos_x,pos_y,pos_z],[u_x,u_y,u_z]]");
       }

@@ -30,7 +30,7 @@ void Motor::SetDiffusion() { diffusion_ = sqrt(24.0 * diameter_ / delta_); }
 
 void Motor::SetWalker(int dir, double walk_v) {
   if (ABS(dir) != 1) {
-    error_exit("Walker direction must be set to +/- 1");
+    Logger::Error("Walker direction must be set to +/- 1");
   }
   walker_ = true;
   velocity_ = walk_v;
@@ -131,7 +131,7 @@ void Motor::CheckNearBuddingBoundary() {
   if (in_cone_region) {
     double scale_factor = space_->bud_neck_radius / sqrt(r_mag) - 1;
     if (scale_factor < 0)
-      error_exit("Something went wrong in CheckNearBuddingBoundary !\n");
+      Logger::Error("Something went wrong in CheckNearBuddingBoundary !\n");
     dr_mag2 = 0;
     for (int i = 0; i < n_dim_ - 1; ++i) {
       dr[i] = scale_factor * r[i];

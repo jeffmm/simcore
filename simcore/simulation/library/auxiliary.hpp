@@ -5,8 +5,8 @@
 #include "definitions.hpp"
 #include "macros.hpp"
 #include "parameters.hpp"
+#include "logger.hpp"
 
-extern bool debug_trace;
 extern bool early_exit;
 
 #include "function_headers.hpp"

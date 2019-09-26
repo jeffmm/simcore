@@ -8,6 +8,7 @@ void Simulation::Run(system_parameters params) {
   params_ = params;
   run_name_ = params.run_name;
   // Initialize simulation data structures
+  Logger::Debug("Something seems.. off?");
   InitSimulation();
   // Begin simulation
   RunSimulation();
@@ -19,10 +20,9 @@ void Simulation::Run(system_parameters params) {
  * motion using Runge-Kutta-like integration schemes for n_steps time steps. */
 void Simulation::RunSimulation() {
 #ifdef ENABLE_OPENMP
-  std::cout << "  Running simulation on " << omp_get_max_threads() << " threads"
-            << std::endl;
+  Logger::Info("Running simulation on %d threads", omp_get_max_threads());
 #else
-  std::cout << "  Running simulation" << std::endl;
+  Logger::Info("Running simulation");
 #endif
   /* Solve equations of motion for all objects */
 
@@ -51,7 +51,7 @@ void Simulation::RunSimulation() {
     /* Catch soft exceptions and terminate the simulation early */
     if (early_exit) {
       early_exit = false;
-      std::cout << "  Early exit triggered. Ending simulation.\n";
+      Logger::Info("Early exit triggered. Ending simulation.");
       return;
     }
     /* Generate all output files */
@@ -79,21 +79,23 @@ void Simulation::PrintComplete() {
     printf("    %2.1f%% complete\r", (double)it / steps);
     fflush(stdout);
   }
-  if (debug_trace) {
-    printf("********\nStep %d\n********\n", i_step_);
-  }
+  Logger::Trace("********\nStep %d\n********\n", i_step_);
 }
 
 /* Update the positions of all objects in the system using numerical
  * integration for one time step defined by the delta parameter. */
 void Simulation::Integrate() {
+  Logger::Debug("Updating object positions");
   for (auto it = species_.begin(); it != species_.end(); ++it) {
     (*it)->UpdatePositions();
   }
 }
 
 /* Calculate interaction forces between all objects if necessary. */
-void Simulation::Interact() { iengine_.Interact(); }
+void Simulation::Interact() { 
+  Logger::Debug("Calculating object interactions");
+  iengine_.Interact(); 
+}
 
 /* Remove forces on all objects. Objects with inertia that use higher order RK
  * schemes with dependence on previous forces need to save their forces in
@@ -107,6 +109,7 @@ void Simulation::ZeroForces() {
 /* Update system pressure, volume and rescale system size if necessary,
  * handling periodic boundaries in a sane way. */
 void Simulation::Statistics() {
+  Logger::Debug("Calculating system thermodynamics");
   if (i_step_ % params_.n_thermo == 0 && i_step_ > 0) {
     /* Calculate system pressure from stress tensor */
     iengine_.CalculatePressure();
@@ -135,7 +138,7 @@ void Simulation::ScaleSpeciesPositions() {
 
 /* Initialize all the data structures in the simulation */
 void Simulation::InitSimulation() {
-  std::cout << "  Initializing simulation" << std::endl;
+  Logger::Info("Initializing simulation");
   space_.Init(&params_);
   InitObjects();
   InitSpecies();
@@ -206,6 +209,7 @@ void Simulation::InitSpecies() {
 
 /* Initialize object positions and orientations.*/
 void Simulation::InsertSpecies(bool force_overlap, bool processing) {
+  Logger::Debug("Inserting species");
   if (params_.print_complete) {
     printf("  Inserting species: 0%% complete\n");
   } else {
@@ -222,8 +226,6 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       force_overlap = true;
     }
     int num = (*spec)->GetNInsert();
-    // printf("n_insert: %d\n",num);
-    // exit(0);
     bool not_done = true;
     int inserted = 0;
     int num_attempts = 0;
@@ -275,7 +277,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         // Attempt a lattice-based insertion strategy (only 2d for now)
         if (params_.n_dim == 3)
           continue;
-        warning("Attempting lattice-based insertion strategy");
+        Logger::Warning("Attempting lattice-based insertion strategy");
         double pos[3] = {0, 0, 0};
         pos[0] = -params_.system_radius;
         pos[1] = -params_.system_radius;
@@ -339,14 +341,14 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       }
       putchar('\n');
       if (num != inserted) {
-        printf("  Species insertion failure threshold of %d reached. "
+        Logger::Warning("Species insertion failure threshold of %d reached. "
                "Reattempting insertion.\n",
                params_.species_insertion_failure_threshold);
         (*spec)->PopAll();
         iengine_.Reset();
       }
       if (++num_attempts > params_.species_insertion_reattempt_threshold) {
-        error_exit("Unable to insert species randomly within the reattempt "
+        Logger::Error("Unable to insert species randomly within the reattempt "
                    "threshold of %d.\n",
                    params_.species_insertion_reattempt_threshold);
       }
@@ -360,7 +362,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
          *
          *if (!(*spec)->CanOverlap() &&
          *iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
-         *  error_exit("Species inserted with deterministic insertion type is
+         *  Logger::Error("Species inserted with deterministic insertion type is
          *overlapping!");
          *}
          *
@@ -377,6 +379,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
 /* Tear down data structures, e.g. cell lists, and close graphics window if
  * necessary. */
 void Simulation::ClearSimulation() {
+  Logger::Debug("Clearing simulation resources");
   output_mgr_.Close();
   ClearSpecies();
   iengine_.Clear();
@@ -385,7 +388,7 @@ void Simulation::ClearSimulation() {
     graphics_.Clear();
   }
 #endif
-  std::cout << "  Simulation complete" << std::endl;
+  Logger::Info("Simulation complete");
 }
 
 /* Tear down object type data structures */
@@ -400,6 +403,7 @@ void Simulation::ClearSpecies() {
 /* Update the OpenGL graphics window */
 void Simulation::Draw(bool single_frame) {
 #ifndef NOGRAPH
+  Logger::Trace("Drawing graphable objects");
   if (params_.graph_flag && i_step_ % params_.n_graph == 0) {
     /* Get updated object positions and orientations */
     GetGraphicsStructure();
@@ -416,6 +420,7 @@ void Simulation::Draw(bool single_frame) {
 /* Loop through objects in simulation to update their positions and
  * orientations in the graphics window */
 void Simulation::GetGraphicsStructure() {
+  Logger::Trace("Retrieving graphics structures from objects");
   graph_array_.clear();
   for (auto it = species_.begin(); it != species_.end(); ++it) {
     (*it)->Draw(&graph_array_);
@@ -426,6 +431,7 @@ void Simulation::GetGraphicsStructure() {
 
 /* Initialize output files */
 void Simulation::InitOutputs() {
+  Logger::Debug("Initializing output files");
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_,
                    run_name_);
   iengine_.InitOutputs();
@@ -445,6 +451,7 @@ void Simulation::InitInputs(run_options run_opts) {
 
 /* Write object positions, etc if necessary */
 void Simulation::WriteOutputs() {
+  Logger::Debug("Writing outputs");
   output_mgr_.WriteOutputs();
   /* Write interaction information/crosslink positions, etc */
   iengine_.WriteOutputs();
@@ -453,12 +460,10 @@ void Simulation::WriteOutputs() {
   if (params_.time_analysis && i_step_ == params_.n_steps) {
     double cpu_final_time = cpu_time();
     double cpu_time = cpu_final_time - cpu_init_time_;
-    std::cout << "CPU Time for Initialization: " << cpu_init_time_ << "\n";
-    std::cout << "CPU Time: " << cpu_time << "\n";
-    std::cout << "Sim Time: " << time_ << "\n";
-    std::cout << "CPU Time/Sim Time: "
-              << "\n"
-              << cpu_time / time_ << std::endl;
+    Logger::Info("CPU Time for Initialization: %2.6f", cpu_init_time_);
+    Logger::Info("CPU Time: %2.6f", cpu_time);
+    Logger::Info("Sim Time: %2.6f", time_);
+    Logger::Info("CPU Time/Sim Time: %2.6f\n", cpu_time / time_);
   }
 }
 
@@ -477,6 +482,7 @@ void Simulation::ProcessOutputs(system_parameters params,
 
 // Initialize data structures for post-processing
 void Simulation::InitProcessing(run_options run_opts) {
+  Logger::Info("Initializing datastructures for post-processing outputs");
   space_.Init(&params_);
   InitObjects();
   InitSpecies();
@@ -510,7 +516,7 @@ void Simulation::InitProcessing(run_options run_opts) {
 /* Post-processing on simulation outputs for movie generation, analysis output
  * generation, etc. */
 void Simulation::RunProcessing(run_options run_opts) {
-  std::cout << "Processing outputs for: " << run_name_ << std::endl;
+  Logger::Info("Processing outputs for %s", run_name_.c_str());
   bool local_order =
       (params_.local_order_analysis || params_.polar_order_analysis ||
        params_.overlap_analysis || params_.density_analysis);
@@ -527,7 +533,7 @@ void Simulation::RunProcessing(run_options run_opts) {
     iengine_.ReadInputs();
     if (early_exit) {
       early_exit = false;
-      std::cout << "  Early exit triggered. Ending simulation.\n";
+      Logger::Info("Early exit triggered. Ending simulation.");
       if (run_analyses && i_step_ > params_.n_steps_equil) {
         for (auto it = species_.begin(); it != species_.end(); ++it) {
           (*it)->FinalizeAnalysis();

@@ -25,7 +25,7 @@ public:
   int NNeighbors() { return nlist_.size(); }
   Object *GetNeighbor(int i_neighbor) {
     if (i_neighbor >= nlist_.size()) {
-      error_exit("Invalid index received in class NeighborList");
+      Logger::Error("Invalid index received in class NeighborList");
     }
     return nlist_[i_neighbor];
   }

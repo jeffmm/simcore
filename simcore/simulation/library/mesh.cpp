@@ -24,10 +24,8 @@ Site *Mesh::GetSite(int i) { return &(sites_[i]); }
 Bond *Mesh::GetBond(int i) { return &(bonds_[i]); }
 void Mesh::AddSite(Site s) {
   if (n_sites_ == n_bonds_max_ + 1) {
-    std::cerr << "ERROR! Attempting to add site beyond allocated maximum.\n";
-    std::cerr << "n_bonds_max_: " << n_bonds_max_ << ", n_sites_: " << n_sites_
-              << "\n";
-    exit(1);
+    Logger::Error("Attempting to add site beyond allocated maximum.\n"
+                  "n_bonds_max_: %d , n_sites_: %d", n_bonds_max_, n_sites_);
   }
   sites_.push_back(s);
   sites_.back().SetColor(color_, draw_);
@@ -36,8 +34,7 @@ void Mesh::AddSite(Site s) {
 }
 void Mesh::AddBond(Bond b) {
   if (n_bonds_ == n_bonds_max_) {
-    std::cerr << "ERROR! Attempting to add bond beyond allocated maximum.\n";
-    exit(1);
+    Logger::Error("Attempting to add bond beyond allocated maximum.\n");
   }
   bonds_.push_back(b);
   bonds_.back().SetColor(color_, draw_);
@@ -82,8 +79,6 @@ void Mesh::DoubleGranularityLinear() {
   }
   // Then update bond positions
   UpdateBondPositions();
-  //printf("Doubling mesh granularity of mesh_id: %d, i_step: %d\n", GetMeshID(),
-      //params_->i_step);
 }
 
 // Halves number of bonds in graph while attempting to keep same shape,
@@ -91,7 +86,7 @@ void Mesh::DoubleGranularityLinear() {
 // number of bonds
 void Mesh::HalfGranularityLinear() {
   if (n_bonds_ % 2 != 0) {
-    error_exit(
+    Logger::Error(
         "HalfGranularityLinear called on mesh with odd number of bonds: %d",
         n_bonds_);
   }
@@ -113,10 +108,6 @@ void Mesh::HalfGranularityLinear() {
   }
   // Then update bond positions
   UpdateBondPositions();
-  //printf("Halving mesh granularity of mesh_id: %d, i_step: %d\n", GetMeshID(),
-      //params_->i_step);
-
-  //printf("n_bonds: %d, n_interactors: %d\n", n_bonds_, GetCount());
 }
 
 void Mesh::UpdatePrevPositions() {
@@ -200,8 +191,7 @@ void Mesh::AddRandomBondAnywhere(double l, double d) {
 }
 void Mesh::AddRandomBondToSite(double l, int i_site) {
   if (i_site > n_sites_ || i_site < 0) {
-    std::cerr << "ERROR! Site index out of range in AddRandomBondToSite!\n";
-    exit(1);
+    Logger::Error("Site index out of range in AddRandomBondToSite!\n");
   }
   double const d = sites_[i_site].GetDiameter();
   double const *const pos0 = sites_[i_site].GetPosition();
@@ -226,8 +216,7 @@ void Mesh::AddBondToTip(double *u, double l) {
 
 void Mesh::AddBondToSite(double *u, double l, int i_site) {
   if (i_site > n_sites_ || i_site < 0) {
-    std::cerr << "ERROR! Site index out of range in AddBondToSite!\n";
-    exit(1);
+    Logger::Error("Site index out of range in AddBondToSite!\n");
   }
   double const d = sites_[i_site].GetDiameter();
   double const *const pos0 = sites_[i_site].GetPosition();
@@ -460,7 +449,7 @@ void Mesh::GetAvgPosition(double *ap) {
     size++;
   }
   if (size == 0)
-    error_exit("Something went wrong in GetAvgPosition!");
+    Logger::Error("Something went wrong in GetAvgPosition!");
   for (int i = 0; i < n_dim_; ++i)
     avg_p[i] /= size;
   std::copy(avg_p, avg_p + 3, ap);

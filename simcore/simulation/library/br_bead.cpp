@@ -39,7 +39,7 @@ void BrBead::InsertBrBead() {
   } else if (params_->br_bead.insertion_type.compare("custom") == 0) {
     // Nothing to do
   } else {
-    error_exit("BrBead insertion type not recognized!");
+    Logger::Error("BrBead insertion type not recognized!");
   }
 }
 

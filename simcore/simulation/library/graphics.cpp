@@ -8,8 +8,6 @@
 #include <iostream>
 #include "macros.hpp"
 
-void error_exit(const char *error_msg, ...);
-
 static void key_callback2d(GLFWwindow *window, int key, int scancode,
                            int action, int mods) {
   // set the window pointer to the keyboard object
@@ -166,7 +164,7 @@ void Graphics::KeyInteraction() {
   if (glfwWindowShouldClose(window_)) {
     glfwDestroyWindow(window_);
     glfwTerminate();
-    exit(1);
+    Logger::Error("Graphics window closed: terminating program");
   }
 }
 
@@ -243,13 +241,13 @@ void Graphics::Init2dWindow() {
 
   {  // Make dummy window so we can get GL extensions
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-    if (!glfwInit()) error_exit("Unable to initialize GLFW toolkit\n");
+    if (!glfwInit()) Logger::Error("Unable to initialize GLFW toolkit\n");
 
     window_ = glfwCreateWindow(windx_, windy_, "2D Sphero", NULL, NULL);
 
     if (!window_) {
       glfwTerminate();
-      error_exit("Failed to create display window\n");
+      Logger::Error("Failed to create display window\n");
     }
 
     // Wrangle in GL function pointers for GL version > 2.0
@@ -264,7 +262,7 @@ void Graphics::Init2dWindow() {
 
   if (!window_) {
     glfwTerminate();
-    error_exit("Failed to create display window\n");
+    Logger::Error("Failed to create display window\n");
   }
 
   glfwMakeContextCurrent(window_);
@@ -326,13 +324,13 @@ void Graphics::Init3dWindow() {
 
   {  // Make dummy window so we can get GL extensions
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-    if (!glfwInit()) error_exit("Unable to initialize GLFW toolkit\n");
+    if (!glfwInit()) Logger::Error("Unable to initialize GLFW toolkit\n");
 
     window_ = glfwCreateWindow(windx_, windy_, "2D Sphero", NULL, NULL);
 
     if (!window_) {
       glfwTerminate();
-      error_exit("Failed to create display window\n");
+      Logger::Error("Failed to create display window\n");
     }
     /* JMM - attempting to fix window size issue with mac Retina display */
     glfwGetFramebufferSize(window_, &windx_, &windy_);
@@ -348,7 +346,7 @@ void Graphics::Init3dWindow() {
 
   if (!window_) {
     glfwTerminate();
-    error_exit("Failed to create display window\n");
+    Logger::Error("Failed to create display window\n");
   }
 
   glfwMakeContextCurrent(window_);
@@ -1210,9 +1208,11 @@ void Graphics::InitDiscoRectangle() {
     discorectangle_.ShowInfoLog(discorectangle_.vertex_shader_, glGetShaderiv,
                                 glGetShaderInfoLog);
     glDeleteShader(discorectangle_.vertex_shader_);
-    exit(1);
+    Logger::Error("Failed to compile vertex shader");
   }
-  if (discorectangle_.vertex_shader_ == 0) exit(1);
+  if (discorectangle_.vertex_shader_ == 0) {
+    Logger::Error("Failed to compile vertex shader (vertex_shader_ = 0)");
+  }
 
   /* Fragment shader source code */
   const char *fs =
@@ -1232,8 +1232,11 @@ void Graphics::InitDiscoRectangle() {
     discorectangle_.ShowInfoLog(discorectangle_.fragment_shader_, glGetShaderiv,
                                 glGetShaderInfoLog);
     glDeleteShader(discorectangle_.fragment_shader_);
+    Logger::Error("Failed to compile fragment shader");
   }
-  if (discorectangle_.fragment_shader_ == 0) exit(1);
+  if (discorectangle_.fragment_shader_ == 0) {
+    Logger::Error("Failed to compile fragment shader (fragment_shader_ = 0)");
+  }
 
   discorectangle_.MakeProgram();
 
@@ -1410,10 +1413,11 @@ void Graphics::InitSpheroCylinder() {
     spherocylinder_.ShowInfoLog(spherocylinder_.vertex_shader_, glGetShaderiv,
                                 glGetShaderInfoLog);
     glDeleteShader(spherocylinder_.vertex_shader_);
-    exit(1);
+    Logger::Error("Failed to compile vertex shader");
   }
-  if (spherocylinder_.vertex_shader_ == 0) exit(1);
-
+  if (spherocylinder_.vertex_shader_ == 0) {
+    Logger::Error("Failed to compile vertex shader (vertex_shader_ = 0)");
+  }
   /* Fragment shader source code */
   const char *fs =
       "#version 120\n"
@@ -1455,7 +1459,7 @@ void Graphics::InitSpheroCylinder() {
     spherocylinder_.ShowInfoLog(spherocylinder_.fragment_shader_, glGetShaderiv,
                                 glGetShaderInfoLog);
     glDeleteShader(spherocylinder_.fragment_shader_);
-    exit(1);
+    Logger::Error("Failed to compile fragment shader");
   }
 
   spherocylinder_.MakeProgram();
@@ -1482,7 +1486,7 @@ void GraphicsPrimitive::MakeProgram() {
     fprintf(stderr, "Failed to link shader program:\n");
     ShowInfoLog(program_, glGetProgramiv, glGetProgramInfoLog);
     glDeleteProgram(program_);
-    exit(1);
+    Logger::Error("Failed to link shader program");
   }
 }
 

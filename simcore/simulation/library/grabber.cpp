@@ -39,15 +39,13 @@ void grabber(int width, int height, std::string fname, int framenum) {
   /* Define pixel array for a no extra byte. Mode 1. */
   pixels = (GLubyte *)malloc(pixelsqty);
   if (pixels == NULL) {
-    fprintf(stderr, "Not enough memory in grabber\n");
-    exit(1);
+    Logger::Error("Not enough memory in grabber");
   }
 
   /* Define revpixel array for a no extra byte. Mode 1. */
   revpixels = (GLubyte *)malloc(pixelsqty);
   if (revpixels == NULL) {
-    fprintf(stderr, "Not enough memory in grabber\n");
-    exit(1);
+    Logger::Error("Not enough memory in grabber");
   }
 
   /* Store Full Image from the back buffer */
@@ -76,8 +74,7 @@ void grabber(int width, int height, std::string fname, int framenum) {
   /* Open file */
   fp_bmp = fopen(bmpfname, "wb");
   if (fp_bmp == NULL) {
-    fprintf(stderr, "Unable to open output file in grabber\n");
-    exit(1);
+    Logger::Error("Unable to open output file in grabber");
   }
 
   /* Write 24-bit BMP file */

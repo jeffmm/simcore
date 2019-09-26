@@ -15,7 +15,7 @@ void StructAnalysis::Init(system_parameters* params, int* i_step) {
   density_analysis_ = params_->density_analysis;
   i_step_ = i_step;
   if (n_dim_ != 2) {
-    error_exit("3D structure analysis is not yet implemented");
+    Logger::Error("3D structure analysis is not yet implemented");
   }
   average_structure_ = params_->local_order_average;
   local_bin_width_ = params_->local_order_bin_width;
@@ -33,7 +33,7 @@ void StructAnalysis::Init(system_parameters* params, int* i_step) {
     n_bins_ = n_bins_1d_ * n_bins_1d_;
     /* Issue a RAM warning if the arrays are very large */
     if (6.0 * n_bins_ * 4.0 / 1e9 > 1) {
-      warning("Local structure content to exceed %2.2f GB of RAM!",
+      Logger::Warning("Local structure content to exceed %2.2f GB of RAM!",
               6.0 * n_bins_ * 4.0 / 1e9);
     }
     /* initialize arrays */
@@ -63,7 +63,7 @@ void StructAnalysis::Init(system_parameters* params, int* i_step) {
     n_bins_ = n_bins_1d_ * n_bins_1d_;
     /* Issue a RAM warning if the arrays are very large */
     if (6.0 * n_bins_ * 4.0 / 1e9 > 1) {
-      warning("Local structure content to exceed %2.2f GB of RAM!",
+      Logger::Warning("Local structure content to exceed %2.2f GB of RAM!",
               6.0 * n_bins_ * 4.0 / 1e9);
     }
     /* initialize arrays */
@@ -95,7 +95,7 @@ void StructAnalysis::ZeroDensityArray() {
 
 void StructAnalysis::SetNumObjs(int nobj) {
   // if (n_objs_ > 0) {
-  // error_exit("Object number in struct analysis reset after initialization.
+  // Logger::Error("Object number in struct analysis reset after initialization.
   // This is unexpected.");
   //}
   n_objs_ = nobj;
@@ -134,7 +134,7 @@ void StructAnalysis::Clear() {
 
 void StructAnalysis::WriteStructData() {
   if (count_ < 1 || n_objs_ < 1) {
-    warning(
+    Logger::Warning(
         "Time average count and/or object number not initialized in "
         "StructAnalysis. Skipping local order output.");
     return;
@@ -144,7 +144,7 @@ void StructAnalysis::WriteStructData() {
   std::string polar_file_name = params_->run_name + ".local_polar";
   pdf_file_.open(pdf_file_name, std::ios::out);
   if (!pdf_file_.is_open()) {
-    error_exit("Output file %s did not open", pdf_file_name.c_str());
+    Logger::Error("Output file %s did not open", pdf_file_name.c_str());
   }
   float vol = 4 * params_->system_radius * params_->system_radius;
   float rhoNinv = vol / (n_objs_ * n_objs_);
@@ -159,7 +159,7 @@ void StructAnalysis::WriteStructData() {
 
   nematic_file_.open(nematic_file_name, std::ios::out);
   if (!nematic_file_.is_open()) {
-    error_exit("Output file %s did not open", nematic_file_name.c_str());
+    Logger::Error("Output file %s did not open", nematic_file_name.c_str());
   }
   for (int i = 0; i < n_bins_1d_; ++i) {
     for (int j = 0; j < n_bins_1d_; ++j) {
@@ -174,7 +174,7 @@ void StructAnalysis::WriteStructData() {
 
   polar_file_.open(polar_file_name, std::ios::out);
   if (!polar_file_.is_open()) {
-    error_exit("Output file %s did not open", polar_file_name.c_str());
+    Logger::Error("Output file %s did not open", polar_file_name.c_str());
   }
   for (int i = 0; i < n_bins_1d_; ++i) {
     for (int j = 0; j < n_bins_1d_; ++j) {
@@ -189,7 +189,7 @@ void StructAnalysis::WriteStructData() {
 
 void StructAnalysis::WriteDensityData() {
   if (count_ < 1 || n_objs_ < 1) {
-    warning(
+    Logger::Warning(
         "Time average count and/or object number not initialized\
         in StructAnalysis. Skipping density output.");
     return;
@@ -479,7 +479,7 @@ void StructAnalysis::BinArray(int x, int y, double dotprod, bool is_local) {
   if (x > n_bins_1d_ - 1) x -= n_bins_1d_;
   if (y > n_bins_1d_ - 1) y -= n_bins_1d_;
   if (x < 0 || y < 0 || x > n_bins_1d_ - 1 || y > n_bins_1d_ - 1) {
-    warning("Invalid value found in BinArray in struct_analysis.cpp");
+    Logger::Warning("Invalid value found in BinArray in struct_analysis.cpp");
     return;
   }
   int index = n_bins_1d_ * y + x;

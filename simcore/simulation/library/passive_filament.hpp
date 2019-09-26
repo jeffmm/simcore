@@ -115,7 +115,7 @@ class PassiveFilamentSpecies : public Species<PassiveFilament> {
     sparams_ = &(params_->passive_filament);
     if (params_->passive_filament.packing_fraction > 0) {
       if (params_->passive_filament.length <= 0) {
-        error_exit(
+        Logger::Error(
             "Packing fraction with polydisperse lengths not implemented yet\n");
       }
       double fil_vol;
@@ -132,9 +132,6 @@ class PassiveFilamentSpecies : public Species<PassiveFilament> {
         sparams_->num = params_->passive_filament.packing_fraction *
                         space_->volume / fil_vol;
       }
-      // DPRINTF("  passive_filament_num: %d\n  sys_volume: %2.2f\n  fil_volume:
-      // %2.2f\n  packing_fraction: %2.2f\n",sparams_->num, space_->volume,
-      // fil_vol, params_->passive_filament.packing_fraction);
     }
   }
   void InitAnalysis();

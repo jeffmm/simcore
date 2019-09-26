@@ -1,6 +1,5 @@
 #include "simulation_manager.hpp"
 
-bool debug_trace;
 bool early_exit;
 
 /****************************************
@@ -21,18 +20,16 @@ void SimulationManager::InitManager(run_options run_opts) {
   if (pnode_["run_name"] && pnode_["run_name"].size() == 0) {
     run_name_ = pnode_["run_name"].as<std::string>();
   }
+  Logger::SetOutput((run_name_ + ".log").c_str());
   long seed = 7143961348914;
   if (pnode_["seed"] && pnode_["seed"].size() == 0) {
     seed = pnode_["seed"].as<long>();
   } else {
-    std::cout << "  WARNING: Default seed not overwritten!\n";
+    Logger::Warning("Default seed not overwritten!");
   }
 
   // Check command-line flags and run options.
   // Prefer command-line options over param file values.
-  if (run_opts_.debug) {
-    debug_trace = true;
-  }
   if (run_opts_.n_run_flag) {
     n_runs_ = run_opts_.n_runs;
   }
@@ -46,7 +43,8 @@ void SimulationManager::InitManager(run_options run_opts) {
   if ((run_opts_.make_movie || run_opts_.analysis_flag ||
        run_opts_.reduce_flag) &&
       n_runs_ > 1) {
-    error_exit("Attempted to run movies/analysis on multiple files.");
+    Logger::Error("Attempted to run movies/analysis on multiple files.");
+    // Logger::Error("Attempted to run movies/analysis on multiple files.");
   }
   if (run_opts_.auto_graph) {
     pnode_["auto_graph"] = 1;
@@ -208,7 +206,7 @@ void SimulationManager::CheckRandomParams() {
 double SimulationManager::GetRandomParam(std::string rtype, double min,
                                          double max) {
   if (max == min) {
-    error_exit(
+    Logger::Error(
         "Min and max value of parameter randomization sequence are equal.");
   }
   if (rtype.compare("R") == 0) {
@@ -218,7 +216,7 @@ double SimulationManager::GetRandomParam(std::string rtype, double min,
   } else if (rtype.compare("RLOG") == 0) {
     return pow(10.0, min + (max - min) * gsl_rng_uniform_pos(rng_->r));
   } else {
-    error_exit("Parameter randomization type not recognized.");
+    Logger::Error("Parameter randomization type not recognized.");
   }
 }
 
@@ -246,17 +244,17 @@ void SimulationManager::CountVariations() {
   if ((run_opts_.make_movie || run_opts_.analysis_flag ||
        run_opts_.reduce_flag) &&
       n_var_ > 1) {
-    error_exit("Attempted to run movies/analysis on multiple files.");
+    Logger::Error("Attempted to run movies/analysis on multiple files.");
   }
   if (n_var_ > 1) {
-    std::cout << "Initializing batch " << run_name_ << " of "
-              << n_var_ * n_runs_ << " simulations with " << n_var_
-              << " variations of " << n_runs_ << " runs each.\n";
+    Logger::Info("Initializing batch %s of %d simulations with %d variations of"
+                 " %d runs each",
+                 run_name_.c_str(), n_var_ * n_runs_, n_var_, n_runs_);
   } else if (n_runs_ > 1) {
-    std::cout << "Initializing batch of %d runs of simulation " << run_name_
-              << ".\n";
+    Logger::Info("Initializing batch of %d runs of simulation %s", n_runs_,
+                 run_name_.c_str());
   } else {
-    std::cout << "Initializing simulation " << run_name_ << ".\n";
+    Logger::Info("Initializing simulation %s", run_name_.c_str());
   }
 }
 
@@ -421,7 +419,7 @@ void SimulationManager::WriteParams() {
   }
 }
 
-/****************************************
+/***************************************
    ::RunSimulations::
    Loop over the vector of parameter file strings and load it as
    a YAML::Node. Parse the parameters of that node using the
@@ -436,8 +434,7 @@ void SimulationManager::RunSimulations() {
        it != pfiles_.end(); ++it) {
     ParseParams(*it);
     sim_ = new Simulation;
-    std::cout << "\nStarting simulation: " << params_.run_name << " (" << i_sim
-              << "/" << n_sims << ")\n";
+    Logger::Info("Starting simulation: %s", params_.run_name.c_str());
     sim_->Run(params_);
     delete sim_;
     i_sim++;
@@ -455,8 +452,8 @@ void SimulationManager::RunSimulations() {
 void SimulationManager::ParseParams(std::string file_name) {
   YAML::Node node = YAML::LoadFile(file_name);
   YAML::Emitter out;
-  std::cout << "Initializing simulation with parameters:\n"
-            << (out << node).c_str() << "\n";
+  Logger::Info("Initializing simulation with parameters:\n%s",
+               (out << node).c_str());
   parse_params(node, &params_);
   if (run_opts_.load_checkpoint) {
     params_.load_checkpoint = 1;

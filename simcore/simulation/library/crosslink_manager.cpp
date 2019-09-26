@@ -63,7 +63,7 @@ Object *CrosslinkManager::GetRandomObject() {
     if (vol > roll)
       return *obj;
   }
-  error_exit("CrosslinkManager::GetRandomObject should never get here!");
+  Logger::Error("CrosslinkManager::GetRandomObject should never get here!");
 }
 
 /* A crosslink binds to an object from solution */
@@ -237,7 +237,7 @@ void CrosslinkManager::Draw(std::vector<graph_struct *> *graph_array) {
 
 void CrosslinkManager::AddNeighborToAnchor(Object *anchor, Object *neighbor) {
   if (anchor->GetSID() != +species_id::crosslink) {
-    error_exit(
+    Logger::Error(
         "BindCrosslinkObj expected crosslink object, got generic object.");
   }
   Anchor *a = dynamic_cast<Anchor *>(anchor);
@@ -257,12 +257,12 @@ void CrosslinkManager::WriteSpecs() {
 
 void CrosslinkManager::ReadSpecs() {
   if (ispec_file_.eof()) {
-    printf("  EOF reached\n");
+    Logger::Info("EOF reached for spec file in CrosslinkManager");
     early_exit = true;
     return;
   }
   if (!ispec_file_.is_open()) {
-    printf(" ERROR: Spec file unexpectedly not open! Exiting early.\n");
+    Logger::Warning("ERROR. Spec file unexpectedly not open! Exiting early.");
     early_exit = true;
     return;
   }
@@ -271,7 +271,7 @@ void CrosslinkManager::ReadSpecs() {
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
   if (n_xlinks_ == -1) {
-    printf("  EOF reached in species\n");
+    Logger::Info("EOF reached for spec file in CrosslinkManager");
     early_exit = true;
     return;
   }
@@ -291,7 +291,7 @@ void CrosslinkManager::WriteCheckpoints() {
   /* Try to open the file */
   std::fstream ocheck_file(checkpoint_file_, std::ios::out | std::ios::binary);
   if (!ocheck_file.is_open()) {
-    error_exit("Output file %s did not open\n", checkpoint_file_.c_str());
+    Logger::Error("Output file %s did not open\n", checkpoint_file_.c_str());
   }
 
   /* Write RNG state */
@@ -319,7 +319,7 @@ void CrosslinkManager::ReadCheckpoints() {
   /* Try to open the file */
   std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
   if (!icheck_file.is_open()) {
-    error_exit("Output file %s did not open\n", checkpoint_file_.c_str());
+    Logger::Error("Output file %s did not open\n", checkpoint_file_.c_str());
   }
 
   /* Read RNG state */
@@ -358,7 +358,7 @@ void CrosslinkManager::InitSpecFile() {
   std::string spec_file_name = params_->run_name + "_crosslink.spec";
   ospec_file_.open(spec_file_name, std::ios::out | std::ios::binary);
   if (!ospec_file_.is_open()) {
-    error_exit("Output file %s did not open\n", spec_file_name.c_str());
+    Logger::Error("Output file %s did not open\n", spec_file_name.c_str());
   }
   ospec_file_.write(reinterpret_cast<char *>(&params_->n_steps), sizeof(int));
   ospec_file_.write(reinterpret_cast<char *>(&params_->crosslink.n_spec),
@@ -383,11 +383,10 @@ bool CrosslinkManager::InitSpecFileInputFromFile(std::string spec_file_name) {
   ispec_file_.read(reinterpret_cast<char *>(&delta), sizeof(double));
   if (n_steps != params_->n_steps || n_spec != params_->crosslink.n_spec ||
       delta != params_->delta) {
-    printf("\nn_steps: %d %d, ", n_steps, params_->n_steps);
-    printf("n_spec: %d %d, ", n_spec, params_->crosslink.n_spec);
-    printf("delta: %2.2f %2.2f\n", delta, params_->delta);
-    warning("Input file %s does not match parameter file\n",
-            spec_file_name.c_str());
+    Logger::Warning("Input file %s does not match parameter file\n",
+                    "n_steps: %d %d, n_spec: %d %d, delta: %2.2f %2.2f",
+                    spec_file_name.c_str(), n_steps, params_->n_steps, n_spec,
+                    params_->crosslink.n_spec, delta, params_->delta);
   }
   ReadSpecs();
   return true;
@@ -396,15 +395,15 @@ bool CrosslinkManager::InitSpecFileInputFromFile(std::string spec_file_name) {
 void CrosslinkManager::InitSpecFileInput() {
   std::string spec_file_name = params_->run_name + "_crosslink.spec";
   if (!InitSpecFileInputFromFile(spec_file_name)) {
-    error_exit("Input file %s did not open", spec_file_name.c_str());
+    Logger::Error("Input file %s did not open", spec_file_name.c_str());
   }
 }
 
 void CrosslinkManager::LoadFromCheckpoints() {
   checkpoint_file_ = params_->checkpoint_run_name + "_crosslink.checkpoint";
   if (!params_->crosslink.checkpoint_flag) {
-    error_exit("Checkpoint file %s not available for parameter file!",
-               checkpoint_file_.c_str());
+    Logger::Error("Checkpoint file %s not available for parameter file!",
+                  checkpoint_file_.c_str());
   }
   ReadCheckpoints();
   InitOutputFiles();
@@ -416,11 +415,11 @@ void CrosslinkManager::InitOutputs(bool reading_inputs, bool reduce_flag,
     LoadFromCheckpoints();
   } else if (reading_inputs) {
     if (with_reloads) {
-      warning("Crosslinks do not yet support reload functionality.");
+      Logger::Warning("Crosslinks do not yet support reload functionality.");
     }
     InitSpecFileInput();
     if (reduce_flag) {
-      warning("Crosslinks do not yet support reduce functionality.");
+      Logger::Warning("Crosslinks do not yet support reduce functionality.");
     } else if (params_->checkpoint_from_spec) {
       InitCheckpoints();
     }
