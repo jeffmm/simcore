@@ -53,20 +53,20 @@ int const Bond::GetBondNumber() { return bond_number_; }
 
 Site* Bond::GetSite(int i) {
   if (i < 0 || i > 1) {
-    std::cerr << "ERROR! Requested adjacent site out of bounds!\n";
+    Logger::Error("Requested adjacent site out of bounds!");
   }
   return sites_[i];
 }
 Bond* Bond::GetNeighborBond(int i) {
   if (i < 0 || i > 1) {
-    std::cerr << "ERROR! Requested neighboring bond out of bounds!\n";
+    Logger::Error("Requested neighboring bond out of bounds!");
   }
   return sites_[i]->GetOtherBond(GetOID());
 }
 
 directed_bond Bond::GetNeighborDirectedBond(int i) {
   if (i < 0 || i > 1) {
-    std::cerr << "ERROR! Requested neighboring bond out of bounds!\n";
+    Logger::Error("Requested neighboring bond out of bounds!");
   }
   return sites_[i]->GetOtherDirectedBond(GetOID());
 }
@@ -112,7 +112,7 @@ void Bond::Draw(std::vector<graph_struct*>* graph_array) {
       // Part of flock exterior
       g_.color = params_->flock_color_ext;
     } else {
-      warning("Unexpected flock parameter value in Bond::Draw");
+      Logger::Warning("Unexpected flock parameter value in Bond::Draw");
     }
     g_.diameter = 2 * diameter_;
     SetFlockType(0);

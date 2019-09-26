@@ -733,7 +733,7 @@ void MinimumDistance::PointBuddingBC(double const *const r, double *dr,
     double scale_factor = space_->bud_neck_radius / sqrt(r_mag) - 1;
     // Temp test code FIXME
     if (scale_factor < 0)
-      error_exit("Something went wrong in PointBuddingBC!!\n");
+      Logger::Error("Something went wrong in PointBuddingBC!!\n");
     *dr_mag2 = 0;
     for (int i = 0; i < n_dim_ - 1; ++i) {
       dr[i] = scale_factor * r[i];

@@ -13,10 +13,7 @@ void cross_product(double const *const a, double const *const b, double *c,
 void normalize_vector(double *a, int n_dim);
 void tridiagonal_solver(std::vector<double> *a, std::vector<double> *b,
                         std::vector<double> *c, std::vector<double> *d, int n);
-void error_exit(const char *error_msg, ...);
-void warning(const char *warning_msg, ...);
 void invert_sym_2d_matrix(double *a, double *b);
 void invert_sym_3d_matrix(double *a, double *b);
 void periodic_boundary_conditions(int n_dim, int n_periodic, double *h,
                                   double *h_inv, double *r, double *s);
-void break_here();

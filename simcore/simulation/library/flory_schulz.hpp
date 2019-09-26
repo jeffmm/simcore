@@ -32,14 +32,14 @@ private:
      random number between 0 and 1 to the Flory-Schulz distribution */
   double Bisection(double roll) {
     if (roll < 0 || roll > 1) {
-      error_exit("Flory-Schulz generator expects a value between 0 and 1");
+      Logger::Error("Flory-Schulz generator expects a value between 0 and 1");
     }
     double low = 0;
     double high = upper_bound_;
     /* Check that the lower and upper bounds are sane for the given
        polydispersity factor */
     if (Func(low, roll) * Func(high, roll) >= 0) {
-      error_exit("Upper and lower bounds are not well-suited for the "
+      Logger::Error("Upper and lower bounds are not well-suited for the "
                  "polydispersity factor provided to the Flory-Schulz "
                  "generator");
       return -1;
@@ -68,24 +68,24 @@ public:
     a_ = a;
     upper_bound_ = ub;
     if (ub < 0) {
-      error_exit("The upper bound provided to the Flory-Schulz distribution "
+      Logger::Error("The upper bound provided to the Flory-Schulz distribution "
                  "should be a positive number");
     }
     epsilon_ = epsilon;
     if (a_ > 0.5 || a < 0.001) {
-      error_exit("Flory-Schulz given off-base parameters. If you /really/ want"
+      Logger::Error("Flory-Schulz given off-base parameters. If you /really/ want"
                  " these polydispersity parameters, you'll have to remove this "
                  " error\n hint: a reasonable polydispersity parameter is in "
                  "the range of 0.001--0.5");
     }
     if (epsilon_ < 1e-18) {
-      error_exit("You have provided the Flory-Schulz generator with an "
+      Logger::Error("You have provided the Flory-Schulz generator with an "
                  "unreasonable precision tolerance. Lower your expectations.");
     }
     if (k_min < 0) {
-      error_exit("FlorySchulz expects a non-negative minimum k value");
+      Logger::Error("FlorySchulz expects a non-negative minimum k value");
     } else if (k_min > 0 && k_min > Bisection(1 - epsilon_)) {
-      error_exit("Value for k_min is too large for the polydispersity "
+      Logger::Error("Value for k_min is too large for the polydispersity "
                  "parameter");
     } else if (k_min > 0) {
       min_roll_ = CDF(k_min);

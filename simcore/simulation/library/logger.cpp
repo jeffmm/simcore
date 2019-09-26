@@ -13,10 +13,10 @@ void LoggerService::SetOutput(const char *fname) const {
 }
 
 void LoggerService::Info(const char *msg, va_list args) const {
-  WriteMsg("INFO", msg, args);
+  WriteMsg("INFO ", msg, args);
 }
 void LoggerService::Warning(const char *msg, va_list args) const {
-  WriteMsg("WARNING", msg, args);
+  WriteMsg("WARN ", msg, args);
 }
 
 void LoggerService::Debug(const char *msg, va_list args) const {
@@ -50,16 +50,16 @@ void LoggerService::WriteMsg(const char *severity, const char *msg, va_list args
     va_copy(arg_cpy, args);
 
     fprintf(log_file_, "%s", timestr);
-    fprintf(log_file_, " - [%-5s] - ", severity);
+    fprintf(log_file_, " - [%s] - ", severity);
     vfprintf(log_file_, msg, arg_cpy);
     fprintf(log_file_, "\n");
-
+    fflush(log_file_);
     va_end(arg_cpy);
   }
 
   // Then to stderr
   fprintf(stderr, "%s", timestr);
-  fprintf(stderr, " - [%-5s] - ", severity);
+  fprintf(stderr, " - [%s] - ", severity);
   vfprintf(stderr, msg, args);
   fprintf(stderr, "\n");
 }

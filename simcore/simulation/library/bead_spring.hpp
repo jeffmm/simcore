@@ -100,7 +100,7 @@ class BeadSpringSpecies : public Species<BeadSpring> {
     midstep_ = true;
     if (params_->bead_spring.packing_fraction > 0) {
       if (params_->bead_spring.length <= 0) {
-        error_exit(
+        Logger::Error(
             "Packing fraction with polydisperse lengths not implemented yet\n");
       }
       if (params_->n_dim == 2) {

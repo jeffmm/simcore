@@ -34,7 +34,7 @@ void Anchor::SetDiffusion() { diffusion_ = sqrt(24.0 * diameter_ / delta_); }
 
 void Anchor::SetWalker(int dir, double walk_v) {
   if (ABS(dir) != 1) {
-    error_exit("Walker direction must be set to +/- 1");
+    Logger::Error("Walker direction must be set to +/- 1");
   }
   walker_ = true;
   velocity_ = walk_v;
@@ -71,7 +71,7 @@ void Anchor::UpdateAnchorPositionToMesh() {
     printf("mesh length: %2.8f\n", mesh_length_);
     printf("bond lambda: %2.8f\n", bond_lambda_);
     printf("bond length: %2.8f\n", bond_length_);
-    error_exit(
+    Logger::Error(
         "Bond lambda out of expected range in UpdateAnchorPositionToMesh\n");
   }
 
@@ -218,15 +218,15 @@ void Anchor::AttachObjRandom(Object *o) {
 
 void Anchor::AttachObjLambda(Object *o, double lambda) {
   if (o->GetType() != +obj_type::bond) {
-    error_exit("Crosslink binding to non-bond objects not yet implemented.");
+    Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
   }
   bond_ = dynamic_cast<Bond *>(o);
   if (bond_ == nullptr) {
-    error_exit("Object ptr passed to anchor was not referencing a bond!");
+    Logger::Error("Object ptr passed to anchor was not referencing a bond!");
   }
   mesh_ = dynamic_cast<Mesh *>(bond_->GetMeshPtr());
   if (mesh_ == nullptr) {
-    error_exit("Object ptr passed to anchor was not referencing a mesh!");
+    Logger::Error("Object ptr passed to anchor was not referencing a mesh!");
   }
   mesh_n_bonds_ = mesh_->GetNBonds();
   bond_length_ = mesh_->GetBondLength();
@@ -235,13 +235,13 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
 
   if (bond_lambda_ < 0) {
     printf("bond_lambda: %2.2f\n", bond_lambda_);
-    error_exit("Lambda passed to anchor should never be negative!");
+    Logger::Error("Lambda passed to anchor should never be negative!");
   }
   if (bond_lambda_ > bond_length_) {
     if (bond_lambda_ - bond_length_ < 1) {
       bond_lambda_ = bond_length_;
     } else {
-      error_exit(
+      Logger::Error(
           "Lambda passed to anchor is much larger than mesh bond length!");
     }
   }
@@ -255,22 +255,22 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
 
 void Anchor::AttachObjMeshLambda(Object *o, double mesh_lambda) {
   if (o->GetType() != +obj_type::bond) {
-    error_exit("Crosslink binding to non-bond objects not yet implemented.");
+    Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
   }
   bond_ = dynamic_cast<Bond *>(o);
   if (bond_ == nullptr) {
-    error_exit("Object ptr passed to anchor was not referencing a bond!");
+    Logger::Error("Object ptr passed to anchor was not referencing a bond!");
   }
   mesh_ = dynamic_cast<Mesh *>(bond_->GetMeshPtr());
   if (mesh_ == nullptr) {
-    error_exit("Object ptr passed to anchor was not referencing a mesh!");
+    Logger::Error("Object ptr passed to anchor was not referencing a mesh!");
   }
   bound_ = true;
   mesh_lambda_ = mesh_lambda;
   mesh_n_bonds_ = -1;
   UpdateAnchorPositionToMesh();
   if (!bound_) {
-    error_exit("Updating anchor to mesh from checkpoint resulted in an unbound "
+    Logger::Error("Updating anchor to mesh from checkpoint resulted in an unbound "
                "anchor");
   }
   SetMeshID(bond_->GetMeshID());

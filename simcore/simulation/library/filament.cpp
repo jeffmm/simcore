@@ -115,7 +115,7 @@ void Filament::Init(bool force_overlap) {
 void Filament::InitElements() {
   int n_bonds;
   if (max_length_ < min_length_) {
-    warning("Minimum filament length larger than max length -- setting "
+    Logger::Warning("Minimum filament length larger than max length -- setting "
             "max_length_ = min_length_");
     max_length_ = min_length_;
   }
@@ -128,7 +128,7 @@ void Filament::InitElements() {
       length_ = fs.Rand(roll);
       if ((length_ > max_length_ || length_ < min_length_) &&
           polydispersity_warn_on_truncate_) {
-        warning(
+        Logger::Warning(
             "Filament polydispersity distribution is being truncated:\n"
             "Attempted length: %2.2f, Min length: %2.2f, Max length: %2.2f\n",
             length_, min_length_, max_length_);
@@ -136,11 +136,11 @@ void Filament::InitElements() {
     } while (length_ < min_length_ || length_ > max_length_);
   }
   if (length_ > max_length_) {
-    warning("Filament length larger than max length -- setting length = "
+    Logger::Warning("Filament length larger than max length -- setting length = "
             "max_length");
     length_ = max_length_;
   } else if (length_ > 0 && length_ < min_length_) {
-    warning("Filament length less than min length -- setting length = "
+    Logger::Warning("Filament length less than min length -- setting length = "
             "min_length");
     length_ = min_length_;
   }
@@ -151,7 +151,7 @@ void Filament::InitElements() {
   }
 
   // if (max_length_/n_bonds_max_ < min_bond_length_) {
-  // error_exit("min_length_ of flexible filament bonds too large for filament
+  // Logger::Error("min_length_ of flexible filament bonds too large for filament
   // length.");
   //}
   // Initialize mesh
@@ -340,7 +340,7 @@ void Filament::InsertAt(double *pos, double *u) {
 // Place a spool centered at the origin
 void Filament::InitSpiral2D() {
   if (n_dim_ > 2)
-    error_exit("3D Spirals not coded yet.");
+    Logger::Error("3D Spirals not coded yet.");
   double prev_pos[3] = {0, 0, 0};
   std::fill(position_, position_ + 3, 0);
   sites_[n_sites_ - 1].SetPosition(prev_pos);

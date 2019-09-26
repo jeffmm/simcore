@@ -24,7 +24,7 @@ Centrosome::Centrosome() : Object() {
 
 void Centrosome::Init() {
   if (n_filaments_min_ > n_filaments_max_) {
-    warning(
+    Logger::Warning(
         "Min n_filaments greater than max n_filaments in centrosome. Setting "
         "equal.");
   }
@@ -101,7 +101,7 @@ void Centrosome::InsertCentrosome() {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
   } else {
-    error_exit("Centrosome insertion type not recognized!");
+    Logger::Error("Centrosome insertion type not recognized!");
   }
 }
 
@@ -115,7 +115,7 @@ void Centrosome::GenerateAnchorSites() {
       anchors_[i_fil].orientation_[1] = sin(theta);
       theta += dtheta;
     } else if (fixed_spacing_ && n_dim_ == 3) {
-      warning(
+      Logger::Warning(
           "Fixed filament spacing not yet implemented for 3D in centrosome. "
           "Inserting randomly.");
       generate_random_unit_vector(n_dim_, anchors_[i_fil].orientation_, rng_.r);

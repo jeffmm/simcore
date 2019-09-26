@@ -35,7 +35,6 @@ private:
 
 public:
   SimulationManager() {
-    debug_trace = false;
     early_exit = false;
   }
   ~SimulationManager() {

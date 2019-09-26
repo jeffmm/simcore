@@ -107,8 +107,7 @@ void OutputManager::InitThermo(std::string fname) {
   fname.append(".thermo");
   othermo_file_.open(fname, std::ios::out | std::ios::binary);
   if (!othermo_file_.is_open()) {
-    std::cout << "ERROR: Thermo file failed to open!\n";
-    exit(1);
+    Logger::Error("Thermo file failed to open!");
   }
   othermo_file_.write(reinterpret_cast<char *>(&(params_->n_steps)),
                       sizeof(int));
@@ -122,8 +121,7 @@ void OutputManager::InitThermoInput(std::string fname) {
   fname.append(".thermo");
   ithermo_file_.open(fname, std::ios::in | std::ios::binary);
   if (!ithermo_file_.is_open()) {
-    std::cout << "ERROR: Thermo file failed to open!\n";
-    exit(1);
+    Logger::Error("Thermo file failed to open!");
   }
   int n_thermo, ndim, n_steps;
   double delta;
@@ -133,12 +131,11 @@ void OutputManager::InitThermoInput(std::string fname) {
   ithermo_file_.read(reinterpret_cast<char *>(&ndim), sizeof(int));
   if (n_steps != params_->n_steps || n_thermo != params_->n_thermo ||
       delta != params_->delta || ndim != params_->n_dim) {
-    std::cout << "ERROR: Input file " << fname
-              << " does not match parameter file\n";
-    printf("%d %d, %d %d, %2.5f %2.5f %d %d\n", n_steps, params_->n_steps,
-           n_thermo, params_->n_thermo, delta, params_->delta, ndim,
-           params_->n_dim);
-    exit(1);
+    Logger::Error(
+        "Input file %s does not match parameter file:\n"
+        "n_steps: %d %d, n_thermo: %d %d, delta: %2.5f %2.5f, n_dim: %d %d",
+        fname.c_str(), n_steps, params_->n_steps, n_thermo, params_->n_thermo, delta,
+        params_->delta, ndim, params_->n_dim);
   }
 }
 

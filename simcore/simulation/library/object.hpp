@@ -109,7 +109,6 @@ class Object {
   virtual void UpdatePeriodic();
   virtual void UpdatePosition() {}
   virtual void Draw(std::vector<graph_struct *> *graph_array);
-  virtual void UpdatePositionMP();
   virtual void SetColor(double const c, draw_type dtype);
   virtual void ScalePosition();
   virtual int GetCount();

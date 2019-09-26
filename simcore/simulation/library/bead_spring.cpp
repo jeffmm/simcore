@@ -145,7 +145,7 @@ void BeadSpring::InsertAt(double *pos, double *u) {
   std::copy(u, u + 3, orientation_);
   AddBondToTip(orientation_, bond_length_);
   if (sites_[n_sites_ - 1].CheckBounds()) {
-    error_exit("BeadSpring inserted manually out of bounds.");
+    Logger::Error("BeadSpring inserted manually out of bounds.");
   }
   SetOrientation(bonds_[n_bonds_ - 1].GetOrientation());
   for (int i = 0; i < n_bonds_max_ - 1; ++i) {
@@ -154,7 +154,7 @@ void BeadSpring::InsertAt(double *pos, double *u) {
     }
     AddBondToTip(orientation_, bond_length_);
     if (sites_[n_sites_ - 1].CheckBounds()) {
-      error_exit("BeadSpring inserted manually out of bounds.");
+      Logger::Error("BeadSpring inserted manually out of bounds.");
     }
   }
   UpdateBondPositions();
@@ -399,7 +399,7 @@ void BeadSpring::GetAvgOrientation(double *au) {
     for (int i = 0; i < n_dim_; ++i) avg_u[i] += u[i];
     size++;
   }
-  if (size == 0) error_exit("Something went wrong in GetAvgOrientation!");
+  if (size == 0) Logger::Error("Something went wrong in GetAvgOrientation!");
   for (int i = 0; i < n_dim_; ++i) avg_u[i] /= size;
   std::copy(avg_u, avg_u + 3, au);
 }
@@ -412,7 +412,7 @@ void BeadSpring::GetAvgPosition(double *ap) {
     for (int i = 0; i < n_dim_; ++i) avg_p[i] += p[i];
     size++;
   }
-  if (size == 0) error_exit("Something went wrong in GetAvgPosition!");
+  if (size == 0) Logger::Error("Something went wrong in GetAvgPosition!");
   for (int i = 0; i < n_dim_; ++i) avg_p[i] /= size;
   std::copy(avg_p, avg_p + 3, ap);
 }
@@ -712,7 +712,7 @@ void BeadSpringSpecies::RunThetaAnalysis() {
       } else if (bin_number == -1) {
         bin_number = 0;
       } else if (bin_number > n_bins_ && bin_number < 0) {
-        error_exit("Something went wrong in RunThetaAnalysis!");
+        Logger::Error("Something went wrong in RunThetaAnalysis!");
       }
       theta_histogram_[i][bin_number]++;
     }

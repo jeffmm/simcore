@@ -7,8 +7,7 @@ void FilamentSpecies::InitAnalysis() {
   }
   if (params_->filament.theta_analysis) {
     if (params_->interaction_flag) {
-      std::cout
-          << "WARNING! Theta analysis running on interacting filaments!\n";
+      Logger::Warning("Theta analysis running on interacting filaments!");
     }
     InitThetaAnalysis();
   }
@@ -30,7 +29,7 @@ void FilamentSpecies::InitAnalysis() {
   }
   if (params_->filament.flocking_analysis) {
     if (!params_->polar_order_analysis) {
-      warning(
+      Logger::Warning(
           "Flocking analysis enabled polar order analysis in "
           "FilamentSpecies::InitAnalysis\n");
       params_->polar_order_analysis = 1;
@@ -46,7 +45,7 @@ void FilamentSpecies::InitAnalysis() {
     in_out_file_ << "umax: " << params_->soft_potential_mag << "\n";
     in_out_file_ << "angle_in: ";
     if (members_.size() < 2) {
-      error_exit("Error in in-out analysis in FilamentSpecies::InitAnalysis");
+      Logger::Error("Error in in-out analysis in FilamentSpecies::InitAnalysis");
     }
     double u1[3] = {0, 0, 0};
     double u2[3] = {0, 0, 0};
@@ -105,7 +104,7 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
     it->GetContactNumbers(&cn);
   }
   if (po.size() != cn.size()) {
-    error_exit(
+    Logger::Error(
         "Number of polar order parameters and contact numbers not equal");
   }
   po_avg_ = 0;
@@ -125,7 +124,7 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
     if (x == -1) x = 0;
     if (y < 0 || x < 0 || y > n_bins_1d_ - 1 || x > n_bins_1d_ - 1) {
       std::cout << cn[i] << " " << po[i] << "\n";
-      error_exit("Out of range in RunPolarOrderAnalysis");
+      Logger::Error("Out of range in RunPolarOrderAnalysis");
     }
     polar_order_histogram_[n_bins_1d_ * y + x]++;
   }
@@ -366,82 +365,9 @@ void FilamentSpecies::RunGlobalOrderAnalysis() {
                        << sn_tot << " " << n_spooling << " " << sn_spools
                        << "\n";
   } else {
-    early_exit = true;
-    std::cout
-        << "ERROR: Problem opening file in RunGlobalOrderAnalysis! Exiting.\n";
+    Logger::Error("Problem opening file in RunGlobalOrderAnalysis!");
   }
 }
-
-// void FilamentSpecies::RunLocalOrderAnalysis() {
-//// Calculate extra-filament local orientation correlations
-//// All-pairs minimum distance
-//// Want a local density within a radius of 1.5*length
-// double rcut2 = SQR(0.5*n_bins_1d_*params_->local_structure_bin_width);
-////double rcut2 = SQR(1.5)*params_->filament.length*params_->filament.length;
-// for (auto it=members_.begin(); it!= members_.end(); ++it) {
-// std::vector<Interaction*> * ixs = it->GetInteractions();
-// double const * const r1 = it->GetPosition();
-// double const * const u1 = it->GetOrientation();
-//// Store the MeshIDs of all objects within range of filament_i
-// std::set<int> ix_mids;
-// for (auto ix = ixs->begin(); ix!=ixs->end(); ++ix) {
-// if ((*ix)->mids.first != it->GetMeshID()) {
-// ix_mids.insert((*ix)->mids.first);
-//}
-// else if ((*ix)->mids.second != it->GetMeshID()) {
-// ix_mids.insert((*ix)->mids.second);
-//}
-//}
-// for (auto jt=members_.begin(); jt!=members_.end(); ++jt) {
-//// Avoid intra-filament correlations for now
-// if (it->GetMeshID() == jt->GetMeshID()) continue;
-//// Check if filament_j is within range
-// if (ix_mids.find(jt->GetMeshID()) == ix_mids.end()) continue;
-
-// std::cout << " Calculating interaction\n";
-// double const * const r2 = jt->GetPosition();
-// double r_diff[3] = {0,0,0};
-// double r_diff_mag = 0;
-// for (int i=0; i<params_->n_dim; ++i) {
-// r_diff[i] = r2[i] - r1[i];
-// r_diff_mag += r_diff[i]*r_diff[i];
-//}
-////if (r_diff_mag > 4*params_->filament.length*params_->filament.length)
-///continue; /mindist_.ObjectObject(&(*it),&(*jt),&ix); /if (ix.dr_mag2 > rcut2)
-///continue; /double const * const u2 = jt->GetOrientation(); /double dp =
-///dot_product(params_->n_dim,u1,u2); /double temp[3];
-////cross_product(u1,u2,temp,3);
-////double relative_angle = SIGNOF(temp[2]) * acos(dp);
-
-//// Here, we want to use Bresenham's line drawing algorithm to populate the
-///histograms
-
-//}
-//}
-//// If we are doing a time average, wait to write local order data.
-// if (params_->local_structure_average == 0 ) {
-//// Write local order data
-// WriteLocalOrderData();
-//}
-//}
-
-// void FilamentSpecies::WriteLocalOrderData() {
-// if (local_order_file_.is_open()) {
-// local_order_file_ << time_ << " " << n_bins_ << " ";
-// for (int i=0;i<n_bins_1d_;++i) {
-// for (int j=0; j<n_bins_1d_; ++j) {
-// local_order_file_ << pdf_histogram_[i][j];
-//}
-//}
-// local_order_file_ << "\n";
-//}
-// else {
-// early_exit = true;
-// std::cout << "ERROR: Problem opening file in RunLocalOrderAnalysis!
-// Exiting.\n";
-//}
-
-//}
 
 void FilamentSpecies::RunSpiralAnalysis() {
   // Treat as though we have many spirals for now
@@ -470,8 +396,7 @@ void FilamentSpecies::RunSpiralAnalysis() {
                  << head_pos[1] << " " << tail_pos[0] << " " << tail_pos[1]
                  << "\n";
   } else {
-    early_exit = true;
-    std::cout << "ERROR: Problem opening file in RunSpiralAnalysis! Exiting.\n";
+    Logger::Error("Problem opening file in RunSpiralAnalysis!");
   }
 }
 
@@ -511,7 +436,7 @@ void FilamentSpecies::RunThetaAnalysis() {
       } else if (bin_number == -1) {
         bin_number = 0;
       } else if (bin_number > n_bins_ && bin_number < 0) {
-        error_exit("Something went wrong in RunThetaAnalysis!");
+        Logger::Error("Something went wrong in RunThetaAnalysis!");
       }
       theta_histogram_[i][bin_number]++;
     }
@@ -554,7 +479,7 @@ void FilamentSpecies::FinalizeAnalysis() {
   if (in_out_file_.is_open()) {
     in_out_file_ << "angle_out: ";
     if (members_.size() < 2) {
-      error_exit(
+      Logger::Error(
           "Error in in-out analysis in FilamentSpecies::FinalizeAnalysis");
     }
     double u1[3] = {0, 0, 0};
@@ -657,7 +582,7 @@ void FilamentSpecies::RunFlockingAnalysis() {
       } else if (flock_type == 2) {
         n_exterior++;
       } else {
-        warning(
+        Logger::Warning(
             "Flock type not recognized in "
             "FilamentSpecies::RunFlockingAnalysis");
       }
@@ -668,7 +593,7 @@ void FilamentSpecies::RunFlockingAnalysis() {
       } else if (flock_change_state == 2) {
         n_left++;
       } else {
-        warning(
+        Logger::Warning(
             "Flock change state not recognized in "
             "FilamentSpecies::RunFlockingAnalysis");
       }
@@ -678,9 +603,7 @@ void FilamentSpecies::RunFlockingAnalysis() {
     flock_file_ << time_ << " " << n_flocking << " " << n_interior << " "
                 << n_exterior << " " << n_joined << " " << n_left << "\n";
   } else {
-    early_exit = true;
-    std::cout
-        << "ERROR: Problem opening file in RunFlockingAnalysis! Exiting.\n";
+    Logger::Error("Problem opening file in RunFlockingAnalysis!");
   }
 }
 

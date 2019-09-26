@@ -21,6 +21,14 @@ set(INCLUDES ${INCLUDES} ${GLEW_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS} ${OPENGL_INC
 else()
   add_definitions(-DNOGRAPH=TRUE)
 endif()
+
+if(DEBUG)
+    add_definitions(-DDEBUG=TRUE)
+endif()
+
+if(TRACE)
+    add_definitions(-DTRACE=TRUE)
+endif()
 include_directories(${INCLUDES})
 set(TARGET "simcore")
 set(SOURCES anchor.cpp 
@@ -33,7 +41,6 @@ set(SOURCES anchor.cpp
             cpu_time.cpp
             crosslink.cpp
             crosslink_manager.cpp
-            error_exit.cpp
             filament.cpp
             filament_species.cpp
             generate_random_unit_vector.cpp
@@ -41,6 +48,7 @@ set(SOURCES anchor.cpp
             graphics.cpp
             interaction_engine.cpp
             linear_algebra.cpp
+            logger.cpp
             mesh.cpp
             minimum_distance.cpp
             #motor.cpp
