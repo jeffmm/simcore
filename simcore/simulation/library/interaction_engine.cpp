@@ -116,6 +116,7 @@ void InteractionEngine::UpdateInteractors() {
   std::vector<Object *> xlinks;
   xlink_.GetInteractors(&xlinks);
   interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
+  printf("%lu objects, %lu xlinks\n", ix_objects_.size(), xlinks.size());
 }
 
 /* Checks whether or not the given anchor is supposed to be attached to the

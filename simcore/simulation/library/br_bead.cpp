@@ -79,7 +79,6 @@ void BrBead::Translate() {
     dr[i] = force_[i] * delta_ * gamma_trans_;
     position_[i] += dr[i];
   }
-  printf("tot force: %2.2f\n", sqrt(fmag));
 }
 
 void BrBead::Rotate() {
@@ -109,7 +108,6 @@ void BrBead::Integrate() {
 }
 
 void BrBead::GetInteractors(std::vector<Object*>* ix) {
-  ix->clear();
   ix->push_back(this);
 }
 

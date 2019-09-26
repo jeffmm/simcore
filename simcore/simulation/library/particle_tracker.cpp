@@ -10,6 +10,7 @@ void ParticleTracker::Init(system_parameters* p, std::vector<Object*>* o,
   cell_length_1d_ = params_->cell_length;
   n_cells_1d_ = (int)floor(2 * params_->system_radius / cell_length_1d_);
   cell_length_1d_ = (double)2 * params_->system_radius / n_cells_1d_;
+  printf("n_cells_1d: %d\ncell_length: %2.2f\n", n_cells_1d_, cell_length_1d_);
   AllocateCellList();
 }
 
@@ -241,6 +242,7 @@ void ParticleTracker::CreatePairsCellList() {
     }
   }
 #endif
+  printf("pairs: %lu\n", nlist_->size());
 }
 
 void ParticleTracker::Clear() { DeallocateCellList(); }
