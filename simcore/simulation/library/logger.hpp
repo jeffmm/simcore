@@ -1,10 +1,10 @@
 #ifndef _SIMCORE_LOGGER_H_
 #define _SIMCORE_LOGGER_H_
 
-#include <csignal>
-#include <cstdio>
-#include <ctime>
 #include <mutex>
+#include <stdarg.h>
+#include <stdio.h>
+#include <time.h>
 
 // Logger singleton
 class LoggerService {
@@ -34,7 +34,6 @@ public:
   // Get logging instance
   static const LoggerService &Get();
 };
-
 
 // Logger interface
 class Logger {
