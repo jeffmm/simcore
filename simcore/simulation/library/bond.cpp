@@ -5,30 +5,22 @@
 **************************/
 Bond::Bond() : Object() { type_ = obj_type::bond; }
 
-void Bond::Init(Site* s1, Site* s2) {
+void Bond::Init(Site *s1, Site *s2) {
   s1->AddBond(this, OUTGOING);
   s2->AddBond(this, INCOMING);
   sites_[0] = s1;
   sites_[1] = s2;
-  double const* const r1 = s1->GetPosition();
-  double const* const r2 = s2->GetPosition();
-  diameter_ = s1->GetDiameter();
-  length_ = 0;
-  for (int i = 0; i < n_dim_; ++i) {
-    orientation_[i] = r2[i] - r1[i];
-    length_ += orientation_[i] * orientation_[i];
-  }
-  length_ = sqrt(length_);
-  equil_length_ = length_;
-  for (int i = 0; i < n_dim_; ++i) {
-    position_[i] = r1[i] + 0.5 * orientation_[i];
-    orientation_[i] /= length_;
-  }
+  ReInit();
+  SetEquilLength(length_);
+  Logger::Trace("Initializing bond at [%2.2f %2.2f %2.2f] with orientation "
+                "[%2.2f %2.2f %2.2f] and length %2.2f",
+                position_[0], position_[1], position_[2], orientation_[0],
+                orientation_[1], orientation_[2], length_);
 }
 
 void Bond::ReInit() {
-  double const* const r1 = sites_[0]->GetPosition();
-  double const* const r2 = sites_[1]->GetPosition();
+  double const *const r1 = sites_[0]->GetPosition();
+  double const *const r2 = sites_[1]->GetPosition();
   diameter_ = sites_[0]->GetDiameter();
   length_ = 0;
   for (int i = 0; i < n_dim_; ++i) {
@@ -43,21 +35,23 @@ void Bond::ReInit() {
   UpdatePeriodic();
 }
 
-void Bond::SetMeshPtr(Object * obj_ptr) {
-  mesh_ptr_ = obj_ptr;
+void Bond::SetEquilLength(double el) {
+  equil_length_ = el;
 }
+
+void Bond::SetMeshPtr(Object *obj_ptr) { mesh_ptr_ = obj_ptr; }
 
 void Bond::SetBondNumber(int bnum) { bond_number_ = bnum; }
 
 int const Bond::GetBondNumber() { return bond_number_; }
 
-Site* Bond::GetSite(int i) {
+Site *Bond::GetSite(int i) {
   if (i < 0 || i > 1) {
     Logger::Error("Requested adjacent site out of bounds!");
   }
   return sites_[i];
 }
-Bond* Bond::GetNeighborBond(int i) {
+Bond *Bond::GetNeighborBond(int i) {
   if (i < 0 || i > 1) {
     Logger::Error("Requested neighboring bond out of bounds!");
   }
@@ -84,7 +78,7 @@ void Bond::ReportSites() {
   }
 }
 
-void Bond::Draw(std::vector<graph_struct*>* graph_array) {
+void Bond::Draw(std::vector<graph_struct *> *graph_array) {
   std::copy(scaled_position_, scaled_position_ + 3, g_.r);
   for (int i = space_->n_periodic; i < n_dim_; ++i) {
     g_.r[i] = position_[i];

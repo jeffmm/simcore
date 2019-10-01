@@ -3,7 +3,6 @@
 
 #include "interaction.hpp"
 #include "object.hpp"
-typedef std::pair<Object *, Interaction> boundary_interaction;
 
 class MinimumDistance {
  private:
@@ -52,10 +51,9 @@ class MinimumDistance {
  public:
   MinimumDistance() {}
   void Init(space_struct *space, double boundary_cutoff_sq);
-  void ObjectObject(Object *o1, Object *o2, Interaction *ix);
-  bool CheckBoundaryInteraction(Object *o1, Interaction *ix);
-  bool CheckOutsideBoundary(Object *o1);
-  void BoundaryCondition(std::vector<boundary_interaction>::iterator bix);
+  void ObjectObject(Interaction &ix);
+  bool CheckBoundaryInteraction(Interaction &ix);
+  bool CheckOutsideBoundary(Object &o1);
 
   // XXX
   int GetNDim() { return n_dim_; }

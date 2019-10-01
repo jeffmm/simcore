@@ -40,8 +40,8 @@ class StructAnalysis {
   void BinLineHigh(int x0, int y0, int x1, int y1, double dotprod,
                    bool is_local);
   void BinArray(int x, int y, double dotprod, bool is_local);
-  void CalculateLocalOrderPair(std::vector<pair_interaction>::iterator pix);
-  void CalculatePolarOrderPair(std::vector<pair_interaction>::iterator pix);
+  void CalculateLocalOrderPair(std::vector<Interaction>::iterator pix);
+  void CalculatePolarOrderPair(std::vector<Interaction>::iterator pix);
   // void CountOverlapEvents(int mid1, int mid2, bool is_overlapping);
   void AddCrossingComplete();
   void AddCrossingInit();
@@ -51,13 +51,13 @@ class StructAnalysis {
  public:
   void Init(system_parameters *params, int *i_step);
   void Clear();
-  void CalculateStructurePair(std::vector<pair_interaction>::iterator pix);
+  void CalculateStructurePair(std::vector<Interaction>::iterator pix);
   void BinDensity(Object *obj);
   void AverageStructure();
   void SetNumObjs(int nobj);
   int GetNumObjs() { return n_objs_; }
   void IncrementCount() { count_++; }
-  void CountOverlap(std::vector<pair_interaction>::iterator pix);
+  void CountOverlap(std::vector<Interaction>::iterator pix);
 };
 
 #endif

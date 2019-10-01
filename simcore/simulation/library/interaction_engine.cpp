@@ -22,23 +22,44 @@ void InteractionEngine::Init(system_parameters *params,
   no_interactions_ = !(params_->interaction_flag);
   i_update_ = -1;
   n_objs_ = -1;
-  // clist_.Init(n_dim_, n_periodic_, params_->cell_length, space_->radius);
+  int n_cells_1d =
+      (int)floor(2 * params_->system_radius / params_->cell_length);
+#ifdef TRACE
+  if (n_cells_1d > 20) {
+    Logger::Warning("Simulation run in trace mode with a large number of "
+        "cells in cell list (%d).", n_cells_1d);
+    fprintf(stderr, "Continue anyway? (y/N) ");
+    char c;
+    if (std::cin.peek() != 'y') {
+      Logger::Error("Terminating simulation by user request");
+    } else if (!(std::cin >> c)) {
+      Logger::Error("Invalid input");
+    } else {
+      fprintf(stderr, "Resuming simulation\n");
+      std::cin.ignore();
+    }
+  }
+#endif
+  double cell_length = (double)2 * params_->system_radius / n_cells_1d;
+  clist_.Init(n_cells_1d, cell_length, params_->n_dim, params_->n_periodic);
   bool local_order =
       (params_->local_order_analysis || params_->polar_order_analysis ||
        params_->overlap_analysis || params_->density_analysis);
   if (processing && local_order) {
     params_->cell_length = 0.5 * params_->local_order_width;
   }
-  ptracker_.Init(params, &interactors_, &nlist_);
   // Update dr distance should be half the cell length, and we are comparing the
   // squares of the trajectory distances
-  dr_update_ = 0.25 * ptracker_.GetCellLength() * ptracker_.GetCellLength();
+  dr_update_ = 0.25 * cell_length * cell_length;
   mindist_.Init(space, 2.0 * dr_update_);
   potentials_.InitPotentials(params_);
   if (local_order && processing) {
     struct_analysis_.Init(params, i_step);
   }
   xlink_.Init(params_, space_, &mindist_, &ix_objects_);
+  no_boundaries_ = false;
+  if (space_->type == +boundary_type::none)
+    no_boundaries_ = true;
 }
 
 /****************************************
@@ -49,7 +70,7 @@ void InteractionEngine::Init(system_parameters *params,
 void InteractionEngine::Interact() {
   n_interactions_ = 0;
   // First check if we need to interact
-  if (no_interactions_ && space_->type == +boundary_type::none)
+  if (no_interactions_ && no_boundaries_)
     return;
   // Check if we need to update objects in cell list
   CheckUpdateObjects();
@@ -88,7 +109,7 @@ void InteractionEngine::CheckUpdateXlinks() {
                         ix_objects_.end());
     // Add crosslinks as interactors
     std::vector<Object *> xlinks;
-    xlink_.GetInteractors(&xlinks);
+    xlink_.GetInteractors(xlinks);
     interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
     UpdateInteractions();
     i_update_ = 0;
@@ -114,9 +135,8 @@ void InteractionEngine::UpdateInteractors() {
   interactors_.insert(interactors_.end(), ix_objects_.begin(),
                       ix_objects_.end());
   std::vector<Object *> xlinks;
-  xlink_.GetInteractors(&xlinks);
+  xlink_.GetInteractors(xlinks);
   interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
-  printf("%lu objects, %lu xlinks\n", ix_objects_.size(), xlinks.size());
 }
 
 /* Checks whether or not the given anchor is supposed to be attached to the
@@ -124,17 +144,16 @@ void InteractionEngine::UpdateInteractors() {
    match, the anchor is attached to the mesh using the anchor mesh_lambda */
 bool InteractionEngine::CheckBondAnchorPair(Object *anchor, Object *bond) {
   // Check that the bond and anchor share a mesh_id
-  printf("anchor_mid: %d, bond_mid: %d\n", anchor->GetMeshID(),
-      bond->GetMeshID());
   if (anchor->GetMeshID() == bond->GetMeshID()) {
     Anchor *a = dynamic_cast<Anchor *>(anchor);
     if (a == nullptr) {
       Logger::Error("Object pointer was unsuccessfully dynamically cast to an "
-                 "Anchor pointer in CheckBondAnchorPair!");
+                    "Anchor pointer in CheckBondAnchorPair!");
     }
     if (bond->GetType() != +obj_type::bond) {
-      Logger::Error("CheckBondAnchorPair expected Bond object pointer, but object"
-                 " pointer does not have bond obj_type!");
+      Logger::Error(
+          "CheckBondAnchorPair expected Bond object pointer, but object"
+          " pointer does not have bond obj_type!");
     }
     // Check that the anchor isn't already attached
     if (a->GetBondLambda() < 0) {
@@ -146,6 +165,7 @@ bool InteractionEngine::CheckBondAnchorPair(Object *anchor, Object *bond) {
 }
 
 void InteractionEngine::PairBondCrosslinks() {
+  Logger::Trace("Pairing bound crosslinks and objects");
   ix_objects_.clear();
   interactors_.clear();
   // First get object interactors (non-crosslinks)
@@ -158,18 +178,21 @@ void InteractionEngine::PairBondCrosslinks() {
 
   // Add anchors as interactors
   std::vector<Object *> anchors;
-  xlink_.GetAnchorInteractors(&anchors);
+  xlink_.GetAnchorInteractors(anchors);
   interactors_.insert(interactors_.end(), anchors.begin(), anchors.end());
-
-  ptracker_.AssignCells();
-  ptracker_.CreatePairsCellList();
+  pair_interactions_.clear();
+  clist_.RenewObjectsCells(interactors_);
+  clist_.MakePairs(pair_interactions_);
   int n_anchors_attached = 0;
-  for (auto pair = nlist_.begin(); pair != nlist_.end(); ++pair) {
-    Object *obj1 = &*interactors_[pair->first];
-    Object *obj2 = &*interactors_[pair->second];
+  //for (auto ix = anchors.begin(); ix != anchors.end(); ++ix) {
+    //for (auto jx = ix_objects_.begin(); jx != ix_objects_.end(); ++jx) {
+  for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end(); ++ix) {
+    Object *obj1 = ix->obj1;
+    Object *obj2 = ix->obj2;
     if (obj1->GetSID() == +species_id::crosslink &&
         obj2->GetType() == +obj_type::bond) {
       if (CheckBondAnchorPair(obj1, obj2))
+      //if (CheckBondAnchorPair(*ix, *jx))
         n_anchors_attached++;
     } else if (obj2->GetSID() == +species_id::crosslink &&
                obj1->GetType() == +obj_type::bond) {
@@ -180,30 +203,32 @@ void InteractionEngine::PairBondCrosslinks() {
   }
   /* Check that all anchors found their bond attachments */
   if (n_anchors_attached != anchors.size()) {
-    printf("n_anchors_attached: %d\nn_anchors: %lu\n", n_anchors_attached,
+    Logger::Error("Not all anchors have found their bond! %d/%lu", n_anchors_attached,
            anchors.size());
-    Logger::Error("Not all anchors have found their bond!\n");
   }
 }
 
 void InteractionEngine::UpdateInteractions() {
+  UpdatePairInteractions();
+  UpdateBoundaryInteractions();
+}
+
+void InteractionEngine::UpdatePairInteractions() {
   if (no_interactions_)
     return;
-  ptracker_.AssignCells();
-  ptracker_.CreatePairsCellList();
   pair_interactions_.clear();
-  for (auto pair = nlist_.begin(); pair != nlist_.end(); ++pair) {
-    Interaction ix;
-    pair_interaction pix(std::make_pair(&(*(interactors_[pair->first])),
-                                        &(*(interactors_[pair->second]))),
-                         ix);
-    pair_interactions_.push_back(pix);
-  }
+  clist_.RenewObjectsCells(interactors_);
+  clist_.MakePairs(pair_interactions_);
+}
+
+void InteractionEngine::UpdateBoundaryInteractions() {
+  if (no_boundaries_)
+    return;
   boundary_interactions_.clear();
   for (auto ixor = interactors_.begin(); ixor != interactors_.end(); ++ixor) {
-    Interaction ix;
-    if (mindist_.CheckBoundaryInteraction(*ixor, &ix)) {
-      boundary_interactions_.push_back(std::make_pair(*ixor, ix));
+    Interaction ix(*ixor);
+    if (mindist_.CheckBoundaryInteraction(ix)) {
+      boundary_interactions_.push_back(ix);
     }
   }
 }
@@ -216,6 +241,16 @@ int InteractionEngine::CountSpecies() {
   return obj_count;
 }
 
+const bool InteractionEngine::CheckSpeciesInteractorUpdate() const {
+  bool result = false;
+  for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
+    if ((*spec)->CheckInteractorUpdate()) {
+      result = true;
+    }
+  }
+  return result;
+}
+
 void InteractionEngine::CheckUpdateObjects() {
   /* First check to see if any objects were added to the system;
      If static_pnumber_ is flagged, we know that particle numbers
@@ -224,8 +259,9 @@ void InteractionEngine::CheckUpdateObjects() {
     return;
   if (static_pnumber_)
     return;
+  bool ix_update = CheckSpeciesInteractorUpdate();
   int obj_count = CountSpecies();
-  if (obj_count != n_objs_) {
+  if (obj_count != n_objs_ || ix_update) {
     // reset update count and update number of objects to track
     i_update_ = 0;
     n_objs_ = obj_count;
@@ -234,6 +270,8 @@ void InteractionEngine::CheckUpdateObjects() {
     // printf("Forcing interactor update, i_step: %d\n", params_->i_step);
   }
 }
+
+void InteractionEngine::ResetCellList() { clist_.ResetNeighbors(); }
 
 void InteractionEngine::CheckUpdateInteractions() {
   /* If n_update_ <=0, we update nearest neighbors if any particle
@@ -271,12 +309,12 @@ void InteractionEngine::ZeroDrTot() {
   }
 }
 
-void InteractionEngine::ProcessPairInteraction(
-    std::vector<pair_interaction>::iterator pix) {
+void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {
   // Avoid certain types of interactions
-  Object *obj1 = pix->first.first;
-  Object *obj2 = pix->first.second;
-  Interaction *ix = &(pix->second);
+  Object *obj1 = ix->obj1;
+  Object *obj2 = ix->obj2;
+  Logger::Trace("Processing interaction between %d and %d", obj1->GetOID(),
+      obj2->GetOID());
   // Rigid objects don't self interact
   // if (obj1->GetRID() == obj2->GetRID())  return;
   // Composite objects do self interact if they want to
@@ -338,7 +376,7 @@ void InteractionEngine::ProcessPairInteraction(
     // obj2->GetSID()._to_string());
   }
 
-  mindist_.ObjectObject(obj1, obj2, ix);
+  mindist_.ObjectObject(*ix);
 
   // XXX Don't interact if we have an overlap. This should eventually go to a
   // max force routine
@@ -349,21 +387,19 @@ void InteractionEngine::ProcessPairInteraction(
   if (ix->dr_mag2 > potentials_.GetRCut2())
     return;
   /* Calculates forces from the potential defined during initialization */
-  potentials_.CalcPotential(ix);
+  potentials_.CalcPotential(*ix);
 }
 
-void InteractionEngine::ProcessBoundaryInteraction(
-    std::vector<boundary_interaction>::iterator bix) {
-  mindist_.BoundaryCondition(bix);
-  Interaction *ix = &(bix->second);
+void InteractionEngine::ProcessBoundaryInteraction(ix_iterator ix) {
+  mindist_.CheckBoundaryInteraction(*ix);
   // XXX Don't interact if we have an overlap. This should eventually go to a
   // max force routine
-  if (ix->dr_mag2 < 0.25 * SQR(bix->first->GetDiameter())) {
+  if (ix->dr_mag2 < 0.25 * SQR(ix->obj1->GetDiameter())) {
     overlap_ = true;
   }
   if (ix->dr_mag2 > potentials_.GetRCut2())
     return;
-  potentials_.CalcPotential(ix);
+  potentials_.CalcPotential(*ix);
 }
 
 void InteractionEngine::CalculateBoundaryInteractions() {
@@ -372,9 +408,7 @@ void InteractionEngine::CalculateBoundaryInteractions() {
   }
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
-  std::vector<std::pair<std::vector<boundary_interaction>::iterator,
-                        std::vector<boundary_interaction>::iterator>>
-      chunks;
+  std::vector < std::pair<ix_iterator, ix_iterator> chunks;
   chunks.reserve(max_threads);
   size_t chunk_size = boundary_interactions_.size() / max_threads;
   auto cur_iter = boundary_interactions_.begin();
@@ -389,20 +423,19 @@ void InteractionEngine::CalculateBoundaryInteractions() {
   {
 #pragma omp for
     for (int i = 0; i < max_threads; ++i) {
-      for (auto bix = chunks[i].first; bix != chunks[i].second; ++bix) {
-        ProcessBoundaryInteraction(bix);
+      for (auto ix = chunks[i].first; ix != chunks[i].second; ++ix) {
+        ProcessBoundaryInteraction(ix);
         // Do torque crossproducts
-        cross_product(bix->second.contact1, bix->second.force, bix->second.t1,
-                      3);
+        cross_product(ix->contact1, ix->force, ix->t1, 3);
       }
     }
   }
 #else
-  for (auto bix = boundary_interactions_.begin();
-       bix != boundary_interactions_.end(); ++bix) {
-    ProcessBoundaryInteraction(bix);
+  for (auto ix = boundary_interactions_.begin();
+       ix != boundary_interactions_.end(); ++ix) {
+    ProcessBoundaryInteraction(ix);
     // Do torque crossproducts
-    cross_product(bix->second.contact1, bix->second.force, bix->second.t1, 3);
+    cross_product(ix->contact1, ix->force, ix->t1, 3);
   }
 #endif
 }
@@ -410,9 +443,7 @@ void InteractionEngine::CalculateBoundaryInteractions() {
 void InteractionEngine::CalculatePairInteractions() {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
-  std::vector<std::pair<std::vector<pair_interaction>::iterator,
-                        std::vector<pair_interaction>::iterator>>
-      chunks;
+  std::vector<std::pair<ix_iterator, ix_iterator>> chunks;
   chunks.reserve(max_threads);
   size_t chunk_size = pair_interactions_.size() / max_threads;
   auto cur_iter = pair_interactions_.begin();
@@ -427,33 +458,30 @@ void InteractionEngine::CalculatePairInteractions() {
   {
 #pragma omp for
     for (int i = 0; i < max_threads; ++i) {
-      for (auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
-        ProcessPairInteraction(pix);
+      for (auto ix = chunks[i].first; ix != chunks[i].second; ++ix) {
+        ProcessPairInteraction(ix);
         // Do torque crossproducts
-        cross_product(pix->second.contact1, pix->second.force, pix->second.t1,
-                      3);
-        cross_product(pix->second.contact2, pix->second.force, pix->second.t2,
-                      3);
+        cross_product(ix->contact1, ix->force, ix->t1, 3);
+        cross_product(ix->contact2, ix->force, ix->t2, 3);
       }
     }
   }
 #else
-  for (auto pix = pair_interactions_.begin(); pix != pair_interactions_.end();
-       ++pix) {
-    ProcessPairInteraction(pix);
+  for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
+       ++ix) {
+    ProcessPairInteraction(ix);
     // Do torque crossproducts
-    cross_product(pix->second.contact1, pix->second.force, pix->second.t1, 3);
-    cross_product(pix->second.contact2, pix->second.force, pix->second.t2, 3);
+    cross_product(ix->contact1, ix->force, ix->t1, 3);
+    cross_product(ix->contact2, ix->force, ix->t2, 3);
   }
 #endif
 }
 
 void InteractionEngine::ApplyPairInteractions() {
-  for (auto pix = pair_interactions_.begin(); pix != pair_interactions_.end();
-       ++pix) {
-    auto obj1 = pix->first.first;
-    auto obj2 = pix->first.second;
-    Interaction *ix = &(pix->second);
+  for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
+       ++ix) {
+    Object *obj1 = ix->obj1;
+    Object *obj2 = ix->obj2;
     obj1->AddForce(ix->force);
     obj2->SubForce(ix->force);
     obj1->AddTorque(ix->t1);
@@ -469,10 +497,9 @@ void InteractionEngine::ApplyPairInteractions() {
 }
 
 void InteractionEngine::ApplyBoundaryInteractions() {
-  for (auto bix = boundary_interactions_.begin();
-       bix != boundary_interactions_.end(); ++bix) {
-    auto obj1 = bix->first;
-    Interaction *ix = &(bix->second);
+  for (auto ix = boundary_interactions_.begin();
+       ix != boundary_interactions_.end(); ++ix) {
+    Object *obj1 = ix->obj1;
     obj1->AddForce(ix->force);
     obj1->AddTorque(ix->t1);
     obj1->AddPotential(ix->pote);
@@ -511,41 +538,23 @@ void InteractionEngine::CalculatePressure() {
   std::fill(stress_, stress_ + 9, 0);
 }
 
-bool InteractionEngine::CheckOverlap(std::vector<Object *> ixs) {
+bool InteractionEngine::CheckOverlap(std::vector<Object *> &ixors) {
   overlap_ = false;
   /* Only consider objects (not crosslinks) for overlaps */
-  int n_interactors = ix_objects_.size();
-  ptracker_.CreatePartialPairsCellList(ixs, n_interactors);
-  pair_interactions_.clear();
-  for (auto pair = nlist_.begin(); pair != nlist_.end(); ++pair) {
-    Object *o1, *o2;
-    Interaction ix;
-    if (pair->first > n_interactors - 1 && pair->second < n_interactors) {
-      o1 = ixs[pair->first - n_interactors];
-      o2 = ix_objects_[pair->second];
-    } else if (pair->second > n_interactors - 1 &&
-               pair->first < n_interactors) {
-      o1 = ixs[pair->second - n_interactors];
-      o2 = ix_objects_[pair->first];
-    } else if (pair->second > n_interactors - 1 &&
-               pair->first > n_interactors - 1) {
-      o1 = ixs[pair->first - n_interactors];
-      o2 = ixs[pair->second - n_interactors];
-    } else {
-      o1 = ix_objects_[pair->first];
-      o2 = ix_objects_[pair->second];
-    }
-    pair_interaction pix(std::make_pair(o1, o2), ix);
-    pair_interactions_.push_back(pix);
+  for (auto ixor = ixors.begin(); ixor != ixors.end(); ++ixor) {
+    pair_interactions_.clear();
+    clist_.PairSingleObject(**ixor, pair_interactions_);
+    CalculatePairInteractions();
+    if (overlap_)
+      break;
   }
-  CalculatePairInteractions();
   return overlap_;
 }
 
-bool InteractionEngine::CheckBoundaryConditions(std::vector<Object *> ixs) {
+bool InteractionEngine::CheckBoundaryConditions(std::vector<Object *> &ixors) {
   bool outside_boundary = false;
-  for (auto ixor = ixs.begin(); ixor != ixs.end(); ++ixor) {
-    if (mindist_.CheckOutsideBoundary(*ixor)) {
+  for (auto ixor = ixors.begin(); ixor != ixors.end(); ++ixor) {
+    if (mindist_.CheckOutsideBoundary(**ixor)) {
       outside_boundary = true;
     }
   }
@@ -574,9 +583,7 @@ void InteractionEngine::CalculateStructure() {
   if (!no_interactions_) {
 #ifdef ENABLE_OPENMP
     int max_threads = omp_get_max_threads();
-    std::vector<std::pair<std::vector<pair_interaction>::iterator,
-                          std::vector<pair_interaction>::iterator>>
-        chunks;
+    std::vector<std::pair<ix_iterator, ix_iterator>> chunks;
     chunks.reserve(max_threads);
     size_t chunk_size = pair_interactions_.size() / max_threads;
     auto cur_iter = pair_interactions_.begin();
@@ -590,41 +597,39 @@ void InteractionEngine::CalculateStructure() {
     {
 #pragma omp for
       for (int i = 0; i < max_threads; ++i) {
-        for (auto pix = chunks[i].first; pix != chunks[i].second; ++pix) {
+        for (auto ix = chunks[i].first; ix != chunks[i].second; ++ix) {
           if (params_->polar_order_analysis || params_->overlap_analysis) {
-            mindist_.ObjectObject(pix->first.first, pix->first.second,
-                                  &(pix->second));
+            mindist_.ObjectObject(*ix);
           }
-          struct_analysis_.CalculateStructurePair(pix);
+          struct_analysis_.CalculateStructurePair(ix);
         }
       }
     }
 #else
-    for (auto pix = pair_interactions_.begin(); pix != pair_interactions_.end();
-         ++pix) {
+    for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
+         ++ix) {
       if (params_->polar_order_analysis || params_->overlap_analysis) {
-        mindist_.ObjectObject(pix->first.first, pix->first.second,
-                              &(pix->second));
+        mindist_.ObjectObject(*ix);
       }
-      struct_analysis_.CalculateStructurePair(pix);
+      struct_analysis_.CalculateStructurePair(ix);
     }
 #endif
   }
   // if (params_->overlap_analysis) {
-  // for(auto pix = pair_interactions_.begin(); pix != pair_interactions_.end();
-  // ++pix) { struct_analysis_.CountOverlap(pix);
+  // for(auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
+  // ++ix) { struct_analysis_.CountOverlap(ix);
   //}
   //}
   struct_analysis_.AverageStructure();
   if (params_->polar_order_analysis) {
-    for (auto pix = pair_interactions_.begin(); pix != pair_interactions_.end();
-         ++pix) {
-      auto obj1 = pix->first.first;
-      auto obj2 = pix->first.second;
-      obj1->AddPolarOrder(pix->second.polar_order);
-      obj2->AddPolarOrder(pix->second.polar_order);
-      obj1->AddContactNumber(pix->second.contact_number);
-      obj2->AddContactNumber(pix->second.contact_number);
+    for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
+         ++ix) {
+      Object *obj1 = ix->obj1;
+      Object *obj2 = ix->obj2;
+      obj1->AddPolarOrder(ix->polar_order);
+      obj2->AddPolarOrder(ix->polar_order);
+      obj1->AddContactNumber(ix->contact_number);
+      obj2->AddContactNumber(ix->contact_number);
     }
     for (auto it = ix_objects_.begin(); it != ix_objects_.end(); ++it) {
       (*it)->CalcPolarOrder();
@@ -665,7 +670,7 @@ void InteractionEngine::CalculateStructure() {
 void InteractionEngine::Clear() {
   if (no_init_)
     return;
-  ptracker_.Clear();
+  clist_.Clear();
   bool local_order =
       (params_->local_order_analysis || params_->polar_order_analysis ||
        params_->overlap_analysis || params_->density_analysis);
@@ -680,12 +685,12 @@ void InteractionEngine::Reset() {
   pair_interactions_.clear();
   ix_objects_.clear();
   interactors_.clear();
-  ptracker_.ClearCells();
+  clist_.ClearCellObjects();
 }
 
 /* Only used during species insertion */
-void InteractionEngine::AddInteractors(std::vector<Object *> ixs) {
-  ptracker_.AddToCellList(ixs, ix_objects_.size());
+void InteractionEngine::AddInteractors(std::vector<Object *> &ixs) {
+  clist_.AssignObjectsCells(ixs);
   ix_objects_.insert(ix_objects_.end(), ixs.begin(), ixs.end());
 }
 
@@ -707,6 +712,7 @@ void InteractionEngine::InitOutputs(bool reading_inputs, bool reduce_flag,
   xlink_.InitOutputs(reading_inputs, reduce_flag, with_reloads);
   if (params_->load_checkpoint) {
     PairBondCrosslinks();
+    ForceUpdate();
   }
 }
 

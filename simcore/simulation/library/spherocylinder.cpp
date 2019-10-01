@@ -11,9 +11,7 @@ Spherocylinder::Spherocylinder() : Object() {
 }
 
 void Spherocylinder::Init() {
-  do {
-    InsertSpherocylinder();
-  } while (CheckBounds());
+  InsertSpherocylinder();
 }
 
 void Spherocylinder::InsertSpherocylinder() {

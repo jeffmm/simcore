@@ -2,19 +2,17 @@
 #define _SIMCORE_SIMULATION_H_
 
 #include "auxiliary.hpp"
-#include "filament.hpp"
 #include "graphics.hpp"
 #include "helpers.hpp"
 #include "interaction_engine.hpp"
 #include "output_manager.hpp"
 #include "space.hpp"
-#include "species.hpp"
+#include "filament_species.hpp"
 //#include "centrosome.hpp"
-#include "bead_spring.hpp"
+//#include "bead_spring.hpp"
 #include "spherocylinder.hpp"
 //#include "spindle.hpp"
 #include "br_bead.hpp"
-#include "passive_filament.hpp"
 //#include "objects.hpp"
 #include "parse_flags.hpp"
 

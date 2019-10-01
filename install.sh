@@ -57,6 +57,22 @@ do_debug_graph_build() {
     cd ..
 }
 
+do_trace_build() {
+    mkdir build
+    cd build || exit 1
+    cmake -DDEBUG=1 -DTRACE=1 ..
+    make -j8
+    cd ..
+}
+
+do_trace_graph_build() {
+    mkdir build
+    cd build || exit 1
+    cmake -DDEBUG=1 -DTRACE=1 -DGRAPH=1 ..
+    make -j8
+    cd ..
+}
+
 do_docs_build() {
     mkdir build
     cd build || exit 1
@@ -84,6 +100,8 @@ do_usage() {
     echo "  gomp    - build simcore with openmp with graphics"
     echo "  debug   - build simcore in debug mode without graphics"
     echo "  gdebug  - build simcore in debug mode with graphics"
+    echo "  trace   - build simcore in trace mode (verbose logging)"
+    echo "  gtrace  - build simcore in trace mode with graphics (verbose logging)"
     echo "  test    - build simcore and run unit tests"
     echo "  docs    - build Doxygen documentation"
 }
@@ -115,6 +133,12 @@ test)
     ;;
 docs)
     do_docs_build
+    ;;
+trace)
+    do_trace_build
+    ;;
+gtrace)
+    do_trace_graph_build
     ;;
 *)
     do_usage

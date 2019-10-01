@@ -15,7 +15,6 @@
   default_config["filament"]["length"] = "-1";
   default_config["filament"]["persistence_length"] = "400";
   default_config["filament"]["max_length"] = "500";
-  default_config["filament"]["max_bond_length"] = "5";
   default_config["filament"]["min_bond_length"] = "1.5";
   default_config["filament"]["spiral_flag"] = "0";
   default_config["filament"]["spiral_number_fail_condition"] = "0";
@@ -41,11 +40,7 @@
   default_config["filament"]["lp_analysis"] = "0";
   default_config["filament"]["global_order_analysis"] = "0";
   default_config["filament"]["packing_fraction"] = "-1";
-  default_config["filament"]["shuffle"] = "1";
-  default_config["filament"]["shuffle_factor"] = "10";
-  default_config["filament"]["shuffle_frequency"] = "0.001";
   default_config["filament"]["perlen_ratio"] = "-1";
-  default_config["filament"]["perlen_ratio_target"] = "-1";
   default_config["filament"]["n_bonds"] = "-1";
   default_config["filament"]["driving_method"] = "0";
   default_config["filament"]["n_equil"] = "0";

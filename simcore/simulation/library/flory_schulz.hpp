@@ -40,8 +40,8 @@ private:
        polydispersity factor */
     if (Func(low, roll) * Func(high, roll) >= 0) {
       Logger::Error("Upper and lower bounds are not well-suited for the "
-                 "polydispersity factor provided to the Flory-Schulz "
-                 "generator");
+                    "polydispersity factor provided to the Flory-Schulz "
+                    "generator");
       return -1;
     }
     double k = low;
@@ -69,26 +69,32 @@ public:
     upper_bound_ = ub;
     if (ub < 0) {
       Logger::Error("The upper bound provided to the Flory-Schulz distribution "
-                 "should be a positive number");
+                    "should be a positive number");
     }
     epsilon_ = epsilon;
     if (a_ > 0.5 || a < 0.001) {
-      Logger::Error("Flory-Schulz given off-base parameters. If you /really/ want"
-                 " these polydispersity parameters, you'll have to remove this "
-                 " error\n hint: a reasonable polydispersity parameter is in "
-                 "the range of 0.001--0.5");
+      Logger::Error(
+          "Flory-Schulz given off-base parameters. If you /really/ want"
+          " these polydispersity parameters, you'll have to remove this "
+          " error\n hint: a reasonable polydispersity parameter is in "
+          "the range of 0.001--0.5");
     }
     if (epsilon_ < 1e-18) {
-      Logger::Error("You have provided the Flory-Schulz generator with an "
-                 "unreasonable precision tolerance. Lower your expectations.");
+      Logger::Error(
+          "You have provided the Flory-Schulz generator with an "
+          "unreasonable precision tolerance. Lower your expectations.");
     }
     if (k_min < 0) {
       Logger::Error("FlorySchulz expects a non-negative minimum k value");
     } else if (k_min > 0 && k_min > Bisection(1 - epsilon_)) {
       Logger::Error("Value for k_min is too large for the polydispersity "
-                 "parameter");
+                    "parameter");
     } else if (k_min > 0) {
       min_roll_ = CDF(k_min);
+      Logger::Trace("Renormalizing rolls in FlorySchulz generator to have a "
+                    "minimum of %2.2f to avoid lengths shorter than minimum "
+                    "length of %2.2f",
+                    min_roll_, k_min);
     }
   }
   /* Given a uniform random number in the range of 0 and 1 (roll), return its
@@ -101,7 +107,11 @@ public:
     if (min_roll_ > 0) {
       roll = (1 - min_roll_) * roll + min_roll_;
     }
-    return Bisection(roll);
+    double result = Bisection(roll);
+    Logger::Trace("FlorySchulz generator received a roll of %2.2f and returned "
+                  "a length of %2.2f",
+                  roll, result);
+    return result;
   }
 };
 

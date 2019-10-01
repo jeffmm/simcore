@@ -28,16 +28,15 @@ class BeadSpring : public Mesh {
   void ApplyInteractionForces();
   void SetParameters();
   void InitElements();
-  void InsertBeadSpring(bool force_overlap = false);
+  void InsertBeadSpring();
   void InsertFirstBond();
   void UpdateAvgPosition();
   void ReportAll();
 
  public:
   BeadSpring();
-  virtual void Init(bool force_overlap = false);
+  virtual void Init();
   virtual void InsertAt(double *pos, double *u);
-  virtual bool CheckBounds(double buffer = 0);
   // void DiffusionValidationInit();
   virtual void Integrate(bool midstep);
   // virtual void Draw(std::vector<graph_struct*> * graph_array);

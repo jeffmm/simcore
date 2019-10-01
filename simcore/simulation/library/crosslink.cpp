@@ -29,17 +29,19 @@ void Crosslink::Init(MinimumDistance *mindist, LookupTable *lut) {
   anchors_[1].Init();
   SetSID(species_id::crosslink);
   SetSingly();
+  Logger::Trace("Initializing crosslink %d with anchors %d and %d", GetOID(),
+      anchors_[0].GetOID(), anchors_[1].GetOID());
 }
 
 /* Function used to set anchor[0] position etc to xlink position etc */
 void Crosslink::UpdatePosition() {}
 
-void Crosslink::GetAnchors(std::vector<Object *> *ixors) {
+void Crosslink::GetAnchors(std::vector<Object *> &ixors) {
   if (IsUnbound())
     return;
-  ixors->push_back(&anchors_[0]);
+  ixors.push_back(&anchors_[0]);
   if (IsDoubly()) {
-    ixors->push_back(&anchors_[1]);
+    ixors.push_back(&anchors_[1]);
   }
 }
 
@@ -75,6 +77,7 @@ void Crosslink::SinglyKMC() {
     // Unbind bound head
     anchors_[0].Unbind();
     SetUnbound();
+    Logger::Trace("Crosslink %d came unbound", GetOID());
   } else if (head_activate == 1) {
     // Bind unbound head
     /* Position on rod where protein will bind with respect to center of rod,
@@ -101,6 +104,8 @@ void Crosslink::SinglyKMC() {
     }
     anchors_[1].AttachObjLambda(bind_obj, bind_lambda);
     SetDoubly();
+    Logger::Trace("Crosslink %d became doubly bound to obj %d", GetOID(),
+        bind_obj->GetOID());
   }
   kmc_filter.clear();
 }
@@ -118,10 +123,14 @@ void Crosslink::DoublyKMC() {
   int head_activate =
       choose_kmc_double(0.5 * unbind_prob, 0.5 * unbind_prob, roll);
   if (head_activate == 0) {
+    Logger::Trace("Doubly-bound crosslink %d came unbound from %d", GetOID(),
+        anchors_[0].GetBoundOID());
     anchors_[0] = anchors_[1];
     anchors_[1].Unbind();
     SetSingly();
   } else if (head_activate == 1) {
+    Logger::Trace("Doubly-bound crosslink %d came unbound from %d", GetOID(),
+        anchors_[1].GetBoundOID());
     anchors_[1].Unbind();
     SetSingly();
   }
@@ -137,10 +146,10 @@ void Crosslink::CalculateBinding() {
 }
 
 /* Only singly-bound crosslinks interact */
-void Crosslink::GetInteractors(std::vector<Object *> *ixors) {
+void Crosslink::GetInteractors(std::vector<Object *> &ixors) {
   ClearNeighbors();
   if (IsSingly()) {
-    ixors->push_back(&anchors_[0]);
+    ixors.push_back(&anchors_[0]);
   }
 }
 
@@ -209,8 +218,8 @@ void Crosslink::CalculateTetherForces() {
   ZeroForce();
   if (!IsDoubly())
     return;
-  Interaction ix;
-  mindist_->ObjectObject(&(anchors_[0]), &(anchors_[1]), &ix);
+  Interaction ix(&anchors_[0], &anchors_[1]);
+  mindist_->ObjectObject(ix);
   /* Check stretch of tether. No penalty for having a stretch < rest_length. ie
    * the spring does not resist compression. */
   length_ = sqrt(ix.dr_mag2);
@@ -284,103 +293,41 @@ bool Crosslink::IsUnbound() { return state_ == +bind_state::unbound; }
 
 void Crosslink::WriteSpec(std::fstream &ospec) {
   if (IsUnbound()) {
-    Logger::Warning("Unbound crosslink tried to WriteSpec!");
-    return;
+    Logger::Error("Unbound crosslink tried to WriteSpec!");
   }
   bool is_doubly = IsDoubly();
   ospec.write(reinterpret_cast<char *>(&is_doubly), sizeof(bool));
   ospec.write(reinterpret_cast<char *>(&diameter_), sizeof(double));
   ospec.write(reinterpret_cast<char *>(&length_), sizeof(double));
-  double temp[3];
-  std::copy(position_, position_ + 3, temp);
   for (int i = 0; i < 3; ++i) {
-    ospec.write(reinterpret_cast<char *>(&temp[i]), sizeof(double));
+    ospec.write(reinterpret_cast<char *>(&position_[i]), sizeof(double));
   }
-  std::copy(orientation_, orientation_ + 3, temp);
   for (int i = 0; i < 3; ++i) {
-    ospec.write(reinterpret_cast<char *>(&temp[i]), sizeof(double));
+    ospec.write(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
-  int mid1 = anchors_[0].GetMeshID();
-  int mid2 = anchors_[1].GetMeshID();
-  ospec.write(reinterpret_cast<char *>(&mid1), sizeof(int));
-  double const *const r0 = anchors_[0].GetPosition();
-  std::copy(r0, r0 + 3, temp);
-  for (int i = 0; i < 3; ++i) {
-    ospec.write(reinterpret_cast<char *>(&temp[i]), sizeof(double));
-  }
-  double const *const u0 = anchors_[0].GetOrientation();
-  std::copy(u0, u0 + 3, temp);
-  for (int i = 0; i < 3; ++i) {
-    ospec.write(reinterpret_cast<char *>(&temp[i]), sizeof(double));
-  }
-  double lambda = anchors_[0].GetMeshLambda();
-  ospec.write(reinterpret_cast<char *>(&lambda), sizeof(double));
-  ospec.write(reinterpret_cast<char *>(&mid2), sizeof(int));
-  double const *const r1 = anchors_[1].GetPosition();
-  std::copy(r1, r1 + 3, temp);
-  for (int i = 0; i < 3; ++i) {
-    ospec.write(reinterpret_cast<char *>(&temp[i]), sizeof(double));
-  }
-  double const *const u1 = anchors_[1].GetOrientation();
-  std::copy(u1, u1 + 3, temp);
-  for (int i = 0; i < 3; ++i) {
-    ospec.write(reinterpret_cast<char *>(&temp[i]), sizeof(double));
-  }
-  lambda = anchors_[1].GetMeshLambda();
-  ospec.write(reinterpret_cast<char *>(&lambda), sizeof(double));
+  anchors_[0].WriteSpec(ospec);
+  anchors_[1].WriteSpec(ospec);
 }
 
 void Crosslink::ReadSpec(std::fstream &ispec) {
   if (ispec.eof())
     return;
   SetSingly();
-  anchors_[1].Unbind();
   bool is_doubly;
   ispec.read(reinterpret_cast<char *>(&is_doubly), sizeof(bool));
   ispec.read(reinterpret_cast<char *>(&diameter_), sizeof(double));
   ispec.read(reinterpret_cast<char *>(&length_), sizeof(double));
-  double temp[3];
   for (int i = 0; i < 3; ++i) {
-    ispec.read(reinterpret_cast<char *>(&temp[i]), sizeof(double));
+    ispec.read(reinterpret_cast<char *>(&position_[i]), sizeof(double));
   }
-  SetPosition(temp);
   for (int i = 0; i < 3; ++i) {
-    ispec.read(reinterpret_cast<char *>(&temp[i]), sizeof(double));
+    ispec.read(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
-  SetOrientation(temp);
-  int mid;
-  ispec.read(reinterpret_cast<char *>(&mid), sizeof(int));
-  anchors_[0].SetMeshID(mid);
-  for (int i = 0; i < 3; ++i) {
-    ispec.read(reinterpret_cast<char *>(&temp[i]), sizeof(double));
-  }
-  anchors_[0].SetPosition(temp);
-  for (int i = 0; i < 3; ++i) {
-    ispec.read(reinterpret_cast<char *>(&temp[i]), sizeof(double));
-  }
-  anchors_[0].SetOrientation(temp);
-  double lambda;
-  ispec.read(reinterpret_cast<char *>(&lambda), sizeof(double));
-  anchors_[0].SetMeshLambda(lambda);
-  ispec.read(reinterpret_cast<char *>(&mid), sizeof(int));
-  anchors_[1].SetMeshID(mid);
-  for (int i = 0; i < 3; ++i) {
-    ispec.read(reinterpret_cast<char *>(&temp[i]), sizeof(double));
-  }
-  anchors_[1].SetPosition(temp);
-  for (int i = 0; i < 3; ++i) {
-    ispec.read(reinterpret_cast<char *>(&temp[i]), sizeof(double));
-  }
-  anchors_[1].SetOrientation(temp);
-  ispec.read(reinterpret_cast<char *>(&lambda), sizeof(double));
-  anchors_[1].SetMeshLambda(lambda);
-  anchors_[0].UpdatePeriodic();
-  anchors_[1].UpdatePeriodic();
-  anchors_[0].SetBound();
+  UpdatePeriodic();
+  anchors_[0].ReadSpec(ispec);
+  anchors_[1].ReadSpec(ispec);
   if (is_doubly) {
     SetDoubly();
-    UpdatePeriodic();
-    anchors_[1].SetBound();
   }
 }
 
@@ -400,4 +347,8 @@ void Crosslink::ReadCheckpoint(std::fstream &icheck) {
   icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
   ReadSpec(icheck);
+  Logger::Trace("Reloading anchor from checkpoint with mid %d", anchors_[0].GetMeshID());
+  if (IsDoubly()) {
+    Logger::Trace("Reloading anchor from checkpoint with mid %d", anchors_[1].GetMeshID());
+  }
 }

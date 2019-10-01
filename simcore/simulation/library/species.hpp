@@ -6,10 +6,10 @@
 #include "yaml-cpp/yaml.h"
 
 class SpeciesBase {
- private:
+private:
   species_id sid_;
 
- protected:
+protected:
   int n_members_ = 0, spec_file_iterator_ = -1;
   std::string spec_name_;
   system_parameters *params_;
@@ -23,11 +23,8 @@ class SpeciesBase {
   std::string checkpoint_file_;
   std::vector<std::string> spec_file_names_;
 
- public:
+public:
   SpeciesBase() {}
-  SpeciesBase(system_parameters *params, space_struct *space, long seed) {
-    Init(params, space, seed);
-  }
   void SetSID(species_id sid) {
     sid_ = sid;
     spec_name_ = sid_._to_string();
@@ -44,8 +41,8 @@ class SpeciesBase {
   virtual void SetLastMemberPosition(double const *const pos) {}
   virtual void PopMember() {}
   virtual void PopAll() {}
-  virtual double GetSpecLength() {return 0;}
-  virtual double GetSpecDiameter() {return 0;}
+  virtual double GetSpecLength() { return 0; }
+  virtual double GetSpecDiameter() { return 0; }
   virtual void ArrangeMembers() {}
   virtual int CanOverlap() { return sparams_->overlap; }
   species_id const GetSID() { return sid_; }
@@ -88,25 +85,24 @@ class SpeciesBase {
   virtual void CloseFiles();
   virtual void CleanUp() {}
   virtual void Reserve() {}
-  virtual double const GetVolume() {return 0;}
-  virtual double const GetDrMax() {return 0;}
+  virtual double const GetVolume() { return 0; }
+  virtual double const GetDrMax() { return 0; }
   virtual void ZeroDrTot() {}
   virtual void CustomInsert() {}
+  virtual const bool CheckInteractorUpdate() { return false; }
 };
 
-template <typename T>
-class Species : public SpeciesBase {
- protected:
+template <typename T> class Species : public SpeciesBase {
+protected:
   std::vector<T> members_;
 
- public:
+public:
   Species() {}
   // Initialize function for setting it up on the first pass
   virtual void Init(system_parameters *params, space_struct *space, long seed) {
     SpeciesBase::Init(params, space, seed);
   }
-  Species(system_parameters *params, space_struct *space, long seed)
-      : SpeciesBase(params, space, seed) {}
+  Species(system_parameters *params, space_struct *space, long seed) {}
   // Virtual functions
   virtual void AddMember();
   virtual void AddMember(T newmem);
@@ -144,8 +140,9 @@ class Species : public SpeciesBase {
   virtual double GetSpecLength();
   virtual double GetSpecDiameter();
   virtual void CustomInsert();
+  virtual const bool CheckInteractorUpdate();
 };
 
 #include "species_templates.hpp"
 
-#endif  // _SIMCORE_SPECIES_H_
+#endif // _SIMCORE_SPECIES_H_

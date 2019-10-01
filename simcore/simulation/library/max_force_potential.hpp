@@ -8,13 +8,13 @@
 class MaxForcePotential : public PotentialBase {
  public:
   MaxForcePotential() {}
-  void CalcPotential(Interaction *ix) {
+  void CalcPotential(Interaction &ix) {
     /* Check if we can generate a non-zero vector between
        the COMs of the two objects */
-    double *dr = ix->dr;
-    if (ix->contact1[0] || ix->contact1[1] || ix->contact1[2]) {
+    double *dr = ix.dr;
+    if (ix.contact1[0] || ix.contact1[1] || ix.contact1[2]) {
       for (int i = 0; i < n_dim_; ++i) {
-        dr[i] = ix->contact1[i] - ix->contact2[i];
+        dr[i] = ix.contact1[i] - ix.contact2[i];
       }
     }
     double rmag = 0.0;
@@ -30,13 +30,13 @@ class MaxForcePotential : public PotentialBase {
     }
     double rinv = 1.0 / (rmag);
     for (int i = 0; i < n_dim_; ++i) {
-      ix->force[i] = fcut_ * dr[i] * rinv;
+      ix.force[i] = fcut_ * dr[i] * rinv;
     }
     for (int i = 0; i < n_dim_; ++i)
       for (int j = 0; j < n_dim_; ++j)
-        ix->stress[n_dim_ * i + j] = -dr[i] * ix->force[j];
+        ix.stress[n_dim_ * i + j] = -dr[i] * ix.force[j];
     // XXX This needs a corresponding potential value
-    ix->pote = 0;
+    ix.pote = 0;
   }
 
   void Init(system_parameters *params) {

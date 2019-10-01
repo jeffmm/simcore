@@ -17,26 +17,23 @@ void MinimumDistance::Init(space_struct *space, double boundary_cutoff_sq) {
 }
 
 /* Find the minimum distance between two particles */
-void MinimumDistance::ObjectObject(Object *o1, Object *o2, Interaction *ix) {
-  double const *const r1 = o1->GetInteractorPosition();
-  double const *const s1 = o1->GetInteractorScaledPosition();
-  double const *const u1 = o1->GetInteractorOrientation();
-  double const l1 = o1->GetInteractorLength();
-  double const d1 = o1->GetInteractorDiameter();
-  double const *const r2 = o2->GetInteractorPosition();
-  double const *const s2 = o2->GetInteractorScaledPosition();
-  double const *const u2 = o2->GetInteractorOrientation();
-  double const l2 = o2->GetInteractorLength();
-  double const d2 = o2->GetInteractorDiameter();
-  ix->oids = std::make_pair(o1->GetOID(), o2->GetOID());
-  ix->mids = std::make_pair(o1->GetMeshID(), o2->GetMeshID());
-  ix->sids = std::make_pair(o1->GetSID(), o2->GetSID());
-  ix->dr_mag2 = 0;
-  std::fill(ix->dr, ix->dr + 3, 0.0);
-  std::fill(ix->contact1, ix->contact1 + 3, 0.0);
-  std::fill(ix->contact2, ix->contact2 + 3, 0.0);
-  ix->buffer_mag = 0.5 * (d1 + d2);
-  ix->buffer_mag2 = ix->buffer_mag * ix->buffer_mag;
+void MinimumDistance::ObjectObject(Interaction &ix) {
+  double const *const r1 = ix.obj1->GetInteractorPosition();
+  double const *const s1 = ix.obj1->GetInteractorScaledPosition();
+  double const *const u1 = ix.obj1->GetInteractorOrientation();
+  double const l1 = ix.obj1->GetInteractorLength();
+  double const d1 = ix.obj1->GetInteractorDiameter();
+  double const *const r2 = ix.obj2->GetInteractorPosition();
+  double const *const s2 = ix.obj2->GetInteractorScaledPosition();
+  double const *const u2 = ix.obj2->GetInteractorOrientation();
+  double const l2 = ix.obj2->GetInteractorLength();
+  double const d2 = ix.obj2->GetInteractorDiameter();
+  ix.dr_mag2 = 0;
+  std::fill(ix.dr, ix.dr + 3, 0.0);
+  std::fill(ix.contact1, ix.contact1 + 3, 0.0);
+  std::fill(ix.contact2, ix.contact2 + 3, 0.0);
+  ix.buffer_mag = 0.5 * (d1 + d2);
+  ix.buffer_mag2 = ix.buffer_mag * ix.buffer_mag;
   /* TODO: Right now, we can only find minimum distances between
      point-like particles, and line-like particles. Minimum distance
      algorithms are written for planes, so at some point we can
@@ -44,24 +41,28 @@ void MinimumDistance::ObjectObject(Object *o1, Object *o2, Interaction *ix) {
 
   if (l1 == 0 && l2 == 0) {
     /* When we have two point-like particles interacting. */
-    PointPoint(r1, s1, r2, s2, ix->dr, &ix->dr_mag2, ix->midpoint);
+    PointPoint(r1, s1, r2, s2, ix.dr, &ix.dr_mag2, ix.midpoint);
   } else if (l1 == 0 && l2 > 0) {
     /* The case where obj1 is a point-like particle and obj2 is an
        extended, line-like particle */
-    SphereSphero(r1, s1, r2, s2, u2, l2, ix->dr, &ix->dr_mag2, ix->contact2);
+    SphereSphero(r1, s1, r2, s2, u2, l2, ix.dr, &ix.dr_mag2, ix.contact2);
   } else if (l1 > 0 && l2 == 0) {
     /* Same, but switching the order of obj1 and obj2, so we'll just swap
        the order of obj1 and obj2 in the min distance calculation, then
        reverse the direction of the min distance vector and proceed. */
-    SphereSphero(r2, s2, r1, s1, u1, l1, ix->dr, &ix->dr_mag2, ix->contact1);
+    SphereSphero(r2, s2, r1, s1, u1, l1, ix.dr, &ix.dr_mag2, ix.contact1);
     for (int i = 0; i < 3; ++i) {
-      ix->dr[i] = -ix->dr[i];
+      ix.dr[i] = -ix.dr[i];
     }
   } else if (l1 > 0 && l2 > 0) {
     /* When we have two extended, line-like particles interacting. */
-    Sphero(r1, s1, u1, l1, r2, s2, u2, l2, ix->dr, &ix->dr_mag2, ix->contact1,
-           ix->contact2);
+    Sphero(r1, s1, u1, l1, r2, s2, u2, l2, ix.dr, &ix.dr_mag2, ix.contact1,
+           ix.contact2);
   }
+#ifdef TRACE
+  Logger::Trace("Minimum distance between %d and %d is %2.4f",
+                ix.obj1->GetOID(), ix.obj2->GetOID(), sqrt(ix.dr_mag2));
+#endif
 }
 
 /* Returns squared minimum distance (dr_mag2) and minimum distance vector (dr)
@@ -304,7 +305,8 @@ void MinimumDistance::Sphero(double const *const r_1, double const *const s_1,
     lambda = SIGN(half_length_1, lambda);
     mu = -dr_dot_u_2 + lambda * u_1_dot_u_2;
     mu_mag = ABS(mu);
-    if (mu_mag > half_length_2) mu = SIGN(half_length_2, mu);
+    if (mu_mag > half_length_2)
+      mu = SIGN(half_length_2, mu);
 
     /* Calculate minimum distance between two spherocylinders. */
     *r_min_mag2 = 0.0;
@@ -317,7 +319,8 @@ void MinimumDistance::Sphero(double const *const r_1, double const *const s_1,
     mu = SIGN(half_length_2, mu);
     lambda = dr_dot_u_1 + mu * u_1_dot_u_2;
     lambda_mag = ABS(lambda);
-    if (lambda_mag > half_length_1) lambda = SIGN(half_length_1, lambda);
+    if (lambda_mag > half_length_1)
+      lambda = SIGN(half_length_1, lambda);
 
     /* Calculate minimum distance between two spherocylinders. */
     *r_min_mag2 = 0.0;
@@ -415,7 +418,8 @@ void MinimumDistance::SpheroDr(double *r_1, double *s_1, double *u_1,
     lambda_a = SIGN(half_length_1, *lambda);
     mu_a = -dr_dot_u_2 + lambda_a * u_1_dot_u_2;
     mu_mag = ABS(mu_a);
-    if (mu_mag > half_length_2) mu_a = SIGN(half_length_2, mu_a);
+    if (mu_mag > half_length_2)
+      mu_a = SIGN(half_length_2, mu_a);
 
     /* Calculate minimum distance between two spherocylinders. */
     r_min_mag2_a = 0.0;
@@ -428,7 +432,8 @@ void MinimumDistance::SpheroDr(double *r_1, double *s_1, double *u_1,
     mu_b = SIGN(half_length_2, *mu);
     lambda_b = dr_dot_u_1 + mu_b * u_1_dot_u_2;
     lambda_mag = ABS(lambda_b);
-    if (lambda_mag > half_length_1) lambda_b = SIGN(half_length_1, lambda_b);
+    if (lambda_mag > half_length_1)
+      lambda_b = SIGN(half_length_1, lambda_b);
 
     /* Calculate minimum distance between two spherocylinders. */
     r_min_mag2_b = 0.0;
@@ -442,19 +447,22 @@ void MinimumDistance::SpheroDr(double *r_1, double *s_1, double *u_1,
       *lambda = lambda_a;
       *mu = mu_a;
       *r_min_mag2 = r_min_mag2_a;
-      for (i = 0; i < n_dim_; ++i) r_min[i] = r_min_a[i];
+      for (i = 0; i < n_dim_; ++i)
+        r_min[i] = r_min_a[i];
     } else {
       *lambda = lambda_b;
       *mu = mu_b;
       *r_min_mag2 = r_min_mag2_b;
-      for (i = 0; i < n_dim_; ++i) r_min[i] = r_min_b[i];
+      for (i = 0; i < n_dim_; ++i)
+        r_min[i] = r_min_b[i];
     }
   } else if (lambda_mag > half_length_1) {
     /* Adjust lambda and mu. */
     *lambda = SIGN(half_length_1, *lambda);
     *mu = -dr_dot_u_2 + *lambda * u_1_dot_u_2;
     mu_mag = ABS(*mu);
-    if (mu_mag > half_length_2) *mu = SIGN(half_length_2, *mu);
+    if (mu_mag > half_length_2)
+      *mu = SIGN(half_length_2, *mu);
 
     /* Calculate minimum distance between two spherocylinders. */
     *r_min_mag2 = 0.0;
@@ -467,7 +475,8 @@ void MinimumDistance::SpheroDr(double *r_1, double *s_1, double *u_1,
     *mu = SIGN(half_length_2, *mu);
     *lambda = dr_dot_u_1 + *mu * u_1_dot_u_2;
     lambda_mag = ABS(*lambda);
-    if (lambda_mag > half_length_1) *lambda = SIGN(half_length_1, *lambda);
+    if (lambda_mag > half_length_1)
+      *lambda = SIGN(half_length_1, *lambda);
 
     /* Calculate minimum distance between two spherocylinders. */
     *r_min_mag2 = 0.0;
@@ -529,13 +538,15 @@ void MinimumDistance::SphereSphero(
   /* Compute minimum distance (see Allen et al., Adv. Chem. Phys. 86, 1 (1993)).
      First consider a point and an infinitely long line. */
   dr_dot_u_2 = 0.0;
-  for (i = 0; i < n_dim_; ++i) dr_dot_u_2 += dr[i] * u_2[i];
+  for (i = 0; i < n_dim_; ++i)
+    dr_dot_u_2 += dr[i] * u_2[i];
   mu = -dr_dot_u_2;
   mu_mag = ABS(mu);
 
   /* Now take into account the fact that the line segment is of finite length.
    */
-  if (mu_mag > half_length_2) mu = SIGN(half_length_2, mu);
+  if (mu_mag > half_length_2)
+    mu = SIGN(half_length_2, mu);
 
   /* Calculate minimum distance between sphere and spherocylinder. */
   *r_min_mag2 = 0.0;
@@ -558,8 +569,10 @@ void MinimumDistance::SpheroPlane(double *r_mt, double *u_mt, double length,
   double costheta = dot_product(3, n_plane, u_mt);
 
   if (fabs(costheta) > SMALL) {
-    for (i = 0; i < 3; ++i) r_1[i] = -0.5 * u_mt[i] * length + r_mt[i];
-    for (i = 0; i < 3; ++i) r_2[i] = 0.5 * u_mt[i] * length + r_mt[i];
+    for (i = 0; i < 3; ++i)
+      r_1[i] = -0.5 * u_mt[i] * length + r_mt[i];
+    for (i = 0; i < 3; ++i)
+      r_2[i] = 0.5 * u_mt[i] * length + r_mt[i];
 
     d_1 = dot_product(3, r_1, n_plane) - offset;
     d_2 = dot_product(3, r_2, n_plane) - offset;
@@ -575,7 +588,8 @@ void MinimumDistance::SpheroPlane(double *r_mt, double *u_mt, double length,
     d_min = dot_product(3, r_mt, n_plane) - offset;
   }
 
-  for (i = 0; i < 3; ++i) r_min[i] = -n_plane[i] * d_min;
+  for (i = 0; i < 3; ++i)
+    r_min[i] = -n_plane[i] * d_min;
   *r_min_mag2 = dot_product(3, r_min, r_min);
 }
 
@@ -796,56 +810,59 @@ void MinimumDistance::SpheroBuddingBC(double const *const r,
   }
 }
 
-bool MinimumDistance::CheckBoundaryInteraction(Object *o1, Interaction *ix) {
+bool MinimumDistance::CheckBoundaryInteraction(Interaction &ix) {
   // No interaction with box boundary yet
   if (space_->type == +boundary_type::box ||
       space_->type == +boundary_type::none)
     return false;
-  double const *const r1 = o1->GetInteractorPosition();
-  double const *const u1 = o1->GetInteractorOrientation();
-  double const l1 = o1->GetInteractorLength();
-  double const d1 = o1->GetInteractorDiameter();
-  ix->dr_mag2 = 0;
-  std::fill(ix->dr, ix->dr + 3, 0.0);
-  std::fill(ix->contact1, ix->contact1 + 3, 0.0);
-  ix->buffer_mag = 0.5 * d1;
-  ix->buffer_mag2 = ix->buffer_mag * ix->buffer_mag;
+  double const *const r1 = ix.obj1->GetInteractorPosition();
+  double const *const u1 = ix.obj1->GetInteractorOrientation();
+  double const l1 = ix.obj1->GetInteractorLength();
+  double const d1 = ix.obj1->GetInteractorDiameter();
+  ix.dr_mag2 = 0;
+  std::fill(ix.dr, ix.dr + 3, 0.0);
+  std::fill(ix.contact1, ix.contact1 + 3, 0.0);
+  ix.buffer_mag = 0.5 * d1;
+  ix.buffer_mag2 = ix.buffer_mag * ix.buffer_mag;
   if (space_->type == +boundary_type::sphere) {
     if (l1 == 0) {
-      PointSphereBC(r1, ix->dr, &(ix->dr_mag2), ix->buffer_mag);
+      PointSphereBC(r1, ix.dr, &(ix.dr_mag2), ix.buffer_mag);
     } else {
-      SpheroSphereBC(r1, u1, l1, ix->dr, &(ix->dr_mag2), ix->contact1,
-                     ix->buffer_mag);
+      SpheroSphereBC(r1, u1, l1, ix.dr, &(ix.dr_mag2), ix.contact1,
+                     ix.buffer_mag);
     }
   } else if (space_->type == +boundary_type::budding) {
     if (l1 == 0) {
-      PointBuddingBC(r1, ix->dr, &(ix->dr_mag2), ix->buffer_mag);
+      PointBuddingBC(r1, ix.dr, &(ix.dr_mag2), ix.buffer_mag);
     } else {
-      SpheroBuddingBC(r1, u1, l1, ix->dr, &(ix->dr_mag2), ix->contact1,
-                      ix->buffer_mag);
+      SpheroBuddingBC(r1, u1, l1, ix.dr, &(ix.dr_mag2), ix.contact1,
+                      ix.buffer_mag);
     }
   }
-  if (ix->dr_mag2 < boundary_cut2_) {
+  if (ix.dr_mag2 < boundary_cut2_) {
     return true;
   }
   return false;
 }
 
-bool MinimumDistance::CheckOutsideBoundary(Object *obj) {
-  if (space_->type == +boundary_type::none) return false;
-  double const *const r = obj->GetInteractorPosition();
-  double const *const u = obj->GetInteractorOrientation();
-  double const l = obj->GetInteractorLength();
-  double const d = obj->GetInteractorDiameter();
+bool MinimumDistance::CheckOutsideBoundary(Object &obj) {
+  if (space_->type == +boundary_type::none)
+    return false;
+  double const *const r = obj.GetInteractorPosition();
+  double const *const u = obj.GetInteractorOrientation();
+  double const l = obj.GetInteractorLength();
+  double const d = obj.GetInteractorDiameter();
   double r_mag = 0.0;
   double z0 = 0.0;
   double r_boundary = space_->radius;
   int sign = (l > 0 ? SIGNOF(dot_product(n_dim_, r, u)) : 0);
   if (space_->type == +boundary_type::box) {
-    if (space_->n_periodic == n_dim_) return false;
+    if (space_->n_periodic == n_dim_)
+      return false;
     for (int j = space_->n_periodic; j < n_dim_; ++j) {
       double r_far = r[j] + sign * 0.5 * l * u[j];
-      if (ABS(r_far) > (r_boundary - 0.5 * d)) return true;
+      if (ABS(r_far) > (r_boundary - 0.5 * d))
+        return true;
     }
     return false;
   }
@@ -859,11 +876,6 @@ bool MinimumDistance::CheckOutsideBoundary(Object *obj) {
   }
   r_mag += SQR(r[n_dim_ - 1] + sign * 0.5 * l * u[n_dim_ - 1] - z0);
   return (r_mag > SQR(r_boundary - 0.5 * d));
-}
-
-void MinimumDistance::BoundaryCondition(
-    std::vector<boundary_interaction>::iterator bix) {
-  CheckBoundaryInteraction(bix->first, &(bix->second));
 }
 
 #undef SMALL

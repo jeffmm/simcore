@@ -1,6 +1,5 @@
 #include "auxiliary.hpp"
 #include "cell_list.hpp"
-#include "object.hpp"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -28,5 +27,6 @@ class ParticleTracker {
   void AssignCells();
   void ClearCells();
   void Clear();
+  void CreatePairs();
   double GetCellLength();
 };

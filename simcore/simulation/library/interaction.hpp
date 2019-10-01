@@ -1,40 +1,34 @@
 #ifndef _SIMCORE_INTERACTION_H_
 #define _SIMCORE_INTERACTION_H_
-#include <tuple>
 #include "definitions.hpp"
+#include <tuple>
 
 class Object;
 
-typedef std::pair<int, int> oid_pair;
-typedef std::pair<int, int> mesh_pair;
-typedef std::pair<species_id, species_id> sid_pair;
-
 class Interaction {
- public:
+public:
   Interaction() {}
-  oid_pair oids;
-  mesh_pair mids;
-  sid_pair sids;
-  bool boundary = false;  // true if boundary interaction
-  double force[3] = {0},  // force acting on obj1 due to obj2
-      t1[3] = {0},        // torque acting on obj1
-      t2[3] = {0},        // torque acting on obj2
-      dr[3] = {0},        // vector from obj1 to obj2
-      midpoint[3] = {0},
-         contact1[3] =
-             {0},  // vector from obj1 COM along obj1 to intersection with dr
-      contact2[3] =
-          {0},  // vector from obj2 COM along obj2 to intersection with dr
-      buffer_mag = 0,      // sum of object radii
-      buffer_mag2 = 0,     // " " " " squared
-      dr_mag2 = -1,        // magnitude of dr vector squared
-      stress[9] = {0},     // stress tensor for calculating pressure
-      pote = 0,            // potential energy
-      polar_order = 0,     // local polar order contribution
-      contact_number = 0;  // contact number contribution
+  Interaction(Object *o1, Object *o2) : obj1(o1), obj2(o2) {}
+  Interaction(Object *o1) : obj1(o1), boundary(true) {}
+  Object *obj1 = nullptr;
+  Object *obj2 = nullptr;
+  bool boundary = false; // true if boundary interaction
+  double force[3] = {0}; // force acting on obj1 due to obj2
+  double t1[3] = {0};    // torque acting on obj1
+  double t2[3] = {0};    // torque acting on obj2
+  double dr[3] = {0};    // vector from obj1 to obj2
+  double midpoint[3] = {0};
+  // vector from obj1 COM along obj1 to intersection with dr
+  double contact1[3] = {0};
+  // vector from obj2 COM along obj2 to intersection with dr
+  double contact2[3] = {0};
+  double buffer_mag = 0;     // sum of object radii
+  double buffer_mag2 = 0;    // " " " " squared
+  double dr_mag2 = -1;       // magnitude of dr vector squared
+  double stress[9] = {0};    // stress tensor for calculating pressure
+  double pote = 0;           // potential energy
+  double polar_order = 0;    // local polar order contribution
+  double contact_number = 0; // contact number contribution
 };
-
-typedef std::pair<Object*, Object*> interactor_pair;
-typedef std::pair<interactor_pair, Interaction> pair_interaction;
 
 #endif

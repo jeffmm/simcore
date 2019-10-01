@@ -331,7 +331,7 @@ void ParticleTracker::CreatePartialPairsCellList(std::vector<Object *> ixs,
   }
 }
 
-void ParticleTracker::AddToCellList(std::vector<Object *> ixs,
+void ParticleTracker::AddToCellList(std::vector<Object *> &ixs,
                                     int n_interactors) {
   nlist_->clear();
   for (auto it = ixs.begin(); it != ixs.end(); ++it) {

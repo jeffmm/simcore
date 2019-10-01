@@ -46,8 +46,8 @@ public:
   void AttachObjRandom(Object *obj);
   void UpdateCrosslinkForces();
   void UpdateCrosslinkPositions();
-  void GetAnchors(std::vector<Object *> *ixors);
-  void GetInteractors(std::vector<Object *> *ixors);
+  void GetAnchors(std::vector<Object *> &ixors);
+  void GetInteractors(std::vector<Object *> &ixors);
   void Draw(std::vector<graph_struct *> *graph_array);
   void SetDoubly();
   void SetSingly();

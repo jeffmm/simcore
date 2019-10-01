@@ -15,6 +15,8 @@ void Species<T>::Reserve() {
 template <typename T>
 void Species<T>::AddMember() {
   T newmember;
+  Logger::Trace("Adding member to species %s, member number %d, member id %d",
+      GetSID()._to_string(), n_members_+1, newmember.GetOID());
   members_.push_back(newmember);
   members_.back().SetSID(GetSID());
   members_.back().Init();
@@ -43,6 +45,7 @@ void Species<T>::ZeroDrTot() {
 
 template <typename T>
 void Species<T>::AddMember(T newmem) {
+  Logger::Trace("Adding preexisting member to species %s", GetSID()._to_string());
   members_.push_back(newmem);
   newmem.SetSID(GetSID());
   n_members_++;
@@ -50,6 +53,7 @@ void Species<T>::AddMember(T newmem) {
 
 template <typename T>
 void Species<T>::PopMember() {
+  Logger::Trace("Removing last member of species %s", GetSID()._to_string());
   members_.back().Cleanup();
   members_.pop_back();
   n_members_--;
@@ -211,6 +215,8 @@ void Species<T>::ReadCheckpoints() {
   icheck_file.read(reinterpret_cast<char *>(&seed), sizeof(seed));
   icheck_file.read(reinterpret_cast<char *>(&size), sizeof(size));
   T member;
+  member.Init();
+  member.SetSID(GetSID());
   members_.resize(size, member);
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->ReadCheckpoint(icheck_file);
@@ -236,7 +242,7 @@ void Species<T>::ReadSpecs() {
     return;
   }
   int size = -1;
-  T *member;
+  //T *member;
   ispec_file_.read(reinterpret_cast<char *>(&size), sizeof(size));
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
@@ -252,6 +258,8 @@ void Species<T>::ReadSpecs() {
   }
   if (size != n_members_) {
     T member;
+    member.Init();
+    member.SetSID(GetSID());
     members_.resize(size, member);
     n_members_ = size;
   }
@@ -458,4 +466,15 @@ void Species<T>::CustomInsert() {
       members_[i_member++].InsertAt(pos, u);
     }
   }
+}
+
+template <typename T>
+const bool Species<T>::CheckInteractorUpdate() {
+  bool result = false;
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    if (it->CheckInteractorUpdate()) {
+      result = true;
+    }
+  }
+  return result;
 }

@@ -31,6 +31,7 @@ Object::Object() {
   in_flock_ = 0;
   flock_change_state_ = 0;
   gid = oid_;
+  interactor_update_ = false;
 }
 
 // Set the object OID in a thread-safe way
@@ -126,6 +127,13 @@ double const Object::GetPolarOrder() { return polar_order_; }
 double const Object::GetContactNumber() { return contact_number_; }
 bool const Object::IsInteractor() { return interacting_; }
 bool const Object::IsMesh() { return is_mesh_; }
+bool const Object::CheckInteractorUpdate() {
+  if (interactor_update_) {
+    interactor_update_ = false;
+    return true;
+  }
+  return false;
+}
 void Object::HasOverlap(bool overlap) { has_overlap_ = overlap; }
 void Object::SetFlockType(int in_flock) { in_flock_ = in_flock; }
 int Object::GetFlockType() { return in_flock_; }
@@ -140,45 +148,8 @@ void Object::SetType(obj_type type) { type_ = type; }
 void Object::SetSID(species_id sid) { sid_ = sid; }
 
 // Virtual functions
-// Returns true if object is out of bounds
-bool Object::CheckBounds(double buffer) {
-  if (space_->type == +boundary_type::none)
-    return false;
-  double const *const r = GetInteractorPosition();
-  double const *const u = GetInteractorOrientation();
-  double const l = GetInteractorLength();
-  double const d = GetInteractorDiameter();
-  double r_mag = 0.0;
-  double z0 = 0.0;
-  double r_boundary = space_->radius;
-  buffer += 0.5 * diameter_;
-  if (buffer > r_boundary) {
-    Logger::Error("Cannot insert object into system!");
-  }
-  int sign = (l > 0 ? SIGNOF(dot_product(n_dim_, r, u)) : 0);
-  if (space_->type == +boundary_type::box) {
-    if (space_->n_periodic == n_dim_)
-      return false;
-    for (int j = space_->n_periodic; j < n_dim_; ++j) {
-      double r_far = r[j] + sign * 0.5 * l * u[j];
-      if (ABS(r_far) > (r_boundary - buffer))
-        return true;
-    }
-    return false;
-  }
-  if (space_->type == +boundary_type::budding &&
-      r[n_dim_ - 1] > space_->bud_neck_height) {
-    z0 = space_->bud_height;
-    r_boundary = space_->bud_radius;
-  }
-  for (int i = 0; i < n_dim_ - 1; ++i) {
-    r_mag += SQR(r[i] + sign * 0.5 * l * u[i]);
-  }
-  r_mag += SQR(r[n_dim_ - 1] + sign * 0.5 * l * u[n_dim_ - 1] - z0);
-  return (r_mag > SQR(r_boundary - buffer));
-}
-
 void Object::InsertRandom() {
+  Logger::Trace("Inserting object %d randomly", GetOID());
   double mag;
   double buffer = diameter_;
   if (space_->n_periodic == n_dim_)
@@ -186,9 +157,10 @@ void Object::InsertRandom() {
   double R = space_->radius;
   // XXX Check to make sure object fits inside unit cell if non-periodic
   if (R - buffer < 0) {
-    Logger::Error("Object #%d is too large to place in system.\n system radius: "
-               "%2.2f, buffer: %2.2f",
-               GetOID(), R, buffer);
+    Logger::Error(
+        "Object #%d is too large to place in system.\n system radius: "
+        "%2.2f, buffer: %2.2f",
+        GetOID(), R, buffer);
   }
   switch (space_->type) {
   // If no boundary, insert wherever
@@ -244,6 +216,10 @@ void Object::InsertRandom() {
   }
   generate_random_unit_vector(n_dim_, orientation_, rng_.r);
   UpdatePeriodic();
+  Logger::Trace("Object inserted at [%2.2f, %2.2f, %2.2f] with orientation "
+                "[%2.2f %2.2f %2.2f]",
+                position_[0], position_[1], position_[2], orientation_[0],
+                orientation_[1], orientation_[2]);
 }
 
 void Object::InsertRandomOriented(double *u) {
@@ -287,9 +263,10 @@ void Object::InsertAt(double *pos, double *u) {
     Logger::Error("Boundary type not recognized.");
   }
   if (out_of_bounds) {
-    Logger::Error("Object %d placed outside of system unit cell! System radius: "
-               "%2.2f, pos: {%2.2f %2.2f %2.2f}",
-               GetOID(), R, pos[0], pos[1], pos[2]);
+    Logger::Error(
+        "Object %d placed outside of system unit cell! System radius: "
+        "%2.2f, pos: {%2.2f %2.2f %2.2f}",
+        GetOID(), R, pos[0], pos[1], pos[2]);
   }
   SetPosition(pos);
   normalize_vector(u, n_dim_);
@@ -387,6 +364,7 @@ double const Object::GetVolume() {
     }
     return -1;
   }
+  return -1;
 }
 double const Object::GetDrTot() { return dr_tot_; }
 void Object::ZeroDrTot() {

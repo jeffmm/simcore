@@ -66,6 +66,8 @@ public:
   const Object *const *GetNeighborListMem();
   Object *GetNeighbor(int i_neighbor);
   int GetNNeighbors();
+  void WriteSpec(std::fstream &ospec);
+  void ReadSpec(std::fstream &ispec);
 };
 
 #endif

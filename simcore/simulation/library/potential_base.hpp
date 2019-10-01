@@ -12,7 +12,7 @@ class PotentialBase {
  public:
   PotentialBase() {}
   double GetRCut2() { return rcut2_; }
-  virtual void CalcPotential(Interaction *ix) {}
+  virtual void CalcPotential(Interaction &ix) {}
   virtual void Init(system_parameters *params) {}
 };
 

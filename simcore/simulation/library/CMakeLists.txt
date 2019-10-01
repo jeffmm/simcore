@@ -35,6 +35,7 @@ set(SOURCES anchor.cpp
             bead_spring.cpp
             bond.cpp
             br_bead.cpp
+            cell.cpp
             cell_list.cpp
             #centrosome.cpp
             cpu.cpp
@@ -51,12 +52,8 @@ set(SOURCES anchor.cpp
             logger.cpp
             mesh.cpp
             minimum_distance.cpp
-            #motor.cpp
             object.cpp
             output_manager.cpp
-            particle_tracker.cpp
-            passive_filament.cpp
-            rigid_mesh.cpp
             rng.cpp
             simulation.cpp
             simulation_manager.cpp

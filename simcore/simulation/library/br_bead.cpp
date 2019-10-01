@@ -11,10 +11,7 @@ BrBead::BrBead() : Object() {
 }
 
 void BrBead::Init() {
-  bool out_of_bounds;
-  do {
-    InsertBrBead();
-  } while (CheckBounds());
+  InsertBrBead();
 }
 
 int BrBead::GetCount() { return 1; }

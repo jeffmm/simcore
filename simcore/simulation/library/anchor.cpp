@@ -176,6 +176,8 @@ void Anchor::Unbind() {
   ClearNeighbors();
   ZeroForce();
   SetMeshID(-1);
+  std::fill(position_, position_ + 3, 0.0);
+  std::fill(orientation_, orientation_ + 3, 0.0);
 }
 
 void Anchor::Diffuse() {
@@ -242,7 +244,8 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
       bond_lambda_ = bond_length_;
     } else {
       Logger::Error(
-          "Lambda passed to anchor is much larger than mesh bond length!");
+          "Lambda passed to anchor is much larger than mesh bond length! %2.2f "
+          "> %2.2f", bond_lambda_, bond_length_);
     }
   }
 
@@ -303,3 +306,35 @@ Object *Anchor::GetNeighbor(int i_neighbor) {
 }
 
 int Anchor::GetNNeighbors() { return neighbors_.NNeighbors(); }
+
+void Anchor::WriteSpec(std::fstream &ospec) {
+  int mid = GetMeshID();
+  ospec.write(reinterpret_cast<char *>(&bound_), sizeof(bool));
+  ospec.write(reinterpret_cast<char *>(&active_), sizeof(bool));
+  ospec.write(reinterpret_cast<char *>(&mid), sizeof(int));
+  for (int i = 0; i < 3; ++i) {
+    ospec.write(reinterpret_cast<char *>(&position_[i]), sizeof(double));
+  }
+  for (int i = 0; i < 3; ++i) {
+    ospec.write(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
+  }
+  ospec.write(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
+}
+
+void Anchor::ReadSpec(std::fstream &ispec) {
+  int mid;
+  ispec.read(reinterpret_cast<char *>(&bound_), sizeof(bool));
+  ispec.read(reinterpret_cast<char *>(&active_), sizeof(bool));
+  ispec.read(reinterpret_cast<char *>(&mid), sizeof(int));
+  SetMeshID(mid);
+  for (int i = 0; i < 3; ++i) {
+    ispec.read(reinterpret_cast<char *>(&position_[i]), sizeof(double));
+  }
+  for (int i = 0; i < 3; ++i) {
+    ispec.read(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
+  }
+  ispec.read(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
+  UpdatePeriodic();
+  if (active_)
+    step_direction_ = - params_->crosslink.step_direction;
+}

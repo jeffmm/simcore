@@ -1,4 +1,130 @@
-#include "filament.hpp"
+#include "filament_species.hpp"
+
+FilamentSpecies::FilamentSpecies() : Species() {
+  SetSID(species_id::filament);
+  midstep_ = true;
+}
+
+void FilamentSpecies::Init(system_parameters *params, space_struct *space,
+                           long seed) {
+  Species::Init(params, space, seed);
+  sparams_ = &(params_->filament);
+  fill_volume_ = 0;
+  packing_fraction_ = params_->filament.packing_fraction;
+#ifdef TRACE
+  if (packing_fraction_ > 0) {
+    Logger::Warning("Simulation run in trace mode with a potentially large "
+                    "number of objects in species %s (packing fraction ="
+                    " %2.4f)",
+                    GetSID()._to_string(), packing_fraction_);
+    fprintf(stderr, "Continue anyway? (y/N) ");
+    char c;
+    if (std::cin.peek() != 'y') {
+      Logger::Error("Terminating simulation by user request");
+    } else if (!(std::cin >> c)) {
+      Logger::Error("Invalid input");
+    } else {
+      fprintf(stderr, "Resuming simulation\n");
+      std::cin.ignore();
+    }
+  }
+#endif
+
+  double min_length = 2 * params_->filament.min_bond_length;
+  if (!params_->filament.polydispersity_flag &&
+      params_->filament.length < min_length) {
+    Logger::Warning("Filament length %2.2f is less than minimum filament length"
+                    " %2.2f for minimum bond length %2.2f. Setting length to "
+                    "minimum length.",
+                    params_->filament.length, min_length,
+                    params_->filament.min_bond_length);
+    params_->filament.length = min_length;
+  }
+  if (params_->filament.perlen_ratio > 0) {
+    if (params_->filament.polydispersity_flag) {
+      Logger::Warning("Persistence length ratio parameter is set with "
+                      "polydispersity. Ignoring perlen_ratio and using "
+                      "persistence_length parameter instead.");
+    } else {
+      params_->filament.persistence_length =
+          params_->filament.length * params_->filament.perlen_ratio;
+    }
+  }
+  if (params_->filament.spiral_flag &&
+      params_->filament.spiral_number_fail_condition <= 0) {
+    Logger::Warning("Spiral simulation will not end on spiral failure due to"
+                    " negative spiral_number_fail_condition");
+  }
+}
+
+void FilamentSpecies::UpdatePositions() {
+#ifdef ENABLE_OPENMP
+  int max_threads = omp_get_max_threads();
+  filament_chunk_vector chunks;
+  chunks.reserve(max_threads);
+  size_t chunk_size = members_.size() / max_threads;
+  filament_iterator cur_iter = members_.begin();
+  for (int i = 0; i < max_threads - 1; ++i) {
+    filament_iterator last_iter = cur_iter;
+    std::advance(cur_iter, chunk_size);
+    chunks.push_back(std::make_pair(last_iter, cur_iter));
+  }
+  chunks.push_back(std::make_pair(cur_iter, members_.end()));
+
+#pragma omp parallel shared(chunks)
+  {
+#pragma omp for
+    for (int i = 0; i < max_threads; ++i)
+      for (auto it = chunks[i].first; it != chunks[i].second; ++it)
+        it->UpdatePosition(midstep_);
+  }
+#else
+  for (filament_iterator it = members_.begin(); it != members_.end(); ++it)
+    it->UpdatePosition(midstep_);
+#endif
+
+  midstep_ = !midstep_;
+}
+
+void FilamentSpecies::Reserve() {
+  int max_insert = GetNInsert();
+  if (packing_fraction_ > 0) {
+    double min_length = 2 * params_->filament.min_bond_length;
+    double diameter = params_->filament.diameter;
+    double min_vol = 0;
+    if (params_->n_dim == 2) {
+      min_vol = diameter * min_length + 0.25 * M_PI * diameter * diameter;
+    }
+    if (params_->n_dim == 3) {
+      min_vol = 0.25 * M_PI * diameter * diameter * min_length +
+                1.0 / 6.0 * M_PI * diameter * diameter * diameter;
+    }
+    max_insert = (int)ceil(packing_fraction_ * space_->volume / min_vol);
+  }
+  members_.reserve(max_insert);
+}
+
+void FilamentSpecies::AddMember() {
+  Species::AddMember();
+  if (packing_fraction_ > 0) {
+    double vol = members_.back().GetVolume();
+    fill_volume_ += vol;
+    /* if we are still short on volume for the target packing fraction, then
+       request more members */
+    if (fill_volume_ < packing_fraction_ * space_->volume &&
+        members_.size() == sparams_->num) {
+      sparams_->num++;
+    }
+  }
+}
+
+void FilamentSpecies::PopMember() {
+  if (packing_fraction_ > 0) {
+    double vol = members_.back().GetVolume();
+    fill_volume_ -= vol;
+  }
+  Species::PopMember();
+}
 
 void FilamentSpecies::InitAnalysis() {
   time_ = 0;
@@ -29,9 +155,8 @@ void FilamentSpecies::InitAnalysis() {
   }
   if (params_->filament.flocking_analysis) {
     if (!params_->polar_order_analysis) {
-      Logger::Warning(
-          "Flocking analysis enabled polar order analysis in "
-          "FilamentSpecies::InitAnalysis\n");
+      Logger::Warning("Flocking analysis enabled polar order analysis in "
+                      "FilamentSpecies::InitAnalysis\n");
       params_->polar_order_analysis = 1;
     }
     InitFlockingAnalysis();
@@ -45,7 +170,8 @@ void FilamentSpecies::InitAnalysis() {
     in_out_file_ << "umax: " << params_->soft_potential_mag << "\n";
     in_out_file_ << "angle_in: ";
     if (members_.size() < 2) {
-      Logger::Error("Error in in-out analysis in FilamentSpecies::InitAnalysis");
+      Logger::Error(
+          "Error in in-out analysis in FilamentSpecies::InitAnalysis");
     }
     double u1[3] = {0, 0, 0};
     double u2[3] = {0, 0, 0};
@@ -118,10 +244,14 @@ void FilamentSpecies::RunPolarOrderAnalysis() {
     // polar_order_file_ << cn[i] << " " << po[i] <<"\n";
     int x = (int)(floor(cn[i] / contact_bin_width_));
     int y = (int)(floor((po[i] + 1) / polar_bin_width_));
-    if (y == n_bins_1d_) y = n_bins_1d_ - 1;
-    if (x == n_bins_1d_) x = n_bins_1d_ - 1;
-    if (y == -1) y = 0;
-    if (x == -1) x = 0;
+    if (y == n_bins_1d_)
+      y = n_bins_1d_ - 1;
+    if (x == n_bins_1d_)
+      x = n_bins_1d_ - 1;
+    if (y == -1)
+      y = 0;
+    if (x == -1)
+      x = 0;
     if (y < 0 || x < 0 || y > n_bins_1d_ - 1 || x > n_bins_1d_ - 1) {
       std::cout << cn[i] << " " << po[i] << "\n";
       Logger::Error("Out of range in RunPolarOrderAnalysis");
@@ -162,9 +292,9 @@ void FilamentSpecies::RunOrientationCorrelationAnalysis() {
     sem += avg_var.second;
   }
   avg /= n_members_;
-  sem = sem / n_members_;  // This calculates the pooled variance
+  sem = sem / n_members_; // This calculates the pooled variance
   sem =
-      sqrt(sem / (n_members_ * members_[0].GetNBonds()));  // """ standard error
+      sqrt(sem / (n_members_ * members_[0].GetNBonds())); // """ standard error
   orientation_corr_file_ << time_ % orientation_corr_n_steps_ << " " << avg
                          << " " << sem << "\n";
 }
@@ -582,9 +712,8 @@ void FilamentSpecies::RunFlockingAnalysis() {
       } else if (flock_type == 2) {
         n_exterior++;
       } else {
-        Logger::Warning(
-            "Flock type not recognized in "
-            "FilamentSpecies::RunFlockingAnalysis");
+        Logger::Warning("Flock type not recognized in "
+                        "FilamentSpecies::RunFlockingAnalysis");
       }
     }
     if (flock_change_state) {
@@ -593,9 +722,8 @@ void FilamentSpecies::RunFlockingAnalysis() {
       } else if (flock_change_state == 2) {
         n_left++;
       } else {
-        Logger::Warning(
-            "Flock change state not recognized in "
-            "FilamentSpecies::RunFlockingAnalysis");
+        Logger::Warning("Flock change state not recognized in "
+                        "FilamentSpecies::RunFlockingAnalysis");
       }
     }
   }

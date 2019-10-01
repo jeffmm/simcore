@@ -11,9 +11,9 @@ class WCAPotential : public PotentialBase {
 
  public:
   WCAPotential() {}
-  void CalcPotential(Interaction *ix) {
-    double rmag = sqrt(ix->dr_mag2);
-    double *dr = ix->dr;
+  void CalcPotential(Interaction &ix) {
+    double rmag = sqrt(ix.dr_mag2);
+    double *dr = ix.dr;
     double rinv = 1.0 / (rmag);
     double rinv2 = rinv * rinv;
     double r6 = rinv2 * rinv2 * rinv2;
@@ -23,12 +23,12 @@ class WCAPotential : public PotentialBase {
       ffac = SIGNOF(ffac) * fcut_;
     }
     for (int i = 0; i < n_dim_; ++i) {
-      ix->force[i] = ffac * dr[i] * rinv;
+      ix.force[i] = ffac * dr[i] * rinv;
     }
     for (int i = 0; i < n_dim_; ++i)
       for (int j = 0; j < n_dim_; ++j)
-        ix->stress[n_dim_ * i + j] = -dr[i] * ix->force[j];
-    ix->pote = r6 * (c12_ * r6 - c6_) + eps_;
+        ix.stress[n_dim_ * i + j] = -dr[i] * ix.force[j];
+    ix.pote = r6 * (c12_ * r6 - c6_) + eps_;
   }
 
   void Init(system_parameters *params) {

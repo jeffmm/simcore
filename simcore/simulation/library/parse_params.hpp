@@ -74,9 +74,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("max_length")==0) {
             params->filament.max_length = jt->second.as<double>();
           }
-          else if (param_name.compare("max_bond_length")==0) {
-            params->filament.max_bond_length = jt->second.as<double>();
-          }
           else if (param_name.compare("min_bond_length")==0) {
             params->filament.min_bond_length = jt->second.as<double>();
           }
@@ -152,20 +149,8 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("packing_fraction")==0) {
             params->filament.packing_fraction = jt->second.as<double>();
           }
-          else if (param_name.compare("shuffle")==0) {
-            params->filament.shuffle = jt->second.as<int>();
-          }
-          else if (param_name.compare("shuffle_factor")==0) {
-            params->filament.shuffle_factor = jt->second.as<double>();
-          }
-          else if (param_name.compare("shuffle_frequency")==0) {
-            params->filament.shuffle_frequency = jt->second.as<double>();
-          }
           else if (param_name.compare("perlen_ratio")==0) {
             params->filament.perlen_ratio = jt->second.as<double>();
-          }
-          else if (param_name.compare("perlen_ratio_target")==0) {
-            params->filament.perlen_ratio_target = jt->second.as<double>();
           }
           else if (param_name.compare("n_bonds")==0) {
             params->filament.n_bonds = jt->second.as<int>();

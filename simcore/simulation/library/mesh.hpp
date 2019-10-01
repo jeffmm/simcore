@@ -7,30 +7,39 @@ typedef std::vector<Bond>::iterator bond_iterator;
 typedef std::vector<Site>::iterator site_iterator;
 
 class Mesh : public Object {
- private:
-  static int next_mesh_id_;
+private:
+  static int _next_mesh_id_;
+  static std::mutex _mesh_mtx_;
+  void InitMeshID();
 
- protected:
-  bool anchored_, midstep_, posits_only_;
-  int n_sites_, n_bonds_, n_bonds_max_;
+protected:
+  bool anchored_;
+  bool midstep_;
+  bool posits_only_;
+  int n_sites_;
+  int n_bonds_;
+  int n_bonds_max_;
   std::vector<Site> sites_;
   std::vector<Bond> bonds_;
   double bond_length_;
   Bond *GetRandomBond();
   void UpdateInteractors();
+  void UpdateSiteOrientations();
+  void RelocateMesh(double *pos, double *u);
+  void AddBondBetweenSites(Site *site1, Site *site2);
+  void AddRandomBondToSite(double l, int i_site);
+  void AddBondToSite(double *u, double l, int i_site);
+  void AddSite(Site s);
+  void AddBond(Bond b);
 
- public:
+public:
   Mesh();
   void InitSiteAt(double *pos, double d);
   void InitBondAt(double *pos, double *u, double l, double d);
   void InitRandomSite(double d);
-  void AddRandomBondToSite(double l, int i_site);
   void AddRandomBondAnywhere(double l, double d = 1);
   void AddRandomBondToTip(double l);
   void AddBondToTip(double *u, double l);
-  void AddBondToSite(double *u, double l, int i_site);
-  void AddSite(Site s);
-  void AddBond(Bond b);
   void SetBondLength(double l);
   void RemoveBondFromTip();
   void ReportSites();
@@ -44,7 +53,7 @@ class Mesh : public Object {
   void Clear();
   void DoubleGranularityLinear();
   void HalfGranularityLinear();
-  int GetNBonds() {return n_bonds_;}
+  int GetNBonds() { return n_bonds_; }
   Bond *GetBondAtLambda(double lambda);
   Site *GetSite(int i);
   Bond *GetBond(int i);
@@ -72,6 +81,7 @@ class Mesh : public Object {
   std::pair<double, double> GetAvgOrientationCorrelation();
   virtual void ZeroOrientationCorrelations();
   virtual double const GetBondLength();
+  virtual const bool CheckInteractorUpdate();
 };
 
-#endif  // _SIMCORE_MESH_H_
+#endif // _SIMCORE_MESH_H_

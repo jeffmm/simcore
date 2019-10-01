@@ -143,10 +143,9 @@ filament:                            # Parameters unique to filament class of ob
                                      # assigned to each filament between min_length and max_length.
   persistence_length: [400, double]  # Persistence length of filament.
   max_length: [500,double]           # Maximum filament length. Also used for dynamic instability.
-  max_bond_length: [5, double]       # Maximum bond length. When using dynamic instability, the
+  min_bond_length: [1.5, double]     # Minimum bond length. When using dynamic instability, the
                                      # number of bonds used to discretize filament may change while
                                      # filament is growing or shrinking to stay in range.
-  min_bond_length: [1.5, double]     # Minimum bond length.
   spiral_flag: [0, int]              # Initializes filaments in an archimedean spiral centered at
                                      # system origin.
   spiral_number_fail_condition: [0, double] # When spiral flag is on, terminates simulation when the
@@ -192,15 +191,8 @@ filament:                            # Parameters unique to filament class of ob
                                     # polar order, global nematic order, global spiral number, etc.
   packing_fraction: [-1, double]    # If num > 0, and packing fraction > 0, filaments are inserted
                                     # until the ratio filament to system volumes match this value.
-  shuffle: [1, int]                 # If inserting filaments on a crystalline lattice, this flag will
-                                    # stochastically propel the filaments forward and backward for
-                                    # n_equil steps.
-  shuffle_factor: [10, double]      # Force density used for propelling filaments during shuffling.
-  shuffle_frequency: [0.001, double] # Rate used for switching between shuffling forward and backward.
   perlen_ratio: [-1, double]        # If perlen ratio >= 0, sets the persistence length of filaments
                                     # such that the persistence length to length ratio is this value.
-  perlen_ratio_target: [-1, double] # When adiabatically varying perlen ratio, this sets the target
-                                    # value to arrive at in n_steps_target simulation steps.
   n_bonds: [-1, int]                # If > 0, sets the number of filament bonds at initialization 
                                     # using this value instead of min_bond_length, etc values.
   driving_method: [0, int]          # If 0, driving forces are centered on bonds, and propulsion 

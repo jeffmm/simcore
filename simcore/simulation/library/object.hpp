@@ -1,20 +1,20 @@
 #ifndef _SIMCORE_OBJECT_H_
 #define _SIMCORE_OBJECT_H_
 
-#include <mutex>
 #include "auxiliary.hpp"
 #include "interaction.hpp"
 #include "rng.hpp"
+#include <mutex>
 
 class Object {
- private:
+private:
   int oid_;
   int mesh_id_;
   static int _next_oid_;
   static std::mutex _obj_mtx_;
   void InitOID();
 
- protected:
+protected:
   static system_parameters *params_;
   static space_struct *space_;
   static int n_dim_;
@@ -24,25 +24,42 @@ class Object {
   graph_struct g_;
   RNG rng_;
   draw_type draw_;
-  int n_contact_,
-      in_flock_,            // 0 if not in flock, 1 if interior, 2 if exterior
-      flock_change_state_;  // 0 if same as previous step, 1 if joined flock, 2
-                            // if left flock
-  double position_[3], prev_position_[3], prev_orientation_[3],
-      scaled_position_[3], orientation_[3], force_[3], torque_[3], dr_zero_[3],
-      color_, diameter_, length_, p_energy_, dr_tot_, polar_order_,
-      contact_number_;
-  bool interacting_, is_mesh_, has_overlap_;
+  int n_contact_;
+  int in_flock_;           // 0 if not in flock, 1 if interior, 2 if exterior
+  int flock_change_state_; // 0 if same as previous step, 1 if joined flock, 2
+                           // if left flock
+  double position_[3];
+  double prev_position_[3];
+  double prev_orientation_[3];
+  double scaled_position_[3];
+  double orientation_[3];
+  double force_[3];
+  double torque_[3];
+  double dr_zero_[3];
+  double color_;
+  double diameter_;
+  double length_;
+  double p_energy_;
+  double dr_tot_;
+  double polar_order_;
+  double contact_number_;
+  bool interacting_;
+  bool is_mesh_;
+  bool has_overlap_;
+  bool interactor_update_;
 
   std::vector<Object *> interactors_;
   std::vector<Interaction *> ixs_;
   void UpdateKMC();
 
- public:
+public:
   Object();
   // kmcx parameter
   int gid;
-  double length, radius, pos[3], direction[3];
+  double length;
+  double radius;
+  double pos[3];
+  double direction[3];
 
   // Static functions
   static void SetParams(system_parameters *params);
@@ -92,6 +109,7 @@ class Object {
   double const GetContactNumber();
   bool const IsInteractor();
   bool const IsMesh();
+  bool const CheckInteractorUpdate();
   void HasOverlap(bool overlap);
   void SetFlockType(int in_flock);
   void SetFlockChangeState(int fcs);
@@ -104,7 +122,6 @@ class Object {
   virtual void InsertRandom();
   virtual void InsertRandomOriented(double *u);
   virtual void InsertAt(double *pos, double *u);
-  virtual bool CheckBounds(double buffer = 0);
   virtual void ZeroForce();
   virtual void UpdatePeriodic();
   virtual void UpdatePosition() {}
@@ -146,4 +163,4 @@ class Object {
 // void MinimumDistance(Object* o1, Object* o2, Interaction *ix, space_struct
 // *space); void BoundaryConditions(Object * o1, space_struct *space);
 
-#endif  // _SIMCORE_OBJECT_H_
+#endif // _SIMCORE_OBJECT_H_

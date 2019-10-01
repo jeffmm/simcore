@@ -20,7 +20,8 @@ void SimulationManager::InitManager(run_options run_opts) {
   if (pnode_["run_name"] && pnode_["run_name"].size() == 0) {
     run_name_ = pnode_["run_name"].as<std::string>();
   }
-  Logger::SetOutput((run_name_ + ".log").c_str());
+  // Initialize logging
+  InitLogger();
   long seed = 7143961348914;
   if (pnode_["seed"] && pnode_["seed"].size() == 0) {
     seed = pnode_["seed"].as<long>();
@@ -63,6 +64,30 @@ void SimulationManager::InitManager(run_options run_opts) {
   CountVariations();
   // Generate n_var_ parameter nodes of unique parameter combinations
   GenerateParameters();
+}
+
+/* Initialize output logging. Requires that simulation run_name_ be initialized
+ */
+void SimulationManager::InitLogger() {
+  std::ostringstream log_name;
+  log_name << run_name_;
+  if (run_opts_.load_checkpoint) {
+    std::ostringstream nload;
+    if (pnode_["n_load"]) {
+      nload << std::setw(3) << std::setfill('0')
+            << pnode_["n_load"].as<int>() + 1;
+    } else {
+      nload << std::setw(3) << std::setfill('0') << 1;
+    }
+    if (log_name.str().find("reload") == std::string::npos) {
+      log_name << "_reload" << nload.str();
+    } else {
+      size_t pos = log_name.tellp();
+      log_name.seekp(pos - 3);
+      log_name << nload.str();
+    }
+  }
+  Logger::SetOutput((log_name.str() + ".log").c_str());
 }
 
 /****************************************

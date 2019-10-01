@@ -8,7 +8,6 @@ void Simulation::Run(system_parameters params) {
   params_ = params;
   run_name_ = params.run_name;
   // Initialize simulation data structures
-  Logger::Debug("Something seems.. off?");
   InitSimulation();
   // Begin simulation
   RunSimulation();
@@ -79,7 +78,7 @@ void Simulation::PrintComplete() {
     printf("    %2.1f%% complete\r", (double)it / steps);
     fflush(stdout);
   }
-  Logger::Trace("********\nStep %d\n********\n", i_step_);
+  Logger::Trace("*****Step %d*****", i_step_);
 }
 
 /* Update the positions of all objects in the system using numerical
@@ -92,9 +91,9 @@ void Simulation::Integrate() {
 }
 
 /* Calculate interaction forces between all objects if necessary. */
-void Simulation::Interact() { 
+void Simulation::Interact() {
   Logger::Debug("Calculating object interactions");
-  iengine_.Interact(); 
+  iengine_.Interact();
 }
 
 /* Remove forces on all objects. Objects with inertia that use higher order RK
@@ -139,6 +138,23 @@ void Simulation::ScaleSpeciesPositions() {
 /* Initialize all the data structures in the simulation */
 void Simulation::InitSimulation() {
   Logger::Info("Initializing simulation");
+#ifdef TRACE
+  if (params_.n_steps > 100) {
+    Logger::Warning("Simulation run in trace mode with a large number of "
+                    "n_steps (%d).",
+                    params_.n_steps);
+    fprintf(stderr, "Continue anyway? (y/N) ");
+    char c;
+    if (std::cin.peek() != 'y') {
+      Logger::Error("Terminating simulation by user request");
+    } else if (!(std::cin >> c)) {
+      Logger::Error("Invalid input");
+    } else {
+      fprintf(stderr, "Resuming simulation\n");
+      std::cin.ignore();
+    }
+  }
+#endif
   space_.Init(&params_);
   InitObjects();
   InitSpecies();
@@ -187,8 +203,6 @@ void Simulation::InitSpecies() {
   /* Factories for creating and initializing registered species with their
      assigned species id */
   REGISTER_SPECIES(FilamentSpecies, filament);
-  REGISTER_SPECIES(PassiveFilamentSpecies, passive_filament);
-  REGISTER_SPECIES(BeadSpringSpecies, bead_spring);
   REGISTER_SPECIES(SpherocylinderSpecies, spherocylinder);
   REGISTER_SPECIES(BrBeadSpecies, br_bead);
 
@@ -201,6 +215,23 @@ void Simulation::InitSpecies() {
         (SpeciesBase *)species_factory_.construct(registered->first);
     spec->Init(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
     if (spec->GetNInsert() > 0) {
+#ifdef TRACE
+      if (spec->GetNInsert() > 20) {
+        Logger::Warning("Simulation run in trace mode with a large number of "
+                        "objects in species %s (%d).",
+                        spec->GetSID()._to_string(), spec->GetNInsert());
+        fprintf(stderr, "Continue anyway? (y/N) ");
+        char c;
+        if (std::cin.peek() != 'y') {
+          Logger::Error("Terminating simulation by user request");
+        } else if (!(std::cin >> c)) {
+          Logger::Error("Invalid input");
+        } else {
+          fprintf(stderr, "Resuming simulation\n");
+          std::cin.ignore();
+        }
+      }
+#endif
       species_.push_back(spec);
       species_.back()->Reserve();
     }
@@ -209,20 +240,12 @@ void Simulation::InitSpecies() {
 
 /* Initialize object positions and orientations.*/
 void Simulation::InsertSpecies(bool force_overlap, bool processing) {
-  Logger::Debug("Inserting species");
-  if (params_.print_complete) {
-    printf("  Inserting species: 0%% complete\n");
-  } else {
-    printf("\r  Inserting species: 0%% complete");
-    fflush(stdout);
-  }
-  // Assuming Random insertion for now
-  // force_overlap = true;
+  Logger::Info("Inserting species");
   for (auto spec = species_.begin(); spec != species_.end(); ++spec) {
     // Check for random insertion
     if (processing ||
         (*spec)->GetInsertionType().find("random") == std::string::npos) {
-      // Insertion not random, force overlap
+      /* Insertion is non-random: don't check for overlaps */
       force_overlap = true;
     }
     int num = (*spec)->GetNInsert();
@@ -234,6 +257,9 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       int num_failures = 0;
       while (num != inserted) {
         (*spec)->AddMember();
+        /* Update the number of particles we need to insert, in case a species
+           needs to have a certain packing fraction */
+        num = (*spec)->GetNInsert();
         // First check that we are respecting boundary conditions
         std::vector<Object *> last_ixors;
         (*spec)->GetLastInteractors(&last_ixors);
@@ -242,7 +268,6 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           (*spec)->PopMember();
           /* We are not counting boundary condition failures in insertion
            failures, since insertion failures are for packing issues */
-          // num_failures++;
         }
         // Check if we have an overlap of objects
         else if (!force_overlap && !(*spec)->CanOverlap() && !processing &&
@@ -250,28 +275,20 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           (*spec)->PopMember();
           num_failures++;
         }
-        // Otherwise update display of percentage of species inserted
+        /* Otherwise update interaction engine to include new interactors and
+           update display of percentage of species inserted */
         else {
           inserted++;
           if (!force_overlap && !processing) {
             iengine_.AddInteractors(last_ixors);
           }
-          int insert_percentage = (int)(100 * (float)inserted / (float)num);
-          if (params_.print_complete) {
-            if (insert_percentage % 10 == 0) {
-              printf("  Inserting species: %d%% complete\n", insert_percentage);
-            }
-          } else {
-            printf("\r  Inserting species: %d%% complete", insert_percentage);
-            fflush(stdout);
-          }
         }
         if (num_failures > params_.species_insertion_failure_threshold) {
+          Logger::Warning("Too many insertion failures have occurred. Managed "
+                          "to insert %2.2f% of objects",
+                          100.0 * inserted / (float)num);
           break;
         }
-        /* Update the number of particles we need to insert, in case a species
-           needs to have a certain packing fraction */
-        num = (*spec)->GetNInsert();
       }
       if (num != inserted) {
         // Attempt a lattice-based insertion strategy (only 2d for now)
@@ -300,6 +317,9 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           pos[0] = grid_array[grid_index[i]].first * d;
           pos[1] = grid_array[grid_index[i]].second * l;
           (*spec)->AddMember();
+          /* Update the number of particles we need to insert, in case a
+             species needs to have a certain packing fraction */
+          num = (*spec)->GetNInsert();
           (*spec)->SetLastMemberPosition(pos);
           // First check that we are respecting boundary conditions
           std::vector<Object *> last_ixors;
@@ -320,60 +340,40 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           else {
             inserted++;
             iengine_.AddInteractors(last_ixors);
-            int insert_percentage = (int)(100 * (float)inserted / (float)num);
-            if (params_.print_complete) {
-              if (insert_percentage % 10 == 0) {
-                printf("  Inserting species: %d%% complete\n",
-                       insert_percentage);
-              }
-            } else {
-              printf("\r  Inserting species: %d%% complete", insert_percentage);
-              fflush(stdout);
-            }
           }
-          /* Update the number of particles we need to insert, in case a species
-             needs to have a certain packing fraction */
-          num = (*spec)->GetNInsert();
           if (inserted == num)
             break;
         }
         delete[] grid_index;
       }
-      putchar('\n');
       if (num != inserted) {
         Logger::Warning("Species insertion failure threshold of %d reached. "
-               "Reattempting insertion.\n",
-               params_.species_insertion_failure_threshold);
+                        "Reattempting insertion.\n",
+                        params_.species_insertion_failure_threshold);
         (*spec)->PopAll();
         iengine_.Reset();
       }
       if (++num_attempts > params_.species_insertion_reattempt_threshold) {
         Logger::Error("Unable to insert species randomly within the reattempt "
-                   "threshold of %d.\n",
-                   params_.species_insertion_reattempt_threshold);
+                      "threshold of %d.\n",
+                      params_.species_insertion_reattempt_threshold);
       }
     }
     if (!processing) {
-      printf("\n");
       if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
         (*spec)->ArrangeMembers();
-        /*
-         * This catch is breaking centered_oriented insertion. Skip it for now.
-         *
-         *if (!(*spec)->CanOverlap() &&
-         *iengine_.CheckOverlap((*spec)->GetLastInteractors())) {
-         *  Logger::Error("Species inserted with deterministic insertion type is
-         *overlapping!");
-         *}
-         *
-         */
       }
+    }
+    if (params_.load_checkpoint) {
+      (*spec)->LoadFromCheckpoints(run_name_, params_.checkpoint_run_name);
     }
   }
   /* Should do this all the time to force object counting */
-  if (!processing) {
-    iengine_.CheckUpdateObjects(); // Forces update as well
-  }
+  iengine_.ResetCellList(); // Forces rebuild cell list without redundancy
+  iengine_.Reset();
+  //if (!processing) {
+  iengine_.CheckUpdateObjects(); // Forces update as well
+  //}
 }
 
 /* Tear down data structures, e.g. cell lists, and close graphics window if
@@ -434,7 +434,8 @@ void Simulation::InitOutputs() {
   Logger::Debug("Initializing output files");
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_,
                    run_name_);
-  iengine_.InitOutputs();
+  //if (!params_.load_checkpoint)
+    iengine_.InitOutputs();
   /* If analyzing run time, record cpu time here */
   if (params_.time_analysis) {
     cpu_init_time_ = cpu_time();
@@ -486,9 +487,9 @@ void Simulation::InitProcessing(run_options run_opts) {
   space_.Init(&params_);
   InitObjects();
   InitSpecies();
+  iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_, true);
   InsertSpecies(true, true);
   // if (run_opts.analysis_flag) {
-  iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_, true);
   //}
   InitInputs(run_opts);
   if (run_opts.graphics_flag || run_opts.make_movie) {
@@ -520,7 +521,8 @@ void Simulation::RunProcessing(run_options run_opts) {
   bool local_order =
       (params_.local_order_analysis || params_.polar_order_analysis ||
        params_.overlap_analysis || params_.density_analysis);
-  // Only step to n_steps-1 since we already read in one input at initialization
+  // Only step to n_steps-1 since we already read in one input at
+  // initialization
   int last_step =
       (run_opts.with_reloads ? params_.n_steps - 1 : 2 * params_.n_steps);
   bool run_analyses = run_opts.analysis_flag;

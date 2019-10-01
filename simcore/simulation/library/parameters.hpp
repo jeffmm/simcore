@@ -27,7 +27,6 @@ class filament_parameters : public species_parameters {
     double length = -1;
     double persistence_length = 400;
     double max_length = 500;
-    double max_bond_length = 5;
     double min_bond_length = 1.5;
     int spiral_flag = 0;
     double spiral_number_fail_condition = 0;
@@ -53,11 +52,7 @@ class filament_parameters : public species_parameters {
     int lp_analysis = 0;
     int global_order_analysis = 0;
     double packing_fraction = -1;
-    int shuffle = 1;
-    double shuffle_factor = 10;
-    double shuffle_frequency = 0.001;
     double perlen_ratio = -1;
-    double perlen_ratio_target = -1;
     int n_bonds = -1;
     int driving_method = 0;
     int n_equil = 0;

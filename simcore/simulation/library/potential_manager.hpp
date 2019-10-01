@@ -38,13 +38,13 @@ class PotentialManager {
     }
     pot_->Init(params);
   }
-  void CalcPotential(Interaction *ix) {
+  void CalcPotential(Interaction &ix) {
     /*
      *  If dr_mag2 is very very small (or zero!) we
      *  are overlapping. This can be very dangerous
      *  for infinite potentials, so enforce a cutoff.
      */
-    if (ix->dr_mag2 < 1e-12 && pot_type_ == +potential_type::wca) {
+    if (ix.dr_mag2 < 1e-12 && pot_type_ == +potential_type::wca) {
       max_.CalcPotential(ix);
       return;
     }

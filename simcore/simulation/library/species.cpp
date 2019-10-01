@@ -5,6 +5,7 @@ void SpeciesBase::Init(system_parameters *params, space_struct *space,
   params_ = params;
   sparams_ = &(params->species);
   space_ = space;
+  Logger::Debug("Initializing species %s", GetSID()._to_string());
 }
 
 void SpeciesBase::InitPositFile(std::string run_name) {

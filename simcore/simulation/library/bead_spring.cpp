@@ -18,16 +18,9 @@ void BeadSpring::SetParameters() {
   eq_steps_count_ = 0;
 }
 
-bool BeadSpring::CheckBounds(double buffer) {
-  for (auto site = sites_.begin(); site != sites_.end(); ++site) {
-    if (site->CheckBounds()) return true;
-  }
-  return false;
-}
-
-void BeadSpring::Init(bool force_overlap) {
+void BeadSpring::Init() {
   InitElements();
-  InsertBeadSpring(force_overlap);
+  InsertBeadSpring();
   UpdatePrevPositions();
   CalculateAngles();
   SetDiffusion();
@@ -52,7 +45,6 @@ void BeadSpring::GenerateProbableOrientation() {
   if (persistence_length_ == 0) {
     theta = gsl_rng_uniform_pos(rng_.r) * M_PI;
   } else if (persistence_length_ < 100) {
-    theta = gsl_rng_uniform_pos(rng_.r) * M_PI;
     theta = acos(log(exp(-persistence_length_ / bond_length_) +
                      2.0 * gsl_rng_uniform_pos(rng_.r) *
                          sinh(persistence_length_ / bond_length_)) /
@@ -106,29 +98,20 @@ void BeadSpring::InsertFirstBond() {
   }
 }
 
-void BeadSpring::InsertBeadSpring(bool force_overlap) {
-  bool out_of_bounds = true;
-  do {
-    out_of_bounds = false;
-    bond_length_ = bond_rest_length_;
-    Clear();
-    InsertFirstBond();
-    if (!force_overlap && (out_of_bounds = sites_[n_sites_ - 1].CheckBounds()))
-      continue;
-    SetOrientation(bonds_[n_bonds_ - 1].GetOrientation());
-    bool probable_orientation =
-        (params_->bead_spring.insertion_type.compare("simple_crystal") != 0 &&
-         params_->bead_spring.insertion_type.compare("random_oriented") != 0);
-    for (int i = 0; i < n_bonds_max_ - 1; ++i) {
-      if (probable_orientation) {
-        GenerateProbableOrientation();
-      }
-      AddBondToTip(orientation_, bond_length_);
-      if (!force_overlap &&
-          (out_of_bounds = sites_[n_sites_ - 1].CheckBounds()))
-        break;
+void BeadSpring::InsertBeadSpring() {
+  bond_length_ = bond_rest_length_;
+  Clear();
+  InsertFirstBond();
+  SetOrientation(bonds_[n_bonds_ - 1].GetOrientation());
+  bool probable_orientation =
+      (params_->bead_spring.insertion_type.compare("simple_crystal") != 0 &&
+       params_->bead_spring.insertion_type.compare("random_oriented") != 0);
+  for (int i = 0; i < n_bonds_max_ - 1; ++i) {
+    if (probable_orientation) {
+      GenerateProbableOrientation();
     }
-  } while (out_of_bounds);
+    AddBondToTip(orientation_, bond_length_);
+  }
   for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
     bond->SetColor(color_, draw_);
   }
@@ -144,18 +127,12 @@ void BeadSpring::InsertAt(double *pos, double *u) {
   InitSiteAt(position_, diameter_);
   std::copy(u, u + 3, orientation_);
   AddBondToTip(orientation_, bond_length_);
-  if (sites_[n_sites_ - 1].CheckBounds()) {
-    Logger::Error("BeadSpring inserted manually out of bounds.");
-  }
   SetOrientation(bonds_[n_bonds_ - 1].GetOrientation());
   for (int i = 0; i < n_bonds_max_ - 1; ++i) {
     if (params_->bead_spring.insertion_type.compare("simple_crystal") != 0) {
       GenerateProbableOrientation();
     }
     AddBondToTip(orientation_, bond_length_);
-    if (sites_[n_sites_ - 1].CheckBounds()) {
-      Logger::Error("BeadSpring inserted manually out of bounds.");
-    }
   }
   UpdateBondPositions();
   UpdateSiteOrientations();

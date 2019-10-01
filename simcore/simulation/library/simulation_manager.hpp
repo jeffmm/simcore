@@ -31,6 +31,7 @@ private:
   void RunSimulations();
   void ParseParams(std::string file_name);
   void ProcessOutputs();
+  void InitLogger();
   UNIT_TESTER;
 
 public:

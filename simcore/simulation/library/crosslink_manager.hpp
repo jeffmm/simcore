@@ -58,7 +58,7 @@ private:
 public:
   void Init(system_parameters *params, space_struct *space,
             MinimumDistance *mindist, std::vector<Object *> *objs);
-  void GetInteractors(std::vector<Object *> *ixors);
+  void GetInteractors(std::vector<Object *> &ixors);
   void UpdateCrosslinks();
   void UpdateObjsVolume();
   bool CheckUpdate();
@@ -70,7 +70,7 @@ public:
   void ReadInputs();
   void InitOutputs(bool reading_inputs = false, bool reduce_flag = false,
                    bool with_reloads = false);
-  void GetAnchorInteractors(std::vector<Object *> *ixors);
+  void GetAnchorInteractors(std::vector<Object *> &ixors);
 };
 
 #endif

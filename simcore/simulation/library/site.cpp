@@ -134,3 +134,13 @@ void Site::Draw(std::vector<graph_struct*>* graph_array) {
   g_.draw = draw_;
   graph_array->push_back(&g_);
 }
+
+void Site::WriteSpec(std::fstream &op) {
+  for (int i=0; i<3; ++i)
+    op.write(reinterpret_cast<char *>(&position_[i]), sizeof(double));
+}
+
+void Site::ReadSpec(std::fstream &ip) {
+  for (int i=0; i<3; ++i)
+    ip.read(reinterpret_cast<char *>(&position_[i]), sizeof(double));
+}

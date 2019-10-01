@@ -11,9 +11,9 @@ class R2Potential : public PotentialBase {
 
  public:
   R2Potential() {}
-  void CalcPotential(Interaction *ix) {
-    double rmag = ix->dr_mag2;
-    double *dr = ix->dr;
+  void CalcPotential(Interaction &ix) {
+    double rmag = ix.dr_mag2;
+    double *dr = ix.dr;
     double ffac = 0;
     double rinv2 = 0;
     if (rmag > 0) {
@@ -30,12 +30,12 @@ class R2Potential : public PotentialBase {
       ffac = SIGNOF(ffac) * fcut_;
     }
     for (int i = 0; i < n_dim_; ++i) {
-      ix->force[i] = ffac * dr[i] / rmag;
+      ix.force[i] = ffac * dr[i] / rmag;
     }
     for (int i = 0; i < n_dim_; ++i)
       for (int j = 0; j < n_dim_; ++j)
-        ix->stress[n_dim_ * i + j] = -dr[i] * ix->force[j];
-    ix->pote = rinv2 - eps_;
+        ix.stress[n_dim_ * i + j] = -dr[i] * ix.force[j];
+    ix.pote = rinv2 - eps_;
   }
 
   void Init(system_parameters *params) {

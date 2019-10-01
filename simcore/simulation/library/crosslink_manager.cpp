@@ -60,8 +60,13 @@ Object *CrosslinkManager::GetRandomObject() {
   double vol = 0;
   for (auto obj = objs_->begin(); obj != objs_->end(); ++obj) {
     vol += (*obj)->GetVolume();
-    if (vol > roll)
+    if (vol > roll) {
+#ifdef TRACE
+      Logger::Trace("Binding free crosslink to random object: xl %d -> obj %d",
+          xlinks_.back().GetOID(), (*obj)->GetOID());
+#endif
       return *obj;
+    }
   }
   Logger::Error("CrosslinkManager::GetRandomObject should never get here!");
 }
@@ -80,22 +85,18 @@ void CrosslinkManager::BindCrosslink() {
 }
 
 /* Return singly-bound anchors, for finding neighbors to bind to */
-void CrosslinkManager::GetInteractors(std::vector<Object *> *ixors) {
-  std::vector<Object *> ix;
+void CrosslinkManager::GetInteractors(std::vector<Object *> &ixors) {
   for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
-    xlink->GetInteractors(&ix);
+    xlink->GetInteractors(ixors);
   }
-  ixors->insert(ixors->end(), ix.begin(), ix.end());
 }
 
 /* Returns all anchors, not just singly-bound anchors. Used for reassigning
    bound anchors to bonds upon a checkpoint reload */
-void CrosslinkManager::GetAnchorInteractors(std::vector<Object *> *ixors) {
-  std::vector<Object *> ix;
+void CrosslinkManager::GetAnchorInteractors(std::vector<Object *> &ixors) {
   for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
-    xlink->GetAnchors(&ix);
+    xlink->GetAnchors(ixors);
   }
-  ixors->insert(ixors->end(), ix.begin(), ix.end());
 }
 
 void CrosslinkManager::UpdateCrosslinks() {
@@ -335,8 +336,10 @@ void CrosslinkManager::ReadCheckpoints() {
 
   /* Prepare the xlink vectors */
   Crosslink xlink;
-  xlink.Init(mindist_, &lut_);
-  xlinks_.resize(n_xlinks_, xlink);
+  xlinks_.push_back(xlink);
+  xlinks_.back().Init(mindist_, &lut_);
+  //xlink.Init(mindist_, &lut_);
+  xlinks_.resize(n_xlinks_, xlinks_[0]);
 
   /* Read the crosslink checkpoints */
   for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
@@ -398,6 +401,12 @@ void CrosslinkManager::InitSpecFileInput() {
     Logger::Error("Input file %s did not open", spec_file_name.c_str());
   }
 }
+
+//void CrosslinkManager::UpdatePeriodic() {
+//for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
+    //xlink->UpdatePeriodic();
+  //}
+//}
 
 void CrosslinkManager::LoadFromCheckpoints() {
   checkpoint_file_ = params_->checkpoint_run_name + "_crosslink.checkpoint";

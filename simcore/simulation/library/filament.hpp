@@ -2,13 +2,7 @@
 #define _SIMCORE_FILAMENT_H_
 
 #include "mesh.hpp"
-#include "species.hpp"
-
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
 #include "flory_schulz.hpp"
-#include "minimum_distance.hpp"
 
 class Filament : public Mesh {
 private:
@@ -17,7 +11,6 @@ private:
   int theta_validation_run_flag_;
   int diffusion_validation_run_flag_;
   int spiral_flag_;
-  int shuffle_flag_;
   int stoch_flag_;
   int flagella_flag_;
   int metric_forces_;
@@ -25,9 +18,7 @@ private:
   int cilia_trap_flag_;
   int optical_trap_fixed_;
   int trapped_site_;
-  // TEMPORARY FIXME
   int n_step_ = 0;
-  int n_motors_bound_;
   int eq_steps_;
   int eq_steps_count_ = 0;
   int polydispersity_flag_ = 0;
@@ -36,8 +27,6 @@ private:
   double max_bond_length_;
   double min_bond_length_;
   double persistence_length_;
-  double persistence_length_target_;
-  double target_step_;
   double friction_ratio_; // friction_par/friction_perp
   double friction_par_;
   double friction_perp_;
@@ -57,8 +46,6 @@ private:
   double driving_factor_;
   double fic_factor_;
   double curvature_ = 0;
-  double shuffle_factor_;
-  double shuffle_frequency_;
   double spiral_number_;
   double tip_force_;
   double optical_trap_spring_;
@@ -83,7 +70,7 @@ private:
   void UpdateSiteBondPositions();
   void SetDiffusion();
   void GenerateProbableOrientation();
-  void CalculateAngles(bool rescale = true);
+  void CalculateAngles();
   void CalculateTangents();
   void AddRandomForces();
   void ConstructUnprojectedRandomForces();
@@ -91,14 +78,12 @@ private:
   void CalculateBendingForces();
   void CalculateTensions();
   void UpdateSitePositions();
-  void UpdateSiteOrientations();
   void ApplyForcesTorques();
-  // void ApplyAnchorForces(); // FIXME temporary
   void ApplyInteractionForces();
   void SetParameters();
-  void InitElements();
-  void InsertFilament(bool force_overlap = false);
-  bool InsertFirstBond();
+  void InitFilamentLength();
+  void InsertFilament();
+  void InsertFirstBond();
   void UpdateAvgPosition();
   void DynamicInstability();
   void UpdatePolyState();
@@ -108,12 +93,12 @@ private:
   void ReportAll();
   void CalculateBinding();
   bool CheckBondLengths();
+  void AllocateControlStructures();
 
 public:
   Filament();
-  virtual void Init(bool force_overlap = false);
+  virtual void Init();
   virtual void InsertAt(double *pos, double *u);
-  virtual bool CheckBounds(double buffer = 0);
   virtual void Integrate();
   virtual void Draw(std::vector<graph_struct *> *graph_array);
   virtual void UpdatePosition() {}
@@ -146,171 +131,6 @@ public:
   void ReadCheckpoint(std::fstream &icheck);
   void ScalePosition();
   double const GetVolume();
-};
-
-typedef std::vector<Filament>::iterator filament_iterator;
-typedef std::vector<
-    std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator>>
-    filament_chunk_vector;
-
-class FilamentSpecies : public Species<Filament> {
-protected:
-  bool midstep_;
-  // Analysis structures
-  MinimumDistance mindist_;
-  double fill_volume_;
-  double packing_fraction_;
-  double e_bend_;
-  double tot_angle_;
-  double mse2e_;
-  double mse2e2_;
-  double polar_bin_width_;
-  double contact_bin_width_;
-  double contact_cut_;
-  double po_avg_;
-  double cn_avg_;
-  double *nematic_order_tensor_;
-  double *polar_order_vector_;
-  int **theta_histogram_;
-  int *polar_order_histogram_;
-  int time_;
-  int n_bins_;
-  int n_bins_1d_;
-  int n_samples_;
-  int orientation_corr_n_steps_;
-  std::fstream spiral_file_;
-  std::fstream flock_file_;
-  std::fstream theta_file_;
-  std::fstream mse2e_file_;
-  std::fstream global_order_file_;
-  std::fstream local_order_file_;
-  std::fstream polar_order_file_;
-  std::fstream orientation_corr_file_;
-  std::fstream crossing_file_;
-  std::fstream polar_order_avg_file_;
-  std::fstream in_out_file_;
-
-public:
-  FilamentSpecies() : Species() {
-    SetSID(species_id::filament);
-    midstep_ = true;
-  }
-  void Init(system_parameters *params, space_struct *space, long seed) {
-    Species::Init(params, space, seed);
-    sparams_ = &(params_->filament);
-    fill_volume_ = 0;
-    packing_fraction_ = params_->filament.packing_fraction;
-  }
-
-  void PopMember() {
-    if (packing_fraction_ > 0) {
-      double vol = members_.back().GetVolume();
-      fill_volume_ -= vol;
-    }
-    Species::PopMember();
-  }
-
-  void AddMember() {
-    Species::AddMember();
-    if (packing_fraction_ > 0) {
-      double vol = members_.back().GetVolume();
-      fill_volume_ += vol;
-      /* if we are still short on volume for the target packing fraction, then
-         request more members */
-      if (fill_volume_ < packing_fraction_ * space_->volume &&
-          members_.size() == sparams_->num) {
-        sparams_->num++;
-      }
-    }
-  }
-
-  void Reserve() {
-    int max_insert = GetNInsert();
-    if (packing_fraction_ > 0) {
-      double min_length = 2 * params_->filament.min_bond_length;
-      double diameter = params_->filament.diameter;
-      double min_vol = 0;
-      if (params_->n_dim == 2) {
-        min_vol = diameter * min_length + 0.25 * M_PI * diameter * diameter;
-      }
-      if (params_->n_dim == 3) {
-        min_vol = 0.25 * M_PI * diameter * diameter * min_length +
-                  1.0 / 6.0 * M_PI * diameter * diameter * diameter;
-      }
-      max_insert = (int) ceil(packing_fraction_ * space_->volume / min_vol);
-    }
-    members_.reserve(max_insert);
-  }
-  void InitAnalysis();
-  void RunAnalysis();
-  void FinalizeAnalysis();
-
-  void InitSpiralAnalysis();
-  void RunSpiralAnalysis();
-  // void FinalizeSpiralAnalysis();
-
-  void InitCrossingAnalysis();
-  void RunCrossingAnalysis();
-  void FinalizeCrossingAnalysis();
-
-  void InitThetaAnalysis();
-  void RunThetaAnalysis();
-  void FinalizeThetaAnalysis();
-
-  void InitMse2eAnalysis();
-  void RunMse2eAnalysis();
-  void FinalizeMse2eAnalysis();
-
-  void InitGlobalOrderAnalysis();
-  void RunGlobalOrderAnalysis();
-  void FinalizeGlobalOrderAnalysis();
-
-  void InitPolarOrderAnalysis();
-  void RunPolarOrderAnalysis();
-  void FinalizePolarOrderAnalysis();
-
-  void InitLocalOrderAnalysis();
-  void RunLocalOrderAnalysis();
-  void WriteLocalOrderData();
-  void FinalizeLocalOrderAnalysis();
-
-  void InitOrientationCorrelationAnalysis();
-  void RunOrientationCorrelationAnalysis();
-  void FinalizeOrientationCorrelationAnalysis();
-
-  void InitFlockingAnalysis();
-  void RunFlockingAnalysis();
-  void FinalizeFlockingAnalysis();
-
-  void UpdatePositions() {
-#ifdef ENABLE_OPENMP
-    int max_threads = omp_get_max_threads();
-    filament_chunk_vector chunks;
-    chunks.reserve(max_threads);
-    size_t chunk_size = members_.size() / max_threads;
-    filament_iterator cur_iter = members_.begin();
-    for (int i = 0; i < max_threads - 1; ++i) {
-      filament_iterator last_iter = cur_iter;
-      std::advance(cur_iter, chunk_size);
-      chunks.push_back(std::make_pair(last_iter, cur_iter));
-    }
-    chunks.push_back(std::make_pair(cur_iter, members_.end()));
-
-#pragma omp parallel shared(chunks)
-    {
-#pragma omp for
-      for (int i = 0; i < max_threads; ++i)
-        for (auto it = chunks[i].first; it != chunks[i].second; ++it)
-          it->UpdatePosition(midstep_);
-    }
-#else
-    for (filament_iterator it = members_.begin(); it != members_.end(); ++it)
-      it->UpdatePosition(midstep_);
-#endif
-
-    midstep_ = !midstep_;
-  }
-  virtual void CenteredOrientedArrangement() {}
 };
 
 #endif // _SIMCORE_FILAMENT_H_
