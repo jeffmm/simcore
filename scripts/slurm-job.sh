@@ -10,7 +10,8 @@
 #SBATCH --account ucb-summit-smr
 #SBATCH --qos=condo
 #SBATCH --partition=shas
-#SBATCH --mail-type=ALL, TIME_LIMIT
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=jemo9179@colorado.edu
 
 module purge
 module load singularity/3.3.0
