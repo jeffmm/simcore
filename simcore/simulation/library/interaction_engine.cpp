@@ -27,7 +27,8 @@ void InteractionEngine::Init(system_parameters *params,
 #ifdef TRACE
   if (n_cells_1d > 20) {
     Logger::Warning("Simulation run in trace mode with a large number of "
-        "cells in cell list (%d).", n_cells_1d);
+                    "cells in cell list (%d).",
+                    n_cells_1d);
     fprintf(stderr, "Continue anyway? (y/N) ");
     char c;
     if (std::cin.peek() != 'y') {
@@ -184,15 +185,16 @@ void InteractionEngine::PairBondCrosslinks() {
   clist_.RenewObjectsCells(interactors_);
   clist_.MakePairs(pair_interactions_);
   int n_anchors_attached = 0;
-  //for (auto ix = anchors.begin(); ix != anchors.end(); ++ix) {
-    //for (auto jx = ix_objects_.begin(); jx != ix_objects_.end(); ++jx) {
-  for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end(); ++ix) {
+  // for (auto ix = anchors.begin(); ix != anchors.end(); ++ix) {
+  // for (auto jx = ix_objects_.begin(); jx != ix_objects_.end(); ++jx) {
+  for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
+       ++ix) {
     Object *obj1 = ix->obj1;
     Object *obj2 = ix->obj2;
     if (obj1->GetSID() == +species_id::crosslink &&
         obj2->GetType() == +obj_type::bond) {
       if (CheckBondAnchorPair(obj1, obj2))
-      //if (CheckBondAnchorPair(*ix, *jx))
+        // if (CheckBondAnchorPair(*ix, *jx))
         n_anchors_attached++;
     } else if (obj2->GetSID() == +species_id::crosslink &&
                obj1->GetType() == +obj_type::bond) {
@@ -203,8 +205,8 @@ void InteractionEngine::PairBondCrosslinks() {
   }
   /* Check that all anchors found their bond attachments */
   if (n_anchors_attached != anchors.size()) {
-    Logger::Error("Not all anchors have found their bond! %d/%lu", n_anchors_attached,
-           anchors.size());
+    Logger::Error("Not all anchors have found their bond! %d/%lu",
+                  n_anchors_attached, anchors.size());
   }
 }
 
@@ -314,7 +316,7 @@ void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {
   Object *obj1 = ix->obj1;
   Object *obj2 = ix->obj2;
   Logger::Trace("Processing interaction between %d and %d", obj1->GetOID(),
-      obj2->GetOID());
+                obj2->GetOID());
   // Rigid objects don't self interact
   // if (obj1->GetRID() == obj2->GetRID())  return;
   // Composite objects do self interact if they want to
@@ -408,7 +410,7 @@ void InteractionEngine::CalculateBoundaryInteractions() {
   }
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
-  std::vector < std::pair<ix_iterator, ix_iterator> chunks;
+  std::vector<std::pair<ix_iterator, ix_iterator>> chunks;
   chunks.reserve(max_threads);
   size_t chunk_size = boundary_interactions_.size() / max_threads;
   auto cur_iter = boundary_interactions_.begin();
