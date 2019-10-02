@@ -63,20 +63,10 @@ void Simulation::RunSimulation() {
  * which can be useful for logging. Otherwise, the progress will be refreshed
  * in a single line printed to standard output. */
 void Simulation::PrintComplete() {
-  int it, steps;
-  // Avoid weird issues with longs
-  if (params_.n_steps > 100000) {
-    it = i_step_ / 100;
-    steps = params_.n_steps / 10000;
-  } else {
-    it = i_step_ * 100;
-    steps = params_.n_steps;
-  }
-  if (params_.print_complete && it % steps == 0) {
-    printf("    %d%% complete\n", it / steps);
-  } else if (!params_.print_complete && it % steps == 0) {
-    printf("    %2.1f%% complete\r", (double)it / steps);
-    fflush(stdout);
+  long iteration = i_step_ * 10;
+  long steps = params_.n_steps;
+  if (iteration % steps == 0) {
+    Logger::Info("%d%% complete", 10 * iteration / steps);
   }
   Logger::Trace("*****Step %d*****", i_step_);
 }
