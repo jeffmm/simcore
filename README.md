@@ -37,10 +37,32 @@ which will mount the simcore directory into a container named `simcore-executer`
 docker exec simcore-executer bash install.sh build
 ```
 
-and to submit simcore jobs, run
+and to execute simcore, run
 
 ```
 docker exec simcore-executer ./simcore.exe [additional-flags] [parameter-files]
+```
+
+If you want to run on multiple threads, replace `build` with `omp` in the install command, and ensure that the environment variable `OMP_NUM_THREADS` is set to the number of threads you want to use.
+
+### Running with Singularity
+
+If you have Singularity installed, you can run simcore inside a singularity image. First pull the image by running
+
+```
+singularity pull shub://jeffmm/simcore:latest
+```
+
+which will create an image file `simcore_latest.sif`. You may then run
+
+```
+singularity exec simcore_latest.sif bash install.sh build
+```
+
+As with the Docker image, if you want to use multithreading, replace `build` with `omp`. Then you can execute simcore with the command
+
+```
+singularity exec simcore_latest.sif ./simcore.exe [flags] [parameter_file]
 ```
 
 ### Manual installation with cmake
@@ -51,10 +73,10 @@ For manual installation, make sure you have the following installed:
   * your favorite C++11 compiler
   * yaml-cpp (https://github.com/jbeder/yaml-cpp)
   * gsl
-  * openmp
+  * openmp libraries
   * fftw
-  * boost
-  * openGL (if you want graphics)
+  * boost (specifically libboost-math1.67-dev or newer)
+  * openGL framework (if you want graphics)
   * glew (if you want graphics)
   * glfw3 (if you want graphics)
 
