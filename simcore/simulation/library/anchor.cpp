@@ -43,7 +43,7 @@ void Anchor::SetWalker(int dir, double walk_v) {
 }
 
 void Anchor::UpdateAnchorPositionToMesh() {
-  if (!bound_)
+  if (!bound_ || static_)
     return;
 
   // Check that the number of bonds has not changed due to dynamic instability
@@ -81,7 +81,7 @@ void Anchor::UpdateAnchorPositionToMesh() {
 
 void Anchor::UpdatePosition() {
   // Currently only bound anchors diffuse/walk (no explicit unbound anchors)
-  if (!bound_ || (!diffuse_ && !walker_)) {
+  if (!bound_ || static_ || (!diffuse_ && !walker_)) {
     return;
   }
   // Diffuse or walk along the mesh, updating mesh_lambda
@@ -279,6 +279,14 @@ void Anchor::AttachObjMeshLambda(Object *o, double mesh_lambda) {
   SetMeshID(bond_->GetMeshID());
 }
 
+void Anchor::BindToPosition(double *pos) {
+  for (int i=0; i<n_dim_; ++i) {
+    position_[i] = pos[i];
+  }
+  UpdatePeriodic();
+}
+
+
 bool Anchor::IsBound() { return bound_; }
 
 int const Anchor::GetBoundOID() {
@@ -325,6 +333,7 @@ void Anchor::ReadSpec(std::fstream &ispec) {
   int mid;
   ispec.read(reinterpret_cast<char *>(&bound_), sizeof(bool));
   ispec.read(reinterpret_cast<char *>(&active_), sizeof(bool));
+  ispec.read(reinterpret_cast<char *>(&static_), sizeof(bool));
   ispec.read(reinterpret_cast<char *>(&mid), sizeof(int));
   SetMeshID(mid);
   for (int i = 0; i < 3; ++i) {

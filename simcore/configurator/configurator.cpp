@@ -42,9 +42,10 @@ public:
   Configurator(std::string default_config_file)
       : parse_params_("simcore/simulation/library/parse_params.hpp",
                       std::ios_base::out),
-        parameters_("simcore/simulation/library/parameters.hpp", std::ios_base::out),
+        parameters_("simcore/simulation/library/parameters.hpp",
+                    std::ios_base::out),
         default_config_("simcore/simulation/library/default_params.hpp",
-                      std::ios_base::out) {
+                        std::ios_base::out) {
     node_ = YAML::LoadFile(default_config_file);
   }
 
@@ -131,12 +132,13 @@ void Configurator::WriteDefParam(std::string parent = "") {
   if (parent.empty()) {
     pname_ = subnode_->first.as<std::string>();
     pvalue_ = subnode_->second[0].as<std::string>();
-    default_config_ << "  default_config[\"" << pname_ << "\"] = \"" << pvalue_ << "\";\n";
+    default_config_ << "  default_config[\"" << pname_ << "\"] = \"" << pvalue_
+                    << "\";\n";
   } else {
     pname_ = subnode_->first.as<std::string>();
     pvalue_ = subnode_->second[0].as<std::string>();
-    default_config_ << "  default_config[\"" << parent << "\"][\"" << pname_ << "\"] = \""
-                  << pvalue_ << "\";\n";
+    default_config_ << "  default_config[\"" << parent << "\"][\"" << pname_
+                    << "\"] = \"" << pvalue_ << "\";\n";
   }
 }
 
@@ -177,17 +179,17 @@ void Configurator::WriteParseParams() {
   WriteParseStructParams();
 
   // Write transition to parse system params
-  parse_params_ << "      else {\n        std::cout << \"  WARNING! "
-                   "Unrecognized struct parameter '\" << struct_name << "
-                   "\"'\\n\";\n      }\n    }\n    else {\n      param_name = "
+  parse_params_ << "      else {\n        Logger::Warning(\"Unrecognized "
+                   "struct parameter '%s'\", struct_name.c_str());\n"
+                   "      }\n    }\n    else {\n      param_name = "
                    "it->first.as<std::string>();\n      if (false) {}\n";
 
   WriteParseSystemParams();
 
   // Write end of file
-  parse_params_ << "      else {\n        std::cout << \"  WARNING! "
-                   "Unrecognized parameter '\" <<  param_name << \"'\\n\";\n   "
-                   "   }\n    }\n  }\n}\n#endif // _SIMCORE_PARSE_PARAMS_H_";
+  parse_params_ << "      else {\n        Logger::Warning(\"Unrecognized "
+                   "parameter '%s'\", param_name.c_str());\n      }\n    "
+                   "}\n  }\n}\n#endif // _SIMCORE_PARSE_PARAMS_H_";
   parse_params_.close();
 }
 
@@ -215,9 +217,9 @@ void Configurator::WriteParseStructParams() {
                  ++subnode_)
               ParseParam("jt");
       parse_params_
-          << "          else {\n            std::cout << \"  WARNING! "
-             "Unrecognized \" << struct_name <<\" parameter: '\" << param_name "
-             "<< \"'\\n\";\n          }\n        }\n      }\n";
+          << "          else {\n            Logger::Warning(\"Unrecognized "
+             "%s parameter: '%s'\", struct_name.c_str(), "
+             "param_name.c_str());\n          }\n        }\n      }\n";
     }
   }
 }

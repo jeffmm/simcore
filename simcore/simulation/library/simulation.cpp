@@ -34,7 +34,9 @@ void Simulation::RunSimulation() {
    also update other objects' positions on every even step too (e.g. xlinks). */
   for (i_step_ = 1; i_step_ < params_.n_steps + 1; ++i_step_) {
     params_.i_step = i_step_;
-    time_ = (i_step_ + 1) * params_.delta;
+    /* Assuming halfstep algorithm, each step only moves the simulation forward
+       by 1/2 delta */
+    time_ = i_step_ * 0.5 * params_.delta;
     // Output progress
     PrintComplete();
     /* Zero the force_ array on all objects for bookkeeping */
@@ -274,8 +276,8 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           }
         }
         if (num_failures > params_.species_insertion_failure_threshold) {
-          Logger::Warning("Too many insertion failures have occurred. Managed "
-                          "to insert %2.2f% of objects",
+          Logger::Warning("Too many insertion failures have occurred: managed "
+                          "to insert %2.1f%% of objects",
                           100.0 * inserted / (float)num);
           break;
         }

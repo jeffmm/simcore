@@ -11,6 +11,7 @@ private:
   bool bound_;
   bool walker_;
   bool diffuse_;
+  bool static_;
   bool active_;
   bool end_pausing_;
 

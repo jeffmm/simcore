@@ -253,14 +253,14 @@ double SimulationManager::GetRandomParam(std::string rtype, double min,
 void SimulationManager::CountVariations() {
   for (YAML::const_iterator it = pnode_.begin(); it != pnode_.end(); ++it) {
     if (it->second.IsSequence() &&
-        (it->second[0].as<std::string>()).at(0) != 'R') {
-      n_var_ *= it->second.size();
+        (it->second[0].as<std::string>()).at(0) == 'V') {
+      n_var_ *= it->second.size() - 1;
     } else if (it->second.IsMap()) {
       for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
            ++jt) {
         if (jt->second.IsSequence() &&
-            (jt->second[0].as<std::string>()).at(0) != 'R') {
-          n_var_ *= jt->second.size();
+            (jt->second[0].as<std::string>()).at(0) == 'V') {
+          n_var_ *= jt->second.size() - 1;
         }
       }
     }
@@ -298,13 +298,13 @@ void SimulationManager::GenerateParameters() {
   int i_var, j_var, k_var = n_var_;
   for (YAML::const_iterator it = pnode_.begin(); it != pnode_.end(); ++it) {
     if (it->second.IsSequence() &&
-        (it->second[0].as<std::string>()).at(0) != 'R') {
-      int s = it->second.size();
+        (it->second[0].as<std::string>()).at(0) == 'V') {
+      int s = it->second.size() - 1;
       k_var /= s;
       j_var = n_var_ / (k_var * s);
       i_var = 0;
       for (int j = 0; j < j_var; ++j) {
-        for (int i_param = 0; i_param < s; ++i_param) {
+        for (int i_param = 1; i_param < s; ++i_param) {
           for (int k = 0; k < k_var; ++k) {
             pvector_[i_var++][it->first] = it->second[i_param];
           }
@@ -314,13 +314,13 @@ void SimulationManager::GenerateParameters() {
       for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
            ++jt) {
         if (jt->second.IsSequence() &&
-            (jt->second[0].as<std::string>()).at(0) != 'R') {
-          int s = jt->second.size();
+            (jt->second[0].as<std::string>()).at(0) == 'V') {
+          int s = jt->second.size() - 1;
           k_var /= s;
           j_var = n_var_ / (k_var * s);
           i_var = 0;
           for (int j = 0; j < j_var; ++j) {
-            for (int i_param = 0; i_param < s; ++i_param) {
+            for (int i_param = 1; i_param < s; ++i_param) {
               for (int k = 0; k < k_var; ++k) {
                 pvector_[i_var++][it->first][jt->first] = jt->second[i_param];
               }

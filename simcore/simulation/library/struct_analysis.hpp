@@ -13,7 +13,7 @@ class StructAnalysis {
   system_parameters *params_;
   std::mutex mtx_;
   int count_, n_dim_, n_bins_, n_bins_1d_, local_bins_1d_, density_bins_1d_,
-      average_structure_, n_objs_, local_order_analysis_, polar_order_analysis_,
+      n_objs_, local_order_analysis_, polar_order_analysis_,
       overlap_analysis_, density_analysis_, *i_step_, n_overlaps_,
       n_crossings_init_, n_crossings_complete_;
 

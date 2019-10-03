@@ -54,7 +54,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->species.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -234,7 +234,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->filament.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -324,7 +324,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->passive_filament.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -387,7 +387,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->hard_rod.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -441,7 +441,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->br_bead.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -495,7 +495,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->md_bead.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -564,7 +564,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->centrosome.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -639,7 +639,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->motor.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -714,7 +714,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->bead_spring.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -774,7 +774,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->spherocylinder.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -846,7 +846,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->spindle.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
@@ -960,12 +960,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
             params->crosslink.n_checkpoint = jt->second.as<int>();
           }
           else {
-            std::cout << "  WARNING! Unrecognized " << struct_name <<" parameter: '" << param_name << "'\n";
+            Logger::Warning("Unrecognized %s parameter: '%s'", struct_name.c_str(), param_name.c_str());
           }
         }
       }
       else {
-        std::cout << "  WARNING! Unrecognized struct parameter '" << struct_name << "'\n";
+        Logger::Warning("Unrecognized struct parameter '%s'", struct_name.c_str());
       }
     }
     else {
@@ -1212,7 +1212,7 @@ void parse_params(YAML::Node node, system_parameters *params) {
         params->in_out_flag = it->second.as<int>();
       }
       else {
-        std::cout << "  WARNING! Unrecognized parameter '" <<  param_name << "'\n";
+        Logger::Warning("Unrecognized parameter '%s'", param_name.c_str());
       }
     }
   }

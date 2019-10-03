@@ -17,7 +17,6 @@ void StructAnalysis::Init(system_parameters* params, int* i_step) {
   if (n_dim_ != 2) {
     Logger::Error("3D structure analysis is not yet implemented");
   }
-  average_structure_ = params_->local_order_average;
   local_bin_width_ = params_->local_order_bin_width;
   density_bin_width_ = params_->density_bin_width;
   if (local_order_analysis_) {
