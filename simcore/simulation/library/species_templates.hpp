@@ -1,5 +1,4 @@
-template <typename T>
-double const Species<T>::GetVolume() {
+template <typename T> double const Species<T>::GetVolume() {
   double vol = 0.0;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     vol += it->GetVolume();
@@ -7,16 +6,14 @@ double const Species<T>::GetVolume() {
   return vol;
 }
 
-template <typename T>
-void Species<T>::Reserve() {
+template <typename T> void Species<T>::Reserve() {
   members_.reserve(GetNInsert());
 }
 
-template <typename T>
-void Species<T>::AddMember() {
+template <typename T> void Species<T>::AddMember() {
   T newmember;
   Logger::Trace("Adding member to species %s, member number %d, member id %d",
-      GetSID()._to_string(), n_members_+1, newmember.GetOID());
+                GetSID()._to_string(), n_members_ + 1, newmember.GetOID());
   members_.push_back(newmember);
   members_.back().SetSID(GetSID());
   members_.back().Init();
@@ -24,8 +21,7 @@ void Species<T>::AddMember() {
   n_members_++;
 }
 
-template <typename T>
-double const Species<T>::GetDrMax() {
+template <typename T> double const Species<T>::GetDrMax() {
   double max_dr = 0;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     double dr = it->GetDrTot();
@@ -36,31 +32,28 @@ double const Species<T>::GetDrMax() {
   return max_dr;
 }
 
-template <typename T>
-void Species<T>::ZeroDrTot() {
+template <typename T> void Species<T>::ZeroDrTot() {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->ZeroDrTot();
   }
 }
 
-template <typename T>
-void Species<T>::AddMember(T newmem) {
-  Logger::Trace("Adding preexisting member to species %s", GetSID()._to_string());
+template <typename T> void Species<T>::AddMember(T newmem) {
+  Logger::Trace("Adding preexisting member to species %s",
+                GetSID()._to_string());
   members_.push_back(newmem);
   newmem.SetSID(GetSID());
   n_members_++;
 }
 
-template <typename T>
-void Species<T>::PopMember() {
+template <typename T> void Species<T>::PopMember() {
   Logger::Trace("Removing last member of species %s", GetSID()._to_string());
   members_.back().Cleanup();
   members_.pop_back();
   n_members_--;
 }
 
-template <typename T>
-void Species<T>::PopAll() {
+template <typename T> void Species<T>::PopAll() {
   while (n_members_ > 0) {
     PopMember();
   }
@@ -73,8 +66,7 @@ void Species<T>::Draw(std::vector<graph_struct *> *graph_array) {
   }
 }
 
-template <typename T>
-void Species<T>::UpdatePositions() {
+template <typename T> void Species<T>::UpdatePositions() {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->UpdatePosition();
   }
@@ -82,7 +74,7 @@ void Species<T>::UpdatePositions() {
 
 template <typename T>
 void Species<T>::GetInteractors(std::vector<Object *> *ixors) {
-  //ix->clear();
+  // ix->clear();
   std::vector<Object *> ix;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->GetInteractors(&ix);
@@ -100,8 +92,7 @@ void Species<T>::GetLastInteractors(std::vector<Object *> *ix) {
   members_.back().GetInteractors(ix);
 }
 
-template <typename T>
-double Species<T>::GetPotentialEnergy() {
+template <typename T> double Species<T>::GetPotentialEnergy() {
   double pe = 0;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     pe += it->GetPotentialEnergy();
@@ -112,22 +103,19 @@ double Species<T>::GetPotentialEnergy() {
   return 0.5 * pe;
 }
 
-template <typename T>
-void Species<T>::ZeroForces() {
+template <typename T> void Species<T>::ZeroForces() {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->ZeroForce();
   }
 }
 
-template <typename T>
-void Species<T>::Report() {
+template <typename T> void Species<T>::Report() {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->Report();
   }
 }
 
-template <typename T>
-int Species<T>::GetCount() {
+template <typename T> int Species<T>::GetCount() {
   int count = 0;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     count += it->GetCount();
@@ -135,24 +123,25 @@ int Species<T>::GetCount() {
   return count;
 }
 
-template <typename T>
-void Species<T>::WritePosits() {
+template <typename T> void Species<T>::WritePosits() {
   int size = members_.size();
   oposit_file_.write(reinterpret_cast<char *>(&size), sizeof(size));
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->WritePosit(oposit_file_);
 }
 
-template <typename T>
-void Species<T>::WriteSpecs() {
+template <typename T> void Species<T>::WriteSpecs() {
+  Logger::Trace("Writing spec file for species %s",
+                GetSID()._to_string());
   int size = members_.size();
   ospec_file_.write(reinterpret_cast<char *>(&size), sizeof(size));
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->WriteSpec(ospec_file_);
 }
 
-template <typename T>
-void Species<T>::WriteCheckpoints() {
+template <typename T> void Species<T>::WriteCheckpoints() {
+  Logger::Trace("Writing checkpoint file for species %s",
+      GetSID()._to_string());
   int size = members_.size();
   std::fstream ocheck_file(checkpoint_file_, std::ios::out | std::ios::binary);
   if (!ocheck_file.is_open()) {
@@ -166,8 +155,7 @@ void Species<T>::WriteCheckpoints() {
   ocheck_file.close();
 }
 
-template <typename T>
-void Species<T>::ReadPosits() {
+template <typename T> void Species<T>::ReadPosits() {
   if (iposit_file_.eof()) {
     Logger::Info("EOF reached while reading posits");
     early_exit = true;
@@ -196,16 +184,14 @@ void Species<T>::ReadPosits() {
     it->ReadPosit(iposit_file_);
 }
 
-template <typename T>
-void Species<T>::ReadPositsFromSpecs() {
+template <typename T> void Species<T>::ReadPositsFromSpecs() {
   ReadSpecs();
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->SetAvgPosition();
   }
 }
 
-template <typename T>
-void Species<T>::ReadCheckpoints() {
+template <typename T> void Species<T>::ReadCheckpoints() {
   std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
   if (!icheck_file.is_open()) {
     Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
@@ -224,8 +210,7 @@ void Species<T>::ReadCheckpoints() {
   rng_.SetSeed(seed);
 }
 
-template <typename T>
-void Species<T>::ReadSpecs() {
+template <typename T> void Species<T>::ReadSpecs() {
   if (ispec_file_.eof()) {
     if (HandleEOF()) {
       Logger::Info("Switching to new spec file");
@@ -242,7 +227,7 @@ void Species<T>::ReadSpecs() {
     return;
   }
   int size = -1;
-  //T *member;
+  // T *member;
   ispec_file_.read(reinterpret_cast<char *>(&size), sizeof(size));
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
@@ -267,19 +252,14 @@ void Species<T>::ReadSpecs() {
     it->ReadSpec(ispec_file_);
 }
 
-template <typename T>
-void Species<T>::ScalePositions() {
+template <typename T> void Species<T>::ScalePositions() {
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->ScalePosition();
 }
 
-template <typename T>
-void Species<T>::CleanUp() {
-  members_.clear();
-}
+template <typename T> void Species<T>::CleanUp() { members_.clear(); }
 
-template <typename T>
-void Species<T>::ArrangeMembers() {
+template <typename T> void Species<T>::ArrangeMembers() {
   if (GetInsertionType().compare("custom") == 0)
     CustomInsert();
   else if (GetInsertionType().compare("simple_crystal") == 0)
@@ -298,24 +278,21 @@ void Species<T>::SetLastMemberPosition(double const *const pos) {
   members_.back().UpdatePeriodic();
 }
 
-template <typename T>
-double Species<T>::GetSpecLength() {
+template <typename T> double Species<T>::GetSpecLength() {
   if (members_.size() == 0)
     return 0;
   else
     return members_[0].GetLength();
 }
 
-template <typename T>
-double Species<T>::GetSpecDiameter() {
+template <typename T> double Species<T>::GetSpecDiameter() {
   if (members_.size() == 0)
     return 0;
   else
     return members_[0].GetDiameter();
 }
 
-template <typename T>
-void Species<T>::CenteredOrientedArrangement() {
+template <typename T> void Species<T>::CenteredOrientedArrangement() {
   // This is redundant for filaments, since they have already inserted
   // themselves properly.
   double pos[3] = {0, 0, 0};
@@ -327,8 +304,7 @@ void Species<T>::CenteredOrientedArrangement() {
   }
 }
 
-template <typename T>
-void Species<T>::CrystalArrangement() {
+template <typename T> void Species<T>::CrystalArrangement() {
   double d = members_[0].GetDiameter();
   double l = members_[0].GetLength();
   int n_dim = params_->n_dim;
@@ -347,7 +323,8 @@ void Species<T>::CrystalArrangement() {
         (int)N);
   }
   double fraction = N / n_members_;
-  if (fraction < 1) fraction = 1;
+  if (fraction < 1)
+    fraction = 1;
   if (l == 0) {
     if (n_dim == 2)
       nY_max = floor(pow(n_members_, 1.0 / n_dim));
@@ -358,7 +335,8 @@ void Species<T>::CrystalArrangement() {
     nX_max = ceil(n_members_ / nY_max);
   } else if (n_dim == 3) {
     nX_max = floor(sqrt(n_members_ / nY_max));
-    if (nX_max == 0) nX_max = 1;
+    if (nX_max == 0)
+      nX_max = 1;
     nZ_max = ceil(n_members_ / (nX_max * nY_max));
   }
   for (int i = 0; i < n_dim; ++i) {
@@ -420,8 +398,7 @@ void Species<T>::CrystalArrangement() {
   }
 }
 
-template <typename T>
-void Species<T>::CustomInsert() {
+template <typename T> void Species<T>::CustomInsert() {
   YAML::Node inode;
   try {
     inode = YAML::LoadFile(sparams_->insert_file);
@@ -443,7 +420,8 @@ void Species<T>::CustomInsert() {
     Logger::Error("");
   }
   for (YAML::const_iterator it = inode.begin(); it != inode.end(); ++it) {
-    if (it->first.as<std::string>().compare(spec_name_) != 0) continue;
+    if (it->first.as<std::string>().compare(spec_name_) != 0)
+      continue;
     if (!it->second.IsSequence()) {
       Logger::Error("Custom insert file positions not specified as sequence");
     }
@@ -455,9 +433,8 @@ void Species<T>::CustomInsert() {
         Logger::Error("Custom insert position not specified as sequence");
       }
       if (jt->size() != 2 || (*jt)[0].size() != 3 || (*jt)[1].size() != 3) {
-        Logger::Error(
-            "Custom insert position not in format "
-            "[[pos_x,pos_y,pos_z],[u_x,u_y,u_z]]");
+        Logger::Error("Custom insert position not in format "
+                      "[[pos_x,pos_y,pos_z],[u_x,u_y,u_z]]");
       }
       for (int i = 0; i < 3; ++i) {
         pos[i] = (*jt)[0][i].as<double>();
@@ -468,10 +445,9 @@ void Species<T>::CustomInsert() {
   }
 }
 
-template <typename T>
-const bool Species<T>::CheckInteractorUpdate() {
+template <typename T> const bool Species<T>::CheckInteractorUpdate() {
   bool result = false;
-  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
     if (it->CheckInteractorUpdate()) {
       result = true;
     }

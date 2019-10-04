@@ -144,6 +144,8 @@ void SpeciesBase::InitSpecFileInput(std::string run_name) {
 }
 
 void SpeciesBase::InitOutputFiles(std::string run_name) {
+  Logger::Trace("Initializing output files for species %s",
+      sid_._to_string());
   if (sparams_->posit_flag)
     InitPositFile(run_name);
   if (sparams_->spec_flag)
@@ -161,6 +163,8 @@ void SpeciesBase::LoadFromCheckpoints(std::string run_name,
                                       std::string checkpoint_run_name) {
   std::string sid_str = sid_._to_string();
   checkpoint_file_ = checkpoint_run_name + "_" + sid_str + ".checkpoint";
+  Logger::Trace("Loading species %s from checkpoint file %s",
+      sid_._to_string(), checkpoint_file_.c_str());
   if (!sparams_->checkpoint_flag) {
     Logger::Error("Checkpoint file %s not available for parameter file!",
                   checkpoint_file_.c_str());

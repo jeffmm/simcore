@@ -98,9 +98,9 @@ void Simulation::ZeroForces() {
 /* Update system pressure, volume and rescale system size if necessary,
  * handling periodic boundaries in a sane way. */
 void Simulation::Statistics() {
-  Logger::Debug("Calculating system thermodynamics");
   if (i_step_ % params_.n_thermo == 0 && i_step_ > 0) {
     /* Calculate system pressure from stress tensor */
+    Logger::Debug("Calculating system thermodynamics");
     iengine_.CalculatePressure();
     if (params_.constant_pressure) {
       space_.ConstantPressure();
@@ -442,7 +442,6 @@ void Simulation::InitInputs(run_options run_opts) {
 
 /* Write object positions, etc if necessary */
 void Simulation::WriteOutputs() {
-  Logger::Debug("Writing outputs");
   output_mgr_.WriteOutputs();
   /* Write interaction information/crosslink positions, etc */
   iengine_.WriteOutputs();

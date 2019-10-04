@@ -4,7 +4,7 @@ run_name: anchor_ds
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 10000
+n_steps: 100
 n_steps_target: 0
 boundary: 0
 n_update_cells: 50
@@ -32,7 +32,7 @@ br_bead:
   color: 3.14
 
 filament:
-  num: 100
+  num: 10
   packing_fraction: -1
   insertion_type: random
   #insert_file: anchor_ds_insert.yaml
