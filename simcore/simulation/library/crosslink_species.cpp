@@ -1,31 +1,30 @@
 #include "crosslink_species.hpp"
 
-void CrosslinkSpecies::Init(system_parameters *params, space_struct *space,
-                            MinimumDistance *mindist,
-                            std::vector<Object *> *objs, double &obj_vol,
-                            bool &update) {
-  params_ = params;
-  space_ = space;
+void CrosslinkSpecies::Init(system_parameters *params,
+                            species_base_parameters *sparams,
+                            space_struct *space) {
+  Species::Init(params, sparams, space);
+  k_on_ = sparams.k_on;
+  k_off_ = sparams.k_off;
+  xlink_concentration_ = sparams.concentration;
+}
+
+void CrosslinkSpecies::InitInteractionEnvironment(MinimumDistance *mindist,
+                                                  std::vector<Object *> *objs,
+                                                  double &obj_vol,
+                                                  bool &update) {
   mindist_ = mindist;
   objs_ = objs;
   obj_volume_ = &obj_vol;
   update_ = &update;
-  k_on_ = params_->crosslink.k_on;
-  k_off_ = params_->crosslink.k_off;
-  xlink_concentration_ = params_->crosslink.concentration;
-  n_xlinks_ = 0;
-  n_spec_ = params_->crosslink.n_spec;
-  n_checkpoint_ = params_->crosslink.n_checkpoint;
-  checkpoint_flag_ = params_->crosslink.checkpoint_flag;
-  spec_flag_ = params_->crosslink.spec_flag;
   /* TODO Lookup table only works for filament objects. Generalize? */
-  lut_.Init(params_->crosslink.k_spring / 2, params_->crosslink.rest_length,
+  lut_.Init(sparams.k_spring / 2, sparams.rest_length,
             params_->filament.diameter);
 }
 
 void CrosslinkSpecies::CalculateBindingFree() {
   /* Check crosslink binding */
-  double concentration = xlink_concentration_ - n_xlinks_ / space_->volume;
+  double concentration = xlink_concentration_ - n_members_ / space_->volume;
   if (gsl_rng_uniform_pos(rng_.r) <=
       concentration * (*obj_volume_) * k_on_ * params_->delta) {
     /* Create a new crosslink and bind an anchor to a random object
@@ -45,7 +44,7 @@ Object *CrosslinkSpecies::GetRandomObject() {
     if (vol > roll) {
 #ifdef TRACE
       Logger::Trace("Binding free crosslink to random object: xl %d -> obj %d",
-                    xlinks_.back().GetOID(), (*obj)->GetOID());
+                    members_.back().GetOID(), (*obj)->GetOID());
 #endif
       return *obj;
     }
@@ -58,17 +57,17 @@ void CrosslinkSpecies::BindCrosslink() {
   /* Create crosslink object and initialize. Crosslink will
    * initially be singly-bound. */
   Crosslink xl;
-  xlinks_.push_back(xl);
-  xlinks_.back().Init(mindist_, &lut_);
-  xlinks_.back().AttachObjRandom(GetRandomObject());
+  members_.push_back(xl);
+  members_.back().Init(mindist_, &lut_);
+  members_.back().AttachObjRandom(GetRandomObject());
   /* Keep track of bound bound anchors, bound crosslinks, and
    * concentration of free crosslinks */
-  n_xlinks_++;
+  n_members_++;
 }
 
 /* Return singly-bound anchors, for finding neighbors to bind to */
 void CrosslinkSpecies::GetInteractors(std::vector<Object *> &ixors) {
-  for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
+  for (auto xlink = members_.begin(); xlink != members_.end(); ++xlink) {
     xlink->GetInteractors(ixors);
   }
 }
@@ -76,13 +75,14 @@ void CrosslinkSpecies::GetInteractors(std::vector<Object *> &ixors) {
 /* Returns all anchors, not just singly-bound anchors. Used for reassigning
    bound anchors to bonds upon a checkpoint reload */
 void CrosslinkSpecies::GetAnchorInteractors(std::vector<Object *> &ixors) {
-  for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
+  for (auto xlink = members_.begin(); xlink != members_.end(); ++xlink) {
     xlink->GetAnchors(ixors);
   }
 }
 
 void CrosslinkSpecies::UpdateCrosslinks() {
-  /* Only do this every other step (assuming flexible filaments with midstep) */
+  /* Only do this every other step (assuming flexible filaments with midstep)
+   */
   if (params_->i_step % 2 == 0) {
     /* First update bound crosslinks state and positions */
     UpdateBoundCrosslinks();
@@ -97,7 +97,7 @@ void CrosslinkSpecies::UpdateCrosslinks() {
 }
 
 void CrosslinkSpecies::UpdateBoundCrosslinks() {
-  n_xlinks_ = 0;
+  n_members_ = 0;
   /* Update anchor positions to their attached meshes and calculate anchor
      forces */
   UpdateBoundCrosslinkForces();
@@ -106,18 +106,18 @@ void CrosslinkSpecies::UpdateBoundCrosslinks() {
   /* Update anchor positions from diffusion, walking */
   UpdateBoundCrosslinkPositions();
   /* Remove crosslinks that came unbound */
-  xlinks_.erase(std::remove_if(xlinks_.begin(), xlinks_.end(),
-                               [](Crosslink x) { return x.IsUnbound(); }),
-                xlinks_.end());
+  members_.erase(std::remove_if(members_.begin(), members_.end(),
+                                [](Crosslink x) { return x.IsUnbound(); }),
+                 members_.end());
   /* Get the number of bound crosslinks so we know what the current
      concentration of free crosslinks is */
-  n_xlinks_ = xlinks_.size();
+  n_members_ = members_.size();
 }
 
-/* This must be done sequentially to avoid racy conditions when accessing bound
-   object's forces */
+/* This must be done sequentially to avoid racy conditions when accessing
+   bound object's forces */
 void CrosslinkSpecies::ApplyCrosslinkTetherForces() {
-  for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
+  for (auto xlink = members_.begin(); xlink != members_.end(); ++xlink) {
     xlink->ApplyTetherForces();
   }
 }
@@ -127,14 +127,14 @@ void CrosslinkSpecies::UpdateBoundCrosslinkForces() {
   int max_threads = omp_get_max_threads();
   xlink_chunk_vector chunks;
   chunks.reserve(max_threads);
-  size_t chunk_size = xlinks_.size() / max_threads;
-  xlink_iterator cur_iter = xlinks_.begin();
+  size_t chunk_size = members_.size() / max_threads;
+  xlink_iterator cur_iter = members_.begin();
   for (int i = 0; i < max_threads - 1; ++i) {
     xlink_iterator last_iter = cur_iter;
     std::advance(cur_iter, chunk_size);
     chunks.push_back(std::make_pair(last_iter, cur_iter));
   }
-  chunks.push_back(std::make_pair(cur_iter, xlinks_.end()));
+  chunks.push_back(std::make_pair(cur_iter, members_.end()));
 
 #pragma omp parallel shared(chunks, update_)
   {
@@ -150,7 +150,7 @@ void CrosslinkSpecies::UpdateBoundCrosslinkForces() {
     }
   }
 #else
-  for (xlink_iterator xlink = xlinks_.begin(); xlink != xlinks_.end();
+  for (xlink_iterator xlink = members_.begin(); xlink != members_.end();
        ++xlink) {
     bool init_state = xlink->IsSingly();
     xlink->UpdateCrosslinkForces();
@@ -165,14 +165,14 @@ void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
   int max_threads = omp_get_max_threads();
   xlink_chunk_vector chunks;
   chunks.reserve(max_threads);
-  size_t chunk_size = xlinks_.size() / max_threads;
-  xlink_iterator cur_iter = xlinks_.begin();
+  size_t chunk_size = members_.size() / max_threads;
+  xlink_iterator cur_iter = members_.begin();
   for (int i = 0; i < max_threads - 1; ++i) {
     xlink_iterator last_iter = cur_iter;
     std::advance(cur_iter, chunk_size);
     chunks.push_back(std::make_pair(last_iter, cur_iter));
   }
-  chunks.push_back(std::make_pair(cur_iter, xlinks_.end()));
+  chunks.push_back(std::make_pair(cur_iter, members_.end()));
 
 #pragma omp parallel shared(chunks, update_)
   {
@@ -184,8 +184,8 @@ void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
         /* Xlink is no longer bound, return to solution */
         if (xlink->IsUnbound()) {
           *update_ = true;
-          /* If a crosslink enters or leaves the singly state, we need to update
-           * xlink interactors */
+          /* If a crosslink enters or leaves the singly state, we need to
+           * update xlink interactors */
         } else if (xlink->IsSingly() != init_state) {
           *update_ = true;
         }
@@ -193,7 +193,7 @@ void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
     }
   }
 #else
-  for (xlink_iterator xlink = xlinks_.begin(); xlink != xlinks_.end();
+  for (xlink_iterator xlink = members_.begin(); xlink != members_.end();
        ++xlink) {
     bool init_state = xlink->IsSingly();
     xlink->UpdateCrosslinkPositions();
@@ -209,21 +209,21 @@ void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
 #endif
 }
 
-void CrosslinkSpecies::Clear() { xlinks_.clear(); }
+void CrosslinkSpecies::Clear() { members_.clear(); }
 
 void CrosslinkSpecies::Draw(std::vector<graph_struct *> *graph_array) {
-  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->Draw(graph_array);
   }
 }
 
 void CrosslinkSpecies::WriteSpecs() {
   /* Write the vector sizes, singly then doubly */
-  n_xlinks_ = xlinks_.size();
-  ospec_file_.write(reinterpret_cast<char *>(&n_xlinks_), sizeof(int));
+  n_members_ = members_.size();
+  ospec_file_.write(reinterpret_cast<char *>(&n_members_), sizeof(int));
 
   /* Write individual crosslink specs, first singly then doubly */
-  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->WriteSpec(ospec_file_);
   }
 }
@@ -239,23 +239,23 @@ void CrosslinkSpecies::ReadSpecs() {
     early_exit = true;
     return;
   }
-  n_xlinks_ = -1;
-  ispec_file_.read(reinterpret_cast<char *>(&n_xlinks_), sizeof(int));
+  n_members_ = -1;
+  ispec_file_.read(reinterpret_cast<char *>(&n_members_), sizeof(int));
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
-  if (n_xlinks_ == -1) {
+  if (n_members_ == -1) {
     Logger::Info("EOF reached for spec file in CrosslinkSpecies");
     early_exit = true;
     return;
   }
-  if (n_xlinks_ == 0) {
-    xlinks_.clear();
-  } else if (n_xlinks_ != xlinks_.size()) {
+  if (n_members_ == 0) {
+    members_.clear();
+  } else if (n_members_ != members_.size()) {
     Crosslink xlink;
     xlink.Init(mindist_, &lut_);
-    xlinks_.resize(n_xlinks_, xlink);
+    members_.resize(n_members_, xlink);
   }
-  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->ReadSpec(ispec_file_);
   }
 }
@@ -276,11 +276,11 @@ void CrosslinkSpecies::WriteCheckpoints() {
   ocheck_file.write(reinterpret_cast<char *>(rng_state), rng_size);
 
   /* Write crosslink vector sizes, singly then doubly */
-  n_xlinks_ = xlinks_.size();
-  ocheck_file.write(reinterpret_cast<char *>(&n_xlinks_), sizeof(int));
+  n_members_ = members_.size();
+  ocheck_file.write(reinterpret_cast<char *>(&n_members_), sizeof(int));
 
   /* Write crosslink checkpoints, singly then doubly */
-  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->WriteCheckpoint(ocheck_file);
   }
 
@@ -303,18 +303,18 @@ void CrosslinkSpecies::ReadCheckpoints() {
   icheck_file.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   icheck_file.read(reinterpret_cast<char *>(rng_state), rng_size);
   /* Read xlink vector sizes, first singly then doubly */
-  n_xlinks_ = -1;
-  icheck_file.read(reinterpret_cast<char *>(&n_xlinks_), sizeof(int));
+  n_members_ = -1;
+  icheck_file.read(reinterpret_cast<char *>(&n_members_), sizeof(int));
 
   /* Prepare the xlink vectors */
   Crosslink xlink;
-  xlinks_.push_back(xlink);
-  xlinks_.back().Init(mindist_, &lut_);
+  members_.push_back(xlink);
+  members_.back().Init(mindist_, &lut_);
   // xlink.Init(mindist_, &lut_);
-  xlinks_.resize(n_xlinks_, xlinks_[0]);
+  members_.resize(n_members_, members_[0]);
 
   /* Read the crosslink checkpoints */
-  for (auto it = xlinks_.begin(); it != xlinks_.end(); ++it) {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->ReadCheckpoint(icheck_file);
   }
   /* Close the file */
@@ -323,9 +323,9 @@ void CrosslinkSpecies::ReadCheckpoints() {
 }
 
 void CrosslinkSpecies::InitOutputFiles() {
-  if (params_->crosslink.spec_flag)
+  if (sparams.spec_flag)
     InitSpecFile();
-  if (params_->crosslink.checkpoint_flag)
+  if (sparams.checkpoint_flag)
     InitCheckpoints();
 }
 
@@ -337,8 +337,7 @@ void CrosslinkSpecies::InitSpecFile() {
     Logger::Error("Output file %s did not open\n", spec_file_name.c_str());
   }
   ospec_file_.write(reinterpret_cast<char *>(&params_->n_steps), sizeof(int));
-  ospec_file_.write(reinterpret_cast<char *>(&params_->crosslink.n_spec),
-                    sizeof(int));
+  ospec_file_.write(reinterpret_cast<char *>(&sparams.n_spec), sizeof(int));
   ospec_file_.write(reinterpret_cast<char *>(&params_->delta), sizeof(double));
 }
 
@@ -358,12 +357,12 @@ bool CrosslinkSpecies::InitSpecFileInputFromFile(std::string spec_file_name) {
   ispec_file_.read(reinterpret_cast<char *>(&n_steps), sizeof(int));
   ispec_file_.read(reinterpret_cast<char *>(&n_spec), sizeof(int));
   ispec_file_.read(reinterpret_cast<char *>(&delta), sizeof(double));
-  if (n_steps != params_->n_steps || n_spec != params_->crosslink.n_spec ||
+  if (n_steps != params_->n_steps || n_spec != sparams.n_spec ||
       delta != params_->delta) {
     Logger::Warning("Input file %s does not match parameter file\n",
                     "n_steps: %d %d, n_spec: %d %d, delta: %2.2f %2.2f",
                     spec_file_name.c_str(), n_steps, params_->n_steps, n_spec,
-                    params_->crosslink.n_spec, delta, params_->delta);
+                    sparams.n_spec, delta, params_->delta);
   }
   ReadSpecs();
   return true;
@@ -378,15 +377,15 @@ void CrosslinkSpecies::InitSpecFileInput() {
 }
 
 // void CrosslinkSpecies::UpdatePeriodic() {
-// for (auto xlink = xlinks_.begin(); xlink != xlinks_.end(); ++xlink) {
+// for (auto xlink = members_.begin(); xlink != members_.end(); ++xlink) {
 // xlink->UpdatePeriodic();
 //}
 //}
 
 void CrosslinkSpecies::LoadFromCheckpoints() {
-  checkpoint_file_ = params_->checkpoint_run_name + "_xlink_" +
-                     xlink_label_ + ".checkpoint";
-  if (!params_->crosslink.checkpoint_flag) {
+  checkpoint_file_ =
+      params_->checkpoint_run_name + "_xlink_" + xlink_label_ + ".checkpoint";
+  if (!GetCheckpointFlag()) {
     Logger::Error("Checkpoint file %s not available for parameter file!",
                   checkpoint_file_.c_str());
   }
@@ -416,7 +415,7 @@ void CrosslinkSpecies::WriteOutputs() {
   if (spec_flag_ && (params_->i_step % n_spec_ == 0)) {
     WriteSpecs();
   }
-  if (checkpoint_flag_ && (params_->i_step % n_checkpoint_ == 0)) {
+  if (checkpoint_flag_ && (params_->i_step % GetNCheckpoint() == 0)) {
     WriteCheckpoints();
   }
 }

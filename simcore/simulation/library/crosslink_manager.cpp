@@ -14,7 +14,8 @@ void CrosslinkManager::InitSpecies(system_parameters *params,
                                    MinimumDistance *mindist,
                                    std::vector<Object *> *objs) {
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
-    (*it)->Init(params, space, mindist, objs, obj_volume_, update_);
+    (*it)->Init(params, space);
+    (*it)->InitEnvironment(mindist, objs, obj_volume_, update_);
   }
 }
 

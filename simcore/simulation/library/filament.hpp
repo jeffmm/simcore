@@ -4,8 +4,6 @@
 #include "flory_schulz.hpp"
 #include "mesh.hpp"
 
-typedef species_parameters<species_id::filament> filament_parameters;
-
 class Filament : public Mesh {
 private:
   filament_parameters *sparams_;

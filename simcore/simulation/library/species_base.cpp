@@ -1,8 +1,9 @@
 #include "species_base.hpp"
 
-void SpeciesBase::Init(system_parameters *params, spec_params *sparams, space_struct *space) {
+void SpeciesBase::Init(system_parameters *params, species_base_parameters *sparams, space_struct *space) {
   params_ = params;
   space_ = space;
+  n_members_ = 0;
   Logger::Debug("Initializing species %s", GetSID()._to_string());
 }
 

@@ -2,24 +2,26 @@
 
 Crosslink::Crosslink() : Object() { SetSID(species_id::crosslink); }
 
-void Crosslink::Init(MinimumDistance *mindist, LookupTable *lut) {
+void Crosslink::Init(crosslink_parameters *sparams, MinimumDistance *mindist,
+                     LookupTable *lut) {
+  sparams_ = sparams;
   mindist_ = mindist;
   lut_ = lut;
   length_ = -1;
-  diameter_ = params_->crosslink.tether_diameter;
-  color_ = params_->crosslink.tether_color;
-  draw_ = draw_type::_from_string(params_->crosslink.tether_draw_type.c_str());
-  rest_length_ = params_->crosslink.rest_length;
-  k_on_ = params_->crosslink.k_on;       // k_on for unbound to singly
-  k_off_ = params_->crosslink.k_off;     // k_off for singly to unbound
-  k_on_d_ = params_->crosslink.k_on_d;   // k_on for singly to doubly
-  k_off_d_ = params_->crosslink.k_off_d; // k_off for doubly to singly
-  k_spring_ = params_->crosslink.k_spring;
-  k_align_ = params_->crosslink.k_align;
-  f_spring_max_ = params_->crosslink.f_spring_max;
-  rcapture_ = params_->crosslink.r_capture;
-  fdep_factor_ = params_->crosslink.force_dep_factor;
-  polar_affinity_ = params_->crosslink.polar_affinity;
+  diameter_ = sparams_->.tether_diameter;
+  color_ = sparams_->.tether_color;
+  draw_ = draw_type::_from_string(sparams_->.tether_draw_type.c_str());
+  rest_length_ = sparams_->.rest_length;
+  k_on_ = sparams_->.k_on;       // k_on for unbound to singly
+  k_off_ = sparams_->.k_off;     // k_off for singly to unbound
+  k_on_d_ = sparams_->.k_on_d;   // k_on for singly to doubly
+  k_off_d_ = sparams_->.k_off_d; // k_off for doubly to singly
+  k_spring_ = sparams_->.k_spring;
+  k_align_ = sparams_->.k_align;
+  f_spring_max_ = sparams_->.f_spring_max;
+  rcapture_ = sparams_->.r_capture;
+  fdep_factor_ = sparams_->.force_dep_factor;
+  polar_affinity_ = sparams_->.polar_affinity;
   /* TODO generalize crosslinks to more than two anchors */
   Anchor anchor1;
   Anchor anchor2;
@@ -30,7 +32,7 @@ void Crosslink::Init(MinimumDistance *mindist, LookupTable *lut) {
   SetSID(species_id::crosslink);
   SetSingly();
   Logger::Trace("Initializing crosslink %d with anchors %d and %d", GetOID(),
-      anchors_[0].GetOID(), anchors_[1].GetOID());
+                anchors_[0].GetOID(), anchors_[1].GetOID());
 }
 
 /* Function used to set anchor[0] position etc to xlink position etc */
@@ -88,7 +90,7 @@ void Crosslink::SinglyKMC() {
     if (i_bind < 0) { // || bind_lambda < 0) {
       printf("i_bind = %d\nbind_lambda = %2.2f\n", i_bind, bind_lambda);
       Logger::Error("kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
-                 " returned an invalid result!");
+                    " returned an invalid result!");
     }
     Object *bind_obj = anchors_[0].GetNeighbor(i_bind);
     double obj_length = bind_obj->GetLength();
@@ -105,7 +107,7 @@ void Crosslink::SinglyKMC() {
     anchors_[1].AttachObjLambda(bind_obj, bind_lambda);
     SetDoubly();
     Logger::Trace("Crosslink %d became doubly bound to obj %d", GetOID(),
-        bind_obj->GetOID());
+                  bind_obj->GetOID());
   }
   kmc_filter.clear();
 }
@@ -124,13 +126,13 @@ void Crosslink::DoublyKMC() {
       choose_kmc_double(0.5 * unbind_prob, 0.5 * unbind_prob, roll);
   if (head_activate == 0) {
     Logger::Trace("Doubly-bound crosslink %d came unbound from %d", GetOID(),
-        anchors_[0].GetBoundOID());
+                  anchors_[0].GetBoundOID());
     anchors_[0] = anchors_[1];
     anchors_[1].Unbind();
     SetSingly();
   } else if (head_activate == 1) {
     Logger::Trace("Doubly-bound crosslink %d came unbound from %d", GetOID(),
-        anchors_[1].GetBoundOID());
+                  anchors_[1].GetBoundOID());
     anchors_[1].Unbind();
     SetSingly();
   }
@@ -347,8 +349,10 @@ void Crosslink::ReadCheckpoint(std::fstream &icheck) {
   icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
   ReadSpec(icheck);
-  Logger::Trace("Reloading anchor from checkpoint with mid %d", anchors_[0].GetMeshID());
+  Logger::Trace("Reloading anchor from checkpoint with mid %d",
+                anchors_[0].GetMeshID());
   if (IsDoubly()) {
-    Logger::Trace("Reloading anchor from checkpoint with mid %d", anchors_[1].GetMeshID());
+    Logger::Trace("Reloading anchor from checkpoint with mid %d",
+                  anchors_[1].GetMeshID());
   }
 }

@@ -10,7 +10,8 @@ private:
   species_id sid_;
 
 protected:
-  int n_members_ = 0, spec_file_iterator_ = -1;
+  int n_members_ = 0;
+  int spec_file_iterator_ = -1;
   std::string spec_name_;
   system_parameters *params_;
   space_struct *space_;
@@ -31,7 +32,7 @@ public:
   }
   virtual void UpdatePositions() {}
   virtual void Draw(std::vector<graph_struct *> *graph_array) {}
-  virtual void Init(system_parameters *params, spec_params *sparams, space_struct *space);
+  virtual void Init(system_parameters *params, species_base_parameters *sparams, space_struct *space);
   virtual void ZeroForces() {}
   virtual void GetInteractors(std::vector<Object *> *ix) {}
   virtual void GetLastInteractors(std::vector<Object *> *ix) {}
@@ -41,20 +42,19 @@ public:
   virtual void SetLastMemberPosition(double const *const pos) {}
   virtual void PopMember() {}
   virtual void PopAll() {}
-  virtual double GetSpecLength() { return 0; }
-  virtual double GetSpecDiameter() { return 0; }
+  virtual const double GetSpecDiameter() { return 1; }
   virtual void ArrangeMembers() {}
-  virtual int CanOverlap() { return -1; }
+  virtual const bool CanOverlap() { return -1; }
   species_id const GetSID() { return sid_; }
   virtual void Report() {}
   int const GetNMembers() { return n_members_; }
   int const GetNInsert() { return -1; }
   int const GetNPosit() { return -1; }
   int const GetNSpec() { return -1; }
-  int const GetNCheckpoint() { return -1; }
+  int const GetNCheckpoint() { return params_->n_checkpoint; }
   bool const GetPositFlag() { return false; }
   bool const GetSpecFlag() { return false; }
-  bool const GetCheckpointFlag() { return false; }
+  bool const GetCheckpointFlag() { return params_->checkpoint_flag; }
   std::string GetInsertionType() { return ""; }
   virtual int GetCount() { return 0; }
   virtual void WriteOutputs(std::string run_name) {}

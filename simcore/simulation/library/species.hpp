@@ -11,22 +11,19 @@ protected:
 public:
   Species() {}
   // Initialize function for setting it up on the first pass
-  virtual void Init(system_parameters *params, space_struct *space) {
-    SpeciesBase::Init(params, space);
-  }
-  Species(system_parameters *params, spec_params *sparams, space_struct *space) {}
-  virtual void InitSpeciesParameters(species_parameters<S> sparams) {
-    sparams_ = sparams;
+  virtual void Init(system_parameters *params, species_base_parameters *sparams, space_struct *space) {
+    sparams_ = *dynamic_cast<species_parameters<S>*>(sparams);
+    SpeciesBase::Init(params, sparams, space);
   }
   // Virtual functions
-  virtual const int GetNInsert() { return -1; }
-  virtual const int GetNPosit() { return -1; }
-  virtual const int GetNSpec() { return -1; }
-  virtual const int GetNCheckpoint() { return -1; }
-  virtual const bool GetPositFlag() { return false; }
-  virtual const bool GetSpecFlag() { return false; }
-  virtual const bool GetCheckpointFlag() { return false; }
-  std::string GetInsertionType() { return ""; }
+  virtual const double GetSpecDiameter() { return sparams_.diameter; }
+  virtual const bool CanOverlap() { return sparams_.overlap; }
+  virtual const int GetNInsert() { return sparams_.num; }
+  virtual const int GetNPosit() { return sparams_.n_posit; }
+  virtual const int GetNSpec() { return sparams_.n_spec; }
+  virtual const bool GetPositFlag() { return sparams_.posit_flag; }
+  virtual const bool GetSpecFlag() { return sparams_.spec_flag; }
+  std::string GetInsertionType() { return sparams_.insertion_type; }
 
   virtual void AddMember();
   virtual void AddMember(T newmem);
@@ -61,8 +58,6 @@ public:
   virtual double const GetVolume();
   virtual double const GetDrMax();
   virtual void ZeroDrTot();
-  virtual double GetSpecLength();
-  virtual double GetSpecDiameter();
   virtual void CustomInsert();
   virtual const bool CheckInteractorUpdate();
 };
@@ -89,7 +84,7 @@ void Species<T, S>::AddMember() {
   members_.push_back(newmember);
   members_.back().SetSID(GetSID());
   members_.back().Init(&sparams_);
-  // newmember->SetColor(sparams_->color, sparams_->draw_type);
+  // newmember->SetColor(sparams_.color, sparams_.draw_type);
   n_members_++;
 }
 
@@ -368,22 +363,6 @@ void Species<T, S>::SetLastMemberPosition(double const *const pos) {
 }
 
 template <typename T, char S>
-double Species<T, S>::GetSpecLength() {
-  if (members_.size() == 0)
-    return 0;
-  else
-    return members_[0].GetLength();
-}
-
-template <typename T, char S>
-double Species<T, S>::GetSpecDiameter() {
-  if (members_.size() == 0)
-    return 0;
-  else
-    return members_[0].GetDiameter();
-}
-
-template <typename T, char S>
 void Species<T, S>::CenteredOrientedArrangement() {
   // This is redundant for filaments, since they have already inserted
   // themselves properly.
@@ -493,9 +472,9 @@ template <typename T, char S>
 void Species<T, S>::CustomInsert() {
   YAML::Node inode;
   try {
-    inode = YAML::LoadFile(sparams_->insert_file);
+    inode = YAML::LoadFile(sparams_.insert_file);
   } catch (...) {
-    std::cout << "Failed to load custom insert file " << sparams_->insert_file
+    std::cout << "Failed to load custom insert file " << sparams_.insert_file
               << " for species " << spec_name_ << "\n";
     Logger::Error("");
   }

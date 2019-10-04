@@ -2,20 +2,19 @@
 #define _SIMCORE_CROSSLINK_SPECIES_H_
 
 #include "crosslink.hpp"
+#include "species.hpp"
 #ifdef ENABLE_OPENMP
 #include "omp.h"
 #endif
 
-typedef std::vector<
-    std::pair<std::vector<Crosslink>::iterator, std::vector<Crosslink>::iterator>>
+typedef std::vector<std::pair<std::vector<Crosslink>::iterator,
+                              std::vector<Crosslink>::iterator>>
     xlink_chunk_vector;
 typedef std::vector<Crosslink>::iterator xlink_iterator;
 
-class CrosslinkSpecies {
+class CrosslinkSpecies : Species<Crosslink, species_id::crosslink> {
 private:
-  crosslink_params sparams_;
   bool *update_;
-  int n_xlinks_;
   int n_spec_;
   int n_checkpoint_;
   int spec_flag_;
@@ -32,7 +31,6 @@ private:
   RNG rng_;
   space_struct *space_;
   LookupTable lut_;
-  std::vector<Crosslink> xlinks_;
   std::vector<Object *> *objs_;
   std::fstream ispec_file_;
   std::fstream ospec_file_;
@@ -58,10 +56,10 @@ private:
   void LoadFromCheckpoints();
 
 public:
-  // IENGINE USES
-  void Init(system_parameters *params, space_struct *space,
-            MinimumDistance *mindist, std::vector<Object *> *objs,
-            double &obj_vol, bool &update);
+  void Init(system_parameters *params, species_base_parameters *sparams,
+            space_struct *space);
+  void InitInteractionEnvironment(MinimumDistance *mindist, std::vector<Object *> *objs,
+                       double &obj_vol, bool &update);
   void GetInteractors(std::vector<Object *> &ixors);
   void UpdateCrosslinks();
   void Clear();

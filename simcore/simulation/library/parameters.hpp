@@ -6,27 +6,26 @@
 
 template <unsigned char S> struct species_parameters;
 
-typedef species_parameters<species_id::none> spec_params;
+typedef species_parameters<species_id::none> species_base_parameters;
 
 template <unsigned char S> struct species_parameters {
-  int num = 0;
   std::string species_name = "";
   std::string insertion_type = "random";
   std::string insert_file = "none";
-  int overlap = 0;
   std::string draw_type = "orientation";
+  double diameter = 1;
   double color = 0;
+  int num = 0;
+  int overlap = 0;
   int posit_flag = 0;
   int spec_flag = 0;
-  int checkpoint_flag = 0;
   int n_posit = 100;
   int n_spec = 100;
-  int n_checkpoint = 10000;
 };
 
 template <>
-struct species_parameters<species_id::filament> : public spec_params {
-  double diameter = 1;
+struct species_parameters<species_id::filament>
+    : public species_base_parameters {
   double length = -1;
   double persistence_length = 400;
   double max_length = 500;
@@ -73,10 +72,12 @@ struct species_parameters<species_id::filament> : public spec_params {
   int polydispersity_warn_on_truncate = 0;
 };
 
+typedef species_parameters<species_id::filament> filament_parameters;
+
 template <>
-struct species_parameters<species_id::crosslink> : public spec_params {
+struct species_parameters<species_id::crosslink>
+    : public species_base_parameters {
   double concentration = 0;
-  double diameter = 1;
   int walker = 0;
   double velocity = 1;
   int diffusion_flag = 0;
@@ -99,6 +100,7 @@ struct species_parameters<species_id::crosslink> : public spec_params {
   int end_pausing = 0;
   double r_capture = 5;
 };
+typedef species_parameters<species_id::crosslink> crosslink_parameters;
 
 struct system_parameters {
   long seed = 7859459105545;
@@ -181,6 +183,8 @@ struct system_parameters {
   double flock_color_ext = 1.57;
   double flock_color_int = 4.71;
   int in_out_flag = 0;
+  int checkpoint_flag = 0;
+  int n_checkpoint = 1000;
 };
 
 #endif // _SIMCORE_PARAMETERS_H_

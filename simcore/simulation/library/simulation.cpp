@@ -294,9 +294,8 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         pos[0] = -params_.system_radius;
         pos[1] = -params_.system_radius;
         double d = 0.5 * (*spec)->GetSpecDiameter();
-        double l = 0.25 * (*spec)->GetSpecLength();
         int num_x = (int)floor(2 * params_.system_radius / d);
-        int num_y = (int)floor(2 * params_.system_radius / l);
+        int num_y = (int)floor(2 * params_.system_radius / d);
         std::vector<std::pair<int, int>> grid_array;
         for (int i = 0; i < num_x; ++i) {
           for (int j = 0; j < num_y; ++j) {
@@ -310,7 +309,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         gsl_ran_shuffle(rng_.r, grid_index, num_x * num_y, sizeof(int));
         for (int i = 0; i < num_x * num_y; ++i) {
           pos[0] = grid_array[grid_index[i]].first * d;
-          pos[1] = grid_array[grid_index[i]].second * l;
+          pos[1] = grid_array[grid_index[i]].second * d;
           (*spec)->AddMember();
           /* Update the number of particles we need to insert, in case a
              species needs to have a certain packing fraction */

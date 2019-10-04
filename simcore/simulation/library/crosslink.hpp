@@ -42,7 +42,8 @@ private:
 
 public:
   Crosslink();
-  void Init(MinimumDistance *mindist, LookupTable *lut);
+  void Init(crosslink_parameters *sparams, MinimumDistance *mindist,
+            LookupTable *lut);
   void AttachObjRandom(Object *obj);
   void UpdateCrosslinkForces();
   void UpdateCrosslinkPositions();

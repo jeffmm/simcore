@@ -5,8 +5,10 @@ FilamentSpecies::FilamentSpecies() : Species() {
   midstep_ = true;
 }
 
-void FilamentSpecies::Init(system_parameters *params, space_struct *space) {
-  Species::Init(params, space);
+void FilamentSpecies::Init(system_parameters *params,
+                           species_base_parameters *sparams,
+                           space_struct *space) {
+  Species::Init(params, sparams, space);
   fill_volume_ = 0;
   packing_fraction_ = sparams_.packing_fraction;
 #ifdef TRACE
@@ -29,13 +31,11 @@ void FilamentSpecies::Init(system_parameters *params, space_struct *space) {
 #endif
 
   double min_length = 2 * sparams_.min_bond_length;
-  if (!sparams_.polydispersity_flag &&
-      sparams_.length < min_length) {
+  if (!sparams_.polydispersity_flag && sparams_.length < min_length) {
     Logger::Warning("Filament length %2.2f is less than minimum filament length"
                     " %2.2f for minimum bond length %2.2f. Setting length to "
                     "minimum length.",
-                    sparams_.length, min_length,
-                    sparams_.min_bond_length);
+                    sparams_.length, min_length, sparams_.min_bond_length);
     sparams_.length = min_length;
   }
   if (sparams_.perlen_ratio > 0) {
@@ -44,12 +44,10 @@ void FilamentSpecies::Init(system_parameters *params, space_struct *space) {
                       "polydispersity. Ignoring perlen_ratio and using "
                       "persistence_length parameter instead.");
     } else {
-      sparams_.persistence_length =
-          sparams_.length * sparams_.perlen_ratio;
+      sparams_.persistence_length = sparams_.length * sparams_.perlen_ratio;
     }
   }
-  if (sparams_.spiral_flag &&
-      sparams_.spiral_number_fail_condition <= 0) {
+  if (sparams_.spiral_flag && sparams_.spiral_number_fail_condition <= 0) {
     Logger::Warning("Spiral simulation will not end on spiral failure due to"
                     " negative spiral_number_fail_condition");
   }
@@ -110,8 +108,8 @@ void FilamentSpecies::AddMember() {
     /* if we are still short on volume for the target packing fraction, then
        request more members */
     if (fill_volume_ < packing_fraction_ * space_->volume &&
-        members_.size() == sparams_->num) {
-      sparams_->num++;
+        members_.size() == sparams_.num) {
+      sparams_.num++;
     }
   }
 }
@@ -305,9 +303,8 @@ void FilamentSpecies::InitCrossingAnalysis() {
   crossing_file_.open(fname, std::ios::out);
   crossing_file_ << "crossing_analysis\n";
   crossing_file_ << "sp lp dr\n";
-  crossing_file_ << params_->soft_potential_mag << " "
-                 << sparams_.perlen_ratio << " "
-                 << sparams_.driving_factor << "\n";
+  crossing_file_ << params_->soft_potential_mag << " " << sparams_.perlen_ratio
+                 << " " << sparams_.driving_factor << "\n";
   double avg_u[3] = {0, 0, 0};
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->GetAvgOrientation(avg_u);
