@@ -1235,6 +1235,7 @@ void Filament::ReportAll() {
     */
 
 void Filament::WriteSpec(std::fstream &ospec) {
+  Logger::Trace("Writing filament specs, object id: %d", GetOID());
   Mesh::WriteSpec(ospec);
   ospec.write(reinterpret_cast<char *>(&persistence_length_), sizeof(double));
   ospec.write(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));

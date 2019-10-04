@@ -1,10 +1,10 @@
 seed: 228312295723876
 
-run_name: anchor_ds
+run_name: checkpoint_debug
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 100
+n_steps: 1000
 n_steps_target: 0
 boundary: 0
 n_update_cells: 50
