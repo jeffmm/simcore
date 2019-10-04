@@ -1,56 +1,56 @@
 #include "filament.hpp"
 
-Filament::Filament() : Mesh() { SetParameters(); }
+Filament::Filament() : Mesh() { }
 
 void Filament::SetParameters() {
   /* Read parameters from filament parameters */
-  color_ = params_->filament.color;
-  draw_ = draw_type::_from_string(params_->filament.draw_type.c_str());
-  length_ = params_->filament.length;
-  persistence_length_ = params_->filament.persistence_length;
-  diameter_ = params_->filament.diameter;
-  max_length_ = params_->filament.max_length;
-  min_bond_length_ = params_->filament.min_bond_length;
+  color_ = sparams_->color;
+  draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
+  length_ = sparams_->length;
+  persistence_length_ = sparams_->persistence_length;
+  diameter_ = sparams_->diameter;
+  max_length_ = sparams_->max_length;
+  min_bond_length_ = sparams_->min_bond_length;
   min_length_ = 2 * min_bond_length_;
-  dynamic_instability_flag_ = params_->filament.dynamic_instability_flag;
-  polydispersity_flag_ = params_->filament.polydispersity_flag;
-  polydispersity_factor_ = params_->filament.polydispersity_factor;
+  dynamic_instability_flag_ = sparams_->dynamic_instability_flag;
+  polydispersity_flag_ = sparams_->polydispersity_flag;
+  polydispersity_factor_ = sparams_->polydispersity_factor;
   polydispersity_warn_on_truncate_ =
-      params_->filament.polydispersity_warn_on_truncate;
-  spiral_flag_ = params_->filament.spiral_flag;
+      sparams_->polydispersity_warn_on_truncate;
+  spiral_flag_ = sparams_->spiral_flag;
   force_induced_catastrophe_flag_ =
-      params_->filament.force_induced_catastrophe_flag;
-  p_g2s_ = params_->filament.f_grow_to_shrink * delta_;
-  p_g2p_ = params_->filament.f_grow_to_pause * delta_;
-  p_s2p_ = params_->filament.f_shrink_to_pause * delta_;
-  p_s2g_ = params_->filament.f_shrink_to_grow * delta_;
-  p_p2s_ = params_->filament.f_pause_to_shrink * delta_;
-  p_p2g_ = params_->filament.f_pause_to_grow * delta_;
-  v_depoly_ = params_->filament.v_depoly;
-  v_poly_ = params_->filament.v_poly;
-  driving_factor_ = params_->filament.driving_factor;
-  friction_ratio_ = params_->filament.friction_ratio;
-  metric_forces_ = params_->filament.metric_forces;
+      sparams_->force_induced_catastrophe_flag;
+  p_g2s_ = sparams_->f_grow_to_shrink * delta_;
+  p_g2p_ = sparams_->f_grow_to_pause * delta_;
+  p_s2p_ = sparams_->f_shrink_to_pause * delta_;
+  p_s2g_ = sparams_->f_shrink_to_grow * delta_;
+  p_p2s_ = sparams_->f_pause_to_shrink * delta_;
+  p_p2g_ = sparams_->f_pause_to_grow * delta_;
+  v_depoly_ = sparams_->v_depoly;
+  v_poly_ = sparams_->v_poly;
+  driving_factor_ = sparams_->driving_factor;
+  friction_ratio_ = sparams_->friction_ratio;
+  metric_forces_ = sparams_->metric_forces;
   // determines whether we are using thermal forces
   stoch_flag_ = params_->stoch_flag;
-  eq_steps_ = params_->filament.n_equil;
+  eq_steps_ = sparams_->n_equil;
   eq_steps_count_ = 0;
-  optical_trap_spring_ = params_->filament.optical_trap_spring;
-  optical_trap_flag_ = params_->filament.optical_trap_flag;
-  optical_trap_fixed_ = params_->filament.optical_trap_fixed;
-  cilia_trap_flag_ = params_->filament.cilia_trap_flag;
-  fic_factor_ = params_->filament.fic_factor;
+  optical_trap_spring_ = sparams_->optical_trap_spring;
+  optical_trap_flag_ = sparams_->optical_trap_flag;
+  optical_trap_fixed_ = sparams_->optical_trap_fixed;
+  cilia_trap_flag_ = sparams_->cilia_trap_flag;
+  fic_factor_ = sparams_->fic_factor;
   tip_force_ = 0.0;
   /* Intrinsic curvature is given in the format of d_theta/d_s where s is the
      arc length, then the angle between each bond must be d_theta/d_s *
      bond_length_. The additional factor of 1/2 is due to the fact that
      curvature is the adjusted angle for each bond when calculating the bending
      forces */
-  curvature_ = 0.5 * params_->filament.intrinsic_curvature;
-  flagella_flag_ = params_->filament.flagella_flag;
-  flagella_freq_ = params_->filament.flagella_freq;
-  flagella_period_ = params_->filament.flagella_period;
-  flagella_amplitude_ = params_->filament.flagella_amplitude;
+  curvature_ = 0.5 * sparams_->intrinsic_curvature;
+  flagella_flag_ = sparams_->flagella_flag;
+  flagella_freq_ = sparams_->flagella_freq;
+  flagella_period_ = sparams_->flagella_period;
+  flagella_amplitude_ = sparams_->flagella_amplitude;
   /* Default site in optical trap is the tail */
   trapped_site_ = 0;
 
@@ -68,14 +68,16 @@ void Filament::SetParameters() {
   }
   /* Fix min and max bond length if we expect the length to be fixed and not
      changing */
-  if (params_->filament.n_bonds > 0 && !dynamic_instability_flag_ &&
+  if (sparams_->n_bonds > 0 && !dynamic_instability_flag_ &&
       !polydispersity_flag_) {
-    min_bond_length_ = length_ / params_->filament.n_bonds + 1e-6;
-    max_bond_length_ = length_ / params_->filament.n_bonds - 1e-6;
+    min_bond_length_ = length_ / sparams_->n_bonds + 1e-6;
+    max_bond_length_ = length_ / sparams_->n_bonds - 1e-6;
   }
 }
 
-void Filament::Init() {
+void Filament::Init(filament_parameters *sparams) {
+  sparams_ = sparams;
+  SetParameters(); 
   InitFilamentLength();
   AllocateControlStructures();
   InsertFilament();
@@ -175,20 +177,20 @@ void Filament::AllocateControlStructures() {
 }
 
 void Filament::InsertFirstBond() {
-  if (params_->filament.insertion_type.compare("random") == 0) {
+  if (sparams_->insertion_type.compare("random") == 0) {
     InitRandomSite(diameter_);
     AddRandomBondToTip(bond_length_);
-  } else if (params_->filament.insertion_type.compare("random_nematic") == 0) {
+  } else if (sparams_->insertion_type.compare("random_nematic") == 0) {
     InitRandomSite(diameter_);
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = (gsl_rng_uniform_pos(rng_.r) > 0.5 ? 1.0 : -1.0);
     AddBondToTip(orientation_, bond_length_);
-  } else if (params_->filament.insertion_type.compare("random_polar") == 0) {
+  } else if (sparams_->insertion_type.compare("random_polar") == 0) {
     InitRandomSite(diameter_);
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
     AddBondToTip(orientation_, bond_length_);
-  } else if (params_->filament.insertion_type.compare("centered_oriented") ==
+  } else if (sparams_->insertion_type.compare("centered_oriented") ==
              0) {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
@@ -197,7 +199,7 @@ void Filament::InsertFirstBond() {
     }
     InitSiteAt(position_, diameter_);
     AddBondToTip(orientation_, bond_length_);
-  } else if (params_->filament.insertion_type.compare("centered_random") == 0) {
+  } else if (sparams_->insertion_type.compare("centered_random") == 0) {
     generate_random_unit_vector(n_dim_, orientation_, rng_.r);
     for (int i = 0; i < n_dim_; ++i) {
       position_[i] = -0.5 * length_ * orientation_[i];
@@ -217,9 +219,9 @@ void Filament::InsertFilament() {
   InsertFirstBond();
   SetOrientation(bonds_.back().GetOrientation());
   bool probable_orientation =
-      (params_->filament.insertion_type.compare("simple_crystal") != 0 &&
-       params_->filament.insertion_type.compare("random_polar") != 0 &&
-       params_->filament.insertion_type.compare("random_nematic") != 0);
+      (sparams_->insertion_type.compare("simple_crystal") != 0 &&
+       sparams_->insertion_type.compare("random_polar") != 0 &&
+       sparams_->insertion_type.compare("random_nematic") != 0);
   for (int i = 0; i < n_bonds_init - 1; ++i) {
     if (probable_orientation) {
       GenerateProbableOrientation();
@@ -431,7 +433,7 @@ void Filament::CalculateSpiralNumber() {
   }
   // Failed spiral (waiting until the filament straightens)
   if (spiral_flag_ &&
-      ABS(GetSpiralNumber()) < params_->filament.spiral_number_fail_condition) {
+      ABS(GetSpiralNumber()) < sparams_->spiral_number_fail_condition) {
     early_exit = true;
   }
 }
@@ -919,7 +921,7 @@ void Filament::ApplyInteractionForces() {
   double pure_torque[3] = {0, 0, 0};
   double site_force[3] = {0, 0, 0};
   double linv = 1.0 / bond_length_;
-  if (params_->filament.driving_method == 1) {
+  if (sparams_->driving_method == 1) {
     // Driving originating from the site tangents
     CalculateTangents();
   }
@@ -949,14 +951,14 @@ void Filament::ApplyInteractionForces() {
     // so need to multiply by bond length to get f_dr on bond
     if (eq_steps_count_ > eq_steps_) {
       double f_dr[3] = {};
-      if (params_->filament.driving_method == 0) {
+      if (sparams_->driving_method == 0) {
         // Add driving (originating from the com of the bond)
         double mag = 0.5 * driving_factor_ * bond_length_;
         for (int j = 0; j < n_dim_; ++j)
           f_dr[j] = mag * u[j];
         sites_[i].AddForce(f_dr);
         sites_[i + 1].AddForce(f_dr);
-      } else if (params_->filament.driving_method == 1) {
+      } else if (sparams_->driving_method == 1) {
         double mag = length_ * driving_factor_ / n_sites_;
         double const *const u_tan = sites_[i].GetTangent();
         for (int j = 0; j < n_dim_; ++j) {

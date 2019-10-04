@@ -1,20 +1,13 @@
 #ifndef _SIMCORE_SIMULATION_H_
 #define _SIMCORE_SIMULATION_H_
 
-#include "auxiliary.hpp"
 #include "graphics.hpp"
-#include "helpers.hpp"
 #include "interaction_engine.hpp"
 #include "output_manager.hpp"
 #include "space.hpp"
-#include "filament_species.hpp"
-//#include "centrosome.hpp"
-//#include "bead_spring.hpp"
-#include "spherocylinder.hpp"
-//#include "spindle.hpp"
-#include "br_bead.hpp"
-//#include "objects.hpp"
+#include "species_factory.hpp"
 #include "parse_flags.hpp"
+#include "params_parser.hpp"
 
 class Simulation {
 private:
@@ -29,6 +22,7 @@ private:
   OutputManager output_mgr_;
   system_parameters params_;
   RNG rng_;
+  ParamsParser parser_;
 
   InteractionEngine iengine_;
 
@@ -37,7 +31,7 @@ private:
 #endif
   Space space_;
   std::vector<SpeciesBase *> species_;
-  rfh::factory species_factory_;
+  SpeciesFactory species_factory_;
   void InitSimulation();
   void InitObjects();
   void InitSpecies();
@@ -67,8 +61,8 @@ private:
 
 public:
   Simulation() {}
-  void Run(system_parameters params);
-  void ProcessOutputs(system_parameters params, run_options run_opts);
+  void Run(YAML::Node sim_params);
+  void ProcessOutputs(YAML::Node sim_params, run_options run_opts);
 };
 
 #endif // _SIMCORE_SIMULATION_H_

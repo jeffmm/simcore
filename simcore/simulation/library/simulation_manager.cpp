@@ -51,6 +51,7 @@ void SimulationManager::InitManager(run_options run_opts) {
     pnode_["auto_graph"] = 1;
   }
   RNG::SetSeed(seed);
+  // Instantiate the RNG after setting static seed
   rng_ = new RNG;
 
   // Check for appendable parameter files
@@ -73,12 +74,13 @@ void SimulationManager::InitLogger() {
   log_name << run_name_;
   if (run_opts_.load_checkpoint) {
     std::ostringstream nload;
+    pnode_["load_checkpoint"] = 1;
     if (pnode_["n_load"]) {
-      nload << std::setw(3) << std::setfill('0')
-            << pnode_["n_load"].as<int>() + 1;
+      pnode_["n_load"] = pnode_["n_load"].as<int>() + 1;
     } else {
-      nload << std::setw(3) << std::setfill('0') << 1;
+      pnode_["n_load"] = 1;
     }
+    nload << std::setw(3) << std::setfill('0') << pnode_["n_load"].as<int>();
     if (log_name.str().find("reload") == std::string::npos) {
       log_name << "_reload" << nload.str();
     } else {
@@ -272,14 +274,14 @@ void SimulationManager::CountVariations() {
     Logger::Error("Attempted to run movies/analysis on multiple files.");
   }
   if (n_var_ > 1) {
-    Logger::Info("Initializing batch %s of %d simulations with %d variations of"
-                 " %d runs each",
+    Logger::Info("Generating batch simulation %s with %d simulations, including"
+                 " %d parameter variations with %d runs each",
                  run_name_.c_str(), n_var_ * n_runs_, n_var_, n_runs_);
   } else if (n_runs_ > 1) {
-    Logger::Info("Initializing batch of %d runs of simulation %s", n_runs_,
-                 run_name_.c_str());
+    Logger::Info("Generating batch simulation %s with %d runs",
+                 run_name_.c_str(), n_runs_);
   } else {
-    Logger::Info("Initializing simulation %s", run_name_.c_str());
+    Logger::Info("Generating simulation %s", run_name_.c_str());
   }
 }
 
@@ -416,15 +418,13 @@ void SimulationManager::WriteParams() {
         pfile.close();
       }
       if (run_opts_.load_checkpoint) {
-        pvector_[i_var]["load_checkpoint"] = 1;
-        int n_load = pvector_[i_var]["n_load"].as<int>() + 1;
-        pvector_[i_var]["n_load"] = n_load;
         pvector_[i_var]["checkpoint_run_name"] = file_name.str();
         if (file_name.str().find("reduce") != std::string::npos) {
           pvector_[i_var]["reload_reduce_switch"] = 1;
         }
         std::ostringstream nload;
-        nload << std::setw(3) << std::setfill('0') << n_load;
+        nload << std::setw(3) << std::setfill('0')
+              << pvector_[i_var]["n_load"].as<int>();
         if (file_name.str().find("reload") == std::string::npos) {
           file_name << "_reload" << nload.str();
         } else {
@@ -453,16 +453,12 @@ void SimulationManager::WriteParams() {
    those parameters.
    *************************************/
 void SimulationManager::RunSimulations() {
-  int n_sims = n_var_ * n_runs_;
-  int i_sim = 1;
   for (std::vector<std::string>::iterator it = pfiles_.begin();
        it != pfiles_.end(); ++it) {
-    ParseParams(*it);
+    //ParseParams(*it);
     sim_ = new Simulation;
-    Logger::Info("Starting simulation: %s", params_.run_name.c_str());
-    sim_->Run(params_);
+    sim_->Run(YAML::LoadFile(*it));
     delete sim_;
-    i_sim++;
   }
 }
 
@@ -473,21 +469,18 @@ void SimulationManager::RunSimulations() {
    simulation parameters. Uses parse_params.h which is generated
    automatically using simcore_config.
    *************************************/
-#include "parse_params.hpp"
-void SimulationManager::ParseParams(std::string file_name) {
-  YAML::Node node = YAML::LoadFile(file_name);
-  YAML::Emitter out;
-  Logger::Info("Initializing simulation with parameters:\n%s",
-               (out << node).c_str());
-  parse_params(node, &params_);
-  if (run_opts_.load_checkpoint) {
-    params_.load_checkpoint = 1;
-  }
-}
+//#include "parse_params.hpp"
+//void SimulationManager::ParseParams(std::string file_name) {
+  //YAML::Node node = YAML::LoadFile(file_name);
+  //YAML::Emitter out;
+  //Logger::Info("Initializing simulation with parameters:\n%s",
+               //(out << node).c_str());
+  //parse_params(node, &params_);
+//}
 
 void SimulationManager::ProcessOutputs() {
-  ParseParams(pfiles_[0]);
+  //ParseParams(pfiles_[0]);
   sim_ = new Simulation;
-  sim_->ProcessOutputs(params_, run_opts_);
+  sim_->ProcessOutputs(YAML::LoadFile(pfiles_[0]), run_opts_);
   delete sim_;
 }

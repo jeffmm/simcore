@@ -41,6 +41,7 @@ set(SOURCES anchor.cpp
             cpu.cpp
             cpu_time.cpp
             crosslink.cpp
+            crosslink_species.cpp
             crosslink_manager.cpp
             filament.cpp
             filament_species.cpp
@@ -54,12 +55,14 @@ set(SOURCES anchor.cpp
             minimum_distance.cpp
             object.cpp
             output_manager.cpp
+            params_parser.cpp
             rng.cpp
             simulation.cpp
             simulation_manager.cpp
             site.cpp
             space.cpp
-            species.cpp
+            #species.cpp
+            species_base.cpp
             spherocylinder.cpp
             #spindle.cpp
             struct_analysis.cpp

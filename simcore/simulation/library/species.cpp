@@ -1,194 +1,482 @@
 #include "species.hpp"
 
-void SpeciesBase::Init(system_parameters *params, space_struct *space,
-                       long seed) {
-  params_ = params;
-  sparams_ = &(params->species);
-  space_ = space;
-  Logger::Debug("Initializing species %s", GetSID()._to_string());
-}
-
-void SpeciesBase::InitPositFile(std::string run_name) {
-  std::string sid_str = sid_._to_string();
-  std::string posit_file_name = run_name + "_" + sid_str + ".posit";
-  oposit_file_.open(posit_file_name, std::ios::out | std::ios::binary);
-  if (!oposit_file_.is_open()) {
-    Logger::Error("Output file %s did not open", posit_file_name.c_str());
+template <typename T, char S>
+double const Species<T, S>::GetVolume() {
+  double vol = 0.0;
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    vol += it->GetVolume();
   }
-  oposit_file_.write(reinterpret_cast<char *>(&params_->n_steps), sizeof(int));
-  oposit_file_.write(reinterpret_cast<char *>(&sparams_->n_posit), sizeof(int));
-  oposit_file_.write(reinterpret_cast<char *>(&params_->delta), sizeof(double));
+  return vol;
 }
 
-void SpeciesBase::InitPositFileInput(std::string run_name) {
-  std::string sid_str = sid_._to_string();
-  std::string posit_file_name = run_name + "_" + sid_str + ".posit";
-  iposit_file_.open(posit_file_name, std::ios::in | std::ios::binary);
+template <typename T, char S>
+void Species<T, S>::Reserve() {
+  members_.reserve(GetNInsert());
+}
+
+template <typename T, char S>
+void Species<T, S>::AddMember() {
+  T newmember;
+  Logger::Trace("Adding member to species %s, member number %d, member id %d",
+      GetSID()._to_string(), n_members_+1, newmember.GetOID());
+  members_.push_back(newmember);
+  members_.back().SetSID(GetSID());
+  members_.back().Init(sparams_);
+  // newmember->SetColor(sparams_->color, sparams_->draw_type);
+  n_members_++;
+}
+
+template <typename T, char S>
+double const Species<T, S>::GetDrMax() {
+  double max_dr = 0;
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    double dr = it->GetDrTot();
+    if (dr > max_dr) {
+      max_dr = dr;
+    }
+  }
+  return max_dr;
+}
+
+template <typename T, char S>
+void Species<T, S>::ZeroDrTot() {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    it->ZeroDrTot();
+  }
+}
+
+template <typename T, char S>
+void Species<T, S>::AddMember(T newmem) {
+  Logger::Trace("Adding preexisting member to species %s", GetSID()._to_string());
+  members_.push_back(newmem);
+  newmem.SetSID(GetSID());
+  n_members_++;
+}
+
+template <typename T, char S>
+void Species<T, S>::PopMember() {
+  Logger::Trace("Removing last member of species %s", GetSID()._to_string());
+  members_.back().Cleanup();
+  members_.pop_back();
+  n_members_--;
+}
+
+template <typename T, char S>
+void Species<T, S>::PopAll() {
+  while (n_members_ > 0) {
+    PopMember();
+  }
+}
+
+template <typename T, char S>
+void Species<T, S>::Draw(std::vector<graph_struct *> *graph_array) {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    it->Draw(graph_array);
+  }
+}
+
+template <typename T, char S>
+void Species<T, S>::UpdatePositions() {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    it->UpdatePosition();
+  }
+}
+
+template <typename T, char S>
+void Species<T, S>::GetInteractors(std::vector<Object *> *ixors) {
+  //ix->clear();
+  std::vector<Object *> ix;
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    it->GetInteractors(&ix);
+  }
+  ixors->insert(ixors->end(), ix.begin(), ix.end());
+}
+
+template <typename T, char S>
+void Species<T, S>::GetLastInteractors(std::vector<Object *> *ix) {
+  if (members_.size() == 0) {
+    Logger::Error(
+        "Called for last interactors of species, but species has zero "
+        "members\n");
+  }
+  members_.back().GetInteractors(ix);
+}
+
+template <typename T, char S>
+double Species<T, S>::GetPotentialEnergy() {
+  double pe = 0;
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    pe += it->GetPotentialEnergy();
+  }
+  /* The total potential energy is going to be half of the
+   potential energy felt by each particle. Potential energy
+   is shared, so I need to avoid double counting. */
+  return 0.5 * pe;
+}
+
+template <typename T, char S>
+void Species<T, S>::ZeroForces() {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    it->ZeroForce();
+  }
+}
+
+template <typename T, char S>
+void Species<T, S>::Report() {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    it->Report();
+  }
+}
+
+template <typename T, char S>
+int Species<T, S>::GetCount() {
+  int count = 0;
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    count += it->GetCount();
+  }
+  return count;
+}
+
+template <typename T, char S>
+void Species<T, S>::WritePosits() {
+  int size = members_.size();
+  oposit_file_.write(reinterpret_cast<char *>(&size), sizeof(size));
+  for (auto it = members_.begin(); it != members_.end(); ++it)
+    it->WritePosit(oposit_file_);
+}
+
+template <typename T, char S>
+void Species<T, S>::WriteSpecs() {
+  int size = members_.size();
+  ospec_file_.write(reinterpret_cast<char *>(&size), sizeof(size));
+  for (auto it = members_.begin(); it != members_.end(); ++it)
+    it->WriteSpec(ospec_file_);
+}
+
+template <typename T, char S>
+void Species<T, S>::WriteCheckpoints() {
+  int size = members_.size();
+  std::fstream ocheck_file(checkpoint_file_, std::ios::out | std::ios::binary);
+  if (!ocheck_file.is_open()) {
+    Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
+  }
+  long seed = rng_.GetSeed();
+  ocheck_file.write(reinterpret_cast<char *>(&seed), sizeof(seed));
+  ocheck_file.write(reinterpret_cast<char *>(&size), sizeof(size));
+  for (auto it = members_.begin(); it != members_.end(); ++it)
+    it->WriteCheckpoint(ocheck_file);
+  ocheck_file.close();
+}
+
+template <typename T, char S>
+void Species<T, S>::ReadPosits() {
+  if (iposit_file_.eof()) {
+    Logger::Info("EOF reached while reading posits");
+    early_exit = true;
+    return;
+  }
   if (!iposit_file_.is_open()) {
-    Logger::Error("Input file %s did not open", posit_file_name.c_str());
+    Logger::Warning("ERROR Posit file unexpectedly not open! Exiting early.");
+    early_exit = true;
+    return;
   }
-  // long n_steps;
-  int n_posit, n_steps;
-  double delta;
-  iposit_file_.read(reinterpret_cast<char *>(&n_steps), sizeof(int));
-  iposit_file_.read(reinterpret_cast<char *>(&n_posit), sizeof(int));
-  iposit_file_.read(reinterpret_cast<char *>(&delta), sizeof(double));
-  if (n_steps != params_->n_steps || n_posit != sparams_->n_posit ||
-      delta != params_->delta) {
-    Logger::Warning("Input file %s does not match parameter file\n",
-            posit_file_name.c_str());
-    printf("%d %d, %d %d, %2.5f %2.5f\n", n_steps, params_->n_steps, n_posit,
-           sparams_->n_posit, delta, params_->delta);
+  int size = -1;
+  T *member;
+  iposit_file_.read(reinterpret_cast<char *>(&size), sizeof(size));
+  // Hacky workaround FIXME
+  // This prevents strange errors that occasionally crop up when reading inputs
+  if (size == -1) {
+    early_exit = true;
+    return;
   }
-  ReadPosits();
+  if (size != n_members_) {
+    T member;
+    members_.resize(size, member);
+    n_members_ = size;
+  }
+  for (auto it = members_.begin(); it != members_.end(); ++it)
+    it->ReadPosit(iposit_file_);
 }
 
-void SpeciesBase::InitSpecFile(std::string run_name) {
-  std::string sid_str = sid_._to_string();
-  std::string spec_file_name = run_name + "_" + sid_str + ".spec";
-  ospec_file_.open(spec_file_name, std::ios::out | std::ios::binary);
-  if (!ospec_file_.is_open()) {
-    Logger::Error("Output file %s did not open", spec_file_name.c_str());
-  }
-  ospec_file_.write(reinterpret_cast<char *>(&params_->n_steps), sizeof(int));
-  ospec_file_.write(reinterpret_cast<char *>(&sparams_->n_spec), sizeof(int));
-  ospec_file_.write(reinterpret_cast<char *>(&params_->delta), sizeof(double));
-}
-
-bool SpeciesBase::HandleEOF() {
-  if (++spec_file_iterator_) {
-    if (params_->i_step < params_->n_steps_equil) {
-      params_->n_steps_equil -= params_->i_step;
-    } else {
-      params_->n_steps_equil = 0;
-    }
-    params_->i_step = 0;
-    std::ostringstream file_name, nload;
-    std::string sid_str = sid_._to_string();
-    file_name << params_->run_name;
-    nload << std::setw(3) << std::setfill('0') << spec_file_iterator_;
-    size_t pos;
-    if ((pos = file_name.str().find("reload")) == std::string::npos) {
-      // This is not a reload file currently
-      if (params_->reduced) {
-        /* The file is either a reduced file, or we are currently reducing */
-
-        if ((pos = file_name.str().find("_reduced")) == std::string::npos) {
-          /* we are currently reducing, so input file does not have reduce in
-           * name */
-          pos = file_name.tellp();
-          file_name << "_reload" << nload.str();
-        } else {
-          if (!params_->reload_reduce_switch) {
-            /* need to (probably) prefix with reload, assuming the reduction
-               came after the reload (most typical case) */
-            file_name.seekp(pos);
-            file_name << "_reload" << nload.str();
-            file_name << "_reduced" << params_->reduced;
-          } else {
-            file_name << "_reload" << nload.str();
-          }
-        }
-      } else {
-        file_name << "_reload" << nload.str();
-      }
-    } else {
-      // The file is currently a reload file, simply seek to beginning of
-      // substring "reload"
-      file_name.seekp(pos);
-      file_name << "_reload" << nload.str();
-      if (params_->reduced) {
-        file_name << "_reduced" << params_->reduced;
-      }
-    }
-    file_name << "_" << sid_str << ".spec";
-    if (ispec_file_.is_open()) {
-      ispec_file_.close();
-    }
-    printf("\n  Initializing new input file, %s\n", file_name.str().c_str());
-    return InitSpecFileInputFromFile(file_name.str());
-  } else {
-    return false;
-  }
-}
-
-bool SpeciesBase::InitSpecFileInputFromFile(std::string spec_file_name) {
-  ispec_file_.open(spec_file_name, std::ios::in | std::ios::binary);
-  if (!ispec_file_.is_open()) {
-    return false;
-  }
-  // long n_steps;
-  int n_spec, n_steps;
-  double delta;
-  ispec_file_.read(reinterpret_cast<char *>(&n_steps), sizeof(int));
-  ispec_file_.read(reinterpret_cast<char *>(&n_spec), sizeof(int));
-  ispec_file_.read(reinterpret_cast<char *>(&delta), sizeof(double));
-  if (n_steps != params_->n_steps || n_spec != sparams_->n_spec ||
-      delta != params_->delta) {
-    printf("\nn_steps: %d %d, ", n_steps, params_->n_steps);
-    printf("n_spec: %d %d, ", n_spec, sparams_->n_spec);
-    printf("delta: %2.2f %2.2f\n", delta, params_->delta);
-    Logger::Warning("Input file %s does not match parameter file\n",
-            spec_file_name.c_str());
-  }
+template <typename T, char S>
+void Species<T, S>::ReadPositsFromSpecs() {
   ReadSpecs();
-  return true;
-}
-
-void SpeciesBase::InitSpecFileInput(std::string run_name) {
-  std::string sid_str = sid_._to_string();
-  std::string spec_file_name = run_name + "_" + sid_str + ".spec";
-  if (!InitSpecFileInputFromFile(spec_file_name)) {
-    Logger::Error("Input file %s did not open", spec_file_name.c_str());
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    it->SetAvgPosition();
   }
 }
 
-void SpeciesBase::InitOutputFiles(std::string run_name) {
-  if (sparams_->posit_flag)
-    InitPositFile(run_name);
-  if (sparams_->spec_flag)
-    InitSpecFile(run_name);
-  if (sparams_->checkpoint_flag)
-    InitCheckpoints(run_name);
-}
-
-void SpeciesBase::InitCheckpoints(std::string run_name) {
-  std::string sid_str = sid_._to_string();
-  checkpoint_file_ = run_name + "_" + sid_str + ".checkpoint";
-}
-
-void SpeciesBase::LoadFromCheckpoints(std::string run_name,
-                                      std::string checkpoint_run_name) {
-  std::string sid_str = sid_._to_string();
-  checkpoint_file_ = checkpoint_run_name + "_" + sid_str + ".checkpoint";
-  if (!sparams_->checkpoint_flag) {
-    Logger::Error("Checkpoint file %s not available for parameter file!",
-                  checkpoint_file_.c_str());
+template <typename T, char S>
+void Species<T, S>::ReadCheckpoints() {
+  std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
+  if (!icheck_file.is_open()) {
+    Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
   }
-  ReadCheckpoints();
-  InitOutputFiles(run_name);
+  int size = 0;
+  long seed = -1;
+  icheck_file.read(reinterpret_cast<char *>(&seed), sizeof(seed));
+  icheck_file.read(reinterpret_cast<char *>(&size), sizeof(size));
+  T member;
+  member.Init();
+  member.SetSID(GetSID());
+  members_.resize(size, member);
+  for (auto it = members_.begin(); it != members_.end(); ++it)
+    it->ReadCheckpoint(icheck_file);
+  icheck_file.close();
+  rng_.SetSeed(seed);
 }
 
-void SpeciesBase::InitInputFiles(std::string run_name, bool posits_only,
-                                 bool with_reloads) {
-  if (posits_only && sparams_->posit_flag) {
-    InitPositFileInput(run_name);
-  } else if (sparams_->spec_flag && with_reloads) {
-    spec_file_iterator_ = 0;
-    InitSpecFileInput(run_name);
-  } else if (sparams_->spec_flag) {
-    InitSpecFileInput(run_name);
+template <typename T, char S>
+void Species<T, S>::ReadSpecs() {
+  if (ispec_file_.eof()) {
+    if (HandleEOF()) {
+      Logger::Info("Switching to new spec file");
+      return;
+    } else {
+      Logger::Info("EOF reached in species ReadSpecs");
+      early_exit = true;
+      return;
+    }
+  }
+  if (!ispec_file_.is_open()) {
+    Logger::Warning("ERROR: Spec file unexpectedly not open! Exiting early.");
+    early_exit = true;
+    return;
+  }
+  int size = -1;
+  //T *member;
+  ispec_file_.read(reinterpret_cast<char *>(&size), sizeof(size));
+  /* For some reason, we can't catch the EOF above. If size == -1 still, then
+     we caught a EOF here */
+  if (size == -1) {
+    if (HandleEOF()) {
+      Logger::Info("Switching to new spec file");
+      return;
+    } else {
+      Logger::Info("EOF reached in species");
+      early_exit = true;
+      return;
+    }
+  }
+  if (size != n_members_) {
+    T member;
+    member.Init();
+    member.SetSID(GetSID());
+    members_.resize(size, member);
+    n_members_ = size;
+  }
+  for (auto it = members_.begin(); it != members_.end(); ++it)
+    it->ReadSpec(ispec_file_);
+}
+
+template <typename T, char S>
+void Species<T, S>::ScalePositions() {
+  for (auto it = members_.begin(); it != members_.end(); ++it)
+    it->ScalePosition();
+}
+
+template <typename T, char S>
+void Species<T, S>::CleanUp() {
+  members_.clear();
+}
+
+template <typename T, char S>
+void Species<T, S>::ArrangeMembers() {
+  if (GetInsertionType().compare("custom") == 0)
+    CustomInsert();
+  else if (GetInsertionType().compare("simple_crystal") == 0)
+    CrystalArrangement();
+  else if (GetInsertionType().compare("centered_oriented") == 0)
+    CenteredOrientedArrangement();
+  else
+    Logger::Warning(
+        "Arrangement not recognized and ArrangeMembers not overwritten by "
+        "species!\n");
+}
+
+template <typename T, char S>
+void Species<T, S>::SetLastMemberPosition(double const *const pos) {
+  members_.back().SetPosition(pos);
+  members_.back().UpdatePeriodic();
+}
+
+template <typename T, char S>
+double Species<T, S>::GetSpecLength() {
+  if (members_.size() == 0)
+    return 0;
+  else
+    return members_[0].GetLength();
+}
+
+template <typename T, char S>
+double Species<T, S>::GetSpecDiameter() {
+  if (members_.size() == 0)
+    return 0;
+  else
+    return members_[0].GetDiameter();
+}
+
+template <typename T, char S>
+void Species<T, S>::CenteredOrientedArrangement() {
+  // This is redundant for filaments, since they have already inserted
+  // themselves properly.
+  double pos[3] = {0, 0, 0};
+  double u[3] = {0, 0, 0};
+  u[params_->n_dim - 1] = 1.0;
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    it->SetPosition(pos);
+    it->SetOrientation(u);
   }
 }
 
-void SpeciesBase::CloseFiles() {
-  if (oposit_file_.is_open())
-    oposit_file_.close();
-  if (iposit_file_.is_open())
-    iposit_file_.close();
-  if (ospec_file_.is_open())
-    ospec_file_.close();
-  if (ispec_file_.is_open())
-    ispec_file_.close();
-  // FinalizeAnalysis();
+template <typename T, char S>
+void Species<T, S>::CrystalArrangement() {
+  double d = members_[0].GetDiameter();
+  double l = members_[0].GetLength();
+  int n_dim = params_->n_dim;
+  double R = space_->radius;
+  double pos[3] = {0, 0, 0};
+  double u[3] = {0, 0, 0};
+  u[n_dim - 1] = 1;
+  double nX_max = floor((2.0 * R / d) - 1);
+  double nY_max = floor((2.0 * R - d) / (l + d));
+  double nZ_max = (n_dim == 3 ? nX_max : 1);
+  double N = nX_max * nY_max * nZ_max;
+  if (n_members_ > N) {
+    Logger::Error(
+        "Number of members in species exceeds maximum possible for crystal in "
+        "system radius! Max possible: %d",
+        (int)N);
+  }
+  double fraction = N / n_members_;
+  if (fraction < 1) fraction = 1;
+  if (l == 0) {
+    if (n_dim == 2)
+      nY_max = floor(pow(n_members_, 1.0 / n_dim));
+    else if (n_dim == 3)
+      nY_max = ceil(pow(n_members_, 1.0 / n_dim));
+  }
+  if (n_dim == 2) {
+    nX_max = ceil(n_members_ / nY_max);
+  } else if (n_dim == 3) {
+    nX_max = floor(sqrt(n_members_ / nY_max));
+    if (nX_max == 0) nX_max = 1;
+    nZ_max = ceil(n_members_ / (nX_max * nY_max));
+  }
+  for (int i = 0; i < n_dim; ++i) {
+    pos[i] = -R + 0.5 * d;
+  }
+  pos[n_dim - 1] += 0.5 * l;
+  int inserted = 0;
+  int insert_x = 0;
+  int insert_y = 0;
+  int insert_z = 0;
+  bool shift = false;
+  double diff_y = (2 * R - nY_max * (l + d)) / nY_max;
+  double diff_x = (2 * R - nX_max * d) / nX_max;
+  double diff_z = (2 * R - nZ_max * d) / nZ_max;
+  int u0 = 1;
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    // Check crystal orientation type
+    if (params_->uniform_crystal == 0) {
+      // Random orientations
+      u[n_dim - 1] = (gsl_rng_uniform_int(rng_.r, 2) == 0 ? 1 : -1);
+    } else if (params_->uniform_crystal == 2) {
+      // Stagger orientations
+      u[n_dim - 1] = -u[n_dim - 1];
+    }
+    // Insert object
+    it->InsertAt(pos, u);
+    inserted++;
+    // Update next position
+    pos[n_dim - 1] += l + d + diff_y;
+    if (++insert_y == nY_max) {
+      if (params_->uniform_crystal == 2 && shift) {
+        // Stagger orientations row-wise
+        u[n_dim - 1] = u0;
+        u0 = -u0;
+      }
+      // Stagger positions column-wise
+      shift = !shift;
+      insert_y = 0;
+      pos[n_dim - 1] =
+          -R + 0.5 * (l + d) + (shift ? 0.5 * (l + d + diff_y) : 0);
+      pos[0] += d + diff_x;
+      if (++insert_x == nX_max) {
+        if (inserted < n_members_ && n_dim == 2) {
+          Logger::Error(
+              "Ran out of room while arranging crystal in 2D! Arranged %d/%d",
+              inserted, n_members_);
+        } else if (n_dim == 2)
+          continue;
+        insert_x = 0;
+        pos[0] = -R + 0.5 * d;
+        pos[1] += d + diff_z;
+        if (++insert_z == nZ_max && inserted < n_members_) {
+          Logger::Error(
+              "Ran out of room while arranging crystal in 3D! Arranged %d/%d",
+              inserted, n_members_);
+        }
+      }
+    }
+  }
+}
+
+template <typename T, char S>
+void Species<T, S>::CustomInsert() {
+  YAML::Node inode;
+  try {
+    inode = YAML::LoadFile(sparams_->insert_file);
+  } catch (...) {
+    std::cout << "Failed to load custom insert file " << sparams_->insert_file
+              << " for species " << spec_name_ << "\n";
+    Logger::Error("");
+  }
+  if (!inode[spec_name_] || inode[spec_name_].size() != n_members_) {
+    std::cout << "Custom insert file for species " << spec_name_
+              << " was invalid: \n";
+    if (!inode[spec_name_]) {
+      std::cout << "  Species ID header was missing from file\n";
+    } else if (inode[spec_name_].size() != n_members_) {
+      std::cout << "  There were " << inode[spec_name_].size()
+                << " positions specified for " << n_members_
+                << " species members\n";
+    }
+    Logger::Error("");
+  }
+  for (YAML::const_iterator it = inode.begin(); it != inode.end(); ++it) {
+    if (it->first.as<std::string>().compare(spec_name_) != 0) continue;
+    if (!it->second.IsSequence()) {
+      Logger::Error("Custom insert file positions not specified as sequence");
+    }
+    int i_member = 0;
+    for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
+         ++jt) {
+      double pos[3], u[3];
+      if (!jt->IsSequence()) {
+        Logger::Error("Custom insert position not specified as sequence");
+      }
+      if (jt->size() != 2 || (*jt)[0].size() != 3 || (*jt)[1].size() != 3) {
+        Logger::Error(
+            "Custom insert position not in format "
+            "[[pos_x,pos_y,pos_z],[u_x,u_y,u_z]]");
+      }
+      for (int i = 0; i < 3; ++i) {
+        pos[i] = (*jt)[0][i].as<double>();
+        u[i] = (*jt)[1][i].as<double>();
+      }
+      members_[i_member++].InsertAt(pos, u);
+    }
+  }
+}
+
+template <typename T, char S>
+const bool Species<T, S>::CheckInteractorUpdate() {
+  bool result = false;
+  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    if (it->CheckInteractorUpdate()) {
+      result = true;
+    }
+  }
+  return result;
 }

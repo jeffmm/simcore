@@ -69,6 +69,7 @@ public:
   int GetNNeighbors();
   void WriteSpec(std::fstream &ospec);
   void ReadSpec(std::fstream &ispec);
+  void BindToPosition(double *pos);
 };
 
 #endif

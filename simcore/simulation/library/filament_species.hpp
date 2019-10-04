@@ -13,7 +13,7 @@ typedef std::vector<
 #include "omp.h"
 #endif
 
-class FilamentSpecies : public Species<Filament> {
+class FilamentSpecies : public Species<Filament, species_id::filament> {
 protected:
   bool midstep_;
   // Analysis structures
@@ -51,7 +51,7 @@ protected:
 
 public:
   FilamentSpecies();
-  void Init(system_parameters *params, space_struct *space, long seed);
+  void Init(system_parameters *params, space_struct *space);
 
   void PopMember();
 

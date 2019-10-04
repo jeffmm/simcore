@@ -1,12 +1,13 @@
 
 #include "simulation.hpp"
 
-#define REGISTER_SPECIES(n, m) species_factory_.register_class<n>(#m);
-
 /* Initialize simulation parameters and run simulation */
-void Simulation::Run(system_parameters params) {
-  params_ = params;
-  run_name_ = params.run_name;
+void Simulation::Run(YAML::Node sim_params) {
+  YAML::Emitter out;
+  Logger::Info("Initializing simulation with parameters:\n%s",
+               (out << sim_params).c_str());
+  // Parse simulation parameters
+  parser_.Init(sim_params);
   // Initialize simulation data structures
   InitSimulation();
   // Begin simulation
@@ -19,9 +20,10 @@ void Simulation::Run(system_parameters params) {
  * motion using Runge-Kutta-like integration schemes for n_steps time steps. */
 void Simulation::RunSimulation() {
 #ifdef ENABLE_OPENMP
-  Logger::Info("Running simulation on %d threads", omp_get_max_threads());
+  Logger::Info("Running simulation %s on %d threads", run_name_.c_str(),
+               omp_get_max_threads());
 #else
-  Logger::Info("Running simulation");
+  Logger::Info("Running simulation %s", run_name_.c_str());
 #endif
   /* Solve equations of motion for all objects */
 
@@ -129,7 +131,9 @@ void Simulation::ScaleSpeciesPositions() {
 
 /* Initialize all the data structures in the simulation */
 void Simulation::InitSimulation() {
-  Logger::Info("Initializing simulation");
+  params_ = parser_.ParseSystemParameters();
+  run_name_ = params_.run_name;
+
 #ifdef TRACE
   if (params_.n_steps > 100) {
     Logger::Warning("Simulation run in trace mode with a large number of "
@@ -192,26 +196,22 @@ void Simulation::InitGraphics() {
 
 /* Initialize object types */
 void Simulation::InitSpecies() {
-  /* Factories for creating and initializing registered species with their
-     assigned species id */
-  REGISTER_SPECIES(FilamentSpecies, filament);
-  REGISTER_SPECIES(SpherocylinderSpecies, spherocylinder);
-  REGISTER_SPECIES(BrBeadSpecies, br_bead);
 
   /* Search the species_factory_ for any registered species,
    and find them in the yaml file */
-  species_.reserve(species_factory_.m_classes.size());
-  for (auto registered = species_factory_.m_classes.begin();
-       registered != species_factory_.m_classes.end(); ++registered) {
-    SpeciesBase *spec =
-        (SpeciesBase *)species_factory_.construct(registered->first);
-    spec->Init(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-    if (spec->GetNInsert() > 0) {
+  std::vector<species_parameters *> spec_params = parser_.GetSpeciesParameters();
+  species_.reserve(spec_params.size());
+  for (auto it = spec_params.begin(); it != spec_params.end(); ++it) {
+    const species_id sid =
+        species_id::_from_string((*it)->species_name.c_str());
+    species_.push_back(species_factory_.CreateSpecies(sid));
+    species_.back()->Init(&params_, *it, space_.GetStruct());
+    if (species_.back()->GetNInsert() > 0) {
 #ifdef TRACE
-      if (spec->GetNInsert() > 20) {
+      if (species_.back()->GetNInsert() > 20) {
         Logger::Warning("Simulation run in trace mode with a large number of "
                         "objects in species %s (%d).",
-                        spec->GetSID()._to_string(), spec->GetNInsert());
+                        sid._to_string(), species_.back()->GetNInsert());
         fprintf(stderr, "Continue anyway? (y/N) ");
         char c;
         if (std::cin.peek() != 'y') {
@@ -224,8 +224,11 @@ void Simulation::InitSpecies() {
         }
       }
 #endif
-      species_.push_back(spec);
       species_.back()->Reserve();
+    } else {
+      species_.back()->CleanUp();
+      delete species_.back();
+      species_.pop_back();
     }
   }
 }
@@ -363,7 +366,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   /* Should do this all the time to force object counting */
   iengine_.ResetCellList(); // Forces rebuild cell list without redundancy
   iengine_.Reset();
-  //if (!processing) {
+  // if (!processing) {
   iengine_.CheckUpdateObjects(); // Forces update as well
   //}
 }
@@ -389,7 +392,7 @@ void Simulation::ClearSpecies() {
     (*it)->CleanUp();
     delete (*it);
   }
-  species_factory_.clear();
+  species_.clear();
 }
 
 /* Update the OpenGL graphics window */
@@ -426,8 +429,8 @@ void Simulation::InitOutputs() {
   Logger::Debug("Initializing output files");
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_,
                    run_name_);
-  //if (!params_.load_checkpoint)
-    iengine_.InitOutputs();
+  // if (!params_.load_checkpoint)
+  iengine_.InitOutputs();
   /* If analyzing run time, record cpu time here */
   if (params_.time_analysis) {
     cpu_init_time_ = cpu_time();
@@ -461,13 +464,8 @@ void Simulation::WriteOutputs() {
 }
 
 /* Run the steps we need for post-processing output files */
-void Simulation::ProcessOutputs(system_parameters params,
-                                run_options run_opts) {
-  params_ = params;
-  run_name_ = params.run_name;
-  // Ensure that we are not trying to load any checkpoints when processing
-  // outputs
-  params_.load_checkpoint = 0;
+void Simulation::ProcessOutputs(YAML::Node sim_params, run_options run_opts) {
+  parser_.Init(sim_params);
   InitProcessing(run_opts);
   RunProcessing(run_opts);
   ClearSimulation();
@@ -476,6 +474,13 @@ void Simulation::ProcessOutputs(system_parameters params,
 // Initialize data structures for post-processing
 void Simulation::InitProcessing(run_options run_opts) {
   Logger::Info("Initializing datastructures for post-processing outputs");
+  params_ = parser_.ParseSystemParameters();
+  run_name_ = params_.run_name;
+
+  /* Ensure that we are not trying to load any checkpoints when processing
+     outputs */
+  params_.load_checkpoint = 0;
+
   space_.Init(&params_);
   InitObjects();
   InitSpecies();

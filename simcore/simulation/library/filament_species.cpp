@@ -5,12 +5,10 @@ FilamentSpecies::FilamentSpecies() : Species() {
   midstep_ = true;
 }
 
-void FilamentSpecies::Init(system_parameters *params, space_struct *space,
-                           long seed) {
-  Species::Init(params, space, seed);
-  sparams_ = &(params_->filament);
+void FilamentSpecies::Init(system_parameters *params, space_struct *space) {
+  Species::Init(params, space);
   fill_volume_ = 0;
-  packing_fraction_ = params_->filament.packing_fraction;
+  packing_fraction_ = sparams_.packing_fraction;
 #ifdef TRACE
   if (packing_fraction_ > 0) {
     Logger::Warning("Simulation run in trace mode with a potentially large "
@@ -30,28 +28,28 @@ void FilamentSpecies::Init(system_parameters *params, space_struct *space,
   }
 #endif
 
-  double min_length = 2 * params_->filament.min_bond_length;
-  if (!params_->filament.polydispersity_flag &&
-      params_->filament.length < min_length) {
+  double min_length = 2 * sparams_.min_bond_length;
+  if (!sparams_.polydispersity_flag &&
+      sparams_.length < min_length) {
     Logger::Warning("Filament length %2.2f is less than minimum filament length"
                     " %2.2f for minimum bond length %2.2f. Setting length to "
                     "minimum length.",
-                    params_->filament.length, min_length,
-                    params_->filament.min_bond_length);
-    params_->filament.length = min_length;
+                    sparams_.length, min_length,
+                    sparams_.min_bond_length);
+    sparams_.length = min_length;
   }
-  if (params_->filament.perlen_ratio > 0) {
-    if (params_->filament.polydispersity_flag) {
+  if (sparams_.perlen_ratio > 0) {
+    if (sparams_.polydispersity_flag) {
       Logger::Warning("Persistence length ratio parameter is set with "
                       "polydispersity. Ignoring perlen_ratio and using "
                       "persistence_length parameter instead.");
     } else {
-      params_->filament.persistence_length =
-          params_->filament.length * params_->filament.perlen_ratio;
+      sparams_.persistence_length =
+          sparams_.length * sparams_.perlen_ratio;
     }
   }
-  if (params_->filament.spiral_flag &&
-      params_->filament.spiral_number_fail_condition <= 0) {
+  if (sparams_.spiral_flag &&
+      sparams_.spiral_number_fail_condition <= 0) {
     Logger::Warning("Spiral simulation will not end on spiral failure due to"
                     " negative spiral_number_fail_condition");
   }
@@ -89,8 +87,8 @@ void FilamentSpecies::UpdatePositions() {
 void FilamentSpecies::Reserve() {
   int max_insert = GetNInsert();
   if (packing_fraction_ > 0) {
-    double min_length = 2 * params_->filament.min_bond_length;
-    double diameter = params_->filament.diameter;
+    double min_length = 2 * sparams_.min_bond_length;
+    double diameter = sparams_.diameter;
     double min_vol = 0;
     if (params_->n_dim == 2) {
       min_vol = diameter * min_length + 0.25 * M_PI * diameter * diameter;
@@ -128,32 +126,32 @@ void FilamentSpecies::PopMember() {
 
 void FilamentSpecies::InitAnalysis() {
   time_ = 0;
-  if (params_->filament.spiral_flag) {
+  if (sparams_.spiral_flag) {
     InitSpiralAnalysis();
   }
-  if (params_->filament.theta_analysis) {
+  if (sparams_.theta_analysis) {
     if (params_->interaction_flag) {
       Logger::Warning("Theta analysis running on interacting filaments!");
     }
     InitThetaAnalysis();
   }
-  // if (params_->filament.crossing_analysis) {
-  if (params_->filament.crossing_analysis) {
+  // if (sparams_.crossing_analysis) {
+  if (sparams_.crossing_analysis) {
     InitCrossingAnalysis();
   }
-  if (params_->filament.lp_analysis) {
+  if (sparams_.lp_analysis) {
     InitMse2eAnalysis();
   }
-  if (params_->filament.global_order_analysis) {
+  if (sparams_.global_order_analysis) {
     InitGlobalOrderAnalysis();
   }
   if (params_->polar_order_analysis) {
     InitPolarOrderAnalysis();
   }
-  if (params_->filament.orientation_corr_analysis) {
+  if (sparams_.orientation_corr_analysis) {
     InitOrientationCorrelationAnalysis();
   }
-  if (params_->filament.flocking_analysis) {
+  if (sparams_.flocking_analysis) {
     if (!params_->polar_order_analysis) {
       Logger::Warning("Flocking analysis enabled polar order analysis in "
                       "FilamentSpecies::InitAnalysis\n");
@@ -166,7 +164,7 @@ void FilamentSpecies::InitAnalysis() {
     std::string fname = params_->run_name;
     fname.append("_filament.in_out");
     in_out_file_.open(fname, std::ios::out);
-    in_out_file_ << "perlen: " << params_->filament.perlen_ratio << "\n";
+    in_out_file_ << "perlen: " << sparams_.perlen_ratio << "\n";
     in_out_file_ << "umax: " << params_->soft_potential_mag << "\n";
     in_out_file_ << "angle_in: ";
     if (members_.size() < 2) {
@@ -267,7 +265,7 @@ void FilamentSpecies::InitOrientationCorrelationAnalysis() {
   std::string fname = params_->run_name;
   fname.append("_filament.orientation_corr");
   orientation_corr_file_.open(fname, std::ios::out);
-  orientation_corr_n_steps_ = params_->filament.orientation_corr_n_steps;
+  orientation_corr_n_steps_ = sparams_.orientation_corr_n_steps;
   orientation_corr_file_ << "orientation_corr_analysis_file, n_filaments = "
                          << n_members_
                          << ", n_bonds = " << members_[0].GetNBonds()
@@ -308,8 +306,8 @@ void FilamentSpecies::InitCrossingAnalysis() {
   crossing_file_ << "crossing_analysis\n";
   crossing_file_ << "sp lp dr\n";
   crossing_file_ << params_->soft_potential_mag << " "
-                 << params_->filament.perlen_ratio << " "
-                 << params_->filament.driving_factor << "\n";
+                 << sparams_.perlen_ratio << " "
+                 << sparams_.driving_factor << "\n";
   double avg_u[3] = {0, 0, 0};
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->GetAvgOrientation(avg_u);
@@ -405,7 +403,7 @@ void FilamentSpecies::InitThetaAnalysis() {
   theta_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " "
               << nmembers << " " << nbonds << " " << params_->n_steps << " "
               << nspec << " " << params_->delta << " " << params_->n_dim << " "
-              << params_->filament.metric_forces << "\n";
+              << sparams_.metric_forces << "\n";
   theta_file_ << "cos_theta";
   for (int i = 0; i < nbonds - 1; ++i) {
     theta_file_ << " theta_" << i + 1 << i + 2;
@@ -423,26 +421,26 @@ void FilamentSpecies::InitThetaAnalysis() {
 }
 
 void FilamentSpecies::RunAnalysis() {
-  if (params_->filament.spiral_flag) {
+  if (sparams_.spiral_flag) {
     RunSpiralAnalysis();
   }
   // TODO Analyze conformation and ms end-to-end
-  if (params_->filament.theta_analysis) {
+  if (sparams_.theta_analysis) {
     RunThetaAnalysis();
   }
-  if (params_->filament.lp_analysis) {
+  if (sparams_.lp_analysis) {
     RunMse2eAnalysis();
   }
-  if (params_->filament.global_order_analysis) {
+  if (sparams_.global_order_analysis) {
     RunGlobalOrderAnalysis();
   }
   if (params_->polar_order_analysis) {
     RunPolarOrderAnalysis();
   }
-  if (params_->filament.orientation_corr_analysis) {
+  if (sparams_.orientation_corr_analysis) {
     RunOrientationCorrelationAnalysis();
   }
-  if (params_->filament.flocking_analysis) {
+  if (sparams_.flocking_analysis) {
     RunFlockingAnalysis();
   }
   time_++;

@@ -1,11 +1,14 @@
 #ifndef _SIMCORE_FILAMENT_H_
 #define _SIMCORE_FILAMENT_H_
 
-#include "mesh.hpp"
 #include "flory_schulz.hpp"
+#include "mesh.hpp"
+
+typedef species_parameters<species_id::filament> filament_parameters;
 
 class Filament : public Mesh {
 private:
+  filament_parameters *sparams_;
   int dynamic_instability_flag_;
   int force_induced_catastrophe_flag_;
   int theta_validation_run_flag_;
@@ -97,7 +100,7 @@ private:
 
 public:
   Filament();
-  virtual void Init();
+  virtual void Init(filament_parameters *sparams);
   virtual void InsertAt(double *pos, double *u);
   virtual void Integrate();
   virtual void Draw(std::vector<graph_struct *> *graph_array);

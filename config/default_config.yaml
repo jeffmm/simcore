@@ -107,6 +107,11 @@ flock_color_ext: [1.57, double]      # Color of flocking objects at the flock ex
 flock_color_int: [4.71, double]      # Color of flocking objects at the flock interior.
 in_out_flag: [0, int]                # Post-process analysis of incoming vs outgoing angle of 
                                      # colliding filaments.
+checkpoint_flag: [0, int]            # Generate a checkpoint file every n_checkpoint steps that 
+                                     # allows users to resume previous simulations. Contains 
+                                     # most recent instance of RNG state and spec file data.
+n_checkpoint: [10000, int]           # Frequency used for generating checkpoint file information.
+
 species:                             # Shared parameters used for all species.
   num: [0, int]                      # Number of members of a species at initialization.
   insertion_type: [random, string]   # Insertion method for initializing members of a species:
@@ -127,12 +132,8 @@ species:                             # Shared parameters used for all species.
   spec_flag: [0, int]                # Generate detailed output file unique for every species that
                                      # can completely reconstruct member information with a
                                      # frequency of n_spec steps.
-  checkpoint_flag: [0, int]          # Generate a checkpoint file every n_checkpoint steps that 
-                                     # allows users to resume previous simulations. Contains 
-                                     # most recent instance of RNG state and species spec_file data.
   n_posit: [100, int]                # Frequency used for generating posit file information.
   n_spec: [100, int]                 # Frequency used for generating spec file information.
-  n_checkpoint: [10000, int]         # Frequency used for generating checkpoint file information.
 filament:                            # Parameters unique to filament class of objects.
   diameter: [1, double]              # Diameter of filament in units of simulation length scale.
   length: [-1, double]               # Length of filament. If < 0, a uniform random length is
