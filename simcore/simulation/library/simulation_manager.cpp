@@ -406,7 +406,7 @@ void SimulationManager::WriteParams() {
         std::string red_file_name = file_name.str() + "_reduced" +
                                     std::to_string(run_opts_.reduce_factor);
         pvector_[i_var]["run_name"] = red_file_name;
-        if (pvector_[i_var]["reduced"] == 0) {
+        if (pvector_[i_var]["reduced"].as<int>() == 0) {
           pvector_[i_var]["reduced"] = run_opts_.reduce_factor;
         }
         red_file_name = red_file_name + "_params.yaml";
