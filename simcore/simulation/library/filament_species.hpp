@@ -51,7 +51,8 @@ protected:
 
 public:
   FilamentSpecies();
-  void Init(system_parameters *params, species_base_parameters * sparams, space_struct *space);
+  void Init(system_parameters *params, species_base_parameters *sparams,
+            space_struct *space);
   void PopMember();
 
   void AddMember();

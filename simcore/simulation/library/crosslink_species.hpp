@@ -12,13 +12,9 @@ typedef std::vector<std::pair<std::vector<Crosslink>::iterator,
     xlink_chunk_vector;
 typedef std::vector<Crosslink>::iterator xlink_iterator;
 
-class CrosslinkSpecies : Species<Crosslink, species_id::crosslink> {
+class CrosslinkSpecies : public Species<Crosslink, species_id::crosslink> {
 private:
   bool *update_;
-  int n_spec_;
-  int n_checkpoint_;
-  int spec_flag_;
-  int checkpoint_flag_;
   MinimumDistance *mindist_;
   std::string checkpoint_file_;
   std::string xlink_label_ = "generic";
@@ -62,10 +58,11 @@ public:
                        double &obj_vol, bool &update);
   void GetInteractors(std::vector<Object *> &ixors);
   void UpdateCrosslinks();
-  void Clear();
+  void CleanUp();
   void Draw(std::vector<graph_struct *> *graph_array);
   void BindCrosslinkObj(Object *obj);
   void AddNeighborToAnchor(Object *anchor, Object *neighbor);
+  void AddMember();
   void WriteOutputs();
   void ReadInputs();
   void InitOutputs(bool reading_inputs = false, bool reduce_flag = false,

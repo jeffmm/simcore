@@ -33,11 +33,33 @@ void ParamsParser::ParseSpeciesParameters() {
       }
     }
   }
-  for (YAML::const_iterator it = species_node_.begin(); it != species_node_.end(); ++it) {
-    species_params_.push_back(parse_species_params(it));
-  }
 }
 
 system_parameters ParamsParser::ParseSystemParameters() {
   return parse_system_params(sim_node_);
+}
+
+species_base_parameters *
+ParamsParser::GetNewSpeciesParameters(sid_label &slab) {
+  for (auto it = species_node_.begin(); it != species_node_.end(); ++it) {
+    if (it->first.as<std::string>() == slab.first) {
+      if (it->second.IsMap() && slab.second == "species") {
+        return parse_species_params(it);
+      } else if (it->second.IsSequence()) {
+        for (int i = 0; i < it->second.size(); ++i) {
+          YAML::Node subnode = it->second[i];
+          for (YAML::const_iterator jt = subnode.begin(); jt != subnode.end();
+               ++jt) {
+            if (jt->first.as<std::string>() == slab.second) {
+              return parse_species_params(jt);
+            }
+          }
+        }
+      }
+    }
+  }
+  Logger::Error("ParamsParser did not find species id/label combination %s/%s"
+                " in species params YAML node!",
+                slab.first.c_str(), slab.second.c_str());
+  return nullptr;
 }

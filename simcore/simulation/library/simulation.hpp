@@ -5,9 +5,7 @@
 #include "interaction_engine.hpp"
 #include "output_manager.hpp"
 #include "space.hpp"
-#include "species_factory.hpp"
 #include "parse_flags.hpp"
-#include "params_parser.hpp"
 
 class Simulation {
 private:
@@ -31,7 +29,6 @@ private:
 #endif
   Space space_;
   std::vector<SpeciesBase *> species_;
-  SpeciesFactory species_factory_;
   void InitSimulation();
   void InitObjects();
   void InitSpecies();

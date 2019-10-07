@@ -2,23 +2,24 @@
 
 Anchor::Anchor() : Object() { SetSID(species_id::crosslink); }
 
-void Anchor::Init() {
-  diameter_ = params_->crosslink.diameter;
-  color_ = params_->crosslink.color;
-  draw_ = draw_type::_from_string(params_->crosslink.draw_type.c_str());
+void Anchor::Init(crosslink_parameters *sparams) {
+  sparams_ = sparams;
+  diameter_ = sparams_->diameter;
+  color_ = sparams_->color;
+  draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
   Unbind();
-  walker_ = (params_->crosslink.walker ? true : false);
-  step_direction_ = (params_->crosslink.step_direction == 0
+  walker_ = (sparams_->walker ? true : false);
+  step_direction_ = (sparams_->step_direction == 0
                          ? 0
-                         : SIGNOF(params_->crosslink.step_direction));
-  velocity_ = params_->crosslink.velocity;
+                         : SIGNOF(sparams_->step_direction));
+  velocity_ = sparams_->velocity;
   max_velocity_ = velocity_;
-  k_off_ = params_->crosslink.k_off;
-  end_pausing_ = (params_->crosslink.end_pausing ? true : false);
-  diffuse_ = (params_->crosslink.diffusion_flag ? true : false);
-  f_spring_max_ = params_->crosslink.f_spring_max;
-  f_stall_ = params_->crosslink.f_stall;
-  force_dep_vel_flag_ = params_->crosslink.force_dep_vel_flag;
+  k_off_ = sparams_->k_off;
+  end_pausing_ = (sparams_->end_pausing ? true : false);
+  diffuse_ = (sparams_->diffusion_flag ? true : false);
+  f_spring_max_ = sparams_->f_spring_max;
+  f_stall_ = sparams_->f_stall;
+  force_dep_vel_flag_ = sparams_->force_dep_vel_flag;
   SetDiffusion();
   SetSID(species_id::crosslink);
 }
@@ -345,5 +346,5 @@ void Anchor::ReadSpec(std::fstream &ispec) {
   ispec.read(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
   UpdatePeriodic();
   if (active_)
-    step_direction_ = - params_->crosslink.step_direction;
+    step_direction_ = - sparams_->step_direction;
 }

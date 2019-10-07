@@ -3,10 +3,17 @@
 
 #include "mesh.hpp"
 class BeadSpring : public Mesh {
- private:
-  int stoch_flag_, eq_steps_, eq_steps_count_ = 0;
-  double max_bond_length_, bond_rest_length_, bond_spring_, persistence_length_,
-      rand_sigma_, driving_factor_;
+private:
+  bead_spring_parameters *sparams_;
+  int stoch_flag_;
+  int eq_steps_;
+  int eq_steps_count_ = 0;
+  double max_bond_length_;
+  double bond_rest_length_;
+  double bond_spring_;
+  double persistence_length_;
+  double rand_sigma_;
+  double driving_factor_;
   std::vector<double> cos_thetas_;
   void SetDiffusion();
   void GenerateProbableOrientation();
@@ -27,9 +34,8 @@ class BeadSpring : public Mesh {
   void UpdateAvgPosition();
   void ReportAll();
 
- public:
+public:
   BeadSpring();
-  virtual void Init();
   virtual void InsertAt(double *pos, double *u);
   // void DiffusionValidationInit();
   virtual void Integrate(bool midstep);
@@ -71,4 +77,4 @@ class BeadSpring : public Mesh {
   double const GetVolume();
 };
 
-#endif  // _SIMCORE_BEAD_SPRING_H_
+#endif // _SIMCORE_BEAD_SPRING_H_

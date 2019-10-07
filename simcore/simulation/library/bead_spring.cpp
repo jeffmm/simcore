@@ -1,24 +1,26 @@
 #include "bead_spring.hpp"
 
-BeadSpring::BeadSpring() : Mesh() { SetParameters(); }
+BeadSpring::BeadSpring() : Mesh() {}
 
 void BeadSpring::SetParameters() {
-  color_ = params_->bead_spring.color;
-  draw_ = draw_type::_from_string(params_->bead_spring.draw_type.c_str());
-  length_ = params_->bead_spring.length;
-  persistence_length_ = params_->bead_spring.persistence_length;
-  diameter_ = params_->bead_spring.diameter;
-  max_bond_length_ = params_->bead_spring.max_bond_length;
-  bond_rest_length_ = params_->bead_spring.bond_rest_length;
-  bond_spring_ = params_->bead_spring.bond_spring;
-  driving_factor_ = params_->bead_spring.driving_factor;
+  color_ = sparams_->color;
+  draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
+  length_ = sparams_->length;
+  persistence_length_ = sparams_->persistence_length;
+  diameter_ = sparams_->diameter;
+  max_bond_length_ = sparams_->max_bond_length;
+  bond_rest_length_ = sparams_->bond_rest_length;
+  bond_spring_ = sparams_->bond_spring;
+  driving_factor_ = sparams_->driving_factor;
   stoch_flag_ =
       params_->stoch_flag;  // determines whether we are using stochastic forces
   eq_steps_ = params_->n_steps_equil;
   eq_steps_count_ = 0;
 }
 
-void BeadSpring::Init() {
+void BeadSpring::Init(bead_spring_parameters sparams) {
+  sparams_ = sparams;
+  SetParameters();
   InitElements();
   InsertBeadSpring();
   UpdatePrevPositions();
@@ -70,16 +72,16 @@ void BeadSpring::GenerateProbableOrientation() {
 }
 
 void BeadSpring::InsertFirstBond() {
-  if (params_->bead_spring.insertion_type.compare("random") == 0) {
+  if (sparams_->insertion_type.compare("random") == 0) {
     InitRandomSite(diameter_);
     AddRandomBondToTip(bond_length_);
-  } else if (params_->bead_spring.insertion_type.compare("random_oriented") ==
+  } else if (sparams_->insertion_type.compare("random_oriented") ==
              0) {
     InitRandomSite(diameter_);
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = (gsl_rng_uniform_pos(rng_.r) > 0.5 ? 1.0 : -1.0);
     AddBondToTip(orientation_, bond_length_);
-  } else if (params_->bead_spring.insertion_type.compare("centered_oriented") ==
+  } else if (sparams_->insertion_type.compare("centered_oriented") ==
              0) {
     std::fill(position_, position_ + 3, 0.0);
     position_[n_dim_ - 1] = -0.5 * length_;
@@ -87,7 +89,7 @@ void BeadSpring::InsertFirstBond() {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
     AddBondToTip(orientation_, bond_length_);
-  } else if (params_->bead_spring.insertion_type.compare("centered_random") ==
+  } else if (sparams_->insertion_type.compare("centered_random") ==
              0) {
     generate_random_unit_vector(n_dim_, orientation_, rng_.r);
     for (int i = 0; i < n_dim_; ++i) {
@@ -104,8 +106,8 @@ void BeadSpring::InsertBeadSpring() {
   InsertFirstBond();
   SetOrientation(bonds_[n_bonds_ - 1].GetOrientation());
   bool probable_orientation =
-      (params_->bead_spring.insertion_type.compare("simple_crystal") != 0 &&
-       params_->bead_spring.insertion_type.compare("random_oriented") != 0);
+      (sparams_->insertion_type.compare("simple_crystal") != 0 &&
+       sparams_->insertion_type.compare("random_oriented") != 0);
   for (int i = 0; i < n_bonds_max_ - 1; ++i) {
     if (probable_orientation) {
       GenerateProbableOrientation();
@@ -129,7 +131,7 @@ void BeadSpring::InsertAt(double *pos, double *u) {
   AddBondToTip(orientation_, bond_length_);
   SetOrientation(bonds_[n_bonds_ - 1].GetOrientation());
   for (int i = 0; i < n_bonds_max_ - 1; ++i) {
-    if (params_->bead_spring.insertion_type.compare("simple_crystal") != 0) {
+    if (sparams_->insertion_type.compare("simple_crystal") != 0) {
       GenerateProbableOrientation();
     }
     AddBondToTip(orientation_, bond_length_);

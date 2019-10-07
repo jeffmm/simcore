@@ -4,9 +4,21 @@ void CrosslinkSpecies::Init(system_parameters *params,
                             species_base_parameters *sparams,
                             space_struct *space) {
   Species::Init(params, sparams, space);
-  k_on_ = sparams.k_on;
-  k_off_ = sparams.k_off;
-  xlink_concentration_ = sparams.concentration;
+  k_on_ = sparams_.k_on;
+  k_off_ = sparams_.k_off;
+  xlink_concentration_ = sparams_.concentration;
+}
+
+void CrosslinkSpecies::AddMember() {
+  Crosslink newmember;
+  Logger::Trace("Adding member to species %s, member number %d, member id %d",
+      GetSID()._to_string(), n_members_+1, newmember.GetOID());
+  members_.push_back(newmember);
+  members_.back().SetSID(GetSID());
+  members_.back().Init(&sparams_, mindist_, &lut_);
+  /* Keep track of bound bound anchors, bound crosslinks, and
+   * concentration of free crosslinks */
+  n_members_++;
 }
 
 void CrosslinkSpecies::InitInteractionEnvironment(MinimumDistance *mindist,
@@ -18,8 +30,7 @@ void CrosslinkSpecies::InitInteractionEnvironment(MinimumDistance *mindist,
   obj_volume_ = &obj_vol;
   update_ = &update;
   /* TODO Lookup table only works for filament objects. Generalize? */
-  lut_.Init(sparams.k_spring / 2, sparams.rest_length,
-            params_->filament.diameter);
+  lut_.Init(sparams_.k_spring / 2, sparams_.rest_length, 1);
 }
 
 void CrosslinkSpecies::CalculateBindingFree() {
@@ -56,13 +67,8 @@ Object *CrosslinkSpecies::GetRandomObject() {
 void CrosslinkSpecies::BindCrosslink() {
   /* Create crosslink object and initialize. Crosslink will
    * initially be singly-bound. */
-  Crosslink xl;
-  members_.push_back(xl);
-  members_.back().Init(mindist_, &lut_);
+  AddMember();
   members_.back().AttachObjRandom(GetRandomObject());
-  /* Keep track of bound bound anchors, bound crosslinks, and
-   * concentration of free crosslinks */
-  n_members_++;
 }
 
 /* Return singly-bound anchors, for finding neighbors to bind to */
@@ -209,7 +215,7 @@ void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
 #endif
 }
 
-void CrosslinkSpecies::Clear() { members_.clear(); }
+void CrosslinkSpecies::CleanUp() { members_.clear(); }
 
 void CrosslinkSpecies::Draw(std::vector<graph_struct *> *graph_array) {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
@@ -252,7 +258,7 @@ void CrosslinkSpecies::ReadSpecs() {
     members_.clear();
   } else if (n_members_ != members_.size()) {
     Crosslink xlink;
-    xlink.Init(mindist_, &lut_);
+    xlink.Init(&sparams_, mindist_, &lut_);
     members_.resize(n_members_, xlink);
   }
   for (auto it = members_.begin(); it != members_.end(); ++it) {
@@ -309,7 +315,7 @@ void CrosslinkSpecies::ReadCheckpoints() {
   /* Prepare the xlink vectors */
   Crosslink xlink;
   members_.push_back(xlink);
-  members_.back().Init(mindist_, &lut_);
+  members_.back().Init(&sparams_, mindist_, &lut_);
   // xlink.Init(mindist_, &lut_);
   members_.resize(n_members_, members_[0]);
 
@@ -323,9 +329,9 @@ void CrosslinkSpecies::ReadCheckpoints() {
 }
 
 void CrosslinkSpecies::InitOutputFiles() {
-  if (sparams.spec_flag)
+  if (GetSpecFlag())
     InitSpecFile();
-  if (sparams.checkpoint_flag)
+  if (GetCheckpointFlag())
     InitCheckpoints();
 }
 
@@ -336,8 +342,9 @@ void CrosslinkSpecies::InitSpecFile() {
   if (!ospec_file_.is_open()) {
     Logger::Error("Output file %s did not open\n", spec_file_name.c_str());
   }
+  int n_spec = GetNSpec();
   ospec_file_.write(reinterpret_cast<char *>(&params_->n_steps), sizeof(int));
-  ospec_file_.write(reinterpret_cast<char *>(&sparams.n_spec), sizeof(int));
+  ospec_file_.write(reinterpret_cast<char *>(&n_spec), sizeof(int));
   ospec_file_.write(reinterpret_cast<char *>(&params_->delta), sizeof(double));
 }
 
@@ -357,12 +364,12 @@ bool CrosslinkSpecies::InitSpecFileInputFromFile(std::string spec_file_name) {
   ispec_file_.read(reinterpret_cast<char *>(&n_steps), sizeof(int));
   ispec_file_.read(reinterpret_cast<char *>(&n_spec), sizeof(int));
   ispec_file_.read(reinterpret_cast<char *>(&delta), sizeof(double));
-  if (n_steps != params_->n_steps || n_spec != sparams.n_spec ||
+  if (n_steps != params_->n_steps || n_spec != GetNSpec() ||
       delta != params_->delta) {
     Logger::Warning("Input file %s does not match parameter file\n",
                     "n_steps: %d %d, n_spec: %d %d, delta: %2.2f %2.2f",
                     spec_file_name.c_str(), n_steps, params_->n_steps, n_spec,
-                    sparams.n_spec, delta, params_->delta);
+                    GetNSpec(), delta, params_->delta);
   }
   ReadSpecs();
   return true;
@@ -412,7 +419,7 @@ void CrosslinkSpecies::InitOutputs(bool reading_inputs, bool reduce_flag,
   }
 }
 void CrosslinkSpecies::WriteOutputs() {
-  if (spec_flag_ && (params_->i_step % n_spec_ == 0)) {
+  if (GetSpecFlag() && (params_->i_step % GetNSpec() == 0)) {
     WriteSpecs();
   }
   if (checkpoint_flag_ && (params_->i_step % GetNCheckpoint() == 0)) {
@@ -421,7 +428,7 @@ void CrosslinkSpecies::WriteOutputs() {
 }
 
 void CrosslinkSpecies::ReadInputs() {
-  if (spec_flag_ && (params_->i_step % n_spec_ == 0)) {
+  if (GetSpecFlag() && (params_->i_step % GetNSpec() == 0)) {
     ReadSpecs();
     if (params_->checkpoint_from_spec) {
       WriteCheckpoints();

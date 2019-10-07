@@ -8,27 +8,27 @@ void Crosslink::Init(crosslink_parameters *sparams, MinimumDistance *mindist,
   mindist_ = mindist;
   lut_ = lut;
   length_ = -1;
-  diameter_ = sparams_->.tether_diameter;
-  color_ = sparams_->.tether_color;
-  draw_ = draw_type::_from_string(sparams_->.tether_draw_type.c_str());
-  rest_length_ = sparams_->.rest_length;
-  k_on_ = sparams_->.k_on;       // k_on for unbound to singly
-  k_off_ = sparams_->.k_off;     // k_off for singly to unbound
-  k_on_d_ = sparams_->.k_on_d;   // k_on for singly to doubly
-  k_off_d_ = sparams_->.k_off_d; // k_off for doubly to singly
-  k_spring_ = sparams_->.k_spring;
-  k_align_ = sparams_->.k_align;
-  f_spring_max_ = sparams_->.f_spring_max;
-  rcapture_ = sparams_->.r_capture;
-  fdep_factor_ = sparams_->.force_dep_factor;
-  polar_affinity_ = sparams_->.polar_affinity;
+  diameter_ = sparams_->tether_diameter;
+  color_ = sparams_->tether_color;
+  draw_ = draw_type::_from_string(sparams_->tether_draw_type.c_str());
+  rest_length_ = sparams_->rest_length;
+  k_on_ = sparams_->k_on;       // k_on for unbound to singly
+  k_off_ = sparams_->k_off;     // k_off for singly to unbound
+  k_on_d_ = sparams_->k_on_d;   // k_on for singly to doubly
+  k_off_d_ = sparams_->k_off_d; // k_off for doubly to singly
+  k_spring_ = sparams_->k_spring;
+  k_align_ = sparams_->k_align;
+  f_spring_max_ = sparams_->f_spring_max;
+  rcapture_ = sparams_->r_capture;
+  fdep_factor_ = sparams_->force_dep_factor;
+  polar_affinity_ = sparams_->polar_affinity;
   /* TODO generalize crosslinks to more than two anchors */
   Anchor anchor1;
   Anchor anchor2;
   anchors_.push_back(anchor1);
   anchors_.push_back(anchor2);
-  anchors_[0].Init();
-  anchors_[1].Init();
+  anchors_[0].Init(sparams_);
+  anchors_[1].Init(sparams_);
   SetSID(species_id::crosslink);
   SetSingly();
   Logger::Trace("Initializing crosslink %d with anchors %d and %d", GetOID(),

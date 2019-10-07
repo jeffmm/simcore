@@ -11,7 +11,7 @@ system_parameters parse_system_params(YAML::Node &node) {
   return params;
 }
 
-species_parameters *parse_species_params(YAML::const_iterator it) {
+species_base_parameters *parse_species_params(YAML::const_iterator it) {
   return new filament_parameters;
 }
 

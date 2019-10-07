@@ -196,16 +196,19 @@ void Simulation::InitGraphics() {
 
 /* Initialize object types */
 void Simulation::InitSpecies() {
-
-  /* Search the species_factory_ for any registered species,
-   and find them in the yaml file */
-  std::vector<species_parameters *> spec_params = parser_.GetSpeciesParameters();
+  std::vector<sid_label> species_labels = parser_.GetSpeciesLabels();
   species_.reserve(spec_params.size());
-  for (auto it = spec_params.begin(); it != spec_params.end(); ++it) {
-    const species_id sid =
-        species_id::_from_string((*it)->species_name.c_str());
-    species_.push_back(species_factory_.CreateSpecies(sid));
-    species_.back()->Init(&params_, *it, space_.GetStruct());
+  SpeciesFactory species_factory;
+  for (auto slab = sid_labels.begin(); slab != sid_labels.end(); ++slab) {
+    const species_id sid = species_id::_from_string(it->first.c_str());
+    if (sid == +species_id::crosslink) {
+      iengine_.InitCrosslinkSpecies(*slab, parser_);
+      continue;
+    }
+    species_.push_back(species_factory.CreateSpecies(sid));
+    species_parameters_base *sparams = params_.GetNewSpeciesParameters(*slab);
+    species_.back()->Init(&params_, sparams, space_.GetStruct());
+    delete sparams;
     if (species_.back()->GetNInsert() > 0) {
 #ifdef TRACE
       if (species_.back()->GetNInsert() > 20) {

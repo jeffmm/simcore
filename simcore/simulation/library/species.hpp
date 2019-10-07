@@ -84,7 +84,6 @@ void Species<T, S>::AddMember() {
   members_.push_back(newmember);
   members_.back().SetSID(GetSID());
   members_.back().Init(&sparams_);
-  // newmember->SetColor(sparams_.color, sparams_.draw_type);
   n_members_++;
 }
 

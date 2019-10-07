@@ -1,19 +1,21 @@
 #ifndef _SIMCORE_CROSSLINK_MANAGER_H_
 #define _SIMCORE_CROSSLINK_MANAGER_H_
 
+#include "params_parser.hpp"
 #include "crosslink_species.hpp"
+#include "species_factory.hpp"
 
 class CrosslinkManager {
 private:
+  system_parameters *params_;
   double obj_volume_;
   bool update_;
   std::vector<CrosslinkSpecies *> xlink_species_;
   std::vector<Object *> *objs_;
-  void InitSpecies(system_parameters *params, space_struct *space,
-                   MinimumDistance *mindist, std::vector<Object *> *objs);
+  MinimumDistance *mindist_;
+  space_struct *space_;
 
 public:
-  // iENGINE USES
   void Init(system_parameters *params, space_struct *space,
             MinimumDistance *mindist, std::vector<Object *> *objs);
   void GetInteractors(std::vector<Object *> &ixors);
@@ -28,6 +30,7 @@ public:
   void InitOutputs(bool reading_inputs = false, bool reduce_flag = false,
                    bool with_reloads = false);
   void GetAnchorInteractors(std::vector<Object *> &ixors);
+  void InitSpecies(sid_label &slab, ParamsParser &parser);
 };
 
 #endif

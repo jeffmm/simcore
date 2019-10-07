@@ -14,7 +14,7 @@ private:
   bool static_;
   bool active_;
   bool end_pausing_;
-
+  crosslink_parameters *sparams_;
   int step_direction_;
 
   double bond_length_;
@@ -42,7 +42,7 @@ private:
 
 public:
   Anchor();
-  void Init();
+  void Init(crosslink_parameters *sparams);
   bool IsBound();
   void UpdatePosition();
   void Activate();

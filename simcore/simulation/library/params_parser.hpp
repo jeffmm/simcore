@@ -13,14 +13,15 @@ private:
   std::vector<sid_label> labels_;
   void CheckDuplicateLabels();
   void ParseSpeciesParameters();
-  std::vector<species_parameters *> species_params_;
+  std::vector<species_base_parameters *> species_params_;
+  int n_species_ = 0;
+  int n_crosslinks = 0;
 
 public:
   void Init(YAML::Node sim_params);
   system_parameters ParseSystemParameters();
-  std::vector<species_parameters *> GetSpeciesParameters() {
-    return species_params_;
-  }
+  std::vector<sid_label> &GetSpeciesLabels() { return labels_; }
+  species_base_parameters *GetNewSpeciesParameters(sid_label &slab);
 };
 
 #endif

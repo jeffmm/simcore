@@ -6,17 +6,18 @@ void CrosslinkManager::Init(system_parameters *params, space_struct *space,
   objs_ = objs;
   update_ = false;
   obj_volume_ = 0;
-  InitSpecies(params, space, mindist, objs);
+  params_ = params;
+  space_ = space;
+  mindist_ = mindist;
 }
 
-void CrosslinkManager::InitSpecies(system_parameters *params,
-                                   space_struct *space,
-                                   MinimumDistance *mindist,
-                                   std::vector<Object *> *objs) {
-  for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
-    (*it)->Init(params, space);
-    (*it)->InitEnvironment(mindist, objs, obj_volume_, update_);
-  }
+void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser) {
+  xlink_species_.push_back(new CrosslinkSpecies());
+  species_base_parameters *sparams = parser.GetNewSpeciesParameters(slab);
+  xlink_species_.back()->Init(params_, sparams, space_);
+  delete sparams;
+  xlink_species_.back()->InitInteractionEnvironment(mindist, objs, obj_volume_,
+                                                    update_);
 }
 
 /* Keep track of volume of objects in the system. Affects the
@@ -62,7 +63,8 @@ void CrosslinkManager::UpdateCrosslinks() {
 
 void CrosslinkManager::Clear() {
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
-    (*it)->Clear();
+    (*it)->CleanUp();
+    delete (*it);
   }
   xlink_species_.clear();
 }
@@ -100,3 +102,5 @@ void CrosslinkManager::ReadInputs() {
     (*it)->ReadInputs();
   }
 }
+
+void CrosslinkManager::InitCrosslinkSpecies() {}

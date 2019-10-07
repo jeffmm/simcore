@@ -118,7 +118,7 @@ public:
   void SetMeshID(int mid);
 
   // Virtual functions
-  virtual void Init() {}
+  virtual void Init(species_base_parameters *sparams) {}
   virtual void InsertRandom();
   virtual void InsertRandomOriented(double *u);
   virtual void InsertAt(double *pos, double *u);

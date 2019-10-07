@@ -90,6 +90,7 @@ public:
                    bool with_reloads = false);
   void ReadInputs();
   void ResetCellList();
+  void InitCrosslinkSpecies(sid_label &slab, ParamsParser &parser);
 };
 
 #endif

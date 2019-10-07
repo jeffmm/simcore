@@ -32,9 +32,9 @@ endif()
 include_directories(${INCLUDES})
 set(TARGET "simcore")
 set(SOURCES anchor.cpp 
-            bead_spring.cpp
+            #bead_spring.cpp
             bond.cpp
-            br_bead.cpp
+            #br_bead.cpp
             cell.cpp
             cell_list.cpp
             #centrosome.cpp
@@ -63,7 +63,7 @@ set(SOURCES anchor.cpp
             space.cpp
             #species.cpp
             species_base.cpp
-            spherocylinder.cpp
+            #spherocylinder.cpp
             #spindle.cpp
             struct_analysis.cpp
             writebmp.cpp

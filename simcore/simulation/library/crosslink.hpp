@@ -14,6 +14,7 @@ enum xstate { unbound, singly, doubly };
  * heads, and tether forces between bound heads. */
 class Crosslink : public Object {
 private:
+  crosslink_parameters *sparams_;
   MinimumDistance *mindist_;
   draw_type draw_;
   bind_state state_;

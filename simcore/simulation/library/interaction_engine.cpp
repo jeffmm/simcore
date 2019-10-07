@@ -723,3 +723,8 @@ void InteractionEngine::ReadInputs() {
     return;
   xlink_.ReadInputs();
 }
+
+void InteractionEngine::InitCrosslinkSpecies(sid_label &slab,
+                                             ParamsParser &parser) {
+  xlink_.InitSpecies(slab, parser);
+}

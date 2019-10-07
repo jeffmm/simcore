@@ -1,13 +1,13 @@
 #include "bead_spring_species.hpp"
 void BeadSpringSpecies::InitAnalysis() {
   time_ = 0;
-  // if (params_->bead_spring.diffusion_analysis) {
+  // if (sparams_.diffusion_analysis) {
   // InitDiffusionAnalysis();
   //}
-  if (params_->bead_spring.theta_analysis) {
+  if (sparams_.theta_analysis) {
     InitThetaAnalysis();
   }
-  if (params_->bead_spring.lp_analysis) {
+  if (sparams_.lp_analysis) {
     InitMse2eAnalysis();
   }
   RunAnalysis();
@@ -116,14 +116,14 @@ void BeadSpringSpecies::InitThetaAnalysis() {
 
 void BeadSpringSpecies::RunAnalysis() {
   // TODO Analyze conformation and ms end-to-end
-  if (params_->bead_spring.theta_analysis) {
+  if (sparams_.theta_analysis) {
     if (params_->interaction_flag) {
       std::cout
           << "WARNING! Theta analysis running on interacting bead_springs!\n";
     }
     RunThetaAnalysis();
   }
-  if (params_->bead_spring.lp_analysis) {
+  if (sparams_.lp_analysis) {
     RunMse2eAnalysis();
   }
   time_++;
@@ -200,7 +200,7 @@ void BeadSpringSpecies::FinalizeMse2eAnalysis() {
   mse2e_file_ << mse2e_ << " ";
   mse2e_file_ << sqrt((mse2e2_ - mse2e_ * mse2e_) / (num * n_samples_)) << " ";
   avg_clen_ /= n_samples_ * num;
-  double pl = params_->bead_spring.persistence_length;
+  double pl = sparams_.persistence_length;
   double theory;
   if (params_->n_dim == 2) {
     theory =
