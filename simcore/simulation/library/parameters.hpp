@@ -6,7 +6,10 @@
 #include <string>
 
 template <unsigned char S> struct species_parameters {
+  std::string name = "species";
   int num = 0;
+  double diameter = 1;
+  double length = 0;
   std::string insertion_type = "random";
   std::string insert_file = "none";
   int overlap = 0;
@@ -16,9 +19,6 @@ template <unsigned char S> struct species_parameters {
   int spec_flag = 0;
   int n_posit = 100;
   int n_spec = 100;
-  std::string label = "species";
-  double diameter = 1;
-  double length = 0;
     virtual ~species_parameters() {}
 };
 

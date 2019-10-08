@@ -1,5 +1,8 @@
   YAML::Node default_config;
+  default_config["species"]["name"] = "species";
   default_config["species"]["num"] = "0";
+  default_config["species"]["diameter"] = "1";
+  default_config["species"]["length"] = "0";
   default_config["species"]["insertion_type"] = "random";
   default_config["species"]["insert_file"] = "none";
   default_config["species"]["overlap"] = "0";
@@ -9,9 +12,6 @@
   default_config["species"]["spec_flag"] = "0";
   default_config["species"]["n_posit"] = "100";
   default_config["species"]["n_spec"] = "100";
-  default_config["species"]["label"] = "species";
-  default_config["species"]["diameter"] = "1";
-  default_config["species"]["length"] = "0";
   default_config["filament"]["persistence_length"] = "400";
   default_config["filament"]["max_length"] = "500";
   default_config["filament"]["min_bond_length"] = "1.5";

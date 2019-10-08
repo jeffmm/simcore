@@ -15,7 +15,6 @@ public:
                     species_base_parameters *sparams,
                     space_struct *space) {
     sparams_ = *dynamic_cast<species_parameters<S> *>(sparams);
-    species_label_ = sparams_.label;
     SetSID(species_id::_from_integral(S));
     SpeciesBase::Init(params, sparams, space);
   }
@@ -28,7 +27,7 @@ public:
   virtual const int GetNSpec() const { return sparams_.n_spec; }
   virtual const bool GetPositFlag() const { return sparams_.posit_flag; }
   virtual const bool GetSpecFlag() const { return sparams_.spec_flag; }
-  virtual const std::string GetSpeciesLabel() const { return sparams_.label; }
+  virtual const std::string GetSpeciesName() const { return sparams_.name; }
   std::string GetInsertionType() const { return sparams_.insertion_type; }
 
   virtual void AddMember();
@@ -454,27 +453,28 @@ void Species<T, S>::CrystalArrangement() {
 
 template <typename T, unsigned char S> void Species<T, S>::CustomInsert() {
   YAML::Node inode;
+  std::string spec_name = GetSID()._to_string();
   try {
     inode = YAML::LoadFile(sparams_.insert_file);
   } catch (...) {
     std::cout << "Failed to load custom insert file " << sparams_.insert_file
-              << " for species " << spec_name_ << "\n";
+              << " for species " << spec_name << "\n";
     Logger::Error("");
   }
-  if (!inode[spec_name_] || inode[spec_name_].size() != n_members_) {
-    std::cout << "Custom insert file for species " << spec_name_
+  if (!inode[spec_name] || inode[spec_name].size() != n_members_) {
+    std::cout << "Custom insert file for species " << spec_name
               << " was invalid: \n";
-    if (!inode[spec_name_]) {
+    if (!inode[spec_name]) {
       std::cout << "  Species ID header was missing from file\n";
-    } else if (inode[spec_name_].size() != n_members_) {
-      std::cout << "  There were " << inode[spec_name_].size()
+    } else if (inode[spec_name].size() != n_members_) {
+      std::cout << "  There were " << inode[spec_name].size()
                 << " positions specified for " << n_members_
                 << " species members\n";
     }
     Logger::Error("");
   }
   for (YAML::const_iterator it = inode.begin(); it != inode.end(); ++it) {
-    if (it->first.as<std::string>().compare(spec_name_) != 0)
+    if (it->first.as<std::string>().compare(spec_name) != 0)
       continue;
     if (!it->second.IsSequence()) {
       Logger::Error("Custom insert file positions not specified as sequence");

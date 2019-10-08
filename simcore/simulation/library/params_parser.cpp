@@ -5,6 +5,7 @@ void ParamsParser::Init(YAML::Node sim_params) {
   sim_node_ = sim_params;
   ParseSpeciesParameters();
 }
+
 void ParamsParser::CheckDuplicateLabels() {
   for (std::size_t i = 0; i < labels_.size() - 1; ++i) {
     for (std::size_t j = i + 1; j < labels_.size(); ++j) {
@@ -15,7 +16,8 @@ void ParamsParser::CheckDuplicateLabels() {
     }
   }
   for (std::size_t i = 0; i < labels_.size(); ++i) {
-    if (species_id::_from_string(labels_[i].first.c_str()) == +species_id::crosslink) {
+    if (species_id::_from_string(labels_[i].first.c_str()) ==
+        +species_id::crosslink) {
       n_crosslinks_++;
     } else {
       n_species_++;
@@ -37,8 +39,10 @@ void ParamsParser::ParseSpeciesParameters() {
         YAML::Node subnode = it->second[i];
         for (YAML::const_iterator jt = subnode.begin(); jt != subnode.end();
              ++jt) {
-          labels_.push_back(std::make_pair(it->first.as<std::string>(),
-                                           jt->first.as<std::string>()));
+          if (jt->first.as<std::string>().compare("name") == 0) {
+            labels_.push_back(std::make_pair(it->first.as<std::string>(),
+                                             jt->second.as<std::string>()));
+          }
         }
       }
     }
@@ -55,15 +59,13 @@ ParamsParser::GetNewSpeciesParameters(sid_label &slab) {
   for (auto it = species_node_.begin(); it != species_node_.end(); ++it) {
     if (it->first.as<std::string>() == slab.first) {
       if (it->second.IsMap() && slab.second == "species") {
-        return parse_species_params(slab.first, slab.second, it, sim_node_);
+        return parse_species_params(slab.first, it->second, sim_node_);
       } else if (it->second.IsSequence()) {
         for (int i = 0; i < it->second.size(); ++i) {
           YAML::Node subnode = it->second[i];
-          for (YAML::const_iterator jt = subnode.begin(); jt != subnode.end();
-               ++jt) {
-            if (jt->first.as<std::string>() == slab.second) {
-              return parse_species_params(slab.first, slab.second, jt, sim_node_);
-            }
+          if (subnode["name"] &&
+              subnode["name"].as<std::string>().compare(slab.second) == 0) {
+            return parse_species_params(slab.first, subnode, sim_node_);
           }
         }
       }

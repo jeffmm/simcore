@@ -185,8 +185,14 @@ void parse_species_base_params(species_base_parameters &params,
       for (auto jt = it->second.begin(); jt != it->second.end(); ++jt) {
         std::string param_name = jt->first.as<std::string>();
         if (false) {
+        } else if (param_name.compare("name")==0) {
+        params.name = jt->second.as<std::string>();
         } else if (param_name.compare("num")==0) {
         params.num = jt->second.as<int>();
+        } else if (param_name.compare("diameter")==0) {
+        params.diameter = jt->second.as<double>();
+        } else if (param_name.compare("length")==0) {
+        params.length = jt->second.as<double>();
         } else if (param_name.compare("insertion_type")==0) {
         params.insertion_type = jt->second.as<std::string>();
         } else if (param_name.compare("insert_file")==0) {
@@ -205,12 +211,6 @@ void parse_species_base_params(species_base_parameters &params,
         params.n_posit = jt->second.as<int>();
         } else if (param_name.compare("n_spec")==0) {
         params.n_spec = jt->second.as<int>();
-        } else if (param_name.compare("label")==0) {
-        params.label = jt->second.as<std::string>();
-        } else if (param_name.compare("diameter")==0) {
-        params.diameter = jt->second.as<double>();
-        } else if (param_name.compare("length")==0) {
-        params.length = jt->second.as<double>();
         } else {
           Logger::Warning("Species base parameter %s not recognized!", param_name.c_str());
         }
@@ -221,43 +221,41 @@ void parse_species_base_params(species_base_parameters &params,
 }
 
 species_base_parameters *parse_species_params(std::string sid,
-                                              std::string label,
-                                              YAML::const_iterator it,
+                                              YAML::Node &subnode,
                                               YAML::Node &node) {
   if (false) {
   } else if (sid.compare("filament") == 0) {
     filament_parameters params;
     parse_species_base_params(params, node);
-    params.label = label;
-    for (auto jt = it->second.begin(); jt != it->second.end(); ++jt) {
+    for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
       std::string param_name = jt->first.as<std::string>();
       if (false) {
-        } else if (param_name.compare("num")==0) {
-        params.num = jt->second.as<int>();
-        } else if (param_name.compare("insertion_type")==0) {
-        params.insertion_type = jt->second.as<std::string>();
-        } else if (param_name.compare("insert_file")==0) {
-        params.insert_file = jt->second.as<std::string>();
-        } else if (param_name.compare("overlap")==0) {
-        params.overlap = jt->second.as<int>();
-        } else if (param_name.compare("draw_type")==0) {
-        params.draw_type = jt->second.as<std::string>();
-        } else if (param_name.compare("color")==0) {
-        params.color = jt->second.as<double>();
-        } else if (param_name.compare("posit_flag")==0) {
-        params.posit_flag = jt->second.as<int>();
-        } else if (param_name.compare("spec_flag")==0) {
-        params.spec_flag = jt->second.as<int>();
-        } else if (param_name.compare("n_posit")==0) {
-        params.n_posit = jt->second.as<int>();
-        } else if (param_name.compare("n_spec")==0) {
-        params.n_spec = jt->second.as<int>();
-        } else if (param_name.compare("label")==0) {
-        params.label = jt->second.as<std::string>();
-        } else if (param_name.compare("diameter")==0) {
-        params.diameter = jt->second.as<double>();
-        } else if (param_name.compare("length")==0) {
-        params.length = jt->second.as<double>();
+      } else if (param_name.compare("name")==0) {
+      params.name = jt->second.as<std::string>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
+      } else if (param_name.compare("diameter")==0) {
+      params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("length")==0) {
+      params.length = jt->second.as<double>();
+      } else if (param_name.compare("insertion_type")==0) {
+      params.insertion_type = jt->second.as<std::string>();
+      } else if (param_name.compare("insert_file")==0) {
+      params.insert_file = jt->second.as<std::string>();
+      } else if (param_name.compare("overlap")==0) {
+      params.overlap = jt->second.as<int>();
+      } else if (param_name.compare("draw_type")==0) {
+      params.draw_type = jt->second.as<std::string>();
+      } else if (param_name.compare("color")==0) {
+      params.color = jt->second.as<double>();
+      } else if (param_name.compare("posit_flag")==0) {
+      params.posit_flag = jt->second.as<int>();
+      } else if (param_name.compare("spec_flag")==0) {
+      params.spec_flag = jt->second.as<int>();
+      } else if (param_name.compare("n_posit")==0) {
+      params.n_posit = jt->second.as<int>();
+      } else if (param_name.compare("n_spec")==0) {
+      params.n_spec = jt->second.as<int>();
       } else if (param_name.compare("persistence_length")==0) {
       params.persistence_length = jt->second.as<double>();
       } else if (param_name.compare("max_length")==0) {
@@ -352,36 +350,35 @@ species_base_parameters *parse_species_params(std::string sid,
   } else if (sid.compare("br_bead") == 0) {
     br_bead_parameters params;
     parse_species_base_params(params, node);
-    params.label = label;
-    for (auto jt = it->second.begin(); jt != it->second.end(); ++jt) {
+    for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
       std::string param_name = jt->first.as<std::string>();
       if (false) {
-        } else if (param_name.compare("num")==0) {
-        params.num = jt->second.as<int>();
-        } else if (param_name.compare("insertion_type")==0) {
-        params.insertion_type = jt->second.as<std::string>();
-        } else if (param_name.compare("insert_file")==0) {
-        params.insert_file = jt->second.as<std::string>();
-        } else if (param_name.compare("overlap")==0) {
-        params.overlap = jt->second.as<int>();
-        } else if (param_name.compare("draw_type")==0) {
-        params.draw_type = jt->second.as<std::string>();
-        } else if (param_name.compare("color")==0) {
-        params.color = jt->second.as<double>();
-        } else if (param_name.compare("posit_flag")==0) {
-        params.posit_flag = jt->second.as<int>();
-        } else if (param_name.compare("spec_flag")==0) {
-        params.spec_flag = jt->second.as<int>();
-        } else if (param_name.compare("n_posit")==0) {
-        params.n_posit = jt->second.as<int>();
-        } else if (param_name.compare("n_spec")==0) {
-        params.n_spec = jt->second.as<int>();
-        } else if (param_name.compare("label")==0) {
-        params.label = jt->second.as<std::string>();
-        } else if (param_name.compare("diameter")==0) {
-        params.diameter = jt->second.as<double>();
-        } else if (param_name.compare("length")==0) {
-        params.length = jt->second.as<double>();
+      } else if (param_name.compare("name")==0) {
+      params.name = jt->second.as<std::string>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
+      } else if (param_name.compare("diameter")==0) {
+      params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("length")==0) {
+      params.length = jt->second.as<double>();
+      } else if (param_name.compare("insertion_type")==0) {
+      params.insertion_type = jt->second.as<std::string>();
+      } else if (param_name.compare("insert_file")==0) {
+      params.insert_file = jt->second.as<std::string>();
+      } else if (param_name.compare("overlap")==0) {
+      params.overlap = jt->second.as<int>();
+      } else if (param_name.compare("draw_type")==0) {
+      params.draw_type = jt->second.as<std::string>();
+      } else if (param_name.compare("color")==0) {
+      params.color = jt->second.as<double>();
+      } else if (param_name.compare("posit_flag")==0) {
+      params.posit_flag = jt->second.as<int>();
+      } else if (param_name.compare("spec_flag")==0) {
+      params.spec_flag = jt->second.as<int>();
+      } else if (param_name.compare("n_posit")==0) {
+      params.n_posit = jt->second.as<int>();
+      } else if (param_name.compare("n_spec")==0) {
+      params.n_spec = jt->second.as<int>();
       } else if (param_name.compare("driving_factor")==0) {
       params.driving_factor = jt->second.as<double>();
       } else if (param_name.compare("packing_fraction")==0) {
@@ -394,36 +391,35 @@ species_base_parameters *parse_species_params(std::string sid,
   } else if (sid.compare("spherocylinder") == 0) {
     spherocylinder_parameters params;
     parse_species_base_params(params, node);
-    params.label = label;
-    for (auto jt = it->second.begin(); jt != it->second.end(); ++jt) {
+    for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
       std::string param_name = jt->first.as<std::string>();
       if (false) {
-        } else if (param_name.compare("num")==0) {
-        params.num = jt->second.as<int>();
-        } else if (param_name.compare("insertion_type")==0) {
-        params.insertion_type = jt->second.as<std::string>();
-        } else if (param_name.compare("insert_file")==0) {
-        params.insert_file = jt->second.as<std::string>();
-        } else if (param_name.compare("overlap")==0) {
-        params.overlap = jt->second.as<int>();
-        } else if (param_name.compare("draw_type")==0) {
-        params.draw_type = jt->second.as<std::string>();
-        } else if (param_name.compare("color")==0) {
-        params.color = jt->second.as<double>();
-        } else if (param_name.compare("posit_flag")==0) {
-        params.posit_flag = jt->second.as<int>();
-        } else if (param_name.compare("spec_flag")==0) {
-        params.spec_flag = jt->second.as<int>();
-        } else if (param_name.compare("n_posit")==0) {
-        params.n_posit = jt->second.as<int>();
-        } else if (param_name.compare("n_spec")==0) {
-        params.n_spec = jt->second.as<int>();
-        } else if (param_name.compare("label")==0) {
-        params.label = jt->second.as<std::string>();
-        } else if (param_name.compare("diameter")==0) {
-        params.diameter = jt->second.as<double>();
-        } else if (param_name.compare("length")==0) {
-        params.length = jt->second.as<double>();
+      } else if (param_name.compare("name")==0) {
+      params.name = jt->second.as<std::string>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
+      } else if (param_name.compare("diameter")==0) {
+      params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("length")==0) {
+      params.length = jt->second.as<double>();
+      } else if (param_name.compare("insertion_type")==0) {
+      params.insertion_type = jt->second.as<std::string>();
+      } else if (param_name.compare("insert_file")==0) {
+      params.insert_file = jt->second.as<std::string>();
+      } else if (param_name.compare("overlap")==0) {
+      params.overlap = jt->second.as<int>();
+      } else if (param_name.compare("draw_type")==0) {
+      params.draw_type = jt->second.as<std::string>();
+      } else if (param_name.compare("color")==0) {
+      params.color = jt->second.as<double>();
+      } else if (param_name.compare("posit_flag")==0) {
+      params.posit_flag = jt->second.as<int>();
+      } else if (param_name.compare("spec_flag")==0) {
+      params.spec_flag = jt->second.as<int>();
+      } else if (param_name.compare("n_posit")==0) {
+      params.n_posit = jt->second.as<int>();
+      } else if (param_name.compare("n_spec")==0) {
+      params.n_spec = jt->second.as<int>();
       } else if (param_name.compare("diffusion_analysis")==0) {
       params.diffusion_analysis = jt->second.as<int>();
       } else if (param_name.compare("n_diffusion_samples")==0) {
@@ -438,36 +434,35 @@ species_base_parameters *parse_species_params(std::string sid,
   } else if (sid.compare("spindle") == 0) {
     spindle_parameters params;
     parse_species_base_params(params, node);
-    params.label = label;
-    for (auto jt = it->second.begin(); jt != it->second.end(); ++jt) {
+    for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
       std::string param_name = jt->first.as<std::string>();
       if (false) {
-        } else if (param_name.compare("num")==0) {
-        params.num = jt->second.as<int>();
-        } else if (param_name.compare("insertion_type")==0) {
-        params.insertion_type = jt->second.as<std::string>();
-        } else if (param_name.compare("insert_file")==0) {
-        params.insert_file = jt->second.as<std::string>();
-        } else if (param_name.compare("overlap")==0) {
-        params.overlap = jt->second.as<int>();
-        } else if (param_name.compare("draw_type")==0) {
-        params.draw_type = jt->second.as<std::string>();
-        } else if (param_name.compare("color")==0) {
-        params.color = jt->second.as<double>();
-        } else if (param_name.compare("posit_flag")==0) {
-        params.posit_flag = jt->second.as<int>();
-        } else if (param_name.compare("spec_flag")==0) {
-        params.spec_flag = jt->second.as<int>();
-        } else if (param_name.compare("n_posit")==0) {
-        params.n_posit = jt->second.as<int>();
-        } else if (param_name.compare("n_spec")==0) {
-        params.n_spec = jt->second.as<int>();
-        } else if (param_name.compare("label")==0) {
-        params.label = jt->second.as<std::string>();
-        } else if (param_name.compare("diameter")==0) {
-        params.diameter = jt->second.as<double>();
-        } else if (param_name.compare("length")==0) {
-        params.length = jt->second.as<double>();
+      } else if (param_name.compare("name")==0) {
+      params.name = jt->second.as<std::string>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
+      } else if (param_name.compare("diameter")==0) {
+      params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("length")==0) {
+      params.length = jt->second.as<double>();
+      } else if (param_name.compare("insertion_type")==0) {
+      params.insertion_type = jt->second.as<std::string>();
+      } else if (param_name.compare("insert_file")==0) {
+      params.insert_file = jt->second.as<std::string>();
+      } else if (param_name.compare("overlap")==0) {
+      params.overlap = jt->second.as<int>();
+      } else if (param_name.compare("draw_type")==0) {
+      params.draw_type = jt->second.as<std::string>();
+      } else if (param_name.compare("color")==0) {
+      params.color = jt->second.as<double>();
+      } else if (param_name.compare("posit_flag")==0) {
+      params.posit_flag = jt->second.as<int>();
+      } else if (param_name.compare("spec_flag")==0) {
+      params.spec_flag = jt->second.as<int>();
+      } else if (param_name.compare("n_posit")==0) {
+      params.n_posit = jt->second.as<int>();
+      } else if (param_name.compare("n_spec")==0) {
+      params.n_spec = jt->second.as<int>();
       } else if (param_name.compare("n_filaments_bud")==0) {
       params.n_filaments_bud = jt->second.as<int>();
       } else if (param_name.compare("n_filaments_mother")==0) {
@@ -490,36 +485,35 @@ species_base_parameters *parse_species_params(std::string sid,
   } else if (sid.compare("crosslink") == 0) {
     crosslink_parameters params;
     parse_species_base_params(params, node);
-    params.label = label;
-    for (auto jt = it->second.begin(); jt != it->second.end(); ++jt) {
+    for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
       std::string param_name = jt->first.as<std::string>();
       if (false) {
-        } else if (param_name.compare("num")==0) {
-        params.num = jt->second.as<int>();
-        } else if (param_name.compare("insertion_type")==0) {
-        params.insertion_type = jt->second.as<std::string>();
-        } else if (param_name.compare("insert_file")==0) {
-        params.insert_file = jt->second.as<std::string>();
-        } else if (param_name.compare("overlap")==0) {
-        params.overlap = jt->second.as<int>();
-        } else if (param_name.compare("draw_type")==0) {
-        params.draw_type = jt->second.as<std::string>();
-        } else if (param_name.compare("color")==0) {
-        params.color = jt->second.as<double>();
-        } else if (param_name.compare("posit_flag")==0) {
-        params.posit_flag = jt->second.as<int>();
-        } else if (param_name.compare("spec_flag")==0) {
-        params.spec_flag = jt->second.as<int>();
-        } else if (param_name.compare("n_posit")==0) {
-        params.n_posit = jt->second.as<int>();
-        } else if (param_name.compare("n_spec")==0) {
-        params.n_spec = jt->second.as<int>();
-        } else if (param_name.compare("label")==0) {
-        params.label = jt->second.as<std::string>();
-        } else if (param_name.compare("diameter")==0) {
-        params.diameter = jt->second.as<double>();
-        } else if (param_name.compare("length")==0) {
-        params.length = jt->second.as<double>();
+      } else if (param_name.compare("name")==0) {
+      params.name = jt->second.as<std::string>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
+      } else if (param_name.compare("diameter")==0) {
+      params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("length")==0) {
+      params.length = jt->second.as<double>();
+      } else if (param_name.compare("insertion_type")==0) {
+      params.insertion_type = jt->second.as<std::string>();
+      } else if (param_name.compare("insert_file")==0) {
+      params.insert_file = jt->second.as<std::string>();
+      } else if (param_name.compare("overlap")==0) {
+      params.overlap = jt->second.as<int>();
+      } else if (param_name.compare("draw_type")==0) {
+      params.draw_type = jt->second.as<std::string>();
+      } else if (param_name.compare("color")==0) {
+      params.color = jt->second.as<double>();
+      } else if (param_name.compare("posit_flag")==0) {
+      params.posit_flag = jt->second.as<int>();
+      } else if (param_name.compare("spec_flag")==0) {
+      params.spec_flag = jt->second.as<int>();
+      } else if (param_name.compare("n_posit")==0) {
+      params.n_posit = jt->second.as<int>();
+      } else if (param_name.compare("n_spec")==0) {
+      params.n_spec = jt->second.as<int>();
       } else if (param_name.compare("concentration")==0) {
       params.concentration = jt->second.as<double>();
       } else if (param_name.compare("walker_flag")==0) {

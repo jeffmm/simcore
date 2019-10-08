@@ -113,7 +113,10 @@ checkpoint_flag: [0, int]            # Generate a checkpoint file every n_checkp
 n_checkpoint: [10000, int]           # Frequency used for generating checkpoint file information.
 
 species:                             # Shared parameters used for all species.
+  name: ["species", string]          # Label given to species (e.g. microtubule, kinesin, etc)
   num: [0, int]                      # Number of members of a species at initialization.
+  diameter: [1, double]              # Diameter of species, for point-like objects and greater
+  length: [0, double]                # Length of species, for line-like objects and greater
   insertion_type: [random, string]   # Insertion method for initializing members of a species:
                                      # Must be defined in the virtual Init() function for species
                                      # members to be effective. All objects have a random 
@@ -134,9 +137,6 @@ species:                             # Shared parameters used for all species.
                                      # frequency of n_spec steps.
   n_posit: [100, int]                # Frequency used for generating posit file information.
   n_spec: [100, int]                 # Frequency used for generating spec file information.
-  label: [species, string]           # Name used to identify unique subtypes of same species
-  diameter: [1, double]              # Diameter of species, for point-like objects and greater
-  length: [0, double]                # Length of species, for line-like objects and greater
 filament:                            # Parameters unique to filament class of objects.
   persistence_length: [400, double]  # Persistence length of filament.
   max_length: [500,double]           # Maximum filament length. Also used for dynamic instability.

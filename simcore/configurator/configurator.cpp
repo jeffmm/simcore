@@ -251,9 +251,7 @@ void Configurator::WriteParseSpeciesParams() {
   parse_params_ << "species_base_parameters *parse_species_params("
                    "std::string sid,\n"
                    "                                              "
-                   "std::string label,\n"
-                   "                                              "
-                   "YAML::const_iterator it,\n"
+                   "YAML::Node &subnode,\n"
                    "                                              "
                    "YAML::Node &node) {\n  if (false) {\n";
   for (YAML::const_iterator it = node_.begin(); it != node_.end(); ++it) {
@@ -267,8 +265,7 @@ void Configurator::WriteParseSpeciesParams() {
           << "\") == 0) {\n    " << species_name
           << "_parameters params;\n"
              "    parse_species_base_params(params, node);\n"
-             "    params.label = label;\n"
-             "    for (auto jt = it->second.begin(); jt != it->second.end();"
+             "    for (auto jt = subnode.begin(); jt != subnode.end();"
              " ++jt) {\n"
              "      std::string param_name = jt->first.as<std::string>();\n"
              "      if (false) {\n";
@@ -324,9 +321,9 @@ void Configurator::ParseParam(std::string iterator, bool store) {
                 << whitespace_ << "params." << pname_ << " = " << iterator
                 << "->second.as<" << ptype_ << ">();\n";
   if (store) {
-    store_string_ << whitespace_ << "} else if (param_name.compare(\"" << pname_
+    store_string_ << "      } else if (param_name.compare(\"" << pname_
                   << "\")==0) {\n"
-                  << whitespace_ << "params." << pname_ << " = " << iterator
+                  << "      params." << pname_ << " = " << iterator
                   << "->second.as<" << ptype_ << ">();\n";
   }
 }

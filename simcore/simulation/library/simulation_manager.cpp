@@ -348,7 +348,7 @@ void SimulationManager::GenerateParameters() {
       j_var = n_var_ / (k_var * s);
       i_var = 0;
       for (int j = 0; j < j_var; ++j) {
-        for (int i_param = 1; i_param < s; ++i_param) {
+        for (int i_param = 1; i_param < s+1; ++i_param) {
           for (int k = 0; k < k_var; ++k) {
             pvector_[i_var++][it->first] = it->second[i_param];
           }
@@ -364,7 +364,7 @@ void SimulationManager::GenerateParameters() {
           j_var = n_var_ / (k_var * s);
           i_var = 0;
           for (int j = 0; j < j_var; ++j) {
-            for (int i_param = 1; i_param < s; ++i_param) {
+            for (int i_param = 1; i_param < s+1; ++i_param) {
               for (int k = 0; k < k_var; ++k) {
                 pvector_[i_var++][it->first][jt->first] = jt->second[i_param];
               }
@@ -387,7 +387,7 @@ void SimulationManager::GenerateParameters() {
             j_var = n_var_ / (k_var * s);
             i_var = 0;
             for (int j = 0; j < j_var; ++j) {
-              for (int i_param = 1; i_param < s; ++i_param) {
+              for (int i_param = 1; i_param < s+1; ++i_param) {
                 for (int k = 0; k < k_var; ++k) {
                   pvector_[i_var++][it->first][sub][jt->first] =
                       jt->second[i_param];

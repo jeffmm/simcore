@@ -340,7 +340,7 @@ void CrosslinkSpecies::InitOutputFiles() {
 
 void CrosslinkSpecies::InitSpecFile() {
   std::string spec_file_name =
-      params_->run_name + "_xlink_" + species_label_ + ".spec";
+      params_->run_name + "_xlink_" + GetSpeciesName() + ".spec";
   ospec_file_.open(spec_file_name, std::ios::out | std::ios::binary);
   if (!ospec_file_.is_open()) {
     Logger::Error("Output file %s did not open\n", spec_file_name.c_str());
@@ -353,7 +353,7 @@ void CrosslinkSpecies::InitSpecFile() {
 
 void CrosslinkSpecies::InitCheckpoints() {
   checkpoint_file_ =
-      params_->run_name + "_xlink_" + species_label_ + ".checkpoint";
+      params_->run_name + "_xlink_" + GetSpeciesName() + ".checkpoint";
 }
 
 bool CrosslinkSpecies::InitSpecFileInputFromFile(std::string spec_file_name) {
@@ -380,7 +380,7 @@ bool CrosslinkSpecies::InitSpecFileInputFromFile(std::string spec_file_name) {
 
 void CrosslinkSpecies::InitSpecFileInput() {
   std::string spec_file_name =
-      params_->run_name + "_xlink_" + species_label_ + ".spec";
+      params_->run_name + "_xlink_" + GetSpeciesName() + ".spec";
   if (!InitSpecFileInputFromFile(spec_file_name)) {
     Logger::Error("Input file %s did not open", spec_file_name.c_str());
   }
@@ -394,7 +394,7 @@ void CrosslinkSpecies::InitSpecFileInput() {
 
 void CrosslinkSpecies::LoadFromCheckpoints() {
   checkpoint_file_ =
-      params_->checkpoint_run_name + "_xlink_" + species_label_ + ".checkpoint";
+      params_->checkpoint_run_name + "_xlink_" + GetSpeciesName() + ".checkpoint";
   if (!GetCheckpointFlag()) {
     Logger::Error("Checkpoint file %s not available for parameter file!",
                   checkpoint_file_.c_str());

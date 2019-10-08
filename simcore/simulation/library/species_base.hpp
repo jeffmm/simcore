@@ -12,7 +12,6 @@ private:
 protected:
   int n_members_ = 0;
   int spec_file_iterator_ = -1;
-  std::string spec_name_;
   system_parameters *params_;
   space_struct *space_;
   RNG rng_;
@@ -21,14 +20,12 @@ protected:
   std::fstream ospec_file_;
   std::fstream ispec_file_;
   std::string checkpoint_file_;
-  std::string species_label_ = "generic";
   std::vector<std::string> spec_file_names_;
 
 public:
   SpeciesBase() {}
   void SetSID(species_id sid) {
     sid_ = sid;
-    spec_name_ = sid_._to_string();
   }
   virtual void UpdatePositions() {}
   virtual void Draw(std::vector<graph_struct *> &graph_array) {}
@@ -91,7 +88,7 @@ public:
   virtual void ZeroDrTot() {}
   virtual void CustomInsert() {}
   virtual const bool CheckInteractorUpdate() { return false; }
-  virtual const std::string GetSpeciesLabel() const { return "base"; }
+  virtual const std::string GetSpeciesName() const { return "base"; }
 };
 
 #endif
