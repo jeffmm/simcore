@@ -43,14 +43,14 @@ private:
 
 public:
   Crosslink();
-  void Init(crosslink_parameters *sparams, MinimumDistance *mindist,
-            LookupTable *lut);
+  void Init(crosslink_parameters *sparams);
+  void InitInteractionEnvironment(MinimumDistance *mindist, LookupTable *lut);
   void AttachObjRandom(Object *obj);
   void UpdateCrosslinkForces();
   void UpdateCrosslinkPositions();
   void GetAnchors(std::vector<Object *> &ixors);
   void GetInteractors(std::vector<Object *> &ixors);
-  void Draw(std::vector<graph_struct *> *graph_array);
+  void Draw(std::vector<graph_struct *> &graph_array);
   void SetDoubly();
   void SetSingly();
   void SetUnbound();

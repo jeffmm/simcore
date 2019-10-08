@@ -8,7 +8,7 @@ void Anchor::Init(crosslink_parameters *sparams) {
   color_ = sparams_->color;
   draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
   Unbind();
-  walker_ = (sparams_->walker ? true : false);
+  walker_ = (sparams_->walker_flag ? true : false);
   step_direction_ = (sparams_->step_direction == 0
                          ? 0
                          : SIGNOF(sparams_->step_direction));
@@ -17,7 +17,7 @@ void Anchor::Init(crosslink_parameters *sparams) {
   k_off_ = sparams_->k_off;
   end_pausing_ = (sparams_->end_pausing ? true : false);
   diffuse_ = (sparams_->diffusion_flag ? true : false);
-  f_spring_max_ = sparams_->f_spring_max;
+  static_ = (sparams_->static_flag ? true : false);
   f_stall_ = sparams_->f_stall;
   force_dep_vel_flag_ = sparams_->force_dep_vel_flag;
   SetDiffusion();
@@ -198,7 +198,7 @@ void Anchor::UpdateAnchorPositionToBond() {
   UpdatePeriodic();
 }
 
-void Anchor::Draw(std::vector<graph_struct *> *graph_array) {
+void Anchor::Draw(std::vector<graph_struct *> &graph_array) {
   if (!bound_)
     return;
   std::copy(scaled_position_, scaled_position_ + 3, g_.r);
@@ -210,7 +210,7 @@ void Anchor::Draw(std::vector<graph_struct *> *graph_array) {
   g_.diameter = diameter_;
   g_.length = length_;
   g_.draw = draw_;
-  graph_array->push_back(&g_);
+  graph_array.push_back(&g_);
 }
 
 void Anchor::AttachObjRandom(Object *o) {

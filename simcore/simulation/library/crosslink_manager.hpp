@@ -23,7 +23,7 @@ public:
   void UpdateObjsVolume();
   bool CheckUpdate();
   void Clear();
-  void Draw(std::vector<graph_struct *> *graph_array);
+  void Draw(std::vector<graph_struct *> &graph_array);
   void AddNeighborToAnchor(Object *anchor, Object *neighbor);
   void WriteOutputs();
   void ReadInputs();

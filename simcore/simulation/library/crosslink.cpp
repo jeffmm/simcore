@@ -2,11 +2,8 @@
 
 Crosslink::Crosslink() : Object() { SetSID(species_id::crosslink); }
 
-void Crosslink::Init(crosslink_parameters *sparams, MinimumDistance *mindist,
-                     LookupTable *lut) {
+void Crosslink::Init(crosslink_parameters *sparams) {
   sparams_ = sparams;
-  mindist_ = mindist;
-  lut_ = lut;
   length_ = -1;
   diameter_ = sparams_->tether_diameter;
   color_ = sparams_->tether_color;
@@ -18,7 +15,6 @@ void Crosslink::Init(crosslink_parameters *sparams, MinimumDistance *mindist,
   k_off_d_ = sparams_->k_off_d; // k_off for doubly to singly
   k_spring_ = sparams_->k_spring;
   k_align_ = sparams_->k_align;
-  f_spring_max_ = sparams_->f_spring_max;
   rcapture_ = sparams_->r_capture;
   fdep_factor_ = sparams_->force_dep_factor;
   polar_affinity_ = sparams_->polar_affinity;
@@ -33,6 +29,11 @@ void Crosslink::Init(crosslink_parameters *sparams, MinimumDistance *mindist,
   SetSingly();
   Logger::Trace("Initializing crosslink %d with anchors %d and %d", GetOID(),
                 anchors_[0].GetOID(), anchors_[1].GetOID());
+}
+
+void Crosslink::InitInteractionEnvironment(MinimumDistance *mindist, LookupTable *lut) {
+  mindist_ = mindist;
+  lut_ = lut;
 }
 
 /* Function used to set anchor[0] position etc to xlink position etc */
@@ -257,7 +258,7 @@ void Crosslink::AttachObjRandom(Object *obj) {
   }
 }
 
-void Crosslink::Draw(std::vector<graph_struct *> *graph_array) {
+void Crosslink::Draw(std::vector<graph_struct *> &graph_array) {
   /* Draw anchors */
   anchors_[0].Draw(graph_array);
   anchors_[1].Draw(graph_array);
@@ -277,7 +278,7 @@ void Crosslink::Draw(std::vector<graph_struct *> *graph_array) {
     }
     g_.length = length_;
     g_.draw = draw_;
-    graph_array->push_back(&g_);
+    graph_array.push_back(&g_);
   }
 }
 

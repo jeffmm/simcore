@@ -3,7 +3,7 @@
 
 #include "species_base.hpp"
 
-template <typename T, char S> class Species : public SpeciesBase {
+template <typename T, unsigned char S> class Species : public SpeciesBase {
 protected:
   std::vector<T> members_;
   species_parameters<S> sparams_;
@@ -11,19 +11,25 @@ protected:
 public:
   Species() {}
   // Initialize function for setting it up on the first pass
-  virtual void Init(system_parameters *params, species_base_parameters *sparams, space_struct *space) {
-    sparams_ = *dynamic_cast<species_parameters<S>*>(sparams);
+  virtual void Init(system_parameters *params,
+                    species_base_parameters *sparams,
+                    space_struct *space) {
+    sparams_ = *dynamic_cast<species_parameters<S> *>(sparams);
+    species_label_ = sparams_.label;
+    SetSID(species_id::_from_integral(S));
     SpeciesBase::Init(params, sparams, space);
   }
   // Virtual functions
-  virtual const double GetSpecDiameter() { return sparams_.diameter; }
-  virtual const bool CanOverlap() { return sparams_.overlap; }
-  virtual const int GetNInsert() { return sparams_.num; }
-  virtual const int GetNPosit() { return sparams_.n_posit; }
-  virtual const int GetNSpec() { return sparams_.n_spec; }
-  virtual const bool GetPositFlag() { return sparams_.posit_flag; }
-  virtual const bool GetSpecFlag() { return sparams_.spec_flag; }
-  std::string GetInsertionType() { return sparams_.insertion_type; }
+  virtual const double GetSpecDiameter() const { return sparams_.diameter; }
+  virtual const double GetSpecLength() const { return sparams_.length; }
+  virtual const bool CanOverlap() const { return sparams_.overlap; }
+  virtual const int GetNInsert() const { return sparams_.num; }
+  virtual const int GetNPosit() const { return sparams_.n_posit; }
+  virtual const int GetNSpec() const { return sparams_.n_spec; }
+  virtual const bool GetPositFlag() const { return sparams_.posit_flag; }
+  virtual const bool GetSpecFlag() const { return sparams_.spec_flag; }
+  virtual const std::string GetSpeciesLabel() const { return sparams_.label; }
+  std::string GetInsertionType() const { return sparams_.insertion_type; }
 
   virtual void AddMember();
   virtual void AddMember(T newmem);
@@ -33,10 +39,10 @@ public:
   virtual void CrystalArrangement();
   virtual void CenteredOrientedArrangement();
   void SetLastMemberPosition(double const *const pos);
-  virtual void Draw(std::vector<graph_struct *> *graph_array);
+  virtual void Draw(std::vector<graph_struct *> &graph_array);
   virtual void UpdatePositions();
-  virtual void GetInteractors(std::vector<Object *> *ix);
-  virtual void GetLastInteractors(std::vector<Object *> *ix);
+  virtual void GetInteractors(std::vector<Object *> &ix);
+  virtual void GetLastInteractors(std::vector<Object *> &ix);
   virtual double GetPotentialEnergy();
   virtual void ZeroForces();
   virtual void Report();
@@ -52,7 +58,7 @@ public:
   virtual void InitAnalysis() {}
   virtual void RunAnalysis() {}
   virtual void FinalizeAnalysis() {}
-  virtual std::vector<T> *GetMembers() { return &members_; }
+  virtual const std::vector<T> &GetMembers() { return members_; }
   virtual void CleanUp();
   virtual void Reserve();
   virtual double const GetVolume();
@@ -62,8 +68,7 @@ public:
   virtual const bool CheckInteractorUpdate();
 };
 
-template <typename T, char S>
-double const Species<T, S>::GetVolume() {
+template <typename T, unsigned char S> double const Species<T, S>::GetVolume() {
   double vol = 0.0;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     vol += it->GetVolume();
@@ -71,24 +76,21 @@ double const Species<T, S>::GetVolume() {
   return vol;
 }
 
-template <typename T, char S>
-void Species<T, S>::Reserve() {
+template <typename T, unsigned char S> void Species<T, S>::Reserve() {
   members_.reserve(GetNInsert());
 }
 
-template <typename T, char S>
-void Species<T, S>::AddMember() {
+template <typename T, unsigned char S> void Species<T, S>::AddMember() {
   T newmember;
   Logger::Trace("Adding member to species %s, member number %d, member id %d",
-      GetSID()._to_string(), n_members_+1, newmember.GetOID());
+                GetSID()._to_string(), n_members_ + 1, newmember.GetOID());
   members_.push_back(newmember);
   members_.back().SetSID(GetSID());
   members_.back().Init(&sparams_);
   n_members_++;
 }
 
-template <typename T, char S>
-double const Species<T, S>::GetDrMax() {
+template <typename T, unsigned char S> double const Species<T, S>::GetDrMax() {
   double max_dr = 0;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     double dr = it->GetDrTot();
@@ -99,62 +101,55 @@ double const Species<T, S>::GetDrMax() {
   return max_dr;
 }
 
-template <typename T, char S>
-void Species<T, S>::ZeroDrTot() {
+template <typename T, unsigned char S> void Species<T, S>::ZeroDrTot() {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->ZeroDrTot();
   }
 }
 
-template <typename T, char S>
-void Species<T, S>::AddMember(T newmem) {
-  Logger::Trace("Adding preexisting member to species %s", GetSID()._to_string());
+template <typename T, unsigned char S> void Species<T, S>::AddMember(T newmem) {
+  Logger::Trace("Adding preexisting member to species %s",
+                GetSID()._to_string());
   members_.push_back(newmem);
   newmem.SetSID(GetSID());
   n_members_++;
 }
 
-template <typename T, char S>
-void Species<T, S>::PopMember() {
+template <typename T, unsigned char S> void Species<T, S>::PopMember() {
   Logger::Trace("Removing last member of species %s", GetSID()._to_string());
   members_.back().Cleanup();
   members_.pop_back();
   n_members_--;
 }
 
-template <typename T, char S>
-void Species<T, S>::PopAll() {
+template <typename T, unsigned char S> void Species<T, S>::PopAll() {
   while (n_members_ > 0) {
     PopMember();
   }
 }
 
-template <typename T, char S>
-void Species<T, S>::Draw(std::vector<graph_struct *> *graph_array) {
+template <typename T, unsigned char S>
+void Species<T, S>::Draw(std::vector<graph_struct *> &graph_array) {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->Draw(graph_array);
   }
 }
 
-template <typename T, char S>
-void Species<T, S>::UpdatePositions() {
+template <typename T, unsigned char S> void Species<T, S>::UpdatePositions() {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->UpdatePosition();
   }
 }
 
-template <typename T, char S>
-void Species<T, S>::GetInteractors(std::vector<Object *> *ixors) {
-  //ix->clear();
-  std::vector<Object *> ix;
+template <typename T, unsigned char S>
+void Species<T, S>::GetInteractors(std::vector<Object *> &ixors) {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
-    it->GetInteractors(&ix);
+    it->GetInteractors(ixors);
   }
-  ixors->insert(ixors->end(), ix.begin(), ix.end());
 }
 
-template <typename T, char S>
-void Species<T, S>::GetLastInteractors(std::vector<Object *> *ix) {
+template <typename T, unsigned char S>
+void Species<T, S>::GetLastInteractors(std::vector<Object *> &ix) {
   if (members_.size() == 0) {
     Logger::Error(
         "Called for last interactors of species, but species has zero "
@@ -163,7 +158,7 @@ void Species<T, S>::GetLastInteractors(std::vector<Object *> *ix) {
   members_.back().GetInteractors(ix);
 }
 
-template <typename T, char S>
+template <typename T, unsigned char S>
 double Species<T, S>::GetPotentialEnergy() {
   double pe = 0;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
@@ -175,22 +170,19 @@ double Species<T, S>::GetPotentialEnergy() {
   return 0.5 * pe;
 }
 
-template <typename T, char S>
-void Species<T, S>::ZeroForces() {
+template <typename T, unsigned char S> void Species<T, S>::ZeroForces() {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->ZeroForce();
   }
 }
 
-template <typename T, char S>
-void Species<T, S>::Report() {
+template <typename T, unsigned char S> void Species<T, S>::Report() {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->Report();
   }
 }
 
-template <typename T, char S>
-int Species<T, S>::GetCount() {
+template <typename T, unsigned char S> int Species<T, S>::GetCount() {
   int count = 0;
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     count += it->GetCount();
@@ -198,24 +190,21 @@ int Species<T, S>::GetCount() {
   return count;
 }
 
-template <typename T, char S>
-void Species<T, S>::WritePosits() {
+template <typename T, unsigned char S> void Species<T, S>::WritePosits() {
   int size = members_.size();
   oposit_file_.write(reinterpret_cast<char *>(&size), sizeof(size));
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->WritePosit(oposit_file_);
 }
 
-template <typename T, char S>
-void Species<T, S>::WriteSpecs() {
+template <typename T, unsigned char S> void Species<T, S>::WriteSpecs() {
   int size = members_.size();
   ospec_file_.write(reinterpret_cast<char *>(&size), sizeof(size));
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->WriteSpec(ospec_file_);
 }
 
-template <typename T, char S>
-void Species<T, S>::WriteCheckpoints() {
+template <typename T, unsigned char S> void Species<T, S>::WriteCheckpoints() {
   int size = members_.size();
   std::fstream ocheck_file(checkpoint_file_, std::ios::out | std::ios::binary);
   if (!ocheck_file.is_open()) {
@@ -229,8 +218,7 @@ void Species<T, S>::WriteCheckpoints() {
   ocheck_file.close();
 }
 
-template <typename T, char S>
-void Species<T, S>::ReadPosits() {
+template <typename T, unsigned char S> void Species<T, S>::ReadPosits() {
   if (iposit_file_.eof()) {
     Logger::Info("EOF reached while reading posits");
     early_exit = true;
@@ -259,7 +247,7 @@ void Species<T, S>::ReadPosits() {
     it->ReadPosit(iposit_file_);
 }
 
-template <typename T, char S>
+template <typename T, unsigned char S>
 void Species<T, S>::ReadPositsFromSpecs() {
   ReadSpecs();
   for (auto it = members_.begin(); it != members_.end(); ++it) {
@@ -267,8 +255,7 @@ void Species<T, S>::ReadPositsFromSpecs() {
   }
 }
 
-template <typename T, char S>
-void Species<T, S>::ReadCheckpoints() {
+template <typename T, unsigned char S> void Species<T, S>::ReadCheckpoints() {
   std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
   if (!icheck_file.is_open()) {
     Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
@@ -287,8 +274,7 @@ void Species<T, S>::ReadCheckpoints() {
   rng_.SetSeed(seed);
 }
 
-template <typename T, char S>
-void Species<T, S>::ReadSpecs() {
+template <typename T, unsigned char S> void Species<T, S>::ReadSpecs() {
   if (ispec_file_.eof()) {
     if (HandleEOF()) {
       Logger::Info("Switching to new spec file");
@@ -305,7 +291,7 @@ void Species<T, S>::ReadSpecs() {
     return;
   }
   int size = -1;
-  //T *member;
+  // T *member;
   ispec_file_.read(reinterpret_cast<char *>(&size), sizeof(size));
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
@@ -330,19 +316,16 @@ void Species<T, S>::ReadSpecs() {
     it->ReadSpec(ispec_file_);
 }
 
-template <typename T, char S>
-void Species<T, S>::ScalePositions() {
+template <typename T, unsigned char S> void Species<T, S>::ScalePositions() {
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->ScalePosition();
 }
 
-template <typename T, char S>
-void Species<T, S>::CleanUp() {
+template <typename T, unsigned char S> void Species<T, S>::CleanUp() {
   members_.clear();
 }
 
-template <typename T, char S>
-void Species<T, S>::ArrangeMembers() {
+template <typename T, unsigned char S> void Species<T, S>::ArrangeMembers() {
   if (GetInsertionType().compare("custom") == 0)
     CustomInsert();
   else if (GetInsertionType().compare("simple_crystal") == 0)
@@ -355,13 +338,13 @@ void Species<T, S>::ArrangeMembers() {
         "species!\n");
 }
 
-template <typename T, char S>
+template <typename T, unsigned char S>
 void Species<T, S>::SetLastMemberPosition(double const *const pos) {
   members_.back().SetPosition(pos);
   members_.back().UpdatePeriodic();
 }
 
-template <typename T, char S>
+template <typename T, unsigned char S>
 void Species<T, S>::CenteredOrientedArrangement() {
   // This is redundant for filaments, since they have already inserted
   // themselves properly.
@@ -374,7 +357,7 @@ void Species<T, S>::CenteredOrientedArrangement() {
   }
 }
 
-template <typename T, char S>
+template <typename T, unsigned char S>
 void Species<T, S>::CrystalArrangement() {
   double d = members_[0].GetDiameter();
   double l = members_[0].GetLength();
@@ -394,7 +377,8 @@ void Species<T, S>::CrystalArrangement() {
         (int)N);
   }
   double fraction = N / n_members_;
-  if (fraction < 1) fraction = 1;
+  if (fraction < 1)
+    fraction = 1;
   if (l == 0) {
     if (n_dim == 2)
       nY_max = floor(pow(n_members_, 1.0 / n_dim));
@@ -405,7 +389,8 @@ void Species<T, S>::CrystalArrangement() {
     nX_max = ceil(n_members_ / nY_max);
   } else if (n_dim == 3) {
     nX_max = floor(sqrt(n_members_ / nY_max));
-    if (nX_max == 0) nX_max = 1;
+    if (nX_max == 0)
+      nX_max = 1;
     nZ_max = ceil(n_members_ / (nX_max * nY_max));
   }
   for (int i = 0; i < n_dim; ++i) {
@@ -467,8 +452,7 @@ void Species<T, S>::CrystalArrangement() {
   }
 }
 
-template <typename T, char S>
-void Species<T, S>::CustomInsert() {
+template <typename T, unsigned char S> void Species<T, S>::CustomInsert() {
   YAML::Node inode;
   try {
     inode = YAML::LoadFile(sparams_.insert_file);
@@ -490,7 +474,8 @@ void Species<T, S>::CustomInsert() {
     Logger::Error("");
   }
   for (YAML::const_iterator it = inode.begin(); it != inode.end(); ++it) {
-    if (it->first.as<std::string>().compare(spec_name_) != 0) continue;
+    if (it->first.as<std::string>().compare(spec_name_) != 0)
+      continue;
     if (!it->second.IsSequence()) {
       Logger::Error("Custom insert file positions not specified as sequence");
     }
@@ -502,9 +487,8 @@ void Species<T, S>::CustomInsert() {
         Logger::Error("Custom insert position not specified as sequence");
       }
       if (jt->size() != 2 || (*jt)[0].size() != 3 || (*jt)[1].size() != 3) {
-        Logger::Error(
-            "Custom insert position not in format "
-            "[[pos_x,pos_y,pos_z],[u_x,u_y,u_z]]");
+        Logger::Error("Custom insert position not in format "
+                      "[[pos_x,pos_y,pos_z],[u_x,u_y,u_z]]");
       }
       for (int i = 0; i < 3; ++i) {
         pos[i] = (*jt)[0][i].as<double>();
@@ -515,10 +499,10 @@ void Species<T, S>::CustomInsert() {
   }
 }
 
-template <typename T, char S>
+template <typename T, unsigned char S>
 const bool Species<T, S>::CheckInteractorUpdate() {
   bool result = false;
-  for (auto it=members_.begin(); it!=members_.end(); ++it) {
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
     if (it->CheckInteractorUpdate()) {
       result = true;
     }

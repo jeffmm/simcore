@@ -280,7 +280,7 @@ void Object::ZeroForce() {
   p_energy_ = 0.0;
 }
 
-void Object::Draw(std::vector<graph_struct *> *graph_array) {
+void Object::Draw(std::vector<graph_struct *> &graph_array) {
   std::copy(scaled_position_, scaled_position_ + 3, g_.r);
   for (int i = space_->n_periodic; i < n_dim_; ++i) {
     g_.r[i] = position_[i];
@@ -290,7 +290,7 @@ void Object::Draw(std::vector<graph_struct *> *graph_array) {
   g_.diameter = diameter_;
   g_.length = length_;
   g_.draw = draw_;
-  graph_array->push_back(&g_);
+  graph_array.push_back(&g_);
 }
 
 // Updates scaled position, leaving position fixed
@@ -332,8 +332,8 @@ void Object::ScalePosition() {
   }
 }
 int Object::GetCount() { return 1; }
-void Object::GetInteractors(std::vector<Object *> *ix) {
-  ix->insert(ix->end(), interactors_.begin(), interactors_.end());
+void Object::GetInteractors(std::vector<Object *> &ix) {
+  ix.insert(ix.end(), interactors_.begin(), interactors_.end());
 }
 double const *const Object::GetInteractorPosition() { return GetPosition(); }
 double const *const Object::GetInteractorPrevPosition() {

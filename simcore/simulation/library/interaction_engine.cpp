@@ -130,7 +130,7 @@ void InteractionEngine::UpdateInteractors() {
   interactors_.clear();
   for (auto spec_it = species_->begin(); spec_it != species_->end();
        ++spec_it) {
-    (*spec_it)->GetInteractors(&ix_objects_);
+    (*spec_it)->GetInteractors(ix_objects_);
   }
   // Add crosslinks as interactors
   interactors_.insert(interactors_.end(), ix_objects_.begin(),
@@ -172,7 +172,7 @@ void InteractionEngine::PairBondCrosslinks() {
   // First get object interactors (non-crosslinks)
   for (auto spec_it = species_->begin(); spec_it != species_->end();
        ++spec_it) {
-    (*spec_it)->GetInteractors(&ix_objects_);
+    (*spec_it)->GetInteractors(ix_objects_);
   }
   interactors_.insert(interactors_.end(), ix_objects_.begin(),
                       ix_objects_.end());
@@ -351,11 +351,6 @@ void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {
     if (obj1->HasNeighbor(obj2->GetOID())) {
       return;
     }
-  }
-
-  if (params_->filament.spiral_flag == 1 &&
-      obj1->GetMeshID() != obj2->GetMeshID()) {
-    return;
   }
 
   /* If one object is a crosslink, add object to crosslink neighbor list */
@@ -697,20 +692,14 @@ void InteractionEngine::AddInteractors(std::vector<Object *> &ixs) {
 }
 
 void InteractionEngine::DrawInteractions(
-    std::vector<graph_struct *> *graph_array) {
+    std::vector<graph_struct *> &graph_array) {
   xlink_.Draw(graph_array);
 }
 
-void InteractionEngine::WriteOutputs() {
-  if (params_->crosslink.concentration < 1e-12)
-    return;
-  xlink_.WriteOutputs();
-}
+void InteractionEngine::WriteOutputs() { xlink_.WriteOutputs(); }
 
 void InteractionEngine::InitOutputs(bool reading_inputs, bool reduce_flag,
                                     bool with_reloads) {
-  if (params_->crosslink.concentration < 1e-12)
-    return;
   xlink_.InitOutputs(reading_inputs, reduce_flag, with_reloads);
   if (params_->load_checkpoint) {
     PairBondCrosslinks();
@@ -718,11 +707,7 @@ void InteractionEngine::InitOutputs(bool reading_inputs, bool reduce_flag,
   }
 }
 
-void InteractionEngine::ReadInputs() {
-  if (params_->crosslink.concentration < 1e-12)
-    return;
-  xlink_.ReadInputs();
-}
+void InteractionEngine::ReadInputs() { xlink_.ReadInputs(); }
 
 void InteractionEngine::InitCrosslinkSpecies(sid_label &slab,
                                              ParamsParser &parser) {

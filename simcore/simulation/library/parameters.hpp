@@ -2,31 +2,31 @@
 #define _SIMCORE_PARAMETERS_H_
 
 #include "definitions.hpp"
+
 #include <string>
 
-template <unsigned char S> struct species_parameters;
-
-typedef species_parameters<species_id::none> species_base_parameters;
-
 template <unsigned char S> struct species_parameters {
-  std::string species_name = "";
+  int num = 0;
   std::string insertion_type = "random";
   std::string insert_file = "none";
-  std::string draw_type = "orientation";
-  double diameter = 1;
-  double color = 0;
-  int num = 0;
   int overlap = 0;
+  std::string draw_type = "orientation";
+  double color = 0;
   int posit_flag = 0;
   int spec_flag = 0;
   int n_posit = 100;
   int n_spec = 100;
+  std::string label = "species";
+  double diameter = 1;
+  double length = 0;
+    virtual ~species_parameters() {}
 };
+
+typedef species_parameters<species_id::none> species_base_parameters;
 
 template <>
 struct species_parameters<species_id::filament>
     : public species_base_parameters {
-  double length = -1;
   double persistence_length = 400;
   double max_length = 500;
   double min_bond_length = 1.5;
@@ -71,16 +71,46 @@ struct species_parameters<species_id::filament>
   double polydispersity_factor = 0.03;
   int polydispersity_warn_on_truncate = 0;
 };
-
 typedef species_parameters<species_id::filament> filament_parameters;
+
+template <>
+struct species_parameters<species_id::br_bead>
+    : public species_base_parameters {
+  double driving_factor = 0;
+  double packing_fraction = -1;
+};
+typedef species_parameters<species_id::br_bead> br_bead_parameters;
+
+template <>
+struct species_parameters<species_id::spherocylinder>
+    : public species_base_parameters {
+  int diffusion_analysis = 0;
+  int n_diffusion_samples = 1;
+  int midstep = 0;
+};
+typedef species_parameters<species_id::spherocylinder> spherocylinder_parameters;
+
+template <>
+struct species_parameters<species_id::spindle>
+    : public species_base_parameters {
+  int n_filaments_bud = 1;
+  int n_filaments_mother = 0;
+  int alignment_potential = 0;
+  double k_spring = 1000;
+  double k_align = 0;
+  double spring_length = 0;
+  double spb_diameter = 5;
+};
+typedef species_parameters<species_id::spindle> spindle_parameters;
 
 template <>
 struct species_parameters<species_id::crosslink>
     : public species_base_parameters {
   double concentration = 0;
-  int walker = 0;
-  double velocity = 1;
+  int walker_flag = 0;
+  int static_flag = 0;
   int diffusion_flag = 0;
+  double velocity = 1;
   double k_on = 10;
   double k_off = 2;
   double k_on_d = 10;
@@ -88,7 +118,6 @@ struct species_parameters<species_id::crosslink>
   double force_dep_factor = 1;
   double polar_affinity = 0;
   double k_spring = 10;
-  double f_spring_max = 1000;
   double f_stall = 100;
   int force_dep_vel_flag = 1;
   double k_align = 0;
@@ -125,7 +154,6 @@ struct system_parameters {
   std::string checkpoint_run_name = "sc";
   int n_load = 0;
   int print_complete = 0;
-  std::string insertion_type = "species";
   int movie_flag = 0;
   std::string movie_directory = "frames";
   int time_analysis = 0;
@@ -138,7 +166,6 @@ struct system_parameters {
   double ss_rs = 1.5;
   double ss_eps = 1;
   double f_cutoff = 2000;
-  int max_overlap = 100000;
   int constant_pressure = 0;
   int constant_volume = 0;
   double target_pressure = 0;
@@ -164,7 +191,6 @@ struct system_parameters {
   int local_order_analysis = 0;
   double local_order_width = 50;
   double local_order_bin_width = 0.5;
-  int local_order_average = 1;
   int local_order_n_analysis = 100;
   int density_analysis = 0;
   double density_bin_width = 0.1;
@@ -172,7 +198,6 @@ struct system_parameters {
   int polar_order_analysis = 0;
   int polar_order_n_bins = 100;
   double polar_order_contact_cutoff = 3;
-  int polar_order_color = 0;
   int overlap_analysis = 0;
   int highlight_overlaps = 0;
   int reduced = 0;
@@ -184,7 +209,7 @@ struct system_parameters {
   double flock_color_int = 4.71;
   int in_out_flag = 0;
   int checkpoint_flag = 0;
-  int n_checkpoint = 1000;
+  int n_checkpoint = 10000;
 };
 
 #endif // _SIMCORE_PARAMETERS_H_

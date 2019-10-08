@@ -48,7 +48,7 @@ public:
   void SubReport();
   void UpdateBondPositions();
   void UpdatePrevPositions();
-  virtual void Draw(std::vector<graph_struct *> *graph_array);
+  virtual void Draw(std::vector<graph_struct *> &graph_array);
   void Reserve(int n_bonds);
   void Clear();
   void DoubleGranularityLinear();
@@ -58,7 +58,7 @@ public:
   Site *GetSite(int i);
   Bond *GetBond(int i);
   virtual void ZeroForce();
-  virtual void GetInteractors(std::vector<Object *> *ix);
+  virtual void GetInteractors(std::vector<Object *> &ix);
   virtual int GetCount();
   virtual void ReadPosit(std::fstream &ip);
   virtual void WritePosit(std::fstream &op);

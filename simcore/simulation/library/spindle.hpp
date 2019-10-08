@@ -7,6 +7,7 @@
 
 class Spindle : public Spherocylinder {
 protected:
+  spindle_parameters *sparams_;
   bool alignment_potential_, fixed_spacing_;
   int n_filaments_bud_, n_filaments_mother_;
   double k_spring_, k_align_, spring_length_, anchor_distance_, gamma_trans_,
@@ -20,15 +21,16 @@ protected:
   void Integrate();
   void ResetAnchorPositions();
   bool InsertFilament(int i);
+  void SetParameters();
 
 public:
   Spindle();
-  void Init();
+  void Init(spindle_parameters *sparams);
   void UpdatePosition() {}
   void UpdatePosition(bool midstep);
-  virtual void GetInteractors(std::vector<Object *> *ix);
+  virtual void GetInteractors(std::vector<Object *> &ix);
   virtual int GetCount();
-  virtual void Draw(std::vector<graph_struct *> *graph_array);
+  virtual void Draw(std::vector<graph_struct *> &graph_array);
   virtual void ZeroForce();
 };
 

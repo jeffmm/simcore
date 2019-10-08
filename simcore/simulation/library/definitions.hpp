@@ -10,8 +10,8 @@ public:                                                                        \
 #define ENABLE_OPENMP
 #endif
 
-BETTER_ENUM(species_id, unsigned char, br_bead, filament, centrosome,
-            bead_spring, spherocylinder, spindle, crosslink, none);
+BETTER_ENUM(species_id, unsigned char, br_bead, filament, spherocylinder,
+            spindle, crosslink, none);
 BETTER_ENUM(draw_type, unsigned char, fixed, orientation, bw, none);
 BETTER_ENUM(potential_type, unsigned char, none, wca, soft);
 BETTER_ENUM(boundary_type, unsigned char, none = 0, box = 1, sphere = 2,

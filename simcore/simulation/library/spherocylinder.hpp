@@ -3,7 +3,8 @@
 
 #include "object.hpp"
 class Spherocylinder : public Object {
- protected:
+protected:
+  spherocylinder_parameters *sparams_;
   double gamma_par_, gamma_perp_, gamma_rot_, diffusion_par_, diffusion_perp_,
       diffusion_rot_, body_frame_[6];
   bool is_midstep_;
@@ -14,11 +15,12 @@ class Spherocylinder : public Object {
   void AddRandomDisplacement();
   void AddRandomReorientation();
   void Integrate();
+  void SetParameters();
 
- public:
+public:
   Spherocylinder();
-  void Init();
+  void Init(spherocylinder_parameters *sparams);
   void UpdatePosition();
 };
 
-#endif  // _SIMCORE_SPHEROCYLINDER_H_
+#endif // _SIMCORE_SPHEROCYLINDER_H_

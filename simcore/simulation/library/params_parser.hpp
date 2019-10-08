@@ -15,13 +15,15 @@ private:
   void ParseSpeciesParameters();
   std::vector<species_base_parameters *> species_params_;
   int n_species_ = 0;
-  int n_crosslinks = 0;
+  int n_crosslinks_ = 0;
 
 public:
   void Init(YAML::Node sim_params);
   system_parameters ParseSystemParameters();
   std::vector<sid_label> &GetSpeciesLabels() { return labels_; }
   species_base_parameters *GetNewSpeciesParameters(sid_label &slab);
+  const int GetNCrosslinkSpecies() { return n_crosslinks_; }
+  const int GetNSpecies() { return n_species_; }
 };
 
 #endif

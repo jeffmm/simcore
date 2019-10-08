@@ -9,7 +9,7 @@ void SpeciesBase::Init(system_parameters *params, species_base_parameters *spara
 
 void SpeciesBase::InitPositFile(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  std::string posit_file_name = run_name + "_" + sid_str + "_" + spec_label_ + ".posit";
+  std::string posit_file_name = run_name + "_" + sid_str + "_" + GetSpeciesLabel() + ".posit";
   oposit_file_.open(posit_file_name, std::ios::out | std::ios::binary);
   if (!oposit_file_.is_open()) {
     Logger::Error("Output file %s did not open", posit_file_name.c_str());
@@ -22,7 +22,7 @@ void SpeciesBase::InitPositFile(std::string run_name) {
 
 void SpeciesBase::InitPositFileInput(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  std::string posit_file_name = run_name + "_" + sid_str + "_" + spec_label_ + ".posit";
+  std::string posit_file_name = run_name + "_" + sid_str + "_" + GetSpeciesLabel() + ".posit";
   iposit_file_.open(posit_file_name, std::ios::in | std::ios::binary);
   if (!iposit_file_.is_open()) {
     Logger::Error("Input file %s did not open", posit_file_name.c_str());
@@ -45,7 +45,7 @@ void SpeciesBase::InitPositFileInput(std::string run_name) {
 
 void SpeciesBase::InitSpecFile(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  std::string spec_file_name = run_name + "_" + sid_str + "_" + spec_label_ + ".spec";
+  std::string spec_file_name = run_name + "_" + sid_str + "_" + GetSpeciesLabel() + ".spec";
   ospec_file_.open(spec_file_name, std::ios::out | std::ios::binary);
   if (!ospec_file_.is_open()) {
     Logger::Error("Output file %s did not open", spec_file_name.c_str());
@@ -102,7 +102,7 @@ bool SpeciesBase::HandleEOF() {
         file_name << "_reduced" << params_->reduced;
       }
     }
-    file_name << "_" << sid_str << "_" << spec_label_ << ".spec";
+    file_name << "_" << sid_str << "_" << GetSpeciesLabel() << ".spec";
     if (ispec_file_.is_open()) {
       ispec_file_.close();
     }
@@ -138,7 +138,7 @@ bool SpeciesBase::InitSpecFileInputFromFile(std::string spec_file_name) {
 
 void SpeciesBase::InitSpecFileInput(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  std::string spec_file_name = run_name + "_" + sid_str + "_" + spec_label_ + ".spec";
+  std::string spec_file_name = run_name + "_" + sid_str + "_" + GetSpeciesLabel() + ".spec";
   if (!InitSpecFileInputFromFile(spec_file_name)) {
     Logger::Error("Input file %s did not open", spec_file_name.c_str());
   }
@@ -155,13 +155,13 @@ void SpeciesBase::InitOutputFiles(std::string run_name) {
 
 void SpeciesBase::InitCheckpoints(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  checkpoint_file_ = run_name + "_" + sid_str + "_" + spec_label_ + ".checkpoint";
+  checkpoint_file_ = run_name + "_" + sid_str + "_" + GetSpeciesLabel() + ".checkpoint";
 }
 
 void SpeciesBase::LoadFromCheckpoints(std::string run_name,
                                       std::string checkpoint_run_name) {
   std::string sid_str = sid_._to_string();
-  checkpoint_file_ = checkpoint_run_name + "_" + sid_str + "_" + spec_label_ + ".checkpoint";
+  checkpoint_file_ = checkpoint_run_name + "_" + sid_str + "_" + GetSpeciesLabel() + ".checkpoint";
   if (!GetCheckpointFlag()) {
     Logger::Error("Checkpoint file %s not available for parameter file!",
                   checkpoint_file_.c_str());

@@ -323,7 +323,7 @@ void Mesh::SubReport() {
   }
 }
 void Mesh::SetBondLength(double l) { bond_length_ = l; }
-void Mesh::Draw(std::vector<graph_struct *> *graph_array) {
+void Mesh::Draw(std::vector<graph_struct *> &graph_array) {
   for (bond_iterator it = bonds_.begin(); it != bonds_.end(); ++it) {
     it->Draw(graph_array);
   }
@@ -352,9 +352,9 @@ const bool Mesh::CheckInteractorUpdate() {
   return Object::CheckInteractorUpdate();
 }
 
-void Mesh::GetInteractors(std::vector<Object *> *ix) {
+void Mesh::GetInteractors(std::vector<Object *> &ix) {
   UpdateInteractors();
-  ix->insert(ix->end(), interactors_.begin(), interactors_.end());
+  ix.insert(ix.end(), interactors_.begin(), interactors_.end());
 }
 
 int Mesh::GetCount() { return n_bonds_; }

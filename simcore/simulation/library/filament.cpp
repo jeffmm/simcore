@@ -1145,7 +1145,7 @@ void Filament::CheckFlocking() {
   }
 }
 
-void Filament::Draw(std::vector<graph_struct *> *graph_array) {
+void Filament::Draw(std::vector<graph_struct *> &graph_array) {
   for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
     bond->SetFlockType(in_flock_);
     bond->Draw(graph_array);

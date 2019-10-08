@@ -66,12 +66,15 @@ void OutputManager::WriteOutputs() {
     WritePosits();
   }
   if (spec_flag_ && (*i_step_ % n_spec_ == 0)) {
+    Logger::Debug("Writing outputs");
     WriteSpecs();
   }
   if (checkpoint_flag_ && (*i_step_ % n_checkpoint_ == 0)) {
+    Logger::Debug("Writing checkpoints");
     WriteCheckpoints();
   }
   if (thermo_flag_ && (*i_step_ % n_thermo_ == 0)) {
+    Logger::Debug("Writing system thermodynamics");
     WriteThermo();
   }
 }

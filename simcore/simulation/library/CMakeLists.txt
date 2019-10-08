@@ -5,6 +5,7 @@ find_package(GSL REQUIRED)
 find_package(FFTW REQUIRED)
 
 set(LIB ${YAML_CPP_LIBRARIES} ${GSL_LIBRARIES}  ${FFTW_LIBRARIES} KMC)
+set(INCLUDES ${GSL_INCLUDE_DIRS} ${FFTW_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIR})
 
 # If we aren't compiling on local machines, use openmp
 if (OMP)
@@ -32,12 +33,11 @@ endif()
 include_directories(${INCLUDES})
 set(TARGET "simcore")
 set(SOURCES anchor.cpp 
-            #bead_spring.cpp
             bond.cpp
-            #br_bead.cpp
+            br_bead.cpp
+            br_bead_species.cpp
             cell.cpp
             cell_list.cpp
-            #centrosome.cpp
             cpu.cpp
             cpu_time.cpp
             crosslink.cpp
@@ -61,10 +61,11 @@ set(SOURCES anchor.cpp
             simulation_manager.cpp
             site.cpp
             space.cpp
-            #species.cpp
             species_base.cpp
-            #spherocylinder.cpp
-            #spindle.cpp
+            spherocylinder.cpp
+            spherocylinder_species.cpp
+            spindle.cpp
+            spindle_species.cpp
             struct_analysis.cpp
             writebmp.cpp
 )

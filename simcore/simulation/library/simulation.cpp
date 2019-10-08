@@ -102,8 +102,8 @@ void Simulation::ZeroForces() {
 /* Update system pressure, volume and rescale system size if necessary,
  * handling periodic boundaries in a sane way. */
 void Simulation::Statistics() {
-  Logger::Debug("Calculating system thermodynamics");
   if (i_step_ % params_.n_thermo == 0 && i_step_ > 0) {
+    Logger::Debug("Calculating system pressure and volume");
     /* Calculate system pressure from stress tensor */
     iengine_.CalculatePressure();
     if (params_.constant_pressure) {
@@ -117,6 +117,7 @@ void Simulation::Statistics() {
   }
   /* Update object positions, etc and handle periodic BCs */
   if (space_.GetUpdate()) {
+    Logger::Debug("Rescaling species scaled positions in dynamic space");
     space_.UpdateSpace();
     ScaleSpeciesPositions();
   }
@@ -153,8 +154,8 @@ void Simulation::InitSimulation() {
 #endif
   space_.Init(&params_);
   InitObjects();
-  InitSpecies();
   iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_);
+  InitSpecies();
   InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
   InitOutputs();
   if (params_.graph_flag) {
@@ -197,16 +198,16 @@ void Simulation::InitGraphics() {
 /* Initialize object types */
 void Simulation::InitSpecies() {
   std::vector<sid_label> species_labels = parser_.GetSpeciesLabels();
-  species_.reserve(spec_params.size());
+  species_.reserve(parser_.GetNSpecies());
   SpeciesFactory species_factory;
-  for (auto slab = sid_labels.begin(); slab != sid_labels.end(); ++slab) {
-    const species_id sid = species_id::_from_string(it->first.c_str());
+  for (auto slab = species_labels.begin(); slab != species_labels.end(); ++slab) {
+    const species_id sid = species_id::_from_string(slab->first.c_str());
     if (sid == +species_id::crosslink) {
       iengine_.InitCrosslinkSpecies(*slab, parser_);
       continue;
     }
     species_.push_back(species_factory.CreateSpecies(sid));
-    species_parameters_base *sparams = params_.GetNewSpeciesParameters(*slab);
+    species_base_parameters *sparams = parser_.GetNewSpeciesParameters(*slab);
     species_.back()->Init(&params_, sparams, space_.GetStruct());
     delete sparams;
     if (species_.back()->GetNInsert() > 0) {
@@ -260,7 +261,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         num = (*spec)->GetNInsert();
         // First check that we are respecting boundary conditions
         std::vector<Object *> last_ixors;
-        (*spec)->GetLastInteractors(&last_ixors);
+        (*spec)->GetLastInteractors(last_ixors);
         if (params_.boundary != 0 && !processing &&
             iengine_.CheckBoundaryConditions(last_ixors)) {
           (*spec)->PopMember();
@@ -297,8 +298,10 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         pos[0] = -params_.system_radius;
         pos[1] = -params_.system_radius;
         double d = 0.5 * (*spec)->GetSpecDiameter();
+        double l = 0.25 * (*spec)->GetSpecLength();
+        l = (l < d ? d : l);
         int num_x = (int)floor(2 * params_.system_radius / d);
-        int num_y = (int)floor(2 * params_.system_radius / d);
+        int num_y = (int)floor(2 * params_.system_radius / l);
         std::vector<std::pair<int, int>> grid_array;
         for (int i = 0; i < num_x; ++i) {
           for (int j = 0; j < num_y; ++j) {
@@ -312,7 +315,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         gsl_ran_shuffle(rng_.r, grid_index, num_x * num_y, sizeof(int));
         for (int i = 0; i < num_x * num_y; ++i) {
           pos[0] = grid_array[grid_index[i]].first * d;
-          pos[1] = grid_array[grid_index[i]].second * d;
+          pos[1] = grid_array[grid_index[i]].second * l;
           (*spec)->AddMember();
           /* Update the number of particles we need to insert, in case a
              species needs to have a certain packing fraction */
@@ -320,7 +323,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           (*spec)->SetLastMemberPosition(pos);
           // First check that we are respecting boundary conditions
           std::vector<Object *> last_ixors;
-          (*spec)->GetLastInteractors(&last_ixors);
+          (*spec)->GetLastInteractors(last_ixors);
           if (params_.boundary != 0 && !processing &&
               iengine_.CheckBoundaryConditions(last_ixors)) {
             (*spec)->PopMember();
@@ -400,8 +403,8 @@ void Simulation::ClearSpecies() {
 /* Update the OpenGL graphics window */
 void Simulation::Draw(bool single_frame) {
 #ifndef NOGRAPH
-  Logger::Trace("Drawing graphable objects");
   if (params_.graph_flag && i_step_ % params_.n_graph == 0) {
+    Logger::Trace("Drawing graphable objects");
     /* Get updated object positions and orientations */
     GetGraphicsStructure();
     graphics_.Draw();
@@ -420,10 +423,10 @@ void Simulation::GetGraphicsStructure() {
   Logger::Trace("Retrieving graphics structures from objects");
   graph_array_.clear();
   for (auto it = species_.begin(); it != species_.end(); ++it) {
-    (*it)->Draw(&graph_array_);
+    (*it)->Draw(graph_array_);
   }
   /* Visualize interaction forces, crosslinks, etc */
-  iengine_.DrawInteractions(&graph_array_);
+  iengine_.DrawInteractions(graph_array_);
 }
 
 /* Initialize output files */
@@ -449,7 +452,6 @@ void Simulation::InitInputs(run_options run_opts) {
 
 /* Write object positions, etc if necessary */
 void Simulation::WriteOutputs() {
-  Logger::Debug("Writing outputs");
   output_mgr_.WriteOutputs();
   /* Write interaction information/crosslink positions, etc */
   iengine_.WriteOutputs();

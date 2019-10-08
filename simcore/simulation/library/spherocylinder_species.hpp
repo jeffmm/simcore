@@ -7,8 +7,9 @@
 #endif
 #include "spherocylinder.hpp"
 
-class SpherocylinderSpecies : public Species<Spherocylinder> {
- protected:
+class SpherocylinderSpecies
+    : public Species<Spherocylinder, species_id::spherocylinder> {
+protected:
   bool midstep_;
   double **pos0_, **u0_, *msd_, *msd_err_, *vcf_, *vcf_err_;
   int time_, time_avg_interval_, n_samples_;
@@ -20,13 +21,10 @@ class SpherocylinderSpecies : public Species<Spherocylinder> {
   void UpdateInitPositions();
   void FinalizeDiffusionAnalysis();
 
- public:
-  SpherocylinderSpecies() : Species() { SetSID(species_id::spherocylinder); }
-  void Init(system_parameters *params, species_parameters *sparams, space_struct *space) {
-    Species::Init(params, sparams, space);
-    sparams_ = &(params_->spherocylinder);
-    midstep_ = params_->spherocylinder.midstep;
-  }
+public:
+  SpherocylinderSpecies() : Species() {}
+  void Init(system_parameters *params, species_base_parameters *sparams,
+            space_struct *space);
   void UpdatePositions() {
     for (auto it = members_.begin(); it != members_.end(); ++it) {
       it->UpdatePosition();

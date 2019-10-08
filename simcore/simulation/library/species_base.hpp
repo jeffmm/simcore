@@ -21,7 +21,7 @@ protected:
   std::fstream ospec_file_;
   std::fstream ispec_file_;
   std::string checkpoint_file_;
-  std::string spec_label_ = "generic";
+  std::string species_label_ = "generic";
   std::vector<std::string> spec_file_names_;
 
 public:
@@ -31,32 +31,33 @@ public:
     spec_name_ = sid_._to_string();
   }
   virtual void UpdatePositions() {}
-  virtual void Draw(std::vector<graph_struct *> *graph_array) {}
+  virtual void Draw(std::vector<graph_struct *> &graph_array) {}
   virtual void Init(system_parameters *params, species_base_parameters *sparams, space_struct *space);
   virtual void ZeroForces() {}
-  virtual void GetInteractors(std::vector<Object *> *ix) {}
-  virtual void GetLastInteractors(std::vector<Object *> *ix) {}
+  virtual void GetInteractors(std::vector<Object *> &ix) {}
+  virtual void GetLastInteractors(std::vector<Object *> &ix) {}
   virtual double GetPotentialEnergy() { return 0; }
   virtual void ScalePositions() {}
   virtual void AddMember() {}
   virtual void SetLastMemberPosition(double const *const pos) {}
   virtual void PopMember() {}
   virtual void PopAll() {}
-  virtual const double GetSpecDiameter() { return 1; }
+  virtual const double GetSpecDiameter() { return -1; }
+  virtual const double GetSpecLength() { return -1; }
   virtual void ArrangeMembers() {}
-  virtual const bool CanOverlap() { return -1; }
-  species_id const GetSID() { return sid_; }
+  virtual const bool CanOverlap() const { return -1; }
+  species_id const GetSID() const { return sid_; }
   virtual void Report() {}
-  int const GetNMembers() { return n_members_; }
-  int const GetNInsert() { return -1; }
-  int const GetNPosit() { return -1; }
-  int const GetNSpec() { return -1; }
-  int const GetNCheckpoint() { return params_->n_checkpoint; }
-  bool const GetPositFlag() { return false; }
-  bool const GetSpecFlag() { return false; }
-  bool const GetCheckpointFlag() { return params_->checkpoint_flag; }
-  std::string GetInsertionType() { return ""; }
-  virtual int GetCount() { return 0; }
+  virtual int const GetNMembers() const { return n_members_; }
+  virtual int const GetNInsert() const { return -1; }
+  virtual int const GetNPosit() const { return -1; }
+  virtual int const GetNSpec() const { return -1; }
+  virtual int const GetNCheckpoint() const { return params_->n_checkpoint; }
+  virtual bool const GetPositFlag() const { return false; }
+  virtual bool const GetSpecFlag() const { return false; }
+  virtual bool const GetCheckpointFlag() const { return params_->checkpoint_flag; }
+  std::string GetInsertionType() const { return ""; }
+  virtual int GetCount() const { return 0; }
   virtual void WriteOutputs(std::string run_name) {}
   virtual void WritePosits() {}
   virtual void WriteSpecs() {}
@@ -90,6 +91,7 @@ public:
   virtual void ZeroDrTot() {}
   virtual void CustomInsert() {}
   virtual const bool CheckInteractorUpdate() { return false; }
+  virtual const std::string GetSpeciesLabel() const { return "base"; }
 };
 
 #endif

@@ -84,7 +84,7 @@ public:
   void CalculateStructure();
   void ForceUpdate();
   void CheckUpdateObjects();
-  void DrawInteractions(std::vector<graph_struct *> *graph_array);
+  void DrawInteractions(std::vector<graph_struct *> &graph_array);
   void WriteOutputs();
   void InitOutputs(bool reading_inputs = false, bool reduce_flag = false,
                    bool with_reloads = false);

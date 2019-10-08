@@ -1,19 +1,26 @@
 #include "spherocylinder_species.hpp"
 
+void SpherocylinderSpecies::Init(system_parameters *params,
+                                 species_base_parameters *sparams,
+                                 space_struct *space) {
+  Species::Init(params, sparams, space);
+  midstep_ = sparams_.midstep;
+}
+
 void SpherocylinderSpecies::InitAnalysis() {
-  if (params_->spherocylinder.diffusion_analysis) {
+  if (sparams_.diffusion_analysis) {
     InitDiffusionAnalysis();
   }
 }
 
 void SpherocylinderSpecies::RunAnalysis() {
-  if (params_->spherocylinder.diffusion_analysis) {
+  if (sparams_.diffusion_analysis) {
     DiffusionAnalysis();
   }
 }
 
 void SpherocylinderSpecies::FinalizeAnalysis() {
-  if (params_->spherocylinder.diffusion_analysis) {
+  if (sparams_.diffusion_analysis) {
     FinalizeDiffusionAnalysis();
   }
 }
@@ -23,18 +30,18 @@ void SpherocylinderSpecies::InitDiffusionAnalysis() {
     Logger::Warning(
         "Diffusion analysis incompatible with simulations of 1 species member. "
         "Aborting diffusion analysis");
-    params_->spherocylinder.diffusion_analysis = 0;
+    sparams_.diffusion_analysis = 0;
     return;
   }
-  n_samples_ = params_->spherocylinder.n_diffusion_samples;
+  n_samples_ = sparams_.n_diffusion_samples;
   time_ = 0;
-  int n_data = params_->n_steps / params_->spherocylinder.n_posit;
+  int n_data = params_->n_steps / sparams_.n_posit;
   time_avg_interval_ = n_data / n_samples_;
   if (time_avg_interval_ < 1) {
     Logger::Error("Something went wrong in InitDiffusionAnalysis!");
   }
-  pos0_ = new double*[n_members_];
-  u0_ = new double*[n_members_];
+  pos0_ = new double *[n_members_];
+  u0_ = new double *[n_members_];
   for (int i = 0; i < n_members_; ++i) {
     pos0_[i] = new double[params_->n_dim];
     u0_[i] = new double[params_->n_dim];
@@ -62,8 +69,8 @@ void SpherocylinderSpecies::DiffusionAnalysis() {
 
 void SpherocylinderSpecies::UpdateInitPositions() {
   for (int i = 0; i < n_members_; ++i) {
-    double const* const position0 = members_[i].GetPosition();
-    double const* const orientation0 = members_[i].GetOrientation();
+    double const *const position0 = members_[i].GetPosition();
+    double const *const orientation0 = members_[i].GetOrientation();
     for (int j = 0; j < params_->n_dim; ++j) {
       pos0_[i][j] = position0[j];
       u0_[i][j] = orientation0[j];
@@ -76,7 +83,7 @@ void SpherocylinderSpecies::CalculateMSD() {
   double avg_sqr_dist_sqr = 0.0;
   for (int i = 0; i < n_members_; ++i) {
     double sqr_diff = 0;
-    double const* const position = members_[i].GetPosition();
+    double const *const position = members_[i].GetPosition();
     for (int j = 0; j < params_->n_dim; ++j) {
       double r_diff = position[j] - pos0_[i][j];
       sqr_diff += SQR(r_diff);
@@ -101,7 +108,7 @@ void SpherocylinderSpecies::CalculateVCF() {
   double avg_udotu0_sqr = 0.0;
   for (int i = 0; i < n_members_; ++i) {
     double udotu0 = 0.0;
-    double const* const orientation = members_[i].GetOrientation();
+    double const *const orientation = members_[i].GetOrientation();
     for (int j = 0; j < params_->n_dim; ++j) {
       udotu0 += orientation[j] * u0_[i][j];
     }
@@ -127,11 +134,10 @@ void SpherocylinderSpecies::FinalizeDiffusionAnalysis() {
   diff_file_.open(fname, std::ios::out);
   diff_file_
       << "length diameter n_dim delta n_steps n_posit n_objs n_samples\n";
-  diff_file_ << params_->spherocylinder.length << " "
-             << params_->spherocylinder.diameter << " " << params_->n_dim << " "
-             << params_->delta << " " << params_->n_steps << " "
-             << params_->spherocylinder.n_posit << " " << n_members_ << " "
-             << n_samples_ << "\n";
+  diff_file_ << sparams_.length << " " << sparams_.diameter << " "
+             << params_->n_dim << " " << params_->delta << " "
+             << params_->n_steps << " " << sparams_.n_posit << " " << n_members_
+             << " " << n_samples_ << "\n";
   diff_file_ << "time msd msd_err vcf vcf_err\n";
   diff_file_ << "0.0 0.0 0.0 1.0 0.0\n";
   diff_file_.precision(16);
@@ -139,9 +145,8 @@ void SpherocylinderSpecies::FinalizeDiffusionAnalysis() {
   diff_file_.setf(std::ios::showpoint);
   double midterm = (midstep_ ? 0.5 : 1);
   for (int t = 0; t < time_avg_interval_; ++t) {
-    diff_file_ << midterm * (t + 1) * params_->delta *
-                      params_->spherocylinder.n_posit
-               << " " << msd_[t] << " " << msd_err_[t] << " " << vcf_[t] << " "
+    diff_file_ << midterm * (t + 1) * params_->delta * GetNPosit() << " "
+               << msd_[t] << " " << msd_err_[t] << " " << vcf_[t] << " "
                << vcf_err_[t] << "\n";
   }
   diff_file_.close();

@@ -134,10 +134,10 @@ species:                             # Shared parameters used for all species.
                                      # frequency of n_spec steps.
   n_posit: [100, int]                # Frequency used for generating posit file information.
   n_spec: [100, int]                 # Frequency used for generating spec file information.
+  label: [species, string]           # Name used to identify unique subtypes of same species
+  diameter: [1, double]              # Diameter of species, for point-like objects and greater
+  length: [0, double]                # Length of species, for line-like objects and greater
 filament:                            # Parameters unique to filament class of objects.
-  diameter: [1, double]              # Diameter of filament in units of simulation length scale.
-  length: [-1, double]               # Length of filament. If < 0, a uniform random length is
-                                     # assigned to each filament between min_length and max_length.
   persistence_length: [400, double]  # Persistence length of filament.
   max_length: [500,double]           # Maximum filament length. Also used for dynamic instability.
   min_bond_length: [1.5, double]     # Minimum bond length. When using dynamic instability, the
@@ -217,31 +217,13 @@ filament:                            # Parameters unique to filament class of ob
                                              # truncated due to min_bond_length or max_length
 
 br_bead:
-  diameter: [1, double]
   driving_factor: [0, double]
   packing_fraction: [-1, double]
-md_bead:
-  diameter: [1, double]
-  mass: [1, double]
-  driving_factor: [0, double]
-centrosome:
-  diameter: [10,double]
-  n_filaments_min: [0,int]
-  n_filaments_max: [10,int]
-  fixed_spacing: [0,int]
-  alignment_potential: [0,int]
-  k_spring: [1000,double]
-  k_align: [0, double]
-  spring_length: [0,double]
 spherocylinder:
-  diameter: [1, double]
-  length: [5, double]
   diffusion_analysis: [0, int]
   n_diffusion_samples: [1, int]
   midstep: [0, int]
 spindle:
-  diameter: [10,double]
-  length: [20, double]
   n_filaments_bud: [1,int]
   n_filaments_mother: [0,int]
   alignment_potential: [0,int]
@@ -251,9 +233,9 @@ spindle:
   spb_diameter: [5, double]
 crosslink:                          # Parameters specific to crosslinks.
   concentration: [0, double]        # Concentration of crosslinkers at simulation initialization.
-  diameter: [1, double]             # Sets graph diameter when using graphics.
-  walker: [0, int]                  # Flag for setting directed motion of crosslink heads.
-  static: [0, int]                  # Flag for setting one crosslinker head to be fixed in space
+  walker_flag: [0, int]             # Flag for setting directed motion of crosslink heads.
+  static_flag: [0, int]             # Flag for setting one crosslinker head to be fixed in space
+  diffusion_flag: [0, int]          # Flag allowing bound crosslink heads to diffuse.
 # insertion type can be random_grid, random_boundary, fixed_grid, fixed_boundary, or centered
 # fixed_grid: place static crosslinkers arranged on a lattice with a spacing equal to static_spacing
 # fixed_boundary: place static crosslinkers along boundary perimeter with a fixed spacing
@@ -261,7 +243,6 @@ crosslink:                          # Parameters specific to crosslinks.
 # random_boundary: place static crosslinkers randomly along perimieter of boundary
 # centered: a single crosslinker fixed at the origin, for testing
   velocity: [1, double]             # Bound crosslink head velocities when walkers.
-  diffusion_flag: [0, int]          # Flag allowing bound crosslink heads to diffuse.
   k_on: [10, double]                # On-rate for binding crosslinks from solution to bonds.
   k_off: [2, double]                # Off-rate for bound crosslinks to go from bound to solution.
   k_on_d: [10, double]              # On-rate for singly bound to doubly bound crosslinks.

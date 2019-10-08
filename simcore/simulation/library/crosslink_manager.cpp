@@ -12,12 +12,20 @@ void CrosslinkManager::Init(system_parameters *params, space_struct *space,
 }
 
 void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser) {
+  if (xlink_species_.size() == 0) {
+    xlink_species_.reserve(parser.GetNCrosslinkSpecies());
+  }
   xlink_species_.push_back(new CrosslinkSpecies());
   species_base_parameters *sparams = parser.GetNewSpeciesParameters(slab);
   xlink_species_.back()->Init(params_, sparams, space_);
   delete sparams;
-  xlink_species_.back()->InitInteractionEnvironment(mindist, objs, obj_volume_,
-                                                    update_);
+  if (xlink_species_.back()->GetConcentration() < 1e-12) {
+    delete xlink_species_.back();
+    xlink_species_.pop_back();
+  } else {
+    xlink_species_.back()->InitInteractionEnvironment(mindist_, objs_,
+                                                    &obj_volume_, &update_);
+  }
 }
 
 /* Keep track of volume of objects in the system. Affects the
@@ -69,7 +77,7 @@ void CrosslinkManager::Clear() {
   xlink_species_.clear();
 }
 
-void CrosslinkManager::Draw(std::vector<graph_struct *> *graph_array) {
+void CrosslinkManager::Draw(std::vector<graph_struct *> &graph_array) {
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
     (*it)->Draw(graph_array);
   }
@@ -102,5 +110,3 @@ void CrosslinkManager::ReadInputs() {
     (*it)->ReadInputs();
   }
 }
-
-void CrosslinkManager::InitCrosslinkSpecies() {}

@@ -61,7 +61,7 @@ public:
   void SetBound();
   void Unbind();
   int const GetBoundOID();
-  void Draw(std::vector<graph_struct *> *graph_array);
+  void Draw(std::vector<graph_struct *> &graph_array);
   void AddNeighbor(Object *neighbor);
   void ClearNeighbors();
   const Object *const *GetNeighborListMem();

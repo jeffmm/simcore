@@ -101,7 +101,7 @@ public:
   virtual void Init(filament_parameters *sparams);
   virtual void InsertAt(double *pos, double *u);
   virtual void Integrate();
-  virtual void Draw(std::vector<graph_struct *> *graph_array);
+  virtual void Draw(std::vector<graph_struct *> &graph_array);
   virtual void UpdatePosition() {}
   virtual void UpdatePosition(bool midstep);
   double const GetLength() { return length_; }
@@ -133,5 +133,10 @@ public:
   void ScalePosition();
   double const GetVolume();
 };
+
+typedef std::vector<Filament>::iterator filament_iterator;
+typedef std::vector<
+    std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator>>
+    filament_chunk_vector;
 
 #endif // _SIMCORE_FILAMENT_H_

@@ -4,11 +4,6 @@
 #include "filament.hpp"
 #include "species.hpp"
 
-typedef std::vector<Filament>::iterator filament_iterator;
-typedef std::vector<
-    std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator>>
-    filament_chunk_vector;
-
 #ifdef ENABLE_OPENMP
 #include "omp.h"
 #endif
@@ -51,8 +46,8 @@ protected:
 
 public:
   FilamentSpecies();
-  void Init(system_parameters *params, species_base_parameters *sparams,
-            space_struct *space);
+  void Init(system_parameters *params,
+            species_base_parameters *sparams, space_struct *space);
   void PopMember();
 
   void AddMember();

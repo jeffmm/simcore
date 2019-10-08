@@ -78,7 +78,7 @@ void Bond::ReportSites() {
   }
 }
 
-void Bond::Draw(std::vector<graph_struct *> *graph_array) {
+void Bond::Draw(std::vector<graph_struct *> &graph_array) {
   std::copy(scaled_position_, scaled_position_ + 3, g_.r);
   for (int i = space_->n_periodic; i < n_dim_; ++i) {
     g_.r[i] = position_[i];
@@ -111,7 +111,7 @@ void Bond::Draw(std::vector<graph_struct *> *graph_array) {
     g_.diameter = 2 * diameter_;
     SetFlockType(0);
   }
-  graph_array->push_back(&g_);
+  graph_array.push_back(&g_);
   HasOverlap(false);
 }
 

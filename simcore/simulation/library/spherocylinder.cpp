@@ -1,33 +1,34 @@
 #include "spherocylinder.hpp"
 
-Spherocylinder::Spherocylinder() : Object() {
-  color_ = params_->spherocylinder.color;
-  draw_ = draw_type::_from_string(params_->spherocylinder.draw_type.c_str());
-  diameter_ = params_->spherocylinder.diameter;
-  length_ = params_->spherocylinder.length;
-  is_midstep_ = params_->spherocylinder.midstep;
+Spherocylinder::Spherocylinder() : Object() {}
+
+void Spherocylinder::SetParameters() {
+  color_ = sparams_->color;
+  draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
+  diameter_ = sparams_->diameter;
+  length_ = sparams_->length;
+  is_midstep_ = sparams_->midstep;
   std::fill(body_frame_, body_frame_ + 6, 0.0);
   SetDiffusion();
 }
 
-void Spherocylinder::Init() {
+void Spherocylinder::Init(spherocylinder_parameters *sparams) {
+  sparams_ = sparams;
+  SetParameters();
   InsertSpherocylinder();
 }
 
 void Spherocylinder::InsertSpherocylinder() {
-  if (params_->spherocylinder.insertion_type.compare("random") == 0) {
+  if (sparams_->insertion_type.compare("random") == 0) {
     InsertRandom();
-  } else if (params_->spherocylinder.insertion_type.compare(
-                 "random_oriented") == 0) {
+  } else if (sparams_->insertion_type.compare("random_oriented") == 0) {
     InsertRandom();
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
-  } else if (params_->spherocylinder.insertion_type.compare(
-                 "centered_random") == 0) {
+  } else if (sparams_->insertion_type.compare("centered_random") == 0) {
     std::fill(position_, position_ + 3, 0.0);
     generate_random_unit_vector(n_dim_, orientation_, rng_.r);
-  } else if (params_->spherocylinder.insertion_type.compare(
-                 "centered_oriented") == 0) {
+  } else if (sparams_->insertion_type.compare("centered_oriented") == 0) {
     std::fill(position_, position_ + 3, 0.0);
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
@@ -70,7 +71,7 @@ void Spherocylinder::Integrate() {
   }
   // Reorientation due to external torques
   double du[3];
-  cross_product(torque_, orientation_, du, 3);  // ndim=3 since torques
+  cross_product(torque_, orientation_, du, 3); // ndim=3 since torques
   for (int i = 0; i < n_dim_; ++i) {
     orientation_[i] += du[i] * delta / gamma_rot_;
   }
@@ -90,7 +91,8 @@ void Spherocylinder::AddRandomDisplacement() {
   GetBodyFrame();
   // First handle the parallel component
   double mag = gsl_ran_gaussian_ziggurat(rng_.r, diffusion_par_);
-  for (int i = 0; i < n_dim_; ++i) position_[i] += mag * orientation_[i];
+  for (int i = 0; i < n_dim_; ++i)
+    position_[i] += mag * orientation_[i];
   // Then the perpendicular component(s)
   for (int j = 0; j < n_dim_ - 1; ++j) {
     mag = gsl_ran_gaussian_ziggurat(rng_.r, diffusion_perp_);
@@ -150,5 +152,3 @@ void Spherocylinder::GetBodyFrame() {
     cross_product(orientation_, &(body_frame_[0]), &(body_frame_[3]), n_dim_);
   }
 }
-
-

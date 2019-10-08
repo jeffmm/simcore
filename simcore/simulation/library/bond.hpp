@@ -17,7 +17,7 @@ public:
   void ReInit();
   void Report();
   void ReportSites();
-  void Draw(std::vector<graph_struct *> *graph_array);
+  void Draw(std::vector<graph_struct *> &graph_array);
   int const GetBondNumber();
   void SetBondNumber(int bnum);
   void SetEquilLength(double el);

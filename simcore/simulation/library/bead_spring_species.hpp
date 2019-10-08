@@ -14,7 +14,7 @@ typedef std::vector<std::pair<std::vector<BeadSpring>::iterator,
                               std::vector<BeadSpring>::iterator> >
     bead_spring_chunk_vector;
 
-class BeadSpringSpecies : public Species<BeadSpring> {
+class BeadSpringSpecies : public Species<BeadSpring, species_id::bead_spring> {
  protected:
   // Analysis structures
   bool midstep_;
@@ -25,27 +25,26 @@ class BeadSpringSpecies : public Species<BeadSpring> {
 
  public:
   BeadSpringSpecies() : Species() { SetSID(species_id::bead_spring); }
-  void Init(system_parameters *params, species_parameters *sparams, space_struct *space) {
+  void Init(system_parameters *params, species_base_parameters *sparams, space_struct *space) {
     Species::Init(params, sparams, space);
-    sparams_ = &(params_->bead_spring);
     midstep_ = true;
-    if (params_->bead_spring.packing_fraction > 0) {
-      if (params_->bead_spring.length <= 0) {
+    if (sparams_.packing_fraction > 0) {
+      if (sparams_.length <= 0) {
         Logger::Error(
             "Packing fraction with polydisperse lengths not implemented yet\n");
       }
       if (params_->n_dim == 2) {
         double fil_vol =
-            params_->bead_spring.length * params_->bead_spring.diameter +
-            0.25 * M_PI * SQR(params_->bead_spring.diameter);
-        sparams_->num =
-            params_->bead_spring.packing_fraction * space_->volume / fil_vol;
+            sparams_.length * sparams_.diameter +
+            0.25 * M_PI * SQR(sparams_.diameter);
+        sparams_.num =
+            sparams_.packing_fraction * space_->volume / fil_vol;
       } else {
-        double fil_vol = 0.25 * M_PI * SQR(params_->bead_spring.diameter) *
-                             params_->bead_spring.length +
-                         M_PI * CUBE(params_->bead_spring.diameter) / 6.0;
-        sparams_->num =
-            params_->bead_spring.packing_fraction * space_->volume / fil_vol;
+        double fil_vol = 0.25 * M_PI * SQR(sparams_.diameter) *
+                             sparams_.length +
+                         M_PI * CUBE(sparams_.diameter) / 6.0;
+        sparams_.num =
+            sparams_.packing_fraction * space_->volume / fil_vol;
       }
     }
   }
