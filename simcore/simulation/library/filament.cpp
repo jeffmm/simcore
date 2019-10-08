@@ -1,6 +1,6 @@
 #include "filament.hpp"
 
-Filament::Filament() : Mesh() { }
+Filament::Filament() : Mesh() {}
 
 void Filament::SetParameters() {
   /* Read parameters from filament parameters */
@@ -17,8 +17,7 @@ void Filament::SetParameters() {
   dynamic_instability_flag_ = sparams_->dynamic_instability_flag;
   polydispersity_flag_ = sparams_->polydispersity_flag;
   spiral_flag_ = sparams_->spiral_flag;
-  force_induced_catastrophe_flag_ =
-      sparams_->force_induced_catastrophe_flag;
+  force_induced_catastrophe_flag_ = sparams_->force_induced_catastrophe_flag;
   p_g2s_ = sparams_->f_grow_to_shrink * delta_;
   p_g2p_ = sparams_->f_grow_to_pause * delta_;
   p_s2p_ = sparams_->f_shrink_to_pause * delta_;
@@ -29,9 +28,7 @@ void Filament::SetParameters() {
   v_poly_ = sparams_->v_poly;
   driving_factor_ = sparams_->driving_factor;
   friction_ratio_ = sparams_->friction_ratio;
-  metric_forces_ = sparams_->metric_forces;
-  // determines whether we are using thermal forces
-  stoch_flag_ = params_->stoch_flag;
+  stoch_flag_ = params_->stoch_flag; // include thermal forces
   eq_steps_ = sparams_->n_equil;
   eq_steps_count_ = 0;
   optical_trap_spring_ = sparams_->optical_trap_spring;
@@ -65,18 +62,11 @@ void Filament::SetParameters() {
      * the min bond length */
     max_bond_length_ = 1.5 * min_bond_length_;
   }
-  /* Fix min and max bond length if we expect the length to be fixed and not
-     changing */
-  if (sparams_->n_bonds > 0 && !dynamic_instability_flag_ &&
-      !polydispersity_flag_) {
-    min_bond_length_ = length_ / sparams_->n_bonds + 1e-6;
-    max_bond_length_ = length_ / sparams_->n_bonds - 1e-6;
-  }
 }
 
 void Filament::Init(filament_parameters *sparams) {
   sparams_ = sparams;
-  SetParameters(); 
+  SetParameters();
   InitFilamentLength();
   AllocateControlStructures();
   InsertFilament();
@@ -187,8 +177,7 @@ void Filament::InsertFirstBond() {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
     AddBondToTip(orientation_, bond_length_);
-  } else if (sparams_->insertion_type.compare("centered_oriented") ==
-             0) {
+  } else if (sparams_->insertion_type.compare("centered_oriented") == 0) {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
     for (int i = 0; i < n_dim_; ++i) {
@@ -561,7 +550,7 @@ void Filament::CalculateBendingForces() {
   /* Metric forces give the appropriate equilibrium behavior at zero
    * persistence
    * length: all angles have an equal probability of being sampled */
-  if (metric_forces_) {
+  { // Apply metric forces
     det_t_mat_[0] = 1;
     det_t_mat_[1] = 2;
     det_b_mat_[n_sites_] = 1;
@@ -578,11 +567,12 @@ void Filament::CalculateBendingForces() {
       g_mat_inverse_[i] =
           cos_thetas_[i] * det_t_mat_[i] * det_b_mat_[i + 3] / det_g;
     }
-  } else {
-    for (int i = 0; i < n_sites_ - 2; ++i) {
-      g_mat_inverse_[i] = 0;
-    }
   }
+  // In the case of no metric forces
+  // for (int i = 0; i < n_sites_ - 2; ++i) {
+  // g_mat_inverse_[i] = 0;
+  //}
+
   // Now calculate the effective rigidities
   for (int i = 0; i < n_sites_ - 2; ++i) {
     k_eff_[i] = (persistence_length_ + bond_length_ * g_mat_inverse_[i]) /
@@ -918,7 +908,7 @@ void Filament::ApplyInteractionForces() {
   double pure_torque[3] = {0, 0, 0};
   double site_force[3] = {0, 0, 0};
   double linv = 1.0 / bond_length_;
-  if (sparams_->driving_method == 1) {
+  if (!sparams_->drive_from_bond_center) {
     // Driving originating from the site tangents
     CalculateTangents();
   }
@@ -948,14 +938,15 @@ void Filament::ApplyInteractionForces() {
     // so need to multiply by bond length to get f_dr on bond
     if (eq_steps_count_ > eq_steps_) {
       double f_dr[3] = {};
-      if (sparams_->driving_method == 0) {
+      if (sparams_->drive_from_bond_center) {
         // Add driving (originating from the com of the bond)
         double mag = 0.5 * driving_factor_ * bond_length_;
         for (int j = 0; j < n_dim_; ++j)
           f_dr[j] = mag * u[j];
         sites_[i].AddForce(f_dr);
         sites_[i + 1].AddForce(f_dr);
-      } else if (sparams_->driving_method == 1) {
+      } else {
+        // Driving from sites
         double mag = length_ * driving_factor_ / n_sites_;
         double const *const u_tan = sites_[i].GetTangent();
         for (int j = 0; j < n_dim_; ++j) {

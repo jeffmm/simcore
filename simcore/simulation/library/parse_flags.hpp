@@ -1,27 +1,28 @@
 #ifndef _SIMCORE_PARSE_FLAGS_H_
 #define _SIMCORE_PARSE_FLAGS_H_
 #include <getopt.h>
+#include <iostream>
 #include <string>
 #include <vector>
 
 // Run parameters that needs to be carried forward should be stored here.
 struct run_options {
   int n_runs = 1;
-  int debug = 0;
-  int run_name_flag = 0;
-  int n_run_flag = 0;
-  int graphics_flag = 0;
-  int make_movie = 0;
-  int analysis_flag = 0;
-  int use_posits = 0;
-  int load_checkpoint = 0;
-  int reduce_flag = 0;
+  bool debug = false;
+  bool run_name_flag = false;
+  bool n_run_flag = false;
+  bool graphics_flag = false;
+  bool make_movie = false;
+  bool analysis_flag = false;
+  bool use_posits = false;
+  bool load_checkpoint = false;
+  bool reduce_flag = false;
   int n_graph = 100;
   int reduce_factor = 1;
-  int blank_flag = 0;
-  int auto_graph = 0;
-  int with_reloads = 0;
-  int single_frame = 0;
+  bool blank_flag = false;
+  bool auto_graph = false;
+  bool with_reloads = false;
+  bool single_frame = false;
   std::string param_file;
   std::string run_name = "sc";
 };
@@ -93,9 +94,11 @@ static void show_help_info(std::string progname) {
             << "  where flags are one of the following: " << std::endl;
   for (int i = 0; i < n_flags; ++i) {
     std::cout << "    --" << long_options[i].name;
-    if (desc[i][1].compare("none") != 0) std::cout << " " << desc[i][1];
+    if (desc[i][1].compare("none") != 0)
+      std::cout << " " << desc[i][1];
     std::cout << ", -" << (char)long_options[i].val;
-    if (desc[i][1].compare("none") != 0) std::cout << " " << desc[i][1];
+    if (desc[i][1].compare("none") != 0)
+      std::cout << " " << desc[i][1];
     std::cout << ", " << desc[i][0] << "\n";
   }
 }
@@ -119,63 +122,64 @@ static run_options parse_opts(int argc, char *argv[]) {
     int option_index = 0;
     tmp = getopt_long(argc, argv, "hdmaplwbMGg:r:n:R:", long_options,
                       &option_index);
-    if (tmp == -1) break;
+    if (tmp == -1)
+      break;
     switch (tmp) {
-      case 0:
-        break;
-      case 'h':
-        show_help_info(argv[0]);
-        exit(0);
-      case 'd':
-        std::cout << "  Running in debug mode\n";
-        run_opts.debug = 1;
-        break;
-      case 'r':
-        run_opts.run_name_flag = 1;
-        run_opts.run_name = optarg;
-        break;
-      case 'n':
-        run_opts.n_run_flag = 1;
-        run_opts.n_runs = atoi(optarg);
-        break;
-      case 'g':
-        run_opts.graphics_flag = 1;
-        run_opts.n_graph = atoi(optarg);
-        break;
-      case 'm':
-        run_opts.make_movie = 1;
-        break;
-      case 'G':
-        run_opts.auto_graph = 1;
-        break;
-      case 'a':
-        run_opts.analysis_flag = 1;
-        break;
-      case 'p':
-        run_opts.use_posits = 1;
-        break;
-      case 'l':
-        run_opts.load_checkpoint = 1;
-        break;
-      case 'R':
-        run_opts.reduce_flag = 1;
-        run_opts.reduce_factor = atoi(optarg);
-        break;
-      case 'b':
-        run_opts.blank_flag = 1;
-        break;
-      case 'w':
-        run_opts.with_reloads = 1;
-        break;
-      case 'M':
-        run_opts.single_frame = 1;
-        run_opts.make_movie = 1;
-        break;
-      case '?':
-        exit(1);
-      default:
-        std::cout << "  ERROR: Unrecognized option: " << tmp << "\n";
-        exit(1);
+    case 0:
+      break;
+    case 'h':
+      show_help_info(argv[0]);
+      exit(0);
+    case 'd':
+      std::cout << "  Running in debug mode\n";
+      run_opts.debug = true;
+      break;
+    case 'r':
+      run_opts.run_name_flag = true;
+      run_opts.run_name = optarg;
+      break;
+    case 'n':
+      run_opts.n_run_flag = true;
+      run_opts.n_runs = atoi(optarg);
+      break;
+    case 'g':
+      run_opts.graphics_flag = true;
+      run_opts.n_graph = atoi(optarg);
+      break;
+    case 'm':
+      run_opts.make_movie = true;
+      break;
+    case 'G':
+      run_opts.auto_graph = true;
+      break;
+    case 'a':
+      run_opts.analysis_flag = true;
+      break;
+    case 'p':
+      run_opts.use_posits = true;
+      break;
+    case 'l':
+      run_opts.load_checkpoint = true;
+      break;
+    case 'R':
+      run_opts.reduce_flag = true;
+      run_opts.reduce_factor = atoi(optarg);
+      break;
+    case 'b':
+      run_opts.blank_flag = true;
+      break;
+    case 'w':
+      run_opts.with_reloads = true;
+      break;
+    case 'M':
+      run_opts.single_frame = true;
+      run_opts.make_movie = true;
+      break;
+    case '?':
+      exit(1);
+    default:
+      std::cout << "  ERROR: Unrecognized option: " << tmp << "\n";
+      exit(1);
     }
   }
   if (optind < argc) {
@@ -187,7 +191,8 @@ static run_options parse_opts(int argc, char *argv[]) {
   }
   if (optind < argc) {
     printf("ERROR: Unrecognized context for non-option arguments: ");
-    while (optind < argc) printf("%s ", argv[optind++]);
+    while (optind < argc)
+      printf("%s ", argv[optind++]);
     putchar('\n');
     exit(1);
   }
@@ -219,11 +224,10 @@ static run_options parse_opts(int argc, char *argv[]) {
            run_opts.reduce_factor);
   }
   if (run_opts.blank_flag) {
-    printf(
-        "  Doing a blank run -- generating parameter files without running "
-        "simulation.\n");
+    printf("  Doing a blank run -- generating parameter files without running "
+           "simulation.\n");
   }
   return run_opts;
 }
 
-#endif  // _SIMCORE_PARSE_FLAGS_H_
+#endif // _SIMCORE_PARSE_FLAGS_H_

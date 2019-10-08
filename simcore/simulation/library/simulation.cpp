@@ -175,7 +175,7 @@ void Simulation::InitObjects() {
 /* Generate graphics window and draw initial simulation setup */
 void Simulation::InitGraphics() {
   GetGraphicsStructure();
-  double background_color = (params_.graph_background == 0 ? 0.1 : 1);
+  double background_color = (params_.invert_background ? 1 : 0.1);
 // If NOGRAPH is defined, skip drawing and grabbing
 #ifndef NOGRAPH
   // Initialize graphics structures
@@ -495,7 +495,7 @@ void Simulation::InitProcessing(run_options run_opts) {
   //}
   InitInputs(run_opts);
   if (run_opts.graphics_flag || run_opts.make_movie) {
-    params_.graph_flag = 1;
+    params_.graph_flag = true;
     if (run_opts.use_posits && params_.n_graph < output_mgr_.GetNPosit()) {
       params_.n_graph = output_mgr_.GetNPosit();
     } else if (!run_opts.use_posits &&
@@ -503,11 +503,11 @@ void Simulation::InitProcessing(run_options run_opts) {
       params_.n_graph = output_mgr_.GetNSpec();
     }
     if (run_opts.make_movie) {
-      params_.movie_flag = 1;
+      params_.movie_flag = true;
     }
     InitGraphics();
   } else {
-    params_.graph_flag = 0;
+    params_.graph_flag = false;
   }
   // if (run_opts.analysis_flag) {
   // for (auto it=species_.begin(); it!=species_.end(); ++it) {

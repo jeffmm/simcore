@@ -95,7 +95,7 @@ void Configurator::WriteParameters() {
       }
     }
   }
-  parameters_ << "    virtual ~species_parameters() {}\n"
+  parameters_ << "  virtual ~species_parameters() {}\n"
                  "};\n\n"
                  "typedef species_parameters<species_id::none> species_base"
                  "_parameters;\n\n";

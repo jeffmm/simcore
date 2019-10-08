@@ -8,24 +8,23 @@
 class Filament : public Mesh {
 private:
   filament_parameters *sparams_;
-  int dynamic_instability_flag_;
-  int force_induced_catastrophe_flag_;
-  int theta_validation_run_flag_;
-  int diffusion_validation_run_flag_;
-  int spiral_flag_;
-  int stoch_flag_;
-  int flagella_flag_;
-  int metric_forces_;
-  int optical_trap_flag_;
-  int cilia_trap_flag_;
+  bool dynamic_instability_flag_;
+  bool force_induced_catastrophe_flag_;
+  bool theta_validation_run_flag_;
+  bool diffusion_validation_run_flag_;
+  bool spiral_flag_;
+  bool stoch_flag_;
+  bool flagella_flag_;
+  bool optical_trap_flag_;
+  bool cilia_trap_flag_;
   int optical_trap_fixed_;
   int trapped_site_;
   int n_step_ = 0;
   int eq_steps_;
   int eq_steps_count_ = 0;
   int polydispersity_flag_ = 0;
-  int polydispersity_warn_on_truncate_ = 0;
   double min_length_;
+  double max_length_;
   double max_bond_length_;
   double min_bond_length_;
   double persistence_length_;
@@ -53,7 +52,6 @@ private:
   double optical_trap_spring_;
   double optical_trap_pos_[3];
   double optical_trap_pos2_[3];
-  double max_length_;
   double polydispersity_factor_;
   std::vector<double> gamma_inverse_;
   std::vector<double> tensions_;      // n_sites-1

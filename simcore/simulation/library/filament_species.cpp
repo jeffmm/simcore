@@ -384,7 +384,7 @@ void FilamentSpecies::InitThetaAnalysis() {
   theta_file_ << "theta_analysis_file\n";
   theta_file_
       << "length diameter bond_length persistence_length driving n_filaments "
-         "n_bonds n_steps n_spec delta n_dim metric_forces\n";
+         "n_bonds n_steps n_spec delta n_dim \n";
   double l, cl, pl, dr, d;
   int nbonds;
   int nmembers = members_.size();
@@ -399,15 +399,14 @@ void FilamentSpecies::InitThetaAnalysis() {
   int nspec = GetNSpec();
   theta_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " "
               << nmembers << " " << nbonds << " " << params_->n_steps << " "
-              << nspec << " " << params_->delta << " " << params_->n_dim << " "
-              << sparams_.metric_forces << "\n";
+              << nspec << " " << params_->delta << " " << params_->n_dim
+              << "\n";
   theta_file_ << "cos_theta";
   for (int i = 0; i < nbonds - 1; ++i) {
     theta_file_ << " theta_" << i + 1 << i + 2;
   }
   theta_file_ << "\n";
   n_bins_ = 10000;
-  int nfil = members_.size();
   theta_histogram_ = new int *[nbonds - 1];
   for (int ibond = 0; ibond < nbonds - 1; ++ibond) {
     theta_histogram_[ibond] = new int[n_bins_];
