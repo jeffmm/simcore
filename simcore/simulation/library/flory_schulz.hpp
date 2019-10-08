@@ -17,9 +17,10 @@
 */
 class FlorySchulz {
 private:
-  double a_ = 0.03;       // polydispersity parameter, must be between 0 and 1
+  double a_ = 0.03;       // characteristic polydispersity factor of FS dist
   double epsilon_ = 1e-3; // level of precision to use in our root-finder
   double min_roll_ = 0;   // smallest allowed roll for lowest allowed value of k
+  double max_roll_ = 0;   // largest allowed roll for largest allowed value of k
   /* The cumulative distribution function of the Flory-Schulz distribution */
   double CDF(double k) { return 1 - pow(1 - a_, k) * (1 + a_ * k); }
   /* Function we are minimizing in our root-finder */
@@ -60,24 +61,22 @@ private:
 
 public:
   /* Initialize the Flory-Schulz distribution generator. The only necessary
-     parameter is the polydispersity parameter, which is a sane value in the
-     range of 0.001 and 0.5 for the purposes of this simulation, but more
-     realistically it should be in the range of 0.01 and 0.1 */
-  void Init(double a, double k_min = 0, double epsilon = 1e-3,
+     parameter is the polydispersity parameter, which is the mean value of the
+     distribution */
+  void Init(double mean, double k_min = 0, double k_max = 1e6, double epsilon = 1e-3,
             double ub = 1000) {
-    a_ = a;
+    a_ = 2.0 / (mean + 1);
     upper_bound_ = ub;
     if (ub < 0) {
       Logger::Error("The upper bound provided to the Flory-Schulz distribution "
                     "should be a positive number");
     }
     epsilon_ = epsilon;
-    if (a_ > 0.5 || a < 0.001) {
+    if (mean < 1 || mean > 10000) {
       Logger::Error(
-          "Flory-Schulz given off-base parameters. If you /really/ want"
-          " these polydispersity parameters, you'll have to remove this "
-          " error\n hint: a reasonable polydispersity parameter is in "
-          "the range of 0.001--0.5");
+          "Flory-Schulz given off-base polydispersity parameter (%2.2f). "
+          "If you /really/ want this parameter, you'll have to remove this "
+          "error");
     }
     if (epsilon_ < 1e-18) {
       Logger::Error(
@@ -89,12 +88,16 @@ public:
     } else if (k_min > 0 && k_min > Bisection(1 - epsilon_)) {
       Logger::Error("Value for k_min is too large for the polydispersity "
                     "parameter");
+    } else if (k_min > k_max) {
+      Logger::Error("Value for k_min in FlorySchulz is larger than k_max");
     } else if (k_min > 0) {
       min_roll_ = CDF(k_min);
+      max_roll_ = CDF(k_max);
       Logger::Trace("Renormalizing rolls in FlorySchulz generator to have a "
-                    "minimum of %2.2f to avoid lengths shorter than minimum "
-                    "length of %2.2f",
-                    min_roll_, k_min);
+                    "minimum of %2.2f and maximum of %2.2f to avoid lengths "
+                    "shorter than minimum length of %2.2f and maximum length "
+                    "of %2.2f",
+                    min_roll_, max_roll_, k_min, k_max);
     }
   }
   /* Given a uniform random number in the range of 0 and 1 (roll), return its
@@ -102,10 +105,9 @@ public:
   double Rand(double roll) {
     /* If we reject values less than some number (because of a minimum length
        requirement) then renormalize the roll to be within the acceptable range.
-       Note, we only do this for the lower bound, since FS distribution prefers
-       small values. */
+        */
     if (min_roll_ > 0) {
-      roll = (1 - min_roll_) * roll + min_roll_;
+      roll = (max_roll_ - min_roll_) * roll + min_roll_;
     }
     double result = Bisection(roll);
     Logger::Trace("FlorySchulz generator received a roll of %2.2f and returned "

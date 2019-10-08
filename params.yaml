@@ -47,8 +47,9 @@ filament:
   min_bond_length: 3
   max_bond_length: 6
   polydispersity_flag: 1
-  polydispersity_factor: 0.1
-  polydispersity_warn_on_truncate: 0
+  polydispersity_factor: 50
+  min_length: 5
+  max_length: 200
   v_poly: 10
   v_depoly: 20
   f_grow_to_shrink: 100
