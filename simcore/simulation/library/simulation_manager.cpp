@@ -175,11 +175,25 @@ void SimulationManager::LoadDefaultParams() {
     if (!pnode_[param_name]) {
       pnode_[param_name] = default_config[param_name];
     } else if (it->second.IsMap()) {
-      for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
-           ++jt) {
-        std::string sub_param = jt->first.as<std::string>();
-        if (!pnode_[param_name][sub_param]) {
-          pnode_[param_name][sub_param] = default_config[param_name][sub_param];
+      if (pnode_[param_name].IsMap()) {
+        for (YAML::const_iterator jt = it->second.begin();
+             jt != it->second.end(); ++jt) {
+          std::string sub_param = jt->first.as<std::string>();
+          if (!pnode_[param_name][sub_param]) {
+            pnode_[param_name][sub_param] =
+                default_config[param_name][sub_param];
+          }
+        }
+      } else if (pnode_[param_name].IsSequence()) {
+        for (int i = 0; i < pnode_[param_name].size(); ++i) {
+          YAML::Node subnode = pnode_[param_name][i];
+          for (YAML::const_iterator jt = it->second.begin();
+               jt != it->second.end(); ++jt) {
+            std::string sub_param = jt->first.as<std::string>();
+            if (!subnode[sub_param]) {
+              subnode[sub_param] = default_config[param_name][sub_param];
+            }
+          }
         }
       }
     }
@@ -198,7 +212,8 @@ void SimulationManager::CheckRandomParams() {
   double min, max;
   for (YAML::const_iterator it = pnode_.begin(); it != pnode_.end(); ++it) {
     std::string param_name = it->first.as<std::string>();
-    if (it->second.IsSequence() && it->second.size() == 3 &&
+    if (it->second.IsSequence() && it->second[0].IsScalar() &&
+        it->second.size() == 3 &&
         (rtype = it->second[0].as<std::string>()).at(0) == 'R') {
       min = it->second[1].as<double>();
       max = it->second[2].as<double>();
@@ -210,6 +225,7 @@ void SimulationManager::CheckRandomParams() {
       for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
            ++jt) {
         if (jt->second.IsSequence() && jt->second.size() == 3 &&
+            jt->second[0].IsScalar() &&
             (rtype = jt->second[0].as<std::string>()).at(0) == 'R') {
           min = jt->second[1].as<double>();
           max = jt->second[2].as<double>();
@@ -217,6 +233,22 @@ void SimulationManager::CheckRandomParams() {
           for (int i = 0; i < n_random_; ++i) {
             pnode_[it->first][jt->first].push_back(
                 GetRandomParam(rtype, min, max));
+          }
+        }
+      }
+    } else if (it->second.IsSequence() && it->second[0].IsMap()) {
+      for (int i = 0; i < it->second.size(); ++i) {
+        YAML::Node subnode = it->second[i];
+        for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
+          if (jt->second.IsSequence() && jt->second.size() == 3 &&
+              jt->second[0].IsScalar() &&
+              (rtype = jt->second[0].as<std::string>()).at(0) == 'R') {
+            min = jt->second[1].as<double>();
+            max = jt->second[2].as<double>();
+            subnode[jt->first] = YAML::Load("[R]");
+            for (int i = 0; i < n_random_; ++i) {
+              subnode[jt->first].push_back(GetRandomParam(rtype, min, max));
+            }
           }
         }
       }
@@ -254,15 +286,25 @@ double SimulationManager::GetRandomParam(std::string rtype, double min,
    *************************************/
 void SimulationManager::CountVariations() {
   for (YAML::const_iterator it = pnode_.begin(); it != pnode_.end(); ++it) {
-    if (it->second.IsSequence() &&
+    if (it->second.IsSequence() && it->second[0].IsScalar() &&
         (it->second[0].as<std::string>()).at(0) == 'V') {
       n_var_ *= it->second.size() - 1;
     } else if (it->second.IsMap()) {
       for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
            ++jt) {
-        if (jt->second.IsSequence() &&
+        if (jt->second.IsSequence() && jt->second[0].IsScalar() &&
             (jt->second[0].as<std::string>()).at(0) == 'V') {
           n_var_ *= jt->second.size() - 1;
+        }
+      }
+    } else if (it->second.IsSequence() && it->second[0].IsMap()) {
+      for (int i = 0; i < it->second.size(); ++i) {
+        YAML::Node subnode = it->second[i];
+        for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
+          if (jt->second.IsSequence() && jt->second[0].IsScalar() &&
+              (jt->second[0].as<std::string>()).at(0) == 'V') {
+            n_var_ *= jt->second.size() - 1;
+          }
         }
       }
     }
@@ -299,7 +341,7 @@ void SimulationManager::GenerateParameters() {
   pvector_.resize(n_var_);
   int i_var, j_var, k_var = n_var_;
   for (YAML::const_iterator it = pnode_.begin(); it != pnode_.end(); ++it) {
-    if (it->second.IsSequence() &&
+    if (it->second.IsSequence() && it->second[0].IsScalar() &&
         (it->second[0].as<std::string>()).at(0) == 'V') {
       int s = it->second.size() - 1;
       k_var /= s;
@@ -315,7 +357,7 @@ void SimulationManager::GenerateParameters() {
     } else if (it->second.IsMap()) {
       for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
            ++jt) {
-        if (jt->second.IsSequence() &&
+        if (jt->second.IsSequence() && jt->second[0].IsScalar() &&
             (jt->second[0].as<std::string>()).at(0) == 'V') {
           int s = jt->second.size() - 1;
           k_var /= s;
@@ -334,6 +376,31 @@ void SimulationManager::GenerateParameters() {
           }
         }
       }
+    } else if (it->second.IsSequence() && it->second[0].IsMap()) {
+      for (int sub = 0; sub != it->second.size(); ++sub) {
+        YAML::Node subnode = it->second[sub];
+        for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
+          if (jt->second.IsSequence() && jt->second[0].IsScalar() &&
+              (jt->second[0].as<std::string>()).at(0) == 'V') {
+            int s = jt->second.size() - 1;
+            k_var /= s;
+            j_var = n_var_ / (k_var * s);
+            i_var = 0;
+            for (int j = 0; j < j_var; ++j) {
+              for (int i_param = 1; i_param < s; ++i_param) {
+                for (int k = 0; k < k_var; ++k) {
+                  pvector_[i_var++][it->first][sub][jt->first] =
+                      jt->second[i_param];
+                }
+              }
+            }
+          } else {
+            for (i_var = 0; i_var < n_var_; ++i_var) {
+              pvector_[i_var][it->first][sub][jt->first] = jt->second;
+            }
+          }
+        }
+      }
     } else {
       for (i_var = 0; i_var < n_var_; ++i_var) {
         pvector_[i_var][it->first] = it->second;
@@ -344,7 +411,7 @@ void SimulationManager::GenerateParameters() {
   // Now handle random parameters
   k_var = n_var_ / n_random_;
   for (YAML::const_iterator it = pnode_.begin(); it != pnode_.end(); ++it) {
-    if (it->second.IsSequence() &&
+    if (it->second.IsSequence() && it->second[0].IsScalar() &&
         (it->second[0].as<std::string>()).at(0) == 'R') {
       i_var = 0;
       for (int k = 0; k < k_var; ++k) {
@@ -355,12 +422,28 @@ void SimulationManager::GenerateParameters() {
     } else if (it->second.IsMap()) {
       for (YAML::const_iterator jt = it->second.begin(); jt != it->second.end();
            ++jt) {
-        if (jt->second.IsSequence() &&
+        if (jt->second.IsSequence() && jt->second[0].IsScalar() &&
             (jt->second[0].as<std::string>()).at(0) == 'R') {
           i_var = 0;
           for (int k = 0; k < k_var; ++k) {
             for (int i = 0; i < n_random_; ++i) {
               pvector_[i_var++][it->first][jt->first] = jt->second[i + 1];
+            }
+          }
+        }
+      }
+    } else if (it->second.IsSequence() && it->second[0].IsMap()) {
+      for (int sub = 0; sub < it->second.size(); ++sub) {
+        YAML::Node subnode = it->second[sub];
+        for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
+          if (jt->second.IsSequence() && jt->second[0].IsScalar() &&
+              (jt->second[0].as<std::string>()).at(0) == 'R') {
+            i_var = 0;
+            for (int k = 0; k < k_var; ++k) {
+              for (int i = 0; i < n_random_; ++i) {
+                pvector_[i_var++][it->first][sub][jt->first] =
+                    jt->second[i + 1];
+              }
             }
           }
         }
@@ -455,7 +538,7 @@ void SimulationManager::WriteParams() {
 void SimulationManager::RunSimulations() {
   for (std::vector<std::string>::iterator it = pfiles_.begin();
        it != pfiles_.end(); ++it) {
-    //ParseParams(*it);
+    // ParseParams(*it);
     sim_ = new Simulation;
     sim_->Run(YAML::LoadFile(*it));
     delete sim_;
@@ -470,16 +553,16 @@ void SimulationManager::RunSimulations() {
    automatically using simcore_config.
    *************************************/
 //#include "parse_params.hpp"
-//void SimulationManager::ParseParams(std::string file_name) {
-  //YAML::Node node = YAML::LoadFile(file_name);
-  //YAML::Emitter out;
-  //Logger::Info("Initializing simulation with parameters:\n%s",
-               //(out << node).c_str());
-  //parse_params(node, &params_);
+// void SimulationManager::ParseParams(std::string file_name) {
+// YAML::Node node = YAML::LoadFile(file_name);
+// YAML::Emitter out;
+// Logger::Info("Initializing simulation with parameters:\n%s",
+//(out << node).c_str());
+// parse_params(node, &params_);
 //}
 
 void SimulationManager::ProcessOutputs() {
-  //ParseParams(pfiles_[0]);
+  // ParseParams(pfiles_[0]);
   sim_ = new Simulation;
   sim_->ProcessOutputs(YAML::LoadFile(pfiles_[0]), run_opts_);
   delete sim_;
