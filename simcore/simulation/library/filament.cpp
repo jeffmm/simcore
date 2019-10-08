@@ -10,13 +10,12 @@ void Filament::SetParameters() {
   persistence_length_ = sparams_->persistence_length;
   diameter_ = sparams_->diameter;
   max_length_ = sparams_->max_length;
+  min_length_ = sparams_->min_length;
   min_bond_length_ = sparams_->min_bond_length;
-  min_length_ = 2 * min_bond_length_;
+  if (min_length_ < 2 * min_bond_length_)
+    min_length_ = 2 * min_bond_length_;
   dynamic_instability_flag_ = sparams_->dynamic_instability_flag;
   polydispersity_flag_ = sparams_->polydispersity_flag;
-  polydispersity_factor_ = sparams_->polydispersity_factor;
-  polydispersity_warn_on_truncate_ =
-      sparams_->polydispersity_warn_on_truncate;
   spiral_flag_ = sparams_->spiral_flag;
   force_induced_catastrophe_flag_ =
       sparams_->force_induced_catastrophe_flag;
@@ -101,19 +100,17 @@ void Filament::InitFilamentLength() {
   }
 
   if (polydispersity_flag_) {
-    FlorySchulz fs;
-    fs.Init(polydispersity_factor_, min_length_);
-    do {
-      double roll = gsl_rng_uniform_pos(rng_.r);
-      length_ = fs.Rand(roll);
-      if ((length_ > max_length_ || length_ < min_length_) &&
-          polydispersity_warn_on_truncate_) {
-        Logger::Warning(
-            "Filament polydispersity distribution is being truncated:\n"
-            "Attempted length: %2.2f, Min length: %2.2f, Max length: %2.2f\n",
-            length_, min_length_, max_length_);
-      }
-    } while (length_ < min_length_ || length_ > max_length_);
+    ExponentialDist expon;
+    expon.Init(length_, min_length_, max_length_);
+    double roll = gsl_rng_uniform_pos(rng_.r);
+    length_ = expon.Rand(roll);
+    if (length_ > max_length_ + 1e-6 || length_ < min_length_ - 1e-6) {
+      Logger::Error(
+          "Filament polydispersity distribution returned a value out of "
+          "range:\nAttempted length: %2.2f, Min length: %2.2f, Max length: "
+          "%2.2f",
+          length_, min_length_, max_length_);
+    }
   }
   if (length_ > max_length_) {
     Logger::Warning(
@@ -1237,6 +1234,7 @@ void Filament::ReportAll() {
     */
 
 void Filament::WriteSpec(std::fstream &ospec) {
+  Logger::Trace("Writing filament specs, object id: %d", GetOID());
   Mesh::WriteSpec(ospec);
   ospec.write(reinterpret_cast<char *>(&persistence_length_), sizeof(double));
   ospec.write(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
@@ -1331,21 +1329,22 @@ void Filament::ReadPosit(std::fstream &iposit) {
 
 void Filament::WriteCheckpoint(std::fstream &ocheck) {
   Mesh::WriteCheckpoint(ocheck);
-  //void *rng_state = gsl_rng_state(rng_.r);
-  //size_t rng_size = gsl_rng_size(rng_.r);
-  //ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  //ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
-  //WriteSpec(ocheck);
+  // void *rng_state = gsl_rng_state(rng_.r);
+  // size_t rng_size = gsl_rng_size(rng_.r);
+  // ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
+  // ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
+  // WriteSpec(ocheck);
 }
 
 void Filament::ReadCheckpoint(std::fstream &icheck) {
   Mesh::ReadCheckpoint(icheck);
-  //if (icheck.eof())
-    //return;
-  //void *rng_state = gsl_rng_state(rng_.r);
-  //size_t rng_size;
-  //icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  //icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
-  //ReadSpec(icheck);
-  //Logger::Trace("Reloading filament from checkpoint with mid %d", GetMeshID());
+  // if (icheck.eof())
+  // return;
+  // void *rng_state = gsl_rng_state(rng_.r);
+  // size_t rng_size;
+  // icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
+  // icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
+  // ReadSpec(icheck);
+  // Logger::Trace("Reloading filament from checkpoint with mid %d",
+  // GetMeshID());
 }

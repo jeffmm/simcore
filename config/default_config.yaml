@@ -140,6 +140,7 @@ species:                             # Shared parameters used for all species.
 filament:                            # Parameters unique to filament class of objects.
   persistence_length: [400, double]  # Persistence length of filament.
   max_length: [500,double]           # Maximum filament length. Also used for dynamic instability.
+  min_length: [5,double]             # Minimum filament length. Also used for dynamic instability.
   min_bond_length: [1.5, double]     # Minimum bond length. When using dynamic instability, the
                                      # number of bonds used to discretize filament may change while
                                      # filament is growing or shrinking to stay in range.

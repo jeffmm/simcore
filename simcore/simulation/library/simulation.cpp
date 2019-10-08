@@ -105,6 +105,7 @@ void Simulation::Statistics() {
   if (i_step_ % params_.n_thermo == 0 && i_step_ > 0) {
     Logger::Debug("Calculating system pressure and volume");
     /* Calculate system pressure from stress tensor */
+    Logger::Debug("Calculating system thermodynamics");
     iengine_.CalculatePressure();
     if (params_.constant_pressure) {
       space_.ConstantPressure();

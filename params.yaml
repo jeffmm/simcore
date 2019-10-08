@@ -2,9 +2,9 @@ seed: 27803201189123
 
 run_name: overhaul_test
 n_dim: 2
-n_periodic: 0
+n_periodic: 2
 delta: 0.0001
-n_steps: 10000000
+n_steps: 100000
 n_steps_target: 0
 boundary: 0
 n_update_cells: 50
@@ -19,7 +19,7 @@ system_radius: 100
 potential: soft
 soft_potential_mag: 100
 stoch_flag: 1
-f_cutoff: 100000
+f_cutoff: 10000
 thermo_flag: 0
 n_thermo: 100
 interaction_flag: 1
@@ -27,37 +27,24 @@ interaction_flag: 1
 checkpoint_flag: 1
 n_checkpoint: 1000
 
-br_bead:
-  num: 0
-  insertion_type: custom
-  insert_file: br_bead_insert.yaml
-  draw_type: orientation
-  color: 3.14
-
 filament:
   - name: microtubule
     num: 10
     packing_fraction: -1
     insertion_type: random
-    #insert_file: anchor_ds_insert.yaml
     diameter: 1
     overlap: 0
     length: 50
-    persistence_length: 5000
-    perlen_ratio: 200
-    driving_factor: 0
-    dynamic_instability_flag: 1
+    min_length: 5
+    max_length: 500
     min_bond_length: 3
     polydispersity_flag: 1
-    polydispersity_factor: 0.1
-    polydispersity_warn_on_truncate: 0
+    dynamic_instability_flag: 1
+    persistence_length: 5000
+    driving_factor: 0
     v_poly: 50
     v_depoly: 50
     f_grow_to_shrink: 10
-    f_grow_to_pause: 0
-    f_pause_to_shrink: 0
-    f_pause_to_grow: 0
-    f_shrink_to_pause: 0
     f_shrink_to_grow: 20
     spec_flag: 1
     n_spec: 100
@@ -65,25 +52,19 @@ filament:
     num: 10
     packing_fraction: -1
     insertion_type: random
-    #insert_file: anchor_ds_insert.yaml
     diameter: 1
     overlap: 0
-    length: 80
-    persistence_length: 200
-    perlen_ratio: 200
-    driving_factor: 0
-    dynamic_instability_flag: 1
+    length: 50
+    min_length: 5
+    max_length: 100
     min_bond_length: 3
     polydispersity_flag: 1
-    polydispersity_factor: 0.1
-    polydispersity_warn_on_truncate: 0
+    dynamic_instability_flag: 1
+    persistence_length: 200
+    driving_factor: 0
     v_poly: 50
     v_depoly: 50
     f_grow_to_shrink: 10
-    f_grow_to_pause: 0
-    f_pause_to_shrink: 0
-    f_pause_to_grow: 0
-    f_shrink_to_pause: 0
     f_shrink_to_grow: 20
     spec_flag: 1
     n_spec: 100

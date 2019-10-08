@@ -46,6 +46,7 @@ void SpeciesBase::InitPositFileInput(std::string run_name) {
 void SpeciesBase::InitSpecFile(std::string run_name) {
   std::string sid_str = sid_._to_string();
   std::string spec_file_name = run_name + "_" + sid_str + "_" + GetSpeciesName() + ".spec";
+  Logger::Trace("Initializing spec file %s", spec_file_name.c_str());
   ospec_file_.open(spec_file_name, std::ios::out | std::ios::binary);
   if (!ospec_file_.is_open()) {
     Logger::Error("Output file %s did not open", spec_file_name.c_str());
@@ -77,7 +78,6 @@ bool SpeciesBase::HandleEOF() {
         if ((pos = file_name.str().find("_reduced")) == std::string::npos) {
           /* we are currently reducing, so input file does not have reduce in
            * name */
-          pos = file_name.tellp();
           file_name << "_reload" << nload.str();
         } else {
           if (!params_->reload_reduce_switch) {
@@ -145,6 +145,8 @@ void SpeciesBase::InitSpecFileInput(std::string run_name) {
 }
 
 void SpeciesBase::InitOutputFiles(std::string run_name) {
+  Logger::Trace("Initializing output files for species %s",
+      sid_._to_string());
   if (GetPositFlag())
     InitPositFile(run_name);
   if (GetSpecFlag())
@@ -162,12 +164,13 @@ void SpeciesBase::LoadFromCheckpoints(std::string run_name,
                                       std::string checkpoint_run_name) {
   std::string sid_str = sid_._to_string();
   checkpoint_file_ = checkpoint_run_name + "_" + sid_str + "_" + GetSpeciesName() + ".checkpoint";
+  Logger::Trace("Loading species %s from checkpoint file %s",
+      sid_._to_string(), checkpoint_file_.c_str());
   if (!GetCheckpointFlag()) {
     Logger::Error("Checkpoint file %s not available for parameter file!",
                   checkpoint_file_.c_str());
   }
   ReadCheckpoints();
-  InitOutputFiles(run_name);
 }
 
 void SpeciesBase::InitInputFiles(std::string run_name, bool posits_only,
@@ -183,6 +186,7 @@ void SpeciesBase::InitInputFiles(std::string run_name, bool posits_only,
 }
 
 void SpeciesBase::CloseFiles() {
+  Logger::Trace("Closing output files for species %s", sid_._to_string());
   if (oposit_file_.is_open())
     oposit_file_.close();
   if (iposit_file_.is_open())

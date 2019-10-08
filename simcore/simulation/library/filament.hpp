@@ -3,6 +3,7 @@
 
 #include "flory_schulz.hpp"
 #include "mesh.hpp"
+#include "exponential_dist.hpp"
 
 class Filament : public Mesh {
 private:

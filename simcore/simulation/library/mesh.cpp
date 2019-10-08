@@ -425,6 +425,7 @@ void Mesh::ReadSpec(std::fstream &ip) {
 
 void Mesh::WriteSpec(std::fstream &op) {
   int mid = GetMeshID();
+  Logger::Trace("Writing specs for mesh id %d", mid);
   op.write(reinterpret_cast<char *>(&mid), sizeof(mid));
   op.write(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   op.write(reinterpret_cast<char *>(&length_), sizeof(length_));
