@@ -6,12 +6,20 @@
 #include "species.hpp"
 
 class OutputManager {
- private:
-  bool posit_flag_ = false, spec_flag_ = false, checkpoint_flag_ = false,
-       thermo_flag_ = false, posits_only_ = false, reduce_flag_ = false,
-       thermo_analysis_ = false;
-  int *i_step_, n_posit_, n_spec_, n_checkpoint_, n_thermo_, reduce_factor_,
-      with_reloads_;
+private:
+  bool posit_flag_ = false;
+  bool spec_flag_ = false;
+  bool checkpoint_flag_ = false;
+  bool thermo_flag_ = false;
+  bool posits_only_ = false;
+  bool reduce_flag_ = false;
+  bool thermo_analysis_ = false;
+  bool with_reloads_ = false;
+  int n_posit_;
+  int n_spec_;
+  int n_checkpoint_;
+  int n_thermo_;
+  int reduce_factor_;
   std::string run_name_;
   system_parameters *params_;
   std::vector<SpeciesBase *> *species_;
@@ -29,13 +37,11 @@ class OutputManager {
   std::fstream ithermo_file_;
   std::fstream time_file_;
 
- public:
+public:
   OutputManager() {}
   void Init(system_parameters *params, std::vector<SpeciesBase *> *species,
-            space_struct *space, int *i_step, std::string run_name,
-            bool reading_inputs = false, bool posits_only = false,
-            bool with_reloads = false, bool reduce_flag = false,
-            int reduce_factor = 1);
+            space_struct *space, bool reading_inputs = false,
+            run_options *run_opts = nullptr);
   // void SetPosits(std::vector<std::string> posit_files) {
   // posit_files_ = posit_files;
   //}
@@ -48,4 +54,4 @@ class OutputManager {
   void Close();
 };
 
-#endif  //_SIMCORE_OUTPUT_MANAGER_H_
+#endif //_SIMCORE_OUTPUT_MANAGER_H_

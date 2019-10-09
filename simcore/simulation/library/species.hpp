@@ -262,14 +262,17 @@ template <typename T, unsigned char S> void Species<T, S>::ReadCheckpoints() {
   if (!icheck_file.is_open()) {
     Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
   }
-  int size = 0;
   long seed = -1;
+  void *rng_state = gsl_rng_state(rng_.r);
+  size_t rng_size;
+  int size;
   icheck_file.read(reinterpret_cast<char *>(&seed), sizeof(seed));
+  icheck_file.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
+  icheck_file.read(reinterpret_cast<char *>(rng_state), rng_size);
   icheck_file.read(reinterpret_cast<char *>(&size), sizeof(size));
-  T member;
-  member.Init(&sparams_);
-  member.SetSID(GetSID());
-  members_.resize(size, member);
+  AddMember();
+  members_.resize(size, members_[0]);
+  n_members_ = size;
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->ReadCheckpoint(icheck_file);
   icheck_file.close();

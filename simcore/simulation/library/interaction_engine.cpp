@@ -96,7 +96,6 @@ void InteractionEngine::CheckUpdateXlinks() {
     xlink_.GetInteractors(xlinks);
     interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
     UpdateInteractions();
-    ZeroDrTot();
     return;
   }
 }
@@ -193,6 +192,7 @@ void InteractionEngine::PairBondCrosslinks() {
 void InteractionEngine::UpdateInteractions() {
   UpdatePairInteractions();
   UpdateBoundaryInteractions();
+  ZeroDrTot();
 }
 
 void InteractionEngine::UpdatePairInteractions() {
@@ -263,7 +263,6 @@ void InteractionEngine::CheckUpdateInteractions() {
                   " last update, dr_max = %2.2f",
                   i_update_, dr_max);
     UpdateInteractions();
-    ZeroDrTot();
     i_update_ = 0;
   }
   i_update_++;
@@ -682,13 +681,8 @@ void InteractionEngine::DrawInteractions(
 
 void InteractionEngine::WriteOutputs() { xlink_.WriteOutputs(); }
 
-void InteractionEngine::InitOutputs(bool reading_inputs, bool reduce_flag,
-                                    bool with_reloads) {
-  xlink_.InitOutputs(reading_inputs, reduce_flag, with_reloads);
-  if (params_->load_checkpoint) {
-    PairBondCrosslinks();
-    ForceUpdate();
-  }
+void InteractionEngine::InitOutputs(bool reading_inputs, run_options *run_opts) {
+  xlink_.InitOutputs(reading_inputs, run_opts);
 }
 
 void InteractionEngine::ReadInputs() { xlink_.ReadInputs(); }
@@ -696,4 +690,11 @@ void InteractionEngine::ReadInputs() { xlink_.ReadInputs(); }
 void InteractionEngine::InitCrosslinkSpecies(sid_label &slab,
                                              ParamsParser &parser) {
   xlink_.InitSpecies(slab, parser);
+}
+
+void InteractionEngine::LoadCrosslinksFromCheckpoints(
+    std::string run_name, std::string checkpoint_run_name) {
+  xlink_.LoadCrosslinksFromCheckpoints(run_name, checkpoint_run_name);
+  PairBondCrosslinks();
+  ForceUpdate();
 }

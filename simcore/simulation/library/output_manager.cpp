@@ -1,23 +1,23 @@
 #include "output_manager.hpp"
+#include "parse_flags.hpp"
 
 void OutputManager::Init(system_parameters *params,
                          std::vector<SpeciesBase *> *species,
-                         space_struct *space, int *i_step, std::string run_name,
-                         bool reading_inputs, bool posits_only,
-                         bool with_reloads, bool reduce_flag,
-                         int reduce_factor) {
-  run_name_ = run_name;
-  reduce_flag_ = reduce_flag;
-  reduce_factor_ = reduce_factor;
-  with_reloads_ = with_reloads;
-  species_ = species;
+                         space_struct *space, bool reading_inputs,
+                         run_options *run_opts) {
   params_ = params;
+  run_name_ = params_->run_name;
+  species_ = species;
   space_ = space;
-  i_step_ = i_step;
   n_posit_ = n_spec_ = n_checkpoint_ = ABS((int)params_->n_steps);
-  posits_only_ = posits_only;
   n_thermo_ = params_->n_thermo;
   thermo_flag_ = params_->thermo_flag;
+  if (run_opts) {
+    reduce_flag_ = run_opts->reduce_flag;
+    reduce_factor_ = run_opts->reduce_factor;
+    with_reloads_ = run_opts->with_reloads;
+    posits_only_ = run_opts->posits_only;
+  }
   if (!reading_inputs && thermo_flag_) {
     InitThermo(run_name_);
   } else if (reading_inputs && thermo_flag_ && thermo_analysis_) {
@@ -62,18 +62,18 @@ void OutputManager::Init(system_parameters *params,
 }
 
 void OutputManager::WriteOutputs() {
-  if (posit_flag_ && (*i_step_ % n_posit_ == 0)) {
+  if (posit_flag_ && (params_->i_step % n_posit_ == 0)) {
     WritePosits();
   }
-  if (spec_flag_ && (*i_step_ % n_spec_ == 0)) {
+  if (spec_flag_ && (params_->i_step % n_spec_ == 0)) {
     Logger::Debug("Writing outputs");
     WriteSpecs();
   }
-  if (checkpoint_flag_ && (*i_step_ % n_checkpoint_ == 0)) {
+  if (checkpoint_flag_ && (params_->i_step % n_checkpoint_ == 0)) {
     Logger::Debug("Writing checkpoints");
     WriteCheckpoints();
   }
-  if (thermo_flag_ && (*i_step_ % n_thermo_ == 0)) {
+  if (thermo_flag_ && (params_->i_step % n_thermo_ == 0)) {
     Logger::Debug("Writing system thermodynamics");
     WriteThermo();
   }
@@ -81,7 +81,8 @@ void OutputManager::WriteOutputs() {
 
 void OutputManager::WritePosits() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-    if ((*spec)->GetPositFlag() && *i_step_ % (*spec)->GetNPosit() == 0) {
+    if ((*spec)->GetPositFlag() &&
+        params_->i_step % (*spec)->GetNPosit() == 0) {
       (*spec)->WritePosits();
     }
   }
@@ -89,7 +90,7 @@ void OutputManager::WritePosits() {
 
 void OutputManager::WriteSpecs() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-    if ((*spec)->GetSpecFlag() && *i_step_ % (*spec)->GetNSpec() == 0) {
+    if ((*spec)->GetSpecFlag() && params_->i_step % (*spec)->GetNSpec() == 0) {
       (*spec)->WriteSpecs();
     }
   }
@@ -98,7 +99,7 @@ void OutputManager::WriteSpecs() {
 void OutputManager::WriteCheckpoints() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if ((*spec)->GetCheckpointFlag() &&
-        *i_step_ % (*spec)->GetNCheckpoint() == 0) {
+        params_->i_step % (*spec)->GetNCheckpoint() == 0) {
       (*spec)->WriteCheckpoints();
     }
   }
@@ -135,8 +136,8 @@ void OutputManager::InitThermoInput(std::string fname) {
     Logger::Error(
         "Input file %s does not match parameter file:\n"
         "n_steps: %d %d, n_thermo: %d %d, delta: %2.5f %2.5f, n_dim: %d %d",
-        fname.c_str(), n_steps, params_->n_steps, n_thermo, params_->n_thermo, delta,
-        params_->delta, ndim, params_->n_dim);
+        fname.c_str(), n_steps, params_->n_steps, n_thermo, params_->n_thermo,
+        delta, params_->delta, ndim, params_->n_dim);
   }
 }
 
@@ -171,21 +172,22 @@ void OutputManager::ReadThermo() {
 }
 
 void OutputManager::ReadInputs() {
-  // if ( *i_step_ % n_posit_ != 0 && *i_step_ % n_spec_ != 0) {
+  // if ( params_->i_step % n_posit_ != 0 && params_->i_step % n_spec_ != 0) {
   // return;
   //}
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if (posits_only_ && (*spec)->GetPositFlag() &&
-        *i_step_ % (*spec)->GetNPosit() == 0) {
+        params_->i_step % (*spec)->GetNPosit() == 0) {
       (*spec)->ReadPosits();
     }
     // In the case that we only want to consider posits, but we only have spec
     // files, use specs to read average positions
     else if (posits_only_ && !(*spec)->GetPositFlag() &&
-             (*spec)->GetSpecFlag() && *i_step_ % (*spec)->GetNSpec() == 0) {
+             (*spec)->GetSpecFlag() &&
+             params_->i_step % (*spec)->GetNSpec() == 0) {
       (*spec)->ReadPositsFromSpecs();
     } else if (!posits_only_ && (*spec)->GetSpecFlag() &&
-               *i_step_ % (*spec)->GetNSpec() == 0) {
+               params_->i_step % (*spec)->GetNSpec() == 0) {
       (*spec)->ReadSpecs();
       if (params_->checkpoint_from_spec) {
         (*spec)->WriteCheckpoints();
@@ -203,15 +205,15 @@ void OutputManager::ReadInputs() {
 void OutputManager::WriteReduce() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if ((*spec)->GetPositFlag() &&
-        *i_step_ % (reduce_factor_ * (*spec)->GetNPosit()) == 0) {
+        params_->i_step % (reduce_factor_ * (*spec)->GetNPosit()) == 0) {
       (*spec)->WritePosits();
     }
     if (!posits_only_ && (*spec)->GetSpecFlag() &&
-        *i_step_ % (reduce_factor_ * (*spec)->GetNSpec()) == 0) {
+        params_->i_step % (reduce_factor_ * (*spec)->GetNSpec()) == 0) {
       (*spec)->WriteSpecs();
     }
   }
-  if (thermo_flag_ && *i_step_ % (reduce_factor_ * n_thermo_) == 0) {
+  if (thermo_flag_ && params_->i_step % (reduce_factor_ * n_thermo_) == 0) {
     WriteThermo();
   }
 }
@@ -238,7 +240,7 @@ void OutputManager::WriteTime() {
   fname.append(".time");
   time_file_.open(fname, std::ios::out);
   time_file_ << "i_step n_steps delta\n";
-  time_file_ << *i_step_ << " " << params_->n_steps << " " << params_->delta
-             << "\n";
+  time_file_ << params_->i_step << " " << params_->n_steps << " "
+             << params_->delta << "\n";
   time_file_.close();
 }

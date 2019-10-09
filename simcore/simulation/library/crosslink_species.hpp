@@ -37,13 +37,11 @@ private:
   void WriteSpecs();
   void ReadSpecs();
   void WriteCheckpoints();
-  void ReadCheckpoints();
   void InitOutputFiles();
   void InitSpecFile();
   void InitCheckpoints();
   bool InitSpecFileInputFromFile(std::string spec_file_name);
   void InitSpecFileInput();
-  void LoadFromCheckpoints();
 
 public:
   void Init(system_parameters *params, species_base_parameters *sparams,
@@ -63,6 +61,7 @@ public:
                    bool with_reloads = false);
   void GetAnchorInteractors(std::vector<Object *> &ixors);
   const double GetConcentration() const { return sparams_.concentration; }
+
 };
 
 #endif

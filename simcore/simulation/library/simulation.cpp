@@ -234,7 +234,7 @@ void Simulation::InitSpecies() {
       double spec_length = species_.back()->GetSpecLength();
       double spec_d = species_.back()->GetSpecDiameter();
       spec_length = (spec_d > spec_length ? spec_d : spec_length);
-      CellList::SetMinCellLength(2*spec_length);
+      CellList::SetMinCellLength(2 * spec_length);
     } else {
       species_.back()->CleanUp();
       delete species_.back();
@@ -372,6 +372,8 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
     }
     if (params_.load_checkpoint) {
       (*spec)->LoadFromCheckpoints(run_name_, params_.checkpoint_run_name);
+      iengine_.LoadCrosslinksFromCheckpoints(run_name_,
+                                             params_.checkpoint_run_name);
     }
   }
   /* Should do this all the time to force object counting */
@@ -438,8 +440,7 @@ void Simulation::GetGraphicsStructure() {
 /* Initialize output files */
 void Simulation::InitOutputs() {
   Logger::Debug("Initializing output files");
-  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_,
-                   run_name_);
+  output_mgr_.Init(&params_, &species_, space_.GetStruct());
   // if (!params_.load_checkpoint)
   iengine_.InitOutputs();
   /* If analyzing run time, record cpu time here */
@@ -450,10 +451,8 @@ void Simulation::InitOutputs() {
 
 /* Determine which output files we are reading */
 void Simulation::InitInputs(run_options run_opts) {
-  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_,
-                   true, run_opts.use_posits, run_opts.with_reloads,
-                   run_opts.reduce_flag, run_opts.reduce_factor);
-  iengine_.InitOutputs(true, run_opts.with_reloads, run_opts.reduce_flag);
+  output_mgr_.Init(&params_, &species_, space_.GetStruct(), true, &run_opts);
+  iengine_.InitOutputs(true, &run_opts);
 }
 
 /* Write object positions, etc if necessary */

@@ -332,21 +332,11 @@ void Crosslink::ReadSpec(std::fstream &ispec) {
 }
 
 void Crosslink::WriteCheckpoint(std::fstream &ocheck) {
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
-  ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
-  WriteSpec(ocheck);
+  Object::WriteCheckpoint();
 }
 
 void Crosslink::ReadCheckpoint(std::fstream &icheck) {
-  if (icheck.eof())
-    return;
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size;
-  icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
-  ReadSpec(icheck);
+  Object::ReadCheckpoint(icheck);
   Logger::Trace("Reloading anchor from checkpoint with mid %d",
                 anchors_[0].GetMeshID());
   if (IsDoubly()) {

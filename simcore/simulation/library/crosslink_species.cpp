@@ -10,16 +10,8 @@ void CrosslinkSpecies::Init(system_parameters *params,
 }
 
 void CrosslinkSpecies::AddMember() {
-  Crosslink newmember;
-  Logger::Trace("Adding member to species %s, member number %d, member id %d",
-      GetSID()._to_string(), n_members_+1, newmember.GetOID());
-  members_.push_back(newmember);
-  members_.back().SetSID(GetSID());
-  members_.back().Init(&sparams_);
+  Species::AddMember();
   members_.back().InitInteractionEnvironment(&lut_);
-  /* Keep track of bound bound anchors, bound crosslinks, and
-   * concentration of free crosslinks */
-  n_members_++;
 }
 
 void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
@@ -294,39 +286,6 @@ void CrosslinkSpecies::WriteCheckpoints() {
   ocheck_file.close();
 }
 
-void CrosslinkSpecies::ReadCheckpoints() {
-  /* Try to open the file */
-  std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
-  if (!icheck_file.is_open()) {
-    Logger::Error("Output file %s did not open\n", checkpoint_file_.c_str());
-  }
-
-  /* Read RNG state */
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size;
-  long seed = -1;
-  icheck_file.read(reinterpret_cast<char *>(&seed), sizeof(long));
-  icheck_file.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  icheck_file.read(reinterpret_cast<char *>(rng_state), rng_size);
-  /* Read xlink vector sizes, first singly then doubly */
-  n_members_ = -1;
-  icheck_file.read(reinterpret_cast<char *>(&n_members_), sizeof(int));
-
-  /* Prepare the xlink vectors */
-  Crosslink xlink;
-  xlink.Init(&sparams_);
-  xlink.InitInteractionEnvironment(&lut_);
-  members_.resize(n_members_, xlink);
-
-  /* Read the crosslink checkpoints */
-  for (auto it = members_.begin(); it != members_.end(); ++it) {
-    it->ReadCheckpoint(icheck_file);
-  }
-  /* Close the file */
-  icheck_file.close();
-  rng_.SetSeed(seed);
-}
-
 void CrosslinkSpecies::InitOutputFiles() {
   if (GetSpecFlag())
     InitSpecFile();
@@ -382,31 +341,12 @@ void CrosslinkSpecies::InitSpecFileInput() {
   }
 }
 
-// void CrosslinkSpecies::UpdatePeriodic() {
-// for (auto xlink = members_.begin(); xlink != members_.end(); ++xlink) {
-// xlink->UpdatePeriodic();
-//}
-//}
-
-void CrosslinkSpecies::LoadFromCheckpoints() {
-  checkpoint_file_ =
-      params_->checkpoint_run_name + "_xlink_" + GetSpeciesName() + ".checkpoint";
-  if (!GetCheckpointFlag()) {
-    Logger::Error("Checkpoint file %s not available for parameter file!",
-                  checkpoint_file_.c_str());
-  }
-  ReadCheckpoints();
-  InitOutputFiles();
-}
-
 void CrosslinkSpecies::InitOutputs(bool reading_inputs, bool reduce_flag,
                                    bool with_reloads) {
   if (sparams_.concentration < 1e-12) {
     return;
   }
-  if (params_->load_checkpoint) {
-    LoadFromCheckpoints();
-  } else if (reading_inputs) {
+  if (!params_->load_checkpoint && reading_inputs) {
     if (with_reloads) {
       Logger::Warning("Crosslinks do not yet support reload functionality.");
     }

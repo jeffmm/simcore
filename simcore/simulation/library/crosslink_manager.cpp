@@ -90,11 +90,8 @@ void CrosslinkManager::AddNeighborToAnchor(Object *anchor, Object *neighbor) {
   a->AddNeighbor(neighbor);
 }
 
-void CrosslinkManager::InitOutputs(bool reading_inputs, bool reduce_flag,
-                                   bool with_reloads) {
-  for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
-    (*it)->InitOutputs(reading_inputs, reduce_flag, with_reloads);
-  }
+void CrosslinkManager::InitOutputs(bool reading_inputs, run_options *run_opts) {
+  output_mgr_.Init(params_, &xlink_species_, space_, reading_inputs, run_opts);
 }
 
 void CrosslinkManager::WriteOutputs() {
@@ -103,10 +100,8 @@ void CrosslinkManager::WriteOutputs() {
   }
 }
 
-void CrosslinkManager::ReadInputs() {
-  for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
-    (*it)->ReadInputs();
-  }
+void CrosslinkManager::InitInputs(run_options *run_opts) {
+  output_mgr_.Init(params_, &xlink_species_, space_, run_opts);
 }
 
 void CrosslinkManager::ZeroDrTot() {
@@ -117,5 +112,11 @@ void CrosslinkManager::ZeroDrTot() {
 const double CrosslinkManager::GetDrMax() {
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
     (*it)->GetDrMax();
+  }
+}
+void CrosslinkManager::LoadCrosslinksFromCheckpoints(
+    std::string run_name, std::string checkpoint_run_name) {
+  for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
+    (*it)->LoadFromCheckpoints(run_name, checkpoint_run_name);
   }
 }

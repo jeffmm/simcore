@@ -4,13 +4,12 @@ run_name: overhaul_test
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 10000
+n_steps: 100
 n_steps_target: 0
 boundary: 0
-n_update_cells: 50
 
 graph_flag: true
-n_graph: 100
+n_graph: 10
 movie_flag: false
 
 system_radius: 100
@@ -21,7 +20,7 @@ thermo_flag: true
 n_thermo: 100
 
 checkpoint_flag: true
-n_checkpoint: 1000
+n_checkpoint: 10
 
 filament:
   - name: microtubule
@@ -43,7 +42,7 @@ filament:
     f_grow_to_shrink: 10
     f_shrink_to_grow: 20
     spec_flag: true
-    n_spec: 100
+    n_spec: 10
   - name: actin
     num: 2
     packing_fraction: -1
@@ -63,7 +62,7 @@ filament:
     f_grow_to_shrink: 10
     f_shrink_to_grow: 20
     spec_flag: true
-    n_spec: 100
+    n_spec: 10
 
 crosslink:
   - name: kinesin
@@ -92,7 +91,7 @@ crosslink:
     end_pausing: false
     r_capture: 10
     spec_flag: true
-    n_spec: 100
+    n_spec: 10
   - name: ase1
     concentration: 0.05
     diameter: 1
@@ -119,4 +118,4 @@ crosslink:
     end_pausing: true
     r_capture: 10
     spec_flag: true
-    n_spec: 100
+    n_spec: 10

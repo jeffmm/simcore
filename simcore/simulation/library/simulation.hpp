@@ -5,7 +5,6 @@
 #include "interaction_engine.hpp"
 #include "output_manager.hpp"
 #include "space.hpp"
-#include "parse_flags.hpp"
 
 class Simulation {
 private:
