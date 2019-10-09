@@ -11,8 +11,7 @@ protected:
 public:
   Species() {}
   // Initialize function for setting it up on the first pass
-  virtual void Init(system_parameters *params,
-                    species_base_parameters *sparams,
+  virtual void Init(system_parameters *params, species_base_parameters *sparams,
                     space_struct *space) {
     sparams_ = *dynamic_cast<species_parameters<S> *>(sparams);
     SetSID(species_id::_from_integral(S));
@@ -96,6 +95,10 @@ template <typename T, unsigned char S> double const Species<T, S>::GetDrMax() {
     if (dr > max_dr) {
       max_dr = dr;
     }
+  }
+  if (max_dr > 10000) {
+    Logger::Warning("Oddly large dr (%2.2f) in species %s", max_dr,
+                    GetSID()._to_string());
   }
   return max_dr;
 }

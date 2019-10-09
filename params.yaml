@@ -4,11 +4,10 @@ run_name: overhaul_test
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 100000
+n_steps: 10000
 n_steps_target: 0
 boundary: 0
 n_update_cells: 50
-cell_length: 6
 
 graph_flag: true
 n_graph: 100
@@ -26,7 +25,7 @@ n_checkpoint: 1000
 
 filament:
   - name: microtubule
-    num: 10
+    num: 2
     packing_fraction: -1
     insertion_type: random
     diameter: 1
@@ -46,7 +45,7 @@ filament:
     spec_flag: true
     n_spec: 100
   - name: actin
-    num: 10
+    num: 2
     packing_fraction: -1
     insertion_type: random
     diameter: 1

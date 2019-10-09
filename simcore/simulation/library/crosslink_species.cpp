@@ -16,17 +16,15 @@ void CrosslinkSpecies::AddMember() {
   members_.push_back(newmember);
   members_.back().SetSID(GetSID());
   members_.back().Init(&sparams_);
-  members_.back().InitInteractionEnvironment(mindist_, &lut_);
+  members_.back().InitInteractionEnvironment(&lut_);
   /* Keep track of bound bound anchors, bound crosslinks, and
    * concentration of free crosslinks */
   n_members_++;
 }
 
-void CrosslinkSpecies::InitInteractionEnvironment(MinimumDistance *mindist,
-                                                  std::vector<Object *> *objs,
+void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
                                                   double *obj_vol,
                                                   bool *update) {
-  mindist_ = mindist;
   objs_ = objs;
   obj_volume_ = obj_vol;
   update_ = update;
@@ -260,7 +258,7 @@ void CrosslinkSpecies::ReadSpecs() {
   } else if (n_members_ != members_.size()) {
     Crosslink xlink;
     xlink.Init(&sparams_);
-    xlink.InitInteractionEnvironment(mindist_, &lut_);
+    xlink.InitInteractionEnvironment(&lut_);
     members_.resize(n_members_, xlink);
   }
   for (auto it = members_.begin(); it != members_.end(); ++it) {
@@ -316,11 +314,9 @@ void CrosslinkSpecies::ReadCheckpoints() {
 
   /* Prepare the xlink vectors */
   Crosslink xlink;
-  members_.push_back(xlink);
-  members_.back().Init(&sparams_);
-  members_.back().InitInteractionEnvironment(mindist_, &lut_);
-  // xlink.Init(mindist_, &lut_);
-  members_.resize(n_members_, members_[0]);
+  xlink.Init(&sparams_);
+  xlink.InitInteractionEnvironment(&lut_);
+  members_.resize(n_members_, xlink);
 
   /* Read the crosslink checkpoints */
   for (auto it = members_.begin(); it != members_.end(); ++it) {

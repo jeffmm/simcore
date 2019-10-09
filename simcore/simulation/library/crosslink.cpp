@@ -25,14 +25,12 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   anchors_.push_back(anchor2);
   anchors_[0].Init(sparams_);
   anchors_[1].Init(sparams_);
-  SetSID(species_id::crosslink);
   SetSingly();
   Logger::Trace("Initializing crosslink %d with anchors %d and %d", GetOID(),
                 anchors_[0].GetOID(), anchors_[1].GetOID());
 }
 
-void Crosslink::InitInteractionEnvironment(MinimumDistance *mindist, LookupTable *lut) {
-  mindist_ = mindist;
+void Crosslink::InitInteractionEnvironment(LookupTable *lut) {
   lut_ = lut;
 }
 
@@ -222,7 +220,8 @@ void Crosslink::CalculateTetherForces() {
   if (!IsDoubly())
     return;
   Interaction ix(&anchors_[0], &anchors_[1]);
-  mindist_->ObjectObject(ix);
+  MinimumDistance mindist;
+  mindist.ObjectObject(ix);
   /* Check stretch of tether. No penalty for having a stretch < rest_length. ie
    * the spring does not resist compression. */
   length_ = sqrt(ix.dr_mag2);
@@ -288,11 +287,9 @@ void Crosslink::SetSingly() { state_ = bind_state::singly; }
 
 void Crosslink::SetUnbound() { state_ = bind_state::unbound; }
 
-bool Crosslink::IsDoubly() { return state_ == +bind_state::doubly; }
-
-bool Crosslink::IsSingly() { return state_ == +bind_state::singly; }
-
-bool Crosslink::IsUnbound() { return state_ == +bind_state::unbound; }
+const bool Crosslink::IsDoubly() const { return state_ == +bind_state::doubly; }
+const bool Crosslink::IsSingly() const { return state_ == +bind_state::singly; }
+const bool Crosslink::IsUnbound() const { return state_ == +bind_state::unbound; }
 
 void Crosslink::WriteSpec(std::fstream &ospec) {
   if (IsUnbound()) {
@@ -355,5 +352,21 @@ void Crosslink::ReadCheckpoint(std::fstream &icheck) {
   if (IsDoubly()) {
     Logger::Trace("Reloading anchor from checkpoint with mid %d",
                   anchors_[1].GetMeshID());
+  }
+}
+
+const double Crosslink::GetDrTot() {
+  if (IsSingly()) {
+    return anchors_[0].GetDrTot();
+  } else if (IsDoubly()) {
+    double dr1 = anchors_[0].GetDrTot();
+    double dr2 = anchors_[1].GetDrTot();
+    if (dr1 > dr2) {
+      return dr1;
+    } else {
+      return dr2;
+    }
+  } else {
+    return 0;
   }
 }

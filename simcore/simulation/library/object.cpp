@@ -366,7 +366,10 @@ double const Object::GetVolume() {
   }
   return -1;
 }
-double const Object::GetDrTot() { return dr_tot_; }
+double const Object::GetDrTot() { 
+  UpdateDrTot();
+  return dr_tot_; 
+}
 void Object::ZeroDrTot() {
   std::copy(position_, position_ + 3, dr_zero_);
   dr_tot_ = 0;

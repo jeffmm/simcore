@@ -38,7 +38,7 @@ void SimulationManager::InitManager(run_options run_opts) {
     run_name_ = run_opts_.run_name;
   }
   if (run_opts_.graphics_flag) {
-    pnode_["graph_flag"] = 1;
+    pnode_["graph_flag"] = true;
     pnode_["n_graph"] = run_opts_.n_graph;
   }
   if ((run_opts_.make_movie || run_opts_.analysis_flag ||
@@ -48,7 +48,7 @@ void SimulationManager::InitManager(run_options run_opts) {
     // Logger::Error("Attempted to run movies/analysis on multiple files.");
   }
   if (run_opts_.auto_graph) {
-    pnode_["auto_graph"] = 1;
+    pnode_["auto_graph"] = true;
   }
   RNG::SetSeed(seed);
   // Instantiate the RNG after setting static seed
@@ -74,7 +74,7 @@ void SimulationManager::InitLogger() {
   log_name << run_name_;
   if (run_opts_.load_checkpoint) {
     std::ostringstream nload;
-    pnode_["load_checkpoint"] = 1;
+    pnode_["load_checkpoint"] = true;
     if (pnode_["n_load"]) {
       pnode_["n_load"] = pnode_["n_load"].as<int>() + 1;
     } else {
@@ -503,7 +503,7 @@ void SimulationManager::WriteParams() {
       if (run_opts_.load_checkpoint) {
         pvector_[i_var]["checkpoint_run_name"] = file_name.str();
         if (file_name.str().find("reduce") != std::string::npos) {
-          pvector_[i_var]["reload_reduce_switch"] = 1;
+          pvector_[i_var]["reload_reduce_switch"] = true;
         }
         std::ostringstream nload;
         nload << std::setw(3) << std::setfill('0')

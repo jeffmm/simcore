@@ -122,6 +122,9 @@ void FilamentSpecies::PopMember() {
   Species::PopMember();
 }
 
+const double FilamentSpecies::GetSpecLength() const {
+  return sparams_.min_bond_length;
+}
 void FilamentSpecies::InitAnalysis() {
   time_ = 0;
   if (sparams_.spiral_flag) {

@@ -57,6 +57,8 @@ public:
   // Redundant for filaments.
   virtual void CenteredOrientedArrangement() {}
 
+  virtual const double GetSpecLength() const;
+
   void InitAnalysis();
   void RunAnalysis();
   void FinalizeAnalysis();

@@ -15,7 +15,6 @@ enum xstate { unbound, singly, doubly };
 class Crosslink : public Object {
 private:
   crosslink_parameters *sparams_;
-  MinimumDistance *mindist_;
   draw_type draw_;
   bind_state state_;
   LookupTable *lut_;
@@ -44,7 +43,7 @@ private:
 public:
   Crosslink();
   void Init(crosslink_parameters *sparams);
-  void InitInteractionEnvironment(MinimumDistance *mindist, LookupTable *lut);
+  void InitInteractionEnvironment(LookupTable *lut);
   void AttachObjRandom(Object *obj);
   void UpdateCrosslinkForces();
   void UpdateCrosslinkPositions();
@@ -54,9 +53,9 @@ public:
   void SetDoubly();
   void SetSingly();
   void SetUnbound();
-  bool IsDoubly();
-  bool IsUnbound();
-  bool IsSingly();
+  const bool IsDoubly() const;
+  const bool IsUnbound() const;
+  const bool IsSingly() const;
   void UpdatePosition();
   void WriteSpec(std::fstream &ospec);
   void WriteCheckpoint(std::fstream &ocheck);
@@ -65,6 +64,7 @@ public:
   void ClearNeighbors();
   void ZeroForce();
   void ApplyTetherForces();
+  const double GetDrTot();
 };
 
 #endif

@@ -1,14 +1,12 @@
 #include "crosslink_manager.hpp"
 
 void CrosslinkManager::Init(system_parameters *params, space_struct *space,
-                            MinimumDistance *mindist,
                             std::vector<Object *> *objs) {
   objs_ = objs;
   update_ = false;
   obj_volume_ = 0;
   params_ = params;
   space_ = space;
-  mindist_ = mindist;
 }
 
 void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser) {
@@ -23,8 +21,8 @@ void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser) {
     delete xlink_species_.back();
     xlink_species_.pop_back();
   } else {
-    xlink_species_.back()->InitInteractionEnvironment(mindist_, objs_,
-                                                    &obj_volume_, &update_);
+    xlink_species_.back()->InitInteractionEnvironment(objs_, &obj_volume_,
+                                                      &update_);
   }
 }
 
@@ -108,5 +106,16 @@ void CrosslinkManager::WriteOutputs() {
 void CrosslinkManager::ReadInputs() {
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
     (*it)->ReadInputs();
+  }
+}
+
+void CrosslinkManager::ZeroDrTot() {
+  for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
+    (*it)->ZeroDrTot();
+  }
+}
+const double CrosslinkManager::GetDrMax() {
+  for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
+    (*it)->GetDrMax();
   }
 }

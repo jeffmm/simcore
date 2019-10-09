@@ -52,7 +52,7 @@ class MinimumDistance {
 
  public:
   MinimumDistance() {}
-  void Init(space_struct *space, double boundary_cutoff_sq);
+  static void Init(space_struct *space, double boundary_cutoff_sq);
   void ObjectObject(Interaction &ix);
   bool CheckBoundaryInteraction(Interaction &ix);
   bool CheckOutsideBoundary(Object &o1);

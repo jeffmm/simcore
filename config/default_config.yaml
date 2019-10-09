@@ -16,11 +16,6 @@ system_radius : [100, double]        # Sets system volume. 1D system length is 2
 n_steps : [1000000, int]             # Number of steps to run simulation before completion.
 i_step: [0, int]                     # Internal parameter used for tracking simulation iteration.
 delta : [0.001, double]              # Simulation time duration between each simulation step.
-cell_length: [10, double]            # Default width of cells used in cell list. Should be set 
-                                     # internally based on other system parameters.
-n_update_cells: [0, int]             # If > 0, updates cell list every n_update_cells steps.
-                                     # Otherwise, updates when particles move a fraction of the
-                                     # cell length.
 graph_flag : [false, bool]           # Whether to run simulation with live graphics.
 n_graph : [1000, int]                # Number of simulation steps between refreshing graphics.
 graph_diameter : [0, double]         # If > 0, draws particles with a diameter of graph_diameter.

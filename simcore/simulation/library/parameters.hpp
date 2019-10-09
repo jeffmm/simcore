@@ -140,8 +140,6 @@ struct system_parameters {
   int n_steps = 1000000;
   int i_step = 0;
   double delta = 0.001;
-  double cell_length = 10;
-  int n_update_cells = 0;
   bool graph_flag = false;
   int n_graph = 1000;
   double graph_diameter = 0;

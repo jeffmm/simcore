@@ -97,12 +97,10 @@
   default_config["n_steps"] = "1000000";
   default_config["i_step"] = "0";
   default_config["delta"] = "0.001";
-  default_config["cell_length"] = "10";
-  default_config["n_update_cells"] = "0";
   default_config["graph_flag"] = "false";
   default_config["n_graph"] = "1000";
   default_config["graph_diameter"] = "0";
-  default_config["invert_background"] = "true";
+  default_config["invert_background"] = "false";
   default_config["draw_boundary"] = "true";
   default_config["load_checkpoint"] = "false";
   default_config["checkpoint_run_name"] = "sc";

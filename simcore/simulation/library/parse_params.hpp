@@ -34,10 +34,6 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.i_step = it->second.as<int>();
     } else if (param_name.compare("delta")==0) {
     params.delta = it->second.as<double>();
-    } else if (param_name.compare("cell_length")==0) {
-    params.cell_length = it->second.as<double>();
-    } else if (param_name.compare("n_update_cells")==0) {
-    params.n_update_cells = it->second.as<int>();
     } else if (param_name.compare("graph_flag")==0) {
     params.graph_flag = it->second.as<bool>();
     } else if (param_name.compare("n_graph")==0) {

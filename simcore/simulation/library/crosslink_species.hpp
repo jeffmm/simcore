@@ -15,7 +15,6 @@ typedef std::vector<Crosslink>::iterator xlink_iterator;
 class CrosslinkSpecies : public Species<Crosslink, species_id::crosslink> {
 private:
   bool *update_;
-  MinimumDistance *mindist_;
   std::string checkpoint_file_;
   double *obj_volume_;
   double xlink_concentration_;
@@ -49,8 +48,7 @@ private:
 public:
   void Init(system_parameters *params, species_base_parameters *sparams,
             space_struct *space);
-  void InitInteractionEnvironment(MinimumDistance *mindist,
-                                  std::vector<Object *> *objs, double *obj_vol,
+  void InitInteractionEnvironment(std::vector<Object *> *objs, double *obj_vol,
                                   bool *update);
   void GetInteractors(std::vector<Object *> &ixors);
   void UpdateCrosslinks();

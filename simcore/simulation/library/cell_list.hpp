@@ -2,14 +2,16 @@
 #define _SIMCORE_CELL_LIST_H_
 
 #include "cell.hpp"
+#include "logger.hpp"
 
 class CellList {
 private:
   Cell ***cell_;
-  int n_dim_;
-  int n_periodic_;
-  int n_cells_1d_;
-  double cell_length_;
+  static double _min_cell_length_;
+  static int _n_dim_;
+  static int _n_periodic_;
+  static int _n_cells_1d_;
+  static double _cell_length_;
   void AllocateCells();
   void DeallocateCells();
   void LabelCells();
@@ -19,7 +21,9 @@ private:
 
 public:
   CellList() {}
-  void Init(int n_cells_1d, double cell_length, int n_dim, int n_periodic);
+  static void Init(int n_dim, int n_periodic, double system_radius);
+  static void SetMinCellLength(double l);
+  static double GetCellLength();
   void MakePairs(std::vector<Interaction> &pair_list);
   void RenewObjectsCells(std::vector<Object *> &objs);
   void ResetNeighbors();
@@ -27,6 +31,7 @@ public:
   void PairSingleObject(Object &obj, std::vector<Interaction> &pair_list);
   void ClearCellObjects();
   void Clear();
+  void BuildCellList();
 };
 
 #endif

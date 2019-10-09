@@ -201,7 +201,8 @@ void Simulation::InitSpecies() {
   std::vector<sid_label> species_labels = parser_.GetSpeciesLabels();
   species_.reserve(parser_.GetNSpecies());
   SpeciesFactory species_factory;
-  for (auto slab = species_labels.begin(); slab != species_labels.end(); ++slab) {
+  for (auto slab = species_labels.begin(); slab != species_labels.end();
+       ++slab) {
     const species_id sid = species_id::_from_string(slab->first.c_str());
     if (sid == +species_id::crosslink) {
       iengine_.InitCrosslinkSpecies(*slab, parser_);
@@ -230,6 +231,10 @@ void Simulation::InitSpecies() {
       }
 #endif
       species_.back()->Reserve();
+      double spec_length = species_.back()->GetSpecLength();
+      double spec_d = species_.back()->GetSpecDiameter();
+      spec_length = (spec_d > spec_length ? spec_d : spec_length);
+      CellList::SetMinCellLength(2*spec_length);
     } else {
       species_.back()->CleanUp();
       delete species_.back();
@@ -488,11 +493,9 @@ void Simulation::InitProcessing(run_options run_opts) {
 
   space_.Init(&params_);
   InitObjects();
-  InitSpecies();
   iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_, true);
+  InitSpecies();
   InsertSpecies(true, true);
-  // if (run_opts.analysis_flag) {
-  //}
   InitInputs(run_opts);
   if (run_opts.graphics_flag || run_opts.make_movie) {
     params_.graph_flag = true;
@@ -509,11 +512,6 @@ void Simulation::InitProcessing(run_options run_opts) {
   } else {
     params_.graph_flag = false;
   }
-  // if (run_opts.analysis_flag) {
-  // for (auto it=species_.begin(); it!=species_.end(); ++it) {
-  //(*it)->InitAnalysis();
-  //}
-  //}
 }
 
 /* Post-processing on simulation outputs for movie generation, analysis output
@@ -530,7 +528,6 @@ void Simulation::RunProcessing(run_options run_opts) {
   bool run_analyses = run_opts.analysis_flag;
   for (i_step_ = 1; true; ++i_step_) {
     params_.i_step = i_step_;
-    // i_step_ = params_.i_step_;
     time_ = (i_step_)*params_.delta;
     PrintComplete();
     output_mgr_.ReadInputs();
@@ -553,9 +550,6 @@ void Simulation::RunProcessing(run_options run_opts) {
       for (auto it = species_.begin(); it != species_.end(); ++it) {
         (*it)->InitAnalysis();
       }
-      // if (local_order && i_step_ % params_.local_order_n_analysis == 0) {
-      // iengine_.StructureAnalysis();
-      //}
       continue;
     }
     if (run_analyses) {

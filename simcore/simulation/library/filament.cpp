@@ -1,6 +1,6 @@
 #include "filament.hpp"
 
-Filament::Filament() : Mesh() {}
+Filament::Filament() : Mesh() { SetSID(species_id::filament); }
 
 void Filament::SetParameters() {
   /* Read parameters from filament parameters */

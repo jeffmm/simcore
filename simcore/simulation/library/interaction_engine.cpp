@@ -17,47 +17,30 @@ void InteractionEngine::Init(system_parameters *params,
   static_pnumber_ = params_->static_particle_number;
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
-  n_update_ = params_->n_update_cells;
   n_thermo_ = params_->n_thermo;
   no_interactions_ = !(params_->interaction_flag);
-  i_update_ = -1;
   n_objs_ = -1;
-  int n_cells_1d =
-      (int)floor(2 * params_->system_radius / params_->cell_length);
-#ifdef TRACE
-  if (n_cells_1d > 20) {
-    Logger::Warning("Simulation run in trace mode with a large number of "
-                    "cells in cell list (%d).",
-                    n_cells_1d);
-    fprintf(stderr, "Continue anyway? (y/N) ");
-    char c;
-    if (std::cin.peek() != 'y') {
-      Logger::Error("Terminating simulation by user request");
-    } else if (!(std::cin >> c)) {
-      Logger::Error("Invalid input");
-    } else {
-      fprintf(stderr, "Resuming simulation\n");
-      std::cin.ignore();
-    }
-  }
-#endif
-  double cell_length = (double)2 * params_->system_radius / n_cells_1d;
-  clist_.Init(n_cells_1d, cell_length, params_->n_dim, params_->n_periodic);
   bool local_order =
       (params_->local_order_analysis || params_->polar_order_analysis ||
        params_->overlap_analysis || params_->density_analysis);
   if (processing && local_order) {
-    params_->cell_length = 0.5 * params_->local_order_width;
+    CellList::SetMinCellLength(0.5 * params_->local_order_width);
   }
+  potentials_.InitPotentials(params_);
+  CellList::SetMinCellLength(sqrt(potentials_.GetRCut2()));
+
+  CellList::Init(params_->n_dim, params_->n_periodic, params_->system_radius);
+  clist_.BuildCellList();
+
+  dr_update_ = 0.25 * CellList::GetCellLength() * CellList::GetCellLength();
+  MinimumDistance::Init(space, 2 * dr_update_);
+
   // Update dr distance should be half the cell length, and we are comparing the
   // squares of the trajectory distances
-  dr_update_ = 0.25 * cell_length * cell_length;
-  mindist_.Init(space, 2.0 * dr_update_);
-  potentials_.InitPotentials(params_);
   if (local_order && processing) {
     struct_analysis_.Init(params, i_step);
   }
-  xlink_.Init(params_, space_, &mindist_, &ix_objects_);
+  xlink_.Init(params_, space_, &ix_objects_);
   no_boundaries_ = false;
   if (space_->type == +boundary_type::none)
     no_boundaries_ = true;
@@ -113,10 +96,7 @@ void InteractionEngine::CheckUpdateXlinks() {
     xlink_.GetInteractors(xlinks);
     interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
     UpdateInteractions();
-    i_update_ = 0;
-    if (n_update_ <= 0) {
-      ZeroDrTot();
-    }
+    ZeroDrTot();
     return;
   }
 }
@@ -265,7 +245,6 @@ void InteractionEngine::CheckUpdateObjects() {
   int obj_count = CountSpecies();
   if (obj_count != n_objs_ || ix_update) {
     // reset update count and update number of objects to track
-    i_update_ = 0;
     n_objs_ = obj_count;
     ForceUpdate();
     xlink_.UpdateObjsVolume();
@@ -276,18 +255,18 @@ void InteractionEngine::CheckUpdateObjects() {
 void InteractionEngine::ResetCellList() { clist_.ResetNeighbors(); }
 
 void InteractionEngine::CheckUpdateInteractions() {
-  /* If n_update_ <=0, we update nearest neighbors if any particle
+  /* we update nearest neighbors if any particle
      has moved a distance further than dr_update_ */
-  if (n_update_ <= 0 && GetDrMax() > dr_update_) {
-    i_update_ = 0;
+  double dr_max = GetDrMax();
+  if (dr_max > dr_update_) {
+    Logger::Debug("Updating interactions due to dr of objects. %d steps since"
+                  " last update, dr_max = %2.2f",
+                  i_update_, dr_max);
     UpdateInteractions();
     ZeroDrTot();
+    i_update_ = 0;
   }
-  /* If n_update_ > 0, we use that number as an update frequency,
-     and update nearest neighbors every n_update_ steps */
-  else if (n_update_ > 0 && (++i_update_) % n_update_ == 0) {
-    UpdateInteractions();
-  }
+  i_update_++;
 }
 
 /* Returns maximum distance traveled by any particle of any species in the
@@ -300,6 +279,10 @@ double InteractionEngine::GetDrMax() {
       max_dr = dr;
     }
   }
+  double xlink_dr = xlink_.GetDrMax();
+  if (xlink_dr > max_dr) {
+    max_dr = xlink_dr;
+  }
   return max_dr;
 }
 
@@ -309,6 +292,7 @@ void InteractionEngine::ZeroDrTot() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     (*spec)->ZeroDrTot();
   }
+  xlink_.ZeroDrTot();
 }
 
 void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {

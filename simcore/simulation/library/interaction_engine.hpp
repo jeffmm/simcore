@@ -28,13 +28,12 @@ private:
   bool in_out_flag_ = false;
   int n_dim_;
   int n_periodic_;
-  int i_update_;
-  int n_update_;
   int n_objs_;
   int n_thermo_;
   int static_pnumber_;
   int *i_step_;
   int n_interactions_;
+  int i_update_ = 0;
   system_parameters *params_;
   space_struct *space_;
   std::vector<SpeciesBase *> *species_;

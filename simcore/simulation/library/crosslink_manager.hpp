@@ -12,12 +12,11 @@ private:
   bool update_;
   std::vector<CrosslinkSpecies *> xlink_species_;
   std::vector<Object *> *objs_;
-  MinimumDistance *mindist_;
   space_struct *space_;
 
 public:
   void Init(system_parameters *params, space_struct *space,
-            MinimumDistance *mindist, std::vector<Object *> *objs);
+            std::vector<Object *> *objs);
   void GetInteractors(std::vector<Object *> &ixors);
   void UpdateCrosslinks();
   void UpdateObjsVolume();
@@ -31,6 +30,8 @@ public:
                    bool with_reloads = false);
   void GetAnchorInteractors(std::vector<Object *> &ixors);
   void InitSpecies(sid_label &slab, ParamsParser &parser);
+  void ZeroDrTot();
+  const double GetDrMax();
 };
 
 #endif
