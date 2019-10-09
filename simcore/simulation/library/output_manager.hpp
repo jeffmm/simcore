@@ -4,6 +4,7 @@
 #include "auxiliary.hpp"
 #include "object.hpp"
 #include "species.hpp"
+#include "parse_flags.hpp"
 
 class OutputManager {
 private:

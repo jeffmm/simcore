@@ -1,5 +1,4 @@
 #include "output_manager.hpp"
-#include "parse_flags.hpp"
 
 void OutputManager::Init(system_parameters *params,
                          std::vector<SpeciesBase *> *species,
@@ -16,7 +15,7 @@ void OutputManager::Init(system_parameters *params,
     reduce_flag_ = run_opts->reduce_flag;
     reduce_factor_ = run_opts->reduce_factor;
     with_reloads_ = run_opts->with_reloads;
-    posits_only_ = run_opts->posits_only;
+    posits_only_ = run_opts->use_posits;
   }
   if (!reading_inputs && thermo_flag_) {
     InitThermo(run_name_);
@@ -24,7 +23,7 @@ void OutputManager::Init(system_parameters *params,
     InitThermoInput(run_name_);
   }
   std::string red_file_name =
-      run_name_ + "_reduced" + std::to_string(reduce_factor);
+      run_name_ + "_reduced" + std::to_string(reduce_factor_);
   if (thermo_flag_ && reduce_flag_) {
     InitThermo(red_file_name);
   }

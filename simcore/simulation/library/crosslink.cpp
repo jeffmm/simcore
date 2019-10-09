@@ -332,7 +332,7 @@ void Crosslink::ReadSpec(std::fstream &ispec) {
 }
 
 void Crosslink::WriteCheckpoint(std::fstream &ocheck) {
-  Object::WriteCheckpoint();
+  Object::WriteCheckpoint(ocheck);
 }
 
 void Crosslink::ReadCheckpoint(std::fstream &icheck) {

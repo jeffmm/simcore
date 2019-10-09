@@ -7,6 +7,7 @@ void CrosslinkSpecies::Init(system_parameters *params,
   k_on_ = sparams_.k_on;
   k_off_ = sparams_.k_off;
   xlink_concentration_ = sparams_.concentration;
+  sparams_.num = (int) floor(sparams_.concentration * space->volume);
 }
 
 void CrosslinkSpecies::AddMember() {
@@ -26,9 +27,9 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
 
 void CrosslinkSpecies::CalculateBindingFree() {
   /* Check crosslink binding */
-  double concentration = xlink_concentration_ - n_members_ / space_->volume;
+  double free_concentration = (sparams_.num - n_members_) / space_->volume;
   if (gsl_rng_uniform_pos(rng_.r) <=
-      concentration * (*obj_volume_) * k_on_ * params_->delta) {
+      free_concentration * (*obj_volume_) * k_on_ * params_->delta) {
     /* Create a new crosslink and bind an anchor to a random object
      * in the system */
     BindCrosslink();
@@ -77,7 +78,7 @@ void CrosslinkSpecies::GetAnchorInteractors(std::vector<Object *> &ixors) {
   }
 }
 
-void CrosslinkSpecies::UpdateCrosslinks() {
+void CrosslinkSpecies::UpdatePositions() {
   /* Only do this every other step (assuming flexible filaments with midstep)
    */
   if (params_->i_step % 2 == 0) {
@@ -214,17 +215,6 @@ void CrosslinkSpecies::Draw(std::vector<graph_struct *> &graph_array) {
   }
 }
 
-void CrosslinkSpecies::WriteSpecs() {
-  /* Write the vector sizes, singly then doubly */
-  n_members_ = members_.size();
-  ospec_file_.write(reinterpret_cast<char *>(&n_members_), sizeof(int));
-
-  /* Write individual crosslink specs, first singly then doubly */
-  for (auto it = members_.begin(); it != members_.end(); ++it) {
-    it->WriteSpec(ospec_file_);
-  }
-}
-
 void CrosslinkSpecies::ReadSpecs() {
   if (ispec_file_.eof()) {
     Logger::Info("EOF reached for spec file in CrosslinkSpecies");
@@ -255,131 +245,5 @@ void CrosslinkSpecies::ReadSpecs() {
   }
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->ReadSpec(ispec_file_);
-  }
-}
-
-void CrosslinkSpecies::WriteCheckpoints() {
-  /* Try to open the file */
-  std::fstream ocheck_file(checkpoint_file_, std::ios::out | std::ios::binary);
-  if (!ocheck_file.is_open()) {
-    Logger::Error("Output file %s did not open\n", checkpoint_file_.c_str());
-  }
-
-  /* Write RNG state */
-  long seed = rng_.GetSeed();
-  ocheck_file.write(reinterpret_cast<char *>(&seed), sizeof(long));
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
-  ocheck_file.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  ocheck_file.write(reinterpret_cast<char *>(rng_state), rng_size);
-
-  /* Write crosslink vector sizes, singly then doubly */
-  n_members_ = members_.size();
-  ocheck_file.write(reinterpret_cast<char *>(&n_members_), sizeof(int));
-
-  /* Write crosslink checkpoints, singly then doubly */
-  for (auto it = members_.begin(); it != members_.end(); ++it) {
-    it->WriteCheckpoint(ocheck_file);
-  }
-
-  /* Close the file */
-  ocheck_file.close();
-}
-
-void CrosslinkSpecies::InitOutputFiles() {
-  if (GetSpecFlag())
-    InitSpecFile();
-  if (GetCheckpointFlag())
-    InitCheckpoints();
-}
-
-void CrosslinkSpecies::InitSpecFile() {
-  std::string spec_file_name =
-      params_->run_name + "_xlink_" + GetSpeciesName() + ".spec";
-  ospec_file_.open(spec_file_name, std::ios::out | std::ios::binary);
-  if (!ospec_file_.is_open()) {
-    Logger::Error("Output file %s did not open\n", spec_file_name.c_str());
-  }
-  int n_spec = GetNSpec();
-  ospec_file_.write(reinterpret_cast<char *>(&params_->n_steps), sizeof(int));
-  ospec_file_.write(reinterpret_cast<char *>(&n_spec), sizeof(int));
-  ospec_file_.write(reinterpret_cast<char *>(&params_->delta), sizeof(double));
-}
-
-void CrosslinkSpecies::InitCheckpoints() {
-  checkpoint_file_ =
-      params_->run_name + "_xlink_" + GetSpeciesName() + ".checkpoint";
-}
-
-bool CrosslinkSpecies::InitSpecFileInputFromFile(std::string spec_file_name) {
-  ispec_file_.open(spec_file_name, std::ios::in | std::ios::binary);
-  if (!ispec_file_.is_open()) {
-    return false;
-  }
-  // long n_steps;
-  int n_spec, n_steps;
-  double delta;
-  ispec_file_.read(reinterpret_cast<char *>(&n_steps), sizeof(int));
-  ispec_file_.read(reinterpret_cast<char *>(&n_spec), sizeof(int));
-  ispec_file_.read(reinterpret_cast<char *>(&delta), sizeof(double));
-  if (n_steps != params_->n_steps || n_spec != GetNSpec() ||
-      delta != params_->delta) {
-    Logger::Warning("Input file %s does not match parameter file\n",
-                    "n_steps: %d %d, n_spec: %d %d, delta: %2.2f %2.2f",
-                    spec_file_name.c_str(), n_steps, params_->n_steps, n_spec,
-                    GetNSpec(), delta, params_->delta);
-  }
-  ReadSpecs();
-  return true;
-}
-
-void CrosslinkSpecies::InitSpecFileInput() {
-  std::string spec_file_name =
-      params_->run_name + "_xlink_" + GetSpeciesName() + ".spec";
-  if (!InitSpecFileInputFromFile(spec_file_name)) {
-    Logger::Error("Input file %s did not open", spec_file_name.c_str());
-  }
-}
-
-void CrosslinkSpecies::InitOutputs(bool reading_inputs, bool reduce_flag,
-                                   bool with_reloads) {
-  if (sparams_.concentration < 1e-12) {
-    return;
-  }
-  if (!params_->load_checkpoint && reading_inputs) {
-    if (with_reloads) {
-      Logger::Warning("Crosslinks do not yet support reload functionality.");
-    }
-    InitSpecFileInput();
-    if (reduce_flag) {
-      Logger::Warning("Crosslinks do not yet support reduce functionality.");
-    } else if (params_->checkpoint_from_spec) {
-      InitCheckpoints();
-    }
-  } else {
-    InitOutputFiles();
-  }
-}
-void CrosslinkSpecies::WriteOutputs() {
-  if (sparams_.concentration < 1e-12) {
-    return;
-  }
-  if (GetSpecFlag() && (params_->i_step % GetNSpec() == 0)) {
-    WriteSpecs();
-  }
-  if (GetCheckpointFlag() && (params_->i_step % GetNCheckpoint() == 0)) {
-    WriteCheckpoints();
-  }
-}
-
-void CrosslinkSpecies::ReadInputs() {
-  if (sparams_.concentration < 1e-12) {
-    return;
-  }
-  if (GetSpecFlag() && (params_->i_step % GetNSpec() == 0)) {
-    ReadSpecs();
-    if (params_->checkpoint_from_spec) {
-      WriteCheckpoints();
-    }
   }
 }

@@ -17,7 +17,7 @@ void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser) {
   species_base_parameters *sparams = parser.GetNewSpeciesParameters(slab);
   xlink_species_.back()->Init(params_, sparams, space_);
   delete sparams;
-  if (xlink_species_.back()->GetConcentration() < 1e-12) {
+  if (xlink_species_.back()->GetNInsert() <= 0) {
     delete xlink_species_.back();
     xlink_species_.pop_back();
   } else {
@@ -63,11 +63,12 @@ void CrosslinkManager::UpdateCrosslinks() {
   update_ = false;
   UpdateObjsVolume();
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
-    (*it)->UpdateCrosslinks();
+    (*it)->UpdatePositions();
   }
 }
 
 void CrosslinkManager::Clear() {
+  output_mgr_.Close();
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
     (*it)->CleanUp();
     delete (*it);
@@ -95,13 +96,7 @@ void CrosslinkManager::InitOutputs(bool reading_inputs, run_options *run_opts) {
 }
 
 void CrosslinkManager::WriteOutputs() {
-  for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
-    (*it)->WriteOutputs();
-  }
-}
-
-void CrosslinkManager::InitInputs(run_options *run_opts) {
-  output_mgr_.Init(params_, &xlink_species_, space_, run_opts);
+  output_mgr_.WriteOutputs();
 }
 
 void CrosslinkManager::ZeroDrTot() {
@@ -119,4 +114,8 @@ void CrosslinkManager::LoadCrosslinksFromCheckpoints(
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
     (*it)->LoadFromCheckpoints(run_name, checkpoint_run_name);
   }
+}
+
+void CrosslinkManager::ReadInputs() {
+  output_mgr_.ReadInputs();
 }

@@ -12,7 +12,7 @@ private:
   OutputManager output_mgr_;
   double obj_volume_;
   bool update_;
-  std::vector<CrosslinkSpecies *> xlink_species_;
+  std::vector<SpeciesBase *> xlink_species_;
   std::vector<Object *> *objs_;
   space_struct *space_;
 
@@ -34,6 +34,7 @@ public:
                                      std::string checkpoint_run_name);
   void ZeroDrTot();
   const double GetDrMax();
+  void ReadInputs();
 };
 
 #endif

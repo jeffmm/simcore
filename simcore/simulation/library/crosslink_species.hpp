@@ -33,34 +33,21 @@ private:
   void ApplyCrosslinkTetherForces();
   Object *GetRandomObject();
 
-  /* IO Functions */
-  void WriteSpecs();
-  void ReadSpecs();
-  void WriteCheckpoints();
-  void InitOutputFiles();
-  void InitSpecFile();
-  void InitCheckpoints();
-  bool InitSpecFileInputFromFile(std::string spec_file_name);
-  void InitSpecFileInput();
-
 public:
   void Init(system_parameters *params, species_base_parameters *sparams,
             space_struct *space);
   void InitInteractionEnvironment(std::vector<Object *> *objs, double *obj_vol,
                                   bool *update);
   void GetInteractors(std::vector<Object *> &ixors);
-  void UpdateCrosslinks();
+  void UpdatePositions();
   void CleanUp();
   void Draw(std::vector<graph_struct *> &graph_array);
   void BindCrosslinkObj(Object *obj);
   void AddNeighborToAnchor(Object *anchor, Object *neighbor);
   void AddMember();
-  void WriteOutputs();
-  void ReadInputs();
-  void InitOutputs(bool reading_inputs = false, bool reduce_flag = false,
-                   bool with_reloads = false);
   void GetAnchorInteractors(std::vector<Object *> &ixors);
   const double GetConcentration() const { return sparams_.concentration; }
+  void ReadSpecs();
 
 };
 
