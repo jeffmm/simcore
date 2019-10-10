@@ -66,6 +66,8 @@ public:
   static void SetSpace(space_struct *space);
   static void SetNDim(int n_dim);
   static void SetDelta(double delta);
+  static const int GetNextOID();
+  static void SetNextOID(const int next_oid);
   // Trivial Set/Get functions
   void SetSID(species_id sid);
   void SetType(obj_type type);
@@ -115,6 +117,7 @@ public:
   void SetFlockChangeState(int fcs);
   int GetFlockType();
   int GetFlockChangeState();
+  void SetOID(int oid);
   void SetMeshID(int mid);
 
   // Virtual functions
@@ -156,7 +159,9 @@ public:
   virtual void ReadSpec(std::fstream &ispec);
   virtual void ReadPositFromSpec(std::fstream &ispec);
   virtual void WriteCheckpoint(std::fstream &ocheck);
+  virtual void WriteCheckpointHeader(std::fstream &ocheck);
   virtual void ReadCheckpoint(std::fstream &icheck);
+  virtual void ReadCheckpointHeader(std::fstream &icheck);
   void SetRNGState(const std::string &filename);
 };
 

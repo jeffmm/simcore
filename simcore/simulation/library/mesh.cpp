@@ -43,12 +43,19 @@ void Mesh::AddBond(Bond b) {
   if (n_bonds_ == n_bonds_max_) {
     Logger::Error("Attempting to add bond beyond allocated maximum.\n");
   }
+  if (n_bonds_ == 0) {
+    true_length_ = 0;
+  } else {
+    true_length_ = bonds_.back().GetMeshLambda() + bonds_.back().GetLength();
+  }
   bonds_.push_back(b);
   bonds_.back().SetColor(color_, draw_);
   bonds_.back().SetMeshID(GetMeshID());
   bonds_.back().SetSID(GetSID());
   bonds_.back().SetMeshPtr(this);
   bonds_.back().SetBondNumber(n_bonds_);
+  bonds_.back().SetMeshLambda(true_length_);
+  true_length_ += bonds_.back().GetLength();
   n_bonds_++;
   /* Anytime we change the number of bonds, which are interactors, we signal
      that interactors must be updated */
@@ -284,10 +291,11 @@ void Mesh::AddBondBetweenSites(Site *site1, Site *site2) {
   bonds_[n_bonds_ - 1].Init(site1, site2);
 }
 void Mesh::UpdateBondPositions() {
-  int i = 0;
+  true_length_ = 0;
   for (bond_iterator it = bonds_.begin(); it != bonds_.end(); ++it) {
     it->ReInit();
-    it->SetBondNumber(i++);
+    it->SetMeshLambda(true_length_);
+    true_length_ += it->GetLength();
   }
   /* This always needs to get called afterwards to remain consistent with bonds
    */
@@ -387,19 +395,20 @@ void Mesh::WritePosit(std::fstream &op) {
 
 void Mesh::ReadSpec(std::fstream &ip) {
   int nsites = 0;
-  int mid = 0;
-  ip.read(reinterpret_cast<char *>(&mid), sizeof(mid));
-  SetMeshID(mid);
   ip.read(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   ip.read(reinterpret_cast<char *>(&length_), sizeof(length_));
   ip.read(reinterpret_cast<char *>(&bond_length_), sizeof(bond_length_));
   ip.read(reinterpret_cast<char *>(&nsites), sizeof(int));
+  true_length_ = length_;
   if (nsites == n_sites_) {
     for (auto it = sites_.begin(); it != sites_.end(); ++it) {
       it->ReadSpec(ip);
     }
+    true_length_ = 0;
     for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
       it->ReInit();
+      it->SetMeshLambda(true_length_);
+      true_length_ += it->GetLength();
     }
   } else {
     Clear();
@@ -424,9 +433,7 @@ void Mesh::ReadSpec(std::fstream &ip) {
 }
 
 void Mesh::WriteSpec(std::fstream &op) {
-  int mid = GetMeshID();
-  Logger::Trace("Writing specs for mesh id %d", mid);
-  op.write(reinterpret_cast<char *>(&mid), sizeof(mid));
+  Logger::Trace("Writing specs for mesh id %d", GetMeshID());
   op.write(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   op.write(reinterpret_cast<char *>(&length_), sizeof(length_));
   op.write(reinterpret_cast<char *>(&bond_length_), sizeof(bond_length_));
@@ -438,23 +445,25 @@ void Mesh::WriteSpec(std::fstream &op) {
 }
 
 void Mesh::ReadCheckpoint(std::fstream &ip) {
-  if (ip.eof())
-    return;
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size;
-  ip.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  ip.read(reinterpret_cast<char *>(rng_state), rng_size);
   Clear();
-  ReadSpec(ip);
-  Logger::Trace("Reloading mesh from checkpoint with mid %d", GetMeshID());
+  Object::ReadCheckpoint(ip);
+  for (auto it = sites_.begin(); it != sites_.end(); ++it) {
+    it->ReadCheckpointHeader(ip);
+  }
+  for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+    it->ReadCheckpointHeader(ip);
+  }
+  Logger::Trace("Reloaded mesh from checkpoint with mid %d", GetMeshID());
 }
 
 void Mesh::WriteCheckpoint(std::fstream &op) {
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
-  op.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  op.write(reinterpret_cast<char *>(rng_state), rng_size);
-  WriteSpec(op);
+  Object::WriteCheckpoint(op);
+  for (auto it = sites_.begin(); it != sites_.end(); ++it) {
+    it->WriteCheckpointHeader(op);
+  }
+  for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+    it->WriteCheckpointHeader(op);
+  }
 }
 
 void Mesh::ScalePosition() {
@@ -608,10 +617,25 @@ Bond *Mesh::GetBondAtLambda(double lambda) {
   return GetBond((int)floor(lambda / bond_length_));
 }
 
+const double Mesh::GetLambdaAtBond(int bond_oid) {
+  double lambda = 0;
+  for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+    if (it->GetOID() == bond_oid) {
+      return lambda;
+    }
+    lambda += it->GetLength();
+  }
+  Logger::Error("Mesh %d could not find bond with OID %d", GetMeshID(),
+                bond_oid);
+  return -1;
+}
+
 void Mesh::ZeroOrientationCorrelations() {
   for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
     it->ZeroOrientationCorrelation();
   }
 }
 
-double const Mesh::GetBondLength() { return bond_length_; }
+const double Mesh::GetBondLength() const { return bond_length_; }
+
+const double Mesh::GetTrueLength() const { return true_length_; }

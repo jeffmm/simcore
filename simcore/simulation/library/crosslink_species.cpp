@@ -92,6 +92,9 @@ void CrosslinkSpecies::UpdatePositions() {
        handled by the crosslink update on even steps */
     ApplyCrosslinkTetherForces();
   }
+  //for (auto it=members_.begin(); it!=members_.end(); ++it) {
+    //it->SanityCheck();
+  //}
 }
 
 void CrosslinkSpecies::UpdateBoundCrosslinks() {

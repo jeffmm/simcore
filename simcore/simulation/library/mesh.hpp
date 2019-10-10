@@ -22,6 +22,7 @@ protected:
   std::vector<Site> sites_;
   std::vector<Bond> bonds_;
   double bond_length_;
+  double true_length_ = -1;
   Bond *GetRandomBond();
   void UpdateInteractors();
   void UpdateSiteOrientations();
@@ -80,8 +81,10 @@ public:
   virtual void GetPolarOrders(std::vector<double> *po);
   std::pair<double, double> GetAvgOrientationCorrelation();
   virtual void ZeroOrientationCorrelations();
-  virtual double const GetBondLength();
+  virtual const double GetBondLength() const;
   virtual const bool CheckInteractorUpdate();
+  virtual const double GetLambdaAtBond(int bond_oid);
+  virtual const double GetTrueLength() const;
 };
 
 #endif // _SIMCORE_MESH_H_

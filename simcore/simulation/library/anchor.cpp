@@ -9,9 +9,8 @@ void Anchor::Init(crosslink_parameters *sparams) {
   draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
   Unbind();
   walker_ = (sparams_->walker_flag ? true : false);
-  step_direction_ = (sparams_->step_direction == 0
-                         ? 0
-                         : SIGNOF(sparams_->step_direction));
+  step_direction_ =
+      (sparams_->step_direction == 0 ? 0 : SIGNOF(sparams_->step_direction));
   velocity_ = sparams_->velocity;
   max_velocity_ = velocity_;
   k_off_ = sparams_->k_off;
@@ -47,33 +46,36 @@ void Anchor::UpdateAnchorPositionToMesh() {
   if (!bound_ || static_)
     return;
 
-  // Check that the number of bonds has not changed due to dynamic instability
-  if (mesh_n_bonds_ != mesh_->GetNBonds()) {
-    // The number of bonds have changed, so we need to reattach to a valid bond
-    bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
-    mesh_n_bonds_ = mesh_->GetNBonds();
-  }
   /* Use the mesh to determine the bond lengths. The true bond lengths fluctuate
      about this, but should be considered approximations to the ideal mesh. */
-  bond_length_ = mesh_->GetBondLength();
-  mesh_length_ = mesh_->GetLength();
+  mesh_length_ = mesh_->GetTrueLength();
   /* Use current position along mesh (mesh_lambda) to determine whether the
      anchor fell off the mesh due to dynamic instability */
   if (!CheckMesh())
     return;
   // Now figure out which bond we are on in the mesh according to mesh_lambda
   bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
+
   // Figure out how far we are from the bond tail: bond_lambda
-  bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber() * bond_length_;
+  bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
+  bond_length_ = bond_->GetLength();
+  if (bond_lambda_ < 0) {
+    bond_ = bond_->GetNeighborBond(0);
+    bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
+    bond_length_ = bond_->GetLength();
+  } else if (bond_lambda_ > bond_length_) {
+    bond_ = bond_->GetNeighborBond(1);
+    bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
+    bond_length_ = bond_->GetLength();
+  }
   // assert(bond_lambda_ >= 0 && bond_lambda_ <= bond_length_);
-  if (bond_lambda_ < 0 || bond_lambda_ > bond_length_ + 1e-4) {
-    printf("bond_num: %d\n", bond_->GetBondNumber());
-    printf("mesh lambda: %2.8f\n", mesh_lambda_);
-    printf("mesh length: %2.8f\n", mesh_length_);
-    printf("bond lambda: %2.8f\n", bond_lambda_);
-    printf("bond length: %2.8f\n", bond_length_);
+  if (bond_lambda_ < 0 || bond_lambda_ > bond_length_) {
     Logger::Error(
-        "Bond lambda out of expected range in UpdateAnchorPositionToMesh\n");
+        "Bond lambda out of expected range in UpdateAnchorPositionToMesh, "
+        "bond_num: %d, mesh lambda: %2.8f, mesh length: %2.8f, bond lambda: "
+        "%2.8f, bond length: %2.8f",
+        bond_->GetBondNumber(), mesh_lambda_, mesh_length_, bond_lambda_,
+        bond_length_);
   }
 
   // Update anchor position with respect to bond
@@ -232,28 +234,22 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
     Logger::Error("Object ptr passed to anchor was not referencing a mesh!");
   }
   mesh_n_bonds_ = mesh_->GetNBonds();
-  bond_length_ = mesh_->GetBondLength();
-  mesh_length_ = mesh_n_bonds_ * bond_length_;
+  bond_length_ = bond_->GetLength();
+  mesh_length_ = mesh_->GetTrueLength();
   bond_lambda_ = lambda;
 
-  if (bond_lambda_ < 0) {
+  if (bond_lambda_ < 0 || bond_lambda_ > bond_length_) {
     printf("bond_lambda: %2.2f\n", bond_lambda_);
-    Logger::Error("Lambda passed to anchor should never be negative!");
-  }
-  if (bond_lambda_ > bond_length_) {
-    if (bond_lambda_ - bond_length_ < 1) {
-      bond_lambda_ = bond_length_;
-    } else {
-      Logger::Error(
-          "Lambda passed to anchor is much larger than mesh bond length! %2.2f "
-          "> %2.2f", bond_lambda_, bond_length_);
-    }
+    Logger::Error("Lambda passed to anchor does not match length of "
+                  "corresponding bond! lambda: %2.2f, bond_length: %2.2f ",
+                  bond_lambda_, bond_length_);
   }
 
   /* Distance anchor is relative to entire mesh length */
-  mesh_lambda_ = bond_->GetBondNumber() * bond_length_ + bond_lambda_;
+  mesh_lambda_ = bond_->GetMeshLambda() + bond_lambda_;
   SetMeshID(bond_->GetMeshID());
   UpdateAnchorPositionToBond();
+  ZeroDrTot();
   bound_ = true;
 }
 
@@ -269,24 +265,27 @@ void Anchor::AttachObjMeshLambda(Object *o, double mesh_lambda) {
   if (mesh_ == nullptr) {
     Logger::Error("Object ptr passed to anchor was not referencing a mesh!");
   }
+  Logger::Trace("Attaching anchor %d to mesh %d", GetOID(), mesh_->GetMeshID());
+
   bound_ = true;
   mesh_lambda_ = mesh_lambda;
   mesh_n_bonds_ = -1;
   UpdateAnchorPositionToMesh();
   if (!bound_) {
-    Logger::Error("Updating anchor to mesh from checkpoint resulted in an unbound "
-               "anchor");
+    Logger::Error(
+        "Updating anchor to mesh from checkpoint resulted in an unbound "
+        "anchor");
   }
   SetMeshID(bond_->GetMeshID());
+  ZeroDrTot();
 }
 
 void Anchor::BindToPosition(double *pos) {
-  for (int i=0; i<n_dim_; ++i) {
+  for (int i = 0; i < n_dim_; ++i) {
     position_[i] = pos[i];
   }
   UpdatePeriodic();
 }
-
 
 bool Anchor::IsBound() { return bound_; }
 
@@ -317,10 +316,9 @@ Object *Anchor::GetNeighbor(int i_neighbor) {
 int Anchor::GetNNeighbors() { return neighbors_.NNeighbors(); }
 
 void Anchor::WriteSpec(std::fstream &ospec) {
-  int mid = GetMeshID();
   ospec.write(reinterpret_cast<char *>(&bound_), sizeof(bool));
   ospec.write(reinterpret_cast<char *>(&active_), sizeof(bool));
-  ospec.write(reinterpret_cast<char *>(&mid), sizeof(int));
+  ospec.write(reinterpret_cast<char *>(&static_), sizeof(bool));
   for (int i = 0; i < 3; ++i) {
     ospec.write(reinterpret_cast<char *>(&position_[i]), sizeof(double));
   }
@@ -331,12 +329,9 @@ void Anchor::WriteSpec(std::fstream &ospec) {
 }
 
 void Anchor::ReadSpec(std::fstream &ispec) {
-  int mid;
   ispec.read(reinterpret_cast<char *>(&bound_), sizeof(bool));
   ispec.read(reinterpret_cast<char *>(&active_), sizeof(bool));
   ispec.read(reinterpret_cast<char *>(&static_), sizeof(bool));
-  ispec.read(reinterpret_cast<char *>(&mid), sizeof(int));
-  SetMeshID(mid);
   for (int i = 0; i < 3; ++i) {
     ispec.read(reinterpret_cast<char *>(&position_[i]), sizeof(double));
   }
@@ -346,5 +341,5 @@ void Anchor::ReadSpec(std::fstream &ispec) {
   ispec.read(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
   UpdatePeriodic();
   if (active_)
-    step_direction_ = - sparams_->step_direction;
+    step_direction_ = -sparams_->step_direction;
 }

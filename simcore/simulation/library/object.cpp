@@ -37,7 +37,7 @@ Object::Object() {
 // Set the object OID in a thread-safe way
 void Object::InitOID() {
   std::lock_guard<std::mutex> lk(_obj_mtx_);
-  oid_ = ++_next_oid_;
+  SetOID(++_next_oid_);
 }
 
 int Object::_next_oid_ = 0;
@@ -51,6 +51,8 @@ void Object::SetParams(system_parameters *params) { params_ = params; }
 void Object::SetSpace(space_struct *space) { space_ = space; }
 void Object::SetNDim(int n_dim) { n_dim_ = n_dim; }
 void Object::SetDelta(double delta) { delta_ = delta; }
+void Object::SetNextOID(const int next_oid) { _next_oid_ = next_oid; }
+const int Object::GetNextOID() { return _next_oid_; }
 // Trivial Get/Set functions
 int const Object::GetOID() const { return oid_; }
 void Object::SetPosition(double const *const pos) {
@@ -141,6 +143,7 @@ void Object::SetFlockChangeState(int fcs) { flock_change_state_ = fcs; }
 int Object::GetFlockChangeState() { return flock_change_state_; }
 int const Object::GetMeshID() const { return mesh_id_; }
 void Object::SetMeshID(int mid) { mesh_id_ = mid; }
+void Object::SetOID(int oid) { oid_ = oid; }
 void Object::ToggleIsMesh() { is_mesh_ = !is_mesh_; }
 obj_type const Object::GetType() { return type_; }
 species_id const Object::GetSID() { return sid_; }
@@ -366,9 +369,9 @@ double const Object::GetVolume() {
   }
   return -1;
 }
-double const Object::GetDrTot() { 
+double const Object::GetDrTot() {
   UpdateDrTot();
-  return dr_tot_; 
+  return dr_tot_;
 }
 void Object::ZeroDrTot() {
   std::copy(position_, position_ + 3, dr_zero_);
@@ -391,21 +394,40 @@ void Object::Cleanup() {}
 
 // Object I/O functions
 void Object::WriteCheckpoint(std::fstream &ocheck) {
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
-  ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
+  WriteCheckpointHeader(ocheck);
   WriteSpec(ocheck);
 }
+void Object::WriteCheckpointHeader(std::fstream &ocheck) {
+  void *rng_state = gsl_rng_state(rng_.r);
+  size_t rng_size = gsl_rng_size(rng_.r);
+  int oid = GetOID();
+  int mid = GetMeshID();
+  ocheck.write(reinterpret_cast<char *>(&oid), sizeof(int));
+  ocheck.write(reinterpret_cast<char *>(&mid), sizeof(int));
+  ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
+  ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
+}
+
 void Object::ReadCheckpoint(std::fstream &icheck) {
+  ReadCheckpointHeader(icheck);
+  ReadSpec(icheck);
+}
+
+void Object::ReadCheckpointHeader(std::fstream &icheck) {
   if (icheck.eof())
     return;
   void *rng_state = gsl_rng_state(rng_.r);
   size_t rng_size;
+  int oid;
+  int mid;
+  icheck.read(reinterpret_cast<char *>(&oid), sizeof(int));
+  icheck.read(reinterpret_cast<char *>(&mid), sizeof(int));
   icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
-  ReadSpec(icheck);
+  SetOID(oid);
+  SetMeshID(mid);
 }
+
 void Object::WritePosit(std::fstream &oposit) {
   for (auto &pos : position_)
     oposit.write(reinterpret_cast<char *>(&pos), sizeof(pos));

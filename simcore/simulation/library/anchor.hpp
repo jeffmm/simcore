@@ -70,6 +70,12 @@ public:
   void WriteSpec(std::fstream &ospec);
   void ReadSpec(std::fstream &ispec);
   void BindToPosition(double *pos);
+  void SanityCheck() {
+    if (mesh_ &&
+        (mesh_lambda_ > mesh_->GetLength() + 1e-12 || mesh_lambda_ < -1e-12)) {
+      Logger::Error("Error in anchor sanity check");
+    }
+  }
 };
 
 #endif

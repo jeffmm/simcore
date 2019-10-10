@@ -98,6 +98,8 @@ void FilamentSpecies::Reserve() {
     max_insert = (int)ceil(packing_fraction_ * space_->volume / min_vol);
   }
   members_.reserve(max_insert);
+  Logger::Debug("Reserving memory for %d members in FilamentSpecies",
+                max_insert);
 }
 
 void FilamentSpecies::AddMember() {

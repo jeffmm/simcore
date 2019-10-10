@@ -1,15 +1,18 @@
 #include "species_base.hpp"
 
-void SpeciesBase::Init(system_parameters *params, species_base_parameters *sparams, space_struct *space) {
+void SpeciesBase::Init(system_parameters *params,
+                       species_base_parameters *sparams, space_struct *space) {
   params_ = params;
   space_ = space;
   n_members_ = 0;
-  Logger::Debug("Initializing species %s", GetSID()._to_string());
+  Logger::Debug("Initializing %s %s", GetSID()._to_string(),
+                GetSpeciesName().c_str());
 }
 
 void SpeciesBase::InitPositFile(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  std::string posit_file_name = run_name + "_" + sid_str + "_" + GetSpeciesName() + ".posit";
+  std::string posit_file_name =
+      run_name + "_" + sid_str + "_" + GetSpeciesName() + ".posit";
   oposit_file_.open(posit_file_name, std::ios::out | std::ios::binary);
   if (!oposit_file_.is_open()) {
     Logger::Error("Output file %s did not open", posit_file_name.c_str());
@@ -22,7 +25,8 @@ void SpeciesBase::InitPositFile(std::string run_name) {
 
 void SpeciesBase::InitPositFileInput(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  std::string posit_file_name = run_name + "_" + sid_str + "_" + GetSpeciesName() + ".posit";
+  std::string posit_file_name =
+      run_name + "_" + sid_str + "_" + GetSpeciesName() + ".posit";
   iposit_file_.open(posit_file_name, std::ios::in | std::ios::binary);
   if (!iposit_file_.is_open()) {
     Logger::Error("Input file %s did not open", posit_file_name.c_str());
@@ -36,7 +40,7 @@ void SpeciesBase::InitPositFileInput(std::string run_name) {
   if (n_steps != params_->n_steps || n_posit != GetNPosit() ||
       delta != params_->delta) {
     Logger::Warning("Input file %s does not match parameter file\n",
-            posit_file_name.c_str());
+                    posit_file_name.c_str());
     printf("%d %d, %d %d, %2.5f %2.5f\n", n_steps, params_->n_steps, n_posit,
            GetNPosit(), delta, params_->delta);
   }
@@ -45,7 +49,8 @@ void SpeciesBase::InitPositFileInput(std::string run_name) {
 
 void SpeciesBase::InitSpecFile(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  std::string spec_file_name = run_name + "_" + sid_str + "_" + GetSpeciesName() + ".spec";
+  std::string spec_file_name =
+      run_name + "_" + sid_str + "_" + GetSpeciesName() + ".spec";
   Logger::Trace("Initializing spec file %s", spec_file_name.c_str());
   ospec_file_.open(spec_file_name, std::ios::out | std::ios::binary);
   if (!ospec_file_.is_open()) {
@@ -130,7 +135,7 @@ bool SpeciesBase::InitSpecFileInputFromFile(std::string spec_file_name) {
     printf("n_spec: %d %d, ", n_spec, GetNSpec());
     printf("delta: %2.2f %2.2f\n", delta, params_->delta);
     Logger::Warning("Input file %s does not match parameter file\n",
-            spec_file_name.c_str());
+                    spec_file_name.c_str());
   }
   ReadSpecs();
   return true;
@@ -138,15 +143,16 @@ bool SpeciesBase::InitSpecFileInputFromFile(std::string spec_file_name) {
 
 void SpeciesBase::InitSpecFileInput(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  std::string spec_file_name = run_name + "_" + sid_str + "_" + GetSpeciesName() + ".spec";
+  std::string spec_file_name =
+      run_name + "_" + sid_str + "_" + GetSpeciesName() + ".spec";
   if (!InitSpecFileInputFromFile(spec_file_name)) {
     Logger::Error("Input file %s did not open", spec_file_name.c_str());
   }
 }
 
 void SpeciesBase::InitOutputFiles(std::string run_name) {
-  Logger::Trace("Initializing output files for species %s",
-      sid_._to_string());
+  Logger::Trace("Initializing output files for %s %s", sid_._to_string(),
+                GetSpeciesName().c_str());
   if (GetPositFlag())
     InitPositFile(run_name);
   if (GetSpecFlag())
@@ -157,15 +163,17 @@ void SpeciesBase::InitOutputFiles(std::string run_name) {
 
 void SpeciesBase::InitCheckpoints(std::string run_name) {
   std::string sid_str = sid_._to_string();
-  checkpoint_file_ = run_name + "_" + sid_str + "_" + GetSpeciesName() + ".checkpoint";
+  checkpoint_file_ =
+      run_name + "_" + sid_str + "_" + GetSpeciesName() + ".checkpoint";
 }
 
 void SpeciesBase::LoadFromCheckpoints(std::string run_name,
                                       std::string checkpoint_run_name) {
   std::string sid_str = sid_._to_string();
-  checkpoint_file_ = checkpoint_run_name + "_" + sid_str + "_" + GetSpeciesName() + ".checkpoint";
-  Logger::Trace("Loading species %s from checkpoint file %s",
-      sid_._to_string(), checkpoint_file_.c_str());
+  checkpoint_file_ = checkpoint_run_name + "_" + sid_str + "_" +
+                     GetSpeciesName() + ".checkpoint";
+  Logger::Trace("Loading %s %s from checkpoint file %s", sid_._to_string(),
+                GetSpeciesName().c_str(), checkpoint_file_.c_str());
   if (!GetCheckpointFlag()) {
     Logger::Error("Checkpoint file %s not available for parameter file!",
                   checkpoint_file_.c_str());
@@ -186,7 +194,8 @@ void SpeciesBase::InitInputFiles(std::string run_name, bool posits_only,
 }
 
 void SpeciesBase::CloseFiles() {
-  Logger::Trace("Closing output files for species %s", sid_._to_string());
+  Logger::Trace("Closing output files for %s %s", sid_._to_string(),
+                GetSpeciesName().c_str());
   if (oposit_file_.is_open())
     oposit_file_.close();
   if (iposit_file_.is_open())

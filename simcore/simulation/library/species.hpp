@@ -76,12 +76,15 @@ template <typename T, unsigned char S> double const Species<T, S>::GetVolume() {
 
 template <typename T, unsigned char S> void Species<T, S>::Reserve() {
   members_.reserve(GetNInsert());
+  Logger::Debug("Reserving memory for %d members in %s %s", GetNInsert(),
+                GetSID()._to_string(), GetSpeciesName().c_str());
 }
 
 template <typename T, unsigned char S> void Species<T, S>::AddMember() {
   T newmember;
-  Logger::Trace("Adding member to species %s, member number %d, member id %d",
-                GetSID()._to_string(), n_members_ + 1, newmember.GetOID());
+  Logger::Trace("Adding member to %s %s, member number %d, member id %d",
+                GetSID()._to_string(), GetSpeciesName().c_str(), n_members_ + 1,
+                newmember.GetOID());
   members_.push_back(newmember);
   members_.back().SetSID(GetSID());
   members_.back().Init(&sparams_);
@@ -97,8 +100,8 @@ template <typename T, unsigned char S> double const Species<T, S>::GetDrMax() {
     }
   }
   if (max_dr > 10000) {
-    Logger::Warning("Oddly large dr (%2.2f) in species %s", max_dr,
-                    GetSID()._to_string());
+    Logger::Warning("Oddly large dr (%2.2f) in %s %s", max_dr,
+                    GetSID()._to_string(), GetSpeciesName().c_str());
   }
   return max_dr;
 }
@@ -110,15 +113,16 @@ template <typename T, unsigned char S> void Species<T, S>::ZeroDrTot() {
 }
 
 template <typename T, unsigned char S> void Species<T, S>::AddMember(T newmem) {
-  Logger::Trace("Adding preexisting member to species %s",
-                GetSID()._to_string());
+  Logger::Trace("Adding preexisting member to %s %s",
+                GetSID()._to_string(), GetSpeciesName().c_str());
   members_.push_back(newmem);
   newmem.SetSID(GetSID());
   n_members_++;
 }
 
 template <typename T, unsigned char S> void Species<T, S>::PopMember() {
-  Logger::Trace("Removing last member of species %s", GetSID()._to_string());
+  Logger::Trace("Removing last member of %s %s", GetSID()._to_string(),
+      GetSpeciesName().c_str());
   members_.back().Cleanup();
   members_.pop_back();
   n_members_--;
@@ -154,8 +158,8 @@ template <typename T, unsigned char S>
 void Species<T, S>::GetLastInteractors(std::vector<Object *> &ix) {
   if (members_.size() == 0) {
     Logger::Error(
-        "Called for last interactors of species, but species has zero "
-        "members\n");
+        "Called for last interactors of %s %s, but species has zero "
+        "members", GetSID()._to_string(), GetSpeciesName().c_str());
   }
   members_.back().GetInteractors(ix);
 }
@@ -194,29 +198,37 @@ template <typename T, unsigned char S> int Species<T, S>::GetCount() {
 
 template <typename T, unsigned char S> void Species<T, S>::WritePosits() {
   int size = members_.size();
-  oposit_file_.write(reinterpret_cast<char *>(&size), sizeof(size));
+  oposit_file_.write(reinterpret_cast<char *>(&size), sizeof(int));
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->WritePosit(oposit_file_);
 }
 
 template <typename T, unsigned char S> void Species<T, S>::WriteSpecs() {
   int size = members_.size();
-  ospec_file_.write(reinterpret_cast<char *>(&size), sizeof(size));
+  ospec_file_.write(reinterpret_cast<char *>(&size), sizeof(int));
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->WriteSpec(ospec_file_);
 }
 
 template <typename T, unsigned char S> void Species<T, S>::WriteCheckpoints() {
-  int size = members_.size();
   std::fstream ocheck_file(checkpoint_file_, std::ios::out | std::ios::binary);
   if (!ocheck_file.is_open()) {
     Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
   }
   long seed = rng_.GetSeed();
-  ocheck_file.write(reinterpret_cast<char *>(&seed), sizeof(seed));
-  ocheck_file.write(reinterpret_cast<char *>(&size), sizeof(size));
-  for (auto it = members_.begin(); it != members_.end(); ++it)
-    it->WriteCheckpoint(ocheck_file);
+  void *rng_state = gsl_rng_state(rng_.r);
+  size_t rng_size = gsl_rng_size(rng_.r);
+  int next_oid = Object::GetNextOID();
+  int size = members_.size();
+  ocheck_file.write(reinterpret_cast<char *>(&seed), sizeof(long));
+  ocheck_file.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
+  ocheck_file.write(reinterpret_cast<char *>(rng_state), rng_size);
+  ocheck_file.write(reinterpret_cast<char *>(&next_oid), sizeof(int));
+  ocheck_file.write(reinterpret_cast<char *>(&size), sizeof(int));
+  if (size > 0) {
+    for (auto it = members_.begin(); it != members_.end(); ++it)
+      it->WriteCheckpoint(ocheck_file);
+  }
   ocheck_file.close();
 }
 
@@ -233,7 +245,7 @@ template <typename T, unsigned char S> void Species<T, S>::ReadPosits() {
   }
   int size = -1;
   T *member;
-  iposit_file_.read(reinterpret_cast<char *>(&size), sizeof(size));
+  iposit_file_.read(reinterpret_cast<char *>(&size), sizeof(int));
   // Hacky workaround FIXME
   // This prevents strange errors that occasionally crop up when reading inputs
   if (size == -1) {
@@ -258,6 +270,8 @@ void Species<T, S>::ReadPositsFromSpecs() {
 }
 
 template <typename T, unsigned char S> void Species<T, S>::ReadCheckpoints() {
+  Logger::Trace("Reading checkpoints for %s %s", GetSID()._to_string(),
+                GetSpeciesName().c_str());
   std::fstream icheck_file(checkpoint_file_, std::ios::in | std::ios::binary);
   if (!icheck_file.is_open()) {
     Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
@@ -265,18 +279,27 @@ template <typename T, unsigned char S> void Species<T, S>::ReadCheckpoints() {
   long seed = -1;
   void *rng_state = gsl_rng_state(rng_.r);
   size_t rng_size;
-  int size;
-  icheck_file.read(reinterpret_cast<char *>(&seed), sizeof(seed));
+  int next_oid = -1;
+  int size = -1;
+  icheck_file.read(reinterpret_cast<char *>(&seed), sizeof(long));
   icheck_file.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   icheck_file.read(reinterpret_cast<char *>(rng_state), rng_size);
-  icheck_file.read(reinterpret_cast<char *>(&size), sizeof(size));
-  AddMember();
-  members_.resize(size, members_[0]);
-  n_members_ = size;
-  for (auto it = members_.begin(); it != members_.end(); ++it)
-    it->ReadCheckpoint(icheck_file);
+  icheck_file.read(reinterpret_cast<char *>(&next_oid), sizeof(int));
+  icheck_file.read(reinterpret_cast<char *>(&size), sizeof(int));
+  if (size == 0) {
+    members_.clear();
+  } else {
+    if (members_.size() == 0) {
+      AddMember();
+    }
+    members_.resize(size, members_[0]);
+    n_members_ = size;
+    for (auto it = members_.begin(); it != members_.end(); ++it)
+      it->ReadCheckpoint(icheck_file);
+  }
   icheck_file.close();
-  rng_.SetSeed(seed);
+  RNG::SetSeed(seed);
+  Object::SetNextOID(next_oid);
 }
 
 template <typename T, unsigned char S> void Species<T, S>::ReadSpecs() {
@@ -297,7 +320,7 @@ template <typename T, unsigned char S> void Species<T, S>::ReadSpecs() {
   }
   int size = -1;
   // T *member;
-  ispec_file_.read(reinterpret_cast<char *>(&size), sizeof(size));
+  ispec_file_.read(reinterpret_cast<char *>(&size), sizeof(int));
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
   if (size == -1) {

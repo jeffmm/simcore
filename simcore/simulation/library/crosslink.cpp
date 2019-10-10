@@ -333,10 +333,14 @@ void Crosslink::ReadSpec(std::fstream &ispec) {
 
 void Crosslink::WriteCheckpoint(std::fstream &ocheck) {
   Object::WriteCheckpoint(ocheck);
+  anchors_[0].WriteCheckpointHeader(ocheck);
+  anchors_[1].WriteCheckpointHeader(ocheck);
 }
 
 void Crosslink::ReadCheckpoint(std::fstream &icheck) {
   Object::ReadCheckpoint(icheck);
+  anchors_[0].ReadCheckpointHeader(icheck);
+  anchors_[1].ReadCheckpointHeader(icheck);
   Logger::Trace("Reloading anchor from checkpoint with mid %d",
                 anchors_[0].GetMeshID());
   if (IsDoubly()) {
@@ -358,5 +362,12 @@ const double Crosslink::GetDrTot() {
     }
   } else {
     return 0;
+  }
+}
+
+void Crosslink::ZeroDrTot() {
+  anchors_[0].ZeroDrTot();
+  if (IsDoubly()) {
+    anchors_[1].ZeroDrTot();
   }
 }

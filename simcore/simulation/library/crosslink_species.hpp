@@ -22,7 +22,6 @@ private:
   double k_off_;
   double k_on_d_;
   double k_off_d_;
-  RNG rng_;
   LookupTable lut_;
   std::vector<Object *> *objs_;
   void CalculateBindingFree();

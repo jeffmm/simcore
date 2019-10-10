@@ -105,9 +105,14 @@ void CrosslinkManager::ZeroDrTot() {
   }
 }
 const double CrosslinkManager::GetDrMax() {
+  double dr_max = 0;
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
-    (*it)->GetDrMax();
+    double dr = (*it)->GetDrMax();
+    if (dr > dr_max) {
+      dr_max = dr;
+    }
   }
+  return dr_max;
 }
 void CrosslinkManager::LoadCrosslinksFromCheckpoints(
     std::string run_name, std::string checkpoint_run_name) {

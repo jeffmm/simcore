@@ -64,7 +64,15 @@ public:
   void ClearNeighbors();
   void ZeroForce();
   void ApplyTetherForces();
+  void ZeroDrTot();
   const double GetDrTot();
+  void SanityCheck() {
+    if (IsUnbound()) {
+      Logger::Error("Error in crosslink sanity check");
+    }
+    anchors_[0].SanityCheck();
+    anchors_[1].SanityCheck();
+  }
 };
 
 #endif

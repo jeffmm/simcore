@@ -141,6 +141,7 @@ void Filament::InitFilamentLength() {
   Logger::Trace("Filament initialized with length %2.2f with %d bonds, mesh_id:"
                 " %d",
                 length_, n_bonds_, GetMeshID());
+  true_length_ = length_;
 }
 
 void Filament::AllocateControlStructures() {

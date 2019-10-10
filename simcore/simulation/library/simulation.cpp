@@ -162,6 +162,8 @@ void Simulation::InitSimulation() {
   if (params_.graph_flag) {
     InitGraphics();
   }
+  params_.i_step = 0;
+  WriteOutputs();
 }
 
 /* Initialize static object parameters that are used everywhere */
@@ -370,13 +372,16 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         (*spec)->ArrangeMembers();
       }
     }
-    if (params_.load_checkpoint) {
-      (*spec)->LoadFromCheckpoints(run_name_, params_.checkpoint_run_name);
-      iengine_.LoadCrosslinksFromCheckpoints(run_name_,
-                                             params_.checkpoint_run_name);
-    }
   }
   /* Should do this all the time to force object counting */
+  if (params_.load_checkpoint) {
+    for (auto spec = species_.begin(); spec != species_.end(); ++spec) {
+      (*spec)->LoadFromCheckpoints(run_name_, params_.checkpoint_run_name);
+    }
+    iengine_.LoadCrosslinksFromCheckpoints(run_name_,
+                                           params_.checkpoint_run_name);
+  }
+
   iengine_.ResetCellList(); // Forces rebuild cell list without redundancy
   iengine_.Reset();
   // if (!processing) {

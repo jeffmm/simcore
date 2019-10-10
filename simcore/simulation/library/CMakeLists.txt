@@ -54,7 +54,6 @@ set(SOURCES anchor.cpp
             mesh.cpp
             minimum_distance.cpp
             object.cpp
-            output_manager.cpp
             params_parser.cpp
             rng.cpp
             simulation.cpp

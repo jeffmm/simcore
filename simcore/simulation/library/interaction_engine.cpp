@@ -100,11 +100,13 @@ void InteractionEngine::CheckUpdateXlinks() {
   }
 }
 void InteractionEngine::ForceUpdate() {
+  Logger::Trace("Forcing update in interaction engine");
   UpdateInteractors();
   UpdateInteractions();
 }
 
 void InteractionEngine::UpdateInteractors() {
+  Logger::Trace("Updating interactors");
   ix_objects_.clear();
   interactors_.clear();
   for (auto spec_it = species_->begin(); spec_it != species_->end();
@@ -117,6 +119,8 @@ void InteractionEngine::UpdateInteractors() {
   std::vector<Object *> xlinks;
   xlink_.GetInteractors(xlinks);
   interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
+  Logger::Trace("Updated interactors: %d objects, %d crosslinks, %d total",
+      ix_objects_.size(), xlinks.size(), interactors_.size());
 }
 
 /* Checks whether or not the given anchor is supposed to be attached to the
@@ -190,6 +194,7 @@ void InteractionEngine::PairBondCrosslinks() {
 }
 
 void InteractionEngine::UpdateInteractions() {
+  Logger::Trace("Updating interactions");
   UpdatePairInteractions();
   UpdateBoundaryInteractions();
   ZeroDrTot();
@@ -198,9 +203,16 @@ void InteractionEngine::UpdateInteractions() {
 void InteractionEngine::UpdatePairInteractions() {
   if (no_interactions_)
     return;
+#ifdef TRACE
+  int nix = pair_interactions_.size();
+#endif
   pair_interactions_.clear();
   clist_.RenewObjectsCells(interactors_);
   clist_.MakePairs(pair_interactions_);
+#ifdef TRACE
+  Logger::Trace("Updated interactions: pair interactions: %d -> %d", nix,
+                pair_interactions_.size());
+#endif
 }
 
 void InteractionEngine::UpdateBoundaryInteractions() {
@@ -300,12 +312,10 @@ void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {
   Object *obj2 = ix->obj2;
   Logger::Trace("Processing interaction between %d and %d", obj1->GetOID(),
                 obj2->GetOID());
-  // Rigid objects don't self interact
-  // if (obj1->GetRID() == obj2->GetRID())  return;
   // Composite objects do self interact if they want to
   // Check to make sure we aren't self-interacting at the simple object level
   if (obj1->GetOID() == obj2->GetOID()) {
-    // Logger::Error("Object %d attempted self-interaction!", obj1->GetOID());
+    Logger::Error("Object %d attempted self-interaction!", obj1->GetOID());
   }
   // If we are disallowing like-like interactions, then similar species do not
   // interact...
@@ -351,9 +361,6 @@ void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {
   }
   if (obj1->GetSID() == +species_id::crosslink ||
       obj2->GetSID() == +species_id::crosslink) {
-    // printf("Crosslink interacting\n");
-    // printf("   with: %s and %s \n", obj1->GetSID()._to_string(),
-    // obj2->GetSID()._to_string());
   }
 
   mindist_.ObjectObject(*ix);
@@ -681,7 +688,8 @@ void InteractionEngine::DrawInteractions(
 
 void InteractionEngine::WriteOutputs() { xlink_.WriteOutputs(); }
 
-void InteractionEngine::InitOutputs(bool reading_inputs, run_options *run_opts) {
+void InteractionEngine::InitOutputs(bool reading_inputs,
+                                    run_options *run_opts) {
   xlink_.InitOutputs(reading_inputs, run_opts);
 }
 
