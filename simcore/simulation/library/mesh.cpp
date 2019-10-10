@@ -39,7 +39,9 @@ void Mesh::AddSite(Site s) {
   sites_.back().SetMeshID(GetMeshID());
   n_sites_++;
 }
-void Mesh::AddBond(Bond b) {
+
+// Adds bond to mesh between sites 1 and 2
+void Mesh::AddBond(Site *site1, Site *site2) {
   if (n_bonds_ == n_bonds_max_) {
     Logger::Error("Attempting to add bond beyond allocated maximum.\n");
   }
@@ -48,6 +50,7 @@ void Mesh::AddBond(Bond b) {
   } else {
     true_length_ = bonds_.back().GetMeshLambda() + bonds_.back().GetLength();
   }
+  Bond b;
   bonds_.push_back(b);
   bonds_.back().SetColor(color_, draw_);
   bonds_.back().SetMeshID(GetMeshID());
@@ -55,6 +58,8 @@ void Mesh::AddBond(Bond b) {
   bonds_.back().SetMeshPtr(this);
   bonds_.back().SetBondNumber(n_bonds_);
   bonds_.back().SetMeshLambda(true_length_);
+  bonds_.back().SetEquilLength(bond_length_);
+  bonds_.back().Init(site1, site2);
   true_length_ += bonds_.back().GetLength();
   n_bonds_++;
   /* Anytime we change the number of bonds, which are interactors, we signal
@@ -228,9 +233,7 @@ void Mesh::InitBondAt(double *pos, double *u, double l, double d) {
   s2.SetPosition(pos);
   AddSite(s1);
   AddSite(s2);
-  Bond b;
-  AddBond(b);
-  bonds_[n_bonds_ - 1].Init(&sites_[n_sites_ - 2], &sites_[n_sites_ - 1]);
+  AddBond(&sites_[n_sites_ - 2], &sites_[n_sites_ - 1]);
 }
 void Mesh::InitRandomSite(double d) {
   InsertRandom();
@@ -258,9 +261,7 @@ void Mesh::AddRandomBondToSite(double l, int i_site) {
     pos[i] = pos0[i] + l * pos[i];
   }
   InitSiteAt(pos, d);
-  Bond b;
-  AddBond(b);
-  bonds_.back().Init(&sites_[i_site], &sites_[n_sites_ - 1]);
+  AddBond(&sites_[i_site], &sites_[n_sites_ - 1]);
 }
 
 void Mesh::AddRandomBondToTip(double l) {
@@ -282,14 +283,9 @@ void Mesh::AddBondToSite(double *u, double l, int i_site) {
     pos[i] = pos0[i] + l * u[i];
   }
   InitSiteAt(pos, d);
-  AddBondBetweenSites(&sites_[i_site], &sites_[n_sites_ - 1]);
+  AddBond(&sites_[i_site], &sites_[n_sites_ - 1]);
 }
 
-void Mesh::AddBondBetweenSites(Site *site1, Site *site2) {
-  Bond b;
-  AddBond(b);
-  bonds_[n_bonds_ - 1].Init(site1, site2);
-}
 void Mesh::UpdateBondPositions() {
   true_length_ = 0;
   for (bond_iterator it = bonds_.begin(); it != bonds_.end(); ++it) {
@@ -423,8 +419,7 @@ void Mesh::ReadSpec(std::fstream &ip) {
                     " Mesh::ReadSpec");
     }
     for (int i = 0; i < n_sites_ - 1; ++i) {
-      AddBondBetweenSites(&sites_[i], &sites_[i + 1]);
-      bonds_[n_bonds_ - 1].SetEquilLength(bond_length_);
+      AddBond(&sites_[i], &sites_[i + 1]);
     }
   }
   if (n_bonds_ != n_sites_ - 1) {

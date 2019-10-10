@@ -135,6 +135,7 @@ void Simulation::ScaleSpeciesPositions() {
 void Simulation::InitSimulation() {
   params_ = parser_.ParseSystemParameters();
   run_name_ = params_.run_name;
+  RNG::SetSeed(params_.seed);
 
 #ifdef TRACE
   if (params_.n_steps > 100) {

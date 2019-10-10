@@ -1,18 +1,18 @@
-seed: 221701271930272
+seed: 270242019331055
 
 run_name: overhaul_test
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 10000
+n_steps: 1000
 n_steps_target: 0
 boundary: 0
 
 graph_flag: true
-n_graph: 10
+n_graph: 100
 movie_flag: false
 
-system_radius: 60
+system_radius: 20
 potential: soft
 soft_potential_mag: 100
 f_cutoff: 10000
@@ -29,9 +29,9 @@ filament:
     insertion_type: random
     diameter: 1
     overlap: false
-    length: 50
+    length: 20
     min_length: 5
-    max_length: 500
+    max_length: 30
     min_bond_length: 3
     polydispersity_flag: true
     dynamic_instability_flag: true
@@ -44,29 +44,25 @@ filament:
     spec_flag: true
     n_spec: 100
   - name: actin
-    num: 2
+    num: 0
     packing_fraction: -1
     insertion_type: random
     diameter: 1
     overlap: false
-    length: 50
+    length: 30
     min_length: 5
-    max_length: 100
+    max_length: 50
     min_bond_length: 3
     polydispersity_flag: true
-    dynamic_instability_flag: true
+    dynamic_instability_flag: false
     persistence_length: 200
     driving_factor: 0
-    v_poly: 50
-    v_depoly: 50
-    f_grow_to_shrink: 10
-    f_shrink_to_grow: 20
     spec_flag: true
     n_spec: 100
 
 crosslink:
   - name: kinesin
-    concentration: 0.05
+    concentration: 0
     diameter: 1.5
     walker_flag: true
     velocity: 50
@@ -93,7 +89,7 @@ crosslink:
     spec_flag: true
     n_spec: 100
   - name: ase1
-    concentration: 0.05
+    concentration: 0
     diameter: 1
     walker_flag: false
     velocity: 0

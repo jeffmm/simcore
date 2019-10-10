@@ -53,7 +53,7 @@ public:
   virtual bool const GetPositFlag() const { return false; }
   virtual bool const GetSpecFlag() const { return false; }
   virtual bool const GetCheckpointFlag() const { return params_->checkpoint_flag; }
-  std::string GetInsertionType() const { return ""; }
+  virtual std::string GetInsertionType() const { return ""; }
   virtual int GetCount() const { return 0; }
   virtual void WriteOutputs(std::string run_name) {}
   virtual void WritePosits() {}

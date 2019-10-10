@@ -27,11 +27,10 @@ protected:
   void UpdateInteractors();
   void UpdateSiteOrientations();
   void RelocateMesh(double *pos, double *u);
-  void AddBondBetweenSites(Site *site1, Site *site2);
   void AddRandomBondToSite(double l, int i_site);
   void AddBondToSite(double *u, double l, int i_site);
   void AddSite(Site s);
-  void AddBond(Bond b);
+  void AddBond(Site *s1, Site *s2);
 
 public:
   Mesh();

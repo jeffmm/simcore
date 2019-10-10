@@ -39,6 +39,7 @@ private:
   void Diffuse();
   void Walk();
   bool CheckMesh();
+  bool CalcBondLambda();
 
 public:
   Anchor();

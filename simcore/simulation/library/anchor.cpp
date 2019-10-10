@@ -57,14 +57,30 @@ void Anchor::UpdateAnchorPositionToMesh() {
   bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
 
   // Figure out how far we are from the bond tail: bond_lambda
+  if (!CalcBondLambda()) {
+    return;
+  }
+  // Update anchor position with respect to bond
+  UpdateAnchorPositionToBond();
+}
+
+bool Anchor::CalcBondLambda() {
   bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
   bond_length_ = bond_->GetLength();
   if (bond_lambda_ < 0) {
     bond_ = bond_->GetNeighborBond(0);
+    if (!bond_) {
+      Unbind();
+      return false;
+    }
     bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
     bond_length_ = bond_->GetLength();
   } else if (bond_lambda_ > bond_length_) {
     bond_ = bond_->GetNeighborBond(1);
+    if (!bond_) {
+      Unbind();
+      return false;
+    }
     bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
     bond_length_ = bond_->GetLength();
   }
@@ -77,11 +93,8 @@ void Anchor::UpdateAnchorPositionToMesh() {
         bond_->GetBondNumber(), mesh_lambda_, mesh_length_, bond_lambda_,
         bond_length_);
   }
-
-  // Update anchor position with respect to bond
-  UpdateAnchorPositionToBond();
+  return true;
 }
-
 void Anchor::UpdatePosition() {
   // Currently only bound anchors diffuse/walk (no explicit unbound anchors)
   if (!bound_ || static_ || (!diffuse_ && !walker_)) {

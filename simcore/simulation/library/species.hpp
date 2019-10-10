@@ -211,6 +211,8 @@ template <typename T, unsigned char S> void Species<T, S>::WriteSpecs() {
 }
 
 template <typename T, unsigned char S> void Species<T, S>::WriteCheckpoints() {
+  Logger::Trace("Writing checkpoints for %s %s", GetSID()._to_string(),
+      GetSpeciesName().c_str());
   std::fstream ocheck_file(checkpoint_file_, std::ios::out | std::ios::binary);
   if (!ocheck_file.is_open()) {
     Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
@@ -361,9 +363,9 @@ template <typename T, unsigned char S> void Species<T, S>::ArrangeMembers() {
   else if (GetInsertionType().compare("centered_oriented") == 0)
     CenteredOrientedArrangement();
   else
-    Logger::Warning(
+    Logger::Error(
         "Arrangement not recognized and ArrangeMembers not overwritten by "
-        "species!\n");
+        "species!");
 }
 
 template <typename T, unsigned char S>
