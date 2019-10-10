@@ -35,10 +35,9 @@ do_graph_build() {
 do_test_build() {
     mkdir build
     cd build || exit 1
-    cmake ..
+    cmake -DUNIT_TESTS=1 ..
     make -j8
-    make test
-    cd ..
+    make test && cd ..
 }
 
 do_debug_build() {

@@ -133,9 +133,11 @@ void Simulation::ScaleSpeciesPositions() {
 
 /* Initialize all the data structures in the simulation */
 void Simulation::InitSimulation() {
+  printf("init sim\n");
   params_ = parser_.ParseSystemParameters();
   run_name_ = params_.run_name;
   RNG::SetSeed(params_.seed);
+  printf("1\n");
 
 #ifdef TRACE
   if (params_.n_steps > 100) {
@@ -157,14 +159,23 @@ void Simulation::InitSimulation() {
   space_.Init(&params_);
   InitObjects();
   iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_);
+
+  printf("2\n");
   InitSpecies();
+  printf("3\n");
+
   InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
+  printf("4\n");
   InitOutputs();
   if (params_.graph_flag) {
     InitGraphics();
   }
+
+  printf("5\n");
   params_.i_step = 0;
   WriteOutputs();
+
+  printf("6\n");
 }
 
 /* Initialize static object parameters that are used everywhere */

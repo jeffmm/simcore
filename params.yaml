@@ -12,7 +12,7 @@ graph_flag: true
 n_graph: 100
 movie_flag: false
 
-system_radius: 20
+system_radius: 50
 potential: soft
 soft_potential_mag: 100
 f_cutoff: 10000
@@ -22,9 +22,11 @@ n_thermo: 100
 checkpoint_flag: true
 n_checkpoint: 100
 
+n_load: 1
+
 filament:
   - name: microtubule
-    num: 2
+    num: 4
     packing_fraction: -1
     insertion_type: random
     diameter: 1
@@ -44,7 +46,7 @@ filament:
     spec_flag: true
     n_spec: 100
   - name: actin
-    num: 0
+    num: 4
     packing_fraction: -1
     insertion_type: random
     diameter: 1
@@ -62,7 +64,7 @@ filament:
 
 crosslink:
   - name: kinesin
-    concentration: 0
+    concentration: 0.1
     diameter: 1.5
     walker_flag: true
     velocity: 50
@@ -89,7 +91,7 @@ crosslink:
     spec_flag: true
     n_spec: 100
   - name: ase1
-    concentration: 0
+    concentration: 0.1
     diameter: 1
     walker_flag: false
     velocity: 0

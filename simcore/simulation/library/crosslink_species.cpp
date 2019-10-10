@@ -220,9 +220,14 @@ void CrosslinkSpecies::Draw(std::vector<graph_struct *> &graph_array) {
 
 void CrosslinkSpecies::ReadSpecs() {
   if (ispec_file_.eof()) {
-    Logger::Info("EOF reached for spec file in CrosslinkSpecies");
-    early_exit = true;
-    return;
+    if (HandleEOF()) {
+      return;
+    } else {
+      Logger::Info("EOF reached in spec file for %s %s", GetSID()._to_string(),
+                   GetSpeciesName().c_str());
+      early_exit = true;
+      return;
+    }
   }
   if (!ispec_file_.is_open()) {
     Logger::Warning("ERROR. Spec file unexpectedly not open! Exiting early.");
@@ -234,9 +239,14 @@ void CrosslinkSpecies::ReadSpecs() {
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
   if (n_members_ == -1) {
-    Logger::Info("EOF reached for spec file in CrosslinkSpecies");
-    early_exit = true;
-    return;
+    if (HandleEOF()) {
+      return;
+    } else {
+      Logger::Info("EOF reached in spec file for %s %s", GetSID()._to_string(),
+                   GetSpeciesName().c_str());
+      early_exit = true;
+      return;
+    }
   }
   if (n_members_ == 0) {
     members_.clear();

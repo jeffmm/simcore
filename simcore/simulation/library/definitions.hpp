@@ -58,6 +58,11 @@ struct graph_struct {
 // class Tester;
 //}
 
-#define UNIT_TESTER friend class Tester
+#ifdef UNIT_TESTS
+#define UNIT_TEST template <typename T> friend class UnitTest;
+template <typename T> class UnitTest {};
+#else
+#define UNIT_TEST
+#endif
 
 #endif

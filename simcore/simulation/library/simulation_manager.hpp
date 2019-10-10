@@ -5,6 +5,7 @@
 
 class SimulationManager {
 private:
+  UNIT_TEST
   bool make_movie_ = false;
   bool run_analysis_ = false;
   int n_runs_ = 1;              // Number of runs per parameters set
@@ -32,7 +33,6 @@ private:
   //void ParseParams(std::string file_name);
   void ProcessOutputs();
   void InitLogger();
-  UNIT_TESTER;
 
 public:
   SimulationManager() { early_exit = false; }

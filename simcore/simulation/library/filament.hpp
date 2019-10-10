@@ -8,7 +8,6 @@
 class Filament : public Mesh {
 private:
   filament_parameters *sparams_;
-  bool dynamic_instability_flag_;
   bool force_induced_catastrophe_flag_;
   bool theta_validation_run_flag_;
   bool diffusion_validation_run_flag_;
@@ -17,12 +16,12 @@ private:
   bool flagella_flag_;
   bool optical_trap_flag_;
   bool cilia_trap_flag_;
+  bool polydispersity_flag_;
   int optical_trap_fixed_;
   int trapped_site_;
   int n_step_ = 0;
   int eq_steps_;
   int eq_steps_count_ = 0;
-  int polydispersity_flag_ = 0;
   double min_length_;
   double max_length_;
   double max_bond_length_;
@@ -93,7 +92,6 @@ private:
   void ReportAll();
   void CalculateBinding();
   bool CheckBondLengths();
-  void AllocateControlStructures();
 
 public:
   Filament();
@@ -106,6 +104,7 @@ public:
   double const GetLength() { return length_; }
   double const GetDriving() { return driving_factor_; }
   double const GetPersistenceLength() { return persistence_length_; }
+  void Reserve();
   void CheckFlocking();
   int const GetNBonds() { return n_bonds_; }
   std::vector<double> const *const GetThetas() { return &cos_thetas_; }

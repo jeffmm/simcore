@@ -12,6 +12,9 @@ set(INCLUDES ${INCLUDES} ${GLEW_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS} ${OPENGL_INC
 else()
   add_definitions(-DNOGRAPH=TRUE)
 endif()
+add_definitions(-DUNIT_TESTS=TRUE)
+add_definitions(-DTRACE=TRUE)
+add_definitions(-DDEBUG=TRUE)
 
 target_link_libraries(test_simcore.exe simcore Catch2::Catch2)
 include(CTest)

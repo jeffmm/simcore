@@ -16,39 +16,17 @@ set(ALLOW_DUPLICATE_CUSTOM_TARGETS TRUE)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/.CMake_FFTW")
 
-if(DEBUG)
+if(DEBUG OR UNIT_TESTS)
   set(CMAKE_BUILD_TYPE "Debug")
-endif()
-
-if(TESTS)
-  set(CMAKE_BUILD_TYPE "Debug")
+else()
+  set(CMAKE_BUILD_TYPE "Release")
 endif()
 
 if (OMP AND APPLE)
-  # This may not be working...
-  #SET(CMAKE_C_COMPILER "/Library/Developer/CommandLineTools/usr/bin/cc")
-  #SET(CMAKE_CXX_COMPILER "/Library/Developer/CommandLineTools/usr/bin/c++")
   set(CMAKE_C_COMPILER "/usr/local/opt/llvm/bin/clang")
   set(CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++")
   set(OPENMP_LIBRARIES "/usr/local/opt/llvm/lib")
   set(OPENMP_INCLUDES "/usr/local/opt/llvm/include")
-  #set(ENV{CC} "/usr/local/opt/llvm/bin/clang")
-  #set(ENV{CXX} "/usr/local/opt/llvm/bin/clang++")
-  #set(ENV{LDFLAGS} "-L/usr/local/opt/llvm/lib")
-  #set(ENV{CPPFLAGS} "-I/usr/local/opt/llvm/include")
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES "^[Dd]ebug")
-  # if debug mode, do tests
-  if(TESTS)
-    message("Building unit tests")
-  else()
-    message("Building simcore in Debug mode")
-  endif()
-else()
-  # otherwise set build to release mode by default
-  set(CMAKE_BUILD_TYPE "Release")
-  message("Building simcore in Release mode")
 endif()
 
 # Require out-of-source builds
@@ -64,8 +42,11 @@ add_subdirectory("extern")
 add_subdirectory("simcore")
 
 # Configure unit tests
-enable_testing()
-add_subdirectory("tests")
+if (UNIT_TESTS)
+    message("Building unit tests")
+    enable_testing()
+    add_subdirectory("tests")
+endif()
 
 # Build the documentation
 # check if Doxygen is installed

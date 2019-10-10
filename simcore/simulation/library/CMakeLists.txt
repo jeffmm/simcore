@@ -29,7 +29,15 @@ endif()
 
 if(TRACE)
     add_definitions(-DTRACE=TRUE)
+    add_definitions(-DDEBUG=TRUE)
 endif()
+
+if(UNIT_TESTS)
+    add_definitions(-DUNIT_TESTS=TRUE)
+    add_definitions(-DTRACE=TRUE)
+    add_definitions(-DDEBUG=TRUE)
+endif()
+
 include_directories(${INCLUDES})
 set(TARGET "simcore")
 set(SOURCES anchor.cpp 

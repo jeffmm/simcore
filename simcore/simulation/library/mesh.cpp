@@ -13,6 +13,7 @@ Mesh::Mesh() : Object() {
   midstep_ = true;
   anchored_ = false;
   posits_only_ = false;
+  dynamic_instability_flag_ = false;
 }
 
 void Mesh::InitMeshID() {
@@ -20,10 +21,9 @@ void Mesh::InitMeshID() {
   SetMeshID(++_next_mesh_id_);
 }
 
-void Mesh::Reserve(int n_bonds) {
-  sites_.reserve(n_bonds + 1);
-  bonds_.reserve(n_bonds);
-  n_bonds_max_ = n_bonds;
+void Mesh::Reserve() {
+  sites_.reserve(n_bonds_max_ + 1);
+  bonds_.reserve(n_bonds_max_);
 }
 
 Site *Mesh::GetSite(int i) { return &(sites_[i]); }
@@ -408,6 +408,10 @@ void Mesh::ReadSpec(std::fstream &ip) {
     }
   } else {
     Clear();
+    if (!dynamic_instability_flag_) {
+      n_bonds_max_ = nsites-1;
+      Reserve();
+    }
     for (int i = 0; i < nsites; ++i) {
       for (int j = 0; j < 3; ++j) {
         ip.read(reinterpret_cast<char *>(&position_[j]), sizeof(double));

@@ -16,6 +16,7 @@ protected:
   bool anchored_;
   bool midstep_;
   bool posits_only_;
+  bool dynamic_instability_flag_;
   int n_sites_;
   int n_bonds_;
   int n_bonds_max_;
@@ -49,7 +50,7 @@ public:
   void UpdateBondPositions();
   void UpdatePrevPositions();
   virtual void Draw(std::vector<graph_struct *> &graph_array);
-  void Reserve(int n_bonds);
+  virtual void Reserve();
   void Clear();
   void DoubleGranularityLinear();
   void HalfGranularityLinear();

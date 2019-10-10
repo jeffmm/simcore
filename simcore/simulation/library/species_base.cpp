@@ -39,10 +39,12 @@ void SpeciesBase::InitPositFileInput(std::string run_name) {
   iposit_file_.read(reinterpret_cast<char *>(&delta), sizeof(double));
   if (n_steps != params_->n_steps || n_posit != GetNPosit() ||
       delta != params_->delta) {
-    Logger::Warning("Input file %s does not match parameter file\n",
-                    posit_file_name.c_str());
-    printf("%d %d, %d %d, %2.5f %2.5f\n", n_steps, params_->n_steps, n_posit,
-           GetNPosit(), delta, params_->delta);
+    Logger::Warning("Input file %s does not match parameter file: "
+                    "n_steps: %d %d, "
+                    "n_spec: %d %d, "
+                    "delta: %2.2f %2.2f ",
+                    posit_file_name.c_str(), n_steps, params_->n_steps, n_posit,
+                    GetNPosit(), delta, params_->delta);
   }
   ReadPosits();
 }
@@ -111,7 +113,7 @@ bool SpeciesBase::HandleEOF() {
     if (ispec_file_.is_open()) {
       ispec_file_.close();
     }
-    printf("\n  Initializing new input file, %s\n", file_name.str().c_str());
+    Logger::Info("Switching to new spec file, %s", file_name.str().c_str());
     return InitSpecFileInputFromFile(file_name.str());
   } else {
     return false;
@@ -131,11 +133,12 @@ bool SpeciesBase::InitSpecFileInputFromFile(std::string spec_file_name) {
   ispec_file_.read(reinterpret_cast<char *>(&delta), sizeof(double));
   if (n_steps != params_->n_steps || n_spec != GetNSpec() ||
       delta != params_->delta) {
-    printf("\nn_steps: %d %d, ", n_steps, params_->n_steps);
-    printf("n_spec: %d %d, ", n_spec, GetNSpec());
-    printf("delta: %2.2f %2.2f\n", delta, params_->delta);
-    Logger::Warning("Input file %s does not match parameter file\n",
-                    spec_file_name.c_str());
+    Logger::Warning("Input file %s does not match parameter file: "
+                    "n_steps: %d %d, "
+                    "n_spec: %d %d, "
+                    "delta: %2.2f %2.2f ",
+                    spec_file_name.c_str(), n_steps, params_->n_steps, n_spec,
+                    GetNSpec(), delta, params_->delta);
   }
   ReadSpecs();
   return true;

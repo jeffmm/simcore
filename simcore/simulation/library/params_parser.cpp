@@ -2,20 +2,23 @@
 #include "parse_params.hpp"
 
 void ParamsParser::Init(YAML::Node sim_params) {
+  Logger::Trace("Initializing yaml parameter parser");
   sim_node_ = sim_params;
   ParseSpeciesParameters();
 }
 
 void ParamsParser::CheckDuplicateLabels() {
-  for (std::size_t i = 0; i < labels_.size() - 1; ++i) {
-    for (std::size_t j = i + 1; j < labels_.size(); ++j) {
+  Logger::Trace("Checking for duplicate species labels");
+  int n_labels = labels_.size();
+  for (int i = 0; i < n_labels - 1; ++i) {
+    for (int j = i + 1; j < n_labels; ++j) {
       if (labels_[i] == labels_[j]) {
         Logger::Error("Duplicate species label found! %s %s",
                       labels_[i].first.c_str(), labels_[i].second.c_str());
       }
     }
   }
-  for (std::size_t i = 0; i < labels_.size(); ++i) {
+  for (int i = 0; i < n_labels; ++i) {
     if (species_id::_from_string(labels_[i].first.c_str()) ==
         +species_id::crosslink) {
       n_crosslinks_++;
@@ -26,6 +29,7 @@ void ParamsParser::CheckDuplicateLabels() {
 }
 
 void ParamsParser::ParseSpeciesParameters() {
+  Logger::Trace("Parsing species parameters");
   for (auto it = sim_node_.begin(); it != sim_node_.end(); ++it) {
     if (it->second.IsMap()) {
       if (it->first.as<std::string>() == "species") {
@@ -51,11 +55,14 @@ void ParamsParser::ParseSpeciesParameters() {
 }
 
 system_parameters ParamsParser::ParseSystemParameters() {
+  Logger::Trace("Building system parameters");
   return parse_system_params(sim_node_);
 }
 
 species_base_parameters *
 ParamsParser::GetNewSpeciesParameters(sid_label &slab) {
+  Logger::Trace("Building parameters for %s %s", slab.first.c_str(),
+                slab.second.c_str());
   for (auto it = species_node_.begin(); it != species_node_.end(); ++it) {
     if (it->first.as<std::string>() == slab.first) {
       if (it->second.IsMap() && slab.second == "species") {

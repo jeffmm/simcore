@@ -113,8 +113,8 @@ template <typename T, unsigned char S> void Species<T, S>::ZeroDrTot() {
 }
 
 template <typename T, unsigned char S> void Species<T, S>::AddMember(T newmem) {
-  Logger::Trace("Adding preexisting member to %s %s",
-                GetSID()._to_string(), GetSpeciesName().c_str());
+  Logger::Trace("Adding preexisting member to %s %s", GetSID()._to_string(),
+                GetSpeciesName().c_str());
   members_.push_back(newmem);
   newmem.SetSID(GetSID());
   n_members_++;
@@ -122,7 +122,7 @@ template <typename T, unsigned char S> void Species<T, S>::AddMember(T newmem) {
 
 template <typename T, unsigned char S> void Species<T, S>::PopMember() {
   Logger::Trace("Removing last member of %s %s", GetSID()._to_string(),
-      GetSpeciesName().c_str());
+                GetSpeciesName().c_str());
   members_.back().Cleanup();
   members_.pop_back();
   n_members_--;
@@ -157,9 +157,9 @@ void Species<T, S>::GetInteractors(std::vector<Object *> &ixors) {
 template <typename T, unsigned char S>
 void Species<T, S>::GetLastInteractors(std::vector<Object *> &ix) {
   if (members_.size() == 0) {
-    Logger::Error(
-        "Called for last interactors of %s %s, but species has zero "
-        "members", GetSID()._to_string(), GetSpeciesName().c_str());
+    Logger::Error("Called for last interactors of %s %s, but species has zero "
+                  "members",
+                  GetSID()._to_string(), GetSpeciesName().c_str());
   }
   members_.back().GetInteractors(ix);
 }
@@ -212,7 +212,7 @@ template <typename T, unsigned char S> void Species<T, S>::WriteSpecs() {
 
 template <typename T, unsigned char S> void Species<T, S>::WriteCheckpoints() {
   Logger::Trace("Writing checkpoints for %s %s", GetSID()._to_string(),
-      GetSpeciesName().c_str());
+                GetSpeciesName().c_str());
   std::fstream ocheck_file(checkpoint_file_, std::ios::out | std::ios::binary);
   if (!ocheck_file.is_open()) {
     Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
@@ -307,10 +307,10 @@ template <typename T, unsigned char S> void Species<T, S>::ReadCheckpoints() {
 template <typename T, unsigned char S> void Species<T, S>::ReadSpecs() {
   if (ispec_file_.eof()) {
     if (HandleEOF()) {
-      Logger::Info("Switching to new spec file");
       return;
     } else {
-      Logger::Info("EOF reached in species ReadSpecs");
+      Logger::Info("EOF reached in spec file for %s %s", GetSID()._to_string(),
+                   GetSpeciesName().c_str());
       early_exit = true;
       return;
     }
@@ -320,27 +320,26 @@ template <typename T, unsigned char S> void Species<T, S>::ReadSpecs() {
     early_exit = true;
     return;
   }
-  int size = -1;
+  n_members_ = -1;
   // T *member;
-  ispec_file_.read(reinterpret_cast<char *>(&size), sizeof(int));
+  ispec_file_.read(reinterpret_cast<char *>(&n_members_), sizeof(int));
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
-  if (size == -1) {
+  if (n_members_ == -1) {
     if (HandleEOF()) {
-      Logger::Info("Switching to new spec file");
       return;
     } else {
-      Logger::Info("EOF reached in species");
+      Logger::Info("EOF reached in spec file for %s %s", GetSID()._to_string(),
+                   GetSpeciesName().c_str());
       early_exit = true;
       return;
     }
   }
-  if (size != n_members_) {
+  if (n_members_ != members_.size()) {
     T member;
     member.Init(&sparams_);
     member.SetSID(GetSID());
-    members_.resize(size, member);
-    n_members_ = size;
+    members_.resize(n_members_, member);
   }
   for (auto it = members_.begin(); it != members_.end(); ++it)
     it->ReadSpec(ispec_file_);

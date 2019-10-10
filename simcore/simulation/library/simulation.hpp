@@ -8,6 +8,7 @@
 
 class Simulation {
 private:
+  UNIT_TEST
   int i_step_ = 0;
   int n_steps_;
   int frame_num_ = 0;
@@ -53,7 +54,6 @@ private:
   void RunProcessing(run_options run_opts);
   void InitGraphics();
   void InitProcessing(run_options run_opts);
-  UNIT_TESTER;
 
 public:
   Simulation() {}

@@ -68,7 +68,7 @@ void Filament::Init(filament_parameters *sparams) {
   sparams_ = sparams;
   SetParameters();
   InitFilamentLength();
-  AllocateControlStructures();
+  Reserve();
   InsertFilament();
   SetDiffusion();
 
@@ -144,9 +144,9 @@ void Filament::InitFilamentLength() {
   true_length_ = length_;
 }
 
-void Filament::AllocateControlStructures() {
+void Filament::Reserve() {
   // Initialize mesh
-  Reserve(n_bonds_max_);
+  Mesh::Reserve();
   // Allocate control structures
   int n_sites_max = n_bonds_max_ + 1;
   tensions_.resize(n_sites_max - 1);                    // max_sites -1
