@@ -18,7 +18,7 @@ private:
   system_parameters *params_;
   CrosslinkOutputManager output_mgr_;
   double obj_volume_;
-  double rcutoff_; // Cutoff for binding any crosslink and bond
+  double rcutoff_ = 0; // Cutoff for binding any crosslink and bond
   bool update_;
   std::vector<CrosslinkSpecies *> xlink_species_;
   std::vector<Object *> *objs_;
