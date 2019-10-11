@@ -15,6 +15,7 @@
   default_config["filament"]["length"] = "-1";
   default_config["filament"]["persistence_length"] = "400";
   default_config["filament"]["max_length"] = "500";
+  default_config["filament"]["min_length"] = "5";
   default_config["filament"]["min_bond_length"] = "1.5";
   default_config["filament"]["spiral_flag"] = "0";
   default_config["filament"]["spiral_number_fail_condition"] = "0";
@@ -137,7 +138,6 @@
   default_config["crosslink"]["force_dep_factor"] = "1";
   default_config["crosslink"]["polar_affinity"] = "0";
   default_config["crosslink"]["k_spring"] = "10";
-  default_config["crosslink"]["f_spring_max"] = "1000";
   default_config["crosslink"]["f_stall"] = "100";
   default_config["crosslink"]["force_dep_vel_flag"] = "1";
   default_config["crosslink"]["k_align"] = "0";

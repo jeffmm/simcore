@@ -10,8 +10,11 @@ void Filament::SetParameters() {
   persistence_length_ = params_->filament.persistence_length;
   diameter_ = params_->filament.diameter;
   max_length_ = params_->filament.max_length;
+  min_length_ = params_->filament.min_length;
   min_bond_length_ = params_->filament.min_bond_length;
-  min_length_ = 2 * min_bond_length_;
+  if (min_length_ < 2 * min_bond_length_) {
+    min_length_ = 2 * min_bond_length_;
+  }
   dynamic_instability_flag_ = params_->filament.dynamic_instability_flag;
   polydispersity_flag_ = params_->filament.polydispersity_flag;
   polydispersity_factor_ = params_->filament.polydispersity_factor;

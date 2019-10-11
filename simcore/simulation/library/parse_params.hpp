@@ -74,6 +74,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("max_length")==0) {
             params->filament.max_length = jt->second.as<double>();
           }
+          else if (param_name.compare("min_length")==0) {
+            params->filament.min_length = jt->second.as<double>();
+          }
           else if (param_name.compare("min_bond_length")==0) {
             params->filament.min_bond_length = jt->second.as<double>();
           }
@@ -889,9 +892,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("k_spring")==0) {
             params->crosslink.k_spring = jt->second.as<double>();
-          }
-          else if (param_name.compare("f_spring_max")==0) {
-            params->crosslink.f_spring_max = jt->second.as<double>();
           }
           else if (param_name.compare("f_stall")==0) {
             params->crosslink.f_stall = jt->second.as<double>();

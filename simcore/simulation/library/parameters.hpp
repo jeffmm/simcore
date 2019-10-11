@@ -27,6 +27,7 @@ class filament_parameters : public species_parameters {
     double length = -1;
     double persistence_length = 400;
     double max_length = 500;
+    double min_length = 5;
     double min_bond_length = 1.5;
     int spiral_flag = 0;
     double spiral_number_fail_condition = 0;
@@ -189,7 +190,6 @@ class crosslink_parameters : public species_parameters {
     double force_dep_factor = 1;
     double polar_affinity = 0;
     double k_spring = 10;
-    double f_spring_max = 1000;
     double f_stall = 100;
     int force_dep_vel_flag = 1;
     double k_align = 0;

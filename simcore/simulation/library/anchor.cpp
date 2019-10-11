@@ -16,7 +16,6 @@ void Anchor::Init() {
   k_off_ = params_->crosslink.k_off;
   end_pausing_ = (params_->crosslink.end_pausing ? true : false);
   diffuse_ = (params_->crosslink.diffusion_flag ? true : false);
-  f_spring_max_ = params_->crosslink.f_spring_max;
   f_stall_ = params_->crosslink.f_stall;
   force_dep_vel_flag_ = params_->crosslink.force_dep_vel_flag;
   SetDiffusion();

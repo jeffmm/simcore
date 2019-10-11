@@ -313,8 +313,6 @@ crosslink:                          # Parameters specific to crosslinks.
   polar_affinity: [0, double]       # Affinity for crosslinks to remain bound to aligned filaments.
                                     # Positive implies aligned, negative implies anti-aligned.
   k_spring: [10, double]            # Spring constant of tension forces of doubly-bound crosslinks.
-  f_spring_max: [1000, double]      # Tether forces greater than this value will result in an
-                                    # automatic unbinding of doubly-bound filaments.
   f_stall: [100, double]            # Tether forces above f_stall cause bound crosslink heads to
                                     # cease walking.
   force_dep_vel_flag: [1, int]      # Flag that causes walking crosslink heads to have force-

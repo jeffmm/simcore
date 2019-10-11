@@ -16,7 +16,6 @@ void Crosslink::Init(MinimumDistance *mindist, LookupTable *lut) {
   k_off_d_ = params_->crosslink.k_off_d; // k_off for doubly to singly
   k_spring_ = params_->crosslink.k_spring;
   k_align_ = params_->crosslink.k_align;
-  f_spring_max_ = params_->crosslink.f_spring_max;
   rcapture_ = params_->crosslink.r_capture;
   fdep_factor_ = params_->crosslink.force_dep_factor;
   polar_affinity_ = params_->crosslink.polar_affinity;

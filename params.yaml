@@ -1,11 +1,10 @@
 seed: 228312295723876
 
-run_name: checkpoint_debug
+run_name: simcore_test
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 1000
-n_steps_target: 0
+n_steps: 100000
 boundary: 0
 n_update_cells: 50
 cell_length: 6
@@ -24,39 +23,24 @@ thermo_flag: 0
 n_thermo: 100
 interaction_flag: 1
 
-br_bead:
-  num: 0
-  insertion_type: custom
-  insert_file: br_bead_insert.yaml
-  draw_type: orientation
-  color: 3.14
-
 filament:
-  num: 10
+  num: 20
   packing_fraction: -1
   insertion_type: random
-  #insert_file: anchor_ds_insert.yaml
   diameter: 1
   overlap: 0
-  length: 50
+  length: 30
   persistence_length: 5000
-  perlen_ratio: 200
-  n_bonds: 6
-  driving_factor: 0
+  driving_factor: 10
   dynamic_instability_flag: 1
   min_bond_length: 3
-  max_bond_length: 6
   polydispersity_flag: 1
   polydispersity_factor: 50
-  min_length: 5
+  min_length: 6
   max_length: 200
   v_poly: 10
   v_depoly: 20
   f_grow_to_shrink: 100
-  f_grow_to_pause: 0
-  f_pause_to_shrink: 0
-  f_pause_to_grow: 0
-  f_shrink_to_pause: 0
   f_shrink_to_grow: 200
   spec_flag: 1
   n_spec: 100
@@ -78,7 +62,6 @@ crosslink:
   force_dep_factor: 0
   polar_affinity: 0
   k_spring: 15
-  f_spring_max: 100000
   f_stall: 1000
   force_dep_vel_flag: 1
   k_align: 0
