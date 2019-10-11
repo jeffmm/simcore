@@ -391,3 +391,7 @@ void Crosslink::InsertAt(double *pos, double *u) {
   anchors_[0].UpdatePeriodic();
   SetSingly();
 }
+
+const int Crosslink::GetNNeighbors() const {
+  return anchors_[0].GetNNeighbors();
+}

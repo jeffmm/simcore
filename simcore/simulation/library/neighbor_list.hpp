@@ -1,4 +1,5 @@
 #include "auxiliary.hpp"
+#include "object.hpp"
 #include <mutex>
 
 /* A data structure that is used to hold a list of particles that are nearby the
@@ -22,7 +23,7 @@ public:
   }
   const Object *const *GetNeighborListMem() { return &nlist_[0]; }
   void Clear() { nlist_.clear(); }
-  int NNeighbors() { return nlist_.size(); }
+  const int NNeighbors() const { return nlist_.size(); }
   Object *GetNeighbor(int i_neighbor) {
     if (i_neighbor >= nlist_.size()) {
       Logger::Error("Invalid index received in class NeighborList");

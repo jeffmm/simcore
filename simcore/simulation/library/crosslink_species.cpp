@@ -13,6 +13,7 @@ void CrosslinkSpecies::Init(system_parameters *params,
 void CrosslinkSpecies::AddMember() {
   Species::AddMember();
   members_.back().InitInteractionEnvironment(&lut_);
+  *update_ = true;
 }
 
 void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
@@ -42,7 +43,6 @@ void CrosslinkSpecies::InsertCrosslinks() {
     double u[3] = {0};
     u[params_->n_dim - 1] = 1.0;
     members_.back().InsertAt(pos, u);
-    *update_ = true;
   } else if (sparams_.insertion_type.compare("random_grid") == 0) {
     sparams_.static_flag = true;
     if (params_->n_dim == 3) {
@@ -70,7 +70,6 @@ void CrosslinkSpecies::InsertCrosslinks() {
       AddMember();
       members_.back().InsertRandom();
     }
-    *update_ = true;
   } else {
     Logger::Error("Insertion type %s not implemented yet for crosslinks",
                   sparams_.insertion_type.c_str());
@@ -89,7 +88,6 @@ void CrosslinkSpecies::CalculateBindingFree() {
     /* Create a new crosslink and bind an anchor to a random object
      * in the system */
     BindCrosslink();
-    *update_ = true;
   }
 }
 
@@ -163,9 +161,11 @@ void CrosslinkSpecies::UpdateBoundCrosslinks() {
   /* Update anchor positions from diffusion, walking */
   UpdateBoundCrosslinkPositions();
   /* Remove crosslinks that came unbound */
-  members_.erase(std::remove_if(members_.begin(), members_.end(),
-                                [](Crosslink x) { return x.IsUnbound(); }),
-                 members_.end());
+  if (!sparams_.static_flag) {
+    members_.erase(std::remove_if(members_.begin(), members_.end(),
+                                  [](Crosslink x) { return x.IsUnbound(); }),
+                   members_.end());
+  }
   /* Get the number of bound crosslinks so we know what the current
      concentration of free crosslinks is */
   n_members_ = members_.size();
@@ -199,6 +199,9 @@ void CrosslinkSpecies::UpdateBoundCrosslinkForces() {
     for (int i = 0; i < max_threads; ++i) {
       for (auto xlink = chunks[i].first; xlink != chunks[i].second; ++xlink) {
         bool init_state = xlink->IsSingly();
+        if (sparams_.static_flag && init_state && xlink->GetNNeighbors() == 0) {
+          continue;
+        }
         xlink->UpdateCrosslinkForces();
         if (xlink->IsSingly() != init_state) {
           *update_ = true;
@@ -210,6 +213,9 @@ void CrosslinkSpecies::UpdateBoundCrosslinkForces() {
   for (xlink_iterator xlink = members_.begin(); xlink != members_.end();
        ++xlink) {
     bool init_state = xlink->IsSingly();
+    if (sparams_.static_flag && init_state && xlink->GetNNeighbors() == 0) {
+      continue;
+    }
     xlink->UpdateCrosslinkForces();
     if (xlink->IsSingly() != init_state) {
       *update_ = true;
@@ -238,6 +244,9 @@ void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
     for (int i = 0; i < max_threads; ++i) {
       for (auto xlink = chunks[i].first; xlink != chunks[i].second; ++xlink) {
         bool init_state = xlink->IsSingly();
+        if (sparams_.static_flag && init_state && xlink->GetNNeighbors() == 0) {
+          continue;
+        }
         xlink->UpdateCrosslinkPositions();
         /* Xlink is no longer bound, return to solution */
         if (xlink->IsUnbound()) {
@@ -257,6 +266,9 @@ void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
   for (xlink_iterator xlink = members_.begin(); xlink != members_.end();
        ++xlink) {
     bool init_state = xlink->IsSingly();
+    if (sparams_.static_flag && init_state && xlink->GetNNeighbors() == 0) {
+      continue;
+    }
     xlink->UpdateCrosslinkPositions();
     /* Xlink is no longer bound, return to solution */
     if (xlink->IsUnbound()) {

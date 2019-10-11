@@ -68,7 +68,7 @@ public:
   void ZeroDrTot();
   const double GetDrTot();
   void InsertAt(double *pos, double *u);
-
+  const int GetNNeighbors() const;
 };
 
 #endif

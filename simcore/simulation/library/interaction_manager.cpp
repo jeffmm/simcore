@@ -89,6 +89,7 @@ void InteractionManager::Interact() {
       in_out_flag_ = true;
     }
   }
+  i_update_++;
 }
 
 void InteractionManager::CheckUpdateXlinks() {
@@ -101,6 +102,9 @@ void InteractionManager::CheckUpdateXlinks() {
     std::vector<Object *> xlinks;
     xlink_.GetInteractors(xlinks);
     interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
+    Logger::Debug("Updating interactions due to crosslink update. %d steps "
+                  "since last update",
+                  i_update_);
     UpdateInteractions();
     return;
   }
@@ -201,6 +205,7 @@ void InteractionManager::PairBondCrosslinks() {
 
 void InteractionManager::UpdateInteractions() {
   Logger::Trace("Updating interactions");
+  i_update_ = 0;
   UpdatePairInteractions();
   UpdateBoundaryInteractions();
   ZeroDrTot();
@@ -264,6 +269,9 @@ void InteractionManager::CheckUpdateObjects() {
   if (obj_count != n_objs_ || ix_update) {
     // reset update count and update number of objects to track
     n_objs_ = obj_count;
+    Logger::Debug("Updating interactions due to object update. %d steps since"
+                  " last update",
+                  i_update_);
     ForceUpdate();
     xlink_.UpdateObjsVolume();
   }
@@ -280,7 +288,6 @@ void InteractionManager::CheckUpdateInteractions() {
                   " last update, dr_max = %2.2f",
                   i_update_, dr_max);
     UpdateInteractions();
-    i_update_ = 0;
   }
   i_update_++;
 }
@@ -315,8 +322,10 @@ void InteractionManager::ProcessPairInteraction(ix_iterator ix) {
   // Avoid certain types of interactions
   Object *obj1 = ix->obj1;
   Object *obj2 = ix->obj2;
+#ifdef TRACE
   Logger::Trace("Processing interaction between %d and %d", obj1->GetOID(),
                 obj2->GetOID());
+#endif
   // Composite objects do self interact if they want to
   // Check to make sure we aren't self-interacting at the simple object level
   if (obj1->GetOID() == obj2->GetOID()) {
@@ -471,11 +480,13 @@ void InteractionManager::CalculatePairInteractions() {
     cross_product(ix->contact2, ix->force, ix->t2, 3);
   }
 #endif
-  /* Remove pairs of interactors who can never interact */
-  pair_interactions_.erase(
-      std::remove_if(pair_interactions_.begin(), pair_interactions_.end(),
-                     [](Interaction x) { return x.no_interaction; }),
-      pair_interactions_.end());
+  /* After interaction update, remove pairs of interactors who can never interact */
+  if (i_update_ == 0) {
+    pair_interactions_.erase(
+        std::remove_if(pair_interactions_.begin(), pair_interactions_.end(),
+                       [](Interaction x) { return x.no_interaction; }),
+        pair_interactions_.end());
+  }
 }
 
 void InteractionManager::ApplyPairInteractions() {

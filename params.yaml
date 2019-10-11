@@ -1,6 +1,6 @@
 seed: 11166216952492
 
-run_name: potential_test
+run_name: motility_test
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
@@ -24,18 +24,18 @@ n_checkpoint: 1000
 
 filament:
   - name: microtubule
-    num: 10
+    num: 1
     packing_fraction: -1
     insertion_type: random
     draw_type: fixed
     color: 2
     diameter: 1
     overlap: false
-    length: 40
+    length: 50
     min_length: 6
-    max_length: 100
+    max_length: 120
     min_bond_length: 3
-    polydispersity_flag: true
+    polydispersity_flag: false
     dynamic_instability_flag: false
     persistence_length: 5000
     driving_factor: 10
@@ -48,7 +48,7 @@ filament:
 
 crosslink:
   - name: dynein
-    concentration: 0
+    concentration: 0.3
     insertion_type: random_grid
     diameter: 0.3
     walker_flag: true

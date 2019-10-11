@@ -350,7 +350,7 @@ Object *Anchor::GetNeighbor(int i_neighbor) {
   return neighbors_.GetNeighbor(i_neighbor);
 }
 
-int Anchor::GetNNeighbors() { return neighbors_.NNeighbors(); }
+const int Anchor::GetNNeighbors() const { return neighbors_.NNeighbors(); }
 
 void Anchor::WriteSpec(std::fstream &ospec) {
   ospec.write(reinterpret_cast<char *>(&bound_), sizeof(bool));

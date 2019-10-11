@@ -67,7 +67,7 @@ public:
   void ClearNeighbors();
   const Object *const *GetNeighborListMem();
   Object *GetNeighbor(int i_neighbor);
-  int GetNNeighbors();
+  const int GetNNeighbors() const;
   void WriteSpec(std::fstream &ospec);
   void ReadSpec(std::fstream &ispec);
   void BindToPosition(double *pos);
