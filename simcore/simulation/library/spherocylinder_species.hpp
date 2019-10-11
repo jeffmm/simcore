@@ -2,9 +2,6 @@
 #define _SIMCORE_SPHEROCYLINDER_SPECIES_H_
 
 #include "species.hpp"
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
 #include "spherocylinder.hpp"
 
 class SpherocylinderSpecies

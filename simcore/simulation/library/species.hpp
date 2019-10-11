@@ -2,6 +2,9 @@
 #define _SIMCORE_SPECIES_H_
 
 #include "species_base.hpp"
+#ifdef ENABLE_OPENMP
+#include "omp.h"
+#endif
 
 template <typename T, unsigned char S> class Species : public SpeciesBase {
 protected:

@@ -3,9 +3,6 @@
 
 #include "bond.hpp"
 #include "species.hpp"
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
 
 class Motor : public Site {
  protected:

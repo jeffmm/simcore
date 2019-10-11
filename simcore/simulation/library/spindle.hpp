@@ -4,6 +4,9 @@
 #include "anchor.hpp"
 #include "filament.hpp"
 #include "spherocylinder.hpp"
+#ifdef ENABLE_OPENMP
+#include "omp.h"
+#endif
 
 class Spindle : public Spherocylinder {
 protected:

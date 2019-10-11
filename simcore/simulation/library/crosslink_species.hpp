@@ -3,9 +3,6 @@
 
 #include "crosslink.hpp"
 #include "species.hpp"
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
 
 typedef std::vector<std::pair<std::vector<Crosslink>::iterator,
                               std::vector<Crosslink>::iterator>>

@@ -2,9 +2,6 @@
 #define _SIMCORE_SPINDLE_SPECIES_H_
 
 #include "species.hpp"
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
 #include "spindle.hpp"
 
 class SpindleSpecies : public Species<Spindle, species_id::spindle> {

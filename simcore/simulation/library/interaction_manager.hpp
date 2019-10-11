@@ -10,10 +10,6 @@
 #include "species.hpp"
 #include "struct_analysis.hpp"
 
-#ifdef ENABLE_OPENMP
-#include <omp.h>
-#endif
-
 typedef std::vector<Interaction>::iterator ix_iterator;
 
 class InteractionManager {

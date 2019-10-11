@@ -2,10 +2,6 @@
 #define _SIMCORE_BR_BEAD_SPECIES_H_
 
 #include "species.hpp"
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
-
 #include "br_bead.hpp"
 
 typedef std::vector<BrBead>::iterator br_bead_iterator;

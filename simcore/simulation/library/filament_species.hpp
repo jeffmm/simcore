@@ -4,10 +4,6 @@
 #include "filament.hpp"
 #include "species.hpp"
 
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
-
 class FilamentSpecies : public Species<Filament, species_id::filament> {
 protected:
   bool midstep_;

@@ -2,11 +2,6 @@
 #define _SIMCORE_BEAD_SPRING_SPECIES_H_
 
 #include "species.hpp"
-
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
-
 #include "bead_spring.hpp"
 
 typedef std::vector<BeadSpring>::iterator bs_iterator;
