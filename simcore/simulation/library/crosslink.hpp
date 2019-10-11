@@ -19,6 +19,7 @@ private:
   bind_state state_;
   LookupTable *lut_;
   std::vector<int> kmc_filter_;
+  bool static_flag_;
   double k_on_;
   double k_on_d_;
   double k_off_;
@@ -66,13 +67,8 @@ public:
   void ApplyTetherForces();
   void ZeroDrTot();
   const double GetDrTot();
-  void SanityCheck() {
-    if (IsUnbound()) {
-      Logger::Error("Error in crosslink sanity check");
-    }
-    anchors_[0].SanityCheck();
-    anchors_[1].SanityCheck();
-  }
+  void InsertAt(double *pos, double *u);
+
 };
 
 #endif

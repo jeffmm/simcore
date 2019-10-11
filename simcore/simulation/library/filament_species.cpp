@@ -125,7 +125,13 @@ void FilamentSpecies::PopMember() {
 }
 
 const double FilamentSpecies::GetSpecLength() const {
-  return sparams_.min_bond_length;
+  if (sparams_.dynamic_instability_flag) {
+    Logger::Debug("Returning %2.2f", 2*sparams_.min_bond_length);
+    return 2*sparams_.min_bond_length;
+  } else {
+    Logger::Debug("Returning %2.2f", 1.5*sparams_.min_bond_length);
+    return 1.5*sparams_.min_bond_length;
+  }
 }
 void FilamentSpecies::InitAnalysis() {
   time_ = 0;

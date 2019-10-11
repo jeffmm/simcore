@@ -39,8 +39,8 @@ public:
   virtual void SetLastMemberPosition(double const *const pos) {}
   virtual void PopMember() {}
   virtual void PopAll() {}
-  virtual const double GetSpecDiameter() { return -1; }
-  virtual const double GetSpecLength() { return -1; }
+  virtual const double GetSpecDiameter() const { return -1; }
+  virtual const double GetSpecLength() const { return -1; }
   virtual void ArrangeMembers() {}
   virtual const bool CanOverlap() const { return -1; }
   species_id const GetSID() const { return sid_; }

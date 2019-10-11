@@ -8,7 +8,7 @@ double CellList::_cell_length_ = -1;
 
 void CellList::SetMinCellLength(double l) {
   if (l > _min_cell_length_) {
-    Logger::Trace("Setting minimum cell length to be %2.2f", l);
+    Logger::Debug("Setting minimum cell length to be %2.2f", l);
     _min_cell_length_ = l;
   }
 }
@@ -36,7 +36,7 @@ void CellList::Init(int n_dim, int n_periodic, double system_radius) {
   _cell_length_ = (double)2 * system_radius / _n_cells_1d_;
   _n_dim_ = n_dim;
   _n_periodic_ = n_periodic;
-  Logger::Trace("Cell list initialized with %d cells per side of length %2.2f",
+  Logger::Debug("Cell list initialized with %d cells per side of length %2.2f",
                 _n_cells_1d_, _cell_length_);
   if (_n_cells_1d_ < 1 || _cell_length_ < 0) {
     Logger::Error("Cell list received bad initialization parameters!");

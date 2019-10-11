@@ -1,10 +1,9 @@
 
-#include "interaction_engine.hpp"
+#include "interaction_manager.hpp"
 
-void InteractionEngine::Init(system_parameters *params,
-                             std::vector<SpeciesBase *> *species,
-                             space_struct *space, int *i_step,
-                             bool processing) {
+void InteractionManager::Init(system_parameters *params,
+                              std::vector<SpeciesBase *> *species,
+                              space_struct *space, bool processing) {
   // Set up pointer structures
   params_ = params;
   species_ = species;
@@ -13,32 +12,21 @@ void InteractionEngine::Init(system_parameters *params,
 
   // Initialize owned structures
   no_init_ = false;
-  i_step_ = i_step;
   static_pnumber_ = params_->static_particle_number;
   n_dim_ = params_->n_dim;
   n_periodic_ = params_->n_periodic;
   n_thermo_ = params_->n_thermo;
   no_interactions_ = !(params_->interaction_flag);
   n_objs_ = -1;
-  bool local_order =
-      (params_->local_order_analysis || params_->polar_order_analysis ||
-       params_->overlap_analysis || params_->density_analysis);
-  if (processing && local_order) {
-    CellList::SetMinCellLength(0.5 * params_->local_order_width);
-  }
-  potentials_.InitPotentials(params_);
-  CellList::SetMinCellLength(sqrt(potentials_.GetRCut2()));
-
-  CellList::Init(params_->n_dim, params_->n_periodic, params_->system_radius);
-  clist_.BuildCellList();
-
-  dr_update_ = 0.25 * CellList::GetCellLength() * CellList::GetCellLength();
-  MinimumDistance::Init(space, 2 * dr_update_);
 
   // Update dr distance should be half the cell length, and we are comparing the
   // squares of the trajectory distances
-  if (local_order && processing) {
-    struct_analysis_.Init(params, i_step);
+  bool local_order =
+      (params_->local_order_analysis || params_->polar_order_analysis ||
+       params_->overlap_analysis || params_->density_analysis);
+
+  if (local_order && processing_) {
+    struct_analysis_.Init(params);
   }
   xlink_.Init(params_, space_, &ix_objects_);
   no_boundaries_ = false;
@@ -46,12 +34,30 @@ void InteractionEngine::Init(system_parameters *params,
     no_boundaries_ = true;
 }
 
+void InteractionManager::InitInteractions() {
+  bool local_order =
+      (params_->local_order_analysis || params_->polar_order_analysis ||
+       params_->overlap_analysis || params_->density_analysis);
+  if (processing_ && local_order) {
+    CellList::SetMinCellLength(0.5 * params_->local_order_width);
+  }
+  CellList::SetMinCellLength(xlink_.GetRCutoff());
+  potentials_.InitPotentials(params_);
+  CellList::SetMinCellLength(sqrt(potentials_.GetRCut2()));
+
+  CellList::Init(params_->n_dim, params_->n_periodic, params_->system_radius);
+  clist_.BuildCellList();
+
+  dr_update_ = 0.25 * CellList::GetCellLength() * CellList::GetCellLength();
+  MinimumDistance::Init(space_, 2 * dr_update_);
+}
+
 /****************************************
   INTERACT: Loop through interactions and
     apply WCA potential (for now)
 *****************************************/
 
-void InteractionEngine::Interact() {
+void InteractionManager::Interact() {
   n_interactions_ = 0;
   // First check if we need to interact
   if (no_interactions_ && no_boundaries_)
@@ -85,7 +91,7 @@ void InteractionEngine::Interact() {
   }
 }
 
-void InteractionEngine::CheckUpdateXlinks() {
+void InteractionManager::CheckUpdateXlinks() {
   /* If we need to update crosslinks */
   if (xlink_.CheckUpdate()) {
     interactors_.clear();
@@ -99,13 +105,13 @@ void InteractionEngine::CheckUpdateXlinks() {
     return;
   }
 }
-void InteractionEngine::ForceUpdate() {
-  Logger::Trace("Forcing update in interaction engine");
+void InteractionManager::ForceUpdate() {
+  Logger::Trace("Forcing update in interaction manager");
   UpdateInteractors();
   UpdateInteractions();
 }
 
-void InteractionEngine::UpdateInteractors() {
+void InteractionManager::UpdateInteractors() {
   Logger::Trace("Updating interactors");
   ix_objects_.clear();
   interactors_.clear();
@@ -120,13 +126,13 @@ void InteractionEngine::UpdateInteractors() {
   xlink_.GetInteractors(xlinks);
   interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
   Logger::Trace("Updated interactors: %d objects, %d crosslinks, %d total",
-      ix_objects_.size(), xlinks.size(), interactors_.size());
+                ix_objects_.size(), xlinks.size(), interactors_.size());
 }
 
 /* Checks whether or not the given anchor is supposed to be attached to the
    given bond by checking mesh_id of both the bond and the anchor. If they
    match, the anchor is attached to the mesh using the anchor mesh_lambda */
-bool InteractionEngine::CheckBondAnchorPair(Object *anchor, Object *bond) {
+bool InteractionManager::CheckBondAnchorPair(Object *anchor, Object *bond) {
   // Check that the bond and anchor share a mesh_id
   if (anchor->GetMeshID() == bond->GetMeshID()) {
     Anchor *a = dynamic_cast<Anchor *>(anchor);
@@ -148,7 +154,7 @@ bool InteractionEngine::CheckBondAnchorPair(Object *anchor, Object *bond) {
   return false;
 }
 
-void InteractionEngine::PairBondCrosslinks() {
+void InteractionManager::PairBondCrosslinks() {
   Logger::Trace("Pairing bound crosslinks and objects");
   ix_objects_.clear();
   interactors_.clear();
@@ -193,14 +199,14 @@ void InteractionEngine::PairBondCrosslinks() {
   }
 }
 
-void InteractionEngine::UpdateInteractions() {
+void InteractionManager::UpdateInteractions() {
   Logger::Trace("Updating interactions");
   UpdatePairInteractions();
   UpdateBoundaryInteractions();
   ZeroDrTot();
 }
 
-void InteractionEngine::UpdatePairInteractions() {
+void InteractionManager::UpdatePairInteractions() {
   if (no_interactions_)
     return;
 #ifdef TRACE
@@ -215,7 +221,7 @@ void InteractionEngine::UpdatePairInteractions() {
 #endif
 }
 
-void InteractionEngine::UpdateBoundaryInteractions() {
+void InteractionManager::UpdateBoundaryInteractions() {
   if (no_boundaries_)
     return;
   boundary_interactions_.clear();
@@ -227,7 +233,7 @@ void InteractionEngine::UpdateBoundaryInteractions() {
   }
 }
 
-int InteractionEngine::CountSpecies() {
+int InteractionManager::CountSpecies() {
   int obj_count = 0;
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     obj_count += (*spec)->GetCount();
@@ -235,7 +241,7 @@ int InteractionEngine::CountSpecies() {
   return obj_count;
 }
 
-const bool InteractionEngine::CheckSpeciesInteractorUpdate() const {
+const bool InteractionManager::CheckSpeciesInteractorUpdate() const {
   bool result = false;
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if ((*spec)->CheckInteractorUpdate()) {
@@ -245,7 +251,7 @@ const bool InteractionEngine::CheckSpeciesInteractorUpdate() const {
   return result;
 }
 
-void InteractionEngine::CheckUpdateObjects() {
+void InteractionManager::CheckUpdateObjects() {
   /* First check to see if any objects were added to the system;
      If static_pnumber_ is flagged, we know that particle numbers
      never change, so we don't bother counting particles and move on */
@@ -260,13 +266,12 @@ void InteractionEngine::CheckUpdateObjects() {
     n_objs_ = obj_count;
     ForceUpdate();
     xlink_.UpdateObjsVolume();
-    // printf("Forcing interactor update, i_step: %d\n", params_->i_step);
   }
 }
 
-void InteractionEngine::ResetCellList() { clist_.ResetNeighbors(); }
+void InteractionManager::ResetCellList() { clist_.ResetNeighbors(); }
 
-void InteractionEngine::CheckUpdateInteractions() {
+void InteractionManager::CheckUpdateInteractions() {
   /* we update nearest neighbors if any particle
      has moved a distance further than dr_update_ */
   double dr_max = GetDrMax();
@@ -282,7 +287,7 @@ void InteractionEngine::CheckUpdateInteractions() {
 
 /* Returns maximum distance traveled by any particle of any species in the
  * system */
-double InteractionEngine::GetDrMax() {
+double InteractionManager::GetDrMax() {
   double max_dr = 0;
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     double dr = (*spec)->GetDrMax();
@@ -299,14 +304,14 @@ double InteractionEngine::GetDrMax() {
 
 /* Resets the origin of each particle's tracked trajectory, for tracking
    total distance travelled by particle*/
-void InteractionEngine::ZeroDrTot() {
+void InteractionManager::ZeroDrTot() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     (*spec)->ZeroDrTot();
   }
   xlink_.ZeroDrTot();
 }
 
-void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {
+void InteractionManager::ProcessPairInteraction(ix_iterator ix) {
   // Avoid certain types of interactions
   Object *obj1 = ix->obj1;
   Object *obj2 = ix->obj2;
@@ -321,11 +326,13 @@ void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {
   // interact...
   // ...so do not interact if same species
   if (!params_->like_like_interactions && obj1->GetSID() == obj2->GetSID()) {
+    ix->no_interaction = true;
     return;
   }
   // Check that objects are not both motors, which do not interact
   if (obj1->GetSID() == +species_id::crosslink &&
       obj2->GetSID() == +species_id::crosslink) {
+    ix->no_interaction = true;
     return;
   }
 
@@ -336,12 +343,14 @@ void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {
     // interact
     if (obj1->GetSID() == +species_id::crosslink ||
         obj2->GetSID() == +species_id::crosslink) {
+      ix->no_interaction = true;
       return;
     }
 
     // ...check if object 2 is a neighbor of object 1, in which case: do not
     // interact
     if (obj1->HasNeighbor(obj2->GetOID())) {
+      ix->no_interaction = true;
       return;
     }
   }
@@ -377,7 +386,7 @@ void InteractionEngine::ProcessPairInteraction(ix_iterator ix) {
   potentials_.CalcPotential(*ix);
 }
 
-void InteractionEngine::ProcessBoundaryInteraction(ix_iterator ix) {
+void InteractionManager::ProcessBoundaryInteraction(ix_iterator ix) {
   mindist_.CheckBoundaryInteraction(*ix);
   // XXX Don't interact if we have an overlap. This should eventually go to a
   // max force routine
@@ -389,7 +398,7 @@ void InteractionEngine::ProcessBoundaryInteraction(ix_iterator ix) {
   potentials_.CalcPotential(*ix);
 }
 
-void InteractionEngine::CalculateBoundaryInteractions() {
+void InteractionManager::CalculateBoundaryInteractions() {
   if (space_->type == +boundary_type::none) {
     return;
   }
@@ -427,7 +436,7 @@ void InteractionEngine::CalculateBoundaryInteractions() {
 #endif
 }
 
-void InteractionEngine::CalculatePairInteractions() {
+void InteractionManager::CalculatePairInteractions() {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
   std::vector<std::pair<ix_iterator, ix_iterator>> chunks;
@@ -462,9 +471,14 @@ void InteractionEngine::CalculatePairInteractions() {
     cross_product(ix->contact2, ix->force, ix->t2, 3);
   }
 #endif
+  /* Remove pairs of interactors who can never interact */
+  pair_interactions_.erase(
+      std::remove_if(pair_interactions_.begin(), pair_interactions_.end(),
+                     [](Interaction x) { return x.no_interaction; }),
+      pair_interactions_.end());
 }
 
-void InteractionEngine::ApplyPairInteractions() {
+void InteractionManager::ApplyPairInteractions() {
   for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
        ++ix) {
     Object *obj1 = ix->obj1;
@@ -483,7 +497,7 @@ void InteractionEngine::ApplyPairInteractions() {
   }
 }
 
-void InteractionEngine::ApplyBoundaryInteractions() {
+void InteractionManager::ApplyBoundaryInteractions() {
   for (auto ix = boundary_interactions_.begin();
        ix != boundary_interactions_.end(); ++ix) {
     Object *obj1 = ix->obj1;
@@ -499,7 +513,7 @@ void InteractionEngine::ApplyBoundaryInteractions() {
 }
 
 // Compute pressure tensor after n_thermo_ steps
-void InteractionEngine::CalculatePressure() {
+void InteractionManager::CalculatePressure() {
   double inv_V = 1.0 / space_->volume;
   std::fill(space_->pressure_tensor, space_->pressure_tensor + 9, 0);
   // Calculate pressure tensor from stress tensor (only physical for periodic
@@ -525,7 +539,7 @@ void InteractionEngine::CalculatePressure() {
   std::fill(stress_, stress_ + 9, 0);
 }
 
-bool InteractionEngine::CheckOverlap(std::vector<Object *> &ixors) {
+bool InteractionManager::CheckOverlap(std::vector<Object *> &ixors) {
   overlap_ = false;
   /* Only consider objects (not crosslinks) for overlaps */
   for (auto ixor = ixors.begin(); ixor != ixors.end(); ++ixor) {
@@ -538,7 +552,7 @@ bool InteractionEngine::CheckOverlap(std::vector<Object *> &ixors) {
   return overlap_;
 }
 
-bool InteractionEngine::CheckBoundaryConditions(std::vector<Object *> &ixors) {
+bool InteractionManager::CheckBoundaryConditions(std::vector<Object *> &ixors) {
   bool outside_boundary = false;
   for (auto ixor = ixors.begin(); ixor != ixors.end(); ++ixor) {
     if (mindist_.CheckOutsideBoundary(**ixor)) {
@@ -550,12 +564,12 @@ bool InteractionEngine::CheckBoundaryConditions(std::vector<Object *> &ixors) {
 
 /* Here, I want to calculate P(r, phi), which tells me the probability
    of finding an object at a position (r, phi) in its reference frame. */
-void InteractionEngine::StructureAnalysis() {
+void InteractionManager::StructureAnalysis() {
   ForceUpdate();
   CalculateStructure();
 }
 
-void InteractionEngine::CalculateStructure() {
+void InteractionManager::CalculateStructure() {
   /* Only consider objects (not crosslinks) for structure analysis */
   if (struct_analysis_.GetNumObjs() == 0) {
     int nobj = CountSpecies();
@@ -654,7 +668,7 @@ void InteractionEngine::CalculateStructure() {
   }
 }
 
-void InteractionEngine::Clear() {
+void InteractionManager::Clear() {
   if (no_init_)
     return;
   clist_.Clear();
@@ -668,7 +682,7 @@ void InteractionEngine::Clear() {
 }
 
 /* Only used during species insertion */
-void InteractionEngine::Reset() {
+void InteractionManager::Reset() {
   pair_interactions_.clear();
   ix_objects_.clear();
   interactors_.clear();
@@ -676,33 +690,35 @@ void InteractionEngine::Reset() {
 }
 
 /* Only used during species insertion */
-void InteractionEngine::AddInteractors(std::vector<Object *> &ixs) {
+void InteractionManager::AddInteractors(std::vector<Object *> &ixs) {
   clist_.AssignObjectsCells(ixs);
   ix_objects_.insert(ix_objects_.end(), ixs.begin(), ixs.end());
 }
 
-void InteractionEngine::DrawInteractions(
+void InteractionManager::DrawInteractions(
     std::vector<graph_struct *> &graph_array) {
   xlink_.Draw(graph_array);
 }
 
-void InteractionEngine::WriteOutputs() { xlink_.WriteOutputs(); }
+void InteractionManager::WriteOutputs() { xlink_.WriteOutputs(); }
 
-void InteractionEngine::InitOutputs(bool reading_inputs,
-                                    run_options *run_opts) {
+void InteractionManager::InitOutputs(bool reading_inputs,
+                                     run_options *run_opts) {
   xlink_.InitOutputs(reading_inputs, run_opts);
 }
 
-void InteractionEngine::ReadInputs() { xlink_.ReadInputs(); }
+void InteractionManager::ReadInputs() { xlink_.ReadInputs(); }
 
-void InteractionEngine::InitCrosslinkSpecies(sid_label &slab,
-                                             ParamsParser &parser) {
+void InteractionManager::InitCrosslinkSpecies(sid_label &slab,
+                                              ParamsParser &parser) {
   xlink_.InitSpecies(slab, parser);
 }
 
-void InteractionEngine::LoadCrosslinksFromCheckpoints(
+void InteractionManager::LoadCrosslinksFromCheckpoints(
     std::string run_name, std::string checkpoint_run_name) {
   xlink_.LoadCrosslinksFromCheckpoints(run_name, checkpoint_run_name);
   PairBondCrosslinks();
   ForceUpdate();
 }
+
+void InteractionManager::InsertCrosslinks() { xlink_.InsertCrosslinks(); }

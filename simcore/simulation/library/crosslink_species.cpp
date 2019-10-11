@@ -7,7 +7,7 @@ void CrosslinkSpecies::Init(system_parameters *params,
   k_on_ = sparams_.k_on;
   k_off_ = sparams_.k_off;
   xlink_concentration_ = sparams_.concentration;
-  sparams_.num = (int) floor(sparams_.concentration * space->volume);
+  sparams_.num = (int)round(sparams_.concentration * space->volume);
 }
 
 void CrosslinkSpecies::AddMember() {
@@ -23,9 +23,65 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
   update_ = update;
   /* TODO Lookup table only works for filament objects. Generalize? */
   lut_.Init(sparams_.k_spring / 2, sparams_.rest_length, 1);
+  /* Integral cutoff */
+  double small = 1e-4; // Value defined in lookup_table
+  sparams_.r_capture =
+      sqrt(-2 * log(small) / sparams_.k_spring) + 1 + sparams_.rest_length;
+}
+
+void CrosslinkSpecies::InsertCrosslinks() {
+  // Random insertion (default) implies crosslinks in solution
+  if (sparams_.insertion_type.compare("random") == 0) {
+    sparams_.static_flag = false;
+    return;
+  } else if (sparams_.insertion_type.compare("centered") == 0) {
+    sparams_.num = 1;
+    sparams_.static_flag = true;
+    AddMember();
+    double pos[3] = {0};
+    double u[3] = {0};
+    u[params_->n_dim - 1] = 1.0;
+    members_.back().InsertAt(pos, u);
+    *update_ = true;
+  } else if (sparams_.insertion_type.compare("random_grid") == 0) {
+    sparams_.static_flag = true;
+    if (params_->n_dim == 3) {
+      if (space_->type == +boundary_type::none ||
+          space_->type == +boundary_type::box) {
+        sparams_.num = (int)round(4 * space_->radius * space_->radius *
+                                  xlink_concentration_);
+      } else if (space_->type == +boundary_type::sphere) {
+        sparams_.num = (int)round(M_PI * space_->radius * space_->radius *
+                                  xlink_concentration_);
+      } else if (space_->type == +boundary_type::budding) {
+        double R = space_->radius;
+        double r = space_->bud_radius;
+        double d = space_->bud_height;
+        sparams_.num = (int)round(
+            M_PI * SQR(R) + M_PI * SQR(r) -
+            SQR(r) * acos((SQR(d) + SQR(r) - SQR(R)) / (2 * d * r)) -
+            SQR(R) * acos((SQR(d) + SQR(R) - SQR(r)) / (2 * d * R)) +
+            0.5 * sqrt((R + r - d) * (r + d - R) * (R + d - r) * (R + r + d)));
+      } else {
+        Logger::Error("Boundary type not recognized in CrosslinkSpecies");
+      }
+    }
+    for (int i = 0; i < sparams_.num; ++i) {
+      AddMember();
+      members_.back().InsertRandom();
+    }
+    *update_ = true;
+  } else {
+    Logger::Error("Insertion type %s not implemented yet for crosslinks",
+                  sparams_.insertion_type.c_str());
+  }
 }
 
 void CrosslinkSpecies::CalculateBindingFree() {
+  /* Static crosslinks are never free */
+  if (sparams_.static_flag) {
+    return;
+  }
   /* Check crosslink binding */
   double free_concentration = (sparams_.num - n_members_) / space_->volume;
   if (gsl_rng_uniform_pos(rng_.r) <=
@@ -92,8 +148,8 @@ void CrosslinkSpecies::UpdatePositions() {
        handled by the crosslink update on even steps */
     ApplyCrosslinkTetherForces();
   }
-  //for (auto it=members_.begin(); it!=members_.end(); ++it) {
-    //it->SanityCheck();
+  // for (auto it=members_.begin(); it!=members_.end(); ++it) {
+  // it->SanityCheck();
   //}
 }
 
@@ -161,6 +217,7 @@ void CrosslinkSpecies::UpdateBoundCrosslinkForces() {
   }
 #endif
 }
+
 void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
@@ -184,6 +241,9 @@ void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
         xlink->UpdateCrosslinkPositions();
         /* Xlink is no longer bound, return to solution */
         if (xlink->IsUnbound()) {
+          if (sparams_.static_flag) {
+            Logger::Error("Static crosslinks became unbound");
+          }
           *update_ = true;
           /* If a crosslink enters or leaves the singly state, we need to
            * update xlink interactors */
@@ -200,6 +260,9 @@ void CrosslinkSpecies::UpdateBoundCrosslinkPositions() {
     xlink->UpdateCrosslinkPositions();
     /* Xlink is no longer bound, return to solution */
     if (xlink->IsUnbound()) {
+      if (sparams_.static_flag) {
+        Logger::Error("Static crosslinks became unbound");
+      }
       *update_ = true;
       /* If a crosslink enters or leaves the singly state, we need to update
        * xlink interactors */
@@ -260,3 +323,8 @@ void CrosslinkSpecies::ReadSpecs() {
     it->ReadSpec(ispec_file_);
   }
 }
+
+const double CrosslinkSpecies::GetConcentration() const {
+  return sparams_.concentration;
+}
+const double CrosslinkSpecies::GetRCutoff() const { return sparams_.r_capture; }

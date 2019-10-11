@@ -18,6 +18,7 @@ private:
   system_parameters *params_;
   CrosslinkOutputManager output_mgr_;
   double obj_volume_;
+  double rcutoff_; // Cutoff for binding any crosslink and bond
   bool update_;
   std::vector<CrosslinkSpecies *> xlink_species_;
   std::vector<Object *> *objs_;
@@ -43,6 +44,8 @@ public:
   void ZeroDrTot();
   const double GetDrMax();
   void ReadInputs();
+  void InsertCrosslinks();
+  const double GetRCutoff() const { return rcutoff_; }
 };
 
 #endif

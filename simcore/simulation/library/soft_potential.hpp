@@ -28,7 +28,7 @@ class SoftPotential : public PotentialBase {
     double rmag = sqrt(ix.dr_mag2);
     double r6 = pow(rmag, 6);
     double r8 = r6 * rmag * rmag;
-    double R = 0.85 * ix.buffer_mag;
+    double R = ix.buffer_mag;
     double R8inv = 1.0 / pow(R, 8);
     double exp1 = eps_ * exp(-r8 * R8inv);
     /* Note that I am intentionally leaving off one factor of dr in
@@ -62,11 +62,6 @@ class SoftPotential : public PotentialBase {
     if (params->soft_potential_mag_target > 0) {
       eps_target_ = params->soft_potential_mag_target;
     }
-    /* WARNING: THE FOLLOWING TWO LINES ARE FOR CONSISTENCY WITH
-     * LEGACY SIMULATION PARAMETERS ONLY. REMOVE AFTER WRAPPING UP
-     * FIRST PAPER. */
-    eps_ = 0.8 * eps_;                // XXX
-    eps_target_ = 0.8 * eps_target_;  // XXX
 
     target_step_ = (eps_target_ - eps_) / params->n_steps_target;
     i_step_ = &(params->i_step);

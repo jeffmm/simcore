@@ -14,7 +14,7 @@ class StructAnalysis {
   std::mutex mtx_;
   int count_, n_dim_, n_bins_, n_bins_1d_, local_bins_1d_, density_bins_1d_,
       n_objs_, local_order_analysis_, polar_order_analysis_,
-      overlap_analysis_, density_analysis_, *i_step_, n_overlaps_,
+      overlap_analysis_, density_analysis_, n_overlaps_,
       n_crossings_init_, n_crossings_complete_;
 
   fftw_complex *density_array_, *fft_array_;
@@ -49,7 +49,7 @@ class StructAnalysis {
   void ZeroDensityArray();
 
  public:
-  void Init(system_parameters *params, int *i_step);
+  void Init(system_parameters *params);
   void Clear();
   void CalculateStructurePair(std::vector<Interaction>::iterator pix);
   void BinDensity(Object *obj);

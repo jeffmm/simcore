@@ -2,7 +2,7 @@
 #define _SIMCORE_SIMULATION_H_
 
 #include "graphics.hpp"
-#include "interaction_engine.hpp"
+#include "interaction_manager.hpp"
 #include "output_manager.hpp"
 #include "space.hpp"
 
@@ -22,7 +22,7 @@ private:
   RNG rng_;
   ParamsParser parser_;
 
-  InteractionEngine iengine_;
+  InteractionManager ix_mgr_;
 
 #ifndef NOGRAPH
   Graphics graphics_;

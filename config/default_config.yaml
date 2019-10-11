@@ -217,17 +217,21 @@ spindle:
   k_align: [0, double]
   spring_length: [0, double]
   spb_diameter: [5, double]
+
 crosslink:                          # Parameters specific to crosslinks.
+  # crosslink insertion type can be the following:
+  # fixed_grid: place static crosslinkers arranged on a 2D lattice with equal spacing
+  # fixed_boundary: place static crosslinkers on boundary perimeter/surface with fixed spacing
+  # random_grid: place static crosslinkers randomly on a 2D plane
+  # random_boundary: place static crosslinkers randomly on boundary perimeter/surface
+  # centered: a single crosslinker fixed at the origin, for testing purposes
   concentration: [0, double]        # Concentration of crosslinkers at simulation initialization.
+                                    # Units in #/area or #/vol in 2D or 3D for free xlinks. In
+                                    # #/area for grid spacing. In #/length or #/area for 2D or 3D
+                                    # boundaries.
   walker_flag: [false, bool]        # Flag for setting directed motion of crosslink heads.
   static_flag: [false, bool]        # Flag for setting one crosslinker head to be fixed in space
   diffusion_flag: [false, bool]     # Flag allowing bound crosslink heads to diffuse.
-# insertion type can be random_grid, random_boundary, fixed_grid, fixed_boundary, or centered
-# fixed_grid: place static crosslinkers arranged on a lattice with a spacing equal to static_spacing
-# fixed_boundary: place static crosslinkers along boundary perimeter with a fixed spacing
-# random_grid: place static crosslinkers randomly on a 2D grid with density of static_density
-# random_boundary: place static crosslinkers randomly along perimieter of boundary
-# centered: a single crosslinker fixed at the origin, for testing
   velocity: [1, double]             # Bound crosslink head velocities when walkers.
   k_on: [10, double]                # On-rate for binding crosslinks from solution to bonds.
   k_off: [2, double]                # Off-rate for bound crosslinks to go from bound to solution.

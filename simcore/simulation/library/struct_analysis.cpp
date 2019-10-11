@@ -1,7 +1,7 @@
 #include "struct_analysis.hpp"
 
 // Assumes 2d for now. In the future, could do 2d projections of 3d data
-void StructAnalysis::Init(system_parameters* params, int* i_step) {
+void StructAnalysis::Init(system_parameters* params) {
   count_ = 0;
   n_objs_ = 0;
   n_overlaps_ = 0;
@@ -13,7 +13,6 @@ void StructAnalysis::Init(system_parameters* params, int* i_step) {
   polar_order_analysis_ = params_->polar_order_analysis;
   overlap_analysis_ = params_->overlap_analysis;
   density_analysis_ = params_->density_analysis;
-  i_step_ = i_step;
   if (n_dim_ != 2) {
     Logger::Error("3D structure analysis is not yet implemented");
   }
@@ -507,7 +506,7 @@ void StructAnalysis::AverageStructure() {
   }
   if (overlap_analysis_) {
     crossing_list_.CompareLists(&n_crossings_init_, &n_crossings_complete_);
-    overlap_file_ << ((*i_step_) * params_->delta) << " " << n_overlaps_ << " "
+    overlap_file_ << ((params_->i_step) * params_->delta) << " " << n_overlaps_ << " "
                   << 0.5 * n_crossings_init_ << " "
                   << 0.5 * n_crossings_complete_ << "\n";
     n_overlaps_ = 0;

@@ -30,9 +30,7 @@ void Crosslink::Init(crosslink_parameters *sparams) {
                 anchors_[0].GetOID(), anchors_[1].GetOID());
 }
 
-void Crosslink::InitInteractionEnvironment(LookupTable *lut) {
-  lut_ = lut;
-}
+void Crosslink::InitInteractionEnvironment(LookupTable *lut) { lut_ = lut; }
 
 /* Function used to set anchor[0] position etc to xlink position etc */
 void Crosslink::UpdatePosition() {}
@@ -52,6 +50,9 @@ void Crosslink::SinglyKMC() {
   int head_bound = 0;
   // Set up KMC objects and calculate probabilities
   double unbind_prob = k_off_ * delta_;
+  if (static_flag_) {
+    unbind_prob = 0;
+  }
   /* Must populate filter with 1 for every neighbor, since KMC
   expects a mask. We already guarantee uniqueness, so we won't overcount. */
   int n_neighbors = anchors_[0].GetNNeighbors();
@@ -120,9 +121,14 @@ void Crosslink::DoublyKMC() {
   double fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
   double unbind_prob = k_off_d_ * delta_ * exp(fdep);
   double roll = gsl_rng_uniform_pos(rng_.r);
+  int head_activate = -1;
+  if (static_flag_) {
+    head_activate = choose_kmc_double(0, unbind_prob, roll);
+  } else {
+    head_activate =
+        choose_kmc_double(0.5 * unbind_prob, 0.5 * unbind_prob, roll);
+  }
   // Each head has an equal likelihood to unbind (half the total probability)
-  int head_activate =
-      choose_kmc_double(0.5 * unbind_prob, 0.5 * unbind_prob, roll);
   if (head_activate == 0) {
     Logger::Trace("Doubly-bound crosslink %d came unbound from %d", GetOID(),
                   anchors_[0].GetBoundOID());
@@ -251,6 +257,7 @@ void Crosslink::AttachObjRandom(Object *obj) {
   if (obj->GetType() == +obj_type::bond) {
     anchors_[0].AttachObjRandom(obj);
     SetMeshID(obj->GetMeshID());
+    SetSingly();
   } else {
     /* TODO: add binding to sphere or site-like objects */
     Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
@@ -289,7 +296,9 @@ void Crosslink::SetUnbound() { state_ = bind_state::unbound; }
 
 const bool Crosslink::IsDoubly() const { return state_ == +bind_state::doubly; }
 const bool Crosslink::IsSingly() const { return state_ == +bind_state::singly; }
-const bool Crosslink::IsUnbound() const { return state_ == +bind_state::unbound; }
+const bool Crosslink::IsUnbound() const {
+  return state_ == +bind_state::unbound;
+}
 
 void Crosslink::WriteSpec(std::fstream &ospec) {
   if (IsUnbound()) {
@@ -370,4 +379,15 @@ void Crosslink::ZeroDrTot() {
   if (IsDoubly()) {
     anchors_[1].ZeroDrTot();
   }
+}
+
+void Crosslink::InsertAt(double *pos, double *u) {
+  static_flag_ = true;
+  anchors_[0].SetBound();
+  anchors_[0].SetStatic(true);
+  anchors_[0].SetPosition(pos);
+  normalize_vector(u, n_dim_);
+  anchors_[0].SetOrientation(u);
+  anchors_[0].UpdatePeriodic();
+  SetSingly();
 }

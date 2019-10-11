@@ -11,7 +11,7 @@ private:
   bool bound_;
   bool walker_;
   bool diffuse_;
-  bool static_;
+  bool static_flag_;
   bool active_;
   bool end_pausing_;
   crosslink_parameters *sparams_;
@@ -71,12 +71,7 @@ public:
   void WriteSpec(std::fstream &ospec);
   void ReadSpec(std::fstream &ispec);
   void BindToPosition(double *pos);
-  void SanityCheck() {
-    if (mesh_ &&
-        (mesh_lambda_ > mesh_->GetLength() + 1e-12 || mesh_lambda_ < -1e-12)) {
-      Logger::Error("Error in anchor sanity check");
-    }
-  }
+  void SetStatic(bool static_flag);
 };
 
 #endif

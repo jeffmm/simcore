@@ -56,7 +56,7 @@ set(SOURCES anchor.cpp
             generate_random_unit_vector.cpp
             grabber.cpp
             graphics.cpp
-            interaction_engine.cpp
+            interaction_manager.cpp
             linear_algebra.cpp
             logger.cpp
             mesh.cpp

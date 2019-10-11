@@ -155,6 +155,8 @@ void Object::InsertRandom() {
   Logger::Trace("Inserting object %d randomly", GetOID());
   double mag;
   double buffer = diameter_;
+  double pos[3] = {0};
+  double u[3] = {0};
   if (space_->n_periodic == n_dim_)
     buffer = 0;
   double R = space_->radius;
@@ -169,21 +171,21 @@ void Object::InsertRandom() {
   // If no boundary, insert wherever
   case +boundary_type::none: // none
     for (int i = 0; i < n_dim_; ++i) {
-      position_[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
+      pos[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
     }
     break;
   // box type boundary
   case +boundary_type::box: // box
     for (int i = 0; i < n_dim_; ++i) {
-      position_[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
+      pos[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
     }
     break;
   // spherical boundary
   case +boundary_type::sphere: // sphere
-    generate_random_unit_vector(n_dim_, position_, rng_.r);
+    generate_random_unit_vector(n_dim_, pos, rng_.r);
     mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer);
     for (int i = 0; i < n_dim_; ++i) {
-      position_[i] *= mag;
+      pos[i] *= mag;
     }
     break;
   // budding yeast boundary type
@@ -198,18 +200,18 @@ void Object::InsertRandom() {
       v_ratio = CUBE(r) / (CUBE(r) + CUBE(R));
     }
     mag = gsl_rng_uniform_pos(rng_.r);
-    generate_random_unit_vector(n_dim_, position_, rng_.r);
+    generate_random_unit_vector(n_dim_, pos, rng_.r);
     if (roll < v_ratio) {
       // Place coordinate in daughter cell
       mag *= (r - buffer);
       for (int i = 0; i < n_dim_; ++i) {
-        position_[i] *= mag;
+        pos[i] *= mag;
       }
-      position_[n_dim_ - 1] += space_->bud_height;
+      pos[n_dim_ - 1] += space_->bud_height;
     } else {
       mag *= (R - buffer);
       for (int i = 0; i < n_dim_; ++i) {
-        position_[i] *= mag;
+        pos[i] *= mag;
       }
     }
     break;
@@ -217,12 +219,11 @@ void Object::InsertRandom() {
   default:
     Logger::Error("Boundary type unrecognized!");
   }
-  generate_random_unit_vector(n_dim_, orientation_, rng_.r);
-  UpdatePeriodic();
+  generate_random_unit_vector(n_dim_, u, rng_.r);
+  InsertAt(pos, u);
   Logger::Trace("Object inserted at [%2.2f, %2.2f, %2.2f] with orientation "
                 "[%2.2f %2.2f %2.2f]",
-                position_[0], position_[1], position_[2], orientation_[0],
-                orientation_[1], orientation_[2]);
+                pos[0], pos[1], pos[2], u[0], u[1], u[2]);
 }
 
 void Object::InsertRandomOriented(double *u) {
@@ -232,45 +233,6 @@ void Object::InsertRandomOriented(double *u) {
 }
 
 void Object::InsertAt(double *pos, double *u) {
-  // Check to make sure position is inside unit cell if non-periodic
-  double R = space_->radius;
-  bool out_of_bounds = false;
-  switch (space_->type._to_integral()) {
-  case 0: // none
-    break;
-  case 2: // sphere
-  {
-    double rsq = 0;
-    for (int i = 0; i < n_dim_; ++i) {
-      rsq += pos[i] * pos[i];
-    }
-    // Check that r^2 <= R^2
-    if (rsq > R * R) {
-      out_of_bounds = true;
-    }
-    break;
-  }
-  case 1: // box
-    // Make sure each dimension of position, x, y etc is within the box radius
-    for (int i = 0; i < n_dim_; ++i) {
-      if (ABS(pos[i]) > R) {
-        out_of_bounds = true;
-      }
-    }
-    break;
-  case 3: // budding
-    // FIXME Add checks to make sure object is placed within budding
-    // boundary... right now, just trust user knows what they are doing.
-    break;
-  default:
-    Logger::Error("Boundary type not recognized.");
-  }
-  if (out_of_bounds) {
-    Logger::Error(
-        "Object %d placed outside of system unit cell! System radius: "
-        "%2.2f, pos: {%2.2f %2.2f %2.2f}",
-        GetOID(), R, pos[0], pos[1], pos[2]);
-  }
   SetPosition(pos);
   normalize_vector(u, n_dim_);
   SetOrientation(u);

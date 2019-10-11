@@ -23,6 +23,7 @@ void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser) {
   } else {
     xlink_species_.back()->InitInteractionEnvironment(objs_, &obj_volume_,
                                                       &update_);
+    rcutoff_ = xlink_species_.back()->GetRCutoff();
   }
 }
 
@@ -64,6 +65,12 @@ void CrosslinkManager::UpdateCrosslinks() {
   UpdateObjsVolume();
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
     (*it)->UpdatePositions();
+  }
+}
+
+void CrosslinkManager::InsertCrosslinks() {
+  for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
+    (*it)->InsertCrosslinks();
   }
 }
 

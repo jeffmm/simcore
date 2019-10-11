@@ -1,5 +1,5 @@
-#ifndef _SIMCORE_INTERACTION_ENGINE_H_
-#define _SIMCORE_INTERACTION_ENGINE_H_
+#ifndef _SIMCORE_INTERACTION_MANAGER_H_
+#define _SIMCORE_INTERACTION_MANAGER_H_
 
 //#include "cell_list.hpp"
 #include "auxiliary.hpp"
@@ -16,7 +16,7 @@
 
 typedef std::vector<Interaction>::iterator ix_iterator;
 
-class InteractionEngine {
+class InteractionManager {
 private:
   double stress_[9];
   double dr_update_;
@@ -69,9 +69,10 @@ private:
   bool CheckBondAnchorPair(Object *anchor, Object *bond);
 
 public:
-  InteractionEngine() {}
+  InteractionManager() {}
   void Init(system_parameters *params, std::vector<SpeciesBase *> *species,
-            space_struct *space, int *i_step, bool processing = false);
+            space_struct *space, bool processing = false);
+  void InitInteractions();
   void Interact();
   void CalculatePressure();
   bool CheckOverlap(std::vector<Object *> &ixs);
@@ -91,6 +92,7 @@ public:
   void InitCrosslinkSpecies(sid_label &slab, ParamsParser &parser);
   void LoadCrosslinksFromCheckpoints(std::string run_name,
                                      std::string checkpoint_run_name);
+  void InsertCrosslinks();
 };
 
 #endif

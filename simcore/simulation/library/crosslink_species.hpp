@@ -45,9 +45,10 @@ public:
   void AddNeighborToAnchor(Object *anchor, Object *neighbor);
   void AddMember();
   void GetAnchorInteractors(std::vector<Object *> &ixors);
-  const double GetConcentration() const { return sparams_.concentration; }
   void ReadSpecs();
-
+  void InsertCrosslinks();
+  const double GetConcentration() const;
+  const double GetRCutoff() const;
 };
 
 #endif
