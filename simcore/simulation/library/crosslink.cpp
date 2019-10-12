@@ -395,3 +395,11 @@ void Crosslink::InsertAt(double *pos, double *u) {
 const int Crosslink::GetNNeighbors() const {
   return anchors_[0].GetNNeighbors();
 }
+
+const double * const Crosslink::GetPosition() {
+  return anchors_[0].GetPosition();
+}
+
+const double * const Crosslink::GetOrientation() {
+  return anchors_[0].GetOrientation();
+}

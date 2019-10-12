@@ -68,6 +68,8 @@ public:
   const double GetDrTot();
   void InsertAt(double *pos, double *u);
   const int GetNNeighbors() const;
+  const double *const GetPosition();
+  const double *const GetOrientation();
 };
 
 #endif

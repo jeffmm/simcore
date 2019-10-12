@@ -69,6 +69,44 @@ void CrosslinkSpecies::InsertCrosslinks() {
     for (int i = 0; i < sparams_.num; ++i) {
       AddMember();
       members_.back().InsertRandom();
+      /* If in 3D, zero out the third dimension so the anchor is on a plane */
+      if (params_->n_dim == 3) {
+        double projected_pos[3] = {0};
+        double same_u[3] = {0};
+        const double *const pos = members_.back().GetPosition();
+        const double *const u = members_.back().GetOrientation();
+        for (int j = 0; j < 3; ++j) {
+          projected_pos[j] = pos[j];
+          same_u[j] = u[j];
+        }
+        projected_pos[2] = 0;
+        members_.back().InsertAt(projected_pos, same_u);
+      }
+    }
+  } else if (sparams_.insertion_type.compare("random_boundary") == 0) {
+    if (space_->type == +boundary_type::none) {
+      Logger::Error("Crosslinker insertion type \"random boundary\" requires a"
+                    " boundary for species insertion.");
+    } else if (space_->type == +boundary_type::sphere) {
+      if (params_->n_dim == 2) {
+        sparams_.num =
+            (int)round(2.0 * M_PI * space_->radius * xlink_concentration_);
+      } else {
+        sparams_.num =
+            (int)round(4 * M_PI * SQR(space_->radius) * xlink_concentration_);
+      }
+      double pos[3] = {0};
+      double u[3] = {0};
+      for (int i = 0; i < sparams_.num; ++i) {
+        generate_random_unit_vector(params_->n_dim, u, rng_.r);
+        for (int j = 0; j < params_->n_dim; ++j) {
+          pos[j] = u[j] * space_->radius;
+        }
+        AddMember();
+        members_.back().InsertAt(pos, u);
+      }
+    } else {
+      Logger::Error("Boundary type not recognized in CrosslinkSpecies");
     }
   } else {
     Logger::Error("Insertion type %s not implemented yet for crosslinks",

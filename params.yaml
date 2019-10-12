@@ -1,6 +1,6 @@
 seed: 29122929517437
 
-run_name: rng_problem2
+run_name: rng_problem
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
@@ -25,7 +25,8 @@ filament:
   - name: microtubule
     num: 1
     packing_fraction: -1
-    insertion_type: random
+    insertion_type: custom
+    insert_file: params/assay_3d_insert.yaml
     draw_type: fixed
     color: 2
     diameter: 1
@@ -36,9 +37,9 @@ filament:
     min_bond_length: 1
     polydispersity_flag: false
     dynamic_instability_flag: false
-    persistence_length: 1000
-    driving_factor: 10
-    v_poly: 50
+    persistence_length: 500
+    driving_factor: 0
+    v_poly: 30
     v_depoly: 50
     f_grow_to_shrink: 10
     f_shrink_to_grow: 20
@@ -47,7 +48,7 @@ filament:
 
 crosslink:
   - name: dynein
-    concentration: 0.5
+    concentration: 1
     insertion_type: random_grid
     diameter: 0.3
     walker_flag: true
@@ -59,7 +60,7 @@ crosslink:
     k_off: 5
     k_on_d: 50
     k_off_d: 5
-    force_dep_factor: 0.05
+    force_dep_factor: 0.01
     polar_affinity: 0
     k_spring: 50
     f_stall: 100
@@ -75,7 +76,7 @@ crosslink:
     spec_flag: true
     n_spec: 100
   - name: dead
-    concentration: 0.005
+    concentration: 0
     insertion_type: centered
     diameter: 0.5
     walker_flag: false
