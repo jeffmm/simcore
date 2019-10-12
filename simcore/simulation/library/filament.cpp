@@ -121,7 +121,7 @@ void Filament::InitFilamentLength() {
       bond_length_ = length_ / n_bonds_;
     }
   } else {
-    n_bonds_ = floor(length_ / max_bond_length_);
+    n_bonds_ = (int)floor(length_ / max_bond_length_);
     /* Minimum number of bonds must be 2 */
     n_bonds_ = (n_bonds_ == 1 ? 2 : n_bonds_);
     bond_length_ = length_ / n_bonds_;

@@ -289,7 +289,6 @@ void InteractionManager::CheckUpdateInteractions() {
                   i_update_, dr_max);
     UpdateInteractions();
   }
-  i_update_++;
 }
 
 /* Returns maximum distance traveled by any particle of any species in the
@@ -480,12 +479,20 @@ void InteractionManager::CalculatePairInteractions() {
     cross_product(ix->contact2, ix->force, ix->t2, 3);
   }
 #endif
-  /* After interaction update, remove pairs of interactors who can never interact */
+  /* After interaction update, remove pairs of interactors who can never
+   * interact */
   if (i_update_ == 0) {
+#ifdef TRACE
+    int nix = pair_interactions_.size();
+#endif
     pair_interactions_.erase(
         std::remove_if(pair_interactions_.begin(), pair_interactions_.end(),
                        [](Interaction x) { return x.no_interaction; }),
         pair_interactions_.end());
+#ifdef TRACE
+    Logger::Trace("Culling pair interactions. Pairs: %d -> %d", nix,
+                  pair_interactions_.size());
+#endif
   }
 }
 

@@ -1,10 +1,10 @@
-seed: 11166216952492
+seed: 29122929517437
 
-run_name: motility_test
+run_name: rng_problem2
 n_dim: 2
 n_periodic: 2
 delta: 0.0001
-n_steps: 1000000
+n_steps: 1000
 n_steps_target: 0
 boundary: 0
 
@@ -12,7 +12,7 @@ graph_flag: true
 n_graph: 100
 movie_flag: false
 
-system_radius: 50
+system_radius: 10
 potential: soft
 soft_potential_mag: 500
 f_cutoff: 10000
@@ -31,13 +31,13 @@ filament:
     color: 2
     diameter: 1
     overlap: false
-    length: 50
+    length: 10
     min_length: 6
     max_length: 120
-    min_bond_length: 3
+    min_bond_length: 1
     polydispersity_flag: false
     dynamic_instability_flag: false
-    persistence_length: 5000
+    persistence_length: 1000
     driving_factor: 10
     v_poly: 50
     v_depoly: 50
@@ -48,7 +48,7 @@ filament:
 
 crosslink:
   - name: dynein
-    concentration: 0.3
+    concentration: 0.5
     insertion_type: random_grid
     diameter: 0.3
     walker_flag: true
@@ -71,6 +71,34 @@ crosslink:
     tether_draw_type: fixed
     tether_diameter: 0.1
     tether_color: 4.67
+    end_pausing: false
+    r_capture: 10
+    spec_flag: true
+    n_spec: 100
+  - name: dead
+    concentration: 0.005
+    insertion_type: centered
+    diameter: 0.5
+    walker_flag: false
+    velocity: 100
+    diffusion_flag: true
+    draw_type: fixed
+    color: 0.5
+    k_on: 50
+    k_off: 5
+    k_on_d: 500
+    k_off_d: 0
+    force_dep_factor: 0.001
+    polar_affinity: 0
+    k_spring: 500
+    f_stall: 100
+    force_dep_vel_flag: false
+    k_align: 0
+    rest_length: 0
+    step_direction: -1
+    tether_draw_type: fixed
+    tether_diameter: 0.1
+    tether_color: 0.5
     end_pausing: false
     r_capture: 10
     spec_flag: true

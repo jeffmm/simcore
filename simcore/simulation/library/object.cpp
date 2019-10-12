@@ -1,6 +1,6 @@
 #include "object.hpp"
 
-Object::Object() {
+Object::Object() : rng_() {
   // Initialize object ID, guaranteeing thread safety
   InitOID();
   // Set some defaults

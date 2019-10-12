@@ -22,6 +22,7 @@ void Mesh::InitMeshID() {
 }
 
 void Mesh::Reserve() {
+  Logger::Debug("n_bonds_max_ %d", n_bonds_max_);
   sites_.reserve(n_bonds_max_ + 1);
   bonds_.reserve(n_bonds_max_);
 }
@@ -38,6 +39,7 @@ void Mesh::AddSite(Site s) {
   sites_.back().SetColor(color_, draw_);
   sites_.back().SetMeshID(GetMeshID());
   n_sites_++;
+  Logger::Debug("Adding site: %d", n_sites_);
 }
 
 // Adds bond to mesh between sites 1 and 2

@@ -72,6 +72,10 @@ void Simulation::PrintComplete() {
   if (iteration % steps == 0) {
     Logger::Info("%d%% complete", 10 * iteration / steps);
   }
+  if (i_step_ == log_interval_+1) {
+    Logger::Info("%d steps completed", log_interval_);
+    log_interval_ = (int)floor(2*log_interval_);
+  }
   Logger::Trace("*****Step %d*****", i_step_);
 }
 

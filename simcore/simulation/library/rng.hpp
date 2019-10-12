@@ -9,14 +9,13 @@
 
 class RNG {
 private:
-  const gsl_rng_type *T;
   static long _seed_;
   static std::mutex _rng_mtx_;
   void Clear() { gsl_rng_free(r); }
   void Init() {
     std::lock_guard<std::mutex> lk(_rng_mtx_);
     gsl_rng_env_setup();
-    T = gsl_rng_default;
+    const gsl_rng_type *T = gsl_rng_default;
     r = gsl_rng_alloc(T);
     gsl_rng_set(r, _seed_);
     _seed_ = gsl_rng_get(this->r);
@@ -28,7 +27,10 @@ public:
   ~RNG() { Clear(); }
   static void SetSeed(long seed) { _seed_ = seed; }
   static long GetSeed() { return _seed_; }
-  RNG(const RNG &that) : RNG() { gsl_rng_memcpy(this->r, that.r); }
+  RNG(const RNG &that) {
+    Init();
+    gsl_rng_memcpy(this->r, that.r);
+  }
   RNG &operator=(RNG const &that) {
     gsl_rng_memcpy(this->r, that.r);
     return *this;
