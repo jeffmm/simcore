@@ -2,7 +2,6 @@
 #define _SIMCORE_PARAMETERS_H_
 
 #include "definitions.hpp"
-
 #include <string>
 
 template <unsigned char S> struct species_parameters {

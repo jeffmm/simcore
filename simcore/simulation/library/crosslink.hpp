@@ -26,7 +26,6 @@ private:
   double k_off_d_;
   double k_spring_;
   double k_align_;
-  double f_spring_max_;
   double rest_length_;
   double rcapture_;
   double tether_force_;

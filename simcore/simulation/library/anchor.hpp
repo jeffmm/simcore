@@ -23,7 +23,6 @@ private:
   double mesh_lambda_;
   double velocity_;
   double max_velocity_, diffusion_;
-  double f_spring_max_;
   double k_off_;
   double f_stall_;
   double force_dep_vel_flag_;

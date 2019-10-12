@@ -24,6 +24,7 @@ set(INCLUDES ${INCLUDES} ${GLEW_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS} ${OPENGL_INC
 else()
   add_definitions(-DNOGRAPH=TRUE)
 endif()
+include_directories(${INCLUDES})
 
 set(TARGET simcore.exe)
 add_executable(${TARGET} simcore_main.cpp)
