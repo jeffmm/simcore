@@ -266,3 +266,103 @@ const bool Spindle::CheckInteractorUpdate() {
   }
   return Object::CheckInteractorUpdate();
 }
+
+void Spindle::WriteSpec(std::fstream &ospec) {
+  ospec.write(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
+  ospec.write(reinterpret_cast<char *>(&length_), sizeof(length_));
+  for (int i = 0; i < 3; ++i) {
+    ospec.write(reinterpret_cast<char *>(&position_[i]), sizeof(double));
+  }
+  for (int i = 0; i < 3; ++i) {
+    ospec.write(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
+  }
+  ospec.write(reinterpret_cast<char *>(&n_filaments_), sizeof(int));
+  for (auto it = nuc_sites_.begin(); it != nuc_sites_.end(); ++it) {
+    double theta = it->GetTheta();
+    double phi = it->GetPhi();
+    ospec.write(reinterpret_cast<char *>(&theta), sizeof(double));
+    ospec.write(reinterpret_cast<char *>(&phi), sizeof(double));
+  }
+  for (int ifil = 0; ifil < n_filaments_; ++ifil) {
+    filaments_[ifil].WriteSpec(ospec);
+  }
+}
+
+void Spindle::ReadSpec(std::fstream &ispec) {
+  if (ispec.eof())
+    return;
+  int nfilaments = 0;
+  ispec.read(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
+  ispec.read(reinterpret_cast<char *>(&length_), sizeof(length_));
+  for (int i = 0; i < 3; ++i) {
+    ispec.read(reinterpret_cast<char *>(&position_[i]), sizeof(double));
+  }
+  for (int i = 0; i < 3; ++i) {
+    ispec.read(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
+  }
+  UpdatePeriodic();
+  ispec.read(reinterpret_cast<char *>(&nfilaments), sizeof(int));
+  if (nfilaments == nuc_sites_.size()) {
+    for (auto it = nuc_sites_.begin(); it != nuc_sites_.end(); ++it) {
+      double theta, phi;
+      ispec.read(reinterpret_cast<char *>(&theta), sizeof(double));
+      ispec.read(reinterpret_cast<char *>(&phi), sizeof(double));
+      it->SetTheta(theta);
+      it->SetPhi(phi);
+    }
+  } else {
+    nuc_sites_.clear();
+    double new_pos[3] = {0, 0, 0};
+    for (int i = 0; i < nfilaments; ++i) {
+      Site s(rng_.GetSeed());
+      nuc_sites_.push_back(s);
+      double delta, phi;
+      ispec.read(reinterpret_cast<char *>(&delta), sizeof(double));
+      ispec.read(reinterpret_cast<char *>(&phi), sizeof(double));
+      nuc_sites_.back().SetDelta(delta);
+      nuc_sites_.back().SetPhi(phi);
+      nuc_sites_.back().SetDiameter(1);
+    }
+  }
+  GetBodyFrame();
+  ResetSitePositions();
+  if (nfilaments == filaments_.size()) {
+    for (int ifil = 0; ifil < nfilaments; ++ifil) {
+      filaments_[ifil].ReadSpec(ispec);
+      fil_sites_[ifil] = filaments_[ifil].GetSite(0);
+    }
+  } else {
+    filaments_.clear();
+    fil_sites_.clear();
+    for (int i = 0; i < nfilaments; ++i) {
+      Filament fil(rng_.GetSeed());
+      filaments_.push_back(fil);
+      filaments_.back().Init(fparams_);
+      filaments_.back().ReadSpec(ispec);
+      fil_sites_.push_back(filaments_.back().GetSite(0));
+    }
+  }
+}
+
+void Spindle::WriteCheckpoint(std::fstream &ocheck) {
+  Object::WriteCheckpoint(ocheck);
+  for (auto it = nuc_sites_.begin(); it != nuc_sites_.end(); ++it) {
+    it->WriteCheckpointHeader(ocheck);
+  }
+  for (filament_iterator it = filaments_.begin(); it != filaments_.end();
+       ++it) {
+    it->WriteCheckpointHeader(ocheck);
+  }
+}
+
+void Spindle::ReadCheckpoint(std::fstream &icheck) {
+  Object::ReadCheckpoint(icheck);
+  for (auto it = nuc_sites_.begin(); it != nuc_sites_.end(); ++it) {
+    it->ReadCheckpointHeader(icheck);
+  }
+  for (filament_iterator it = filaments_.begin(); it != filaments_.end();
+       ++it) {
+    it->ReadCheckpointHeader(icheck);
+  }
+  Logger::Trace("Reloading spindle from checkpoint");
+}

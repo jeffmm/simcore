@@ -106,8 +106,8 @@ void CrosslinkSpecies::InsertCrosslinks() {
         AddMember();
         members_.back().InsertAt(pos, u);
       }
-    } else if (space_->type == +boundary_type::budding){
-
+    } else if (space_->type == +boundary_type::budding) {
+      Logger::Error("Boundary type budding not done yet for CrosslinkSpecies");
     } else {
       Logger::Error("Boundary type not recognized in CrosslinkSpecies");
     }

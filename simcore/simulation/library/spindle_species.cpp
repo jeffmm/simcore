@@ -35,5 +35,49 @@ const double SpindleSpecies::GetSpecLength() const {
   }
 }
 
+void SpindleSpecies::ReadSpecs() {
+  if (ispec_file_.eof()) {
+    if (HandleEOF()) {
+      return;
+    } else {
+      Logger::Info("EOF reached in spec file for %s %s", GetSID()._to_string(),
+                   GetSpeciesName().c_str());
+      early_exit = true;
+      return;
+    }
+  }
+  if (!ispec_file_.is_open()) {
+    Logger::Warning("ERROR. Spec file unexpectedly not open! Exiting early.");
+    early_exit = true;
+    return;
+  }
+  n_members_ = -1;
+  ispec_file_.read(reinterpret_cast<char *>(&n_members_), sizeof(int));
+  /* For some reason, we can't catch the EOF above. If size == -1 still, then
+     we caught a EOF here */
+  if (n_members_ == -1) {
+    if (HandleEOF()) {
+      return;
+    } else {
+      Logger::Info("EOF reached in spec file for %s %s", GetSID()._to_string(),
+                   GetSpeciesName().c_str());
+      early_exit = true;
+      return;
+    }
+  }
+  if (n_members_ == 0) {
+    members_.clear();
+  } else if (n_members_ != members_.size()) {
+    Spindle s(rng_.GetSeed());
+    s.Init(&sparams_);
+    s.InitFilamentParameters(&fparams_);
+    s.SetSID(GetSID());
+    members_.resize(n_members_, s);
+  }
+  for (auto it = members_.begin(); it != members_.end(); ++it) {
+    it->ReadSpec(ispec_file_);
+  }
+}
+
 
 

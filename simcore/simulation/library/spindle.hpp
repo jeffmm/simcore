@@ -13,9 +13,9 @@ protected:
   filament_parameters *fparams_;
   std::vector<Filament> filaments_;
   std::vector<Site> nuc_sites_;
-  std::vector<Site*> fil_sites_;
+  std::vector<Site *> fil_sites_;
   std::vector<double> theta_; // reference coordinates for nucleation site
-  std::vector<double> phi_;  // positions in body frame
+  std::vector<double> phi_;   // positions in body frame
   bool midstep_;
   bool alignment_potential_;
   bool fixed_spacing_;
@@ -52,6 +52,10 @@ public:
   void ZeroDrTot();
   const double GetDrTot();
   const bool CheckInteractorUpdate();
+  void WriteCheckpoint(std::fstream &ocheck);
+  void WriteSpec(std::fstream &ospec);
+  void ReadCheckpoint(std::fstream &icheck);
+  void ReadSpec(std::fstream &ispec);
 };
 
 #endif // _SIMCORE_SPINDLE_H_

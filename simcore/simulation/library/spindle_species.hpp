@@ -15,6 +15,7 @@ public:
   void UpdatePositions();
   void AddMember();
   const double GetSpecLength() const;
+  void ReadSpecs();
 };
 
 

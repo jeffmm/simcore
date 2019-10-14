@@ -1,7 +1,7 @@
 seed: 293881442930153
 
 run_name: spindle_test
-n_dim: 2
+n_dim: 3
 n_periodic: 0
 delta: 0.00001
 n_steps: 1000000
@@ -11,7 +11,7 @@ graph_flag: true
 n_graph: 100
 movie_flag: false
 
-system_radius: 50
+system_radius: 30
 potential: soft
 soft_potential_mag: 1000
 f_cutoff: 100000
@@ -58,7 +58,7 @@ filament:
     spec_flag: true
     n_spec: 100
     force_induced_catastrophe_flag: true
-    fic_factor: 0.001
+    fic_factor: 0.01
 crosslink:
   - name: dynein
     concentration: 0.1
