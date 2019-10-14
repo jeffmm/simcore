@@ -1,68 +1,81 @@
-seed: 29122929517437
+seed: 293881442930153
 
-run_name: rng_problem
+run_name: spindle_test
 n_dim: 2
-n_periodic: 2
-delta: 0.0001
-n_steps: 100000
-boundary: 0
+n_periodic: 0
+delta: 0.00001
+n_steps: 1000000
+boundary: 2
 
 graph_flag: true
 n_graph: 100
 movie_flag: false
 
-system_radius: 10
+system_radius: 50
 potential: soft
-soft_potential_mag: 500
-f_cutoff: 10000
+soft_potential_mag: 1000
+f_cutoff: 100000
 thermo_flag: true
 n_thermo: 100
+like_like_interactions: false
 
 checkpoint_flag: true
 n_checkpoint: 1000
 
-filament:
-  - name: microtubule
+spindle:
+  - name: species
     num: 1
+    n_filaments_mother: 3
+    n_filaments_bud: 3
+    insertion_type: random
+    length: 10
+    diameter: 10
+    spb_diameter: 5
+    k_spring: 500
+
+filament:
+  - name: spindle
+    num: 0
     packing_fraction: -1
-    insertion_type: custom
+    insertion_type: random
     insert_file: params/assay_3d_insert.yaml
     draw_type: fixed
     color: 2
     diameter: 1
     overlap: false
-    length: 10
-    min_length: 6
+    length: 4
+    min_length: 4
     max_length: 120
-    min_bond_length: 1
+    min_bond_length: 2
     polydispersity_flag: false
-    dynamic_instability_flag: false
-    persistence_length: 500
+    dynamic_instability_flag: true
+    persistence_length: 10000
     driving_factor: 0
     v_poly: 30
     v_depoly: 50
-    f_grow_to_shrink: 10
+    f_grow_to_shrink: 5
     f_shrink_to_grow: 20
     spec_flag: true
     n_spec: 100
-
+    force_induced_catastrophe_flag: true
+    fic_factor: 0.001
 crosslink:
   - name: dynein
-    concentration: 1
-    insertion_type: random_grid
+    concentration: 0.1
+    insertion_type: random_boundary
     diameter: 0.3
     walker_flag: true
-    velocity: 100
+    velocity: 50
     diffusion_flag: true
     draw_type: fixed
     color: 4.67
     k_on: 50
     k_off: 5
-    k_on_d: 50
-    k_off_d: 5
-    force_dep_factor: 0.01
+    k_on_d: 100
+    k_off_d: 0.001
+    force_dep_factor: 0
     polar_affinity: 0
-    k_spring: 50
+    k_spring: 500
     f_stall: 100
     force_dep_vel_flag: false
     k_align: 0
@@ -75,19 +88,19 @@ crosslink:
     r_capture: 10
     spec_flag: true
     n_spec: 100
-  - name: dead
+  - name: kinesin
     concentration: 0
-    insertion_type: centered
+    insertion_type: random_grid
     diameter: 0.5
     walker_flag: false
     velocity: 100
-    diffusion_flag: true
+    diffusion_flag: false
     draw_type: fixed
     color: 0.5
     k_on: 50
     k_off: 5
-    k_on_d: 500
-    k_off_d: 0
+    k_on_d: 50
+    k_off_d: 0.1
     force_dep_factor: 0.001
     polar_affinity: 0
     k_spring: 500
