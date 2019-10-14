@@ -1,6 +1,6 @@
 #include "object.hpp"
 
-Object::Object() : rng_() {
+Object::Object(unsigned long seed) : rng_(seed) {
   // Initialize object ID, guaranteeing thread safety
   InitOID();
   // Set some defaults
@@ -9,6 +9,8 @@ Object::Object() : rng_() {
   std::fill(prev_orientation_, prev_orientation_ + 3, 0.0);
   std::fill(scaled_position_, scaled_position_ + 3, 0.0);
   std::fill(orientation_, orientation_ + 3, 0.0);
+  orientation_[n_dim_ - 1] = 1.0;
+  prev_orientation_[n_dim_ - 1] = 1.0;
   std::fill(pos, pos + 3, 0.0);
   std::fill(direction, direction + 3, 0.0);
   std::fill(force_, force_ + 3, 0.0);
@@ -55,8 +57,8 @@ void Object::SetNextOID(const int next_oid) { _next_oid_ = next_oid; }
 const int Object::GetNextOID() { return _next_oid_; }
 // Trivial Get/Set functions
 int const Object::GetOID() const { return oid_; }
-void Object::SetPosition(double const *const pos) {
-  std::copy(pos, pos + n_dim_, position_);
+void Object::SetPosition(double const *const new_pos) {
+  std::copy(new_pos, new_pos + n_dim_, position_);
 }
 void Object::SetScaledPosition(double const *const spos) {
   std::copy(spos, spos + n_dim_, scaled_position_);
@@ -151,92 +153,33 @@ void Object::SetType(obj_type type) { type_ = type; }
 void Object::SetSID(species_id sid) { sid_ = sid; }
 
 // Virtual functions
-void Object::InsertRandom() {
+void Object::InsertRandom(double buffer) {
+  if (buffer < 0) {
+    buffer = diameter_;
+  }
+  double pos[3] = {0, 0, 0};
+  double u[3] = {0, 0, 0};
   Logger::Trace("Inserting object %d randomly", GetOID());
-  double mag;
-  double buffer = diameter_;
-  double pos[3] = {0};
-  double u[3] = {0};
-  if (space_->n_periodic == n_dim_)
-    buffer = 0;
-  double R = space_->radius;
-  // XXX Check to make sure object fits inside unit cell if non-periodic
-  if (R - buffer < 0) {
-    Logger::Error(
-        "Object #%d is too large to place in system.\n system radius: "
-        "%2.2f, buffer: %2.2f",
-        GetOID(), R, buffer);
-  }
-  switch (space_->type) {
-  // If no boundary, insert wherever
-  case +boundary_type::none: // none
-    for (int i = 0; i < n_dim_; ++i) {
-      pos[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
-    }
-    break;
-  // box type boundary
-  case +boundary_type::box: // box
-    for (int i = 0; i < n_dim_; ++i) {
-      pos[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
-    }
-    break;
-  // spherical boundary
-  case +boundary_type::sphere: // sphere
-    generate_random_unit_vector(n_dim_, pos, rng_.r);
-    mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer);
-    for (int i = 0; i < n_dim_; ++i) {
-      pos[i] *= mag;
-    }
-    break;
-  // budding yeast boundary type
-  case +boundary_type::budding: // budding
-  {
-    double r = space_->bud_radius;
-    double roll = gsl_rng_uniform_pos(rng_.r);
-    double v_ratio = 0;
-    if (n_dim_ == 2) {
-      v_ratio = SQR(r) / (SQR(r) + SQR(R));
-    } else {
-      v_ratio = CUBE(r) / (CUBE(r) + CUBE(R));
-    }
-    mag = gsl_rng_uniform_pos(rng_.r);
-    generate_random_unit_vector(n_dim_, pos, rng_.r);
-    if (roll < v_ratio) {
-      // Place coordinate in daughter cell
-      mag *= (r - buffer);
-      for (int i = 0; i < n_dim_; ++i) {
-        pos[i] *= mag;
-      }
-      pos[n_dim_ - 1] += space_->bud_height;
-    } else {
-      mag *= (R - buffer);
-      for (int i = 0; i < n_dim_; ++i) {
-        pos[i] *= mag;
-      }
-    }
-    break;
-  }
-  default:
-    Logger::Error("Boundary type unrecognized!");
-  }
-  generate_random_unit_vector(n_dim_, u, rng_.r);
+  rng_.RandomCoordinate(space_, pos, buffer);
+  rng_.RandomUnitVector(n_dim_, u);
   InsertAt(pos, u);
-  Logger::Trace("Object inserted at [%2.2f, %2.2f, %2.2f] with orientation "
-                "[%2.2f %2.2f %2.2f]",
-                pos[0], pos[1], pos[2], u[0], u[1], u[2]);
 }
 
-void Object::InsertRandomOriented(double *u) {
+void Object::InsertRandomOriented(double const *const u) {
   InsertRandom();
-  normalize_vector(u, n_dim_);
   SetOrientation(u);
+  normalize_vector(orientation_, n_dim_);
 }
 
-void Object::InsertAt(double *pos, double *u) {
-  SetPosition(pos);
-  normalize_vector(u, n_dim_);
+void Object::InsertAt(double const *const new_pos, double const *const u) {
+  SetPosition(new_pos);
   SetOrientation(u);
+  normalize_vector(orientation_, n_dim_);
   UpdatePeriodic();
+  Logger::Trace("Object %d inserted at [%2.2f, %2.2f, %2.2f] with orientation "
+                "[%2.2f %2.2f %2.2f]",
+                GetOID(), position_[0], position_[1], position_[2],
+                orientation_[0], orientation_[1], orientation_[2]);
 }
 
 void Object::ZeroForce() {
@@ -360,8 +303,8 @@ void Object::WriteCheckpoint(std::fstream &ocheck) {
   WriteSpec(ocheck);
 }
 void Object::WriteCheckpointHeader(std::fstream &ocheck) {
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
+  void *rng_state = rng_.GetState();
+  size_t rng_size = rng_.GetSize();
   int oid = GetOID();
   int mid = GetMeshID();
   ocheck.write(reinterpret_cast<char *>(&oid), sizeof(int));
@@ -378,7 +321,7 @@ void Object::ReadCheckpoint(std::fstream &icheck) {
 void Object::ReadCheckpointHeader(std::fstream &icheck) {
   if (icheck.eof())
     return;
-  void *rng_state = gsl_rng_state(rng_.r);
+  void *rng_state = rng_.GetState();
   size_t rng_size;
   int oid;
   int mid;
@@ -391,8 +334,8 @@ void Object::ReadCheckpointHeader(std::fstream &icheck) {
 }
 
 void Object::WritePosit(std::fstream &oposit) {
-  for (auto &pos : position_)
-    oposit.write(reinterpret_cast<char *>(&pos), sizeof(pos));
+  for (auto &posit : position_)
+    oposit.write(reinterpret_cast<char *>(&posit), sizeof(posit));
   for (auto &spos : scaled_position_)
     oposit.write(reinterpret_cast<char *>(&spos), sizeof(spos));
   for (auto &u : orientation_)
@@ -404,8 +347,8 @@ void Object::WritePosit(std::fstream &oposit) {
 void Object::ReadPosit(std::fstream &iposit) {
   if (iposit.eof())
     return;
-  for (auto &pos : position_)
-    iposit.read(reinterpret_cast<char *>(&pos), sizeof(pos));
+  for (auto &posit : position_)
+    iposit.read(reinterpret_cast<char *>(&posit), sizeof(posit));
   for (auto &spos : scaled_position_)
     iposit.read(reinterpret_cast<char *>(&spos), sizeof(spos));
   for (auto &u : orientation_)
@@ -424,14 +367,6 @@ void Object::GetAvgOrientation(double *au) {
 }
 void Object::SetAvgPosition() {
   // Nothing to be done
-}
-void Object::SetRNGState(const std::string &filename) {
-  // Load the rng state from binary file
-  FILE *pfile = fopen(filename.c_str(), "r");
-  auto retval = gsl_rng_fread(pfile, rng_.r);
-  if (retval != 0) {
-    std::cout << "Reading rng state failed " << retval << std::endl;
-  }
 }
 
 void Object::Report() {

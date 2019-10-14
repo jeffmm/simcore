@@ -676,6 +676,7 @@ void MinimumDistance::SpheroSphereBC(double const *const r,
                                      double const *const u, double const length,
                                      double *dr, double *dr_mag2,
                                      double *r_contact, double buffer) {
+
   /* For a spherocylinder with spherical BCs, the minimum distance will
      always be at one of the endpoints */
   double r_min[3] = {0, 0, 0};
@@ -689,11 +690,13 @@ void MinimumDistance::SpheroSphereBC(double const *const r,
     r_contact[i] = sign * 0.5 * length * u[i];
     r_min[i] = r[i] + r_contact[i];
   }
+
   double r_mag = 0;
   for (int i = 0; i < n_dim_; ++i) {
     r_mag += r_min[i] * r_min[i];
   }
   r_mag = sqrt(r_mag);
+
   for (int i = 0; i < n_dim_; ++i) {
     dr[i] = (space_->radius / r_mag - 1) * r_min[i];
   }

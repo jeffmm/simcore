@@ -53,7 +53,8 @@ protected:
   void UpdateKMC();
 
 public:
-  Object();
+  Object(unsigned long seed);
+  virtual ~Object() = default;
   // kmcx parameter
   int gid;
   double length;
@@ -71,7 +72,7 @@ public:
   // Trivial Set/Get functions
   void SetSID(species_id sid);
   void SetType(obj_type type);
-  void SetPosition(const double *const pos);
+  void SetPosition(const double *const new_pos);
   void SetScaledPosition(const double *const spos);
   void SetOrientation(const double *const u);
   void SetPrevPosition(const double *const ppos);
@@ -122,9 +123,9 @@ public:
 
   // Virtual functions
   virtual void Init(species_base_parameters *sparams) {}
-  virtual void InsertRandom();
-  virtual void InsertRandomOriented(double *u);
-  virtual void InsertAt(double *pos, double *u);
+  virtual void InsertRandom(double buffer = -1);
+  virtual void InsertRandomOriented(const double *const u);
+  virtual void InsertAt(const double *const new_pos, const double *const u);
   virtual void ZeroForce();
   virtual void UpdatePeriodic();
   virtual void UpdatePosition() {}
@@ -162,7 +163,6 @@ public:
   virtual void WriteCheckpointHeader(std::fstream &ocheck);
   virtual void ReadCheckpoint(std::fstream &icheck);
   virtual void ReadCheckpointHeader(std::fstream &icheck);
-  void SetRNGState(const std::string &filename);
 };
 
 // void MinimumDistance(Object* o1, Object* o2, Interaction *ix, space_struct

@@ -11,9 +11,8 @@ typedef std::vector<
 
 class BrBeadSpecies : public Species<BrBead, species_id::br_bead> {
 public:
-  BrBeadSpecies() : Species() {}
-  void Init(system_parameters *params, species_base_parameters *sparams,
-            space_struct *space);
+  BrBeadSpecies(unsigned long seed);
+  void Init(std::string spec_name, ParamsParser &parser);
   void UpdatePositions();
 };
 

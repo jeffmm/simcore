@@ -1,20 +1,22 @@
 #ifndef _SIMCORE_SPINDLE_SPECIES_H_
 #define _SIMCORE_SPINDLE_SPECIES_H_
 
-#include "species.hpp"
 #include "spindle.hpp"
+#include "species.hpp"
 
 class SpindleSpecies : public Species<Spindle, species_id::spindle> {
 protected:
-  bool midstep_;
+  bool midstep_ = true;
+  filament_parameters fparams_;
 
 public:
-  SpindleSpecies() : Species() {
-    midstep_ = true;
-  }
-  void Init(system_parameters *params, species_base_parameters *sparams,
-            space_struct *space);
+  SpindleSpecies(unsigned long seed);
+  void Init(std::string spec_name, ParamsParser &parser);
   void UpdatePositions();
+  void AddMember();
+  const double GetSpecLength() const;
 };
+
+
 
 #endif // _SIMCORE_SPINDLE_SPECIES_H_

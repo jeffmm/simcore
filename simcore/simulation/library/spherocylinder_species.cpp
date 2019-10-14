@@ -1,9 +1,11 @@
 #include "spherocylinder_species.hpp"
 
-void SpherocylinderSpecies::Init(system_parameters *params,
-                                 species_base_parameters *sparams,
-                                 space_struct *space) {
-  Species::Init(params, sparams, space);
+SpherocylinderSpecies::SpherocylinderSpecies(unsigned long seed)
+    : Species(seed) {
+  SetSID(species_id::spherocylinder);
+}
+void SpherocylinderSpecies::Init(std::string spec_name, ParamsParser &parser) {
+  Species::Init(spec_name, parser);
   midstep_ = sparams_.midstep;
 }
 

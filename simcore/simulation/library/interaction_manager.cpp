@@ -18,6 +18,7 @@ void InteractionManager::Init(system_parameters *params,
   n_thermo_ = params_->n_thermo;
   no_interactions_ = !(params_->interaction_flag);
   n_objs_ = -1;
+  std::fill(stress_, stress_ + 9, 0);
 
   // Update dr distance should be half the cell length, and we are comparing the
   // squares of the trajectory distances
@@ -728,8 +729,9 @@ void InteractionManager::InitOutputs(bool reading_inputs,
 void InteractionManager::ReadInputs() { xlink_.ReadInputs(); }
 
 void InteractionManager::InitCrosslinkSpecies(sid_label &slab,
-                                              ParamsParser &parser) {
-  xlink_.InitSpecies(slab, parser);
+                                              ParamsParser &parser,
+                                              unsigned long seed) {
+  xlink_.InitSpecies(slab, parser, seed);
 }
 
 void InteractionManager::LoadCrosslinksFromCheckpoints(

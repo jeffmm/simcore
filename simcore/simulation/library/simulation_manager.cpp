@@ -50,9 +50,8 @@ void SimulationManager::InitManager(run_options run_opts) {
   if (run_opts_.auto_graph) {
     pnode_["auto_graph"] = true;
   }
-  RNG::SetSeed(seed);
   // Instantiate the RNG after setting static seed
-  rng_ = new RNG;
+  rng_ = new RNG(seed);
 
   // Check for appendable parameter files
   CheckAppendParams();
@@ -269,11 +268,11 @@ double SimulationManager::GetRandomParam(std::string rtype, double min,
         "Min and max value of parameter randomization sequence are equal.");
   }
   if (rtype.compare("R") == 0) {
-    return (min + (max - min) * gsl_rng_uniform_pos(rng_->r));
+    return (min + (max - min) * rng_->RandomUniform());
   } else if (rtype.compare("RINT") == 0) {
-    return (min + gsl_rng_uniform_int(rng_->r, max - min));
+    return (min + rng_->RandomInt(max - min));
   } else if (rtype.compare("RLOG") == 0) {
-    return pow(10.0, min + (max - min) * gsl_rng_uniform_pos(rng_->r));
+    return pow(10.0, min + (max - min) * rng_->RandomUniform());
   } else {
     Logger::Error("Parameter randomization type not recognized.");
   }
@@ -467,7 +466,7 @@ void SimulationManager::WriteParams() {
          can be rerun individually with the expected result, ie not
          generating a different seed than the one generated here */
       if (n_runs_ > 1 || n_var_ > 1) {
-        pvector_[i_var]["seed"] = gsl_rng_get(rng_->r);
+        pvector_[i_var]["seed"] = rng_->GetSeed();
       }
       std::ostringstream var;
       std::ostringstream run;

@@ -60,19 +60,20 @@ system_parameters ParamsParser::ParseSystemParameters() {
 }
 
 species_base_parameters *
-ParamsParser::GetNewSpeciesParameters(sid_label &slab) {
-  Logger::Trace("Building parameters for %s %s", slab.first.c_str(),
-                slab.second.c_str());
+ParamsParser::GetNewSpeciesParameters(species_id sid, std::string spec_name) {
+  std::string sid_str(sid._to_string());
+  Logger::Trace("Building parameters for %s %s", sid_str.c_str(),
+                spec_name.c_str());
   for (auto it = species_node_.begin(); it != species_node_.end(); ++it) {
-    if (it->first.as<std::string>() == slab.first) {
-      if (it->second.IsMap() && slab.second == "species") {
-        return parse_species_params(slab.first, it->second, sim_node_);
+    if (it->first.as<std::string>().compare(sid_str) == 0) {
+      if (it->second.IsMap() && spec_name.compare("species") == 0){
+        return parse_species_params(sid_str, it->second, sim_node_);
       } else if (it->second.IsSequence()) {
         for (int i = 0; i < it->second.size(); ++i) {
           YAML::Node subnode = it->second[i];
           if (subnode["name"] &&
-              subnode["name"].as<std::string>().compare(slab.second) == 0) {
-            return parse_species_params(slab.first, subnode, sim_node_);
+              subnode["name"].as<std::string>().compare(spec_name) == 0) {
+            return parse_species_params(sid_str, subnode, sim_node_);
           }
         }
       }
@@ -80,6 +81,6 @@ ParamsParser::GetNewSpeciesParameters(sid_label &slab) {
   }
   Logger::Error("ParamsParser did not find species id/label combination %s/%s"
                 " in species params YAML node!",
-                slab.first.c_str(), slab.second.c_str());
+                sid_str.c_str(), spec_name.c_str());
   return nullptr;
 }

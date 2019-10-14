@@ -6,7 +6,7 @@
 
 class FilamentSpecies : public Species<Filament, species_id::filament> {
 protected:
-  bool midstep_;
+  bool midstep_ = true;
   // Analysis structures
   double fill_volume_;
   double packing_fraction_;
@@ -41,9 +41,8 @@ protected:
   std::fstream in_out_file_;
 
 public:
-  FilamentSpecies();
-  void Init(system_parameters *params,
-            species_base_parameters *sparams, space_struct *space);
+  FilamentSpecies(unsigned long seed);
+  void Init(std::string spec_name, ParamsParser &parser);
   void PopMember();
 
   void AddMember();

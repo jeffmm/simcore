@@ -1,9 +1,8 @@
 #ifndef _SIMCORE_SPECIES_BASE_H_
 #define _SIMCORE_SPECIES_BASE_H_
 
-#include "auxiliary.hpp"
 #include "object.hpp"
-#include "yaml-cpp/yaml.h"
+#include "params_parser.hpp"
 
 class SpeciesBase {
 private:
@@ -12,8 +11,8 @@ private:
 protected:
   int n_members_ = 0;
   int spec_file_iterator_ = -1;
-  system_parameters *params_;
-  space_struct *space_;
+  static const system_parameters *params_;
+  static const space_struct *space_;
   RNG rng_;
   std::fstream oposit_file_;
   std::fstream iposit_file_;
@@ -23,13 +22,13 @@ protected:
   std::vector<std::string> spec_file_names_;
 
 public:
-  SpeciesBase() {}
-  void SetSID(species_id sid) {
-    sid_ = sid;
-  }
+  SpeciesBase(unsigned long seed);
+  static void SetParams(system_parameters *params);
+  static void SetSpace(space_struct *space);
+  void SetSID(species_id sid);
   virtual void UpdatePositions() {}
   virtual void Draw(std::vector<graph_struct *> &graph_array) {}
-  virtual void Init(system_parameters *params, species_base_parameters *sparams, space_struct *space);
+  virtual void Init(std::string spec_name, ParamsParser &parser) {}
   virtual void ZeroForces() {}
   virtual void GetInteractors(std::vector<Object *> &ix) {}
   virtual void GetLastInteractors(std::vector<Object *> &ix) {}
@@ -52,7 +51,9 @@ public:
   virtual int const GetNCheckpoint() const { return params_->n_checkpoint; }
   virtual bool const GetPositFlag() const { return false; }
   virtual bool const GetSpecFlag() const { return false; }
-  virtual bool const GetCheckpointFlag() const { return params_->checkpoint_flag; }
+  virtual bool const GetCheckpointFlag() const {
+    return params_->checkpoint_flag;
+  }
   virtual std::string GetInsertionType() const { return ""; }
   virtual int GetCount() const { return 0; }
   virtual void WriteOutputs(std::string run_name) {}

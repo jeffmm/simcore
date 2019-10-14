@@ -19,9 +19,8 @@ protected:
   void FinalizeDiffusionAnalysis();
 
 public:
-  SpherocylinderSpecies() : Species() {}
-  void Init(system_parameters *params, species_base_parameters *sparams,
-            space_struct *space);
+  SpherocylinderSpecies(unsigned long seed);
+  void Init(std::string spec_name, ParamsParser &parser);
   void UpdatePositions() {
     for (auto it = members_.begin(); it != members_.end(); ++it) {
       it->UpdatePosition();

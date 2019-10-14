@@ -1,14 +1,10 @@
 #include "filament_species.hpp"
 
-FilamentSpecies::FilamentSpecies() : Species() {
+FilamentSpecies::FilamentSpecies(unsigned long seed) : Species(seed) {
   SetSID(species_id::filament);
-  midstep_ = true;
 }
-
-void FilamentSpecies::Init(system_parameters *params,
-                           species_base_parameters *sparams,
-                           space_struct *space) {
-  Species::Init(params, sparams, space);
+void FilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
+  Species::Init(spec_name, parser);
   fill_volume_ = 0;
   packing_fraction_ = sparams_.packing_fraction;
 #ifdef TRACE
@@ -126,9 +122,9 @@ void FilamentSpecies::PopMember() {
 
 const double FilamentSpecies::GetSpecLength() const {
   if (sparams_.dynamic_instability_flag) {
-    return 2*sparams_.min_bond_length;
+    return 2 * sparams_.min_bond_length;
   } else {
-    return 1.5*sparams_.min_bond_length;
+    return 1.5 * sparams_.min_bond_length;
   }
 }
 void FilamentSpecies::InitAnalysis() {
@@ -160,9 +156,8 @@ void FilamentSpecies::InitAnalysis() {
   }
   if (sparams_.flocking_analysis) {
     if (!params_->polar_order_analysis) {
-      Logger::Warning("Flocking analysis enabled polar order analysis in "
-                      "FilamentSpecies::InitAnalysis\n");
-      params_->polar_order_analysis = 1;
+      Logger::Error("Flocking analysis requires polar order analysis to be "
+                    "enabled");
     }
     InitFlockingAnalysis();
   }

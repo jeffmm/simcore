@@ -1,13 +1,14 @@
 #include "species_base.hpp"
 
-void SpeciesBase::Init(system_parameters *params,
-                       species_base_parameters *sparams, space_struct *space) {
-  params_ = params;
-  space_ = space;
-  n_members_ = 0;
-  Logger::Debug("Initializing %s %s", GetSID()._to_string(),
-                GetSpeciesName().c_str());
-}
+
+SpeciesBase::SpeciesBase(unsigned long seed) : rng_(seed) {}
+void SpeciesBase::SetSID(species_id sid) { sid_ = sid; }
+
+/* Static functions*/
+void SpeciesBase::SetParams(system_parameters *params) { params_ = params; }
+void SpeciesBase::SetSpace(space_struct *space) { space_ = space; }
+const space_struct *SpeciesBase::space_ = nullptr;
+const system_parameters *SpeciesBase::params_ = nullptr;;
 
 void SpeciesBase::InitPositFile(std::string run_name) {
   std::string sid_str = sid_._to_string();
@@ -18,9 +19,11 @@ void SpeciesBase::InitPositFile(std::string run_name) {
     Logger::Error("Output file %s did not open", posit_file_name.c_str());
   }
   int n_posit = GetNPosit();
-  oposit_file_.write(reinterpret_cast<char *>(&params_->n_steps), sizeof(int));
+  int n_steps = params_->n_steps;
+  double delta = params_->delta;
+  oposit_file_.write(reinterpret_cast<char *>(&n_steps), sizeof(int));
   oposit_file_.write(reinterpret_cast<char *>(&n_posit), sizeof(int));
-  oposit_file_.write(reinterpret_cast<char *>(&params_->delta), sizeof(double));
+  oposit_file_.write(reinterpret_cast<char *>(&delta), sizeof(double));
 }
 
 void SpeciesBase::InitPositFileInput(std::string run_name) {
@@ -59,19 +62,21 @@ void SpeciesBase::InitSpecFile(std::string run_name) {
     Logger::Error("Output file %s did not open", spec_file_name.c_str());
   }
   int n_spec = GetNSpec();
-  ospec_file_.write(reinterpret_cast<char *>(&params_->n_steps), sizeof(int));
+  int n_steps = params_->n_steps;
+  double delta = params_->delta;
+  ospec_file_.write(reinterpret_cast<char *>(&n_steps), sizeof(int));
   ospec_file_.write(reinterpret_cast<char *>(&n_spec), sizeof(int));
-  ospec_file_.write(reinterpret_cast<char *>(&params_->delta), sizeof(double));
+  ospec_file_.write(reinterpret_cast<char *>(&delta), sizeof(double));
 }
 
 bool SpeciesBase::HandleEOF() {
   if (++spec_file_iterator_) {
-    if (params_->i_step < params_->n_steps_equil) {
-      params_->n_steps_equil -= params_->i_step;
-    } else {
-      params_->n_steps_equil = 0;
-    }
-    params_->i_step = 0;
+    //if (params_->i_step < params_->n_steps_equil) {
+      //params_->n_steps_equil -= params_->i_step;
+    //} else {
+      //params_->n_steps_equil = 0;
+    //}
+    //params_->i_step = 0;
     std::ostringstream file_name, nload;
     std::string sid_str = sid_._to_string();
     file_name << params_->run_name;

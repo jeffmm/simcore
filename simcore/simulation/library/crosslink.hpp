@@ -41,7 +41,7 @@ private:
   void UpdateXlinkState();
 
 public:
-  Crosslink();
+  Crosslink(unsigned long seed);
   void Init(crosslink_parameters *sparams);
   void InitInteractionEnvironment(LookupTable *lut);
   void AttachObjRandom(Object *obj);
@@ -66,7 +66,7 @@ public:
   void ApplyTetherForces();
   void ZeroDrTot();
   const double GetDrTot();
-  void InsertAt(double *pos, double *u);
+  void InsertAt(double const *const new_pos, double const *const u);
   const int GetNNeighbors() const;
   const double *const GetPosition();
   const double *const GetOrientation();

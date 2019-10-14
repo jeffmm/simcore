@@ -3,7 +3,7 @@
 /**************************
 ** Site member functions **
 **************************/
-Site::Site() : Object() {
+Site::Site(unsigned long seed) : Object(seed) {
   n_bonds_ = 0;
   std::fill(tangent_, tangent_ + 3, 0.0);
   std::fill(random_force_, random_force_ + 3, 0.0);
@@ -65,7 +65,7 @@ directed_bond Site::GetOtherDirectedBond(int bond_oid) {
     // there are no other bonds
     return std::make_pair(nullptr, NONE);
   }
-  int i_bond = gsl_rng_uniform_int(rng_.r, n_bonds_ - 1);
+  int i_bond = rng_.RandomInt(n_bonds_ - 1);
   if (bonds_[i_bond].first->GetOID() != bond_oid) {
     return bonds_[i_bond];
   }
@@ -120,19 +120,6 @@ bool Site::HasNeighbor(int other_oid) {
     }
   }
   return false;
-}
-
-void Site::Draw(std::vector<graph_struct*>* graph_array) {
-  std::copy(scaled_position_, scaled_position_ + 3, g_.r);
-  for (int i = space_->n_periodic; i < n_dim_; ++i) {
-    g_.r[i] = position_[i];
-  }
-  std::copy(orientation_, orientation_ + 3, g_.u);
-  g_.color = color_;
-  g_.diameter = diameter_;
-  g_.length = length_;
-  g_.draw = draw_;
-  graph_array->push_back(&g_);
 }
 
 void Site::WriteSpec(std::fstream &op) {

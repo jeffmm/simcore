@@ -9,14 +9,13 @@ void CrosslinkManager::Init(system_parameters *params, space_struct *space,
   space_ = space;
 }
 
-void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser) {
+void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser,
+                                   unsigned long seed) {
   if (xlink_species_.size() == 0) {
     xlink_species_.reserve(parser.GetNCrosslinkSpecies());
   }
-  xlink_species_.push_back(new CrosslinkSpecies());
-  species_base_parameters *sparams = parser.GetNewSpeciesParameters(slab);
-  xlink_species_.back()->Init(params_, sparams, space_);
-  delete sparams;
+  xlink_species_.push_back(new CrosslinkSpecies(seed));
+  xlink_species_.back()->Init(slab.second, parser);
   if (xlink_species_.back()->GetNInsert() <= 0) {
     delete xlink_species_.back();
     xlink_species_.pop_back();
@@ -102,9 +101,7 @@ void CrosslinkManager::InitOutputs(bool reading_inputs, run_options *run_opts) {
   output_mgr_.Init(params_, &xlink_species_, space_, reading_inputs, run_opts);
 }
 
-void CrosslinkManager::WriteOutputs() {
-  output_mgr_.WriteOutputs();
-}
+void CrosslinkManager::WriteOutputs() { output_mgr_.WriteOutputs(); }
 
 void CrosslinkManager::ZeroDrTot() {
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {
@@ -128,6 +125,4 @@ void CrosslinkManager::LoadCrosslinksFromCheckpoints(
   }
 }
 
-void CrosslinkManager::ReadInputs() {
-  output_mgr_.ReadInputs();
-}
+void CrosslinkManager::ReadInputs() { output_mgr_.ReadInputs(); }

@@ -82,10 +82,12 @@ public:
   void CheckUpdateObjects();
   void DrawInteractions(std::vector<graph_struct *> &graph_array);
   void WriteOutputs();
-  void InitOutputs(bool reading_inputs = false, run_options *run_opts = nullptr);
+  void InitOutputs(bool reading_inputs = false,
+                   run_options *run_opts = nullptr);
   void ReadInputs();
   void ResetCellList();
-  void InitCrosslinkSpecies(sid_label &slab, ParamsParser &parser);
+  void InitCrosslinkSpecies(sid_label &slab, ParamsParser &parser,
+                            unsigned long seed);
   void LoadCrosslinksFromCheckpoints(std::string run_name,
                                      std::string checkpoint_run_name);
   void InsertCrosslinks();

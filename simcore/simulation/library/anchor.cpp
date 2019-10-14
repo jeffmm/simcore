@@ -1,6 +1,6 @@
 #include "anchor.hpp"
 
-Anchor::Anchor() : Object() { SetSID(species_id::crosslink); }
+Anchor::Anchor(unsigned long seed) : Object(seed) { SetSID(species_id::crosslink); }
 
 void Anchor::Init(crosslink_parameters *sparams) {
   sparams_ = sparams;
@@ -9,18 +9,17 @@ void Anchor::Init(crosslink_parameters *sparams) {
   draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
   static_flag_ = false; // Must be explicitly set to true by Crosslink
   Unbind();
-  walker_ = (sparams_->walker_flag ? true : false);
+  walker_ = sparams_->walker_flag;
   step_direction_ =
       (sparams_->step_direction == 0 ? 0 : SIGNOF(sparams_->step_direction));
   velocity_ = sparams_->velocity;
   max_velocity_ = velocity_;
   k_off_ = sparams_->k_off;
-  end_pausing_ = (sparams_->end_pausing ? true : false);
-  diffuse_ = (sparams_->diffusion_flag ? true : false);
+  end_pausing_ = sparams_->end_pausing;
+  diffuse_ = sparams_->diffusion_flag;
   f_stall_ = sparams_->f_stall;
   force_dep_vel_flag_ = sparams_->force_dep_vel_flag;
   SetDiffusion();
-  SetSID(species_id::crosslink);
 }
 
 double const Anchor::GetMeshLambda() { return mesh_lambda_; }
@@ -218,7 +217,7 @@ void Anchor::Unbind() {
 }
 
 void Anchor::Diffuse() {
-  double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
+  double kick = rng_.RandomUniform() - 0.5;
   double dr = kick * diffusion_ * delta_ / diameter_;
   mesh_lambda_ += dr;
 }
@@ -254,7 +253,7 @@ void Anchor::Draw(std::vector<graph_struct *> &graph_array) {
 
 void Anchor::AttachObjRandom(Object *o) {
   double length = o->GetLength();
-  double lambda = length * gsl_rng_uniform_pos(rng_.r);
+  double lambda = length * rng_.RandomUniform();
   AttachObjLambda(o, lambda);
 }
 
@@ -317,9 +316,9 @@ void Anchor::AttachObjMeshLambda(Object *o, double mesh_lambda) {
   ZeroDrTot();
 }
 
-void Anchor::BindToPosition(double *pos) {
+void Anchor::BindToPosition(double *bind_pos) {
   for (int i = 0; i < n_dim_; ++i) {
-    position_[i] = pos[i];
+    position_[i] = bind_pos[i];
   }
   UpdatePeriodic();
 }

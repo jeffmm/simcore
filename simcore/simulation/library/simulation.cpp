@@ -139,7 +139,7 @@ void Simulation::ScaleSpeciesPositions() {
 void Simulation::InitSimulation() {
   params_ = parser_.ParseSystemParameters();
   run_name_ = params_.run_name;
-  RNG::SetSeed(params_.seed);
+  rng_ = new RNG(params_.seed);
 
 #ifdef TRACE
   if (params_.n_steps > 100) {
@@ -178,6 +178,8 @@ void Simulation::InitObjects() {
   Object::SetNDim(params_.n_dim);
   Object::SetDelta(params_.delta);
   Object::SetSpace(space_.GetStruct());
+  SpeciesBase::SetParams(&params_);
+  SpeciesBase::SetSpace(space_.GetStruct());
 }
 
 /* Generate graphics window and draw initial simulation setup */
@@ -213,13 +215,11 @@ void Simulation::InitSpecies() {
        ++slab) {
     const species_id sid = species_id::_from_string(slab->first.c_str());
     if (sid == +species_id::crosslink) {
-      ix_mgr_.InitCrosslinkSpecies(*slab, parser_);
+      ix_mgr_.InitCrosslinkSpecies(*slab, parser_, rng_->GetSeed());
       continue;
     }
-    species_.push_back(species_factory.CreateSpecies(sid));
-    species_base_parameters *sparams = parser_.GetNewSpeciesParameters(*slab);
-    species_.back()->Init(&params_, sparams, space_.GetStruct());
-    delete sparams;
+    species_.push_back(species_factory.CreateSpecies(sid, rng_->GetSeed()));
+    species_.back()->Init(slab->second, parser_);
     if (species_.back()->GetNInsert() > 0) {
 #ifdef TRACE
       if (species_.back()->GetNInsert() > 20) {
@@ -326,7 +326,8 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         for (int i = 0; i < num_x * num_y; ++i) {
           grid_index[i] = i;
         }
-        gsl_ran_shuffle(rng_.r, grid_index, num_x * num_y, sizeof(int));
+        rng_->Shuffle<int>(grid_index, num_x * num_y);
+        //gsl_ran_shuffle(rng_.r, grid_index, num_x * num_y, sizeof(int));
         for (int i = 0; i < num_x * num_y; ++i) {
           pos[0] = grid_array[grid_index[i]].first * d;
           pos[1] = grid_array[grid_index[i]].second * l;
@@ -409,6 +410,7 @@ void Simulation::ClearSimulation() {
     graphics_.Clear();
   }
 #endif
+  delete rng_;
   Logger::Info("Simulation complete");
 }
 
@@ -498,6 +500,7 @@ void Simulation::InitProcessing(run_options run_opts) {
   Logger::Info("Initializing datastructures for post-processing outputs");
   params_ = parser_.ParseSystemParameters();
   run_name_ = params_.run_name;
+  rng_ = new RNG(params_.seed);
 
   /* Ensure that we are not trying to load any checkpoints when processing
      outputs */

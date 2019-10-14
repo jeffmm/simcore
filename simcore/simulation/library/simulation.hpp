@@ -20,7 +20,7 @@ private:
 
   OutputManager output_mgr_;
   system_parameters params_;
-  RNG rng_;
+  RNG *rng_;
   ParamsParser parser_;
 
   InteractionManager ix_mgr_;

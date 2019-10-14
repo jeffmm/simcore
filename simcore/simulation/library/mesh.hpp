@@ -13,30 +13,30 @@ private:
   void InitMeshID();
 
 protected:
-  bool anchored_;
-  bool midstep_;
-  bool posits_only_;
-  bool dynamic_instability_flag_;
-  int n_sites_;
-  int n_bonds_;
-  int n_bonds_max_;
+  bool anchored_ = false;
+  bool midstep_ = true;
+  bool posits_only_ = false;
+  bool dynamic_instability_flag_ = false;
+  int n_sites_ = 0;
+  int n_bonds_ = 0;
+  int n_bonds_max_ = 0;
   std::vector<Site> sites_;
   std::vector<Bond> bonds_;
-  double bond_length_;
+  double bond_length_ = -1;
   double true_length_ = -1;
   Bond *GetRandomBond();
   void UpdateInteractors();
   void UpdateSiteOrientations();
-  void RelocateMesh(double *pos, double *u);
+  void RelocateMesh(double const *const new_pos, double const *const u);
   void AddRandomBondToSite(double l, int i_site);
   void AddBondToSite(double *u, double l, int i_site);
   void AddSite(Site s);
   void AddBond(Site *s1, Site *s2);
 
 public:
-  Mesh();
-  void InitSiteAt(double *pos, double d);
-  void InitBondAt(double *pos, double *u, double l, double d);
+  Mesh(unsigned long seed);
+  void InitSiteAt(double *new_pos, double d);
+  void InitBondAt(double *new_pos, double *u, double l, double d);
   void InitRandomSite(double d);
   void AddRandomBondAnywhere(double l, double d = 1);
   void AddRandomBondToTip(double l);
@@ -71,7 +71,7 @@ public:
   virtual void UpdateDrTot();
   virtual double const GetDrTot();
   virtual void ZeroDrTot();
-  virtual void SetPosition(double const *const pos);
+  virtual void SetPosition(double const *const new_pos);
   virtual std::vector<Interaction *> *GetInteractions();
   virtual void ClearInteractions();
   virtual void GetAvgPosition(double *ap);

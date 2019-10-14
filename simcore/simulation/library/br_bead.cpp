@@ -1,6 +1,8 @@
 #include "br_bead.hpp"
 
-BrBead::BrBead() : Object() {}
+BrBead::BrBead(unsigned long seed) : Object(seed) {
+  SetSID(species_id::br_bead);
+}
 
 void BrBead::Init(br_bead_parameters *sparams) {
   sparams_ = sparams;
@@ -26,7 +28,7 @@ void BrBead::InsertBrBead() {
     orientation_[n_dim_ - 1] = 1.0;
   } else if (sparams_->insertion_type.compare("centered_random") == 0) {
     std::fill(position_, position_ + 3, 0.0);
-    generate_random_unit_vector(n_dim_, orientation_, rng_.r);
+    rng_.RandomUnitVector(n_dim_, orientation_);
   } else if (sparams_->insertion_type.compare("centered_oriented") == 0) {
     std::fill(position_, position_ + 3, 0.0);
     std::fill(orientation_, orientation_ + 3, 0.0);
@@ -49,7 +51,7 @@ void BrBead::ApplyForcesTorques() {
   // Add random thermal kick to the bead
   if (stoch_flag_) {
     for (int i = 0; i < n_dim_; ++i) {
-      double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
+      double kick = rng_.RandomUniform() - 0.5;
       force_[i] += kick * diffusion_;
     }
   }
@@ -94,7 +96,7 @@ void BrBead::Rotate() {
     for (int i = 0; i < 3; ++i)
       unit_torque[i] = torque_[i] / torque_mag;
     domega = torque_mag * delta_ * gamma_rot_;
-    rotate_vector(orientation_, unit_torque, domega);
+    rotate_vector(orientation_, unit_torque, domega, n_dim_);
   }
   normalize_vector(orientation_, n_dim_);
 }

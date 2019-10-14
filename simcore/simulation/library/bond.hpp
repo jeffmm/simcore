@@ -17,7 +17,7 @@ protected:
   Object *mesh_ptr_;
 
 public:
-  Bond();
+  Bond(unsigned long seed);
   void Init(Site *s1, Site *s2);
   void ReInit();
   void Report();

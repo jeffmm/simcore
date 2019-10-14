@@ -44,6 +44,7 @@ set(SOURCES anchor.cpp
             bond.cpp
             br_bead.cpp
             br_bead_species.cpp
+            br_rod.cpp
             cell.cpp
             cell_list.cpp
             cpu.cpp
@@ -53,7 +54,6 @@ set(SOURCES anchor.cpp
             crosslink_manager.cpp
             filament.cpp
             filament_species.cpp
-            generate_random_unit_vector.cpp
             grabber.cpp
             graphics.cpp
             interaction_manager.cpp

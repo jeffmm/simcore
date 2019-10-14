@@ -6,14 +6,9 @@
 int Mesh::_next_mesh_id_ = 0;
 std::mutex Mesh::_mesh_mtx_;
 
-Mesh::Mesh() : Object() {
+Mesh::Mesh(unsigned long seed) : Object(seed) {
   InitMeshID();
-  n_sites_ = n_bonds_ = n_bonds_max_ = 0;
   is_mesh_ = true;
-  midstep_ = true;
-  anchored_ = false;
-  posits_only_ = false;
-  dynamic_instability_flag_ = false;
 }
 
 void Mesh::InitMeshID() {
@@ -22,7 +17,6 @@ void Mesh::InitMeshID() {
 }
 
 void Mesh::Reserve() {
-  Logger::Debug("n_bonds_max_ %d", n_bonds_max_);
   sites_.reserve(n_bonds_max_ + 1);
   bonds_.reserve(n_bonds_max_);
 }
@@ -39,7 +33,8 @@ void Mesh::AddSite(Site s) {
   sites_.back().SetColor(color_, draw_);
   sites_.back().SetMeshID(GetMeshID());
   n_sites_++;
-  Logger::Debug("Adding site: %d", n_sites_);
+  Logger::Trace("Added site number %d, id: %d", n_sites_,
+                sites_.back().GetOID());
 }
 
 // Adds bond to mesh between sites 1 and 2
@@ -52,7 +47,7 @@ void Mesh::AddBond(Site *site1, Site *site2) {
   } else {
     true_length_ = bonds_.back().GetMeshLambda() + bonds_.back().GetLength();
   }
-  Bond b;
+  Bond b(rng_.GetSeed());
   bonds_.push_back(b);
   bonds_.back().SetColor(color_, draw_);
   bonds_.back().SetMeshID(GetMeshID());
@@ -64,6 +59,9 @@ void Mesh::AddBond(Site *site1, Site *site2) {
   bonds_.back().Init(site1, site2);
   true_length_ += bonds_.back().GetLength();
   n_bonds_++;
+  Logger::Trace("Added bond number %d, id: %d", n_bonds_,
+                bonds_.back().GetOID());
+
   /* Anytime we change the number of bonds, which are interactors, we signal
      that interactors must be updated */
   interactor_update_ = true;
@@ -148,8 +146,8 @@ void Mesh::HalfGranularityLinear() {
 }
 
 /* Move COM of mesh to new position and orientation */
-void Mesh::RelocateMesh(double *pos, double *u) {
-  std::copy(pos, pos + 3, position_);
+void Mesh::RelocateMesh(double const *const new_pos, double const *const u) {
+  std::copy(new_pos, new_pos + 3, position_);
   std::copy(u, u + 3, orientation_);
   normalize_vector(orientation_, n_dim_);
   for (int i = 0; i < n_dim_; ++i) {
@@ -181,16 +179,16 @@ void Mesh::UpdatePrevPositions() {
   }
 }
 
-void Mesh::InitSiteAt(double *pos, double d) {
+void Mesh::InitSiteAt(double *new_pos, double d) {
   Logger::Trace("Mesh %d inserting site at [%2.2f %2.2f %2.2f]", GetMeshID(),
-                pos[0], pos[1], pos[2]);
-  Site s;
-  s.SetPosition(pos);
+                new_pos[0], new_pos[1], new_pos[2]);
+  Site s(rng_.GetSeed());
+  s.SetPosition(new_pos);
   s.SetDiameter(d);
   AddSite(s);
 }
 
-void Mesh::SetPosition(double const *const pos) {
+void Mesh::SetPosition(double const *const new_pos) {
   std::fill(position_, position_ + 3, 0.0);
   std::fill(orientation_, orientation_ + 3, 0.0);
   for (auto site_it = sites_.begin(); site_it != sites_.end(); ++site_it) {
@@ -207,40 +205,38 @@ void Mesh::SetPosition(double const *const pos) {
   }
   double dr[3] = {0, 0, 0};
   for (int i = 0; i < n_dim_; ++i) {
-    dr[i] = pos[i] - position_[i];
+    dr[i] = new_pos[i] - position_[i];
   }
   for (auto site_it = sites_.begin(); site_it != sites_.end(); ++site_it) {
-    double new_pos[3] = {0, 0, 0};
+    double posit[3] = {0, 0, 0};
     double const *const site_pos = site_it->GetPosition();
     for (int i = 0; i < n_dim_; ++i) {
-      new_pos[i] = site_pos[i] + dr[i];
+      posit[i] = site_pos[i] + dr[i];
     }
-    site_it->SetPosition(new_pos);
+    site_it->SetPosition(posit);
   }
   UpdateBondPositions();
 }
 
-void Mesh::InitBondAt(double *pos, double *u, double l, double d) {
-  Site s1;
-  Site s2;
+void Mesh::InitBondAt(double *new_pos, double *u, double l, double d) {
+  Site s1(rng_.GetSeed());
+  Site s2(rng_.GetSeed());
   s1.SetDiameter(d);
   s2.SetDiameter(d);
   for (int i = 0; i < n_dim_; ++i) {
-    pos[i] -= 0.5 * l * u[i];
+    new_pos[i] -= 0.5 * l * u[i];
   }
-  s1.SetPosition(pos);
+  s1.SetPosition(new_pos);
   for (int i = 0; i < n_dim_; ++i) {
-    pos[i] += l * u[i];
+    new_pos[i] += l * u[i];
   }
-  s2.SetPosition(pos);
+  s2.SetPosition(new_pos);
   AddSite(s1);
   AddSite(s2);
   AddBond(&sites_[n_sites_ - 2], &sites_[n_sites_ - 1]);
 }
 void Mesh::InitRandomSite(double d) {
-  InsertRandom();
-  // double pos[3];
-  // get_random_coordinate(pos,params_->n_dim,params_->system_radius,params_->boundary,rng_.r);
+  rng_.RandomCoordinate(space_, position_, d);
   InitSiteAt(position_, d);
 }
 // Default d=1
@@ -248,21 +244,23 @@ void Mesh::AddRandomBondAnywhere(double l, double d) {
   if (n_sites_ < 1) {
     InitRandomSite(d);
   }
-  int i_site = gsl_rng_uniform_int(rng_.r, n_sites_);
+  int i_site = rng_.RandomInt(n_sites_);
   AddRandomBondToSite(l, i_site);
 }
 void Mesh::AddRandomBondToSite(double l, int i_site) {
+  Logger::Trace("Adding random bond of length %2.2f to site number %d", l,
+                i_site);
   if (i_site > n_sites_ || i_site < 0) {
     Logger::Error("Site index out of range in AddRandomBondToSite!\n");
   }
   double const d = sites_[i_site].GetDiameter();
   double const *const pos0 = sites_[i_site].GetPosition();
-  double pos[3] = {0, 0, 0};
-  generate_random_unit_vector(n_dim_, pos, rng_.r);
+  double new_pos[3] = {0, 0, 0};
+  rng_.RandomUnitVector(n_dim_, new_pos);
   for (int i = 0; i < n_dim_; ++i) {
-    pos[i] = pos0[i] + l * pos[i];
+    new_pos[i] = pos0[i] + l * new_pos[i];
   }
-  InitSiteAt(pos, d);
+  InitSiteAt(new_pos, d);
   AddBond(&sites_[i_site], &sites_[n_sites_ - 1]);
 }
 
@@ -275,16 +273,20 @@ void Mesh::AddBondToTip(double *u, double l) {
 }
 
 void Mesh::AddBondToSite(double *u, double l, int i_site) {
+  Logger::Trace("Adding bond of length %2.2f and orientation [%2.2f %2.2f %2.2f"
+                "] to site number %d ",
+                l, u[0], u[1], u[2], i_site);
+
   if (i_site > n_sites_ || i_site < 0) {
     Logger::Error("Site index out of range in AddBondToSite!\n");
   }
   double const d = sites_[i_site].GetDiameter();
   double const *const pos0 = sites_[i_site].GetPosition();
-  double pos[3];
+  double new_pos[3] = {0, 0, 0};
   for (int i = 0; i < n_dim_; ++i) {
-    pos[i] = pos0[i] + l * u[i];
+    new_pos[i] = pos0[i] + l * u[i];
   }
-  InitSiteAt(pos, d);
+  InitSiteAt(new_pos, d);
   AddBond(&sites_[i_site], &sites_[n_sites_ - 1]);
 }
 
@@ -367,8 +369,8 @@ int Mesh::GetCount() { return n_bonds_; }
 
 void Mesh::ReadPosit(std::fstream &ip) {
   int size;
-  Site s;
-  Bond b;
+  Site s(rng_.GetSeed());
+  Bond b(rng_.GetSeed());
   ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   sites_.resize(size, s);
   ip.read(reinterpret_cast<char *>(&size), sizeof(size));
@@ -411,7 +413,7 @@ void Mesh::ReadSpec(std::fstream &ip) {
   } else {
     Clear();
     if (!dynamic_instability_flag_) {
-      n_bonds_max_ = nsites-1;
+      n_bonds_max_ = nsites - 1;
       Reserve();
     }
     for (int i = 0; i < nsites; ++i) {
@@ -480,7 +482,7 @@ Bond *Mesh::GetRandomBond() {
   if (n_bonds_ == 0) {
     return nullptr;
   }
-  int i_bond = gsl_rng_uniform_int(rng_.r, n_bonds_);
+  int i_bond = rng_.RandomInt(n_bonds_);
   return &bonds_[i_bond];
 }
 

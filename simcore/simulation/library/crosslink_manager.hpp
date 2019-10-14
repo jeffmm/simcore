@@ -2,7 +2,6 @@
 #define _SIMCORE_CROSSLINK_MANAGER_H_
 
 #include "output_manager.hpp"
-#include "params_parser.hpp"
 #include "species_factory.hpp"
 
 class CrosslinkOutputManager : public OutputManagerBase<CrosslinkSpecies> {
@@ -10,7 +9,6 @@ class CrosslinkOutputManager : public OutputManagerBase<CrosslinkSpecies> {
   void WriteThermo() {}
   void ReadThermo() {}
   void InitThermo(std::string fname) {}
-  void InitThermoInput(std::string fname) {}
 };
 
 class CrosslinkManager {
@@ -38,7 +36,7 @@ public:
   void InitOutputs(bool reading_inputs = false,
                    run_options *run_opts = nullptr);
   void GetAnchorInteractors(std::vector<Object *> &ixors);
-  void InitSpecies(sid_label &slab, ParamsParser &parser);
+  void InitSpecies(sid_label &slab, ParamsParser &parser, unsigned long seed);
   void LoadCrosslinksFromCheckpoints(std::string run_name,
                                      std::string checkpoint_run_name);
   void ZeroDrTot();

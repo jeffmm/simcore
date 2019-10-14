@@ -30,8 +30,8 @@ private:
   Object *GetRandomObject();
 
 public:
-  void Init(system_parameters *params, species_base_parameters *sparams,
-            space_struct *space);
+  CrosslinkSpecies(unsigned long seed);
+  void Init(std::string spec_name, ParamsParser &parser);
   void InitInteractionEnvironment(std::vector<Object *> *objs, double *obj_vol,
                                   bool *update);
   void GetInteractors(std::vector<Object *> &ixors);

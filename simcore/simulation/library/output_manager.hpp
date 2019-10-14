@@ -29,7 +29,6 @@ private:
   virtual void WriteThermo();
   virtual void ReadThermo();
   virtual void InitThermo(std::string fname);
-  virtual void InitThermoInput(std::string fname);
   void WriteReduce();
   void WriteTime();
   std::fstream othermo_file_;
@@ -61,20 +60,18 @@ void OutputManagerBase<T>::Init(system_parameters *params,
   n_posit_ = n_spec_ = n_checkpoint_ = ABS((int)params_->n_steps);
   n_thermo_ = params_->n_thermo;
   thermo_flag_ = params_->thermo_flag;
+
   if (run_opts) {
     reduce_flag_ = run_opts->reduce_flag;
     reduce_factor_ = run_opts->reduce_factor;
     with_reloads_ = run_opts->with_reloads;
     posits_only_ = run_opts->use_posits;
   }
-  if (!reading_inputs && thermo_flag_) {
+  if (thermo_flag_ && !reading_inputs && !reduce_flag_) {
     InitThermo(run_name_);
-  } else if (reading_inputs && thermo_flag_ && thermo_analysis_) {
-    InitThermoInput(run_name_);
-  }
-  std::string red_file_name =
-      run_name_ + "_reduced" + std::to_string(reduce_factor_);
-  if (thermo_flag_ && reduce_flag_) {
+  } else if (thermo_flag_ && !reading_inputs && reduce_flag_) {
+    std::string red_file_name =
+        run_name_ + "_reduced" + std::to_string(reduce_factor_);
     InitThermo(red_file_name);
   }
 
@@ -82,6 +79,8 @@ void OutputManagerBase<T>::Init(system_parameters *params,
     if (!params_->load_checkpoint && reading_inputs) {
       (*it)->InitInputFiles(run_name_, posits_only_, with_reloads_);
       if (reduce_flag_) {
+        std::string red_file_name =
+            run_name_ + "_reduced" + std::to_string(reduce_factor_);
         (*it)->InitOutputFiles(red_file_name);
       } else if (params->checkpoint_from_spec) {
         (*it)->InitCheckpoints(run_name_);
@@ -166,29 +165,6 @@ template <class T> void OutputManagerBase<T>::InitThermo(std::string fname) {
   othermo_file_.write(reinterpret_cast<char *>(&(params_->delta)),
                       sizeof(double));
   othermo_file_.write(reinterpret_cast<char *>(&(params_->n_dim)), sizeof(int));
-}
-
-template <class T>
-void OutputManagerBase<T>::InitThermoInput(std::string fname) {
-  fname.append(".thermo");
-  ithermo_file_.open(fname, std::ios::in | std::ios::binary);
-  if (!ithermo_file_.is_open()) {
-    Logger::Error("Thermo file failed to open!");
-  }
-  int n_thermo, ndim, n_steps;
-  double delta;
-  ithermo_file_.read(reinterpret_cast<char *>(&n_steps), sizeof(int));
-  ithermo_file_.read(reinterpret_cast<char *>(&n_thermo), sizeof(int));
-  ithermo_file_.read(reinterpret_cast<char *>(&delta), sizeof(double));
-  ithermo_file_.read(reinterpret_cast<char *>(&ndim), sizeof(int));
-  if (n_steps != params_->n_steps || n_thermo != params_->n_thermo ||
-      delta != params_->delta || ndim != params_->n_dim) {
-    Logger::Error(
-        "Input file %s does not match parameter file:\n"
-        "n_steps: %d %d, n_thermo: %d %d, delta: %2.5f %2.5f, n_dim: %d %d",
-        fname.c_str(), n_steps, params_->n_steps, n_thermo, params_->n_thermo,
-        delta, params_->delta, ndim, params_->n_dim);
-  }
 }
 
 template <class T> void OutputManagerBase<T>::WriteThermo() {

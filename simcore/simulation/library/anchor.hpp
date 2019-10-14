@@ -41,7 +41,7 @@ private:
   bool CalcBondLambda();
 
 public:
-  Anchor();
+  Anchor(unsigned long seed);
   void Init(crosslink_parameters *sparams);
   bool IsBound();
   void UpdatePosition();
@@ -69,7 +69,7 @@ public:
   const int GetNNeighbors() const;
   void WriteSpec(std::fstream &ospec);
   void ReadSpec(std::fstream &ispec);
-  void BindToPosition(double *pos);
+  void BindToPosition(double *bind_pos);
   void SetStatic(bool static_flag);
 };
 

@@ -36,7 +36,7 @@ private:
 
 public:
   BeadSpring();
-  virtual void InsertAt(double *pos, double *u);
+  virtual void InsertAt(double *new_pos, double *u);
   // void DiffusionValidationInit();
   virtual void Integrate(bool midstep);
   // virtual void Draw(std::vector<graph_struct*> * graph_array);

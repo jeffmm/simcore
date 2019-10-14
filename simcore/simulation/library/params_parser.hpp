@@ -21,7 +21,8 @@ public:
   void Init(YAML::Node sim_params);
   system_parameters ParseSystemParameters();
   std::vector<sid_label> &GetSpeciesLabels() { return labels_; }
-  species_base_parameters *GetNewSpeciesParameters(sid_label &slab);
+  species_base_parameters *GetNewSpeciesParameters(species_id sid,
+                                                   std::string spec_name);
   const int GetNCrosslinkSpecies() { return n_crosslinks_; }
   const int GetNSpecies() { return n_species_; }
 };

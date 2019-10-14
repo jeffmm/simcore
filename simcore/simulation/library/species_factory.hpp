@@ -9,17 +9,17 @@
 
 class SpeciesFactory {
   public:
-    SpeciesBase* CreateSpecies(const species_id sid) const {
+    SpeciesBase* CreateSpecies(const species_id sid, unsigned long seed) const {
       if (sid == +species_id::filament) {
-        return new FilamentSpecies();
+        return new FilamentSpecies(seed);
       } else if (sid == +species_id::br_bead) {
-        return new BrBeadSpecies();
+        return new BrBeadSpecies(seed);
       } else if (sid == +species_id::crosslink) {
-        return new CrosslinkSpecies();
+        return new CrosslinkSpecies(seed);
       } else if (sid == +species_id::spindle) {
-        return new SpindleSpecies();
+        return new SpindleSpecies(seed);
       } else if (sid == +species_id::spherocylinder) {
-        return new SpherocylinderSpecies();
+        return new SpherocylinderSpecies(seed);
       }
       Logger::Error("Species ID not recognized in SpeciesFactory!");
       return nullptr;

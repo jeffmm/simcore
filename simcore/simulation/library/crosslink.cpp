@@ -1,6 +1,8 @@
 #include "crosslink.hpp"
 
-Crosslink::Crosslink() : Object() { SetSID(species_id::crosslink); }
+Crosslink::Crosslink(unsigned long seed) : Object(seed) {
+  SetSID(species_id::crosslink);
+}
 
 void Crosslink::Init(crosslink_parameters *sparams) {
   sparams_ = sparams;
@@ -19,8 +21,8 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   fdep_factor_ = sparams_->force_dep_factor;
   polar_affinity_ = sparams_->polar_affinity;
   /* TODO generalize crosslinks to more than two anchors */
-  Anchor anchor1;
-  Anchor anchor2;
+  Anchor anchor1(rng_.GetSeed());
+  Anchor anchor2(rng_.GetSeed());
   anchors_.push_back(anchor1);
   anchors_.push_back(anchor2);
   anchors_[0].Init(sparams_);
@@ -38,7 +40,9 @@ void Crosslink::UpdatePosition() {}
 void Crosslink::GetAnchors(std::vector<Object *> &ixors) {
   if (IsUnbound())
     return;
-  ixors.push_back(&anchors_[0]);
+  if (!static_flag_) {
+    ixors.push_back(&anchors_[0]);
+  }
   if (IsDoubly()) {
     ixors.push_back(&anchors_[1]);
   }
@@ -46,7 +50,7 @@ void Crosslink::GetAnchors(std::vector<Object *> &ixors) {
 
 /* Perform kinetic monte carlo step of protein with 1 head attached. */
 void Crosslink::SinglyKMC() {
-  double roll = gsl_rng_uniform_pos(rng_.r);
+  double roll = rng_.RandomUniform();
   int head_bound = 0;
   // Set up KMC objects and calculate probabilities
   double unbind_prob = k_off_ * delta_;
@@ -120,7 +124,7 @@ void Crosslink::DoublyKMC() {
   tether_stretch = (tether_stretch > 0 ? tether_stretch : 0);
   double fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
   double unbind_prob = k_off_d_ * delta_ * exp(fdep);
-  double roll = gsl_rng_uniform_pos(rng_.r);
+  double roll = rng_.RandomUniform();
   int head_activate = -1;
   if (static_flag_) {
     head_activate = choose_kmc_double(0, unbind_prob, roll);
@@ -381,14 +385,11 @@ void Crosslink::ZeroDrTot() {
   }
 }
 
-void Crosslink::InsertAt(double *pos, double *u) {
+void Crosslink::InsertAt(double const *const new_pos, double const *const u) {
   static_flag_ = true;
+  anchors_[0].InsertAt(new_pos, u);
   anchors_[0].SetBound();
   anchors_[0].SetStatic(true);
-  anchors_[0].SetPosition(pos);
-  normalize_vector(u, n_dim_);
-  anchors_[0].SetOrientation(u);
-  anchors_[0].UpdatePeriodic();
   SetSingly();
 }
 
@@ -396,10 +397,10 @@ const int Crosslink::GetNNeighbors() const {
   return anchors_[0].GetNNeighbors();
 }
 
-const double * const Crosslink::GetPosition() {
+const double *const Crosslink::GetPosition() {
   return anchors_[0].GetPosition();
 }
 
-const double * const Crosslink::GetOrientation() {
+const double *const Crosslink::GetOrientation() {
   return anchors_[0].GetOrientation();
 }

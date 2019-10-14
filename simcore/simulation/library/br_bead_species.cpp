@@ -1,9 +1,10 @@
 #include "br_bead_species.hpp"
 
-void BrBeadSpecies::Init(system_parameters *params,
-                         species_base_parameters *sparams,
-                         space_struct *space) {
-  Species::Init(params, sparams, space);
+BrBeadSpecies::BrBeadSpecies(unsigned long seed) : Species(seed) {
+  SetSID(species_id::br_bead);
+}
+void BrBeadSpecies::Init(std::string spec_name, ParamsParser &parser) {
+  Species::Init(spec_name, parser);
 }
 
 void BrBeadSpecies::UpdatePositions() {

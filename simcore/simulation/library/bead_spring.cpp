@@ -45,24 +45,24 @@ void BeadSpring::GenerateProbableOrientation() {
   for large k */
   double theta;
   if (persistence_length_ == 0) {
-    theta = gsl_rng_uniform_pos(rng_.r) * M_PI;
+    theta = rng_.RandomUniform() * M_PI;
   } else if (persistence_length_ < 100) {
     theta = acos(log(exp(-persistence_length_ / bond_length_) +
-                     2.0 * gsl_rng_uniform_pos(rng_.r) *
+                     2.0 * rng_.RandomUniform() *
                          sinh(persistence_length_ / bond_length_)) /
                  (persistence_length_ / bond_length_));
   } else {
-    theta = acos((log(2.0 * gsl_rng_uniform_pos(rng_.r)) - log(2.0) +
+    theta = acos((log(2.0 * rng_.RandomUniform()) - log(2.0) +
                   persistence_length_ / bond_length_) /
                  (persistence_length_ / bond_length_));
   }
   double new_orientation[3] = {0, 0, 0};
   if (n_dim_ == 2) {
-    theta = (gsl_rng_uniform_int(rng_.r, 2) == 0 ? -1 : 1) * theta;
+    theta = (rng_.RandomInt(2) == 0 ? -1 : 1) * theta;
     new_orientation[0] = cos(theta);
     new_orientation[1] = sin(theta);
   } else {
-    double phi = gsl_rng_uniform_pos(rng_.r) * 2.0 * M_PI;
+    double phi = rng_.RandomUniform() * 2.0 * M_PI;
     new_orientation[0] = sin(theta) * cos(phi);
     new_orientation[1] = sin(theta) * sin(phi);
     new_orientation[2] = cos(theta);
@@ -79,7 +79,7 @@ void BeadSpring::InsertFirstBond() {
              0) {
     InitRandomSite(diameter_);
     std::fill(orientation_, orientation_ + 3, 0.0);
-    orientation_[n_dim_ - 1] = (gsl_rng_uniform_pos(rng_.r) > 0.5 ? 1.0 : -1.0);
+    orientation_[n_dim_ - 1] = (rng_.RandomUniform() > 0.5 ? 1.0 : -1.0);
     AddBondToTip(orientation_, bond_length_);
   } else if (sparams_->insertion_type.compare("centered_oriented") ==
              0) {
@@ -121,10 +121,10 @@ void BeadSpring::InsertBeadSpring() {
   UpdateSiteOrientations();
 }
 
-void BeadSpring::InsertAt(double *pos, double *u) {
+void BeadSpring::InsertAt(double *new_pos, double *u) {
   bond_length_ = bond_rest_length_;
   for (int i = 0; i < n_dim_; ++i) {
-    position_[i] = pos[i] - 0.5 * length_ * u[i];
+    position_[i] = new_pos[i] - 0.5 * length_ * u[i];
   }
   InitSiteAt(position_, diameter_);
   std::copy(u, u + 3, orientation_);
@@ -215,7 +215,7 @@ void BeadSpring::CalcRandomForces() {
   if (!stoch_flag_) return;
   for (int i_site = 0; i_site < n_sites_; ++i_site) {
     for (int i = 0; i < n_dim_; ++i) {
-      double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
+      double kick = rng_.RandomUniform() - 0.5;
       force_[i] = kick * rand_sigma_;
     }
     sites_[i_site].SetRandomForce(force_);
@@ -487,8 +487,8 @@ void BeadSpring::ReadPosit(std::fstream &iposit) {
 }
 
 void BeadSpring::WriteCheckpoint(std::fstream &ocheck) {
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
+  void *rng_state = rng_.GetState();
+  size_t rng_size = rng_.GetSize();
   ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
   WriteSpec(ocheck);
@@ -496,7 +496,7 @@ void BeadSpring::WriteCheckpoint(std::fstream &ocheck) {
 
 void BeadSpring::ReadCheckpoint(std::fstream &icheck) {
   if (icheck.eof()) return;
-  void *rng_state = gsl_rng_state(rng_.r);
+  void *rng_state = rng_.GetState();
   size_t rng_size;
   icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   icheck.read(reinterpret_cast<char *>(rng_state), rng_size);

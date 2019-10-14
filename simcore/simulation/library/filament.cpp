@@ -1,7 +1,8 @@
 #include "filament.hpp"
 
-Filament::Filament() : Mesh() { SetSID(species_id::filament); }
-
+Filament::Filament(unsigned long seed) : Mesh(seed) {
+  SetSID(species_id::filament);
+}
 void Filament::SetParameters() {
   /* Read parameters from filament parameters */
   color_ = sparams_->color;
@@ -92,7 +93,7 @@ void Filament::InitFilamentLength() {
   if (polydispersity_flag_) {
     ExponentialDist expon;
     expon.Init(length_, min_length_, max_length_);
-    double roll = gsl_rng_uniform_pos(rng_.r);
+    double roll = rng_.RandomUniform();
     length_ = expon.Rand(roll);
     if (length_ > max_length_ + 1e-6 || length_ < min_length_ - 1e-6) {
       Logger::Error(
@@ -171,7 +172,7 @@ void Filament::InsertFirstBond() {
   } else if (sparams_->insertion_type.compare("random_nematic") == 0) {
     InitRandomSite(diameter_);
     std::fill(orientation_, orientation_ + 3, 0.0);
-    orientation_[n_dim_ - 1] = (gsl_rng_uniform_pos(rng_.r) > 0.5 ? 1.0 : -1.0);
+    orientation_[n_dim_ - 1] = (rng_.RandomUniform() > 0.5 ? 1.0 : -1.0);
     AddBondToTip(orientation_, bond_length_);
   } else if (sparams_->insertion_type.compare("random_polar") == 0) {
     InitRandomSite(diameter_);
@@ -187,7 +188,7 @@ void Filament::InsertFirstBond() {
     InitSiteAt(position_, diameter_);
     AddBondToTip(orientation_, bond_length_);
   } else if (sparams_->insertion_type.compare("centered_random") == 0) {
-    generate_random_unit_vector(n_dim_, orientation_, rng_.r);
+    rng_.RandomUnitVector(n_dim_, orientation_);
     for (int i = 0; i < n_dim_; ++i) {
       position_[i] = -0.5 * length_ * orientation_[i];
     }
@@ -226,11 +227,11 @@ void Filament::InsertFilament() {
   CalculateAngles();
 }
 
-void Filament::InsertAt(double *pos, double *u) {
+void Filament::InsertAt(const double *const new_pos, const double *const u) {
   Logger::Trace("Inserting filament at [%2.1f, %2.1f, %2.1f] with orientation"
                 "[%2.1f, %2.1f, %2.1f]",
-                pos[0], pos[1], pos[2], u[0], u[1], u[2]);
-  RelocateMesh(pos, u);
+                new_pos[0], new_pos[1], new_pos[2], u[0], u[1], u[2]);
+  RelocateMesh(new_pos, u);
   UpdatePrevPositions();
   CalculateAngles();
   SetDiffusion();
@@ -247,8 +248,8 @@ void Filament::InsertAt(double *pos, double *u) {
       }
     }
     int trapped_2 = (trapped_site_ == 0 ? 1 : n_sites_ - 2);
-    double const *const r0 = sites_[trapped_site_].GetPosition();
-    double const *const r1 = sites_[trapped_2].GetPosition();
+    const double *const r0 = sites_[trapped_site_].GetPosition();
+    const double *const r1 = sites_[trapped_2].GetPosition();
     std::copy(r0, r0 + 3, optical_trap_pos_);
     std::copy(r1, r1 + 3, optical_trap_pos2_);
   }
@@ -305,24 +306,24 @@ void Filament::GenerateProbableOrientation() {
   approximate distribution that is valid for large k */
   double theta;
   if (persistence_length_ == 0) {
-    theta = gsl_rng_uniform_pos(rng_.r) * M_PI;
+    theta = rng_.RandomUniform() * M_PI;
   } else if (persistence_length_ < 100) {
     theta = acos(log(exp(-persistence_length_ / bond_length_) +
-                     2.0 * gsl_rng_uniform_pos(rng_.r) *
+                     2.0 * rng_.RandomUniform() *
                          sinh(persistence_length_ / bond_length_)) /
                  (persistence_length_ / bond_length_));
   } else {
-    theta = acos((log(2.0 * gsl_rng_uniform_pos(rng_.r)) - log(2.0) +
+    theta = acos((log(2.0 * rng_.RandomUniform()) - log(2.0) +
                   persistence_length_ / bond_length_) /
                  (persistence_length_ / bond_length_));
   }
   double new_orientation[3] = {0, 0, 0};
   if (n_dim_ == 2) {
-    theta = (gsl_rng_uniform_int(rng_.r, 2) == 0 ? -1 : 1) * theta;
+    theta = (rng_.RandomInt(2) == 0 ? -1 : 1) * theta;
     new_orientation[0] = cos(theta);
     new_orientation[1] = sin(theta);
   } else {
-    double phi = gsl_rng_uniform_pos(rng_.r) * 2.0 * M_PI;
+    double phi = rng_.RandomUniform() * 2.0 * M_PI;
     new_orientation[0] = sin(theta) * cos(phi);
     new_orientation[1] = sin(theta) * sin(phi);
     new_orientation[2] = cos(theta);
@@ -469,7 +470,7 @@ void Filament::ConstructUnprojectedRandomForces() {
   for (int i_site = 0; i_site < n_sites_; ++i_site) {
     double const *const utan = sites_[i_site].GetTangent();
     for (int i = 0; i < n_dim_; ++i)
-      xi[i] = gsl_rng_uniform_pos(rng_.r) - 0.5;
+      xi[i] = rng_.RandomUniform() - 0.5;
     if (n_dim_ == 2) {
       xi_term[0] = SQR(utan[0]) * xi[0] + utan[0] * utan[1] * xi[1];
       xi_term[1] = SQR(utan[1]) * xi[1] + utan[0] * utan[1] * xi[0];
@@ -618,8 +619,8 @@ void Filament::CalculateBendingForces() {
         std::copy(u1_temp, u1_temp + 3, u1);
         std::copy(u2_temp, u2_temp + 3, u2);
         if (curvature_ != 0 || flagella_flag_) {
-          rotate_vector(u1, zvec, curve * bond_length_);
-          rotate_vector(u2, zvec, -curve * bond_length_);
+          rotate_vector(u1, zvec, curve * bond_length_, n_dim_);
+          rotate_vector(u2, zvec, -curve * bond_length_, n_dim_);
         }
         f_site[0] += k_eff_[k_site - 2] *
                      ((1 - SQR(u2[0])) * u1[0] - u2[0] * u2[1] * u1[1]);
@@ -635,8 +636,8 @@ void Filament::CalculateBendingForces() {
         std::copy(u1_temp, u1_temp + 3, u1);
         std::copy(u2_temp, u2_temp + 3, u2);
         if (curvature_ != 0 || flagella_flag_) {
-          rotate_vector(u1, zvec, curve * bond_length_);
-          rotate_vector(u2, zvec, -curve * bond_length_);
+          rotate_vector(u1, zvec, curve * bond_length_, n_dim_);
+          rotate_vector(u2, zvec, -curve * bond_length_, n_dim_);
         }
         f_site[0] += k_eff_[k_site - 1] *
                      ((1 - SQR(u1[0])) * u2[0] - u1[0] * u1[1] * u2[1] -
@@ -654,8 +655,8 @@ void Filament::CalculateBendingForces() {
         std::copy(u1_temp, u1_temp + 3, u1);
         std::copy(u2_temp, u2_temp + 3, u2);
         if (curvature_ != 0 || flagella_flag_) {
-          rotate_vector(u1, zvec, curve * bond_length_);
-          rotate_vector(u2, zvec, -curve * bond_length_);
+          rotate_vector(u1, zvec, curve * bond_length_, n_dim_);
+          rotate_vector(u2, zvec, -curve * bond_length_, n_dim_);
         }
         f_site[0] -=
             k_eff_[k_site] * ((1 - SQR(u1[0])) * u2[0] - u1[0] * u1[1] * u2[1]);
@@ -1046,7 +1047,7 @@ void Filament::RescaleBonds() {
 void Filament::UpdatePolyState() {
   double p_g2s = p_g2s_;
   double p_p2s = p_p2s_;
-  double roll = gsl_rng_uniform_pos(rng_.r);
+  double roll = rng_.RandomUniform();
   double p_norm;
   // Modify catastrophe probabilities if the end of the filament is under a
   // load
@@ -1321,22 +1322,8 @@ void Filament::ReadPosit(std::fstream &iposit) {
 
 void Filament::WriteCheckpoint(std::fstream &ocheck) {
   Mesh::WriteCheckpoint(ocheck);
-  // void *rng_state = gsl_rng_state(rng_.r);
-  // size_t rng_size = gsl_rng_size(rng_.r);
-  // ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  // ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
-  // WriteSpec(ocheck);
 }
 
 void Filament::ReadCheckpoint(std::fstream &icheck) {
   Mesh::ReadCheckpoint(icheck);
-  // if (icheck.eof())
-  // return;
-  // void *rng_state = gsl_rng_state(rng_.r);
-  // size_t rng_size;
-  // icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  // icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
-  // ReadSpec(icheck);
-  // Logger::Trace("Reloading filament from checkpoint with mid %d",
-  // GetMeshID());
 }

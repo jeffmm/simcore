@@ -20,7 +20,7 @@ protected:
   void Integrate();
 
 public:
-  BrBead();
+  BrBead(unsigned long seed);
   void Init(br_bead_parameters *sparams);
   void UpdatePosition();
   virtual void GetInteractors(std::vector<Object *> &ix);

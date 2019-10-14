@@ -12,13 +12,16 @@ protected:
   species_parameters<S> sparams_;
 
 public:
-  Species() {}
+  Species(unsigned long seed) : SpeciesBase(seed) {}
   // Initialize function for setting it up on the first pass
-  virtual void Init(system_parameters *params, species_base_parameters *sparams,
-                    space_struct *space) {
-    sparams_ = *dynamic_cast<species_parameters<S> *>(sparams);
+  virtual void Init(std::string spec_name, ParamsParser &parser) {
     SetSID(species_id::_from_integral(S));
-    SpeciesBase::Init(params, sparams, space);
+    species_base_parameters *sparams =
+      parser.GetNewSpeciesParameters(GetSID(), spec_name);
+    sparams_ = *dynamic_cast<species_parameters<S> *>(sparams);
+    delete sparams;
+    Logger::Debug("Initializing %s %s", GetSID()._to_string(),
+                  GetSpeciesName().c_str());
   }
   // Virtual functions
   virtual const double GetSpecDiameter() const { return sparams_.diameter; }
@@ -84,7 +87,7 @@ template <typename T, unsigned char S> void Species<T, S>::Reserve() {
 }
 
 template <typename T, unsigned char S> void Species<T, S>::AddMember() {
-  T newmember;
+  T newmember(rng_.GetSeed());
   Logger::Trace("Adding member to %s %s, member number %d, member id %d",
                 GetSID()._to_string(), GetSpeciesName().c_str(), n_members_ + 1,
                 newmember.GetOID());
@@ -220,12 +223,10 @@ template <typename T, unsigned char S> void Species<T, S>::WriteCheckpoints() {
   if (!ocheck_file.is_open()) {
     Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
   }
-  long seed = rng_.GetSeed();
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
+  void *rng_state = rng_.GetState();
+  size_t rng_size = rng_.GetSize();
   int next_oid = Object::GetNextOID();
   int size = members_.size();
-  ocheck_file.write(reinterpret_cast<char *>(&seed), sizeof(long));
   ocheck_file.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   ocheck_file.write(reinterpret_cast<char *>(rng_state), rng_size);
   ocheck_file.write(reinterpret_cast<char *>(&next_oid), sizeof(int));
@@ -249,7 +250,6 @@ template <typename T, unsigned char S> void Species<T, S>::ReadPosits() {
     return;
   }
   int size = -1;
-  T *member;
   iposit_file_.read(reinterpret_cast<char *>(&size), sizeof(int));
   // Hacky workaround FIXME
   // This prevents strange errors that occasionally crop up when reading inputs
@@ -258,7 +258,7 @@ template <typename T, unsigned char S> void Species<T, S>::ReadPosits() {
     return;
   }
   if (size != n_members_) {
-    T member;
+    T member(rng_.GetSeed());
     members_.resize(size, member);
     n_members_ = size;
   }
@@ -281,12 +281,10 @@ template <typename T, unsigned char S> void Species<T, S>::ReadCheckpoints() {
   if (!icheck_file.is_open()) {
     Logger::Error("Output %s file did not open", checkpoint_file_.c_str());
   }
-  long seed = -1;
-  void *rng_state = gsl_rng_state(rng_.r);
+  void *rng_state = rng_.GetState();
   size_t rng_size;
   int next_oid = -1;
   int size = -1;
-  icheck_file.read(reinterpret_cast<char *>(&seed), sizeof(long));
   icheck_file.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   icheck_file.read(reinterpret_cast<char *>(rng_state), rng_size);
   icheck_file.read(reinterpret_cast<char *>(&next_oid), sizeof(int));
@@ -303,7 +301,6 @@ template <typename T, unsigned char S> void Species<T, S>::ReadCheckpoints() {
       it->ReadCheckpoint(icheck_file);
   }
   icheck_file.close();
-  RNG::SetSeed(seed);
   Object::SetNextOID(next_oid);
 }
 
@@ -324,7 +321,6 @@ template <typename T, unsigned char S> void Species<T, S>::ReadSpecs() {
     return;
   }
   n_members_ = -1;
-  // T *member;
   ispec_file_.read(reinterpret_cast<char *>(&n_members_), sizeof(int));
   /* For some reason, we can't catch the EOF above. If size == -1 still, then
      we caught a EOF here */
@@ -339,7 +335,7 @@ template <typename T, unsigned char S> void Species<T, S>::ReadSpecs() {
     }
   }
   if (n_members_ != members_.size()) {
-    T member;
+    T member(rng_.GetSeed());
     member.Init(&sparams_);
     member.SetSID(GetSID());
     members_.resize(n_members_, member);
@@ -442,7 +438,7 @@ void Species<T, S>::CrystalArrangement() {
     // Check crystal orientation type
     if (params_->uniform_crystal == 0) {
       // Random orientations
-      u[n_dim - 1] = (gsl_rng_uniform_int(rng_.r, 2) == 0 ? 1 : -1);
+      u[n_dim - 1] = (rng_.RandomInt(2) == 0 ? 1 : -1);
     } else if (params_->uniform_crystal == 2) {
       // Stagger orientations
       u[n_dim - 1] = -u[n_dim - 1];

@@ -1,9 +1,9 @@
 #ifndef _SIMCORE_FILAMENT_H_
 #define _SIMCORE_FILAMENT_H_
 
+#include "exponential_dist.hpp"
 #include "flory_schulz.hpp"
 #include "mesh.hpp"
-#include "exponential_dist.hpp"
 
 class Filament : public Mesh {
 private:
@@ -94,9 +94,9 @@ private:
   bool CheckBondLengths();
 
 public:
-  Filament();
+  Filament(unsigned long seed);
   virtual void Init(filament_parameters *sparams);
-  virtual void InsertAt(double *pos, double *u);
+  virtual void InsertAt(const double *const new_pos, const double *const u);
   virtual void Integrate();
   virtual void Draw(std::vector<graph_struct *> &graph_array);
   virtual void UpdatePosition() {}

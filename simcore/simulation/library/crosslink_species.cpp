@@ -1,13 +1,14 @@
 #include "crosslink_species.hpp"
 
-void CrosslinkSpecies::Init(system_parameters *params,
-                            species_base_parameters *sparams,
-                            space_struct *space) {
-  Species::Init(params, sparams, space);
+CrosslinkSpecies::CrosslinkSpecies(unsigned long seed) : Species(seed) {
+  SetSID(species_id::crosslink);
+}
+void CrosslinkSpecies::Init(std::string spec_name, ParamsParser &parser) {
+  Species::Init(spec_name, parser);
   k_on_ = sparams_.k_on;
   k_off_ = sparams_.k_off;
   xlink_concentration_ = sparams_.concentration;
-  sparams_.num = (int)round(sparams_.concentration * space->volume);
+  sparams_.num = (int)round(sparams_.concentration * space_->volume);
 }
 
 void CrosslinkSpecies::AddMember() {
@@ -39,8 +40,8 @@ void CrosslinkSpecies::InsertCrosslinks() {
     sparams_.num = 1;
     sparams_.static_flag = true;
     AddMember();
-    double pos[3] = {0};
-    double u[3] = {0};
+    double pos[3] = {0, 0, 0};
+    double u[3] = {0, 0, 0};
     u[params_->n_dim - 1] = 1.0;
     members_.back().InsertAt(pos, u);
   } else if (sparams_.insertion_type.compare("random_grid") == 0) {
@@ -98,13 +99,15 @@ void CrosslinkSpecies::InsertCrosslinks() {
       double pos[3] = {0};
       double u[3] = {0};
       for (int i = 0; i < sparams_.num; ++i) {
-        generate_random_unit_vector(params_->n_dim, u, rng_.r);
+        rng_.RandomUnitVector(params_->n_dim, u);
         for (int j = 0; j < params_->n_dim; ++j) {
           pos[j] = u[j] * space_->radius;
         }
         AddMember();
         members_.back().InsertAt(pos, u);
       }
+    } else if (space_->type == +boundary_type::budding){
+
     } else {
       Logger::Error("Boundary type not recognized in CrosslinkSpecies");
     }
@@ -121,7 +124,7 @@ void CrosslinkSpecies::CalculateBindingFree() {
   }
   /* Check crosslink binding */
   double free_concentration = (sparams_.num - n_members_) / space_->volume;
-  if (gsl_rng_uniform_pos(rng_.r) <=
+  if (rng_.RandomUniform() <=
       free_concentration * (*obj_volume_) * k_on_ * params_->delta) {
     /* Create a new crosslink and bind an anchor to a random object
      * in the system */
@@ -132,7 +135,7 @@ void CrosslinkSpecies::CalculateBindingFree() {
 /* Returns a random object with selection probability proportional to object
    volume */
 Object *CrosslinkSpecies::GetRandomObject() {
-  double roll = (*obj_volume_) * gsl_rng_uniform_pos(rng_.r);
+  double roll = (*obj_volume_) * rng_.RandomUniform();
   double vol = 0;
   for (auto obj = objs_->begin(); obj != objs_->end(); ++obj) {
     vol += (*obj)->GetVolume();
@@ -364,9 +367,10 @@ void CrosslinkSpecies::ReadSpecs() {
   if (n_members_ == 0) {
     members_.clear();
   } else if (n_members_ != members_.size()) {
-    Crosslink xlink;
+    Crosslink xlink(rng_.GetSeed());
     xlink.Init(&sparams_);
     xlink.InitInteractionEnvironment(&lut_);
+    xlink.SetSID(GetSID());
     members_.resize(n_members_, xlink);
   }
   for (auto it = members_.begin(); it != members_.end(); ++it) {

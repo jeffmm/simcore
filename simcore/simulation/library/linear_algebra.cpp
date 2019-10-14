@@ -198,21 +198,26 @@ void tridiagonal_solver(std::vector<double> *a, std::vector<double> *b,
 
 /* This function rotates vector v about vector k by an angle theta.
  * Derived using rodrigues' rotation formula */
-void rotate_vector(double *v, double *k, double theta) {
+void rotate_vector(double *v, double *k, double theta, int n_dim) {
   double cos_theta = cos(theta);
   double sin_theta = sin(theta);
-  double k_dot_v = k[0] * v[0] + k[1] * v[1] + k[2] * v[2];
-  double t[3];
-  t[0] = v[0] * cos_theta + (k[1] * v[2] - v[1] * k[2]) * sin_theta +
-         k[0] * k_dot_v * (1 - cos_theta);
-  t[1] = v[1] * cos_theta + (k[2] * v[0] - k[0] * v[2]) * sin_theta +
-         k[1] * k_dot_v * (1 - cos_theta);
-  t[2] = v[2] * cos_theta + (k[0] * v[1] - k[1] * v[0]) * sin_theta +
-         k[2] * k_dot_v * (1 - cos_theta);
+  if (n_dim == 2) {
+    v[0] = v[0] * cos_theta - v[1] * sin_theta;
+    v[1] = v[0] * sin_theta + v[1] * cos_theta;
+  } else {
+    double k_dot_v = k[0] * v[0] + k[1] * v[1] + k[2] * v[2];
+    double t[3];
+    t[0] = v[0] * cos_theta + (k[1] * v[2] - v[1] * k[2]) * sin_theta +
+           k[0] * k_dot_v * (1 - cos_theta);
+    t[1] = v[1] * cos_theta + (k[2] * v[0] - k[0] * v[2]) * sin_theta +
+           k[1] * k_dot_v * (1 - cos_theta);
+    t[2] = v[2] * cos_theta + (k[0] * v[1] - k[1] * v[0]) * sin_theta +
+           k[2] * k_dot_v * (1 - cos_theta);
 
-  v[0] = t[0];
-  v[1] = t[1];
-  v[2] = t[2];
+    v[0] = t[0];
+    v[1] = t[1];
+    v[2] = t[2];
+  }
 }
 
 /* This function takes two unit vectors and rotates vect1 such that its relative
