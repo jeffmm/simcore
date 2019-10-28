@@ -166,17 +166,29 @@ void Simulation::InitObjects() {
 
 /* Generate graphics window and draw initial simulation setup */
 void Simulation::InitGraphics() {
+  Logger::Trace("Here is fail");
+
   GetGraphicsStructure();
+  Logger::Trace("Here is fail 2");
+ 
   double background_color = (params_.graph_background == 0 ? 0.1 : 1);
 // If NOGRAPH is defined, skip drawing and grabbing
 #ifndef NOGRAPH
   // Initialize graphics structures
+  Logger::Trace("Here is fail3");
+ 
   graphics_.Init(&graph_array_, space_.GetStruct(), background_color,
                  params_.draw_boundary, params_.auto_graph);
-  graphics_.DrawLoop();
+
+  Logger::Trace("Here is fail4");
+ /* graphics_.DrawLoop();*/
+  Logger::Trace("Here is fail5");
+
 #endif
   // Initialize directory for grabbed images
   params_.movie_directory.append("/");
+  Logger::Trace("Here is fail6");
+
   params_.movie_directory.append(params_.run_name);
 #ifndef NOGRAPH
   // Grab first frame
@@ -185,8 +197,11 @@ void Simulation::InitGraphics() {
     grabber(graphics_.windx_, graphics_.windy_, params_.movie_directory,
             (int)i_step_ / params_.n_graph);
   }
+  Logger::Trace("Here is fail5");
+
 #endif
 }
+
 
 /* Initialize object types */
 void Simulation::InitSpecies() {
@@ -412,11 +427,16 @@ void Simulation::Draw(bool single_frame) {
 void Simulation::GetGraphicsStructure() {
   Logger::Trace("Retrieving graphics structures from objects");
   graph_array_.clear();
+
   for (auto it = species_.begin(); it != species_.end(); ++it) {
     (*it)->Draw(&graph_array_);
   }
+
   /* Visualize interaction forces, crosslinks, etc */
+ 
   iengine_.DrawInteractions(&graph_array_);
+  
+
 }
 
 /* Initialize output files */
@@ -424,12 +444,18 @@ void Simulation::InitOutputs() {
   Logger::Debug("Initializing output files");
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_,
                    run_name_);
+
   //if (!params_.load_checkpoint)
     iengine_.InitOutputs();
+  
   /* If analyzing run time, record cpu time here */
   if (params_.time_analysis) {
     cpu_init_time_ = cpu_time();
+  
+
   }
+  Logger::Debug("Initializing output files4");
+
 }
 
 /* Determine which output files we are reading */

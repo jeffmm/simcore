@@ -12,7 +12,9 @@ cell_length: 6
 graph_flag: 1
 n_graph: 100
 graph_background: 0
-movie_flag: 0
+movie_flag: 1
+movie_directory: movie
+
 
 system_radius: 100
 potential: soft

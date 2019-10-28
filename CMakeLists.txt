@@ -64,8 +64,10 @@ add_subdirectory("extern")
 add_subdirectory("simcore")
 
 # Configure unit tests
+if(TESTS)
 enable_testing()
 add_subdirectory("tests")
+endif()
 
 # Build the documentation
 # check if Doxygen is installed
