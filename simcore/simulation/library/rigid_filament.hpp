@@ -53,8 +53,8 @@ class RigidFilament : public Mesh {
   void UpdateSiteBondPositions();
   void SetDiffusion();
   void GenerateProbableOrientation();
-  void CalculateAngles();
-  void CalculateTangents();
+  // void CalculateAngles();
+  // void CalculateTangents();
   void AddRandomForces();
 
   // void ConstructUnprojectedRandomForces();  //?
@@ -74,7 +74,7 @@ class RigidFilament : public Mesh {
   void ReportAll();
 
   void CalculateBinding();
-  bool CheckBondLengths();
+  // bool CheckBondLengths();
 
  protected:
   void InsertRigidFilament(std::string insertion_type, double buffer = -1);
@@ -91,7 +91,7 @@ class RigidFilament : public Mesh {
   virtual void UpdatePosition();
   double const GetLength() { return length_; }
   // double const GetDriving() { return driving_factor_; }
-  void Reserve();
+  // void Reserve();
   void CheckFlocking();
 
   void GetNematicOrder(double *nematic_order_tensor);

@@ -13,6 +13,11 @@ void RigidFilament::SetParameters() {
   diameter_ = sparams_->diameter;
   max_length_ = sparams_->max_length;
   min_length_ = sparams_->min_length;
+  // driving_factor_ = sparams_->driving_factor;
+  // stoch_flag_ = params_->stoch_flag;  // include thermal forces
+  // eq_steps_ = sparams_->n_equil;
+  eq_steps_count_ = 0;
+
   // dynamic_instability_flag_ = sparams_->dynamic_instability_flag;
   // polydispersity_flag_ = sparams_->polydispersity_flag;
   // force_induced_catastrophe_flag_ = sparams_->force_induced_catastrophe_flag;
@@ -24,10 +29,7 @@ void RigidFilament::SetParameters() {
   // p_p2g_ = sparams_->f_pause_to_grow * delta_;
   // v_depoly_ = sparams_->v_depoly;
   // v_poly_ = sparams_->v_poly;
-  // driving_factor_ = sparams_->driving_factor;
-  // stoch_flag_ = params_->stoch_flag;  // include thermal forces
-  eq_steps_ = sparams_->n_equil;
-  eq_steps_count_ = 0;
+
   // optical_trap_spring_ = sparams_->optical_trap_spring;
   // optical_trap_flag_ = sparams_->optical_trap_flag;
   // optical_trap_fixed_ = sparams_->optical_trap_fixed;
@@ -128,20 +130,25 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
     buffer = length_;
   }
   if (insertion_type.compare("random") == 0) {
-    InsertRandom();
+    AddRandomBondAnywhere(length_, diameter_);
+    SetOrientation(bonds_.back().GetOrientation());
+    SetPosition(bonds_.back().GetPosition());
   } else if (insertion_type.compare("random_oriented") == 0) {
-    InsertRandom();
-    std::fill(orientation_, orientation_ + 3, 0.0);
-    orientation_[n_dim_ - 1] = 1.0;
-  } else if (insertion_type.compare("centered_random") == 0) {
-    std::fill(position_, position_ + 3, 0.0);
-    rng_.RandomUnitVector(n_dim_, orientation_);
-  } else if (insertion_type.compare("centered_oriented") == 0) {
-    std::fill(position_, position_ + 3, 0.0);
-    std::fill(orientation_, orientation_ + 3, 0.0);
-    orientation_[n_dim_ - 1] = 1.0;
+    AddRandomBondAnywhere(length_, diameter_);
+    double orient[3] = {0};
+    orient[n_dim_ - 1] = 1.0;
+    bonds_.back().SetOrientation(orient);
+    SetOrientation(bonds_.back().GetOrientation());
+    SetPosition(bonds_.back().GetPosition());
+    //} else if (insertion_type.compare("centered_random") == 0) {
+    //  std::fill(position_, position_ + 3, 0.0);
+    //  rng_.RandomUnitVector(n_dim_, orientation_);
+    //} else if (insertion_type.compare("centered_oriented") == 0) {
+    //  std::fill(position_, position_ + 3, 0.0);
+    //  std::fill(orientation_, orientation_ + 3, 0.0);
+    //  orientation_[n_dim_ - 1] = 1.0;
   } else {
-    Logger::Error("BrRod insertion type not recognized!");
+    Logger::Error("Rigid Filament insertion type not recognized!");
   }
 }
 
@@ -182,6 +189,8 @@ void RigidFilament::Integrate() {
   // Update the orientation due to torques and random rotation
   AddRandomReorientation();
   UpdatePeriodic();
+  UpdateSitePositions();
+  UpdateBondPositions();
 }
 
 /* Calculates body frame, which returns the vector(s) orthogonal
@@ -247,7 +256,7 @@ void RigidFilament::InsertAt(const double *const new_pos,
       new_pos[0], new_pos[1], new_pos[2], u[0], u[1], u[2]);
   RelocateMesh(new_pos, u);
   UpdatePrevPositions();
-  CalculateAngles();
+  // CalculateAngles();
   SetDiffusion();
   // if (optical_trap_flag_) {
   //  trapped_site_ = 0;
@@ -295,33 +304,16 @@ double const RigidFilament::GetVolume() {
 void RigidFilament::UpdatePosition() {
   ApplyForcesTorques();
   Integrate();
-  UpdateAvgPosition();
+  // UpdateAvgPosition();
   // DynamicInstability();
   eq_steps_count_++;
 }
 
-/*******************************************************************************
-  BD algorithm for inextensible wormlike chains with anisotropic friction
-  Montesi, Morse, Pasquali. J Chem Phys 122, 084903 (2005).
-********************************************************************************/
-// void RigidFilament::Integrate() {
-//  CalculateAngles();
-//  CalculateTangents();
-//  if (midstep_) {
-//    ConstructUnprojectedRandomForces();
-//    GeometricallyProjectRandomForces();
-//    UpdatePrevPositions();
+// void RigidFilament::CalculateTangents() {
+//  for (auto it = sites_.begin(); it != sites_.end(); ++it) {
+//    it->CalcTangent();
 //  }
-//  AddRandomForces();
-//  UpdateSitePositions();
-//  UpdateBondPositions();
 //}
-
-void RigidFilament::CalculateTangents() {
-  for (auto it = sites_.begin(); it != sites_.end(); ++it) {
-    it->CalcTangent();
-  }
-}
 
 void RigidFilament::GetNematicOrder(double *nematic_order_tensor) {
   for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
@@ -353,83 +345,58 @@ void RigidFilament::GetPolarOrder(double *polar_order_vector) {
   }
 }
 
-void RigidFilament::AddRandomForces() {
-  if (!stoch_flag_) return;
-  for (auto site = sites_.begin(); site != sites_.end(); ++site)
-    site->AddRandomForce();
-}
+// void RigidFilament::AddRandomForces() {
+//  if (!stoch_flag_) return;
+//  for (auto site = sites_.begin(); site != sites_.end(); ++site)
+//    site->AddRandomForce();
+//}
 
 void RigidFilament::UpdateSitePositions() {
-  double f_site[3];
-  // First get total forces
-  // Handle end sites first
-  // Now update positions
-  double f_term[3], r_new[3];
-  int site_index = 0;
-  int next_site = n_dim_ * n_dim_;
-  // Next, update orientation vectors
-  double u_mag, r_diff[3];
-  for (int i_site = 0; i_site < n_sites_ - 1; ++i_site) {
-    double const *const r_site1 = sites_[i_site].GetPosition();
-    double const *const r_site2 = sites_[i_site + 1].GetPosition();
-    u_mag = 0.0;
-    for (int i = 0; i < n_dim_; ++i) {
-      r_diff[i] = r_site2[i] - r_site1[i];
-      u_mag += SQR(r_diff[i]);
-    }
-    u_mag = sqrt(u_mag);
-    for (int i = 0; i < n_dim_; ++i) r_diff[i] /= u_mag;
-    sites_[i_site].SetOrientation(r_diff);
-  }
-  sites_[n_sites_ - 1].SetOrientation(sites_[n_sites_ - 2].GetOrientation());
-  // Finally, normalize site positions, making sure the sites are still
-  // rod-length apart
-  // if (CheckBondLengths()) {
-  //  for (int i_site = 1; i_site < n_sites_; ++i_site) {
-  //    double const *const r_site1 = sites_[i_site - 1].GetPosition();
-  //    double const *const u_site1 = sites_[i_site - 1].GetOrientation();
-  //    for (int i = 0; i < n_dim_; ++i)
-  //      r_diff[i] = r_site1[i] + bond_length_ * u_site1[i];
-  //    sites_[i_site].SetPosition(r_diff);
-  //  }
-  //}
-}
-
-bool RigidFilament::CheckBondLengths() {
-  bool renormalize = false;
-  for (int i_site = 1; i_site < n_sites_; ++i_site) {
-    double const *const r_site1 = sites_[i_site - 1].GetPosition();
-    double const *const r_site2 = sites_[i_site].GetPosition();
-    double a = 0.0;
-    for (int i = 0; i < n_dim_; ++i) {
-      double temp = r_site2[i] - r_site1[i];
-      a += temp * temp;
-    }
-    a = sqrt(a);
-    double err = ABS(bond_length_ - a) / bond_length_;
-    if (err > 1e-3) {
-      renormalize = true;
-    }
-  }
-  return renormalize;
-}
-
-void RigidFilament::UpdateAvgPosition() {
-  std::fill(position_, position_ + 3, 0.0);
-  std::fill(orientation_, orientation_ + 3, 0.0);
-  for (auto site_it = sites_.begin(); site_it != sites_.end(); ++site_it) {
-    double const *const site_pos = site_it->GetPosition();
-    double const *const site_u = site_it->GetOrientation();
-    for (int i = 0; i < n_dim_; ++i) {
-      position_[i] += site_pos[i];
-      orientation_[i] += site_u[i];
-    }
-  }
-  normalize_vector(orientation_, n_dim_);
+  double s0_pos[3] = {0};
+  double s1_pos[3] = {0};
   for (int i = 0; i < n_dim_; ++i) {
-    position_[i] /= n_sites_;
+    s0_pos[i] = position_[i] - .5 * length_ * orientation_[i];
+    s1_pos[i] = position_[i] + .5 * length_ * orientation_[i];
   }
+  sites_[0].SetPosition(s0_pos);
+  sites_[1].SetPosition(s1_pos);
 }
+
+// bool RigidFilament::CheckBondLengths() {
+//  bool renormalize = false;
+//  for (int i_site = 1; i_site < n_sites_; ++i_site) {
+//    double const *const r_site1 = sites_[i_site - 1].GetPosition();
+//    double const *const r_site2 = sites_[i_site].GetPosition();
+//    double a = 0.0;
+//    for (int i = 0; i < n_dim_; ++i) {
+//      double temp = r_site2[i] - r_site1[i];
+//      a += temp * temp;
+//    }
+//    a = sqrt(a);
+//    double err = ABS(bond_length_ - a) / bond_length_;
+//    if (err > 1e-3) {
+//      renormalize = true;
+//    }
+//  }
+//  return renormalize;
+//}
+
+// void RigidFilament::UpdateAvgPosition() {
+// std::fill(position_, position_ + 3, 0.0);
+// std::fill(orientation_, orientation_ + 3, 0.0);
+// for (auto site_it = sites_.begin(); site_it != sites_.end(); ++site_it) {
+// double const *const site_pos = site_it->GetPosition();
+// double const *const site_u = site_it->GetOrientation();
+// for (int i = 0; i < n_dim_; ++i) {
+// position_[i] += site_pos[i];
+// orientation_[i] += site_u[i];
+//}
+//}
+// normalize_vector(orientation_, n_dim_);
+// for (int i = 0; i < n_dim_; ++i) {
+// position_[i] /= n_sites_;
+//}
+//}
 
 void RigidFilament::ApplyForcesTorques() {
   ApplyInteractionForces();
@@ -457,10 +424,10 @@ void RigidFilament::ApplyInteractionForces() {
   double pure_torque[3] = {0, 0, 0};
   double site_force[3] = {0, 0, 0};
   double linv = 1.0 / bond_length_;
-  if (!sparams_->drive_from_bond_center) {
-    // Driving originating from the site tangents
-    CalculateTangents();
-  }
+  // if (!sparams_->drive_from_bond_center) {
+  //  // Driving originating from the site tangents
+  //  CalculateTangents();
+  //}
   for (int i = 0; i < n_bonds_; ++i) {
     double const *const f = bonds_[i].GetForce();
     double const *const t = bonds_[i].GetTorque();
@@ -798,7 +765,7 @@ void RigidFilament::ReadPosit(std::fstream &iposit) {
   sites_[n_bonds_].SetOrientation(avg_u);
   SetOrientation(avg_u);
   UpdatePeriodic();
-  CalculateAngles();
+  // CalculateAngles();
 }
 
 void RigidFilament::WriteCheckpoint(std::fstream &ocheck) {
