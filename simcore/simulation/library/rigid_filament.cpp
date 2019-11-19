@@ -13,8 +13,8 @@ void RigidFilament::SetParameters() {
   diameter_ = sparams_->diameter;
   max_length_ = sparams_->max_length;
   min_length_ = sparams_->min_length;
+  stoch_flag_ = params_->stoch_flag;  // include thermal forces
   // driving_factor_ = sparams_->driving_factor;
-  // stoch_flag_ = params_->stoch_flag;  // include thermal forces
   // eq_steps_ = sparams_->n_equil;
   eq_steps_count_ = 0;
 
@@ -132,7 +132,6 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
   }
   if (insertion_type.compare("random") == 0) {
     AddRandomBondAnywhere(length_, diameter_);
-    UpdateSiteOrientations();
     SetPosition(bonds_.back().GetPosition());
     SetOrientation(bonds_.back().GetOrientation());
   } else if (insertion_type.compare("random_oriented") == 0) {
@@ -140,8 +139,8 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
     double orient[3] = {0};
     orient[n_dim_ - 1] = 1.0;
     bonds_.back().SetOrientation(orient);
-    SetOrientation(bonds_.back().GetOrientation());
     SetPosition(bonds_.back().GetPosition());
+    SetOrientation(bonds_.back().GetOrientation());
     //} else if (insertion_type.compare("centered_random") == 0) {
     //  std::fill(position_, position_ + 3, 0.0);
     //  rng_.RandomUnitVector(n_dim_, orientation_);
@@ -186,10 +185,12 @@ void RigidFilament::Integrate() {
   for (int i = 0; i < n_dim_; ++i) {
     orientation_[i] += du[i] * delta_ / gamma_rot_;
   }
-  // Add the random displacement dr(t)
-  AddRandomDisplacement();
-  // Update the orientation due to torques and random rotation
-  AddRandomReorientation();
+  if (stoch_flag_) {
+    // Add the random displacement dr(t)
+    AddRandomDisplacement();
+    // Update the orientation due to torques and random rotation
+    AddRandomReorientation();
+  }
   UpdatePeriodic();
   UpdateSitePositions();
   UpdateBondPositions();
