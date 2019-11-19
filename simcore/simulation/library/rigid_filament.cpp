@@ -132,8 +132,9 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
   }
   if (insertion_type.compare("random") == 0) {
     AddRandomBondAnywhere(length_, diameter_);
-    SetOrientation(bonds_.back().GetOrientation());
+    UpdateSiteOrientations();
     SetPosition(bonds_.back().GetPosition());
+    SetOrientation(bonds_.back().GetOrientation());
   } else if (insertion_type.compare("random_oriented") == 0) {
     AddRandomBondAnywhere(length_, diameter_);
     double orient[3] = {0};
