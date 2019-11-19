@@ -7,7 +7,7 @@
 
 class RigidFilament : public Mesh {
  private:
-  filament_parameters *sparams_;
+  rigid_filament_parameters *sparams_;
   double gamma_par_ = 0;
   double gamma_perp_ = 0;
   double gamma_rot_ = 0;
@@ -84,7 +84,7 @@ class RigidFilament : public Mesh {
 
  public:
   RigidFilament(unsigned long seed);
-  virtual void Init(filament_parameters *sparams);
+  virtual void Init(rigid_filament_parameters *sparams);
   virtual void InsertAt(const double *const new_pos, const double *const u);
   virtual void Integrate();
   virtual void Draw(std::vector<graph_struct *> &graph_array);

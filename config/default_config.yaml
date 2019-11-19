@@ -130,77 +130,144 @@ species:                             # Shared parameters used for all species.
                                      # frequency of n_spec steps.
   n_posit: [100, int]                # Frequency used for generating posit file information.
   n_spec: [100, int]                 # Frequency used for generating spec file information.
-filament:                            # Parameters unique to filament class of objects.
-  persistence_length: [400, double]  # Persistence length of filament.
-  max_length: [500, double]          # Maximum filament length. Also used for dynamic instability.
-  min_length: [5, double]            # Minimum filament length. Also used for dynamic instability.
-  min_bond_length: [1.5, double]     # Minimum bond length. When using dynamic instability, the
+
+rigid_filament:
+  max_length: [500, double]          # maximum filament length. also used for dynamic instability.
+  min_length: [5, double]            # minimum filament length. also used for dynamic instability.
                                      # number of bonds used to discretize filament may change while
                                      # filament is growing or shrinking to stay in range.
-  spiral_flag: [false, bool]         # Initializes filaments in an archimedean spiral centered at
+  #driving_factor: [0, double]        # force density used to propel active filaments.
+  #friction_ratio: [2, double]        # ratio of filament friction, perpendicular / parallel.
+  #dynamic_instability_flag : [false, bool] # flag for modeling dynamic instability of filaments. filaments
+  #                                   # will polymerize at a rate of v_poly and depolymerize at a 
+  #                                   # rate v_depoly, and switches between the two states 
+  #                                   # stochastically with poisson frequencies dictated by 
+  #                                   # f_shrink_to_grow, etc. will use a 3-state polymerization 
+  #                                   # model if one of f_pause_to_shrink, etc frequencies are nonzero.
+  #force_induced_catastrophe_flag : [false, bool] # induces a force-dependent depolymerization rate for
+  #                                               # forces applied to the filament tip.
+  #optical_trap_flag: [false, bool]   # at initialization, the tail of every filament will be tethered
+  #                                   # to its current position by a spring-like force.
+  #optical_trap_spring: [20, double]  # spring constant used for optical trap forces.
+  #optical_trap_fixed: [false, bool]  # if 0, optical trap lets filaments swing freely. if 1, filament
+  #                                   # orientations are fixed by applying a second optical trap at the
+  #                                   # head of the tail bond.
+  #cilia_trap_flag: [false, bool]     # if this and optical trap flag are activated, filaments oriented
+  #                                   # along positive dimension axes will have their tails fixed in
+  #                                   # optical traps, and those oriented along negative axes will have
+  #                                   # their heads fixed in optical traps.
+  #fic_factor: [0.828, double]        # constant used in exponential term of force-induced catastrophe.
+  #f_shrink_to_grow : [0.017, double] # frequencies for polymerization rate switching when using 
+  #f_shrink_to_pause : [0.0, double]  # dynamic instability.
+  #f_pause_to_grow : [0.0, double]
+  #f_pause_to_shrink : [0.0, double]
+  #f_grow_to_pause : [0.0, double]
+  #f_grow_to_shrink : [0.00554, double]
+  #v_poly : [0.44, double]            # speed of filament lengthening when filament is in grow state.
+  #v_depoly : [0.793, double]         # speed of shortening when filament is in shrink state.
+  #theta_analysis: [false, bool]      # run post-process analysis of filament conformation for testing
+  #                                   # persistence length. outputs histogram of angle distributions
+  #                                   # between neighboring bonds to compare to theory.
+  #lp_analysis: [false, bool]         # test persistence length by measuring mean-square end-to-end
+  #                                   # distance of filament in post-process analysis. outputs mse2e
+  #                                   # file that measures mean-square end-to-end distance and variance.
+  #global_order_analysis: [false, bool] # post-process analysis of global order parameters, such as global
+  #                                  # polar order, global nematic order, global spiral number, etc.
+  packing_fraction: [-1, double]    # if num > 0, and packing fraction > 0, filaments are inserted
+  #                                  # until the ratio filament to system volumes match this value.
+  #perlen_ratio: [-1, double]        # if perlen ratio >= 0, sets the persistence length of filaments
+  #                                  # such that the persistence length to length ratio is this value.
+  #drive_from_bond_center: [true, bool] # if true, driving forces are centered on bonds, and propulsion 
+  #                                  # forces are directed along bond orientation. otherwise, driving forces
+  #                                  # are centered on sites and forces are directed tangent to sites.
+  n_equil: [0, int]                 # internal filament parameter used for shuffling.
+  #orientation_corr_analysis: [false, bool] # post-process analysis of orientation correlation function.
+  #orientation_corr_n_steps: [1000, int] # number of steps to measure orientation correlation, defines
+  #                                     # interval over which to average.
+  #crossing_analysis: [false, bool]  # apply post-process analysis of filament crossing events.
+  #intrinsic_curvature: [0, double]  # curvature per unit length to apply on filament. defines the
+  #                                  # curvature of zero bending energy. positive is right-handed.
+  #flagella_flag: [false, bool]           # applies a sinusoidal, time-varying intrinsic curvature along 
+  #                                  # filament.
+  #flagella_freq: [1, double]        # frequency at which to oscillate intrinsic curvature of flagella.
+  #flagella_period: [2, double]      # period of sinusoid to apply along filament length.
+  #flagella_amplitude: [1, double]   # defines amplitude of sinuosoid to apply along filament length.
+  #flocking_analysis: [false, bool]       # post-process analysis of measuring flocking filaments.
+  #                                  # generates output file giving number of flocking filaments as
+  #                                  # well as number of exterior and interior flocking filaments.
+  #polydispersity_flag: [false, bool] # if > 0, assign length from exponential distribution
+
+filament:                            # Parameters unique to filament class of objects.
+  persistence_length: [400, double]  # persistence length of filament.
+  max_length: [500, double]          # maximum filament length. also used for dynamic instability.
+  min_length: [5, double]            # minimum filament length. also used for dynamic instability.
+  min_bond_length: [1.5, double]     # minimum bond length. when using dynamic instability, the
+                                     # number of bonds used to discretize filament may change while
+                                     # filament is growing or shrinking to stay in range.
+  spiral_flag: [false, bool]         # initializes filaments in an archimedean spiral centered at
                                      # system origin.
-  spiral_number_fail_condition: [0, double] # When spiral flag is on, terminates simulation when the
+  spiral_number_fail_condition: [0, double] # when spiral flag is on, terminates simulation when the
                                             # spiral number of a filament is less than this value.
-  driving_factor: [0, double]        # Force density used to propel active filaments.
-  friction_ratio: [2, double]        # Ratio of filament friction, perpendicular / parallel.
-  dynamic_instability_flag : [false, bool] # Flag for modeling dynamic instability of filaments. Filaments
+  driving_factor: [0, double]        # force density used to propel active filaments.
+  friction_ratio: [2, double]        # ratio of filament friction, perpendicular / parallel.
+  dynamic_instability_flag : [false, bool] # flag for modeling dynamic instability of filaments. filaments
                                      # will polymerize at a rate of v_poly and depolymerize at a 
                                      # rate v_depoly, and switches between the two states 
-                                     # stochastically with Poisson frequencies dictated by 
-                                     # f_shrink_to_grow, etc. Will use a 3-state polymerization 
+                                     # stochastically with poisson frequencies dictated by 
+                                     # f_shrink_to_grow, etc. will use a 3-state polymerization 
                                      # model if one of f_pause_to_shrink, etc frequencies are nonzero.
-  force_induced_catastrophe_flag : [false, bool] # Induces a force-dependent depolymerization rate for
+  force_induced_catastrophe_flag : [false, bool] # induces a force-dependent depolymerization rate for
                                                  # forces applied to the filament tip.
-  optical_trap_flag: [false, bool]   # At initialization, the tail of every filament will be tethered
+  optical_trap_flag: [false, bool]   # at initialization, the tail of every filament will be tethered
                                      # to its current position by a spring-like force.
-  optical_trap_spring: [20, double]  # Spring constant used for optical trap forces.
-  optical_trap_fixed: [false, bool]  # If 0, optical trap lets filaments swing freely. If 1, filament
+  optical_trap_spring: [20, double]  # spring constant used for optical trap forces.
+  optical_trap_fixed: [false, bool]  # if 0, optical trap lets filaments swing freely. if 1, filament
                                      # orientations are fixed by applying a second optical trap at the
                                      # head of the tail bond.
-  cilia_trap_flag: [false, bool]     # If this and optical trap flag are activated, filaments oriented
+  cilia_trap_flag: [false, bool]     # if this and optical trap flag are activated, filaments oriented
                                      # along positive dimension axes will have their tails fixed in
                                      # optical traps, and those oriented along negative axes will have
                                      # their heads fixed in optical traps.
-  fic_factor: [0.828, double]        # Constant used in exponential term of force-induced catastrophe.
-  f_shrink_to_grow : [0.017, double] # Frequencies for polymerization rate switching when using 
+  fic_factor: [0.828, double]        # constant used in exponential term of force-induced catastrophe.
+  f_shrink_to_grow : [0.017, double] # frequencies for polymerization rate switching when using 
   f_shrink_to_pause : [0.0, double]  # dynamic instability.
   f_pause_to_grow : [0.0, double]
   f_pause_to_shrink : [0.0, double]
   f_grow_to_pause : [0.0, double]
   f_grow_to_shrink : [0.00554, double]
-  v_poly : [0.44, double]            # Speed of filament lengthening when filament is in grow state.
-  v_depoly : [0.793, double]         # Speed of shortening when filament is in shrink state.
-  theta_analysis: [false, bool]      # Run post-process analysis of filament conformation for testing
-                                     # persistence length. Outputs histogram of angle distributions
+  v_poly : [0.44, double]            # speed of filament lengthening when filament is in grow state.
+  v_depoly : [0.793, double]         # speed of shortening when filament is in shrink state.
+  theta_analysis: [false, bool]      # run post-process analysis of filament conformation for testing
+                                     # persistence length. outputs histogram of angle distributions
                                      # between neighboring bonds to compare to theory.
-  lp_analysis: [false, bool]         # Test persistence length by measuring mean-square end-to-end
-                                     # distance of filament in post-process analysis. Outputs mse2e
+  lp_analysis: [false, bool]         # test persistence length by measuring mean-square end-to-end
+                                     # distance of filament in post-process analysis. outputs mse2e
                                      # file that measures mean-square end-to-end distance and variance.
-  global_order_analysis: [false, bool] # Post-process analysis of global order parameters, such as global
+  global_order_analysis: [false, bool] # post-process analysis of global order parameters, such as global
                                     # polar order, global nematic order, global spiral number, etc.
-  packing_fraction: [-1, double]    # If num > 0, and packing fraction > 0, filaments are inserted
+  packing_fraction: [-1, double]    # if num > 0, and packing fraction > 0, filaments are inserted
                                     # until the ratio filament to system volumes match this value.
-  perlen_ratio: [-1, double]        # If perlen ratio >= 0, sets the persistence length of filaments
+  perlen_ratio: [-1, double]        # if perlen ratio >= 0, sets the persistence length of filaments
                                     # such that the persistence length to length ratio is this value.
-  drive_from_bond_center: [true, bool] # If true, driving forces are centered on bonds, and propulsion 
-                                    # forces are directed along bond orientation. Otherwise, driving forces
+  drive_from_bond_center: [true, bool] # if true, driving forces are centered on bonds, and propulsion 
+                                    # forces are directed along bond orientation. otherwise, driving forces
                                     # are centered on sites and forces are directed tangent to sites.
-  n_equil: [0, int]                 # Internal filament parameter used for shuffling.
-  orientation_corr_analysis: [false, bool] # Post-process analysis of orientation correlation function.
-  orientation_corr_n_steps: [1000, int] # Number of steps to measure orientation correlation, defines
+  n_equil: [0, int]                 # internal filament parameter used for shuffling.
+  orientation_corr_analysis: [false, bool] # post-process analysis of orientation correlation function.
+  orientation_corr_n_steps: [1000, int] # number of steps to measure orientation correlation, defines
                                        # interval over which to average.
-  crossing_analysis: [false, bool]  # Apply post-process analysis of filament crossing events.
-  intrinsic_curvature: [0, double]  # Curvature per unit length to apply on filament. Defines the
-                                    # curvature of zero bending energy. Positive is right-handed.
-  flagella_flag: [false, bool]           # Applies a sinusoidal, time-varying intrinsic curvature along 
+  crossing_analysis: [false, bool]  # apply post-process analysis of filament crossing events.
+  intrinsic_curvature: [0, double]  # curvature per unit length to apply on filament. defines the
+                                    # curvature of zero bending energy. positive is right-handed.
+  flagella_flag: [false, bool]           # applies a sinusoidal, time-varying intrinsic curvature along 
                                     # filament.
-  flagella_freq: [1, double]        # Frequency at which to oscillate intrinsic curvature of flagella.
-  flagella_period: [2, double]      # Period of sinusoid to apply along filament length.
-  flagella_amplitude: [1, double]   # Defines amplitude of sinuosoid to apply along filament length.
-  flocking_analysis: [false, bool]       # Post-process analysis of measuring flocking filaments.
-                                    # Generates output file giving number of flocking filaments as
+  flagella_freq: [1, double]        # frequency at which to oscillate intrinsic curvature of flagella.
+  flagella_period: [2, double]      # period of sinusoid to apply along filament length.
+  flagella_amplitude: [1, double]   # defines amplitude of sinuosoid to apply along filament length.
+  flocking_analysis: [false, bool]       # post-process analysis of measuring flocking filaments.
+                                    # generates output file giving number of flocking filaments as
                                     # well as number of exterior and interior flocking filaments.
-  polydispersity_flag: [false, bool] # If > 0, assign length from Exponential distribution
+  polydispersity_flag: [false, bool] # if > 0, assign length from exponential distribution
 
 br_bead:
   driving_factor: [0, double]

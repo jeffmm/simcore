@@ -12,6 +12,10 @@
   default_config["species"]["spec_flag"] = "false";
   default_config["species"]["n_posit"] = "100";
   default_config["species"]["n_spec"] = "100";
+  default_config["rigid_filament"]["max_length"] = "500";
+  default_config["rigid_filament"]["min_length"] = "5";
+  default_config["rigid_filament"]["packing_fraction"] = "-1";
+  default_config["rigid_filament"]["n_equil"] = "0";
   default_config["filament"]["persistence_length"] = "400";
   default_config["filament"]["max_length"] = "500";
   default_config["filament"]["min_length"] = "5";

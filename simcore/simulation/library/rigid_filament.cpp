@@ -41,7 +41,7 @@ void RigidFilament::SetParameters() {
   /* Refine parameters */
 }
 
-void RigidFilament::Init(filament_parameters *sparams) {
+void RigidFilament::Init(rigid_filament_parameters *sparams) {
   sparams_ = sparams;
   SetParameters();
   InitRigidFilamentLength();
@@ -62,7 +62,7 @@ void RigidFilament::Init(filament_parameters *sparams) {
 void RigidFilament::InitRigidFilamentLength() {
   if (max_length_ < min_length_) {
     Logger::Warning(
-        "Minimum filament length larger than max length -- setting "
+        "Minimum rigid filament length larger than max length -- setting "
         "max_length_ = min_length_");
     max_length_ = min_length_;
   }
@@ -122,6 +122,7 @@ void RigidFilament::InitRigidFilamentLength() {
       " %d",
       length_, n_bonds_, GetMeshID());
   true_length_ = length_;
+  n_bonds_max_ = 1;
 }
 
 void RigidFilament::InsertRigidFilament(std::string insertion_type,

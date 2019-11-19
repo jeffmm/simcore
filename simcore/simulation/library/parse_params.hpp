@@ -218,6 +218,51 @@ species_base_parameters *parse_species_params(std::string sid,
                                               YAML::Node &subnode,
                                               YAML::Node &node) {
   if (false) {
+  } else if (sid.compare("rigid_filament") == 0) {
+    rigid_filament_parameters params;
+    parse_species_base_params(params, node);
+    for (auto jt = subnode.begin(); jt != subnode.end(); ++jt) {
+      std::string param_name = jt->first.as<std::string>();
+      if (false) {
+      } else if (param_name.compare("name")==0) {
+      params.name = jt->second.as<std::string>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
+      } else if (param_name.compare("diameter")==0) {
+      params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("length")==0) {
+      params.length = jt->second.as<double>();
+      } else if (param_name.compare("insertion_type")==0) {
+      params.insertion_type = jt->second.as<std::string>();
+      } else if (param_name.compare("insert_file")==0) {
+      params.insert_file = jt->second.as<std::string>();
+      } else if (param_name.compare("overlap")==0) {
+      params.overlap = jt->second.as<bool>();
+      } else if (param_name.compare("draw_type")==0) {
+      params.draw_type = jt->second.as<std::string>();
+      } else if (param_name.compare("color")==0) {
+      params.color = jt->second.as<double>();
+      } else if (param_name.compare("posit_flag")==0) {
+      params.posit_flag = jt->second.as<bool>();
+      } else if (param_name.compare("spec_flag")==0) {
+      params.spec_flag = jt->second.as<bool>();
+      } else if (param_name.compare("n_posit")==0) {
+      params.n_posit = jt->second.as<int>();
+      } else if (param_name.compare("n_spec")==0) {
+      params.n_spec = jt->second.as<int>();
+      } else if (param_name.compare("max_length")==0) {
+      params.max_length = jt->second.as<double>();
+      } else if (param_name.compare("min_length")==0) {
+      params.min_length = jt->second.as<double>();
+      } else if (param_name.compare("packing_fraction")==0) {
+      params.packing_fraction = jt->second.as<double>();
+      } else if (param_name.compare("n_equil")==0) {
+      params.n_equil = jt->second.as<int>();
+      } else {
+        Logger::Warning("Unrecognized %s parameter: '%s'", sid.c_str(), param_name.c_str());
+      }
+    }
+    return new rigid_filament_parameters(params);
   } else if (sid.compare("filament") == 0) {
     filament_parameters params;
     parse_species_base_params(params, node);
