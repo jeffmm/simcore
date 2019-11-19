@@ -1,10 +1,11 @@
-#ifndef _SIMCORE_FILAMENT_SPECIES_H_
-#define _SIMCORE_FILAMENT_SPECIES_H_
+#ifndef _SIMCORE_RIGID_FILAMENT_SPECIES_H_
+#define _SIMCORE_RIGID_FILAMENT_SPECIES_H_
 
-#include "filament.hpp"
+#include "rigid_filament.hpp"
 #include "species.hpp"
 
-class FilamentSpecies : public Species<Filament, species_id::filament> {
+class RigidFilamentSpecies
+    : public Species<RigidFilament, species_id::rigid_filament> {
  protected:
   bool midstep_ = true;
   // Analysis structures
@@ -41,7 +42,7 @@ class FilamentSpecies : public Species<Filament, species_id::filament> {
   std::fstream in_out_file_;
 
  public:
-  FilamentSpecies(unsigned long seed);
+  RigidFilamentSpecies(unsigned long seed);
   void Init(std::string spec_name, ParamsParser &parser);
   void PopMember();
 

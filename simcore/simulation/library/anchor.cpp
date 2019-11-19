@@ -1,13 +1,15 @@
 #include "anchor.hpp"
 
-Anchor::Anchor(unsigned long seed) : Object(seed) { SetSID(species_id::crosslink); }
+Anchor::Anchor(unsigned long seed) : Object(seed) {
+  SetSID(species_id::crosslink);
+}
 
 void Anchor::Init(crosslink_parameters *sparams) {
   sparams_ = sparams;
   diameter_ = sparams_->diameter;
   color_ = sparams_->color;
   draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
-  static_flag_ = false; // Must be explicitly set to true by Crosslink
+  static_flag_ = false;  // Must be explicitly set to true by Crosslink
   Unbind();
   walker_ = sparams_->walker_flag;
   step_direction_ =
@@ -42,8 +44,7 @@ void Anchor::SetWalker(int dir, double walk_v) {
 }
 
 void Anchor::UpdateAnchorPositionToMesh() {
-  if (!bound_ || static_flag_)
-    return;
+  if (!bound_ || static_flag_) return;
   if (!bond_ || !mesh_) {
     Logger::Error("Anchor tried to update position to nullptr bond or mesh");
   }
@@ -53,8 +54,7 @@ void Anchor::UpdateAnchorPositionToMesh() {
   mesh_length_ = mesh_->GetTrueLength();
   /* Use current position along mesh (mesh_lambda) to determine whether the
      anchor fell off the mesh due to dynamic instability */
-  if (!CheckMesh())
-    return;
+  if (!CheckMesh()) return;
   // Now figure out which bond we are on in the mesh according to mesh_lambda
   bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
 
@@ -68,8 +68,9 @@ void Anchor::UpdateAnchorPositionToMesh() {
 
 bool Anchor::CalcBondLambda() {
   if (!bond_) {
-    Logger::Error("Attempted to calculate bond lambda when not attached to"
-                  " bond!");
+    Logger::Error(
+        "Attempted to calculate bond lambda when not attached to"
+        " bond!");
   }
   bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
   bond_length_ = bond_->GetLength();
@@ -117,8 +118,7 @@ void Anchor::UpdatePosition() {
   // Diffuse or walk along the mesh, updating mesh_lambda
   if (diffuse_) {
     Diffuse();
-    if (!CheckMesh())
-      return;
+    if (!CheckMesh()) return;
   }
   if (walker_) {
     Walk();
@@ -237,8 +237,7 @@ void Anchor::UpdateAnchorPositionToBond() {
 }
 
 void Anchor::Draw(std::vector<graph_struct *> &graph_array) {
-  if (!bound_)
-    return;
+  if (!bound_) return;
   std::copy(scaled_position_, scaled_position_ + 3, g_.r);
   for (int i = space_->n_periodic; i < n_dim_; ++i) {
     g_.r[i] = position_[i];
@@ -258,7 +257,8 @@ void Anchor::AttachObjRandom(Object *o) {
 }
 
 void Anchor::AttachObjLambda(Object *o, double lambda) {
-  if (o->GetType() != +obj_type::bond) {
+  if (o->GetType() != +obj_type::bond ||
+      o->GetSID() != +species_id::spherocylinder) {
     Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
   }
   bond_ = dynamic_cast<Bond *>(o);
@@ -276,9 +276,10 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
 
   if (bond_lambda_ < 0 || bond_lambda_ > bond_length_) {
     printf("bond_lambda: %2.2f\n", bond_lambda_);
-    Logger::Error("Lambda passed to anchor does not match length of "
-                  "corresponding bond! lambda: %2.2f, bond_length: %2.2f ",
-                  bond_lambda_, bond_length_);
+    Logger::Error(
+        "Lambda passed to anchor does not match length of "
+        "corresponding bond! lambda: %2.2f, bond_length: %2.2f ",
+        bond_lambda_, bond_length_);
   }
 
   /* Distance anchor is relative to entire mesh length */
@@ -376,8 +377,7 @@ void Anchor::ReadSpec(std::fstream &ispec) {
   }
   ispec.read(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
   UpdatePeriodic();
-  if (active_)
-    step_direction_ = -sparams_->step_direction;
+  if (active_) step_direction_ = -sparams_->step_direction;
 }
 
 void Anchor::SetStatic(bool static_flag) { static_flag_ = static_flag; }

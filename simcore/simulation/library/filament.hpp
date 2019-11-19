@@ -6,7 +6,7 @@
 #include "mesh.hpp"
 
 class Filament : public Mesh {
-private:
+ private:
   filament_parameters *sparams_;
   bool force_induced_catastrophe_flag_;
   bool theta_validation_run_flag_;
@@ -27,7 +27,7 @@ private:
   double max_bond_length_;
   double min_bond_length_;
   double persistence_length_;
-  double friction_ratio_; // friction_par/friction_perp
+  double friction_ratio_;  // friction_par/friction_perp
   double friction_par_;
   double friction_perp_;
   double rand_sigma_par_;
@@ -53,17 +53,17 @@ private:
   double optical_trap_pos2_[3];
   double polydispersity_factor_;
   std::vector<double> gamma_inverse_;
-  std::vector<double> tensions_;      // n_sites-1
-  std::vector<double> g_mat_lower_;   // n_sites-2
-  std::vector<double> g_mat_upper_;   // n_sites-2
-  std::vector<double> g_mat_diag_;    // n_sites-1
-  std::vector<double> det_t_mat_;     // n_sites+1
-  std::vector<double> det_b_mat_;     // n_sites+1
-  std::vector<double> g_mat_inverse_; // n_sites-2
-  std::vector<double> k_eff_;         // n_sites-2
-  std::vector<double> h_mat_diag_;    // n_sites-1
-  std::vector<double> h_mat_upper_;   // n_sites-2
-  std::vector<double> h_mat_lower_;   // n_sites-2
+  std::vector<double> tensions_;       // n_sites-1
+  std::vector<double> g_mat_lower_;    // n_sites-2
+  std::vector<double> g_mat_upper_;    // n_sites-2
+  std::vector<double> g_mat_diag_;     // n_sites-1
+  std::vector<double> det_t_mat_;      // n_sites+1
+  std::vector<double> det_b_mat_;      // n_sites+1
+  std::vector<double> g_mat_inverse_;  // n_sites-2
+  std::vector<double> k_eff_;          // n_sites-2
+  std::vector<double> h_mat_diag_;     // n_sites-1
+  std::vector<double> h_mat_upper_;    // n_sites-2
+  std::vector<double> h_mat_lower_;    // n_sites-2
   std::vector<double> cos_thetas_;
   poly_state poly_;
   void UpdateSiteBondPositions();
@@ -93,7 +93,7 @@ private:
   void CalculateBinding();
   bool CheckBondLengths();
 
-public:
+ public:
   Filament(unsigned long seed);
   virtual void Init(filament_parameters *sparams);
   virtual void InsertAt(const double *const new_pos, const double *const u);
@@ -137,4 +137,4 @@ typedef std::vector<
     std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator>>
     filament_chunk_vector;
 
-#endif // _SIMCORE_FILAMENT_H_
+#endif  // _SIMCORE_FILAMENT_H_

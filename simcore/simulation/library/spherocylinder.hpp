@@ -3,16 +3,16 @@
 
 #include "br_rod.hpp"
 class Spherocylinder : public BrRod {
-protected:
+ protected:
   spherocylinder_parameters *sparams_;
   void ApplyForcesTorques();
   void InsertSpherocylinder();
   void SetParameters();
 
-public:
+ public:
   Spherocylinder(unsigned long seed);
   void Init(spherocylinder_parameters *sparams);
   void UpdatePosition();
 };
 
-#endif // _SIMCORE_SPHEROCYLINDER_H_
+#endif  // _SIMCORE_SPHEROCYLINDER_H_

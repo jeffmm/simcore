@@ -13,7 +13,7 @@
 typedef std::vector<Interaction>::iterator ix_iterator;
 
 class InteractionManager {
-private:
+ private:
   double stress_[9];
   double dr_update_;
   bool overlap_;
@@ -64,7 +64,7 @@ private:
   void PairBondCrosslinks();
   bool CheckBondAnchorPair(Object *anchor, Object *bond);
 
-public:
+ public:
   InteractionManager() {}
   void Init(system_parameters *params, std::vector<SpeciesBase *> *species,
             space_struct *space, bool processing = false);
