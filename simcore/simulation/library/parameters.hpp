@@ -1,10 +1,11 @@
 #ifndef _SIMCORE_PARAMETERS_H_
 #define _SIMCORE_PARAMETERS_H_
 
-#include "definitions.hpp"
 #include <string>
+#include "definitions.hpp"
 
-template <unsigned char S> struct species_parameters {
+template <unsigned char S>
+struct species_parameters {
   std::string name = "species";
   int num = 0;
   double diameter = 1;
@@ -70,6 +71,12 @@ struct species_parameters<species_id::filament>
 typedef species_parameters<species_id::filament> filament_parameters;
 
 template <>
+struct species_parameters<species_id::rigid_filament>
+    : public species_parameters<species_id::filament> {};
+typedef species_parameters<species_id::rigid_filament>
+    rigid_filament_parameters;
+
+template <>
 struct species_parameters<species_id::br_bead>
     : public species_base_parameters {
   double driving_factor = 0;
@@ -84,7 +91,8 @@ struct species_parameters<species_id::spherocylinder>
   int n_diffusion_samples = 1;
   bool midstep = false;
 };
-typedef species_parameters<species_id::spherocylinder> spherocylinder_parameters;
+typedef species_parameters<species_id::spherocylinder>
+    spherocylinder_parameters;
 
 template <>
 struct species_parameters<species_id::spindle>
@@ -205,4 +213,4 @@ struct system_parameters {
   int n_checkpoint = 10000;
 };
 
-#endif // _SIMCORE_PARAMETERS_H_
+#endif  // _SIMCORE_PARAMETERS_H_
