@@ -131,7 +131,8 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
   if (buffer < 0) {
     buffer = length_;
   }
-  if (insertion_type.compare("random") == 0) {
+  if (insertion_type.compare("random") == 0 ||
+      insertion_type.compare("custom") == 0) {
     AddRandomBondAnywhere(length_, diameter_);
     SetPosition(bonds_.back().GetPosition());
     SetOrientation(bonds_.back().GetOrientation());
@@ -257,11 +258,16 @@ void RigidFilament::GetBodyFrame() {
 void RigidFilament::InsertAt(const double *const new_pos,
                              const double *const u) {
   Logger::Trace(
-      "Inserting filament at [%2.1f, %2.1f, %2.1f] with orientation"
+      "Inserting rigid filament at [%2.1f, %2.1f, %2.1f] with orientation"
       "[%2.1f, %2.1f, %2.1f]",
       new_pos[0], new_pos[1], new_pos[2], u[0], u[1], u[2]);
   RelocateMesh(new_pos, u);
-  UpdatePrevPositions();
+  std::copy(new_pos, new_pos + 3, position_);
+  // UpdatePrevPositions();
+  // AddRandomBondAnywhere(length_, diameter_);
+  // SetPosition(bonds_.back().GetPosition());
+  // SetOrientation(bonds_.back().GetOrientation());
+  // UpdateBondPositions();
   // CalculateAngles();
   SetDiffusion();
   // if (optical_trap_flag_) {
@@ -405,7 +411,13 @@ void RigidFilament::UpdateSitePositions() {
 //}
 
 void RigidFilament::ApplyForcesTorques() {
-  ApplyInteractionForces();
+  const double *force = bonds_.back().GetForce();
+  const double *torque = bonds_.back().GetTorque();
+  for (int i = 0; i < 3; ++i) {
+    force_[i] = force[i];
+    torque_[i] = torque[i];
+  }
+  // ApplyInteractionForces();
   // if (optical_trap_flag_) {
   //  double f_trap1[3] = {0};
   //  double f_trap2[3] = {0};
@@ -474,6 +486,7 @@ void RigidFilament::ApplyInteractionForces() {
     //    }
     //    sites_[i].AddForce(f_dr);
     //  }
+    //}
     //}
   }
 }

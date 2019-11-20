@@ -156,6 +156,8 @@ void Mesh::RelocateMesh(double const *const new_pos, double const *const u) {
   for (int i = 0; i < n_sites_; ++i) {
     sites_[i].SetPosition(position_);
     for (int i = 0; i < n_dim_; ++i) {
+      // FIXME ? This would leave the position of mesh at the last site location
+      // which seems wrong.
       position_[i] += bond_length_ * orientation_[i];
     }
   }
