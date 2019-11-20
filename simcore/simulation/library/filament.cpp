@@ -340,11 +340,14 @@ double const Filament::GetVolume() {
 
 void Filament::UpdatePosition(bool midstep) {
   midstep_ = midstep;
+  if (eq_steps_count_++ < eq_steps_) {
+    return;
+  }
   ApplyForcesTorques();
   Integrate();
   UpdateAvgPosition();
   DynamicInstability();
-  eq_steps_count_++;
+  //eq_steps_count_++;
 }
 
 /*******************************************************************************

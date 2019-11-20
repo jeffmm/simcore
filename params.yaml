@@ -37,6 +37,7 @@ filament:
     persistence_length: 3400
     spec_flag: true
     n_spec: 100
+    n_equil: 1000
 
 crosslink:
   - name: filamen
