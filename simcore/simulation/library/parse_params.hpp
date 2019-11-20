@@ -162,6 +162,8 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.checkpoint_flag = it->second.as<bool>();
     } else if (param_name.compare("n_checkpoint")==0) {
     params.n_checkpoint = it->second.as<int>();
+    } else if (param_name.compare("no_midstep")==0) {
+    params.no_midstep = it->second.as<bool>();
     } else {
       Logger::Warning("Unrecognized parameter '%s'", param_name.c_str());
     }

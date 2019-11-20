@@ -26,7 +26,7 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
   /* TODO Lookup table only works for filament objects. Generalize? */
   lut_.Init(sparams_.k_spring / 2, sparams_.rest_length, 1);
   /* Integral cutoff */
-  double small = 1e-4; // Value defined in lookup_table
+  double small = 1e-4;  // Value defined in lookup_table
   sparams_.r_capture =
       sqrt(-2 * log(small) / sparams_.k_spring) + 1 + sparams_.rest_length;
 }
@@ -86,8 +86,9 @@ void CrosslinkSpecies::InsertCrosslinks() {
     }
   } else if (sparams_.insertion_type.compare("random_boundary") == 0) {
     if (space_->type == +boundary_type::none) {
-      Logger::Error("Crosslinker insertion type \"random boundary\" requires a"
-                    " boundary for species insertion.");
+      Logger::Error(
+          "Crosslinker insertion type \"random boundary\" requires a"
+          " boundary for species insertion.");
     } else if (space_->type == +boundary_type::sphere) {
       if (params_->n_dim == 2) {
         sparams_.num =
@@ -176,7 +177,11 @@ void CrosslinkSpecies::GetAnchorInteractors(std::vector<Object *> &ixors) {
 void CrosslinkSpecies::UpdatePositions() {
   /* Only do this every other step (assuming flexible filaments with midstep)
    */
-  if (params_->i_step % 2 == 0) {
+  if (params_->no_midstep) {
+    UpdateBoundCrosslinks();
+    CalculateBindingFree();
+    ApplyCrosslinkTetherForces();
+  } else if (params_->i_step % 2 == 0) {
     /* First update bound crosslinks state and positions */
     UpdateBoundCrosslinks();
     /* Calculate implicit binding of crosslinks from solution */

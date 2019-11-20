@@ -87,6 +87,7 @@ bool Anchor::CalcBondLambda() {
       return false;
     }
   } else if (bond_lambda_ > bond_length_) {
+    printf("bond_length_ = %f\n", bond_length_);
     Bond *bond = bond_->GetNeighborBond(1);
     if (bond) {
       bond_ = bond;
@@ -257,9 +258,10 @@ void Anchor::AttachObjRandom(Object *o) {
 }
 
 void Anchor::AttachObjLambda(Object *o, double lambda) {
-  if (o->GetType() != +obj_type::bond ||
-      o->GetSID() != +species_id::spherocylinder) {
-    Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
+  if (o->GetType() != +obj_type::bond) {
+    Logger::Error(
+        "Crosslink binding to non-bond objects not yet implemented in "
+        "AttachObjLambda.");
   }
   bond_ = dynamic_cast<Bond *>(o);
   if (bond_ == nullptr) {
@@ -292,7 +294,9 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
 
 void Anchor::AttachObjMeshLambda(Object *o, double mesh_lambda) {
   if (o->GetType() != +obj_type::bond) {
-    Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
+    Logger::Error(
+        "Crosslink binding to non-bond objects not yet implemented in "
+        "AttachObjMeshLambda.");
   }
   bond_ = dynamic_cast<Bond *>(o);
   if (bond_ == nullptr) {

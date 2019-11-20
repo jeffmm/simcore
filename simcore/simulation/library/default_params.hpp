@@ -165,3 +165,4 @@
   default_config["in_out_flag"] = "false";
   default_config["checkpoint_flag"] = "false";
   default_config["n_checkpoint"] = "10000";
+  default_config["no_midstep"] = "false";

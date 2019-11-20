@@ -122,6 +122,7 @@ void RigidFilament::InitRigidFilamentLength() {
       " %d",
       length_, n_bonds_, GetMeshID());
   true_length_ = length_;
+  bond_length_ = length_;
   n_bonds_max_ = 1;
 }
 
@@ -134,6 +135,7 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
     AddRandomBondAnywhere(length_, diameter_);
     SetPosition(bonds_.back().GetPosition());
     SetOrientation(bonds_.back().GetOrientation());
+    UpdateBondPositions();
   } else if (insertion_type.compare("random_oriented") == 0) {
     AddRandomBondAnywhere(length_, diameter_);
     double orient[3] = {0};
@@ -141,6 +143,7 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
     bonds_.back().SetOrientation(orient);
     SetPosition(bonds_.back().GetPosition());
     SetOrientation(bonds_.back().GetOrientation());
+    UpdateBondPositions();
     //} else if (insertion_type.compare("centered_random") == 0) {
     //  std::fill(position_, position_ + 3, 0.0);
     //  rng_.RandomUnitVector(n_dim_, orientation_);

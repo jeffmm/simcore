@@ -104,6 +104,7 @@ checkpoint_flag: [false, bool]       # Generate a checkpoint file every n_checkp
                                      # allows users to resume previous simulations. Contains 
                                      # most recent instance of RNG state and spec file data.
 n_checkpoint: [10000, int]           # Frequency used for generating checkpoint file information.
+no_midstep: [false, bool]            # Specify the simulation is not using a mid step algorithm
 
 species:                             # Shared parameters used for all species.
   name: ["species", string]          # Label given to species (e.g. microtubule, kinesin, etc)

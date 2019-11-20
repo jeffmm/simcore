@@ -214,6 +214,7 @@ struct system_parameters {
   bool in_out_flag = false;
   bool checkpoint_flag = false;
   int n_checkpoint = 10000;
+  bool no_midstep = false;
 };
 
 #endif // _SIMCORE_PARAMETERS_H_

@@ -61,7 +61,8 @@ void Site::RemoveOutgoingBonds() {
 }
 
 directed_bond Site::GetOtherDirectedBond(int bond_oid) {
-  if (n_bonds_ == 1) {
+  std::cout << "n_bonds:" << n_bonds_ << std::endl;
+  if (n_bonds_ <= 1) {
     // there are no other bonds
     return std::make_pair(nullptr, NONE);
   }
@@ -122,12 +123,12 @@ bool Site::HasNeighbor(int other_oid) {
   return false;
 }
 
-void Site::WriteSpec(std::fstream &op) {
-  for (int i=0; i<3; ++i)
-    op.write(reinterpret_cast<char *>(&position_[i]), sizeof(double));
+void Site::WriteSpec(std::fstream& op) {
+  for (int i = 0; i < 3; ++i)
+    op.write(reinterpret_cast<char*>(&position_[i]), sizeof(double));
 }
 
-void Site::ReadSpec(std::fstream &ip) {
-  for (int i=0; i<3; ++i)
-    ip.read(reinterpret_cast<char *>(&position_[i]), sizeof(double));
+void Site::ReadSpec(std::fstream& ip) {
+  for (int i = 0; i < 3; ++i)
+    ip.read(reinterpret_cast<char*>(&position_[i]), sizeof(double));
 }
