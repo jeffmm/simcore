@@ -729,16 +729,13 @@ void RigidFilament::ReadSpec(std::fstream &ispec) {
    double length
 */
 void RigidFilament::WritePosit(std::fstream &oposit) {
-  double avg_pos[3], avg_u[3];
-  GetAvgPosition(avg_pos);
-  GetAvgOrientation(avg_u);
-  std::copy(avg_pos, avg_pos + 3, position_);
   UpdatePeriodic();
   for (auto &pos : position_)
     oposit.write(reinterpret_cast<char *>(&pos), sizeof(pos));
   for (auto &spos : scaled_position_)
     oposit.write(reinterpret_cast<char *>(&spos), sizeof(spos));
-  for (auto &u : avg_u) oposit.write(reinterpret_cast<char *>(&u), sizeof(u));
+  for (auto &u : orientation_)
+    oposit.write(reinterpret_cast<char *>(&u), sizeof(u));
   oposit.write(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   oposit.write(reinterpret_cast<char *>(&length_), sizeof(length_));
 }
