@@ -2,6 +2,7 @@
 #define _SIMCORE_PARAMETERS_H_
 
 #include "definitions.hpp"
+
 #include <string>
 
 template <unsigned char S> struct species_parameters {
@@ -168,6 +169,7 @@ struct system_parameters {
   bool stoch_flag = true;
   bool thermo_flag = false;
   int n_thermo = 1000;
+  double insert_radius = -1;
   bool interaction_flag = true;
   int species_insertion_failure_threshold = 10000;
   int species_insertion_reattempt_threshold = 10;

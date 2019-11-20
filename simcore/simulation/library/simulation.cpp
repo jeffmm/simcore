@@ -242,7 +242,7 @@ void Simulation::InitSpecies() {
       double spec_length = species_.back()->GetSpecLength();
       double spec_d = species_.back()->GetSpecDiameter();
       spec_length = (spec_d > spec_length ? spec_d : spec_length);
-      CellList::SetMinCellLength(2 * spec_length);
+      CellList::SetMinCellLength(spec_length);
     } else {
       species_.back()->CleanUp();
       delete species_.back();

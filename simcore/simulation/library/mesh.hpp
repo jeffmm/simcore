@@ -38,6 +38,8 @@ public:
   void InitSiteAt(double *new_pos, double d);
   void InitBondAt(double *new_pos, double *u, double l, double d);
   void InitRandomSite(double d);
+  void InitRandomBond(double d);
+  void InitRandomBondOriented(double *u, double d);
   void AddRandomBondAnywhere(double l, double d = 1);
   void AddRandomBondToTip(double l);
   void AddBondToTip(double *u, double l);

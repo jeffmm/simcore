@@ -152,12 +152,12 @@ void Graphics::KeyInteraction() {
   // Set the proper key callback, since 2d and 3d should have different key
   // controls
   // No key interactions if we're doing auto_graph
-  if (!auto_graph_) {
+  //if (!auto_graph_) {
     if (n_dim_ == 2)
       glfwSetKeyCallback(window_, key_callback2d);
     else if (n_dim_ == 3)
       glfwSetKeyCallback(window_, key_callback3d);
-  }
+  //}
   // Check window for key presses/mouse interaction
   glfwPollEvents();
   // Exit program if you close graphics window
