@@ -738,6 +738,8 @@ void RigidFilament::WritePosit(std::fstream &oposit) {
     oposit.write(reinterpret_cast<char *>(&u), sizeof(u));
   oposit.write(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   oposit.write(reinterpret_cast<char *>(&length_), sizeof(length_));
+  auto mesh_id = GetMeshID();
+  oposit.write(reinterpret_cast<char *>(&mesh_id), sizeof(mesh_id));
 }
 
 /* double[3] avg_pos
@@ -749,38 +751,42 @@ void RigidFilament::WritePosit(std::fstream &oposit) {
 void RigidFilament::ReadPosit(std::fstream &iposit) {
   if (iposit.eof()) return;
   posits_only_ = true;
-  double avg_pos[3], avg_u[3], s_pos[3];
+  // double avg_pos[3], avg_u[3], s_pos[3];
   for (int i = 0; i < 3; ++i)
-    iposit.read(reinterpret_cast<char *>(&avg_pos[i]), sizeof(double));
+    iposit.read(reinterpret_cast<char *>(&position_[i]), sizeof(double));
   for (int i = 0; i < 3; ++i)
-    iposit.read(reinterpret_cast<char *>(&s_pos[i]), sizeof(double));
+    iposit.read(reinterpret_cast<char *>(&scaled_position_[i]), sizeof(double));
   for (int i = 0; i < 3; ++i)
-    iposit.read(reinterpret_cast<char *>(&avg_u[i]), sizeof(double));
+    iposit.read(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   iposit.read(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   iposit.read(reinterpret_cast<char *>(&length_), sizeof(length_));
+  int mesh_id = 0;
+  iposit.read(reinterpret_cast<char *>(mesh_id), sizeof(int));
+  SetMeshID(mesh_id);
+  UpdateBondPositions();
   // Initialize first bond position
-  std::copy(avg_pos, avg_pos + 3, position_);
-  for (int i = 0; i < n_dim_; ++i)
-    avg_pos[i] = avg_pos[i] - 0.5 * length_ * avg_u[i];
-  for (int i_bond = 0; i_bond < n_bonds_; ++i_bond) {
-    sites_[i_bond].SetPosition(avg_pos);
-    sites_[i_bond].SetOrientation(avg_u);
-    for (int i = 0; i < n_dim_; ++i) {
-      avg_pos[i] += 0.5 * bond_length_ * avg_u[i];
-    }
-    bonds_[i_bond].SetPosition(avg_pos);
-    bonds_[i_bond].SetOrientation(avg_u);
-    bonds_[i_bond].SetDiameter(diameter_);
-    bonds_[i_bond].UpdatePeriodic();
-    // Set next bond position
-    for (int i = 0; i < n_dim_; ++i) {
-      avg_pos[i] += 0.5 * bond_length_ * avg_u[i];
-    }
-  }
-  sites_[n_bonds_].SetPosition(avg_pos);
-  sites_[n_bonds_].SetOrientation(avg_u);
-  SetOrientation(avg_u);
-  UpdatePeriodic();
+  // std::copy(avg_pos, avg_pos + 3, position_);
+  // for (int i = 0; i < n_dim_; ++i)
+  //  avg_pos[i] = avg_pos[i] - 0.5 * length_ * avg_u[i];
+  // for (int i_bond = 0; i_bond < n_bonds_; ++i_bond) {
+  //  sites_[i_bond].SetPosition(avg_pos);
+  //  sites_[i_bond].SetOrientation(avg_u);
+  //  for (int i = 0; i < n_dim_; ++i) {
+  //    avg_pos[i] += 0.5 * bond_length_ * avg_u[i];
+  //  }
+  //  bonds_[i_bond].SetPosition(avg_pos);
+  //  bonds_[i_bond].SetOrientation(avg_u);
+  //  bonds_[i_bond].SetDiameter(diameter_);
+  //  bonds_[i_bond].UpdatePeriodic();
+  //  // Set next bond position
+  //  for (int i = 0; i < n_dim_; ++i) {
+  //    avg_pos[i] += 0.5 * bond_length_ * avg_u[i];
+  //  }
+  //}
+  // sites_[n_bonds_].SetPosition(avg_pos);
+  // sites_[n_bonds_].SetOrientation(avg_u);
+  // SetOrientation(avg_u);
+  // UpdatePeriodic();
   // CalculateAngles();
 }
 

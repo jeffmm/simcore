@@ -367,6 +367,8 @@ void Anchor::WriteSpec(std::fstream &ospec) {
     ospec.write(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
   ospec.write(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
+  int attached_mesh_id = bound_ ? mesh_->GetMeshID() : -1;
+  ospec.write(reinterpret_cast<char *>(&attached_mesh_id), sizeof(int));
 }
 
 void Anchor::ReadSpec(std::fstream &ispec) {
@@ -380,6 +382,8 @@ void Anchor::ReadSpec(std::fstream &ispec) {
     ispec.read(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
   ispec.read(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
+  int attached_mesh_id = -1;  // Just a place holder at the moment
+  ispec.read(reinterpret_cast<char *>(&attached_mesh_id), sizeof(int));
   UpdatePeriodic();
   if (active_) step_direction_ = -sparams_->step_direction;
 }
