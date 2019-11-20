@@ -29,6 +29,7 @@ struct species_parameters<species_id::rigid_filament>
     : public species_base_parameters {
   double max_length = 500;
   double min_length = 5;
+  bool stationary_flag = false;
   double packing_fraction = -1;
   int n_equil = 0;
 };

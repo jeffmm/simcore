@@ -315,7 +315,7 @@ double const RigidFilament::GetVolume() {
 
 void RigidFilament::UpdatePosition() {
   ApplyForcesTorques();
-  Integrate();
+  if (!sparams_->stationary_flag) Integrate();
   // UpdateAvgPosition();
   // DynamicInstability();
   eq_steps_count_++;

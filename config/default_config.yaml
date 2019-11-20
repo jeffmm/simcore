@@ -135,6 +135,7 @@ species:                             # Shared parameters used for all species.
 rigid_filament:
   max_length: [500, double]          # maximum filament length. also used for dynamic instability.
   min_length: [5, double]            # minimum filament length. also used for dynamic instability.
+  stationary_flag: [false, bool]      # If true, rigid_filaments will not move regardless of forces on them.
                                      # number of bonds used to discretize filament may change while
                                      # filament is growing or shrinking to stay in range.
   #driving_factor: [0, double]        # force density used to propel active filaments.
