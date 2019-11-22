@@ -212,6 +212,7 @@ void Crosslink::UpdateXlinkState() {
     SetSingly();
   } else if (IsDoubly() && !anchors_[0].IsBound()) {
     anchors_[0] = anchors_[1];
+    anchors_[1].Unbind();
     SetSingly();
   }
   if (IsSingly() && anchors_[1].IsBound()) {
