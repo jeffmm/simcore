@@ -303,10 +303,8 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           break;
         }
       }
-      if (num != inserted) {
+      if (num != inserted && params_.n_dim == 2) {
         // Attempt a lattice-based insertion strategy (only 2d for now)
-        if (params_.n_dim == 3)
-          continue;
         Logger::Warning("Attempting lattice-based insertion strategy");
         double pos[3] = {0, 0, 0};
         pos[0] = -params_.system_radius;
