@@ -171,11 +171,11 @@ void Filament::InsertFirstBond() {
   } else if (sparams_->insertion_type.compare("random_nematic") == 0) {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = (rng_.RandomUniform() > 0.5 ? 1.0 : -1.0);
-    InitRandomBondOriented(orientation_, bond_length_);
+    InitRandomBondOriented(orientation_, diameter_);
   } else if (sparams_->insertion_type.compare("random_polar") == 0) {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
-    InitRandomBondOriented(orientation_, bond_length_);
+    InitRandomBondOriented(orientation_, diameter_);
   } else if (sparams_->insertion_type.compare("centered_oriented") == 0) {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
