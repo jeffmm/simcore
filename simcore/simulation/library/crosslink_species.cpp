@@ -8,6 +8,8 @@ void CrosslinkSpecies::Init(std::string spec_name, ParamsParser &parser) {
   k_on_ = sparams_.k_on;
   k_off_ = sparams_.k_off;
   xlink_concentration_ = sparams_.concentration;
+  infinite_reservoir_flag_ = sparams_.infinite_reservoir_flag;
+  // if (!infinite_reservoir_flag_)
   sparams_.num = (int)round(sparams_.concentration * space_->volume);
 }
 
@@ -39,6 +41,7 @@ void CrosslinkSpecies::InsertCrosslinks() {
   } else if (sparams_.insertion_type.compare("centered") == 0) {
     sparams_.num = 1;
     sparams_.static_flag = true;
+    sparams_.infinite_reservoir_flag = false;
     AddMember();
     double pos[3] = {0, 0, 0};
     double u[3] = {0, 0, 0};
@@ -46,6 +49,7 @@ void CrosslinkSpecies::InsertCrosslinks() {
     members_.back().InsertAt(pos, u);
   } else if (sparams_.insertion_type.compare("random_grid") == 0) {
     sparams_.static_flag = true;
+    sparams_.infinite_reservoir_flag = false;
     if (params_->n_dim == 3) {
       if (space_->type == +boundary_type::none ||
           space_->type == +boundary_type::box) {
@@ -85,6 +89,7 @@ void CrosslinkSpecies::InsertCrosslinks() {
       }
     }
   } else if (sparams_.insertion_type.compare("random_boundary") == 0) {
+    sparams_.infinite_reservoir_flag = false;
     if (space_->type == +boundary_type::none) {
       Logger::Error(
           "Crosslinker insertion type \"random boundary\" requires a"
@@ -124,7 +129,13 @@ void CrosslinkSpecies::CalculateBindingFree() {
     return;
   }
   /* Check crosslink binding */
-  double free_concentration = (sparams_.num - n_members_) / space_->volume;
+  double free_concentration;
+  if (infinite_reservoir_flag_) {
+    free_concentration = xlink_concentration_;
+  } else {
+    free_concentration = (sparams_.num - n_members_) / space_->volume;
+  }
+
   if (rng_.RandomUniform() <=
       free_concentration * (*obj_volume_) * k_on_ * params_->delta) {
     /* Create a new crosslink and bind an anchor to a random object

@@ -5,7 +5,8 @@
 
 #include <string>
 
-template <unsigned char S> struct species_parameters {
+template <unsigned char S>
+struct species_parameters {
   std::string name = "species";
   int num = 0;
   double diameter = 1;
@@ -33,7 +34,8 @@ struct species_parameters<species_id::rigid_filament>
   double packing_fraction = -1;
   int n_equil = 0;
 };
-typedef species_parameters<species_id::rigid_filament> rigid_filament_parameters;
+typedef species_parameters<species_id::rigid_filament>
+    rigid_filament_parameters;
 
 template <>
 struct species_parameters<species_id::filament>
@@ -96,7 +98,8 @@ struct species_parameters<species_id::spherocylinder>
   int n_diffusion_samples = 1;
   bool midstep = false;
 };
-typedef species_parameters<species_id::spherocylinder> spherocylinder_parameters;
+typedef species_parameters<species_id::spherocylinder>
+    spherocylinder_parameters;
 
 template <>
 struct species_parameters<species_id::spindle>
@@ -115,6 +118,7 @@ template <>
 struct species_parameters<species_id::crosslink>
     : public species_base_parameters {
   double concentration = 0;
+  bool infinite_reservoir_flag = false;
   bool walker_flag = false;
   bool static_flag = false;
   bool diffusion_flag = false;
@@ -219,4 +223,4 @@ struct system_parameters {
   bool no_midstep = false;
 };
 
-#endif // _SIMCORE_PARAMETERS_H_
+#endif  // _SIMCORE_PARAMETERS_H_

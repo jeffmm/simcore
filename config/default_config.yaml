@@ -299,6 +299,10 @@ crosslink:                          # Parameters specific to crosslinks.
                                     # Units in #/area or #/vol in 2D or 3D for free xlinks. In
                                     # #/area for grid spacing. In #/length or #/area for 2D or 3D
                                     # boundaries.
+  infinite_reservoir_flag: [false, bool] # Do crosslinks bind from an infinite
+                                         # reservoir when going from unbound to
+                                         # singly bound.  Only applicable for
+                                         # crosslinks in solution.
   walker_flag: [false, bool]        # Flag for setting directed motion of crosslink heads.
   static_flag: [false, bool]        # Flag for setting one crosslinker head to be fixed in space
   diffusion_flag: [false, bool]     # Flag allowing bound crosslink heads to diffuse.
