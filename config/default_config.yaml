@@ -47,6 +47,7 @@ stoch_flag: [true, bool]             # Flag for toggling Brownian motion in vari
 thermo_flag: [false, bool]           # Output stress tensor and pressure/volume information every
                                      # n_thermo steps.
 n_thermo: [1000, int]                # How often to output thermo info.
+insert_radius: [-1, double]          # Insert species into subvolume with radius insert_radius
 interaction_flag: [true, bool]       # If zero, skips checking for particle interactions.
 species_insertion_failure_threshold: [10000, int] # Threshold used during species insertion for
                                                  # triggering a re-insertion of all species

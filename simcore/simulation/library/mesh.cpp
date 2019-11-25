@@ -241,6 +241,35 @@ void Mesh::InitRandomSite(double d) {
   rng_.RandomCoordinate(space_, position_, d);
   InitSiteAt(position_, d);
 }
+void Mesh::InitRandomBond(double d) {
+  rng_.RandomUnitVector(n_dim_, orientation_);
+  if (params_->insert_radius > 0) {
+    space_struct space_temp(*space_);
+    space_temp.radius = params_->insert_radius;
+    rng_.RandomCoordinate(&space_temp, position_, d);
+  } else {
+    rng_.RandomCoordinate(space_, position_, d);
+  }
+  for (int i=0; i<n_dim_; ++i) {
+    position_[i] -= 0.5 * orientation_[i] * length_;
+  }
+  InitSiteAt(position_, d);
+  AddBondToTip(orientation_, bond_length_);
+}
+void Mesh::InitRandomBondOriented(double *u, double d) {
+  if (params_->insert_radius > 0) {
+    space_struct space_temp(*space_);
+    space_temp.radius = params_->insert_radius;
+    rng_.RandomCoordinate(&space_temp, position_, d);
+  } else {
+    rng_.RandomCoordinate(space_, position_, d);
+  }
+  for (int i=0; i<n_dim_; ++i) {
+    position_[i] -= 0.5 * orientation_[i] * length_;
+  }
+  InitSiteAt(position_, d);
+  AddBondToTip(u, bond_length_);
+}
 // Default d=1
 void Mesh::AddRandomBondAnywhere(double l, double d) {
   if (n_sites_ < 1) {

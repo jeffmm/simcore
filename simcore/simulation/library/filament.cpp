@@ -167,18 +167,15 @@ void Filament::Reserve() {
 
 void Filament::InsertFirstBond() {
   if (sparams_->insertion_type.compare("random") == 0) {
-    InitRandomSite(diameter_);
-    AddRandomBondToTip(bond_length_);
+    InitRandomBond(diameter_);
   } else if (sparams_->insertion_type.compare("random_nematic") == 0) {
-    InitRandomSite(diameter_);
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = (rng_.RandomUniform() > 0.5 ? 1.0 : -1.0);
-    AddBondToTip(orientation_, bond_length_);
+    InitRandomBondOriented(orientation_, diameter_);
   } else if (sparams_->insertion_type.compare("random_polar") == 0) {
-    InitRandomSite(diameter_);
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
-    AddBondToTip(orientation_, bond_length_);
+    InitRandomBondOriented(orientation_, diameter_);
   } else if (sparams_->insertion_type.compare("centered_oriented") == 0) {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
@@ -343,11 +340,14 @@ double const Filament::GetVolume() {
 
 void Filament::UpdatePosition(bool midstep) {
   midstep_ = midstep;
+  if (eq_steps_count_++ < eq_steps_) {
+    return;
+  }
   ApplyForcesTorques();
   Integrate();
   UpdateAvgPosition();
   DynamicInstability();
-  eq_steps_count_++;
+  //eq_steps_count_++;
 }
 
 /*******************************************************************************
@@ -838,12 +838,24 @@ void Filament::UpdateSitePositions() {
   // Finally, normalize site positions, making sure the sites are still
   // rod-length apart
   if (CheckBondLengths()) {
-    for (int i_site = 1; i_site < n_sites_; ++i_site) {
-      double const *const r_site1 = sites_[i_site - 1].GetPosition();
-      double const *const u_site1 = sites_[i_site - 1].GetOrientation();
-      for (int i = 0; i < n_dim_; ++i)
-        r_diff[i] = r_site1[i] + bond_length_ * u_site1[i];
-      sites_[i_site].SetPosition(r_diff);
+    normalize_switch_ = !normalize_switch_;
+    n_normalize_++;
+    if (normalize_switch_) {
+      for (int i_site = 1; i_site < n_sites_; ++i_site) {
+        double const *const r_site1 = sites_[i_site - 1].GetPosition();
+        double const *const u_site1 = sites_[i_site - 1].GetOrientation();
+        for (int i = 0; i < n_dim_; ++i)
+          r_diff[i] = r_site1[i] + bond_length_ * u_site1[i];
+        sites_[i_site].SetPosition(r_diff);
+      }
+    } else {
+      for (int i_site = n_sites_-1; i_site > 0; --i_site) {
+        double const *const r_site1 = sites_[i_site].GetPosition();
+        double const *const u_site1 = sites_[i_site-1].GetOrientation();
+        for (int i = 0; i < n_dim_; ++i)
+          r_diff[i] = r_site1[i] - bond_length_ * u_site1[i];
+        sites_[i_site-1].SetPosition(r_diff);
+      }
     }
   }
 }

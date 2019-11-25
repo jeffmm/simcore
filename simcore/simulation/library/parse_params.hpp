@@ -92,6 +92,8 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.thermo_flag = it->second.as<bool>();
     } else if (param_name.compare("n_thermo")==0) {
     params.n_thermo = it->second.as<int>();
+    } else if (param_name.compare("insert_radius")==0) {
+    params.insert_radius = it->second.as<double>();
     } else if (param_name.compare("interaction_flag")==0) {
     params.interaction_flag = it->second.as<bool>();
     } else if (param_name.compare("species_insertion_failure_threshold")==0) {

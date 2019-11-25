@@ -131,6 +131,7 @@
   default_config["stoch_flag"] = "true";
   default_config["thermo_flag"] = "false";
   default_config["n_thermo"] = "1000";
+  default_config["insert_radius"] = "-1";
   default_config["interaction_flag"] = "true";
   default_config["species_insertion_failure_threshold"] = "10000";
   default_config["species_insertion_reattempt_threshold"] = "10";

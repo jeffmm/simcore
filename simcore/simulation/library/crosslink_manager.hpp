@@ -43,7 +43,10 @@ public:
   const double GetDrMax();
   void ReadInputs();
   void InsertCrosslinks();
-  const double GetRCutoff() const { return rcutoff_; }
+  const double GetRCutoff() const {
+    Logger::Trace("Crosslink rcutoff is %2.2f", rcutoff_);
+    return rcutoff_;
+  }
 };
 
 #endif

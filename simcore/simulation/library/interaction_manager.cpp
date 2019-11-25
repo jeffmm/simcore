@@ -40,6 +40,8 @@ void InteractionManager::InitInteractions() {
        params_->overlap_analysis || params_->density_analysis);
   if (processing_ && local_order) {
     CellList::SetMinCellLength(0.5 * params_->local_order_width);
+  } else if (processing_) {
+    return;
   }
   CellList::SetMinCellLength(xlink_.GetRCutoff());
   potentials_.InitPotentials(params_);
