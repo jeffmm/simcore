@@ -17,6 +17,8 @@ private:
   bool optical_trap_flag_;
   bool cilia_trap_flag_;
   bool polydispersity_flag_;
+  bool normalize_switch_ = true;
+  int n_normalize_ = 0;
   int optical_trap_fixed_;
   int trapped_site_;
   int n_step_ = 0;
