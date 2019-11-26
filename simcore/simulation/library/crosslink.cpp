@@ -68,7 +68,12 @@ void Crosslink::SinglyKMC() {
 
   /* Calculate probability to bind */
   double kmc_bind_prob = 0;
-  std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_);
+  /* Effective concentration of one anchor in a sphere of
+   * rcaputre_ radius
+   */
+  double eff_concentration = .75 / (M_PI * CUBE(rcapture_));
+
+  std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_ * eff_concentration);
   if (n_neighbors > 0) {
     kmc_bind.CalcTotProbsSD(anchors_[0].GetNeighborListMem(), kmc_filter,
                             anchors_[0].GetBoundOID(), 0, k_spring_, 1.0,

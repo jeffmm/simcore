@@ -9,8 +9,12 @@ void CrosslinkSpecies::Init(std::string spec_name, ParamsParser &parser) {
   k_off_ = sparams_.k_off;
   xlink_concentration_ = sparams_.concentration;
   infinite_reservoir_flag_ = sparams_.infinite_reservoir_flag;
-  // if (!infinite_reservoir_flag_)
   sparams_.num = (int)round(sparams_.concentration * space_->volume);
+  double small = 1e-4;  // Value defined in lookup_table
+  /* TODO: Have lookup table be the only source of cutoff value <25-11-19, ARL>
+   */
+  sparams_.r_capture =
+      sqrt(-2 * log(small) / sparams_.k_spring) + 1 + sparams_.rest_length;
 }
 
 void CrosslinkSpecies::AddMember() {
@@ -28,9 +32,10 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
   /* TODO Lookup table only works for filament objects. Generalize? */
   lut_.Init(sparams_.k_spring / 2, sparams_.rest_length, 1);
   /* Integral cutoff */
-  double small = 1e-4;  // Value defined in lookup_table
-  sparams_.r_capture =
-      sqrt(-2 * log(small) / sparams_.k_spring) + 1 + sparams_.rest_length;
+  // Defined above
+  // double small = 1e-4;  // Value defined in lookup_table
+  // sparams_.r_capture =
+  //    sqrt(-2 * log(small) / sparams_.k_spring) + 1 + sparams_.rest_length;
 }
 
 void CrosslinkSpecies::InsertCrosslinks() {
