@@ -31,7 +31,9 @@ void CrosslinkManager::InitSpecies(sid_label &slab, ParamsParser &parser,
 void CrosslinkManager::UpdateObjsVolume() {
   obj_volume_ = 0;
   for (auto it = objs_->begin(); it != objs_->end(); ++it) {
-    obj_volume_ += (*it)->GetVolume();
+    // obj_volume_ += (*it)->GetVolume(); //XXX: Binding based off length not
+    // volume
+    obj_volume_ += (*it)->GetLength();
   }
 }
 

@@ -7,6 +7,7 @@ void CrosslinkSpecies::Init(std::string spec_name, ParamsParser &parser) {
   Species::Init(spec_name, parser);
   k_on_ = sparams_.k_on;
   k_off_ = sparams_.k_off;
+  bind_site_density_ = sparams_.bind_site_density;
   xlink_concentration_ = sparams_.concentration;
   infinite_reservoir_flag_ = sparams_.infinite_reservoir_flag;
   sparams_.num = (int)round(sparams_.concentration * space_->volume);
@@ -27,7 +28,7 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
                                                   double *obj_vol,
                                                   bool *update) {
   objs_ = objs;
-  obj_volume_ = obj_vol;
+  obj_volume_ = obj_vol;  // Technically a length
   update_ = update;
   /* TODO Lookup table only works for filament objects. Generalize? */
   lut_.Init(sparams_.k_spring / 2, sparams_.rest_length, 1);
@@ -128,6 +129,7 @@ void CrosslinkSpecies::InsertCrosslinks() {
   }
 }
 
+// Calculate and bind crosslinkers from solution implicitly
 void CrosslinkSpecies::CalculateBindingFree() {
   /* Static crosslinks are never free */
   if (sparams_.static_flag) {
@@ -135,14 +137,17 @@ void CrosslinkSpecies::CalculateBindingFree() {
   }
   /* Check crosslink binding */
   double free_concentration;
-  if (infinite_reservoir_flag_) {
+  if (infinite_reservoir_flag_) {  // Have a constant concentration of
+                                   // crosslinkers binding from solution
     free_concentration = xlink_concentration_;
-  } else {
+  } else {  // Have a constant number of crosslinkers in a space
     free_concentration = (sparams_.num - n_members_) / space_->volume;
   }
-
-  if (rng_.RandomUniform() <=
-      free_concentration * (*obj_volume_) * k_on_ * params_->delta) {
+  int bind_num = rng_.RandomPoisson(bind_site_density_ * free_concentration *
+                                    (*obj_volume_) * k_on_ * params_->delta);
+  // Use a Poisson distribution to calculate the number of particles
+  // binding from distribution
+  for (int i = 0; i < bind_num; ++i) {
     /* Create a new crosslink and bind an anchor to a random object
      * in the system */
     BindCrosslink();
@@ -150,12 +155,12 @@ void CrosslinkSpecies::CalculateBindingFree() {
 }
 
 /* Returns a random object with selection probability proportional to object
-   volume */
+   length */
 Object *CrosslinkSpecies::GetRandomObject() {
   double roll = (*obj_volume_) * rng_.RandomUniform();
   double vol = 0;
   for (auto obj = objs_->begin(); obj != objs_->end(); ++obj) {
-    vol += (*obj)->GetVolume();
+    vol += (*obj)->GetLength();
     if (vol > roll) {
 #ifdef TRACE
       Logger::Trace("Binding free crosslink to random object: xl %d -> obj %d",

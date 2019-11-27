@@ -303,6 +303,8 @@ crosslink:                          # Parameters specific to crosslinks.
                                          # reservoir when going from unbound to
                                          # singly bound.  Only applicable for
                                          # crosslinks in solution.
+  bind_site_density: [1, double]    # The linear binding site density along
+                                    # filament that crosslinker ends bind to
   walker_flag: [false, bool]        # Flag for setting directed motion of crosslink heads.
   static_flag: [false, bool]        # Flag for setting one crosslinker head to be fixed in space
   diffusion_flag: [false, bool]     # Flag allowing bound crosslink heads to diffuse.

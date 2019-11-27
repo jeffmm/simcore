@@ -132,6 +132,7 @@ class Filament : public Mesh {
   void ReadCheckpoint(std::fstream &icheck);
   void ScalePosition();
   double const GetVolume();
+  // const double GetLength() { return length_; };
 };
 
 typedef std::vector<Filament>::iterator filament_iterator;

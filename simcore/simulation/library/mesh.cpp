@@ -250,7 +250,7 @@ void Mesh::InitRandomBond(double d) {
   } else {
     rng_.RandomCoordinate(space_, position_, d);
   }
-  for (int i=0; i<n_dim_; ++i) {
+  for (int i = 0; i < n_dim_; ++i) {
     position_[i] -= 0.5 * orientation_[i] * length_;
   }
   InitSiteAt(position_, d);
@@ -264,7 +264,7 @@ void Mesh::InitRandomBondOriented(double *u, double d) {
   } else {
     rng_.RandomCoordinate(space_, position_, d);
   }
-  for (int i=0; i<n_dim_; ++i) {
+  for (int i = 0; i < n_dim_; ++i) {
     position_[i] -= 0.5 * orientation_[i] * length_;
   }
   InitSiteAt(position_, d);

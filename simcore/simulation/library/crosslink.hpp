@@ -28,6 +28,7 @@ class Crosslink : public Object {
   double k_align_;
   double rest_length_;
   double rcapture_;
+  double bind_site_density_;
   double tether_force_;
   double fdep_factor_;
   double polar_affinity_;

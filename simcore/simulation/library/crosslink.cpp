@@ -18,6 +18,7 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   k_spring_ = sparams_->k_spring;
   k_align_ = sparams_->k_align;
   rcapture_ = sparams_->r_capture;
+  bind_site_density_ = sparams_->bind_site_density;
   fdep_factor_ = sparams_->force_dep_factor;
   polar_affinity_ = sparams_->polar_affinity;
   /* TODO generalize crosslinks to more than two anchors */
@@ -72,8 +73,10 @@ void Crosslink::SinglyKMC() {
    * rcaputre_ radius
    */
   double eff_concentration = .75 / (M_PI * CUBE(rcapture_));
+  double k_on_d_prime = k_on_d_ * eff_concentration * bind_site_density_;
+  printf("k_on_d_prime = %f\n", k_on_d_prime);
 
-  std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_ * eff_concentration);
+  std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_prime);
   if (n_neighbors > 0) {
     kmc_bind.CalcTotProbsSD(anchors_[0].GetNeighborListMem(), kmc_filter,
                             anchors_[0].GetBoundOID(), 0, k_spring_, 1.0,

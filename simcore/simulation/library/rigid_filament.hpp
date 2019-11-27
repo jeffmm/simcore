@@ -90,6 +90,7 @@ class RigidFilament : public Mesh {
   virtual void Draw(std::vector<graph_struct *> &graph_array);
   virtual void UpdatePosition();
   double const GetLength() { return length_; }
+  double const GetTrueLength() const { return length_; }
   // double const GetDriving() { return driving_factor_; }
   // void Reserve();
   void CheckFlocking();
