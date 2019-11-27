@@ -74,7 +74,6 @@ void Crosslink::SinglyKMC() {
    */
   double eff_concentration = .75 / (M_PI * CUBE(rcapture_));
   double k_on_d_prime = k_on_d_ * eff_concentration * bind_site_density_;
-  printf("k_on_d_prime = %f\n", k_on_d_prime);
 
   std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_prime);
   if (n_neighbors > 0) {

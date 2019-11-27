@@ -15,7 +15,7 @@ void CrosslinkSpecies::Init(std::string spec_name, ParamsParser &parser) {
   /* TODO: Have lookup table be the only source of cutoff value <25-11-19, ARL>
    */
   sparams_.r_capture =
-      sqrt(-2 * log(small) / sparams_.k_spring) + 1 + sparams_.rest_length;
+      sqrt(-2 * log(small) / sparams_.k_spring) + sparams_.rest_length;
 }
 
 void CrosslinkSpecies::AddMember() {

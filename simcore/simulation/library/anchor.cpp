@@ -155,13 +155,14 @@ void Anchor::Deactivate() {
 
 void Anchor::Walk() {
   if (force_dep_vel_flag_) {
-    double fmag = 0.0;
+    double const *const bond_orientation = bond_->GetOrientation();
+    double fmag_para = 0.0;
     for (int i = 0; i < n_dim_; ++i) {
-      fmag += force_[i] * force_[i];
+      fmag_para += force_[i] * bond_orientation[i];
     }
-    fmag = sqrt(fmag);
+    // fmag = sqrt(fmag);
     // Linear force-velocity relationship
-    double fdep = 1 - fmag / f_stall_;
+    double fdep = 1. + fmag_para / f_stall_;
     if (fdep > 1) {
       fdep = 1;
     } else if (fdep < 0) {
