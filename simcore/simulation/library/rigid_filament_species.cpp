@@ -57,7 +57,7 @@ void RigidFilamentSpecies::UpdatePositions() {
 #pragma omp for
     for (int i = 0; i < max_threads; ++i)
       for (auto it = chunks[i].first; it != chunks[i].second; ++it)
-        it->UpdatePosition(midstep_);
+        it->UpdatePosition();
   }
 #else
   for (rigid_filament_iterator it = members_.begin(); it != members_.end();
