@@ -1,6 +1,8 @@
 #include "anchor.hpp"
 
-Anchor::Anchor(unsigned long seed) : Object(seed) { SetSID(species_id::crosslink); }
+Anchor::Anchor(unsigned long seed) : Object(seed) {
+  SetSID(species_id::crosslink);
+}
 
 void Anchor::Init(crosslink_parameters *sparams) {
   sparams_ = sparams;
@@ -154,19 +156,19 @@ void Anchor::Deactivate() {
 
 void Anchor::Walk() {
   if (force_dep_vel_flag_) {
-    double fmag = 0.0;
-    for (int i = 0; i < n_dim_; ++i) {
-      fmag += force_[i] * force_[i];
+    // Only consider projected force
+    double force_proj = dot_product(n_dim_, force_, orientation_);
+    // Only consider forces that oppose direction of velocity
+    if (SIGNOF(force_proj) != SIGNOF(step_direction_)) {
+      // Linear force-velocity relationship
+      double fdep = 1 - force_proj / f_stall_;
+      if (fdep > 1) {
+        fdep = 1;
+      } else if (fdep < 0) {
+        fdep = 0;
+      }
+      velocity_ = max_velocity_ * fdep;
     }
-    fmag = sqrt(fmag);
-    // Linear force-velocity relationship
-    double fdep = 1 - fmag / f_stall_;
-    if (fdep > 1) {
-      fdep = 1;
-    } else if (fdep < 0) {
-      fdep = 0;
-    }
-    velocity_ = max_velocity_ * fdep;
   }
   double dr = step_direction_ * velocity_ * delta_;
   mesh_lambda_ += dr;
@@ -218,7 +220,23 @@ void Anchor::Unbind() {
 
 void Anchor::Diffuse() {
   double kick = rng_.RandomUniform() - 0.5;
-  double dr = kick * diffusion_ * delta_ / diameter_;
+  double vel = kick * diffusion_ / diameter_;
+  if (force_dep_vel_flag_) {
+    double force_proj = dot_product(n_dim_, force_, orientation_);
+    // Add force-velocity relationship to diffusion
+    if (SIGNOF(force_proj) != SIGNOF(vel)) {
+      double fdep = 1 - force_proj / f_stall_;
+      // TODO Check whether the force can cause the motor to reverse
+      // For now, assume that diffusion can be biased in either direction
+      // if (fdep > 1) {
+      // fdep = 1;
+      //} else if (fdep < 0) {
+      // fdep = 0;
+      //}
+      vel *= fdep;
+    }
+  }
+  double dr = vel * delta_;
   mesh_lambda_ += dr;
 }
 

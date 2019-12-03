@@ -257,5 +257,5 @@ crosslink:                          # Parameters specific to crosslinks.
   end_pausing: [false, bool]        # If 0, diffusing or walking crosslinks that move off the
                                     # filament automatically unbind. If 1, crosslinks that try to
                                     # do so will remain at the filament tip until unbinding.
-  r_capture: [5, double]            # Maximum distance at which to consider binding singly bound to
-                                    # doubly bound crosslink.
+  r_capture: [5, double]            # Max range allowed for singly to doubly bound crosslink.
+                                    # Calculated using k_spring, rest_length. User input ignored.

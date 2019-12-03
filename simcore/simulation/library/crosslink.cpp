@@ -121,7 +121,8 @@ void Crosslink::SinglyKMC() {
 void Crosslink::DoublyKMC() {
   /* Calculate force-dependent unbinding for each head */
   double tether_stretch = length_ - rest_length_;
-  tether_stretch = (tether_stretch > 0 ? tether_stretch : 0);
+  // For springs that only worry about stretch and not compression
+  //tether_stretch = (tether_stretch > 0 ? tether_stretch : 0);
   double fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
   double unbind_prob = k_off_d_ * delta_ * exp(fdep);
   double roll = rng_.RandomUniform();
@@ -129,10 +130,10 @@ void Crosslink::DoublyKMC() {
   if (static_flag_) {
     head_activate = choose_kmc_double(0, unbind_prob, roll);
   } else {
+    // k_off_d is the unbinding rate for each head
     head_activate =
-        choose_kmc_double(0.5 * unbind_prob, 0.5 * unbind_prob, roll);
+        choose_kmc_double(unbind_prob, unbind_prob, roll);
   }
-  // Each head has an equal likelihood to unbind (half the total probability)
   if (head_activate == 0) {
     Logger::Trace("Doubly-bound crosslink %d came unbound from %d", GetOID(),
                   anchors_[0].GetBoundOID());
