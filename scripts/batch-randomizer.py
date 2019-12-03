@@ -137,17 +137,17 @@ def randomizeSummitJobs(
                 writeMultiJob(run_name, job_nums, num_cores, job, time, email)
             else:
                 job_num = run * n_job_files + job
-                writeMultiJob(
-                    run_name, job_nums, num_cores, job_num, time, email, run
-                )
+                writeMultiJob(run_name, job_nums, num_cores, job_num, time, email, run)
 
 
 def printHelp():
     """ Prints expected arguments for summit_job_randomizer.py """
-    print("=========================================================\n"
-          "batch-randomizer.py: generate slurm job files for simcore\n"
-          "=========================================================\n"
-          "The expected format is:\n")
+    print(
+        "=========================================================\n"
+        "batch-randomizer.py: generate slurm job files for simcore\n"
+        "=========================================================\n"
+        "The expected format is:\n"
+    )
     print(
         "  python batch-randomizer.py run_name n_sims n_cores time "
         "n_runs email n_sims_per_job\n"
