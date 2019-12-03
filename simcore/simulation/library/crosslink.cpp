@@ -11,6 +11,7 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   color_ = sparams_->tether_color;
   draw_ = draw_type::_from_string(sparams_->tether_draw_type.c_str());
   rest_length_ = sparams_->rest_length;
+  static_flag_ = sparams_->static_flag;
   k_on_ = sparams_->k_on;        // k_on for unbound to singly
   k_off_ = sparams_->k_off;      // k_off for singly to unbound
   k_on_d_ = sparams_->k_on_d;    // k_on for singly to doubly
