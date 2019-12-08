@@ -31,8 +31,7 @@ void InteractionManager::Init(system_parameters *params,
   }
   xlink_.Init(params_, space_, &ix_objects_);
   no_boundaries_ = false;
-  if (space_->type == +boundary_type::none)
-    no_boundaries_ = true;
+  if (space_->type == +boundary_type::none) no_boundaries_ = true;
 }
 
 void InteractionManager::InitInteractions() {
@@ -63,8 +62,7 @@ void InteractionManager::InitInteractions() {
 void InteractionManager::Interact() {
   n_interactions_ = 0;
   // First check if we need to interact
-  if (no_interactions_ && no_boundaries_)
-    return;
+  if (no_interactions_ && no_boundaries_) return;
   // Check if we need to update objects in cell list
   CheckUpdateObjects();
   // Update crosslinks
@@ -105,9 +103,10 @@ void InteractionManager::CheckUpdateXlinks() {
     std::vector<Object *> xlinks;
     xlink_.GetInteractors(xlinks);
     interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
-    Logger::Debug("Updating interactions due to crosslink update. %d steps "
-                  "since last update",
-                  i_update_);
+    Logger::Debug(
+        "Updating interactions due to crosslink update. %d steps "
+        "since last update",
+        i_update_);
     UpdateInteractions();
     return;
   }
@@ -144,8 +143,9 @@ bool InteractionManager::CheckBondAnchorPair(Object *anchor, Object *bond) {
   if (anchor->GetMeshID() == bond->GetMeshID()) {
     Anchor *a = dynamic_cast<Anchor *>(anchor);
     if (a == nullptr) {
-      Logger::Error("Object pointer was unsuccessfully dynamically cast to an "
-                    "Anchor pointer in CheckBondAnchorPair!");
+      Logger::Error(
+          "Object pointer was unsuccessfully dynamically cast to an "
+          "Anchor pointer in CheckBondAnchorPair!");
     }
     if (bond->GetType() != +obj_type::bond) {
       Logger::Error(
@@ -215,8 +215,7 @@ void InteractionManager::UpdateInteractions() {
 }
 
 void InteractionManager::UpdatePairInteractions() {
-  if (no_interactions_)
-    return;
+  if (no_interactions_) return;
 #ifdef TRACE
   int nix = pair_interactions_.size();
 #endif
@@ -230,8 +229,7 @@ void InteractionManager::UpdatePairInteractions() {
 }
 
 void InteractionManager::UpdateBoundaryInteractions() {
-  if (no_boundaries_)
-    return;
+  if (no_boundaries_) return;
   boundary_interactions_.clear();
   for (auto ixor = interactors_.begin(); ixor != interactors_.end(); ++ixor) {
     Interaction ix(*ixor);
@@ -263,18 +261,17 @@ void InteractionManager::CheckUpdateObjects() {
   /* First check to see if any objects were added to the system;
      If static_pnumber_ is flagged, we know that particle numbers
      never change, so we don't bother counting particles and move on */
-  if (processing_)
-    return;
-  if (static_pnumber_)
-    return;
+  if (processing_) return;
+  if (static_pnumber_) return;
   bool ix_update = CheckSpeciesInteractorUpdate();
   int obj_count = CountSpecies();
   if (obj_count != n_objs_ || ix_update) {
     // reset update count and update number of objects to track
     n_objs_ = obj_count;
-    Logger::Debug("Updating interactions due to object update. %d steps since"
-                  " last update",
-                  i_update_);
+    Logger::Debug(
+        "Updating interactions due to object update. %d steps since"
+        " last update",
+        i_update_);
     ForceUpdate();
     xlink_.UpdateObjsVolume();
   }
@@ -287,9 +284,10 @@ void InteractionManager::CheckUpdateInteractions() {
      has moved a distance further than dr_update_ */
   double dr_max = GetDrMax();
   if (dr_max > dr_update_) {
-    Logger::Debug("Updating interactions due to dr of objects. %d steps since"
-                  " last update, dr_max = %2.2f",
-                  i_update_, dr_max);
+    Logger::Debug(
+        "Updating interactions due to dr of objects. %d steps since"
+        " last update, dr_max = %2.2f",
+        i_update_, dr_max);
     UpdateInteractions();
   }
 }
@@ -391,8 +389,7 @@ void InteractionManager::ProcessPairInteraction(ix_iterator ix) {
     overlap_ = true;
   }
   /* Check to see if particles are not close enough to interact */
-  if (ix->dr_mag2 > potentials_.GetRCut2())
-    return;
+  if (ix->dr_mag2 > potentials_.GetRCut2()) return;
   /* Calculates forces from the potential defined during initialization */
   potentials_.CalcPotential(*ix);
 }
@@ -404,8 +401,7 @@ void InteractionManager::ProcessBoundaryInteraction(ix_iterator ix) {
   if (ix->dr_mag2 < 0.25 * SQR(ix->obj1->GetDiameter())) {
     overlap_ = true;
   }
-  if (ix->dr_mag2 > potentials_.GetRCut2())
-    return;
+  if (ix->dr_mag2 > potentials_.GetRCut2()) return;
   potentials_.CalcPotential(*ix);
 }
 
@@ -567,8 +563,7 @@ bool InteractionManager::CheckOverlap(std::vector<Object *> &ixors) {
     pair_interactions_.clear();
     clist_.PairSingleObject(**ixor, pair_interactions_);
     CalculatePairInteractions();
-    if (overlap_)
-      break;
+    if (overlap_) break;
   }
   return overlap_;
 }
@@ -690,8 +685,7 @@ void InteractionManager::CalculateStructure() {
 }
 
 void InteractionManager::Clear() {
-  if (no_init_)
-    return;
+  if (no_init_) return;
   clist_.Clear();
   bool local_order =
       (params_->local_order_analysis || params_->polar_order_analysis ||

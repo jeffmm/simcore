@@ -12,6 +12,11 @@
   default_config["species"]["spec_flag"] = "false";
   default_config["species"]["n_posit"] = "100";
   default_config["species"]["n_spec"] = "100";
+  default_config["rigid_filament"]["max_length"] = "500";
+  default_config["rigid_filament"]["min_length"] = "5";
+  default_config["rigid_filament"]["stationary_flag"] = "false";
+  default_config["rigid_filament"]["packing_fraction"] = "-1";
+  default_config["rigid_filament"]["n_equil"] = "0";
   default_config["filament"]["persistence_length"] = "400";
   default_config["filament"]["max_length"] = "500";
   default_config["filament"]["min_length"] = "5";
@@ -65,6 +70,8 @@
   default_config["spindle"]["spring_length"] = "0";
   default_config["spindle"]["spb_diameter"] = "5";
   default_config["crosslink"]["concentration"] = "0";
+  default_config["crosslink"]["infinite_reservoir_flag"] = "false";
+  default_config["crosslink"]["bind_site_density"] = "1";
   default_config["crosslink"]["walker_flag"] = "false";
   default_config["crosslink"]["static_flag"] = "false";
   default_config["crosslink"]["diffusion_flag"] = "false";
@@ -164,3 +171,4 @@
   default_config["in_out_flag"] = "false";
   default_config["checkpoint_flag"] = "false";
   default_config["n_checkpoint"] = "10000";
+  default_config["no_midstep"] = "false";

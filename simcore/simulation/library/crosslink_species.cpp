@@ -7,8 +7,15 @@ void CrosslinkSpecies::Init(std::string spec_name, ParamsParser &parser) {
   Species::Init(spec_name, parser);
   k_on_ = sparams_.k_on;
   k_off_ = sparams_.k_off;
+  bind_site_density_ = sparams_.bind_site_density;
   xlink_concentration_ = sparams_.concentration;
+  infinite_reservoir_flag_ = sparams_.infinite_reservoir_flag;
   sparams_.num = (int)round(sparams_.concentration * space_->volume);
+  double small = 1e-4;  // Value defined in lookup_table
+  /* TODO: Have lookup table be the only source of cutoff value <25-11-19, ARL>
+   */
+  sparams_.r_capture =
+      sqrt(-2 * log(small) / sparams_.k_spring) + sparams_.rest_length;
 }
 
 void CrosslinkSpecies::AddMember() {
@@ -21,14 +28,15 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
                                                   double *obj_vol,
                                                   bool *update) {
   objs_ = objs;
-  obj_volume_ = obj_vol;
+  obj_volume_ = obj_vol;  // Technically a length
   update_ = update;
   /* TODO Lookup table only works for filament objects. Generalize? */
   lut_.Init(sparams_.k_spring / 2, sparams_.rest_length, 1);
   /* Integral cutoff */
-  double small = 1e-4; // Value defined in lookup_table
-  sparams_.r_capture =
-      sqrt(-2 * log(small) / sparams_.k_spring) + 1 + sparams_.rest_length;
+  // Defined above
+  // double small = 1e-4;  // Value defined in lookup_table
+  // sparams_.r_capture =
+  //    sqrt(-2 * log(small) / sparams_.k_spring) + 1 + sparams_.rest_length;
 }
 
 void CrosslinkSpecies::InsertCrosslinks() {
@@ -39,6 +47,7 @@ void CrosslinkSpecies::InsertCrosslinks() {
   } else if (sparams_.insertion_type.compare("centered") == 0) {
     sparams_.num = 1;
     sparams_.static_flag = true;
+    sparams_.infinite_reservoir_flag = false;
     AddMember();
     double pos[3] = {0, 0, 0};
     double u[3] = {0, 0, 0};
@@ -46,6 +55,7 @@ void CrosslinkSpecies::InsertCrosslinks() {
     members_.back().InsertAt(pos, u);
   } else if (sparams_.insertion_type.compare("random_grid") == 0) {
     sparams_.static_flag = true;
+    sparams_.infinite_reservoir_flag = false;
     if (params_->n_dim == 3) {
       if (space_->type == +boundary_type::none ||
           space_->type == +boundary_type::box) {
@@ -85,9 +95,11 @@ void CrosslinkSpecies::InsertCrosslinks() {
       }
     }
   } else if (sparams_.insertion_type.compare("random_boundary") == 0) {
+    sparams_.infinite_reservoir_flag = false;
     if (space_->type == +boundary_type::none) {
-      Logger::Error("Crosslinker insertion type \"random boundary\" requires a"
-                    " boundary for species insertion.");
+      Logger::Error(
+          "Crosslinker insertion type \"random boundary\" requires a"
+          " boundary for species insertion.");
     } else if (space_->type == +boundary_type::sphere) {
       if (params_->n_dim == 2) {
         sparams_.num =
@@ -117,15 +129,25 @@ void CrosslinkSpecies::InsertCrosslinks() {
   }
 }
 
+// Calculate and bind crosslinkers from solution implicitly
 void CrosslinkSpecies::CalculateBindingFree() {
   /* Static crosslinks are never free */
   if (sparams_.static_flag) {
     return;
   }
   /* Check crosslink binding */
-  double free_concentration = (sparams_.num - n_members_) / space_->volume;
-  if (rng_.RandomUniform() <=
-      free_concentration * (*obj_volume_) * k_on_ * params_->delta) {
+  double free_concentration;
+  if (infinite_reservoir_flag_) {  // Have a constant concentration of
+                                   // crosslinkers binding from solution
+    free_concentration = xlink_concentration_;
+  } else {  // Have a constant number of crosslinkers in a space
+    free_concentration = (sparams_.num - n_members_) / space_->volume;
+  }
+  int bind_num = rng_.RandomPoisson(bind_site_density_ * free_concentration *
+                                    (*obj_volume_) * k_on_ * params_->delta);
+  // Use a Poisson distribution to calculate the number of particles
+  // binding from distribution
+  for (int i = 0; i < bind_num; ++i) {
     /* Create a new crosslink and bind an anchor to a random object
      * in the system */
     BindCrosslink();
@@ -133,12 +155,12 @@ void CrosslinkSpecies::CalculateBindingFree() {
 }
 
 /* Returns a random object with selection probability proportional to object
-   volume */
+   length */
 Object *CrosslinkSpecies::GetRandomObject() {
   double roll = (*obj_volume_) * rng_.RandomUniform();
   double vol = 0;
   for (auto obj = objs_->begin(); obj != objs_->end(); ++obj) {
-    vol += (*obj)->GetVolume();
+    vol += (*obj)->GetLength();
     if (vol > roll) {
 #ifdef TRACE
       Logger::Trace("Binding free crosslink to random object: xl %d -> obj %d",
@@ -176,7 +198,11 @@ void CrosslinkSpecies::GetAnchorInteractors(std::vector<Object *> &ixors) {
 void CrosslinkSpecies::UpdatePositions() {
   /* Only do this every other step (assuming flexible filaments with midstep)
    */
-  if (params_->i_step % 2 == 0) {
+  if (params_->no_midstep) {
+    UpdateBoundCrosslinks();
+    CalculateBindingFree();
+    ApplyCrosslinkTetherForces();
+  } else if (params_->i_step % 2 == 0) {
     /* First update bound crosslinks state and positions */
     UpdateBoundCrosslinks();
     /* Calculate implicit binding of crosslinks from solution */

@@ -25,6 +25,17 @@ template <unsigned char S> struct species_parameters {
 typedef species_parameters<species_id::none> species_base_parameters;
 
 template <>
+struct species_parameters<species_id::rigid_filament>
+    : public species_base_parameters {
+  double max_length = 500;
+  double min_length = 5;
+  bool stationary_flag = false;
+  double packing_fraction = -1;
+  int n_equil = 0;
+};
+typedef species_parameters<species_id::rigid_filament> rigid_filament_parameters;
+
+template <>
 struct species_parameters<species_id::filament>
     : public species_base_parameters {
   double persistence_length = 400;
@@ -104,6 +115,8 @@ template <>
 struct species_parameters<species_id::crosslink>
     : public species_base_parameters {
   double concentration = 0;
+  bool infinite_reservoir_flag = false;
+  double bind_site_density = 1;
   bool walker_flag = false;
   bool static_flag = false;
   bool diffusion_flag = false;
@@ -207,6 +220,7 @@ struct system_parameters {
   bool in_out_flag = false;
   bool checkpoint_flag = false;
   int n_checkpoint = 10000;
+  bool no_midstep = false;
 };
 
 #endif // _SIMCORE_PARAMETERS_H_

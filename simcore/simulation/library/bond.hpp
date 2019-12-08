@@ -5,7 +5,7 @@
 
 // Bonds, ie graph edges
 class Bond : public Object {
-protected:
+ protected:
   Site *sites_[2];
   int bond_number_ = 0;
   double dr_[3];
@@ -16,7 +16,7 @@ protected:
   double orientation_0_[3];
   Object *mesh_ptr_;
 
-public:
+ public:
   Bond(unsigned long seed);
   void Init(Site *s1, Site *s2);
   void ReInit();
@@ -43,4 +43,4 @@ public:
   const double GetMeshLambda() const { return mesh_lambda_; }
 };
 
-#endif // _SIMCORE_BOND_H_
+#endif  // _SIMCORE_BOND_H_

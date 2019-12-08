@@ -5,7 +5,7 @@
 #include "species.hpp"
 
 class FilamentSpecies : public Species<Filament, species_id::filament> {
-protected:
+ protected:
   bool midstep_ = true;
   // Analysis structures
   double fill_volume_;
@@ -40,7 +40,7 @@ protected:
   std::fstream polar_order_avg_file_;
   std::fstream in_out_file_;
 
-public:
+ public:
   FilamentSpecies(unsigned long seed);
   void Init(std::string spec_name, ParamsParser &parser);
   void PopMember();

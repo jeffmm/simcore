@@ -12,10 +12,11 @@ void Bond::Init(Site *s1, Site *s2) {
   sites_[1] = s2;
   ReInit();
   SetEquilLength(length_);
-  Logger::Trace("Initializing bond at [%2.2f %2.2f %2.2f] with orientation "
-                "[%2.2f %2.2f %2.2f] and length %2.2f",
-                position_[0], position_[1], position_[2], orientation_[0],
-                orientation_[1], orientation_[2], length_);
+  Logger::Trace(
+      "Initializing bond at [%2.2f %2.2f %2.2f] with orientation "
+      "[%2.2f %2.2f %2.2f] and length %2.2f",
+      position_[0], position_[1], position_[2], orientation_[0],
+      orientation_[1], orientation_[2], length_);
 }
 
 void Bond::ReInit() {
@@ -35,9 +36,7 @@ void Bond::ReInit() {
   UpdatePeriodic();
 }
 
-void Bond::SetEquilLength(double el) {
-  equil_length_ = el;
-}
+void Bond::SetEquilLength(double el) { equil_length_ = el; }
 
 void Bond::SetMeshPtr(Object *obj_ptr) { mesh_ptr_ = obj_ptr; }
 
@@ -52,6 +51,7 @@ Site *Bond::GetSite(int i) {
   return sites_[i];
 }
 Bond *Bond::GetNeighborBond(int i) {
+  // ReportSites();
   if (i < 0 || i > 1) {
     Logger::Error("Requested neighboring bond out of bounds!");
   }

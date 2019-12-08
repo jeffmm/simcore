@@ -2,8 +2,9 @@
 #define _SIMCORE_BR_ROD_H_
 
 #include "object.hpp"
+
 class BrRod : public Object {
-protected:
+ protected:
   double gamma_par_ = 0;
   double gamma_perp_ = 0;
   double gamma_rot_ = 0;
@@ -18,8 +19,8 @@ protected:
   void AddRandomReorientation();
   void Integrate();
 
-public:
+ public:
   BrRod(unsigned long seed);
 };
 
-#endif // _SIMCORE_BR_ROD_H_
+#endif  // _SIMCORE_BR_ROD_H_

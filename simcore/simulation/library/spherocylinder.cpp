@@ -17,6 +17,7 @@ void Spherocylinder::Init(spherocylinder_parameters *sparams) {
   sparams_ = sparams;
   SetParameters();
   InsertSpherocylinder();
+  interactors_.push_back(this);
 }
 
 void Spherocylinder::InsertSpherocylinder() {

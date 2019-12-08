@@ -63,6 +63,8 @@ set(SOURCES anchor.cpp
             minimum_distance.cpp
             object.cpp
             params_parser.cpp
+            rigid_filament.cpp
+            rigid_filament_species.cpp
             rng.cpp
             simulation.cpp
             simulation_manager.cpp
