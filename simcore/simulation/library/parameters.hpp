@@ -115,6 +115,8 @@ struct species_parameters<species_id::crosslink>
   double force_dep_factor = 1;
   double polar_affinity = 0;
   double k_spring = 10;
+  double k2_spring = 0;
+  bool anisotropic_spring_flag = false;
   double f_stall = 100;
   bool force_dep_vel_flag = true;
   double k_align = 0;

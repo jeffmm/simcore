@@ -56,6 +56,8 @@ crosslink:
     force_dep_factor: 0
     polar_affinity: 0
     k_spring: 50
+    k2_spring: 0
+    anisotropic_spring_flag: true
     f_stall: 100
     force_dep_vel_flag: true
     k_align: 0

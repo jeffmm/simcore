@@ -528,6 +528,10 @@ species_base_parameters *parse_species_params(std::string sid,
       params.polar_affinity = jt->second.as<double>();
       } else if (param_name.compare("k_spring")==0) {
       params.k_spring = jt->second.as<double>();
+      } else if (param_name.compare("k2_spring")==0) {
+      params.k2_spring = jt->second.as<double>();
+      } else if (param_name.compare("anisotropic_spring_flag")==0) {
+      params.anisotropic_spring_flag = jt->second.as<bool>();
       } else if (param_name.compare("f_stall")==0) {
       params.f_stall = jt->second.as<double>();
       } else if (param_name.compare("force_dep_vel_flag")==0) {

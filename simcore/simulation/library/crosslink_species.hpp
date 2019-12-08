@@ -19,6 +19,10 @@ private:
   double k_off_;
   double k_on_d_;
   double k_off_d_;
+  double k_spring_;
+  double k2_spring_;
+  bool static_flag_;
+  bool anisotropic_spring_flag_;
   LookupTable lut_;
   std::vector<Object *> *objs_;
   void CalculateBindingFree();

@@ -16,6 +16,10 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   k_on_d_ = sparams_->k_on_d;   // k_on for singly to doubly
   k_off_d_ = sparams_->k_off_d; // k_off for doubly to singly
   k_spring_ = sparams_->k_spring;
+  k2_spring_ = sparams_->k2_spring; // spring const for compression if
+                                    // anisotropic_spring_flag is true
+  anisotropic_spring_flag_ = sparams_->anisotropic_spring_flag;
+  static_flag_ = sparams_->static_flag;
   k_align_ = sparams_->k_align;
   rcapture_ = sparams_->r_capture;
   fdep_factor_ = sparams_->force_dep_factor;
@@ -121,9 +125,13 @@ void Crosslink::SinglyKMC() {
 void Crosslink::DoublyKMC() {
   /* Calculate force-dependent unbinding for each head */
   double tether_stretch = length_ - rest_length_;
-  // For springs that only worry about stretch and not compression
-  //tether_stretch = (tether_stretch > 0 ? tether_stretch : 0);
-  double fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
+  double fdep;
+  // For anisotropic springs apply second spring constant for compression
+  if (anisotropic_spring_flag_ && tether_stretch < 0) {
+    fdep = fdep_factor_ * 0.5 * k2_spring_ * SQR(tether_stretch);
+  } else {
+    fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
+  }
   double unbind_prob = k_off_d_ * delta_ * exp(fdep);
   double roll = rng_.RandomUniform();
   int head_activate = -1;
