@@ -88,6 +88,7 @@ bool Anchor::CalcBondLambda() {
       return false;
     }
   } else if (bond_lambda_ > bond_length_) {
+    printf("bond_length_ = %f\n", bond_length_);
     Bond *bond = bond_->GetNeighborBond(1);
     if (bond) {
       bond_ = bond;
@@ -158,17 +159,14 @@ void Anchor::Walk() {
   if (force_dep_vel_flag_) {
     // Only consider projected force
     double force_proj = dot_product(n_dim_, force_, orientation_);
-    // Only consider forces that oppose direction of velocity
-    if (SIGNOF(force_proj) != SIGNOF(step_direction_)) {
-      // Linear force-velocity relationship
-      double fdep = 1 - force_proj / f_stall_;
-      if (fdep > 1) {
-        fdep = 1;
-      } else if (fdep < 0) {
-        fdep = 0;
-      }
-      velocity_ = max_velocity_ * fdep;
+    // Linear force-velocity relationship
+    double fdep = 1 - force_proj / f_stall_;
+    if (fdep > 1) {
+      fdep = 1;
+    } else if (fdep < 0) {
+      fdep = 0;
     }
+    velocity_ = max_velocity_ * fdep;
   }
   double dr = step_direction_ * velocity_ * delta_;
   mesh_lambda_ += dr;
@@ -277,7 +275,9 @@ void Anchor::AttachObjRandom(Object *o) {
 
 void Anchor::AttachObjLambda(Object *o, double lambda) {
   if (o->GetType() != +obj_type::bond) {
-    Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
+    Logger::Error(
+        "Crosslink binding to non-bond objects not yet implemented in "
+        "AttachObjLambda.");
   }
   bond_ = dynamic_cast<Bond *>(o);
   if (bond_ == nullptr) {
@@ -309,7 +309,9 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
 
 void Anchor::AttachObjMeshLambda(Object *o, double mesh_lambda) {
   if (o->GetType() != +obj_type::bond) {
-    Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
+    Logger::Error(
+        "Crosslink binding to non-bond objects not yet implemented in "
+        "AttachObjMeshLambda.");
   }
   bond_ = dynamic_cast<Bond *>(o);
   if (bond_ == nullptr) {
@@ -380,6 +382,8 @@ void Anchor::WriteSpec(std::fstream &ospec) {
     ospec.write(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
   ospec.write(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
+  int attached_mesh_id = bound_ ? mesh_->GetMeshID() : -1;
+  ospec.write(reinterpret_cast<char *>(&attached_mesh_id), sizeof(int));
 }
 
 void Anchor::ReadSpec(std::fstream &ispec) {
@@ -393,6 +397,8 @@ void Anchor::ReadSpec(std::fstream &ispec) {
     ispec.read(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
   ispec.read(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
+  int attached_mesh_id = -1; // Just a place holder at the moment
+  ispec.read(reinterpret_cast<char *>(&attached_mesh_id), sizeof(int));
   UpdatePeriodic();
   if (active_)
     step_direction_ = -sparams_->step_direction;

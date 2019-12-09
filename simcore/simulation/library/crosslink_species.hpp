@@ -10,11 +10,13 @@ typedef std::vector<std::pair<std::vector<Crosslink>::iterator,
 typedef std::vector<Crosslink>::iterator xlink_iterator;
 
 class CrosslinkSpecies : public Species<Crosslink, species_id::crosslink> {
-private:
+ private:
   bool *update_;
   std::string checkpoint_file_;
-  double *obj_volume_;
+  double *obj_volume_;  // Total length of all the objects in the system
   double xlink_concentration_;
+  double bind_site_density_;
+  bool infinite_reservoir_flag_;
   double k_on_;
   double k_off_;
   double k_on_d_;
@@ -33,7 +35,7 @@ private:
   void ApplyCrosslinkTetherForces();
   Object *GetRandomObject();
 
-public:
+ public:
   CrosslinkSpecies(unsigned long seed);
   void Init(std::string spec_name, ParamsParser &parser);
   void InitInteractionEnvironment(std::vector<Object *> *objs, double *obj_vol,

@@ -72,9 +72,9 @@ void Simulation::PrintComplete() {
   if (iteration % steps == 0) {
     Logger::Info("%d%% complete", 10 * iteration / steps);
   }
-  if (i_step_ == log_interval_+1) {
+  if (i_step_ == log_interval_ + 1) {
     Logger::Info("%d steps completed", log_interval_);
-    log_interval_ = (int)floor(2*log_interval_);
+    log_interval_ = (int)floor(2 * log_interval_);
   }
   Logger::Trace("*****Step %d*****", i_step_);
 }
@@ -143,9 +143,9 @@ void Simulation::InitSimulation() {
 
 #ifdef TRACE
   if (params_.n_steps > 100) {
-    Logger::Warning("Simulation run in trace mode with a large number of "
-                    "n_steps (%d).",
-                    params_.n_steps);
+    Logger::Warning(
+        "Simulation run in trace mode with a large number of n_steps (%d).",
+        params_.n_steps);
     fprintf(stderr, "Continue anyway? (y/N) ");
     char c;
     if (std::cin.peek() != 'y') {
@@ -223,9 +223,10 @@ void Simulation::InitSpecies() {
     if (species_.back()->GetNInsert() > 0) {
 #ifdef TRACE
       if (species_.back()->GetNInsert() > 20) {
-        Logger::Warning("Simulation run in trace mode with a large number of "
-                        "objects in species %s (%d).",
-                        sid._to_string(), species_.back()->GetNInsert());
+        Logger::Warning(
+            "Simulation run in trace mode with a large number of "
+            "objects in species %s (%d).",
+            sid._to_string(), species_.back()->GetNInsert());
         fprintf(stderr, "Continue anyway? (y/N) ");
         char c;
         if (std::cin.peek() != 'y') {
@@ -297,9 +298,10 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           }
         }
         if (num_failures > params_.species_insertion_failure_threshold) {
-          Logger::Warning("Too many insertion failures have occurred: managed "
-                          "to insert %2.1f%% of objects",
-                          100.0 * inserted / (float)num);
+          Logger::Warning(
+              "Too many insertion failures have occurred: managed "
+              "to insert %2.1f%% of objects",
+              100.0 * inserted / (float)num);
           break;
         }
       }
@@ -325,7 +327,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           grid_index[i] = i;
         }
         rng_->Shuffle<int>(grid_index, num_x * num_y);
-        //gsl_ran_shuffle(rng_.r, grid_index, num_x * num_y, sizeof(int));
+        // gsl_ran_shuffle(rng_.r, grid_index, num_x * num_y, sizeof(int));
         for (int i = 0; i < num_x * num_y; ++i) {
           pos[0] = grid_array[grid_index[i]].first * d;
           pos[1] = grid_array[grid_index[i]].second * l;
@@ -354,22 +356,23 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
             inserted++;
             ix_mgr_.AddInteractors(last_ixors);
           }
-          if (inserted == num)
-            break;
+          if (inserted == num) break;
         }
         delete[] grid_index;
       }
       if (num != inserted) {
-        Logger::Warning("Species insertion failure threshold of %d reached. "
-                        "Reattempting insertion.\n",
-                        params_.species_insertion_failure_threshold);
+        Logger::Warning(
+            "Species insertion failure threshold of %d reached. "
+            "Reattempting insertion.\n",
+            params_.species_insertion_failure_threshold);
         (*spec)->PopAll();
         ix_mgr_.Reset();
       }
       if (++num_attempts > params_.species_insertion_reattempt_threshold) {
-        Logger::Error("Unable to insert species randomly within the reattempt "
-                      "threshold of %d.\n",
-                      params_.species_insertion_reattempt_threshold);
+        Logger::Error(
+            "Unable to insert species randomly within the reattempt "
+            "threshold of %d.\n",
+            params_.species_insertion_reattempt_threshold);
       }
     }
     if (!processing) {
@@ -386,13 +389,13 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       (*spec)->LoadFromCheckpoints(run_name_, params_.checkpoint_run_name);
     }
     ix_mgr_.LoadCrosslinksFromCheckpoints(run_name_,
-                                           params_.checkpoint_run_name);
+                                          params_.checkpoint_run_name);
   }
 
-  ix_mgr_.ResetCellList(); // Forces rebuild cell list without redundancy
+  ix_mgr_.ResetCellList();  // Forces rebuild cell list without redundancy
   ix_mgr_.Reset();
   // if (!processing) {
-  ix_mgr_.CheckUpdateObjects(); // Forces update as well
+  ix_mgr_.CheckUpdateObjects();  // Forces update as well
   //}
 }
 

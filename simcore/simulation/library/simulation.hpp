@@ -7,7 +7,7 @@
 #include "space.hpp"
 
 class Simulation {
-private:
+ private:
   UNIT_TEST
   int i_step_ = 0;
   int log_interval_ = 10;
@@ -56,10 +56,10 @@ private:
   void InitGraphics();
   void InitProcessing(run_options run_opts);
 
-public:
+ public:
   Simulation() {}
   void Run(YAML::Node sim_params);
   void ProcessOutputs(YAML::Node sim_params, run_options run_opts);
 };
 
-#endif // _SIMCORE_SIMULATION_H_
+#endif  // _SIMCORE_SIMULATION_H_

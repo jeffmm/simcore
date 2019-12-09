@@ -54,7 +54,7 @@ void BrRod::Integrate() {
   }
   // Reorientation due to external torques
   double du[3];
-  cross_product(torque_, orientation_, du, 3); // ndim=3 since torques
+  cross_product(torque_, orientation_, du, 3);  // ndim=3 since torques
   for (int i = 0; i < n_dim_; ++i) {
     orientation_[i] += du[i] * delta_ / gamma_rot_;
   }
@@ -75,8 +75,7 @@ void BrRod::AddRandomDisplacement() {
   GetBodyFrame();
   // First handle the parallel component
   double mag = rng_.RandomNormal(diffusion_par_);
-  for (int i = 0; i < n_dim_; ++i)
-    position_[i] += mag * orientation_[i];
+  for (int i = 0; i < n_dim_; ++i) position_[i] += mag * orientation_[i];
   // Then the perpendicular component(s)
   for (int j = 0; j < n_dim_ - 1; ++j) {
     mag = rng_.RandomNormal(diffusion_perp_);
