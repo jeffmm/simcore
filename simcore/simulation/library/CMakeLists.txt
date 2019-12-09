@@ -23,6 +23,12 @@ if (GRAPH)
   find_package(OpenGL REQUIRED)
   set(LIB ${LIB} ${GLEW_LIB} ${GLFW3_LIBRARIE} ${OPENGL_gl_LIBRARY} glfw)
 set(INCLUDES ${INCLUDES} ${GLEW_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
+
+if(WINDOWS)
+  add_definitions(-DWINGRAPH=TRUE)
+  message("Using Windows Graphics")
+endif() 
+
 else()
   add_definitions(-DNOGRAPH=TRUE)
 endif()

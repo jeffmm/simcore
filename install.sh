@@ -32,6 +32,15 @@ do_graph_build() {
     cd ..
 }
 
+do_windows_graph_build() {
+    mkdir build
+    cd build || exit 1
+    cmake -DGRAPH=1 ..
+    cmake -DWINDOWS=1 ..
+    make -j8
+    cd ..
+}
+
 do_test_build() {
     mkdir build
     cd build || exit 1
@@ -100,6 +109,7 @@ do_usage() {
     echo "  gomp    - build simcore with openmp with graphics"
     echo "  debug   - build simcore in debug mode without graphics"
     echo "  gdebug  - build simcore in debug mode with graphics"
+    echo "  gwin    - build simcore in windows with graphics"
     echo "  trace   - build simcore in trace mode (verbose logging)"
     echo "  gtrace  - build simcore in trace mode with graphics (verbose logging)"
     echo "  test    - build simcore and run unit tests"
@@ -109,6 +119,9 @@ do_usage() {
 case $1 in
 clean)
     do_clean
+    ;;
+gwin)
+    do_windows_graph_build
     ;;
 build)
     do_build

@@ -11,7 +11,9 @@
   default_config["species"]["n_posit"] = "100";
   default_config["species"]["n_spec"] = "100";
   default_config["species"]["n_checkpoint"] = "10000";
+  default_config["filament"]["polydispersity_warn_on_truncate"] = "0";
   default_config["filament"]["diameter"] = "1";
+  default_config["filament"]["force_induced_catastrophe_flag"] = "0";
   default_config["filament"]["length"] = "-1";
   default_config["filament"]["persistence_length"] = "400";
   default_config["filament"]["max_length"] = "500";
@@ -22,7 +24,6 @@
   default_config["filament"]["driving_factor"] = "0";
   default_config["filament"]["friction_ratio"] = "2";
   default_config["filament"]["dynamic_instability_flag"] = "0";
-  default_config["filament"]["force_induced_catastrophe_flag"] = "0";
   default_config["filament"]["optical_trap_flag"] = "0";
   default_config["filament"]["optical_trap_spring"] = "20";
   default_config["filament"]["optical_trap_fixed"] = "0";
@@ -56,7 +57,7 @@
   default_config["filament"]["flocking_analysis"] = "0";
   default_config["filament"]["polydispersity_flag"] = "0";
   default_config["filament"]["polydispersity_factor"] = "0.03";
-  default_config["filament"]["polydispersity_warn_on_truncate"] = "0";
+  default_config["filament"]["custom_set_tail"] = "0";
   default_config["passive_filament"]["diameter"] = "1";
   default_config["passive_filament"]["length"] = "-1";
   default_config["passive_filament"]["persistence_length"] = "400";
@@ -136,7 +137,7 @@
   default_config["crosslink"]["k_on_d"] = "10";
   default_config["crosslink"]["k_off_d"] = "2";
   default_config["crosslink"]["force_dep_factor"] = "1";
-  default_config["crosslink"]["polar_affinity"] = "0";
+  default_config["crosslink"]["polar_affinity"] = "1";
   default_config["crosslink"]["k_spring"] = "10";
   default_config["crosslink"]["f_stall"] = "100";
   default_config["crosslink"]["force_dep_vel_flag"] = "1";
@@ -150,6 +151,8 @@
   default_config["crosslink"]["r_capture"] = "5";
   default_config["seed"] = "7859459105545";
   default_config["n_runs"] = "1";
+  default_config["species_insertion_failure_threshold"] = "10000";
+  default_config["polar_order_color"] = "0";
   default_config["n_random"] = "1";
   default_config["run_name"] = "sc";
   default_config["n_dim"] = "3";
@@ -189,13 +192,12 @@
   default_config["target_pressure"] = "0";
   default_config["target_radius"] = "100";
   default_config["pressure_time"] = "100";
+  default_config["species_insertion_reattempt_threshold"] = "10";
   default_config["compressibility"] = "1";
   default_config["stoch_flag"] = "1";
   default_config["thermo_flag"] = "0";
   default_config["n_thermo"] = "1000";
   default_config["interaction_flag"] = "1";
-  default_config["species_insertion_failure_threshold"] = "10000";
-  default_config["species_insertion_reattempt_threshold"] = "10";
   default_config["uniform_crystal"] = "0";
   default_config["n_steps_equil"] = "0";
   default_config["n_steps_target"] = "100000";
@@ -217,7 +219,6 @@
   default_config["polar_order_analysis"] = "0";
   default_config["polar_order_n_bins"] = "100";
   default_config["polar_order_contact_cutoff"] = "3";
-  default_config["polar_order_color"] = "0";
   default_config["overlap_analysis"] = "0";
   default_config["highlight_overlaps"] = "0";
   default_config["reduced"] = "0";

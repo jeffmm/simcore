@@ -219,6 +219,8 @@ filament:                            # Parameters unique to filament class of ob
                                          # polydispersity factor should be between 0.001 and 0.5.
   polydispersity_warn_on_truncate: [0, int]  # whether to warn when polydispersity distribution is 
                                              # truncated due to min_bond_length or max_length
+  custom_set_tail: [0,int]          # If custom set tail is one then the locations provided in the insert file
+			            # are the locations of the tails instead of the centers 
 
 passive_filament:                   # Filament that stays fixed after simulation initialization.
   diameter: [1, double]
@@ -310,8 +312,8 @@ crosslink:                          # Parameters specific to crosslinks.
   k_off_d: [2, double]              # Off-rate for doubly bound to singly bound crosslinks.
   force_dep_factor: [1, double]     # Scalar in exponential force-dependent off-rate of doubly-
                                     # bound crosslinks when under a load.
-  polar_affinity: [0, double]       # Affinity for crosslinks to remain bound to aligned filaments.
-                                    # Positive implies aligned, negative implies anti-aligned.
+  polar_affinity: [1, double]       # Ratio of (probability of binding for antiparallel)/(probability 
+                                    # of binding parallel)  
   k_spring: [10, double]            # Spring constant of tension forces of doubly-bound crosslinks.
   f_stall: [100, double]            # Tether forces above f_stall cause bound crosslink heads to
                                     # cease walking.

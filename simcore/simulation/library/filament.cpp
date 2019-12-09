@@ -56,6 +56,9 @@ void Filament::SetParameters() {
   flagella_amplitude_ = params_->filament.flagella_amplitude;
   /* Default site in optical trap is the tail */
   trapped_site_ = 0;
+  
+  custom_set_tail_ = params_->filament.custom_set_tail;
+
 
   /* Refine parameters */
   if (dynamic_instability_flag_) {
@@ -207,6 +210,7 @@ void Filament::InsertFirstBond() {
     AddBondToTip(orientation_, bond_length_);
   } else {
     // Assume custom arrangement for now
+
     InitSiteAt(position_, diameter_);
     AddBondToTip(orientation_, bond_length_);
   }
@@ -242,6 +246,12 @@ void Filament::InsertAt(double *pos, double *u) {
   Logger::Trace("Inserting filament at [%2.1f, %2.1f, %2.1f] with orientation"
                 "[%2.1f, %2.1f, %2.1f]",
                 pos[0], pos[1], pos[2], u[0], u[1], u[2]);
+  if(custom_set_tail_==1){
+    for (int i=0; i<n_dim_; ++i){
+    pos[i]+=u[i]*length_*.5;   
+    Logger::Trace("Insert file locations are the locations of tails");
+    }
+  } 
   RelocateMesh(pos, u);
   UpdatePrevPositions();
   CalculateAngles();

@@ -23,6 +23,9 @@ private:
   double velocity_;
   double max_velocity_, diffusion_;
   double k_off_;
+  double k_on_d_;
+  double polar_affinity_;
+
   double f_stall_;
   double force_dep_vel_flag_;
 
@@ -54,6 +57,7 @@ public:
   void AttachObjMeshLambda(Object *o, double mesh_lambda);
   double const GetMeshLambda();
   double const GetBondLambda();
+  std::vector<double> CreateOrientationArray(int n_neighbors);
   void SetBondLambda(double l);
   void SetMeshLambda(double ml);
   void SetBound();

@@ -24,6 +24,7 @@ private:
   int eq_steps_count_ = 0;
   int polydispersity_flag_ = 0;
   int polydispersity_warn_on_truncate_ = 0;
+  int custom_set_tail_;
   double min_length_;
   double max_bond_length_;
   double min_bond_length_;

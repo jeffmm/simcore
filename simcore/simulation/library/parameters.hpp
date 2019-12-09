@@ -23,7 +23,9 @@ class species_parameters {
 
 class filament_parameters : public species_parameters {
   public:
+    int polydispersity_warn_on_truncate = 0;
     double diameter = 1;
+    int force_induced_catastrophe_flag = 0;
     double length = -1;
     double persistence_length = 400;
     double max_length = 500;
@@ -34,7 +36,6 @@ class filament_parameters : public species_parameters {
     double driving_factor = 0;
     double friction_ratio = 2;
     int dynamic_instability_flag = 0;
-    int force_induced_catastrophe_flag = 0;
     int optical_trap_flag = 0;
     double optical_trap_spring = 20;
     int optical_trap_fixed = 0;
@@ -68,7 +69,7 @@ class filament_parameters : public species_parameters {
     int flocking_analysis = 0;
     int polydispersity_flag = 0;
     double polydispersity_factor = 0.03;
-    int polydispersity_warn_on_truncate = 0;
+    int custom_set_tail = 0;
 };
 
 class passive_filament_parameters : public species_parameters {
@@ -188,7 +189,7 @@ class crosslink_parameters : public species_parameters {
     double k_on_d = 10;
     double k_off_d = 2;
     double force_dep_factor = 1;
-    double polar_affinity = 0;
+    double polar_affinity = 1;
     double k_spring = 10;
     double f_stall = 100;
     int force_dep_vel_flag = 1;
@@ -206,6 +207,8 @@ class system_parameters {
   public:
     long seed = 7859459105545;
     int n_runs = 1;
+    int species_insertion_failure_threshold = 10000;
+    int polar_order_color = 0;
     int n_random = 1;
     std::string run_name = "sc";
     int n_dim = 3;
@@ -245,13 +248,12 @@ class system_parameters {
     double target_pressure = 0;
     double target_radius = 100;
     int pressure_time = 100;
+    int species_insertion_reattempt_threshold = 10;
     double compressibility = 1;
     int stoch_flag = 1;
     int thermo_flag = 0;
     int n_thermo = 1000;
     int interaction_flag = 1;
-    int species_insertion_failure_threshold = 10000;
-    int species_insertion_reattempt_threshold = 10;
     int uniform_crystal = 0;
     int n_steps_equil = 0;
     int n_steps_target = 100000;
@@ -273,7 +275,6 @@ class system_parameters {
     int polar_order_analysis = 0;
     int polar_order_n_bins = 100;
     double polar_order_contact_cutoff = 3;
-    int polar_order_color = 0;
     int overlap_analysis = 0;
     int highlight_overlaps = 0;
     int reduced = 0;

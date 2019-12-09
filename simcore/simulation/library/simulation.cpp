@@ -166,28 +166,25 @@ void Simulation::InitObjects() {
 
 /* Generate graphics window and draw initial simulation setup */
 void Simulation::InitGraphics() {
-  Logger::Trace("Here is fail");
 
   GetGraphicsStructure();
-  Logger::Trace("Here is fail 2");
  
   double background_color = (params_.graph_background == 0 ? 0.1 : 1);
 // If NOGRAPH is defined, skip drawing and grabbing
 #ifndef NOGRAPH
   // Initialize graphics structures
-  Logger::Trace("Here is fail3");
  
   graphics_.Init(&graph_array_, space_.GetStruct(), background_color,
                  params_.draw_boundary, params_.auto_graph);
-
-  Logger::Trace("Here is fail4");
- /* graphics_.DrawLoop();*/
-  Logger::Trace("Here is fail5");
+  
+  //This line was interferring with graphics on Windows, and removing it did no harm
+  #ifndef WINGRAPH
+    graphics_.DrawLoop();
+  #endif
 
 #endif
   // Initialize directory for grabbed images
   params_.movie_directory.append("/");
-  Logger::Trace("Here is fail6");
 
   params_.movie_directory.append(params_.run_name);
 #ifndef NOGRAPH
@@ -197,7 +194,6 @@ void Simulation::InitGraphics() {
     grabber(graphics_.windx_, graphics_.windy_, params_.movie_directory,
             (int)i_step_ / params_.n_graph);
   }
-  Logger::Trace("Here is fail5");
 
 #endif
 }

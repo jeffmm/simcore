@@ -18,6 +18,8 @@ void Anchor::Init() {
   diffuse_ = (params_->crosslink.diffusion_flag ? true : false);
   f_stall_ = params_->crosslink.f_stall;
   force_dep_vel_flag_ = params_->crosslink.force_dep_vel_flag;
+  k_on_d_ = params_->crosslink.k_on_d;   // k_on for singly to doubly
+  polar_affinity_ = params_->crosslink.polar_affinity;
   SetDiffusion();
   SetSID(species_id::crosslink);
 }
@@ -195,6 +197,31 @@ void Anchor::UpdateAnchorPositionToBond() {
   }
   UpdatePeriodic();
 }
+
+std::vector<double> Anchor::CreateOrientationArray(int n_neighbors){
+  double const *const orientation = bond_->GetOrientation();
+   std::vector<double> OrientationArray(n_neighbors, k_on_d_);  
+   
+   for(int j=0; j<n_neighbors;++j){
+
+       	Object* obj=neighbors_.GetNeighbor(j);  
+        double const* const n_orientation=obj->GetOrientation();
+
+	double DotProduct=dot_product(n_dim_,orientation,n_orientation);
+       
+        if (DotProduct<0){
+		OrientationArray[j]=k_on_d_*polar_affinity_;
+        }   	 
+   }
+   return OrientationArray;
+}
+
+
+
+
+
+
+
 
 void Anchor::Draw(std::vector<graph_struct *> *graph_array) {
   if (!bound_)

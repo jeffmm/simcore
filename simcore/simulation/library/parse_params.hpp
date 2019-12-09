@@ -62,8 +62,14 @@ void parse_params(YAML::Node node, system_parameters *params) {
         for (YAML::const_iterator jt=it->second.begin(); jt!= it->second.end(); ++jt) {
           param_name = jt->first.as<std::string>();
           if (false) {}
+          else if (param_name.compare("polydispersity_warn_on_truncate")==0) {
+            params->filament.polydispersity_warn_on_truncate = jt->second.as<int>();
+          }
           else if (param_name.compare("diameter")==0) {
             params->filament.diameter = jt->second.as<double>();
+          }
+          else if (param_name.compare("force_induced_catastrophe_flag")==0) {
+            params->filament.force_induced_catastrophe_flag = jt->second.as<int>();
           }
           else if (param_name.compare("length")==0) {
             params->filament.length = jt->second.as<double>();
@@ -94,9 +100,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
           }
           else if (param_name.compare("dynamic_instability_flag")==0) {
             params->filament.dynamic_instability_flag = jt->second.as<int>();
-          }
-          else if (param_name.compare("force_induced_catastrophe_flag")==0) {
-            params->filament.force_induced_catastrophe_flag = jt->second.as<int>();
           }
           else if (param_name.compare("optical_trap_flag")==0) {
             params->filament.optical_trap_flag = jt->second.as<int>();
@@ -197,8 +200,8 @@ void parse_params(YAML::Node node, system_parameters *params) {
           else if (param_name.compare("polydispersity_factor")==0) {
             params->filament.polydispersity_factor = jt->second.as<double>();
           }
-          else if (param_name.compare("polydispersity_warn_on_truncate")==0) {
-            params->filament.polydispersity_warn_on_truncate = jt->second.as<int>();
+          else if (param_name.compare("custom_set_tail")==0) {
+            params->filament.custom_set_tail = jt->second.as<int>();
           }
           else if (param_name.compare("num")==0) {
             params->filament.num = jt->second.as<int>();
@@ -977,6 +980,12 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("n_runs")==0) {
         params->n_runs = it->second.as<int>();
       }
+      else if (param_name.compare("species_insertion_failure_threshold")==0) {
+        params->species_insertion_failure_threshold = it->second.as<int>();
+      }
+      else if (param_name.compare("polar_order_color")==0) {
+        params->polar_order_color = it->second.as<int>();
+      }
       else if (param_name.compare("n_random")==0) {
         params->n_random = it->second.as<int>();
       }
@@ -1094,6 +1103,9 @@ void parse_params(YAML::Node node, system_parameters *params) {
       else if (param_name.compare("pressure_time")==0) {
         params->pressure_time = it->second.as<int>();
       }
+      else if (param_name.compare("species_insertion_reattempt_threshold")==0) {
+        params->species_insertion_reattempt_threshold = it->second.as<int>();
+      }
       else if (param_name.compare("compressibility")==0) {
         params->compressibility = it->second.as<double>();
       }
@@ -1108,12 +1120,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("interaction_flag")==0) {
         params->interaction_flag = it->second.as<int>();
-      }
-      else if (param_name.compare("species_insertion_failure_threshold")==0) {
-        params->species_insertion_failure_threshold = it->second.as<int>();
-      }
-      else if (param_name.compare("species_insertion_reattempt_threshold")==0) {
-        params->species_insertion_reattempt_threshold = it->second.as<int>();
       }
       else if (param_name.compare("uniform_crystal")==0) {
         params->uniform_crystal = it->second.as<int>();
@@ -1177,9 +1183,6 @@ void parse_params(YAML::Node node, system_parameters *params) {
       }
       else if (param_name.compare("polar_order_contact_cutoff")==0) {
         params->polar_order_contact_cutoff = it->second.as<double>();
-      }
-      else if (param_name.compare("polar_order_color")==0) {
-        params->polar_order_color = it->second.as<int>();
       }
       else if (param_name.compare("overlap_analysis")==0) {
         params->overlap_analysis = it->second.as<int>();
