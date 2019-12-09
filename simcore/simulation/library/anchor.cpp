@@ -382,7 +382,7 @@ void Anchor::WriteSpec(std::fstream &ospec) {
     ospec.write(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
   ospec.write(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
-  int attached_mesh_id = bound_ ? mesh_->GetMeshID() : -1;
+  int attached_mesh_id = mesh_ != nullptr ? mesh_->GetMeshID() : -1;
   ospec.write(reinterpret_cast<char *>(&attached_mesh_id), sizeof(int));
 }
 
