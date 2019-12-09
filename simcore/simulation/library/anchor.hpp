@@ -25,7 +25,6 @@ private:
   double k_off_;
   double k_on_d_;
   double polar_affinity_;
-
   double f_stall_;
   double force_dep_vel_flag_;
 

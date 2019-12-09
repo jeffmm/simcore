@@ -197,31 +197,20 @@ void Anchor::UpdateAnchorPositionToBond() {
   }
   UpdatePeriodic();
 }
-
+/*Creates Vector that has different binding rates for parallel and anti-parallel bonds*/
 std::vector<double> Anchor::CreateOrientationArray(int n_neighbors){
   double const *const orientation = bond_->GetOrientation();
-   std::vector<double> OrientationArray(n_neighbors, k_on_d_);  
-   
+   std::vector<double> OrientationArray(n_neighbors, k_on_d_);     
    for(int j=0; j<n_neighbors;++j){
-
        	Object* obj=neighbors_.GetNeighbor(j);  
         double const* const n_orientation=obj->GetOrientation();
-
 	double DotProduct=dot_product(n_dim_,orientation,n_orientation);
-       
         if (DotProduct<0){
 		OrientationArray[j]=k_on_d_*polar_affinity_;
         }   	 
    }
    return OrientationArray;
 }
-
-
-
-
-
-
-
 
 void Anchor::Draw(std::vector<graph_struct *> *graph_array) {
   if (!bound_)

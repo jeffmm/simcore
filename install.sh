@@ -35,8 +35,7 @@ do_graph_build() {
 do_windows_graph_build() {
     mkdir build
     cd build || exit 1
-    cmake -DGRAPH=1 ..
-    cmake -DWINDOWS=1 ..
+    cmake -DGRAPH=1 -DWINDOWS=1 ..
     make -j8
     cd ..
 }

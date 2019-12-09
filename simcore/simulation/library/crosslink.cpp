@@ -3,16 +3,6 @@
 
 Crosslink::Crosslink() : Object() { SetSID(species_id::crosslink); }
 
-
-void print(std::vector<double> const &input)
-{
-	for (int i = 0; i < input.size(); i++) {
-		std::cout << input.at(i) << ' ';
-	}
-}
-
-
-
 void Crosslink::Init(MinimumDistance *mindist, LookupTable *lut) {
   mindist_ = mindist;
   lut_ = lut;
@@ -72,17 +62,12 @@ void Crosslink::SinglyKMC() {
   kmc_bind.SetPBCs(n_dim_, space_->n_periodic, space_->unit_cell);
 
   /* Calculate probability to bind */
-  double kmc_bind_prob = 0;
-
-  
+  double kmc_bind_prob = 0;  
   std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_);
-  
-
-  if (polar_affinity_ !=1){
-  	kmc_bind_factor=anchors_[0].CreateOrientationArray(n_neighbors); 
-  }
-  
   if (n_neighbors > 0) {
+    if (polar_affinity_ !=1){                                                
+  	kmc_bind_factor=anchors_[0].CreateOrientationArray(n_neighbors); 
+    }
     kmc_bind.CalcTotProbsSD(anchors_[0].GetNeighborListMem(), kmc_filter,
                             anchors_[0].GetBoundOID(), 0, k_spring_, 1.0,
                             rest_length_, kmc_bind_factor);

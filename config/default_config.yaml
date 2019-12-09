@@ -220,7 +220,7 @@ filament:                            # Parameters unique to filament class of ob
   polydispersity_warn_on_truncate: [0, int]  # whether to warn when polydispersity distribution is 
                                              # truncated due to min_bond_length or max_length
   custom_set_tail: [0,int]          # If custom set tail is one then the locations provided in the insert file
-			            # are the locations of the tails instead of the centers 
+                                    # are the locations of the tails instead of the centers 
 
 passive_filament:                   # Filament that stays fixed after simulation initialization.
   diameter: [1, double]

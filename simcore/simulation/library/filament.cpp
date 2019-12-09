@@ -56,9 +56,7 @@ void Filament::SetParameters() {
   flagella_amplitude_ = params_->filament.flagella_amplitude;
   /* Default site in optical trap is the tail */
   trapped_site_ = 0;
-  
   custom_set_tail_ = params_->filament.custom_set_tail;
-
 
   /* Refine parameters */
   if (dynamic_instability_flag_) {
@@ -210,7 +208,6 @@ void Filament::InsertFirstBond() {
     AddBondToTip(orientation_, bond_length_);
   } else {
     // Assume custom arrangement for now
-
     InitSiteAt(position_, diameter_);
     AddBondToTip(orientation_, bond_length_);
   }
