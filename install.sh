@@ -43,7 +43,7 @@ do_windows_graph_build() {
 do_test_build() {
     mkdir build
     cd build || exit 1
-    cmake ..
+    cmake -DTESTS=1 ..
     make -j8
     make test
     cd ..
