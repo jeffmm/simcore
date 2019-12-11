@@ -13,30 +13,33 @@ private:
   void InitMeshID();
 
 protected:
-  bool anchored_;
-  bool midstep_;
-  bool posits_only_;
-  int n_sites_;
-  int n_bonds_;
-  int n_bonds_max_;
+  bool anchored_ = false;
+  bool midstep_ = true;
+  bool posits_only_ = false;
+  bool dynamic_instability_flag_ = false;
+  int n_sites_ = 0;
+  int n_bonds_ = 0;
+  int n_bonds_max_ = 0;
   std::vector<Site> sites_;
   std::vector<Bond> bonds_;
-  double bond_length_;
+  double bond_length_ = -1;
+  double true_length_ = -1;
   Bond *GetRandomBond();
   void UpdateInteractors();
   void UpdateSiteOrientations();
-  void RelocateMesh(double *pos, double *u);
-  void AddBondBetweenSites(Site *site1, Site *site2);
+  void RelocateMesh(double const *const new_pos, double const *const u);
   void AddRandomBondToSite(double l, int i_site);
   void AddBondToSite(double *u, double l, int i_site);
   void AddSite(Site s);
-  void AddBond(Bond b);
+  void AddBond(Site *s1, Site *s2);
 
 public:
-  Mesh();
-  void InitSiteAt(double *pos, double d);
-  void InitBondAt(double *pos, double *u, double l, double d);
+  Mesh(unsigned long seed);
+  void InitSiteAt(double *new_pos, double d);
+  void InitBondAt(double *new_pos, double *u, double l, double d);
   void InitRandomSite(double d);
+  void InitRandomBond(double d);
+  void InitRandomBondOriented(double *u, double d);
   void AddRandomBondAnywhere(double l, double d = 1);
   void AddRandomBondToTip(double l);
   void AddBondToTip(double *u, double l);
@@ -48,8 +51,8 @@ public:
   void SubReport();
   void UpdateBondPositions();
   void UpdatePrevPositions();
-  virtual void Draw(std::vector<graph_struct *> *graph_array);
-  void Reserve(int n_bonds);
+  virtual void Draw(std::vector<graph_struct *> &graph_array);
+  virtual void Reserve();
   void Clear();
   void DoubleGranularityLinear();
   void HalfGranularityLinear();
@@ -58,7 +61,7 @@ public:
   Site *GetSite(int i);
   Bond *GetBond(int i);
   virtual void ZeroForce();
-  virtual void GetInteractors(std::vector<Object *> *ix);
+  virtual void GetInteractors(std::vector<Object *> &ix);
   virtual int GetCount();
   virtual void ReadPosit(std::fstream &ip);
   virtual void WritePosit(std::fstream &op);
@@ -70,7 +73,7 @@ public:
   virtual void UpdateDrTot();
   virtual double const GetDrTot();
   virtual void ZeroDrTot();
-  virtual void SetPosition(double const *const pos);
+  virtual void SetPosition(double const *const new_pos);
   virtual std::vector<Interaction *> *GetInteractions();
   virtual void ClearInteractions();
   virtual void GetAvgPosition(double *ap);
@@ -80,8 +83,10 @@ public:
   virtual void GetPolarOrders(std::vector<double> *po);
   std::pair<double, double> GetAvgOrientationCorrelation();
   virtual void ZeroOrientationCorrelations();
-  virtual double const GetBondLength();
+  virtual const double GetBondLength() const;
   virtual const bool CheckInteractorUpdate();
+  virtual const double GetLambdaAtBond(int bond_oid);
+  virtual const double GetTrueLength() const;
 };
 
 #endif // _SIMCORE_MESH_H_

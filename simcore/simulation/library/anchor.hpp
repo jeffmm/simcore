@@ -11,9 +11,10 @@ private:
   bool bound_;
   bool walker_;
   bool diffuse_;
+  bool static_flag_;
   bool active_;
   bool end_pausing_;
-
+  crosslink_parameters *sparams_;
   int step_direction_;
 
   double bond_length_;
@@ -23,6 +24,8 @@ private:
   double velocity_;
   double max_velocity_, diffusion_;
   double k_off_;
+  double k_on_d_;
+  double polar_affinity_;
   double f_stall_;
   double force_dep_vel_flag_;
 
@@ -37,10 +40,11 @@ private:
   void Diffuse();
   void Walk();
   bool CheckMesh();
+  bool CalcBondLambda();
 
 public:
-  Anchor();
-  void Init();
+  Anchor(unsigned long seed);
+  void Init(crosslink_parameters *sparams);
   bool IsBound();
   void UpdatePosition();
   void Activate();
@@ -54,19 +58,22 @@ public:
   void AttachObjMeshLambda(Object *o, double mesh_lambda);
   double const GetMeshLambda();
   double const GetBondLambda();
+  void CalculatePolarAffinity(std::vector<double> &doubly_binding_rates);
   void SetBondLambda(double l);
   void SetMeshLambda(double ml);
   void SetBound();
   void Unbind();
   int const GetBoundOID();
-  void Draw(std::vector<graph_struct *> *graph_array);
+  void Draw(std::vector<graph_struct *> &graph_array);
   void AddNeighbor(Object *neighbor);
   void ClearNeighbors();
   const Object *const *GetNeighborListMem();
   Object *GetNeighbor(int i_neighbor);
-  int GetNNeighbors();
+  const int GetNNeighbors() const;
   void WriteSpec(std::fstream &ospec);
   void ReadSpec(std::fstream &ispec);
+  void BindToPosition(double *bind_pos);
+  void SetStatic(bool static_flag);
 };
 
 #endif

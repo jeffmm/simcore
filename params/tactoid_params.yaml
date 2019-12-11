@@ -1,0 +1,186 @@
+seed: 89362513826754
+run_name: tactoid_test2
+n_dim: 3
+n_periodic: 3
+delta: 0.0001
+n_steps: 10000000
+boundary: 0
+graph_flag: true
+n_graph: 100
+movie_flag: false
+insert_radius: 50
+graph_diameter: 1
+system_radius: 150
+potential: soft
+soft_potential_mag: 1000
+f_cutoff: 100000
+thermo_flag: true
+n_thermo: 100
+like_like_interactions: true
+checkpoint_flag: true
+n_checkpoint: 10000
+filament:
+  - name: actin
+    num: 300
+    insertion_type: random_nematic
+    draw_type: fixed
+    color: 2
+    diameter: 1
+    overlap: false
+    length: 36
+    min_bond_length: 2
+    polydispersity_flag: true
+    persistence_length: 3400
+    spec_flag: true
+    n_spec: 1000
+    n_equil: 10000
+    max_length: 500
+    min_length: 5
+    spiral_flag: false
+    spiral_number_fail_condition: 0
+    driving_factor: 0
+    friction_ratio: 2
+    dynamic_instability_flag: false
+    force_induced_catastrophe_flag: false
+    optical_trap_flag: false
+    optical_trap_spring: 20
+    optical_trap_fixed: false
+    cilia_trap_flag: false
+    fic_factor: 0.828
+    f_shrink_to_grow: 0.017
+    f_shrink_to_pause: 0.0
+    f_pause_to_grow: 0.0
+    f_pause_to_shrink: 0.0
+    f_grow_to_pause: 0.0
+    f_grow_to_shrink: 0.00554
+    v_poly: 0.44
+    v_depoly: 0.793
+    theta_analysis: false
+    lp_analysis: false
+    global_order_analysis: false
+    packing_fraction: -1
+    perlen_ratio: -1
+    drive_from_bond_center: true
+    orientation_corr_analysis: false
+    orientation_corr_n_steps: 1000
+    crossing_analysis: false
+    intrinsic_curvature: 0
+    flagella_flag: false
+    flagella_freq: 1
+    flagella_period: 2
+    flagella_amplitude: 1
+    flocking_analysis: false
+crosslink:
+  - name: filamin
+    concentration: 0.0001
+    insertion_type: random
+    diameter: 1
+    walker_flag: false
+    velocity: 0
+    diffusion_flag: false
+    draw_type: fixed
+    color: 4.67
+    k_on: 50
+    k_off: 5
+    k_on_d: 50
+    k_off_d: 5
+    force_dep_factor: 0
+    polar_affinity: 0
+    k_spring: 10
+    f_stall: 100
+    force_dep_vel_flag: false
+    k_align: 0
+    rest_length: 8
+    step_direction: -1
+    tether_draw_type: fixed
+    tether_diameter: 0.1
+    tether_color: 4.67
+    end_pausing: false
+    r_capture: 30
+    spec_flag: true
+    n_spec: 1000
+    static_flag: false
+n_runs: 1
+n_random: 1
+species:
+  name: species
+  num: 0
+  diameter: 1
+  length: 0
+  insertion_type: random
+  insert_file: none
+  overlap: false
+  draw_type: orientation
+  color: 0
+  posit_flag: false
+  spec_flag: false
+  n_posit: 100
+  n_spec: 100
+br_bead:
+  driving_factor: 0
+  packing_fraction: -1
+spherocylinder:
+  diffusion_analysis: false
+  n_diffusion_samples: 1
+  midstep: false
+spindle:
+  n_filaments_bud: 1
+  n_filaments_mother: 0
+  alignment_potential: false
+  k_spring: 1000
+  k_align: 0
+  spring_length: 0
+  spb_diameter: 5
+i_step: 0
+invert_background: false
+draw_boundary: true
+load_checkpoint: false
+checkpoint_run_name: sc
+n_load: 0
+movie_directory: frames
+time_analysis: false
+bud_height: 680
+bud_radius: 300
+lj_epsilon: 1
+wca_eps: 1
+wca_sig: 1
+ss_a: 1
+ss_rs: 1.5
+ss_eps: 1
+constant_pressure: false
+constant_volume: false
+target_pressure: 0
+target_radius: 100
+pressure_time: 100
+compressibility: 1
+stoch_flag: true
+interaction_flag: true
+species_insertion_failure_threshold: 10000
+species_insertion_reattempt_threshold: 10
+uniform_crystal: false
+n_steps_equil: 0
+n_steps_target: 100000
+static_particle_number: false
+checkpoint_from_spec: false
+soft_potential_mag_target: -1
+auto_graph: false
+local_order_analysis: false
+local_order_width: 50
+local_order_bin_width: 0.5
+local_order_n_analysis: 100
+density_analysis: 0
+density_bin_width: 0.1
+density_com_only: false
+polar_order_analysis: false
+polar_order_n_bins: 100
+polar_order_contact_cutoff: 3
+overlap_analysis: false
+highlight_overlaps: false
+reduced: false
+reload_reduce_switch: false
+flock_polar_min: 0.5
+flock_contact_min: 1.5
+highlight_flock: false
+flock_color_ext: 1.57
+flock_color_int: 4.71
+in_out_flag: false

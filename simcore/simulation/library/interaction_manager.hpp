@@ -1,5 +1,5 @@
-#ifndef _SIMCORE_INTERACTION_ENGINE_H_
-#define _SIMCORE_INTERACTION_ENGINE_H_
+#ifndef _SIMCORE_INTERACTION_MANAGER_H_
+#define _SIMCORE_INTERACTION_MANAGER_H_
 
 //#include "cell_list.hpp"
 #include "auxiliary.hpp"
@@ -10,14 +10,10 @@
 #include "species.hpp"
 #include "struct_analysis.hpp"
 
-#ifdef ENABLE_OPENMP
-#include <omp.h>
-#endif
-
 typedef std::vector<Interaction>::iterator ix_iterator;
 
-class InteractionEngine {
-private:
+class InteractionManager {
+ private:
   double stress_[9];
   double dr_update_;
   bool overlap_;
@@ -28,13 +24,12 @@ private:
   bool in_out_flag_ = false;
   int n_dim_;
   int n_periodic_;
-  int i_update_;
-  int n_update_;
   int n_objs_;
   int n_thermo_;
   int static_pnumber_;
   int *i_step_;
   int n_interactions_;
+  int i_update_ = 0;
   system_parameters *params_;
   space_struct *space_;
   std::vector<SpeciesBase *> *species_;
@@ -69,10 +64,11 @@ private:
   void PairBondCrosslinks();
   bool CheckBondAnchorPair(Object *anchor, Object *bond);
 
-public:
-  InteractionEngine() {}
+ public:
+  InteractionManager() {}
   void Init(system_parameters *params, std::vector<SpeciesBase *> *species,
-            space_struct *space, int *i_step, bool processing = false);
+            space_struct *space, bool processing = false);
+  void InitInteractions();
   void Interact();
   void CalculatePressure();
   bool CheckOverlap(std::vector<Object *> &ixs);
@@ -84,12 +80,17 @@ public:
   void CalculateStructure();
   void ForceUpdate();
   void CheckUpdateObjects();
-  void DrawInteractions(std::vector<graph_struct *> *graph_array);
+  void DrawInteractions(std::vector<graph_struct *> &graph_array);
   void WriteOutputs();
-  void InitOutputs(bool reading_inputs = false, bool reduce_flag = false,
-                   bool with_reloads = false);
+  void InitOutputs(bool reading_inputs = false,
+                   run_options *run_opts = nullptr);
   void ReadInputs();
   void ResetCellList();
+  void InitCrosslinkSpecies(sid_label &slab, ParamsParser &parser,
+                            unsigned long seed);
+  void LoadCrosslinksFromCheckpoints(std::string run_name,
+                                     std::string checkpoint_run_name);
+  void InsertCrosslinks();
 };
 
 #endif

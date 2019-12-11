@@ -1,24 +1,16 @@
 #ifndef _SIMCORE_SIMULATION_H_
 #define _SIMCORE_SIMULATION_H_
 
-#include "auxiliary.hpp"
 #include "graphics.hpp"
-#include "helpers.hpp"
-#include "interaction_engine.hpp"
+#include "interaction_manager.hpp"
 #include "output_manager.hpp"
 #include "space.hpp"
-#include "filament_species.hpp"
-//#include "centrosome.hpp"
-//#include "bead_spring.hpp"
-#include "spherocylinder.hpp"
-//#include "spindle.hpp"
-#include "br_bead.hpp"
-//#include "objects.hpp"
-#include "parse_flags.hpp"
 
 class Simulation {
-private:
+ private:
+  UNIT_TEST
   int i_step_ = 0;
+  int log_interval_ = 10;
   int n_steps_;
   int frame_num_ = 0;
   double time_;
@@ -28,16 +20,16 @@ private:
 
   OutputManager output_mgr_;
   system_parameters params_;
-  RNG rng_;
+  RNG *rng_;
+  ParamsParser parser_;
 
-  InteractionEngine iengine_;
+  InteractionManager ix_mgr_;
 
 #ifndef NOGRAPH
   Graphics graphics_;
 #endif
   Space space_;
   std::vector<SpeciesBase *> species_;
-  rfh::factory species_factory_;
   void InitSimulation();
   void InitObjects();
   void InitSpecies();
@@ -63,12 +55,11 @@ private:
   void RunProcessing(run_options run_opts);
   void InitGraphics();
   void InitProcessing(run_options run_opts);
-  UNIT_TESTER;
 
-public:
+ public:
   Simulation() {}
-  void Run(system_parameters params);
-  void ProcessOutputs(system_parameters params, run_options run_opts);
+  void Run(YAML::Node sim_params);
+  void ProcessOutputs(YAML::Node sim_params, run_options run_opts);
 };
 
-#endif // _SIMCORE_SIMULATION_H_
+#endif  // _SIMCORE_SIMULATION_H_

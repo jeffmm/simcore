@@ -2,17 +2,18 @@
 #define _SIMCORE_BEAD_SPRING_H_
 
 #include "mesh.hpp"
-#include "species.hpp"
-
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
-
 class BeadSpring : public Mesh {
- private:
-  int stoch_flag_, eq_steps_, eq_steps_count_ = 0;
-  double max_bond_length_, bond_rest_length_, bond_spring_, persistence_length_,
-      rand_sigma_, driving_factor_;
+private:
+  bead_spring_parameters *sparams_;
+  int stoch_flag_;
+  int eq_steps_;
+  int eq_steps_count_ = 0;
+  double max_bond_length_;
+  double bond_rest_length_;
+  double bond_spring_;
+  double persistence_length_;
+  double rand_sigma_;
+  double driving_factor_;
   std::vector<double> cos_thetas_;
   void SetDiffusion();
   void GenerateProbableOrientation();
@@ -33,10 +34,9 @@ class BeadSpring : public Mesh {
   void UpdateAvgPosition();
   void ReportAll();
 
- public:
+public:
   BeadSpring();
-  virtual void Init();
-  virtual void InsertAt(double *pos, double *u);
+  virtual void InsertAt(double *new_pos, double *u);
   // void DiffusionValidationInit();
   virtual void Integrate(bool midstep);
   // virtual void Draw(std::vector<graph_struct*> * graph_array);
@@ -77,85 +77,4 @@ class BeadSpring : public Mesh {
   double const GetVolume();
 };
 
-typedef std::vector<BeadSpring>::iterator bs_iterator;
-typedef std::vector<std::pair<std::vector<BeadSpring>::iterator,
-                              std::vector<BeadSpring>::iterator> >
-    bead_spring_chunk_vector;
-
-class BeadSpringSpecies : public Species<BeadSpring> {
- protected:
-  // Analysis structures
-  bool midstep_;
-  double e_bend_, tot_angle_, mse2e_, mse2e2_, avg_clen_;
-  int **theta_histogram_;
-  int time_, n_bins_, n_samples_;
-  std::fstream spiral_file_, theta_file_, mse2e_file_, diffusion_file_;
-
- public:
-  BeadSpringSpecies() : Species() { SetSID(species_id::bead_spring); }
-  void Init(system_parameters *params, space_struct *space, long seed) {
-    Species::Init(params, space, seed);
-    sparams_ = &(params_->bead_spring);
-    midstep_ = true;
-    if (params_->bead_spring.packing_fraction > 0) {
-      if (params_->bead_spring.length <= 0) {
-        Logger::Error(
-            "Packing fraction with polydisperse lengths not implemented yet\n");
-      }
-      if (params_->n_dim == 2) {
-        double fil_vol =
-            params_->bead_spring.length * params_->bead_spring.diameter +
-            0.25 * M_PI * SQR(params_->bead_spring.diameter);
-        sparams_->num =
-            params_->bead_spring.packing_fraction * space_->volume / fil_vol;
-      } else {
-        double fil_vol = 0.25 * M_PI * SQR(params_->bead_spring.diameter) *
-                             params_->bead_spring.length +
-                         M_PI * CUBE(params_->bead_spring.diameter) / 6.0;
-        sparams_->num =
-            params_->bead_spring.packing_fraction * space_->volume / fil_vol;
-      }
-    }
-  }
-  void InitAnalysis();
-  void InitDiffusionAnalysis();
-  void InitThetaAnalysis();
-  void InitMse2eAnalysis();
-  void RunAnalysis();
-  void RunThetaAnalysis();
-  void RunMse2eAnalysis();
-  void FinalizeAnalysis();
-  void FinalizeDiffusionAnalysis();
-  void FinalizeMse2eAnalysis();
-  void FinalizeThetaAnalysis();
-  void UpdatePositions() {
-#ifdef ENABLE_OPENMP
-    int max_threads = omp_get_max_threads();
-    bead_spring_chunk_vector chunks;
-    chunks.reserve(max_threads);
-    size_t chunk_size = members_.size() / max_threads;
-    bs_iterator cur_iter = members_.begin();
-    for (int i = 0; i < max_threads - 1; ++i) {
-      bs_iterator last_iter = cur_iter;
-      std::advance(cur_iter, chunk_size);
-      chunks.push_back(std::make_pair(last_iter, cur_iter));
-    }
-    chunks.push_back(std::make_pair(cur_iter, members_.end()));
-
-#pragma omp parallel shared(chunks)
-    {
-#pragma omp for
-      for (int i = 0; i < max_threads; ++i)
-        for (auto it = chunks[i].first; it != chunks[i].second; ++it)
-          it->UpdatePosition(midstep_);
-    }
-#else
-    for (bs_iterator it = members_.begin(); it != members_.end(); ++it)
-      it->UpdatePosition(midstep_);
-#endif
-
-    midstep_ = !midstep_;
-  }
-};
-
-#endif  // _SIMCORE_BEAD_SPRING_H_
+#endif // _SIMCORE_BEAD_SPRING_H_

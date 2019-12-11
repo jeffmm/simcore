@@ -29,6 +29,7 @@ public:
   double pote = 0;           // potential energy
   double polar_order = 0;    // local polar order contribution
   double contact_number = 0; // contact number contribution
+  bool no_interaction = false; // true for objects that do not interact
 };
 
 #endif

@@ -1,7 +1,16 @@
 #include "space.hpp"
 
 // Constructor for array reference construction
-Space::Space() {}
+Space::Space() {
+  std::fill(unit_cell_, unit_cell_ + 9, 0.0);
+  std::fill(unit_cell_inv_, unit_cell_inv_ + 9, 0.0);
+  std::fill(a_, a_ + 9, 0.0);
+  std::fill(b_, b_ + 9, 0.0);
+  std::fill(a_perp_, a_perp_ + 3, 0.0);
+  std::fill(pressure_tensor_, pressure_tensor_ + 9, 0.0);
+  std::fill(prev_unit_cell_, prev_unit_cell_ + 9, 0.0);
+  std::fill(mu_, mu_ + 9, 0.0);
+}
 
 void Space::Init(system_parameters *params) {
   params_ = params;
@@ -180,7 +189,7 @@ void Space::UpdateUnitCell() {
    (doesn't work for unit cells with non-zero off-diagonal elements) */
 void Space::CalculateScalingMatrix() {
   double time_const = compressibility_ * delta_ / (n_dim_ * pressure_time_);
-  std::copy(s_struct.pressure_tensor, s_struct.pressure_tensor + 9,
+  std::copy(s_struct.pressure_tensor, s_struct.pressure_tensor + n_dim_*n_dim_,
             pressure_tensor_);
   for (int i = 0; i < n_dim_; ++i) {
     for (int j = 0; j < n_dim_; ++j) {
@@ -318,6 +327,8 @@ void Space::InitSpaceStruct() {
   s_struct.b = b_;
   s_struct.a_perp = a_perp_;
   s_struct.mu = mu_;
+  s_struct.pressure = 0;
+  std::fill(s_struct.pressure_tensor, s_struct.pressure_tensor+9, 0.0);
   UpdateSpaceStruct();
 }
 

@@ -15,9 +15,11 @@ class Site : public Object {
   double tangent_[3];  // if one or two bonds, vector tangent to bonds at site
   double random_force_[3];  // random forces for filaments
   int n_bonds_;
+  double theta_ = 0;
+  double phi_ = 0;
 
  public:
-  Site();
+  Site(unsigned long seed);
   void AddBond(Bond* bond, directed_type dir);
   void Report();
   void ReportBonds();
@@ -34,9 +36,12 @@ class Site : public Object {
   void RemoveOutgoingBonds();
   void RemoveBond(int bond_oid);
   virtual bool HasNeighbor(int other_oid);
-  void Draw(std::vector<graph_struct*>* graph_array);
   void WriteSpec(std::fstream &op);
   void ReadSpec(std::fstream &ip);
+  void SetTheta(const double theta) { theta_ = theta; }
+  void SetPhi(const double phi) { phi_ = phi; }
+  const double GetTheta() const { return theta_; }
+  const double GetPhi() const { return phi_; }
 };
 
 #endif  // _SIMCORE_SITE_H_

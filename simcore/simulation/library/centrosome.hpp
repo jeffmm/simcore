@@ -1,10 +1,8 @@
 #ifndef _SIMCORE_CENTROSOME_H_
 #define _SIMCORE_CENTROSOME_H_
 
+#include "species.hpp"
 #include "filament.hpp"
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
 
 class Centrosome : public Object {
  protected:

@@ -1,12 +1,13 @@
 
 #include "simulation.hpp"
 
-#define REGISTER_SPECIES(n, m) species_factory_.register_class<n>(#m);
-
 /* Initialize simulation parameters and run simulation */
-void Simulation::Run(system_parameters params) {
-  params_ = params;
-  run_name_ = params.run_name;
+void Simulation::Run(YAML::Node sim_params) {
+  YAML::Emitter out;
+  Logger::Info("Initializing simulation with parameters:\n%s",
+               (out << sim_params).c_str());
+  // Parse simulation parameters
+  parser_.Init(sim_params);
   // Initialize simulation data structures
   InitSimulation();
   // Begin simulation
@@ -19,9 +20,10 @@ void Simulation::Run(system_parameters params) {
  * motion using Runge-Kutta-like integration schemes for n_steps time steps. */
 void Simulation::RunSimulation() {
 #ifdef ENABLE_OPENMP
-  Logger::Info("Running simulation on %d threads", omp_get_max_threads());
+  Logger::Info("Running simulation %s on %d threads", run_name_.c_str(),
+               omp_get_max_threads());
 #else
-  Logger::Info("Running simulation");
+  Logger::Info("Running simulation %s", run_name_.c_str());
 #endif
   /* Solve equations of motion for all objects */
 
@@ -34,7 +36,9 @@ void Simulation::RunSimulation() {
    also update other objects' positions on every even step too (e.g. xlinks). */
   for (i_step_ = 1; i_step_ < params_.n_steps + 1; ++i_step_) {
     params_.i_step = i_step_;
-    time_ = (i_step_ + 1) * params_.delta;
+    /* Assuming halfstep algorithm, each step only moves the simulation forward
+       by 1/2 delta */
+    time_ = i_step_ * 0.5 * params_.delta;
     // Output progress
     PrintComplete();
     /* Zero the force_ array on all objects for bookkeeping */
@@ -68,6 +72,10 @@ void Simulation::PrintComplete() {
   if (iteration % steps == 0) {
     Logger::Info("%d%% complete", 10 * iteration / steps);
   }
+  if (i_step_ == log_interval_ + 1) {
+    Logger::Info("%d steps completed", log_interval_);
+    log_interval_ = (int)floor(2 * log_interval_);
+  }
   Logger::Trace("*****Step %d*****", i_step_);
 }
 
@@ -83,7 +91,7 @@ void Simulation::Integrate() {
 /* Calculate interaction forces between all objects if necessary. */
 void Simulation::Interact() {
   Logger::Debug("Calculating object interactions");
-  iengine_.Interact();
+  ix_mgr_.Interact();
 }
 
 /* Remove forces on all objects. Objects with inertia that use higher order RK
@@ -99,9 +107,10 @@ void Simulation::ZeroForces() {
  * handling periodic boundaries in a sane way. */
 void Simulation::Statistics() {
   if (i_step_ % params_.n_thermo == 0 && i_step_ > 0) {
+    Logger::Debug("Calculating system pressure and volume");
     /* Calculate system pressure from stress tensor */
     Logger::Debug("Calculating system thermodynamics");
-    iengine_.CalculatePressure();
+    ix_mgr_.CalculatePressure();
     if (params_.constant_pressure) {
       space_.ConstantPressure();
     }
@@ -113,6 +122,7 @@ void Simulation::Statistics() {
   }
   /* Update object positions, etc and handle periodic BCs */
   if (space_.GetUpdate()) {
+    Logger::Debug("Rescaling species scaled positions in dynamic space");
     space_.UpdateSpace();
     ScaleSpeciesPositions();
   }
@@ -127,12 +137,15 @@ void Simulation::ScaleSpeciesPositions() {
 
 /* Initialize all the data structures in the simulation */
 void Simulation::InitSimulation() {
-  Logger::Info("Initializing simulation");
+  params_ = parser_.ParseSystemParameters();
+  run_name_ = params_.run_name;
+  rng_ = new RNG(params_.seed);
+
 #ifdef TRACE
   if (params_.n_steps > 100) {
-    Logger::Warning("Simulation run in trace mode with a large number of "
-                    "n_steps (%d).",
-                    params_.n_steps);
+    Logger::Warning(
+        "Simulation run in trace mode with a large number of n_steps (%d).",
+        params_.n_steps);
     fprintf(stderr, "Continue anyway? (y/N) ");
     char c;
     if (std::cin.peek() != 'y') {
@@ -147,13 +160,16 @@ void Simulation::InitSimulation() {
 #endif
   space_.Init(&params_);
   InitObjects();
+  ix_mgr_.Init(&params_, &species_, space_.GetStruct());
   InitSpecies();
-  iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_);
+  ix_mgr_.InitInteractions();
   InsertSpecies(params_.load_checkpoint, params_.load_checkpoint);
   InitOutputs();
   if (params_.graph_flag) {
     InitGraphics();
   }
+  params_.i_step = 0;
+  WriteOutputs();
 }
 
 /* Initialize static object parameters that are used everywhere */
@@ -162,18 +178,25 @@ void Simulation::InitObjects() {
   Object::SetNDim(params_.n_dim);
   Object::SetDelta(params_.delta);
   Object::SetSpace(space_.GetStruct());
+  SpeciesBase::SetParams(&params_);
+  SpeciesBase::SetSpace(space_.GetStruct());
 }
 
 /* Generate graphics window and draw initial simulation setup */
 void Simulation::InitGraphics() {
   GetGraphicsStructure();
-  double background_color = (params_.graph_background == 0 ? 0.1 : 1);
+  double background_color = (params_.invert_background ? 1 : 0.1);
 // If NOGRAPH is defined, skip drawing and grabbing
 #ifndef NOGRAPH
   // Initialize graphics structures
   graphics_.Init(&graph_array_, space_.GetStruct(), background_color,
                  params_.draw_boundary, params_.auto_graph);
-  graphics_.DrawLoop();
+  
+  //This line was interferring with graphics on Windows, and removing it did no harm
+  #ifndef WINGRAPH
+    graphics_.DrawLoop();
+  #endif
+
 #endif
   // Initialize directory for grabbed images
   params_.movie_directory.append("/");
@@ -190,26 +213,25 @@ void Simulation::InitGraphics() {
 
 /* Initialize object types */
 void Simulation::InitSpecies() {
-  /* Factories for creating and initializing registered species with their
-     assigned species id */
-  REGISTER_SPECIES(FilamentSpecies, filament);
-  REGISTER_SPECIES(SpherocylinderSpecies, spherocylinder);
-  REGISTER_SPECIES(BrBeadSpecies, br_bead);
-
-  /* Search the species_factory_ for any registered species,
-   and find them in the yaml file */
-  species_.reserve(species_factory_.m_classes.size());
-  for (auto registered = species_factory_.m_classes.begin();
-       registered != species_factory_.m_classes.end(); ++registered) {
-    SpeciesBase *spec =
-        (SpeciesBase *)species_factory_.construct(registered->first);
-    spec->Init(&params_, space_.GetStruct(), gsl_rng_get(rng_.r));
-    if (spec->GetNInsert() > 0) {
+  std::vector<sid_label> species_labels = parser_.GetSpeciesLabels();
+  species_.reserve(parser_.GetNSpecies());
+  SpeciesFactory species_factory;
+  for (auto slab = species_labels.begin(); slab != species_labels.end();
+       ++slab) {
+    const species_id sid = species_id::_from_string(slab->first.c_str());
+    if (sid == +species_id::crosslink) {
+      ix_mgr_.InitCrosslinkSpecies(*slab, parser_, rng_->GetSeed());
+      continue;
+    }
+    species_.push_back(species_factory.CreateSpecies(sid, rng_->GetSeed()));
+    species_.back()->Init(slab->second, parser_);
+    if (species_.back()->GetNInsert() > 0) {
 #ifdef TRACE
-      if (spec->GetNInsert() > 20) {
-        Logger::Warning("Simulation run in trace mode with a large number of "
-                        "objects in species %s (%d).",
-                        spec->GetSID()._to_string(), spec->GetNInsert());
+      if (species_.back()->GetNInsert() > 20) {
+        Logger::Warning(
+            "Simulation run in trace mode with a large number of "
+            "objects in species %s (%d).",
+            sid._to_string(), species_.back()->GetNInsert());
         fprintf(stderr, "Continue anyway? (y/N) ");
         char c;
         if (std::cin.peek() != 'y') {
@@ -222,8 +244,15 @@ void Simulation::InitSpecies() {
         }
       }
 #endif
-      species_.push_back(spec);
       species_.back()->Reserve();
+      double spec_length = species_.back()->GetSpecLength();
+      double spec_d = species_.back()->GetSpecDiameter();
+      spec_length = (spec_d > spec_length ? spec_d : spec_length);
+      CellList::SetMinCellLength(spec_length);
+    } else {
+      species_.back()->CleanUp();
+      delete species_.back();
+      species_.pop_back();
     }
   }
 }
@@ -252,16 +281,16 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         num = (*spec)->GetNInsert();
         // First check that we are respecting boundary conditions
         std::vector<Object *> last_ixors;
-        (*spec)->GetLastInteractors(&last_ixors);
+        (*spec)->GetLastInteractors(last_ixors);
         if (params_.boundary != 0 && !processing &&
-            iengine_.CheckBoundaryConditions(last_ixors)) {
+            ix_mgr_.CheckBoundaryConditions(last_ixors)) {
           (*spec)->PopMember();
           /* We are not counting boundary condition failures in insertion
            failures, since insertion failures are for packing issues */
         }
         // Check if we have an overlap of objects
         else if (!force_overlap && !(*spec)->CanOverlap() && !processing &&
-                 iengine_.CheckOverlap(last_ixors)) {
+                 ix_mgr_.CheckOverlap(last_ixors)) {
           (*spec)->PopMember();
           num_failures++;
         }
@@ -270,26 +299,26 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         else {
           inserted++;
           if (!force_overlap && !processing) {
-            iengine_.AddInteractors(last_ixors);
+            ix_mgr_.AddInteractors(last_ixors);
           }
         }
         if (num_failures > params_.species_insertion_failure_threshold) {
-          Logger::Warning("Too many insertion failures have occurred. Managed "
-                          "to insert %2.2f% of objects",
-                          100.0 * inserted / (float)num);
+          Logger::Warning(
+              "Too many insertion failures have occurred: managed "
+              "to insert %2.1f%% of objects",
+              100.0 * inserted / (float)num);
           break;
         }
       }
-      if (num != inserted) {
+      if (num != inserted && params_.n_dim == 2) {
         // Attempt a lattice-based insertion strategy (only 2d for now)
-        if (params_.n_dim == 3)
-          continue;
         Logger::Warning("Attempting lattice-based insertion strategy");
         double pos[3] = {0, 0, 0};
         pos[0] = -params_.system_radius;
         pos[1] = -params_.system_radius;
         double d = 0.5 * (*spec)->GetSpecDiameter();
         double l = 0.25 * (*spec)->GetSpecLength();
+        l = (l < d ? d : l);
         int num_x = (int)floor(2 * params_.system_radius / d);
         int num_y = (int)floor(2 * params_.system_radius / l);
         std::vector<std::pair<int, int>> grid_array;
@@ -302,7 +331,8 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         for (int i = 0; i < num_x * num_y; ++i) {
           grid_index[i] = i;
         }
-        gsl_ran_shuffle(rng_.r, grid_index, num_x * num_y, sizeof(int));
+        rng_->Shuffle<int>(grid_index, num_x * num_y);
+        // gsl_ran_shuffle(rng_.r, grid_index, num_x * num_y, sizeof(int));
         for (int i = 0; i < num_x * num_y; ++i) {
           pos[0] = grid_array[grid_index[i]].first * d;
           pos[1] = grid_array[grid_index[i]].second * l;
@@ -313,40 +343,41 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           (*spec)->SetLastMemberPosition(pos);
           // First check that we are respecting boundary conditions
           std::vector<Object *> last_ixors;
-          (*spec)->GetLastInteractors(&last_ixors);
+          (*spec)->GetLastInteractors(last_ixors);
           if (params_.boundary != 0 && !processing &&
-              iengine_.CheckBoundaryConditions(last_ixors)) {
+              ix_mgr_.CheckBoundaryConditions(last_ixors)) {
             (*spec)->PopMember();
             // We are not counting boundary condition failures in insertion
             // failures, since insertion failures are for packing issues
           }
           // Check if we have an overlap of objects
           else if (!force_overlap && !(*spec)->CanOverlap() && !processing &&
-                   iengine_.CheckOverlap(last_ixors)) {
+                   ix_mgr_.CheckOverlap(last_ixors)) {
             (*spec)->PopMember();
             num_failures++;
           }
           // Otherwise update display of percentage of species inserted
           else {
             inserted++;
-            iengine_.AddInteractors(last_ixors);
+            ix_mgr_.AddInteractors(last_ixors);
           }
-          if (inserted == num)
-            break;
+          if (inserted == num) break;
         }
         delete[] grid_index;
       }
       if (num != inserted) {
-        Logger::Warning("Species insertion failure threshold of %d reached. "
-                        "Reattempting insertion.\n",
-                        params_.species_insertion_failure_threshold);
+        Logger::Warning(
+            "Species insertion failure threshold of %d reached. "
+            "Reattempting insertion.\n",
+            params_.species_insertion_failure_threshold);
         (*spec)->PopAll();
-        iengine_.Reset();
+        ix_mgr_.Reset();
       }
       if (++num_attempts > params_.species_insertion_reattempt_threshold) {
-        Logger::Error("Unable to insert species randomly within the reattempt "
-                      "threshold of %d.\n",
-                      params_.species_insertion_reattempt_threshold);
+        Logger::Error(
+            "Unable to insert species randomly within the reattempt "
+            "threshold of %d.\n",
+            params_.species_insertion_reattempt_threshold);
       }
     }
     if (!processing) {
@@ -354,15 +385,22 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
         (*spec)->ArrangeMembers();
       }
     }
-    if (params_.load_checkpoint) {
+  }
+  /* Initialize static crosslink positions */
+  ix_mgr_.InsertCrosslinks();
+  /* Should do this all the time to force object counting */
+  if (params_.load_checkpoint) {
+    for (auto spec = species_.begin(); spec != species_.end(); ++spec) {
       (*spec)->LoadFromCheckpoints(run_name_, params_.checkpoint_run_name);
     }
+    ix_mgr_.LoadCrosslinksFromCheckpoints(run_name_,
+                                          params_.checkpoint_run_name);
   }
-  /* Should do this all the time to force object counting */
-  iengine_.ResetCellList(); // Forces rebuild cell list without redundancy
-  iengine_.Reset();
-  //if (!processing) {
-  iengine_.CheckUpdateObjects(); // Forces update as well
+
+  ix_mgr_.ResetCellList();  // Forces rebuild cell list without redundancy
+  ix_mgr_.Reset();
+  // if (!processing) {
+  ix_mgr_.CheckUpdateObjects();  // Forces update as well
   //}
 }
 
@@ -372,12 +410,13 @@ void Simulation::ClearSimulation() {
   Logger::Debug("Clearing simulation resources");
   output_mgr_.Close();
   ClearSpecies();
-  iengine_.Clear();
+  ix_mgr_.Clear();
 #ifndef NOGRAPH
   if (params_.graph_flag) {
     graphics_.Clear();
   }
 #endif
+  delete rng_;
   Logger::Info("Simulation complete");
 }
 
@@ -387,14 +426,14 @@ void Simulation::ClearSpecies() {
     (*it)->CleanUp();
     delete (*it);
   }
-  species_factory_.clear();
+  species_.clear();
 }
 
 /* Update the OpenGL graphics window */
 void Simulation::Draw(bool single_frame) {
 #ifndef NOGRAPH
-  Logger::Trace("Drawing graphable objects");
   if (params_.graph_flag && i_step_ % params_.n_graph == 0) {
+    Logger::Trace("Drawing graphable objects");
     /* Get updated object positions and orientations */
     GetGraphicsStructure();
     graphics_.Draw();
@@ -413,19 +452,18 @@ void Simulation::GetGraphicsStructure() {
   Logger::Trace("Retrieving graphics structures from objects");
   graph_array_.clear();
   for (auto it = species_.begin(); it != species_.end(); ++it) {
-    (*it)->Draw(&graph_array_);
+    (*it)->Draw(graph_array_);
   }
   /* Visualize interaction forces, crosslinks, etc */
-  iengine_.DrawInteractions(&graph_array_);
+  ix_mgr_.DrawInteractions(graph_array_);
 }
 
 /* Initialize output files */
 void Simulation::InitOutputs() {
   Logger::Debug("Initializing output files");
-  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_,
-                   run_name_);
-  //if (!params_.load_checkpoint)
-    iengine_.InitOutputs();
+  output_mgr_.Init(&params_, &species_, space_.GetStruct());
+  // if (!params_.load_checkpoint)
+  ix_mgr_.InitOutputs();
   /* If analyzing run time, record cpu time here */
   if (params_.time_analysis) {
     cpu_init_time_ = cpu_time();
@@ -434,17 +472,15 @@ void Simulation::InitOutputs() {
 
 /* Determine which output files we are reading */
 void Simulation::InitInputs(run_options run_opts) {
-  output_mgr_.Init(&params_, &species_, space_.GetStruct(), &i_step_, run_name_,
-                   true, run_opts.use_posits, run_opts.with_reloads,
-                   run_opts.reduce_flag, run_opts.reduce_factor);
-  iengine_.InitOutputs(true, run_opts.with_reloads, run_opts.reduce_flag);
+  output_mgr_.Init(&params_, &species_, space_.GetStruct(), true, &run_opts);
+  ix_mgr_.InitOutputs(true, &run_opts);
 }
 
 /* Write object positions, etc if necessary */
 void Simulation::WriteOutputs() {
   output_mgr_.WriteOutputs();
   /* Write interaction information/crosslink positions, etc */
-  iengine_.WriteOutputs();
+  ix_mgr_.WriteOutputs();
   /* If we are analyzing run time and this is the last step, record final time
    * here. */
   if (params_.time_analysis && i_step_ == params_.n_steps) {
@@ -458,13 +494,8 @@ void Simulation::WriteOutputs() {
 }
 
 /* Run the steps we need for post-processing output files */
-void Simulation::ProcessOutputs(system_parameters params,
-                                run_options run_opts) {
-  params_ = params;
-  run_name_ = params.run_name;
-  // Ensure that we are not trying to load any checkpoints when processing
-  // outputs
-  params_.load_checkpoint = 0;
+void Simulation::ProcessOutputs(YAML::Node sim_params, run_options run_opts) {
+  parser_.Init(sim_params);
   InitProcessing(run_opts);
   RunProcessing(run_opts);
   ClearSimulation();
@@ -473,16 +504,23 @@ void Simulation::ProcessOutputs(system_parameters params,
 // Initialize data structures for post-processing
 void Simulation::InitProcessing(run_options run_opts) {
   Logger::Info("Initializing datastructures for post-processing outputs");
+  params_ = parser_.ParseSystemParameters();
+  run_name_ = params_.run_name;
+  rng_ = new RNG(params_.seed);
+
+  /* Ensure that we are not trying to load any checkpoints when processing
+     outputs */
+  params_.load_checkpoint = 0;
+
   space_.Init(&params_);
   InitObjects();
+  ix_mgr_.Init(&params_, &species_, space_.GetStruct(), true);
   InitSpecies();
-  iengine_.Init(&params_, &species_, space_.GetStruct(), &i_step_, true);
+  ix_mgr_.InitInteractions();
   InsertSpecies(true, true);
-  // if (run_opts.analysis_flag) {
-  //}
   InitInputs(run_opts);
   if (run_opts.graphics_flag || run_opts.make_movie) {
-    params_.graph_flag = 1;
+    params_.graph_flag = true;
     if (run_opts.use_posits && params_.n_graph < output_mgr_.GetNPosit()) {
       params_.n_graph = output_mgr_.GetNPosit();
     } else if (!run_opts.use_posits &&
@@ -490,17 +528,12 @@ void Simulation::InitProcessing(run_options run_opts) {
       params_.n_graph = output_mgr_.GetNSpec();
     }
     if (run_opts.make_movie) {
-      params_.movie_flag = 1;
+      params_.movie_flag = true;
     }
     InitGraphics();
   } else {
-    params_.graph_flag = 0;
+    params_.graph_flag = false;
   }
-  // if (run_opts.analysis_flag) {
-  // for (auto it=species_.begin(); it!=species_.end(); ++it) {
-  //(*it)->InitAnalysis();
-  //}
-  //}
 }
 
 /* Post-processing on simulation outputs for movie generation, analysis output
@@ -517,11 +550,10 @@ void Simulation::RunProcessing(run_options run_opts) {
   bool run_analyses = run_opts.analysis_flag;
   for (i_step_ = 1; true; ++i_step_) {
     params_.i_step = i_step_;
-    // i_step_ = params_.i_step_;
     time_ = (i_step_)*params_.delta;
     PrintComplete();
     output_mgr_.ReadInputs();
-    iengine_.ReadInputs();
+    ix_mgr_.ReadInputs();
     if (early_exit) {
       early_exit = false;
       Logger::Info("Early exit triggered. Ending simulation.");
@@ -540,9 +572,6 @@ void Simulation::RunProcessing(run_options run_opts) {
       for (auto it = species_.begin(); it != species_.end(); ++it) {
         (*it)->InitAnalysis();
       }
-      // if (local_order && i_step_ % params_.local_order_n_analysis == 0) {
-      // iengine_.StructureAnalysis();
-      //}
       continue;
     }
     if (run_analyses) {
@@ -558,7 +587,7 @@ void Simulation::RunProcessing(run_options run_opts) {
       // Do structure analysis first
       if (struct_update && local_order &&
           i_step_ % params_.local_order_n_analysis == 0) {
-        iengine_.StructureAnalysis();
+        ix_mgr_.StructureAnalysis();
       }
       // Now do species analyses
       for (auto it = species_.begin(); it != species_.end(); ++it) {

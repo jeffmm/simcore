@@ -6,13 +6,9 @@
 int Mesh::_next_mesh_id_ = 0;
 std::mutex Mesh::_mesh_mtx_;
 
-Mesh::Mesh() : Object() {
+Mesh::Mesh(unsigned long seed) : Object(seed) {
   InitMeshID();
-  n_sites_ = n_bonds_ = n_bonds_max_ = 0;
   is_mesh_ = true;
-  midstep_ = true;
-  anchored_ = false;
-  posits_only_ = false;
 }
 
 void Mesh::InitMeshID() {
@@ -20,36 +16,53 @@ void Mesh::InitMeshID() {
   SetMeshID(++_next_mesh_id_);
 }
 
-void Mesh::Reserve(int n_bonds) {
-  sites_.reserve(n_bonds + 1);
-  bonds_.reserve(n_bonds);
-  n_bonds_max_ = n_bonds;
+void Mesh::Reserve() {
+  sites_.reserve(n_bonds_max_ + 1);
+  bonds_.reserve(n_bonds_max_);
 }
 
 Site *Mesh::GetSite(int i) { return &(sites_[i]); }
 Bond *Mesh::GetBond(int i) { return &(bonds_[i]); }
 void Mesh::AddSite(Site s) {
   if (n_sites_ == n_bonds_max_ + 1) {
-    Logger::Error("Attempting to add site beyond allocated maximum.\n"
-                  "n_bonds_max_: %d , n_sites_: %d",
-                  n_bonds_max_, n_sites_);
+    Logger::Error(
+        "Attempting to add site beyond allocated maximum.\n"
+        "n_bonds_max_: %d , n_sites_: %d",
+        n_bonds_max_, n_sites_);
   }
   sites_.push_back(s);
   sites_.back().SetColor(color_, draw_);
   sites_.back().SetMeshID(GetMeshID());
   n_sites_++;
+  Logger::Trace("Added site number %d, id: %d", n_sites_,
+                sites_.back().GetOID());
 }
-void Mesh::AddBond(Bond b) {
+
+// Adds bond to mesh between sites 1 and 2
+void Mesh::AddBond(Site *site1, Site *site2) {
   if (n_bonds_ == n_bonds_max_) {
     Logger::Error("Attempting to add bond beyond allocated maximum.\n");
   }
+  if (n_bonds_ == 0) {
+    true_length_ = 0;
+  } else {
+    true_length_ = bonds_.back().GetMeshLambda() + bonds_.back().GetLength();
+  }
+  Bond b(rng_.GetSeed());
   bonds_.push_back(b);
   bonds_.back().SetColor(color_, draw_);
   bonds_.back().SetMeshID(GetMeshID());
   bonds_.back().SetSID(GetSID());
   bonds_.back().SetMeshPtr(this);
   bonds_.back().SetBondNumber(n_bonds_);
+  bonds_.back().SetMeshLambda(true_length_);
+  bonds_.back().SetEquilLength(bond_length_);
+  bonds_.back().Init(site1, site2);
+  true_length_ += bonds_.back().GetLength();
   n_bonds_++;
+  Logger::Trace("Added bond number %d, id: %d", n_bonds_,
+                bonds_.back().GetOID());
+
   /* Anytime we change the number of bonds, which are interactors, we signal
      that interactors must be updated */
   interactor_update_ = true;
@@ -63,8 +76,7 @@ void Mesh::Clear() {
 }
 
 void Mesh::RemoveBondFromTip() {
-  if (n_bonds_ == 0)
-    return;
+  if (n_bonds_ == 0) return;
   sites_.pop_back();
   n_sites_--;
   sites_.back().RemoveBond(bonds_.back().GetOID());
@@ -78,10 +90,10 @@ void Mesh::RemoveBondFromTip() {
 // Doubles number of bonds in graph while keeping same shape
 // currently only works for linear objects like filaments
 void Mesh::DoubleGranularityLinear() {
-  Logger::Trace("Mesh %d doubling bonds for dynamic instability, n_bonds: %d ->"
-                " %d, bond_length: %2.2f -> %2.2f",
-                GetMeshID(), n_bonds_, 2 * n_bonds_, bond_length_,
-                0.5 * bond_length_);
+  Logger::Trace(
+      "Mesh %d doubling bonds for dynamic instability, n_bonds: %d ->"
+      " %d, bond_length: %2.2f -> %2.2f",
+      GetMeshID(), n_bonds_, 2 * n_bonds_, bond_length_, 0.5 * bond_length_);
   int n_bonds_old = n_bonds_;
   bond_length_ /= 2;
   // First record positions of currently existing graph
@@ -109,10 +121,10 @@ void Mesh::HalfGranularityLinear() {
         "HalfGranularityLinear called on mesh with odd number of bonds: %d",
         n_bonds_);
   }
-  Logger::Trace("Mesh %d halving bonds for dynamic instability, n_bonds: %d ->"
-                " %d, bond_length: %2.2f -> %2.2f",
-                GetMeshID(), n_bonds_, n_bonds_ / 2, bond_length_,
-                2 * bond_length_);
+  Logger::Trace(
+      "Mesh %d halving bonds for dynamic instability, n_bonds: %d ->"
+      " %d, bond_length: %2.2f -> %2.2f",
+      GetMeshID(), n_bonds_, n_bonds_ / 2, bond_length_, 2 * bond_length_);
 
   int n_bonds_new = n_bonds_ / 2;
   bond_length_ *= 2;
@@ -134,8 +146,8 @@ void Mesh::HalfGranularityLinear() {
 }
 
 /* Move COM of mesh to new position and orientation */
-void Mesh::RelocateMesh(double *pos, double *u) {
-  std::copy(pos, pos + 3, position_);
+void Mesh::RelocateMesh(double const *const new_pos, double const *const u) {
+  std::copy(new_pos, new_pos + 3, position_);
   std::copy(u, u + 3, orientation_);
   normalize_vector(orientation_, n_dim_);
   for (int i = 0; i < n_dim_; ++i) {
@@ -144,6 +156,8 @@ void Mesh::RelocateMesh(double *pos, double *u) {
   for (int i = 0; i < n_sites_; ++i) {
     sites_[i].SetPosition(position_);
     for (int i = 0; i < n_dim_; ++i) {
+      // FIXME ? This would leave the position of mesh at the last site location
+      // which seems wrong.
       position_[i] += bond_length_ * orientation_[i];
     }
   }
@@ -167,16 +181,16 @@ void Mesh::UpdatePrevPositions() {
   }
 }
 
-void Mesh::InitSiteAt(double *pos, double d) {
+void Mesh::InitSiteAt(double *new_pos, double d) {
   Logger::Trace("Mesh %d inserting site at [%2.2f %2.2f %2.2f]", GetMeshID(),
-                pos[0], pos[1], pos[2]);
-  Site s;
-  s.SetPosition(pos);
+                new_pos[0], new_pos[1], new_pos[2]);
+  Site s(rng_.GetSeed());
+  s.SetPosition(new_pos);
   s.SetDiameter(d);
   AddSite(s);
 }
 
-void Mesh::SetPosition(double const *const pos) {
+void Mesh::SetPosition(double const *const new_pos) {
   std::fill(position_, position_ + 3, 0.0);
   std::fill(orientation_, orientation_ + 3, 0.0);
   for (auto site_it = sites_.begin(); site_it != sites_.end(); ++site_it) {
@@ -193,67 +207,92 @@ void Mesh::SetPosition(double const *const pos) {
   }
   double dr[3] = {0, 0, 0};
   for (int i = 0; i < n_dim_; ++i) {
-    dr[i] = pos[i] - position_[i];
+    dr[i] = new_pos[i] - position_[i];
   }
   for (auto site_it = sites_.begin(); site_it != sites_.end(); ++site_it) {
-    double new_pos[3] = {0, 0, 0};
+    double posit[3] = {0, 0, 0};
     double const *const site_pos = site_it->GetPosition();
     for (int i = 0; i < n_dim_; ++i) {
-      new_pos[i] = site_pos[i] + dr[i];
+      posit[i] = site_pos[i] + dr[i];
     }
-    site_it->SetPosition(new_pos);
+    site_it->SetPosition(posit);
   }
   UpdateBondPositions();
 }
 
-void Mesh::InitBondAt(double *pos, double *u, double l, double d) {
-  Site s1;
-  Site s2;
+void Mesh::InitBondAt(double *new_pos, double *u, double l, double d) {
+  Site s1(rng_.GetSeed());
+  Site s2(rng_.GetSeed());
   s1.SetDiameter(d);
   s2.SetDiameter(d);
   for (int i = 0; i < n_dim_; ++i) {
-    pos[i] -= 0.5 * l * u[i];
+    new_pos[i] -= 0.5 * l * u[i];
   }
-  s1.SetPosition(pos);
+  s1.SetPosition(new_pos);
   for (int i = 0; i < n_dim_; ++i) {
-    pos[i] += l * u[i];
+    new_pos[i] += l * u[i];
   }
-  s2.SetPosition(pos);
+  s2.SetPosition(new_pos);
   AddSite(s1);
   AddSite(s2);
-  Bond b;
-  AddBond(b);
-  bonds_[n_bonds_ - 1].Init(&sites_[n_sites_ - 2], &sites_[n_sites_ - 1]);
+  AddBond(&sites_[n_sites_ - 2], &sites_[n_sites_ - 1]);
 }
 void Mesh::InitRandomSite(double d) {
-  InsertRandom();
-  // double pos[3];
-  // get_random_coordinate(pos,params_->n_dim,params_->system_radius,params_->boundary,rng_.r);
+  rng_.RandomCoordinate(space_, position_, d);
   InitSiteAt(position_, d);
+}
+void Mesh::InitRandomBond(double d) {
+  rng_.RandomUnitVector(n_dim_, orientation_);
+  if (params_->insert_radius > 0) {
+    space_struct space_temp(*space_);
+    space_temp.radius = params_->insert_radius;
+    rng_.RandomCoordinate(&space_temp, position_, d);
+  } else {
+    rng_.RandomCoordinate(space_, position_, d);
+  }
+  for (int i = 0; i < n_dim_; ++i) {
+    position_[i] -= 0.5 * orientation_[i] * length_;
+  }
+  InitSiteAt(position_, d);
+  AddBondToTip(orientation_, bond_length_);
+}
+void Mesh::InitRandomBondOriented(double *u, double d) {
+  if (params_->insert_radius > 0) {
+    space_struct space_temp(*space_);
+    space_temp.radius = params_->insert_radius;
+    rng_.RandomCoordinate(&space_temp, position_, d);
+  } else {
+    rng_.RandomCoordinate(space_, position_, d);
+  }
+  for (int i = 0; i < n_dim_; ++i) {
+    position_[i] -= 0.5 * orientation_[i] * length_;
+  }
+  InitSiteAt(position_, d);
+  AddBondToTip(u, bond_length_);
 }
 // Default d=1
 void Mesh::AddRandomBondAnywhere(double l, double d) {
   if (n_sites_ < 1) {
     InitRandomSite(d);
   }
-  int i_site = gsl_rng_uniform_int(rng_.r, n_sites_);
+  int i_site = rng_.RandomInt(n_sites_);
   AddRandomBondToSite(l, i_site);
 }
 void Mesh::AddRandomBondToSite(double l, int i_site) {
+  Logger::Trace("Adding random bond of length %2.2f to site number %d", l,
+                i_site);
   if (i_site > n_sites_ || i_site < 0) {
     Logger::Error("Site index out of range in AddRandomBondToSite!\n");
   }
   double const d = sites_[i_site].GetDiameter();
   double const *const pos0 = sites_[i_site].GetPosition();
-  double pos[3] = {0, 0, 0};
-  generate_random_unit_vector(n_dim_, pos, rng_.r);
+  double new_pos[3] = {0, 0, 0};
+  rng_.RandomUnitVector(n_dim_, new_pos);
   for (int i = 0; i < n_dim_; ++i) {
-    pos[i] = pos0[i] + l * pos[i];
+    new_pos[i] = pos0[i] + l * new_pos[i];
   }
-  InitSiteAt(pos, d);
-  Bond b;
-  AddBond(b);
-  bonds_.back().Init(&sites_[i_site], &sites_[n_sites_ - 1]);
+  InitSiteAt(new_pos, d);
+  AddBond(&sites_[i_site], &sites_[n_sites_ - 1]);
 }
 
 void Mesh::AddRandomBondToTip(double l) {
@@ -265,29 +304,30 @@ void Mesh::AddBondToTip(double *u, double l) {
 }
 
 void Mesh::AddBondToSite(double *u, double l, int i_site) {
+  Logger::Trace(
+      "Adding bond of length %2.2f and orientation [%2.2f %2.2f %2.2f"
+      "] to site number %d ",
+      l, u[0], u[1], u[2], i_site);
+
   if (i_site > n_sites_ || i_site < 0) {
     Logger::Error("Site index out of range in AddBondToSite!\n");
   }
   double const d = sites_[i_site].GetDiameter();
   double const *const pos0 = sites_[i_site].GetPosition();
-  double pos[3];
+  double new_pos[3] = {0, 0, 0};
   for (int i = 0; i < n_dim_; ++i) {
-    pos[i] = pos0[i] + l * u[i];
+    new_pos[i] = pos0[i] + l * u[i];
   }
-  InitSiteAt(pos, d);
-  AddBondBetweenSites(&sites_[i_site], &sites_[n_sites_ - 1]);
+  InitSiteAt(new_pos, d);
+  AddBond(&sites_[i_site], &sites_[n_sites_ - 1]);
 }
 
-void Mesh::AddBondBetweenSites(Site *site1, Site *site2) {
-  Bond b;
-  AddBond(b);
-  bonds_[n_bonds_ - 1].Init(site1, site2);
-}
 void Mesh::UpdateBondPositions() {
-  int i = 0;
+  true_length_ = 0;
   for (bond_iterator it = bonds_.begin(); it != bonds_.end(); ++it) {
     it->ReInit();
-    it->SetBondNumber(i++);
+    it->SetMeshLambda(true_length_);
+    true_length_ += it->GetLength();
   }
   /* This always needs to get called afterwards to remain consistent with bonds
    */
@@ -323,7 +363,7 @@ void Mesh::SubReport() {
   }
 }
 void Mesh::SetBondLength(double l) { bond_length_ = l; }
-void Mesh::Draw(std::vector<graph_struct *> *graph_array) {
+void Mesh::Draw(std::vector<graph_struct *> &graph_array) {
   for (bond_iterator it = bonds_.begin(); it != bonds_.end(); ++it) {
     it->Draw(graph_array);
   }
@@ -352,25 +392,23 @@ const bool Mesh::CheckInteractorUpdate() {
   return Object::CheckInteractorUpdate();
 }
 
-void Mesh::GetInteractors(std::vector<Object *> *ix) {
+void Mesh::GetInteractors(std::vector<Object *> &ix) {
   UpdateInteractors();
-  ix->insert(ix->end(), interactors_.begin(), interactors_.end());
+  ix.insert(ix.end(), interactors_.begin(), interactors_.end());
 }
 
 int Mesh::GetCount() { return n_bonds_; }
 
 void Mesh::ReadPosit(std::fstream &ip) {
   int size;
-  Site s;
-  Bond b;
+  Site s(rng_.GetSeed());
+  Bond b(rng_.GetSeed());
   ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   sites_.resize(size, s);
   ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   bonds_.resize(size, b);
-  for (auto &s : sites_)
-    s.ReadPosit(ip);
-  for (auto &b : bonds_)
-    b.ReadPosit(ip);
+  for (auto &s : sites_) s.ReadPosit(ip);
+  for (auto &b : bonds_) b.ReadPosit(ip);
 }
 
 void Mesh::WritePosit(std::fstream &op) {
@@ -379,30 +417,33 @@ void Mesh::WritePosit(std::fstream &op) {
   op.write(reinterpret_cast<char *>(&size), sizeof(size));
   size = bonds_.size();
   op.write(reinterpret_cast<char *>(&size), sizeof(size));
-  for (auto &s : sites_)
-    s.WritePosit(op);
-  for (auto &b : bonds_)
-    b.WritePosit(op);
+  for (auto &s : sites_) s.WritePosit(op);
+  for (auto &b : bonds_) b.WritePosit(op);
 }
 
 void Mesh::ReadSpec(std::fstream &ip) {
   int nsites = 0;
-  int mid = 0;
-  ip.read(reinterpret_cast<char *>(&mid), sizeof(mid));
-  SetMeshID(mid);
   ip.read(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   ip.read(reinterpret_cast<char *>(&length_), sizeof(length_));
   ip.read(reinterpret_cast<char *>(&bond_length_), sizeof(bond_length_));
   ip.read(reinterpret_cast<char *>(&nsites), sizeof(int));
+  true_length_ = length_;
   if (nsites == n_sites_) {
     for (auto it = sites_.begin(); it != sites_.end(); ++it) {
       it->ReadSpec(ip);
     }
+    true_length_ = 0;
     for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
       it->ReInit();
+      it->SetMeshLambda(true_length_);
+      true_length_ += it->GetLength();
     }
   } else {
     Clear();
+    if (!dynamic_instability_flag_) {
+      n_bonds_max_ = nsites - 1;
+      Reserve();
+    }
     for (int i = 0; i < nsites; ++i) {
       for (int j = 0; j < 3; ++j) {
         ip.read(reinterpret_cast<char *>(&position_[j]), sizeof(double));
@@ -410,12 +451,12 @@ void Mesh::ReadSpec(std::fstream &ip) {
       InitSiteAt(position_, diameter_);
     }
     if (n_sites_ != nsites || n_sites_ < 2) {
-      Logger::Error("Improper number of site positions read in"
-                    " Mesh::ReadSpec");
+      Logger::Error(
+          "Improper number of site positions read in"
+          " Mesh::ReadSpec");
     }
     for (int i = 0; i < n_sites_ - 1; ++i) {
-      AddBondBetweenSites(&sites_[i], &sites_[i + 1]);
-      bonds_[n_bonds_ - 1].SetEquilLength(bond_length_);
+      AddBond(&sites_[i], &sites_[i + 1]);
     }
   }
   if (n_bonds_ != n_sites_ - 1) {
@@ -424,9 +465,7 @@ void Mesh::ReadSpec(std::fstream &ip) {
 }
 
 void Mesh::WriteSpec(std::fstream &op) {
-  int mid = GetMeshID();
-  Logger::Trace("Writing specs for mesh id %d", mid);
-  op.write(reinterpret_cast<char *>(&mid), sizeof(mid));
+  Logger::Trace("Writing specs for mesh id %d", GetMeshID());
   op.write(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
   op.write(reinterpret_cast<char *>(&length_), sizeof(length_));
   op.write(reinterpret_cast<char *>(&bond_length_), sizeof(bond_length_));
@@ -438,23 +477,25 @@ void Mesh::WriteSpec(std::fstream &op) {
 }
 
 void Mesh::ReadCheckpoint(std::fstream &ip) {
-  if (ip.eof())
-    return;
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size;
-  ip.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  ip.read(reinterpret_cast<char *>(rng_state), rng_size);
   Clear();
-  ReadSpec(ip);
-  Logger::Trace("Reloading mesh from checkpoint with mid %d", GetMeshID());
+  Object::ReadCheckpoint(ip);
+  for (auto it = sites_.begin(); it != sites_.end(); ++it) {
+    it->ReadCheckpointHeader(ip);
+  }
+  for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+    it->ReadCheckpointHeader(ip);
+  }
+  Logger::Trace("Reloaded mesh from checkpoint with mid %d", GetMeshID());
 }
 
 void Mesh::WriteCheckpoint(std::fstream &op) {
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
-  op.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  op.write(reinterpret_cast<char *>(rng_state), rng_size);
-  WriteSpec(op);
+  Object::WriteCheckpoint(op);
+  for (auto it = sites_.begin(); it != sites_.end(); ++it) {
+    it->WriteCheckpointHeader(op);
+  }
+  for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+    it->WriteCheckpointHeader(op);
+  }
 }
 
 void Mesh::ScalePosition() {
@@ -470,7 +511,7 @@ Bond *Mesh::GetRandomBond() {
   if (n_bonds_ == 0) {
     return nullptr;
   }
-  int i_bond = gsl_rng_uniform_int(rng_.r, n_bonds_);
+  int i_bond = rng_.RandomInt(n_bonds_);
   return &bonds_[i_bond];
 }
 
@@ -518,14 +559,11 @@ void Mesh::GetAvgPosition(double *ap) {
   int size = 0;
   for (auto it = sites_.begin(); it != sites_.end(); ++it) {
     double const *const p = it->GetPosition();
-    for (int i = 0; i < n_dim_; ++i)
-      avg_p[i] += p[i];
+    for (int i = 0; i < n_dim_; ++i) avg_p[i] += p[i];
     size++;
   }
-  if (size == 0)
-    Logger::Error("Something went wrong in GetAvgPosition!");
-  for (int i = 0; i < n_dim_; ++i)
-    avg_p[i] /= size;
+  if (size == 0) Logger::Error("Something went wrong in GetAvgPosition!");
+  for (int i = 0; i < n_dim_; ++i) avg_p[i] /= size;
   std::copy(avg_p, avg_p + 3, ap);
 }
 
@@ -534,8 +572,7 @@ void Mesh::GetAvgOrientation(double *au) {
   int size = 0;
   for (auto it = sites_.begin(); it != sites_.end(); ++it) {
     double const *const u = it->GetOrientation();
-    for (int i = 0; i < n_dim_; ++i)
-      avg_u[i] += u[i];
+    for (int i = 0; i < n_dim_; ++i) avg_u[i] += u[i];
   }
   normalize_vector(avg_u, n_dim_);
   std::copy(avg_u, avg_u + 3, au);
@@ -608,10 +645,25 @@ Bond *Mesh::GetBondAtLambda(double lambda) {
   return GetBond((int)floor(lambda / bond_length_));
 }
 
+const double Mesh::GetLambdaAtBond(int bond_oid) {
+  double lambda = 0;
+  for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+    if (it->GetOID() == bond_oid) {
+      return lambda;
+    }
+    lambda += it->GetLength();
+  }
+  Logger::Error("Mesh %d could not find bond with OID %d", GetMeshID(),
+                bond_oid);
+  return -1;
+}
+
 void Mesh::ZeroOrientationCorrelations() {
   for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
     it->ZeroOrientationCorrelation();
   }
 }
 
-double const Mesh::GetBondLength() { return bond_length_; }
+const double Mesh::GetBondLength() const { return bond_length_; }
+
+const double Mesh::GetTrueLength() const { return true_length_; }

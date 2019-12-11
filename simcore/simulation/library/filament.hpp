@@ -1,34 +1,36 @@
 #ifndef _SIMCORE_FILAMENT_H_
 #define _SIMCORE_FILAMENT_H_
 
-#include "mesh.hpp"
-#include "flory_schulz.hpp"
 #include "exponential_dist.hpp"
+#include "flory_schulz.hpp"
+#include "mesh.hpp"
 
 class Filament : public Mesh {
-private:
-  int dynamic_instability_flag_;
-  int force_induced_catastrophe_flag_;
-  int theta_validation_run_flag_;
-  int diffusion_validation_run_flag_;
-  int spiral_flag_;
-  int stoch_flag_;
-  int flagella_flag_;
-  int metric_forces_;
-  int optical_trap_flag_;
-  int cilia_trap_flag_;
+ private:
+  filament_parameters *sparams_;
+  bool force_induced_catastrophe_flag_;
+  bool theta_validation_run_flag_;
+  bool diffusion_validation_run_flag_;
+  bool spiral_flag_;
+  bool stoch_flag_;
+  bool flagella_flag_;
+  bool optical_trap_flag_;
+  bool cilia_trap_flag_;
+  bool polydispersity_flag_;
+  bool normalize_switch_ = true;
+  int n_normalize_ = 0;
   int optical_trap_fixed_;
   int trapped_site_;
   int n_step_ = 0;
   int eq_steps_;
   int eq_steps_count_ = 0;
-  int polydispersity_flag_ = 0;
-  int polydispersity_warn_on_truncate_ = 0;
+  bool custom_set_tail_;
   double min_length_;
+  double max_length_;
   double max_bond_length_;
   double min_bond_length_;
   double persistence_length_;
-  double friction_ratio_; // friction_par/friction_perp
+  double friction_ratio_;  // friction_par/friction_perp
   double friction_par_;
   double friction_perp_;
   double rand_sigma_par_;
@@ -52,20 +54,19 @@ private:
   double optical_trap_spring_;
   double optical_trap_pos_[3];
   double optical_trap_pos2_[3];
-  double max_length_;
   double polydispersity_factor_;
   std::vector<double> gamma_inverse_;
-  std::vector<double> tensions_;      // n_sites-1
-  std::vector<double> g_mat_lower_;   // n_sites-2
-  std::vector<double> g_mat_upper_;   // n_sites-2
-  std::vector<double> g_mat_diag_;    // n_sites-1
-  std::vector<double> det_t_mat_;     // n_sites+1
-  std::vector<double> det_b_mat_;     // n_sites+1
-  std::vector<double> g_mat_inverse_; // n_sites-2
-  std::vector<double> k_eff_;         // n_sites-2
-  std::vector<double> h_mat_diag_;    // n_sites-1
-  std::vector<double> h_mat_upper_;   // n_sites-2
-  std::vector<double> h_mat_lower_;   // n_sites-2
+  std::vector<double> tensions_;       // n_sites-1
+  std::vector<double> g_mat_lower_;    // n_sites-2
+  std::vector<double> g_mat_upper_;    // n_sites-2
+  std::vector<double> g_mat_diag_;     // n_sites-1
+  std::vector<double> det_t_mat_;      // n_sites+1
+  std::vector<double> det_b_mat_;      // n_sites+1
+  std::vector<double> g_mat_inverse_;  // n_sites-2
+  std::vector<double> k_eff_;          // n_sites-2
+  std::vector<double> h_mat_diag_;     // n_sites-1
+  std::vector<double> h_mat_upper_;    // n_sites-2
+  std::vector<double> h_mat_lower_;    // n_sites-2
   std::vector<double> cos_thetas_;
   poly_state poly_;
   void UpdateSiteBondPositions();
@@ -94,19 +95,19 @@ private:
   void ReportAll();
   void CalculateBinding();
   bool CheckBondLengths();
-  void AllocateControlStructures();
 
-public:
-  Filament();
-  virtual void Init();
-  virtual void InsertAt(double *pos, double *u);
+ public:
+  Filament(unsigned long seed);
+  virtual void Init(filament_parameters *sparams);
+  virtual void InsertAt(const double *const new_pos, const double *const u);
   virtual void Integrate();
-  virtual void Draw(std::vector<graph_struct *> *graph_array);
+  virtual void Draw(std::vector<graph_struct *> &graph_array);
   virtual void UpdatePosition() {}
   virtual void UpdatePosition(bool midstep);
   double const GetLength() { return length_; }
   double const GetDriving() { return driving_factor_; }
   double const GetPersistenceLength() { return persistence_length_; }
+  void Reserve();
   void CheckFlocking();
   int const GetNBonds() { return n_bonds_; }
   std::vector<double> const *const GetThetas() { return &cos_thetas_; }
@@ -132,6 +133,12 @@ public:
   void ReadCheckpoint(std::fstream &icheck);
   void ScalePosition();
   double const GetVolume();
+  // const double GetLength() { return length_; };
 };
 
-#endif // _SIMCORE_FILAMENT_H_
+typedef std::vector<Filament>::iterator filament_iterator;
+typedef std::vector<
+    std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator>>
+    filament_chunk_vector;
+
+#endif  // _SIMCORE_FILAMENT_H_

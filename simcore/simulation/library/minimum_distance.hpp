@@ -6,8 +6,10 @@
 
 class MinimumDistance {
  private:
-  static int n_dim_, n_periodic_;
-  static double *unit_cell_, boundary_cut2_;
+  static int n_dim_;
+  static int n_periodic_;
+  static double *unit_cell_;
+  static double boundary_cut2_;
   static space_struct *space_;
   void PointPoint(double const *const r1, double const *const s1,
                   double const *const r2, double const *const s2, double *dr,
@@ -50,7 +52,7 @@ class MinimumDistance {
 
  public:
   MinimumDistance() {}
-  void Init(space_struct *space, double boundary_cutoff_sq);
+  static void Init(space_struct *space, double boundary_cutoff_sq);
   void ObjectObject(Interaction &ix);
   bool CheckBoundaryInteraction(Interaction &ix);
   bool CheckOutsideBoundary(Object &o1);

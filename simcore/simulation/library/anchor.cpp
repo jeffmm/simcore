@@ -1,25 +1,29 @@
 #include "anchor.hpp"
 
-Anchor::Anchor() : Object() { SetSID(species_id::crosslink); }
-
-void Anchor::Init() {
-  diameter_ = params_->crosslink.diameter;
-  color_ = params_->crosslink.color;
-  draw_ = draw_type::_from_string(params_->crosslink.draw_type.c_str());
-  Unbind();
-  walker_ = (params_->crosslink.walker ? true : false);
-  step_direction_ = (params_->crosslink.step_direction == 0
-                         ? 0
-                         : SIGNOF(params_->crosslink.step_direction));
-  velocity_ = params_->crosslink.velocity;
-  max_velocity_ = velocity_;
-  k_off_ = params_->crosslink.k_off;
-  end_pausing_ = (params_->crosslink.end_pausing ? true : false);
-  diffuse_ = (params_->crosslink.diffusion_flag ? true : false);
-  f_stall_ = params_->crosslink.f_stall;
-  force_dep_vel_flag_ = params_->crosslink.force_dep_vel_flag;
-  SetDiffusion();
+Anchor::Anchor(unsigned long seed) : Object(seed) {
   SetSID(species_id::crosslink);
+}
+
+void Anchor::Init(crosslink_parameters *sparams) {
+  sparams_ = sparams;
+  diameter_ = sparams_->diameter;
+  color_ = sparams_->color;
+  draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
+  static_flag_ = false; // Must be explicitly set to true by Crosslink
+  Unbind();
+  walker_ = sparams_->walker_flag;
+  step_direction_ =
+      (sparams_->step_direction == 0 ? 0 : SIGNOF(sparams_->step_direction));
+  velocity_ = sparams_->velocity;
+  max_velocity_ = velocity_;
+  k_off_ = sparams_->k_off;
+  end_pausing_ = sparams_->end_pausing;
+  diffuse_ = sparams_->diffusion_flag;
+  f_stall_ = sparams_->f_stall;
+  force_dep_vel_flag_ = sparams_->force_dep_vel_flag;
+  polar_affinity_ = sparams_->polar_affinity;
+  assert(polar_affinity_ >= 0 && polar_affinity_ <= 1);
+  SetDiffusion();
 }
 
 double const Anchor::GetMeshLambda() { return mesh_lambda_; }
@@ -42,45 +46,76 @@ void Anchor::SetWalker(int dir, double walk_v) {
 }
 
 void Anchor::UpdateAnchorPositionToMesh() {
-  if (!bound_)
+  if (!bound_ || static_flag_)
     return;
-
-  // Check that the number of bonds has not changed due to dynamic instability
-  if (mesh_n_bonds_ != mesh_->GetNBonds()) {
-    // The number of bonds have changed, so we need to reattach to a valid bond
-    bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
-    mesh_n_bonds_ = mesh_->GetNBonds();
+  if (!bond_ || !mesh_) {
+    Logger::Error("Anchor tried to update position to nullptr bond or mesh");
   }
+
   /* Use the mesh to determine the bond lengths. The true bond lengths fluctuate
      about this, but should be considered approximations to the ideal mesh. */
-  bond_length_ = mesh_->GetBondLength();
-  mesh_length_ = mesh_->GetLength();
+  mesh_length_ = mesh_->GetTrueLength();
   /* Use current position along mesh (mesh_lambda) to determine whether the
      anchor fell off the mesh due to dynamic instability */
   if (!CheckMesh())
     return;
   // Now figure out which bond we are on in the mesh according to mesh_lambda
   bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
-  // Figure out how far we are from the bond tail: bond_lambda
-  bond_lambda_ = mesh_lambda_ - bond_->GetBondNumber() * bond_length_;
-  // assert(bond_lambda_ >= 0 && bond_lambda_ <= bond_length_);
-  if (bond_lambda_ < 0 || bond_lambda_ > bond_length_ + 1e-4) {
-    printf("bond_num: %d\n", bond_->GetBondNumber());
-    printf("mesh lambda: %2.8f\n", mesh_lambda_);
-    printf("mesh length: %2.8f\n", mesh_length_);
-    printf("bond lambda: %2.8f\n", bond_lambda_);
-    printf("bond length: %2.8f\n", bond_length_);
-    Logger::Error(
-        "Bond lambda out of expected range in UpdateAnchorPositionToMesh\n");
-  }
 
+  // Figure out how far we are from the bond tail: bond_lambda
+  if (!CalcBondLambda()) {
+    return;
+  }
   // Update anchor position with respect to bond
   UpdateAnchorPositionToBond();
 }
 
+bool Anchor::CalcBondLambda() {
+  if (!bond_) {
+    Logger::Error("Attempted to calculate bond lambda when not attached to"
+                  " bond!");
+  }
+  bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
+  bond_length_ = bond_->GetLength();
+  if (bond_lambda_ < 0) {
+    Bond *bond = bond_->GetNeighborBond(0);
+    if (bond) {
+      bond_ = bond;
+      bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
+      bond_length_ = bond_->GetLength();
+    } else if (end_pausing_) {
+      bond_lambda_ = 0;
+    } else {
+      Unbind();
+      return false;
+    }
+  } else if (bond_lambda_ > bond_length_) {
+    Bond *bond = bond_->GetNeighborBond(1);
+    if (bond) {
+      bond_ = bond;
+      bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
+      bond_length_ = bond_->GetLength();
+    } else if (end_pausing_) {
+      bond_lambda_ = bond_length_;
+    } else {
+      Unbind();
+      return false;
+    }
+  }
+  // assert(bond_lambda_ >= 0 && bond_lambda_ <= bond_length_);
+  if (bond_lambda_ < -1e-6 || bond_lambda_ > bond_length_ + 1e-6) {
+    Logger::Error(
+        "Bond lambda out of expected range in UpdateAnchorPositionToMesh, "
+        "bond_num: %d, mesh lambda: %2.8f, mesh length: %2.8f, bond lambda: "
+        "%2.8f, bond length: %2.8f",
+        bond_->GetBondNumber(), mesh_lambda_, mesh_length_, bond_lambda_,
+        bond_length_);
+  }
+  return true;
+}
 void Anchor::UpdatePosition() {
   // Currently only bound anchors diffuse/walk (no explicit unbound anchors)
-  if (!bound_ || (!diffuse_ && !walker_)) {
+  if (!bound_ || static_flag_ || (!diffuse_ && !walker_)) {
     return;
   }
   // Diffuse or walk along the mesh, updating mesh_lambda
@@ -96,8 +131,11 @@ void Anchor::UpdatePosition() {
 }
 
 void Anchor::ApplyAnchorForces() {
-  if (!bound_) {
+  if (!bound_ || static_flag_) {
     return;
+  }
+  if (!bond_) {
+    Logger::Error("Anchor attempted to apply forces to nullptr bond");
   }
   bond_->AddForce(force_);
   double dlambda[3] = {0};
@@ -120,13 +158,10 @@ void Anchor::Deactivate() {
 
 void Anchor::Walk() {
   if (force_dep_vel_flag_) {
-    double fmag = 0.0;
-    for (int i = 0; i < n_dim_; ++i) {
-      fmag += force_[i] * force_[i];
-    }
-    fmag = sqrt(fmag);
+    // Only consider projected force
+    double force_proj = dot_product(n_dim_, force_, orientation_);
     // Linear force-velocity relationship
-    double fdep = 1 - fmag / f_stall_;
+    double fdep = 1 - force_proj / f_stall_;
     if (fdep > 1) {
       fdep = 1;
     } else if (fdep < 0) {
@@ -164,6 +199,9 @@ bool Anchor::CheckMesh() {
 }
 
 void Anchor::Unbind() {
+  if (static_flag_) {
+    Logger::Error("Static anchor attempted to unbind");
+  }
   bound_ = false;
   bond_ = nullptr;
   mesh_ = nullptr;
@@ -180,12 +218,31 @@ void Anchor::Unbind() {
 }
 
 void Anchor::Diffuse() {
-  double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
-  double dr = kick * diffusion_ * delta_ / diameter_;
+  double kick = rng_.RandomUniform() - 0.5;
+  double vel = kick * diffusion_ / diameter_;
+  if (force_dep_vel_flag_) {
+    double force_proj = dot_product(n_dim_, force_, orientation_);
+    // Add force-velocity relationship to diffusion
+    if (SIGNOF(force_proj) != SIGNOF(vel)) {
+      double fdep = 1 - force_proj / f_stall_;
+      // TODO Check whether the force can cause the motor to reverse
+      // For now, assume that diffusion can be biased in either direction
+      // if (fdep > 1) {
+      // fdep = 1;
+      //} else if (fdep < 0) {
+      // fdep = 0;
+      //}
+      vel *= fdep;
+    }
+  }
+  double dr = vel * delta_;
   mesh_lambda_ += dr;
 }
 
 void Anchor::UpdateAnchorPositionToBond() {
+  if (!bond_) {
+    Logger::Error("Anchor tried to update position relative to nullptr bond");
+  }
   double const *const bond_position = bond_->GetPosition();
   double const *const bond_orientation = bond_->GetOrientation();
   for (int i = 0; i < n_dim_; ++i) {
@@ -195,8 +252,21 @@ void Anchor::UpdateAnchorPositionToBond() {
   }
   UpdatePeriodic();
 }
+/*Creates Vector that has different binding rates for parallel and anti-parallel
+ * bonds*/
+void Anchor::CalculatePolarAffinity(std::vector<double> &doubly_binding_rates) {
+  double const *const orientation = bond_->GetOrientation();
+  for (int i = 0; i < doubly_binding_rates.size(); ++i) {
+    Object *obj = neighbors_.GetNeighbor(i);
+    double const *const i_orientation = obj->GetOrientation();
+    double alignment = dot_product(n_dim_, orientation, i_orientation);
+    if (alignment < 0) {
+      doubly_binding_rates[i] *= polar_affinity_;
+    }
+  }
+}
 
-void Anchor::Draw(std::vector<graph_struct *> *graph_array) {
+void Anchor::Draw(std::vector<graph_struct *> &graph_array) {
   if (!bound_)
     return;
   std::copy(scaled_position_, scaled_position_ + 3, g_.r);
@@ -208,18 +278,20 @@ void Anchor::Draw(std::vector<graph_struct *> *graph_array) {
   g_.diameter = diameter_;
   g_.length = length_;
   g_.draw = draw_;
-  graph_array->push_back(&g_);
+  graph_array.push_back(&g_);
 }
 
 void Anchor::AttachObjRandom(Object *o) {
   double length = o->GetLength();
-  double lambda = length * gsl_rng_uniform_pos(rng_.r);
+  double lambda = length * rng_.RandomUniform();
   AttachObjLambda(o, lambda);
 }
 
 void Anchor::AttachObjLambda(Object *o, double lambda) {
   if (o->GetType() != +obj_type::bond) {
-    Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
+    Logger::Error(
+        "Crosslink binding to non-bond objects not yet implemented in "
+        "AttachObjLambda.");
   }
   bond_ = dynamic_cast<Bond *>(o);
   if (bond_ == nullptr) {
@@ -230,34 +302,30 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
     Logger::Error("Object ptr passed to anchor was not referencing a mesh!");
   }
   mesh_n_bonds_ = mesh_->GetNBonds();
-  bond_length_ = mesh_->GetBondLength();
-  mesh_length_ = mesh_n_bonds_ * bond_length_;
+  bond_length_ = bond_->GetLength();
+  mesh_length_ = mesh_->GetTrueLength();
   bond_lambda_ = lambda;
 
-  if (bond_lambda_ < 0) {
+  if (bond_lambda_ < 0 || bond_lambda_ > bond_length_) {
     printf("bond_lambda: %2.2f\n", bond_lambda_);
-    Logger::Error("Lambda passed to anchor should never be negative!");
-  }
-  if (bond_lambda_ > bond_length_) {
-    if (bond_lambda_ - bond_length_ < 1) {
-      bond_lambda_ = bond_length_;
-    } else {
-      Logger::Error(
-          "Lambda passed to anchor is much larger than mesh bond length! %2.2f "
-          "> %2.2f", bond_lambda_, bond_length_);
-    }
+    Logger::Error("Lambda passed to anchor does not match length of "
+                  "corresponding bond! lambda: %2.2f, bond_length: %2.2f ",
+                  bond_lambda_, bond_length_);
   }
 
   /* Distance anchor is relative to entire mesh length */
-  mesh_lambda_ = bond_->GetBondNumber() * bond_length_ + bond_lambda_;
+  mesh_lambda_ = bond_->GetMeshLambda() + bond_lambda_;
   SetMeshID(bond_->GetMeshID());
   UpdateAnchorPositionToBond();
+  ZeroDrTot();
   bound_ = true;
 }
 
 void Anchor::AttachObjMeshLambda(Object *o, double mesh_lambda) {
   if (o->GetType() != +obj_type::bond) {
-    Logger::Error("Crosslink binding to non-bond objects not yet implemented.");
+    Logger::Error(
+        "Crosslink binding to non-bond objects not yet implemented in "
+        "AttachObjMeshLambda.");
   }
   bond_ = dynamic_cast<Bond *>(o);
   if (bond_ == nullptr) {
@@ -267,21 +335,32 @@ void Anchor::AttachObjMeshLambda(Object *o, double mesh_lambda) {
   if (mesh_ == nullptr) {
     Logger::Error("Object ptr passed to anchor was not referencing a mesh!");
   }
+  Logger::Trace("Attaching anchor %d to mesh %d", GetOID(), mesh_->GetMeshID());
+
   bound_ = true;
   mesh_lambda_ = mesh_lambda;
   mesh_n_bonds_ = -1;
   UpdateAnchorPositionToMesh();
   if (!bound_) {
-    Logger::Error("Updating anchor to mesh from checkpoint resulted in an unbound "
-               "anchor");
+    Logger::Error(
+        "Updating anchor to mesh from checkpoint resulted in an unbound "
+        "anchor");
   }
   SetMeshID(bond_->GetMeshID());
+  ZeroDrTot();
+}
+
+void Anchor::BindToPosition(double *bind_pos) {
+  for (int i = 0; i < n_dim_; ++i) {
+    position_[i] = bind_pos[i];
+  }
+  UpdatePeriodic();
 }
 
 bool Anchor::IsBound() { return bound_; }
 
 int const Anchor::GetBoundOID() {
-  if (!bound_) {
+  if (!bond_) {
     return -1;
   }
   return bond_->GetOID();
@@ -304,13 +383,12 @@ Object *Anchor::GetNeighbor(int i_neighbor) {
   return neighbors_.GetNeighbor(i_neighbor);
 }
 
-int Anchor::GetNNeighbors() { return neighbors_.NNeighbors(); }
+const int Anchor::GetNNeighbors() const { return neighbors_.NNeighbors(); }
 
 void Anchor::WriteSpec(std::fstream &ospec) {
-  int mid = GetMeshID();
   ospec.write(reinterpret_cast<char *>(&bound_), sizeof(bool));
   ospec.write(reinterpret_cast<char *>(&active_), sizeof(bool));
-  ospec.write(reinterpret_cast<char *>(&mid), sizeof(int));
+  ospec.write(reinterpret_cast<char *>(&static_flag_), sizeof(bool));
   for (int i = 0; i < 3; ++i) {
     ospec.write(reinterpret_cast<char *>(&position_[i]), sizeof(double));
   }
@@ -318,14 +396,14 @@ void Anchor::WriteSpec(std::fstream &ospec) {
     ospec.write(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
   ospec.write(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
+  int attached_mesh_id = mesh_ != nullptr ? mesh_->GetMeshID() : -1;
+  ospec.write(reinterpret_cast<char *>(&attached_mesh_id), sizeof(int));
 }
 
 void Anchor::ReadSpec(std::fstream &ispec) {
-  int mid;
   ispec.read(reinterpret_cast<char *>(&bound_), sizeof(bool));
   ispec.read(reinterpret_cast<char *>(&active_), sizeof(bool));
-  ispec.read(reinterpret_cast<char *>(&mid), sizeof(int));
-  SetMeshID(mid);
+  ispec.read(reinterpret_cast<char *>(&static_flag_), sizeof(bool));
   for (int i = 0; i < 3; ++i) {
     ispec.read(reinterpret_cast<char *>(&position_[i]), sizeof(double));
   }
@@ -333,7 +411,11 @@ void Anchor::ReadSpec(std::fstream &ispec) {
     ispec.read(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
   ispec.read(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
+  int attached_mesh_id = -1; // Just a place holder at the moment
+  ispec.read(reinterpret_cast<char *>(&attached_mesh_id), sizeof(int));
   UpdatePeriodic();
   if (active_)
-    step_direction_ = - params_->crosslink.step_direction;
+    step_direction_ = -sparams_->step_direction;
 }
+
+void Anchor::SetStatic(bool static_flag) { static_flag_ = static_flag; }

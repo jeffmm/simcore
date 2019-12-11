@@ -1,24 +1,26 @@
 #include "bead_spring.hpp"
 
-BeadSpring::BeadSpring() : Mesh() { SetParameters(); }
+BeadSpring::BeadSpring() : Mesh() {}
 
 void BeadSpring::SetParameters() {
-  color_ = params_->bead_spring.color;
-  draw_ = draw_type::_from_string(params_->bead_spring.draw_type.c_str());
-  length_ = params_->bead_spring.length;
-  persistence_length_ = params_->bead_spring.persistence_length;
-  diameter_ = params_->bead_spring.diameter;
-  max_bond_length_ = params_->bead_spring.max_bond_length;
-  bond_rest_length_ = params_->bead_spring.bond_rest_length;
-  bond_spring_ = params_->bead_spring.bond_spring;
-  driving_factor_ = params_->bead_spring.driving_factor;
+  color_ = sparams_->color;
+  draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
+  length_ = sparams_->length;
+  persistence_length_ = sparams_->persistence_length;
+  diameter_ = sparams_->diameter;
+  max_bond_length_ = sparams_->max_bond_length;
+  bond_rest_length_ = sparams_->bond_rest_length;
+  bond_spring_ = sparams_->bond_spring;
+  driving_factor_ = sparams_->driving_factor;
   stoch_flag_ =
       params_->stoch_flag;  // determines whether we are using stochastic forces
   eq_steps_ = params_->n_steps_equil;
   eq_steps_count_ = 0;
 }
 
-void BeadSpring::Init() {
+void BeadSpring::Init(bead_spring_parameters sparams) {
+  sparams_ = sparams;
+  SetParameters();
   InitElements();
   InsertBeadSpring();
   UpdatePrevPositions();
@@ -43,24 +45,24 @@ void BeadSpring::GenerateProbableOrientation() {
   for large k */
   double theta;
   if (persistence_length_ == 0) {
-    theta = gsl_rng_uniform_pos(rng_.r) * M_PI;
+    theta = rng_.RandomUniform() * M_PI;
   } else if (persistence_length_ < 100) {
     theta = acos(log(exp(-persistence_length_ / bond_length_) +
-                     2.0 * gsl_rng_uniform_pos(rng_.r) *
+                     2.0 * rng_.RandomUniform() *
                          sinh(persistence_length_ / bond_length_)) /
                  (persistence_length_ / bond_length_));
   } else {
-    theta = acos((log(2.0 * gsl_rng_uniform_pos(rng_.r)) - log(2.0) +
+    theta = acos((log(2.0 * rng_.RandomUniform()) - log(2.0) +
                   persistence_length_ / bond_length_) /
                  (persistence_length_ / bond_length_));
   }
   double new_orientation[3] = {0, 0, 0};
   if (n_dim_ == 2) {
-    theta = (gsl_rng_uniform_int(rng_.r, 2) == 0 ? -1 : 1) * theta;
+    theta = (rng_.RandomInt(2) == 0 ? -1 : 1) * theta;
     new_orientation[0] = cos(theta);
     new_orientation[1] = sin(theta);
   } else {
-    double phi = gsl_rng_uniform_pos(rng_.r) * 2.0 * M_PI;
+    double phi = rng_.RandomUniform() * 2.0 * M_PI;
     new_orientation[0] = sin(theta) * cos(phi);
     new_orientation[1] = sin(theta) * sin(phi);
     new_orientation[2] = cos(theta);
@@ -70,16 +72,16 @@ void BeadSpring::GenerateProbableOrientation() {
 }
 
 void BeadSpring::InsertFirstBond() {
-  if (params_->bead_spring.insertion_type.compare("random") == 0) {
+  if (sparams_->insertion_type.compare("random") == 0) {
     InitRandomSite(diameter_);
     AddRandomBondToTip(bond_length_);
-  } else if (params_->bead_spring.insertion_type.compare("random_oriented") ==
+  } else if (sparams_->insertion_type.compare("random_oriented") ==
              0) {
     InitRandomSite(diameter_);
     std::fill(orientation_, orientation_ + 3, 0.0);
-    orientation_[n_dim_ - 1] = (gsl_rng_uniform_pos(rng_.r) > 0.5 ? 1.0 : -1.0);
+    orientation_[n_dim_ - 1] = (rng_.RandomUniform() > 0.5 ? 1.0 : -1.0);
     AddBondToTip(orientation_, bond_length_);
-  } else if (params_->bead_spring.insertion_type.compare("centered_oriented") ==
+  } else if (sparams_->insertion_type.compare("centered_oriented") ==
              0) {
     std::fill(position_, position_ + 3, 0.0);
     position_[n_dim_ - 1] = -0.5 * length_;
@@ -87,7 +89,7 @@ void BeadSpring::InsertFirstBond() {
     std::fill(orientation_, orientation_ + 3, 0.0);
     orientation_[n_dim_ - 1] = 1.0;
     AddBondToTip(orientation_, bond_length_);
-  } else if (params_->bead_spring.insertion_type.compare("centered_random") ==
+  } else if (sparams_->insertion_type.compare("centered_random") ==
              0) {
     generate_random_unit_vector(n_dim_, orientation_, rng_.r);
     for (int i = 0; i < n_dim_; ++i) {
@@ -104,8 +106,8 @@ void BeadSpring::InsertBeadSpring() {
   InsertFirstBond();
   SetOrientation(bonds_[n_bonds_ - 1].GetOrientation());
   bool probable_orientation =
-      (params_->bead_spring.insertion_type.compare("simple_crystal") != 0 &&
-       params_->bead_spring.insertion_type.compare("random_oriented") != 0);
+      (sparams_->insertion_type.compare("simple_crystal") != 0 &&
+       sparams_->insertion_type.compare("random_oriented") != 0);
   for (int i = 0; i < n_bonds_max_ - 1; ++i) {
     if (probable_orientation) {
       GenerateProbableOrientation();
@@ -119,17 +121,17 @@ void BeadSpring::InsertBeadSpring() {
   UpdateSiteOrientations();
 }
 
-void BeadSpring::InsertAt(double *pos, double *u) {
+void BeadSpring::InsertAt(double *new_pos, double *u) {
   bond_length_ = bond_rest_length_;
   for (int i = 0; i < n_dim_; ++i) {
-    position_[i] = pos[i] - 0.5 * length_ * u[i];
+    position_[i] = new_pos[i] - 0.5 * length_ * u[i];
   }
   InitSiteAt(position_, diameter_);
   std::copy(u, u + 3, orientation_);
   AddBondToTip(orientation_, bond_length_);
   SetOrientation(bonds_[n_bonds_ - 1].GetOrientation());
   for (int i = 0; i < n_bonds_max_ - 1; ++i) {
-    if (params_->bead_spring.insertion_type.compare("simple_crystal") != 0) {
+    if (sparams_->insertion_type.compare("simple_crystal") != 0) {
       GenerateProbableOrientation();
     }
     AddBondToTip(orientation_, bond_length_);
@@ -213,7 +215,7 @@ void BeadSpring::CalcRandomForces() {
   if (!stoch_flag_) return;
   for (int i_site = 0; i_site < n_sites_; ++i_site) {
     for (int i = 0; i < n_dim_; ++i) {
-      double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
+      double kick = rng_.RandomUniform() - 0.5;
       force_[i] = kick * rand_sigma_;
     }
     sites_[i_site].SetRandomForce(force_);
@@ -485,8 +487,8 @@ void BeadSpring::ReadPosit(std::fstream &iposit) {
 }
 
 void BeadSpring::WriteCheckpoint(std::fstream &ocheck) {
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
+  void *rng_state = rng_.GetState();
+  size_t rng_size = rng_.GetSize();
   ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
   WriteSpec(ocheck);
@@ -494,7 +496,7 @@ void BeadSpring::WriteCheckpoint(std::fstream &ocheck) {
 
 void BeadSpring::ReadCheckpoint(std::fstream &icheck) {
   if (icheck.eof()) return;
-  void *rng_state = gsl_rng_state(rng_.r);
+  void *rng_state = rng_.GetState();
   size_t rng_size;
   icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
   icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
@@ -521,231 +523,4 @@ void BeadSpring::ReadCheckpoint(std::fstream &icheck) {
   cos_thetas_.resize(n_sites_ - 2);  // max_sites-2
 }
 
-void BeadSpringSpecies::InitAnalysis() {
-  time_ = 0;
-  // if (params_->bead_spring.diffusion_analysis) {
-  // InitDiffusionAnalysis();
-  //}
-  if (params_->bead_spring.theta_analysis) {
-    InitThetaAnalysis();
-  }
-  if (params_->bead_spring.lp_analysis) {
-    InitMse2eAnalysis();
-  }
-  RunAnalysis();
-}
 
-void BeadSpringSpecies::InitMse2eAnalysis() {
-  std::string fname = params_->run_name;
-  fname.append("_bead_spring.mse2e");
-  mse2e_file_.open(fname, std::ios::out);
-  mse2e_file_ << "mse2e_analysis_file\n";
-  mse2e_file_ << "length diameter bond_length persistence_length driving ndim "
-                 "nsteps nspec delta\n";
-  auto it = members_.begin();
-  double l = it->GetLength();
-  double d = it->GetDiameter();
-  double cl = it->GetBondLength();
-  double pl = it->GetPersistenceLength();
-  double dr = it->GetDriving();
-  double nspec = GetNSpec();
-  double theory;
-  if (params_->n_dim == 2) {
-    theory = l * pl * 4.0 - 8.0 * pl * pl * (1 - exp(-0.5 * l / pl));
-  } else {
-    theory = l * pl * 2.0 - 2.0 * pl * pl * (1 - exp(-l / pl));
-  }
-  mse2e_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " "
-              << params_->n_dim << " " << params_->n_steps << " " << nspec
-              << " " << params_->delta << "\n";
-  mse2e_file_ << "num_bead_springs_averaged mse2e_mean mse2e_std_err "
-                 "avg_contour_length theory\n";
-  mse2e_ = 0;
-  mse2e2_ = 0;
-  n_samples_ = 0;
-  avg_clen_ = 0;
-}
-
-void BeadSpringSpecies::InitDiffusionAnalysis() {
-  std::string fname = params_->run_name;
-  fname.append("_bead_spring.diffusion");
-  mse2e_file_.open(fname, std::ios::out);
-  mse2e_file_ << "mse2e_analysis_file\n";
-  mse2e_file_ << "length diameter bond_length persistence_length driving ndim "
-                 "nsteps nspec delta theory\n";
-  auto it = members_.begin();
-  double l = it->GetLength();
-  double d = it->GetDiameter();
-  double cl = it->GetBondLength();
-  double pl = it->GetPersistenceLength();
-  double dr = it->GetDriving();
-  double nspec = GetNSpec();
-  double theory;
-  if (params_->n_dim == 2) {
-    theory = l * pl * 4.0 - 8.0 * pl * pl * (1 - exp(-0.5 * l / pl));
-  } else {
-    theory = l * pl * 2.0 - 2.0 * pl * pl * (1 - exp(-l / pl));
-  }
-  mse2e_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " "
-              << params_->n_dim << " " << params_->n_steps << " " << nspec
-              << " " << params_->delta << " " << theory << "\n";
-  mse2e_file_ << "num_bead_springs_averaged mse2e_mean mse2e_std_err\n";
-  mse2e_ = 0.0;
-  mse2e2_ = 0.0;
-  n_samples_ = 0;
-}
-
-void BeadSpringSpecies::InitThetaAnalysis() {
-  // TODO Should check to make sure the same lengths, child lengths, persistence
-  // lengths, etc are used for each bead_spring in system.
-  std::string fname = params_->run_name;
-  fname.append("_bead_spring.theta");
-  theta_file_.open(fname, std::ios::out);
-  theta_file_ << "theta_analysis_file\n";
-  theta_file_ << "length diameter bond_length persistence_length "
-                 "n_bead_springs n_bonds n_steps n_spec delta n_dim \n";
-  double l, cl, pl, dr, d;
-  int nbonds;
-  int nmembers = members_.size();
-  for (auto it = members_.begin(); it != members_.end(); ++it) {
-    l = it->GetLength();
-    d = it->GetDiameter();
-    cl = it->GetBondLength();
-    pl = it->GetPersistenceLength();
-    dr = it->GetDriving();
-    nbonds = it->GetNBonds();
-  }
-  int nspec = GetNSpec();
-  theta_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " "
-              << nmembers << " " << nbonds << " " << params_->n_steps << " "
-              << nspec << " " << params_->delta << " " << params_->n_dim << " "
-              << "\n";
-  theta_file_ << "cos_theta";
-  for (int i = 0; i < nbonds - 1; ++i) {
-    theta_file_ << " theta_" << i + 1 << i + 2;
-  }
-  theta_file_ << "\n";
-  n_bins_ = 10000;
-  int nfil = members_.size();
-  theta_histogram_ = new int *[nbonds - 1];
-  for (int ibond = 0; ibond < nbonds - 1; ++ibond) {
-    theta_histogram_[ibond] = new int[n_bins_];
-    for (int ibin = 0; ibin < n_bins_; ++ibin) {
-      theta_histogram_[ibond][ibin] = 0;
-    }
-  }
-}
-
-void BeadSpringSpecies::RunAnalysis() {
-  // TODO Analyze conformation and ms end-to-end
-  if (params_->bead_spring.theta_analysis) {
-    if (params_->interaction_flag) {
-      std::cout
-          << "WARNING! Theta analysis running on interacting bead_springs!\n";
-    }
-    RunThetaAnalysis();
-  }
-  if (params_->bead_spring.lp_analysis) {
-    RunMse2eAnalysis();
-  }
-  time_++;
-}
-
-void BeadSpringSpecies::RunMse2eAnalysis() {
-  // Treat as though we have many spirals for now
-  // if ( ! mse2e_file_.is_open()) {
-  // early_exit = true;
-  // std::cout << " Error! Problem opening file in RunMse2eAnalysis!
-  // Exiting.\n";
-  //}
-  // mse2e_file_ << time_;
-  for (auto it = members_.begin(); it != members_.end(); ++it) {
-    double const *const head_pos = it->GetHeadPosition();
-    double const *const tail_pos = it->GetTailPosition();
-    double mse2e_temp = 0.0;
-    for (int i = 0; i < params_->n_dim; ++i) {
-      double temp = (head_pos[i] - tail_pos[i]);
-      mse2e_temp += temp * temp;
-    }
-    mse2e_ += mse2e_temp;
-    mse2e2_ += mse2e_temp * mse2e_temp;
-    // mse2e_file_ << " " << mse2e ;
-    avg_clen_ += it->GetContourLength();
-  }
-  // mse2e_ /= members_.size();
-  // mse2e2_ /= members_.size();
-  // mse2e_file_ << "\n";
-
-  n_samples_++;
-}
-
-void BeadSpringSpecies::RunThetaAnalysis() {
-  for (auto it = members_.begin(); it != members_.end(); ++it) {
-    std::vector<double> const *const thetas = it->GetThetas();
-    for (int i = 0; i < (it->GetNBonds() - 1); ++i) {
-      int bin_number = (int)floor((1 + (*thetas)[i]) * (n_bins_ / 2));
-      if (bin_number == n_bins_) {
-        bin_number = n_bins_ - 1;
-      } else if (bin_number == -1) {
-        bin_number = 0;
-      } else if (bin_number > n_bins_ && bin_number < 0) {
-        Logger::Error("Something went wrong in RunThetaAnalysis!");
-      }
-      theta_histogram_[i][bin_number]++;
-    }
-  }
-}
-
-void BeadSpringSpecies::FinalizeAnalysis() {
-  if (spiral_file_.is_open()) {
-    spiral_file_.close();
-  }
-  if (theta_file_.is_open()) {
-    FinalizeThetaAnalysis();
-    theta_file_.close();
-  }
-  if (mse2e_file_.is_open()) {
-    FinalizeMse2eAnalysis();
-    mse2e_file_.close();
-  }
-  if (diffusion_file_.is_open()) {
-    // FinalizeDiffusionAnalysis();
-    diffusion_file_.close();
-  }
-}
-
-void BeadSpringSpecies::FinalizeMse2eAnalysis() {
-  int num = members_.size();
-  mse2e_file_ << num << " ";
-  mse2e_ /= n_samples_ * num;
-  mse2e2_ /= n_samples_ * num;
-  mse2e_file_ << mse2e_ << " ";
-  mse2e_file_ << sqrt((mse2e2_ - mse2e_ * mse2e_) / (num * n_samples_)) << " ";
-  avg_clen_ /= n_samples_ * num;
-  double pl = params_->bead_spring.persistence_length;
-  double theory;
-  if (params_->n_dim == 2) {
-    theory =
-        avg_clen_ * pl * 4.0 - 8.0 * pl * pl * (1 - exp(-0.5 * avg_clen_ / pl));
-  } else {
-    theory = avg_clen_ * pl * 2.0 - 2.0 * pl * pl * (1 - exp(-avg_clen_ / pl));
-  }
-  mse2e_file_ << avg_clen_ << " " << theory << "\n";
-}
-
-void BeadSpringSpecies::FinalizeThetaAnalysis() {
-  int nbonds = members_[members_.size() - 1].GetNBonds();
-  for (int i = 0; i < n_bins_; ++i) {
-    double axis = (2.0 / n_bins_) * i - 1;
-    theta_file_ << " " << axis;
-    for (int ibond = 0; ibond < nbonds - 1; ++ibond) {
-      theta_file_ << " " << theta_histogram_[ibond][i];
-    }
-    theta_file_ << "\n";
-  }
-
-  for (int ibond = 0; ibond < nbonds - 1; ++ibond) {
-    delete[] theta_histogram_[ibond];
-  }
-  delete[] theta_histogram_;
-}

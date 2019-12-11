@@ -2,7 +2,7 @@
 double cpu_time();
 void grabber(int width, int height, std::string fname, int framenum);
 void rotate_vector_relative(int n_dim, double *vect1, double *vect2);
-void rotate_vector(double *v, double *k, double theta);
+void rotate_vector(double *v, double *k, double theta, int n_dim);
 double dot_product(int n_dim, double const *const a, double const *const b);
 double determinant(int n, double **mat);
 void separation_vector(int n_dim, int n_periodic, double const *const r1,

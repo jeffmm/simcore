@@ -11,7 +11,7 @@ Centrosome::Centrosome() : Object() {
   }
   n_filaments_ =
       n_filaments_min_ +
-      gsl_rng_uniform_int(rng_.r, n_filaments_max_ - n_filaments_min_ + 1);
+      rng_.RandomInt(n_filaments_max_ - n_filaments_min_ + 1);
   k_spring_ = params_->centrosome.k_spring;
   k_align_ = params_->centrosome.k_align;
   spring_length_ = params_->centrosome.spring_length;
@@ -94,7 +94,7 @@ void Centrosome::InsertCentrosome() {
   } else if (params_->centrosome.insertion_type.compare("centered_random") ==
              0) {
     std::fill(position_, position_ + 3, 0.0);
-    generate_random_unit_vector(n_dim_, orientation_, rng_.r);
+    rng_.RandomUnitVector(n_dim_, orientation_);
   } else if (params_->centrosome.insertion_type.compare("centered_oriented") ==
              0) {
     std::fill(position_, position_ + 3, 0.0);
@@ -118,9 +118,9 @@ void Centrosome::GenerateAnchorSites() {
       Logger::Warning(
           "Fixed filament spacing not yet implemented for 3D in centrosome. "
           "Inserting randomly.");
-      generate_random_unit_vector(n_dim_, anchors_[i_fil].orientation_, rng_.r);
+      rng_.RandomUnitVector(n_dim_, anchors_[i_fil].orientation_);
     } else {
-      generate_random_unit_vector(n_dim_, anchors_[i_fil].orientation_, rng_.r);
+      rng_.RandomUnitVector(n_dim_, anchors_[i_fil].orientation_);
     }
     for (int i = 0; i < n_dim_; ++i) {
       anchors_[i_fil].position_[i] =
@@ -134,7 +134,7 @@ void Centrosome::GenerateAnchorSites() {
 }
 
 void Centrosome::RandomizeAnchorPosition(int i_fil) {
-  generate_random_unit_vector(n_dim_, anchors_[i_fil].orientation_, rng_.r);
+  rng_.RandomUnitVector(n_dim_, anchors_[i_fil].orientation_);
   for (int i = 0; i < n_dim_; ++i) {
     anchors_[i_fil].position_[i] =
         position_[i] + anchor_distance_ * anchors_[i_fil].orientation_[i];
@@ -181,7 +181,7 @@ void Centrosome::UpdatePosition(bool midstep) {
 
 void Centrosome::ApplyForcesTorques() {
   for (int i = 0; i < n_dim_; ++i) {
-    double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
+    double kick = rng_.RandomUniform() - 0.5;
     force_[i] += kick * diffusion_;
   }
   for (anchor_iterator it = anchors_.begin(); it != anchors_.end(); ++it) {

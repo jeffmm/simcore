@@ -1,12 +1,50 @@
 #include "cell_list.hpp"
 
-void CellList::Init(int n_cells_1d, double cell_length, int n_dim,
-                    int n_periodic) {
-  Logger::Trace("Initializing cell list");
-  n_dim_ = n_dim;
-  n_periodic_ = n_periodic;
-  cell_length_ = cell_length;
-  n_cells_1d_ = n_cells_1d;
+double CellList::_min_cell_length_ = -1;
+int CellList::_n_dim_ = -1;
+int CellList::_n_periodic_ = -1;
+int CellList::_n_cells_1d_ = -1;
+double CellList::_cell_length_ = -1;
+
+void CellList::SetMinCellLength(double l) {
+  if (l > _min_cell_length_) {
+    Logger::Debug("Setting minimum cell length to be %2.2f", l);
+    _min_cell_length_ = l;
+  }
+}
+double CellList::GetCellLength() { return _cell_length_; }
+
+void CellList::Init(int n_dim, int n_periodic, double system_radius) {
+  _n_cells_1d_ = (int)floor(2 * system_radius / _min_cell_length_);
+#ifdef TRACE
+  if (_n_cells_1d_ > 20) {
+    Logger::Warning("Simulation run in trace mode with a large number of "
+                    "cells in cell list (%d).",
+                    _n_cells_1d_);
+    fprintf(stderr, "Continue anyway? (y/N) ");
+    char c;
+    if (std::cin.peek() != 'y') {
+      Logger::Error("Terminating simulation by user request");
+    } else if (!(std::cin >> c)) {
+      Logger::Error("Invalid input");
+    } else {
+      fprintf(stderr, "Resuming simulation\n");
+      std::cin.ignore();
+    }
+  }
+#endif
+  _cell_length_ = (double)2 * system_radius / _n_cells_1d_;
+  _n_dim_ = n_dim;
+  _n_periodic_ = n_periodic;
+  Logger::Debug("Cell list initialized with %d cells per side of length %2.2f",
+                _n_cells_1d_, _cell_length_);
+  if (_n_cells_1d_ < 1 || _cell_length_ < 0) {
+    Logger::Error("Cell list received bad initialization parameters!");
+  }
+}
+
+void CellList::BuildCellList() {
+  Logger::Trace("Building cell list");
   AllocateCells();
   LabelCells();
   ClearCellObjects();
@@ -17,14 +55,14 @@ void CellList::Init(int n_cells_1d, double cell_length, int n_dim,
 
 void CellList::AllocateCells() {
   Logger::Debug("Allocating cell list");
-  Logger::Trace("cell_length: %2.2f", cell_length_);
-  Logger::Trace("n_cells_1d: %d", n_cells_1d_);
+  Logger::Trace("cell_length: %2.2f", _cell_length_);
+  Logger::Trace("n_cells_1d: %d", _n_cells_1d_);
 
-  int third_dim = (n_dim_ == 3 ? n_cells_1d_ : 1);
-  cell_ = new Cell **[n_cells_1d_];
-  for (int i = 0; i < n_cells_1d_; ++i) {
-    cell_[i] = new Cell *[n_cells_1d_];
-    for (int j = 0; j < n_cells_1d_; ++j) {
+  int third_dim = (_n_dim_ == 3 ? _n_cells_1d_ : 1);
+  cell_ = new Cell **[_n_cells_1d_];
+  for (int i = 0; i < _n_cells_1d_; ++i) {
+    cell_[i] = new Cell *[_n_cells_1d_];
+    for (int j = 0; j < _n_cells_1d_; ++j) {
       cell_[i][j] = new Cell[third_dim];
     }
   }
@@ -44,8 +82,8 @@ void CellList::ResetNeighbors() {
 
 void CellList::DeallocateCells() {
   Logger::Debug("Deallocating cell list");
-  for (int i = 0; i < n_cells_1d_; ++i) {
-    for (int j = 0; j < n_cells_1d_; ++j) {
+  for (int i = 0; i < _n_cells_1d_; ++i) {
+    for (int j = 0; j < _n_cells_1d_; ++j) {
       delete[] cell_[i][j];
     }
     delete[] cell_[i];
@@ -54,9 +92,9 @@ void CellList::DeallocateCells() {
 }
 
 void CellList::LabelCells() {
-  int third_dim = (n_dim_ == 3 ? n_cells_1d_ : 1);
-  for (int i = 0; i < n_cells_1d_; ++i) {
-    for (int j = 0; j < n_cells_1d_; ++j) {
+  int third_dim = (_n_dim_ == 3 ? _n_cells_1d_ : 1);
+  for (int i = 0; i < _n_cells_1d_; ++i) {
+    for (int j = 0; j < _n_cells_1d_; ++j) {
       for (int k = 0; k < third_dim; ++k) {
         cell_[i][j][k].AssignIndex(i, j, k);
       }
@@ -66,9 +104,9 @@ void CellList::LabelCells() {
 
 void CellList::MakePairs(std::vector<Interaction> &pair_list) {
   Logger::Debug("Constructing object interaction pairs");
-  int third_dim = (n_dim_ == 3 ? n_cells_1d_ : 1);
-  for (int i = 0; i < n_cells_1d_; ++i) {
-    for (int j = 0; j < n_cells_1d_; ++j) {
+  int third_dim = (_n_dim_ == 3 ? _n_cells_1d_ : 1);
+  for (int i = 0; i < _n_cells_1d_; ++i) {
+    for (int j = 0; j < _n_cells_1d_; ++j) {
       for (int k = 0; k < third_dim; ++k) {
         cell_[i][j][k].MakePairs(pair_list);
       }
@@ -79,18 +117,18 @@ void CellList::MakePairs(std::vector<Interaction> &pair_list) {
 xyz_coord CellList::FindCellCoords(Object &obj) {
   const double *const spos = obj.GetScaledPosition();
   double x = spos[0] + 0.5;
-  int xcell = (int)floor(n_cells_1d_ * x);
-  if (xcell == n_cells_1d_)
+  int xcell = (int)floor(_n_cells_1d_ * x);
+  if (xcell == _n_cells_1d_)
     xcell -= 1;
   double y = spos[1] + 0.5;
-  int ycell = (int)floor(n_cells_1d_ * y);
-  if (ycell == n_cells_1d_)
+  int ycell = (int)floor(_n_cells_1d_ * y);
+  if (ycell == _n_cells_1d_)
     ycell -= 1;
   int zcell = 0;
-  if (n_dim_ == 3) {
+  if (_n_dim_ == 3) {
     double z = spos[2] + 0.5;
-    zcell = (int)floor(n_cells_1d_ * z);
-    if (zcell == n_cells_1d_)
+    zcell = (int)floor(_n_cells_1d_ * z);
+    if (zcell == _n_cells_1d_)
       zcell -= 1;
   }
   return std::make_tuple(xcell, ycell, zcell);
@@ -98,9 +136,9 @@ xyz_coord CellList::FindCellCoords(Object &obj) {
 
 void CellList::ClearCellObjects() {
   Logger::Trace("Clearing cell list objects");
-  int third_dim = (n_dim_ == 3 ? n_cells_1d_ : 1);
-  for (int i = 0; i < n_cells_1d_; ++i) {
-    for (int j = 0; j < n_cells_1d_; ++j) {
+  int third_dim = (_n_dim_ == 3 ? _n_cells_1d_ : 1);
+  for (int i = 0; i < _n_cells_1d_; ++i) {
+    for (int j = 0; j < _n_cells_1d_; ++j) {
       for (int k = 0; k < third_dim; ++k) {
         cell_[i][j][k].ClearObjs();
       }
@@ -110,9 +148,9 @@ void CellList::ClearCellObjects() {
 
 void CellList::ClearCellNeighbors() {
   Logger::Trace("Clearing cell list neighbors");
-  int third_dim = (n_dim_ == 3 ? n_cells_1d_ : 1);
-  for (int i = 0; i < n_cells_1d_; ++i) {
-    for (int j = 0; j < n_cells_1d_; ++j) {
+  int third_dim = (_n_dim_ == 3 ? _n_cells_1d_ : 1);
+  for (int i = 0; i < _n_cells_1d_; ++i) {
+    for (int j = 0; j < _n_cells_1d_; ++j) {
       for (int k = 0; k < third_dim; ++k) {
         cell_[i][j][k].ClearNeighbors();
       }
@@ -145,45 +183,45 @@ void CellList::AssignObjectsCells(std::vector<Object *> &objs) {
  */
 void CellList::AssignCellNeighbors(bool redundancy) {
   /* If we build with redundancy, all cells will store neighbors of all
-     adjacent cells, so total neighbor pairs stored will be doubled. This may be
-     useful for quickly determining the potential interactions from a single
-     object (ie useful for quick overlap checking of new objects) */
+     adjacent cells, so total neighbor pairs stored will be doubled. This may
+     be useful for quickly determining the potential interactions from a
+     single object (ie useful for quick overlap checking of new objects) */
   if (redundancy) {
     Logger::Debug(
         "Assigning cell list neighbors with redundant neighbor pairs");
   } else {
     Logger::Debug("Assigning cell list neighbors");
   }
-  int third_dim = (n_dim_ == 3 ? n_cells_1d_ : 1);
+  int third_dim = (_n_dim_ == 3 ? _n_cells_1d_ : 1);
   // Loop through all cells in cell list
   for (int z = 0; z < third_dim; ++z) {
-    for (int y = 0; y < n_cells_1d_; ++y) {
-      for (int x = 0; x < n_cells_1d_; ++x) {
+    for (int y = 0; y < _n_cells_1d_; ++y) {
+      for (int x = 0; x < _n_cells_1d_; ++x) {
         Cell &c = cell_[x][y][z];
-        int z_begin = (redundancy && n_dim_ == 3 ? z - 1 : z);
-        int z_end = (n_dim_ == 3 ? z + 2 : z + 1);
+        int z_begin = (redundancy && _n_dim_ == 3 ? z - 1 : z);
+        int z_end = (_n_dim_ == 3 ? z + 2 : z + 1);
         /* Add all adjacent cells "above" this cell along z axis */
         for (int zp = z_begin; zp < z_end; ++zp) {
           int nz = zp;
-          if ((nz < 0 || nz == n_cells_1d_) && n_periodic_ >= 3) {
-            nz = (nz < 0 ? n_cells_1d_ - 1 : 0);
-          } else if (nz < 0 || nz == n_cells_1d_) {
+          if ((nz < 0 || nz == _n_cells_1d_) && _n_periodic_ >= 3) {
+            nz = (nz < 0 ? _n_cells_1d_ - 1 : 0);
+          } else if (nz < 0 || nz == _n_cells_1d_) {
             continue;
           }
           int y_begin = (redundancy || zp > z ? y - 1 : y);
           for (int yp = y_begin; yp < y + 2; ++yp) {
             int ny = yp;
-            if ((ny < 0 || ny == n_cells_1d_) && n_periodic_ >= 2) {
-              ny = (ny < 0 ? n_cells_1d_ - 1 : 0);
-            } else if (ny < 0 || ny == n_cells_1d_) {
+            if ((ny < 0 || ny == _n_cells_1d_) && _n_periodic_ >= 2) {
+              ny = (ny < 0 ? _n_cells_1d_ - 1 : 0);
+            } else if (ny < 0 || ny == _n_cells_1d_) {
               continue;
             }
             int x_begin = (redundancy || yp > y || zp > z ? x - 1 : x + 1);
             for (int xp = x_begin; xp < x + 2; ++xp) {
               int nx = xp;
-              if ((nx < 0 || nx == n_cells_1d_) && n_periodic_ >= 1) {
-                nx = (nx < 0 ? n_cells_1d_ - 1 : 0);
-              } else if (nx < 0 || nx == n_cells_1d_) {
+              if ((nx < 0 || nx == _n_cells_1d_) && _n_periodic_ >= 1) {
+                nx = (nx < 0 ? _n_cells_1d_ - 1 : 0);
+              } else if (nx < 0 || nx == _n_cells_1d_) {
                 continue;
               }
               /* Note that cells never add themselves */

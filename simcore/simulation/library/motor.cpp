@@ -232,7 +232,7 @@ void Motor::Diffuse() {
   } else {
     // Otherwise diffuse normally
     for (int i = 0; i < n_dim_; ++i) {
-      double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
+      double kick = rng_.RandomUniform() - 0.5;
       force_[i] += kick * diffusion_;
       position_[i] += force_[i] * delta_ / diameter_;
     }
@@ -242,7 +242,7 @@ void Motor::Diffuse() {
 void Motor::DiffuseBound() {
   double dr[3] = {0, 0, 0};
   double dr_mag = 0;
-  double kick = gsl_rng_uniform_pos(rng_.r) - 0.5;
+  double kick = rng_.RandomUniform() - 0.5;
   double const* const pos0 = bonds_[0].first->GetPosition();
   for (int i = 0; i < n_dim_; ++i) {
     force_[i] = kick * diffusion_ * orientation_[i];
@@ -323,7 +323,7 @@ bool Motor::SwitchBonds(bool next_bond, double dr_mag) {
 }
 
 void Motor::AttachBondRandom(Bond* b, double mesh_lambda) {
-  double l = b->GetLength() * gsl_rng_uniform_pos(rng_.r);
+  double l = b->GetLength() * rng_.RandomUniform();
   mesh_lambda_ = mesh_lambda + l;
   directed_bond db = std::make_pair(b, OUTGOING);
   AttachToBond(db, l, mesh_lambda_);

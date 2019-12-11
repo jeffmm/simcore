@@ -4,18 +4,9 @@
 #include "filament.hpp"
 #include "species.hpp"
 
-typedef std::vector<Filament>::iterator filament_iterator;
-typedef std::vector<
-    std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator>>
-    filament_chunk_vector;
-
-#ifdef ENABLE_OPENMP
-#include "omp.h"
-#endif
-
-class FilamentSpecies : public Species<Filament> {
-protected:
-  bool midstep_;
+class FilamentSpecies : public Species<Filament, species_id::filament> {
+ protected:
+  bool midstep_ = true;
   // Analysis structures
   double fill_volume_;
   double packing_fraction_;
@@ -49,10 +40,9 @@ protected:
   std::fstream polar_order_avg_file_;
   std::fstream in_out_file_;
 
-public:
-  FilamentSpecies();
-  void Init(system_parameters *params, space_struct *space, long seed);
-
+ public:
+  FilamentSpecies(unsigned long seed);
+  void Init(std::string spec_name, ParamsParser &parser);
   void PopMember();
 
   void AddMember();
@@ -61,6 +51,8 @@ public:
   void UpdatePositions();
   // Redundant for filaments.
   virtual void CenteredOrientedArrangement() {}
+
+  virtual const double GetSpecLength() const;
 
   void InitAnalysis();
   void RunAnalysis();

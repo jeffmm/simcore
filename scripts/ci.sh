@@ -13,7 +13,7 @@ ci_cpp() {
         mkdir build
     fi
     cd build || exit 1
-    cmake ..
+    cmake -DUNIT_TESTS=1 ..
     make -j8
     make test && cd ..
 }

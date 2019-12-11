@@ -1,6 +1,6 @@
 #include "object.hpp"
 
-Object::Object() {
+Object::Object(unsigned long seed) : rng_(seed) {
   // Initialize object ID, guaranteeing thread safety
   InitOID();
   // Set some defaults
@@ -9,6 +9,8 @@ Object::Object() {
   std::fill(prev_orientation_, prev_orientation_ + 3, 0.0);
   std::fill(scaled_position_, scaled_position_ + 3, 0.0);
   std::fill(orientation_, orientation_ + 3, 0.0);
+  orientation_[n_dim_ - 1] = 1.0;
+  prev_orientation_[n_dim_ - 1] = 1.0;
   std::fill(pos, pos + 3, 0.0);
   std::fill(direction, direction + 3, 0.0);
   std::fill(force_, force_ + 3, 0.0);
@@ -37,7 +39,7 @@ Object::Object() {
 // Set the object OID in a thread-safe way
 void Object::InitOID() {
   std::lock_guard<std::mutex> lk(_obj_mtx_);
-  oid_ = ++_next_oid_;
+  SetOID(++_next_oid_);
 }
 
 int Object::_next_oid_ = 0;
@@ -51,10 +53,12 @@ void Object::SetParams(system_parameters *params) { params_ = params; }
 void Object::SetSpace(space_struct *space) { space_ = space; }
 void Object::SetNDim(int n_dim) { n_dim_ = n_dim; }
 void Object::SetDelta(double delta) { delta_ = delta; }
+void Object::SetNextOID(const int next_oid) { _next_oid_ = next_oid; }
+const int Object::GetNextOID() { return _next_oid_; }
 // Trivial Get/Set functions
 int const Object::GetOID() const { return oid_; }
-void Object::SetPosition(double const *const pos) {
-  std::copy(pos, pos + n_dim_, position_);
+void Object::SetPosition(double const *const new_pos) {
+  std::copy(new_pos, new_pos + n_dim_, position_);
 }
 void Object::SetScaledPosition(double const *const spos) {
   std::copy(spos, spos + n_dim_, scaled_position_);
@@ -141,6 +145,7 @@ void Object::SetFlockChangeState(int fcs) { flock_change_state_ = fcs; }
 int Object::GetFlockChangeState() { return flock_change_state_; }
 int const Object::GetMeshID() const { return mesh_id_; }
 void Object::SetMeshID(int mid) { mesh_id_ = mid; }
+void Object::SetOID(int oid) { oid_ = oid; }
 void Object::ToggleIsMesh() { is_mesh_ = !is_mesh_; }
 obj_type const Object::GetType() { return type_; }
 species_id const Object::GetSID() { return sid_; }
@@ -148,130 +153,33 @@ void Object::SetType(obj_type type) { type_ = type; }
 void Object::SetSID(species_id sid) { sid_ = sid; }
 
 // Virtual functions
-void Object::InsertRandom() {
+void Object::InsertRandom(double buffer) {
+  if (buffer < 0) {
+    buffer = diameter_;
+  }
+  double pos[3] = {0, 0, 0};
+  double u[3] = {0, 0, 0};
   Logger::Trace("Inserting object %d randomly", GetOID());
-  double mag;
-  double buffer = diameter_;
-  if (space_->n_periodic == n_dim_)
-    buffer = 0;
-  double R = space_->radius;
-  // XXX Check to make sure object fits inside unit cell if non-periodic
-  if (R - buffer < 0) {
-    Logger::Error(
-        "Object #%d is too large to place in system.\n system radius: "
-        "%2.2f, buffer: %2.2f",
-        GetOID(), R, buffer);
-  }
-  switch (space_->type) {
-  // If no boundary, insert wherever
-  case +boundary_type::none: // none
-    for (int i = 0; i < n_dim_; ++i) {
-      position_[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
-    }
-    break;
-  // box type boundary
-  case +boundary_type::box: // box
-    for (int i = 0; i < n_dim_; ++i) {
-      position_[i] = (2.0 * gsl_rng_uniform_pos(rng_.r) - 1.0) * (R - buffer);
-    }
-    break;
-  // spherical boundary
-  case +boundary_type::sphere: // sphere
-    generate_random_unit_vector(n_dim_, position_, rng_.r);
-    mag = gsl_rng_uniform_pos(rng_.r) * (R - buffer);
-    for (int i = 0; i < n_dim_; ++i) {
-      position_[i] *= mag;
-    }
-    break;
-  // budding yeast boundary type
-  case +boundary_type::budding: // budding
-  {
-    double r = space_->bud_radius;
-    double roll = gsl_rng_uniform_pos(rng_.r);
-    double v_ratio = 0;
-    if (n_dim_ == 2) {
-      v_ratio = SQR(r) / (SQR(r) + SQR(R));
-    } else {
-      v_ratio = CUBE(r) / (CUBE(r) + CUBE(R));
-    }
-    mag = gsl_rng_uniform_pos(rng_.r);
-    generate_random_unit_vector(n_dim_, position_, rng_.r);
-    if (roll < v_ratio) {
-      // Place coordinate in daughter cell
-      mag *= (r - buffer);
-      for (int i = 0; i < n_dim_; ++i) {
-        position_[i] *= mag;
-      }
-      position_[n_dim_ - 1] += space_->bud_height;
-    } else {
-      mag *= (R - buffer);
-      for (int i = 0; i < n_dim_; ++i) {
-        position_[i] *= mag;
-      }
-    }
-    break;
-  }
-  default:
-    Logger::Error("Boundary type unrecognized!");
-  }
-  generate_random_unit_vector(n_dim_, orientation_, rng_.r);
-  UpdatePeriodic();
-  Logger::Trace("Object inserted at [%2.2f, %2.2f, %2.2f] with orientation "
-                "[%2.2f %2.2f %2.2f]",
-                position_[0], position_[1], position_[2], orientation_[0],
-                orientation_[1], orientation_[2]);
+  rng_.RandomCoordinate(space_, pos, buffer);
+  rng_.RandomUnitVector(n_dim_, u);
+  InsertAt(pos, u);
 }
 
-void Object::InsertRandomOriented(double *u) {
+void Object::InsertRandomOriented(double const *const u) {
   InsertRandom();
-  normalize_vector(u, n_dim_);
   SetOrientation(u);
+  normalize_vector(orientation_, n_dim_);
 }
 
-void Object::InsertAt(double *pos, double *u) {
-  // Check to make sure position is inside unit cell if non-periodic
-  double R = space_->radius;
-  bool out_of_bounds = false;
-  switch (space_->type._to_integral()) {
-  case 0: // none
-    break;
-  case 2: // sphere
-  {
-    double rsq = 0;
-    for (int i = 0; i < n_dim_; ++i) {
-      rsq += pos[i] * pos[i];
-    }
-    // Check that r^2 <= R^2
-    if (rsq > R * R) {
-      out_of_bounds = true;
-    }
-    break;
-  }
-  case 1: // box
-    // Make sure each dimension of position, x, y etc is within the box radius
-    for (int i = 0; i < n_dim_; ++i) {
-      if (ABS(pos[i]) > R) {
-        out_of_bounds = true;
-      }
-    }
-    break;
-  case 3: // budding
-    // FIXME Add checks to make sure object is placed within budding
-    // boundary... right now, just trust user knows what they are doing.
-    break;
-  default:
-    Logger::Error("Boundary type not recognized.");
-  }
-  if (out_of_bounds) {
-    Logger::Error(
-        "Object %d placed outside of system unit cell! System radius: "
-        "%2.2f, pos: {%2.2f %2.2f %2.2f}",
-        GetOID(), R, pos[0], pos[1], pos[2]);
-  }
-  SetPosition(pos);
-  normalize_vector(u, n_dim_);
+void Object::InsertAt(double const *const new_pos, double const *const u) {
+  SetPosition(new_pos);
   SetOrientation(u);
+  normalize_vector(orientation_, n_dim_);
   UpdatePeriodic();
+  Logger::Trace("Object %d inserted at [%2.2f, %2.2f, %2.2f] with orientation "
+                "[%2.2f %2.2f %2.2f]",
+                GetOID(), position_[0], position_[1], position_[2],
+                orientation_[0], orientation_[1], orientation_[2]);
 }
 
 void Object::ZeroForce() {
@@ -280,7 +188,7 @@ void Object::ZeroForce() {
   p_energy_ = 0.0;
 }
 
-void Object::Draw(std::vector<graph_struct *> *graph_array) {
+void Object::Draw(std::vector<graph_struct *> &graph_array) {
   std::copy(scaled_position_, scaled_position_ + 3, g_.r);
   for (int i = space_->n_periodic; i < n_dim_; ++i) {
     g_.r[i] = position_[i];
@@ -290,7 +198,7 @@ void Object::Draw(std::vector<graph_struct *> *graph_array) {
   g_.diameter = diameter_;
   g_.length = length_;
   g_.draw = draw_;
-  graph_array->push_back(&g_);
+  graph_array.push_back(&g_);
 }
 
 // Updates scaled position, leaving position fixed
@@ -332,8 +240,8 @@ void Object::ScalePosition() {
   }
 }
 int Object::GetCount() { return 1; }
-void Object::GetInteractors(std::vector<Object *> *ix) {
-  ix->insert(ix->end(), interactors_.begin(), interactors_.end());
+void Object::GetInteractors(std::vector<Object *> &ix) {
+  ix.insert(ix.end(), interactors_.begin(), interactors_.end());
 }
 double const *const Object::GetInteractorPosition() { return GetPosition(); }
 double const *const Object::GetInteractorPrevPosition() {
@@ -366,7 +274,10 @@ double const Object::GetVolume() {
   }
   return -1;
 }
-double const Object::GetDrTot() { return dr_tot_; }
+double const Object::GetDrTot() {
+  UpdateDrTot();
+  return dr_tot_;
+}
 void Object::ZeroDrTot() {
   std::copy(position_, position_ + 3, dr_zero_);
   dr_tot_ = 0;
@@ -388,24 +299,43 @@ void Object::Cleanup() {}
 
 // Object I/O functions
 void Object::WriteCheckpoint(std::fstream &ocheck) {
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size = gsl_rng_size(rng_.r);
-  ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
+  WriteCheckpointHeader(ocheck);
   WriteSpec(ocheck);
 }
+void Object::WriteCheckpointHeader(std::fstream &ocheck) {
+  void *rng_state = rng_.GetState();
+  size_t rng_size = rng_.GetSize();
+  int oid = GetOID();
+  int mid = GetMeshID();
+  ocheck.write(reinterpret_cast<char *>(&oid), sizeof(int));
+  ocheck.write(reinterpret_cast<char *>(&mid), sizeof(int));
+  ocheck.write(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
+  ocheck.write(reinterpret_cast<char *>(rng_state), rng_size);
+}
+
 void Object::ReadCheckpoint(std::fstream &icheck) {
-  if (icheck.eof())
-    return;
-  void *rng_state = gsl_rng_state(rng_.r);
-  size_t rng_size;
-  icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
-  icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
+  ReadCheckpointHeader(icheck);
   ReadSpec(icheck);
 }
+
+void Object::ReadCheckpointHeader(std::fstream &icheck) {
+  if (icheck.eof())
+    return;
+  void *rng_state = rng_.GetState();
+  size_t rng_size;
+  int oid;
+  int mid;
+  icheck.read(reinterpret_cast<char *>(&oid), sizeof(int));
+  icheck.read(reinterpret_cast<char *>(&mid), sizeof(int));
+  icheck.read(reinterpret_cast<char *>(&rng_size), sizeof(size_t));
+  icheck.read(reinterpret_cast<char *>(rng_state), rng_size);
+  SetOID(oid);
+  SetMeshID(mid);
+}
+
 void Object::WritePosit(std::fstream &oposit) {
-  for (auto &pos : position_)
-    oposit.write(reinterpret_cast<char *>(&pos), sizeof(pos));
+  for (auto &posit : position_)
+    oposit.write(reinterpret_cast<char *>(&posit), sizeof(posit));
   for (auto &spos : scaled_position_)
     oposit.write(reinterpret_cast<char *>(&spos), sizeof(spos));
   for (auto &u : orientation_)
@@ -417,8 +347,8 @@ void Object::WritePosit(std::fstream &oposit) {
 void Object::ReadPosit(std::fstream &iposit) {
   if (iposit.eof())
     return;
-  for (auto &pos : position_)
-    iposit.read(reinterpret_cast<char *>(&pos), sizeof(pos));
+  for (auto &posit : position_)
+    iposit.read(reinterpret_cast<char *>(&posit), sizeof(posit));
   for (auto &spos : scaled_position_)
     iposit.read(reinterpret_cast<char *>(&spos), sizeof(spos));
   for (auto &u : orientation_)
@@ -437,14 +367,6 @@ void Object::GetAvgOrientation(double *au) {
 }
 void Object::SetAvgPosition() {
   // Nothing to be done
-}
-void Object::SetRNGState(const std::string &filename) {
-  // Load the rng state from binary file
-  FILE *pfile = fopen(filename.c_str(), "r");
-  auto retval = gsl_rng_fread(pfile, rng_.r);
-  if (retval != 0) {
-    std::cout << "Reading rng state failed " << retval << std::endl;
-  }
 }
 
 void Object::Report() {

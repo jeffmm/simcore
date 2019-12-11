@@ -14,11 +14,18 @@ if (OMP)
 endif()
 
 if (GRAPH)
-  find_package(glfw3 REQUIRED)
-  find_package(glew REQUIRED)
+  find_package(glfw3 REQUIRED)# HINTS /usr/include/GLFW)
   find_package(OpenGL REQUIRED)
-set(LIB ${LIB} GLEW::GLEW ${GLFW3_LIBRARIES} ${OPENGL_gl_LIBRARY} glfw)
-set(INCLUDES ${INCLUDES} ${GLEW_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
+  if (${WINDOWS})
+    message("Using Windows Graphics")
+    set(GLEW_LIBRARY -lGL -lGLU -lGLEW -ldl -lX11 -lpthread -lXrandr -lXxf86vm -lXi -lm -lXcursor -lXinerama)
+    set(GLEW_INCLUDE_PATH /usr/include/)
+    add_definitions(-DWINGRAPH=TRUE)
+  else()
+    find_package(glew REQUIRED)
+  endif()
+  set(LIB ${LIB} ${GLEW_LIBRARY} ${GLFW3_LIBRARIES} ${OPENGL_gl_LIBRARY} glfw)
+  set(INCLUDES ${INCLUDES} ${GLEW_INCLUDE_PATH} ${GLFW3_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
 else()
   add_definitions(-DNOGRAPH=TRUE)
 endif()
@@ -29,40 +36,52 @@ endif()
 
 if(TRACE)
     add_definitions(-DTRACE=TRUE)
+    add_definitions(-DDEBUG=TRUE)
 endif()
+
+if(UNIT_TESTS)
+    add_definitions(-DUNIT_TESTS=TRUE)
+    add_definitions(-DTRACE=TRUE)
+    add_definitions(-DDEBUG=TRUE)
+endif()
+
 include_directories(${INCLUDES})
 set(TARGET "simcore")
 set(SOURCES anchor.cpp 
-            bead_spring.cpp
             bond.cpp
             br_bead.cpp
+            br_bead_species.cpp
+            br_rod.cpp
             cell.cpp
             cell_list.cpp
-            #centrosome.cpp
             cpu.cpp
             cpu_time.cpp
             crosslink.cpp
+            crosslink_species.cpp
             crosslink_manager.cpp
             filament.cpp
             filament_species.cpp
-            generate_random_unit_vector.cpp
             grabber.cpp
             graphics.cpp
-            interaction_engine.cpp
+            interaction_manager.cpp
             linear_algebra.cpp
             logger.cpp
             mesh.cpp
             minimum_distance.cpp
             object.cpp
-            output_manager.cpp
+            params_parser.cpp
+            rigid_filament.cpp
+            rigid_filament_species.cpp
             rng.cpp
             simulation.cpp
             simulation_manager.cpp
             site.cpp
             space.cpp
-            species.cpp
+            species_base.cpp
             spherocylinder.cpp
-            #spindle.cpp
+            spherocylinder_species.cpp
+            spindle.cpp
+            spindle_species.cpp
             struct_analysis.cpp
             writebmp.cpp
 )

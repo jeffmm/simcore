@@ -1,7 +1,0 @@
-run_name: test
-seed: 314159
-n_runs: 13
-n_random: 7
-n_steps: 42
-n_dim: [2, 3]
-delta: [R, 0.1, 0.001]

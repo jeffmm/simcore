@@ -53,7 +53,8 @@ protected:
   void UpdateKMC();
 
 public:
-  Object();
+  Object(unsigned long seed);
+  virtual ~Object() = default;
   // kmcx parameter
   int gid;
   double length;
@@ -66,79 +67,82 @@ public:
   static void SetSpace(space_struct *space);
   static void SetNDim(int n_dim);
   static void SetDelta(double delta);
+  static const int GetNextOID();
+  static void SetNextOID(const int next_oid);
   // Trivial Set/Get functions
   void SetSID(species_id sid);
   void SetType(obj_type type);
-  void SetPosition(double const *const pos);
-  void SetScaledPosition(double const *const spos);
-  void SetOrientation(double const *const u);
-  void SetPrevPosition(double const *const ppos);
-  void SetPrevOrientation(double const *const pu);
+  void SetPosition(const double *const new_pos);
+  void SetScaledPosition(const double *const spos);
+  void SetOrientation(const double *const u);
+  void SetPrevPosition(const double *const ppos);
+  void SetPrevOrientation(const double *const pu);
   void SetDiameter(double new_diameter);
   void SetLength(double new_length);
-  void AddForce(double const *const f);
-  void SubForce(double const *const f);
-  void SetForce(double const *const f);
-  void AddTorque(double const *const t);
-  void SubTorque(double const *const t);
-  void SetTorque(double const *const t);
-  void AddPotential(double const p);
-  void AddPolarOrder(double const po);
-  void AddContactNumber(double const cn);
+  void AddForce(const double *const f);
+  void SubForce(const double *const f);
+  void SetForce(const double *const f);
+  void AddTorque(const double *const t);
+  void SubTorque(const double *const t);
+  void SetTorque(const double *const t);
+  void AddPotential(const double p);
+  void AddPolarOrder(const double po);
+  void AddContactNumber(const double cn);
   void SetInteractor(bool ix);
   void ToggleIsMesh();
   void CalcPolarOrder();
   void ZeroPolarOrder();
   species_id const GetSID();
   obj_type const GetType();
-  int const GetOID() const;
-  int const GetMeshID() const;
-  double const *const GetPosition();
-  double const *const GetPrevPosition();
-  double const *const GetScaledPosition();
-  double const *const GetOrientation();
+  const int GetOID() const;
+  const int GetMeshID() const;
+  const double *const GetPosition();
+  const double *const GetPrevPosition();
+  const double *const GetScaledPosition();
+  const double *const GetOrientation();
   virtual void GetAvgPosition(double *ap);
   virtual void GetAvgOrientation(double *au);
   virtual void SetAvgPosition();
-  double const GetDiameter();
-  double const GetLength();
-  double const *const GetForce();
-  double const *const GetTorque();
-  double const GetPotentialEnergy();
-  double const GetPolarOrder();
-  double const GetContactNumber();
-  bool const IsInteractor();
-  bool const IsMesh();
-  bool const CheckInteractorUpdate();
+  const double GetDiameter();
+  const double GetLength();
+  const double *const GetForce();
+  const double *const GetTorque();
+  const double GetPotentialEnergy();
+  const double GetPolarOrder();
+  const double GetContactNumber();
+  const bool IsInteractor();
+  const bool IsMesh();
+  const bool CheckInteractorUpdate();
   void HasOverlap(bool overlap);
   void SetFlockType(int in_flock);
   void SetFlockChangeState(int fcs);
   int GetFlockType();
   int GetFlockChangeState();
+  void SetOID(int oid);
   void SetMeshID(int mid);
 
   // Virtual functions
-  virtual void Init() {}
-  virtual void InsertRandom();
-  virtual void InsertRandomOriented(double *u);
-  virtual void InsertAt(double *pos, double *u);
+  virtual void Init(species_base_parameters *sparams) {}
+  virtual void InsertRandom(double buffer = -1);
+  virtual void InsertRandomOriented(const double *const u);
+  virtual void InsertAt(const double *const new_pos, const double *const u);
   virtual void ZeroForce();
   virtual void UpdatePeriodic();
   virtual void UpdatePosition() {}
-  virtual void Draw(std::vector<graph_struct *> *graph_array);
-  virtual void SetColor(double const c, draw_type dtype);
+  virtual void Draw(std::vector<graph_struct *> &graph_array);
+  virtual void SetColor(const double c, draw_type dtype);
   virtual void ScalePosition();
   virtual int GetCount();
-  virtual void GetInteractors(std::vector<Object *> *ix);
-  virtual double const *const GetInteractorPosition();
-  virtual double const *const GetInteractorPrevPosition();
-  virtual double const *const GetInteractorScaledPosition();
-  virtual double const *const GetInteractorOrientation();
-  virtual double const GetInteractorDiameter();
-  virtual double const GetInteractorLength();
-  virtual double const GetVolume();
+  virtual void GetInteractors(std::vector<Object *> &ix);
+  virtual const double *const GetInteractorPosition();
+  virtual const double *const GetInteractorPrevPosition();
+  virtual const double *const GetInteractorScaledPosition();
+  virtual const double *const GetInteractorOrientation();
+  virtual const double GetInteractorDiameter();
+  virtual const double GetInteractorLength();
+  virtual const double GetVolume();
   virtual void UpdateDrTot();
-  virtual double const GetDrTot();
+  virtual const double GetDrTot();
   virtual void ZeroDrTot();
   virtual bool HasNeighbor(int other_id);
   virtual void GiveInteraction(Interaction *ix);
@@ -156,8 +160,9 @@ public:
   virtual void ReadSpec(std::fstream &ispec);
   virtual void ReadPositFromSpec(std::fstream &ispec);
   virtual void WriteCheckpoint(std::fstream &ocheck);
+  virtual void WriteCheckpointHeader(std::fstream &ocheck);
   virtual void ReadCheckpoint(std::fstream &icheck);
-  void SetRNGState(const std::string &filename);
+  virtual void ReadCheckpointHeader(std::fstream &icheck);
 };
 
 // void MinimumDistance(Object* o1, Object* o2, Interaction *ix, space_struct
