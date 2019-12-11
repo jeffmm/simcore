@@ -381,6 +381,10 @@ species_base_parameters *parse_species_params(std::string sid,
       params.flocking_analysis = jt->second.as<bool>();
       } else if (param_name.compare("polydispersity_flag")==0) {
       params.polydispersity_flag = jt->second.as<bool>();
+      } else if (param_name.compare("polydispersity_warn_on_truncate")==0) {
+      params.polydispersity_warn_on_truncate = jt->second.as<int>();
+      } else if (param_name.compare("custom_set_tail")==0) {
+      params.custom_set_tail = jt->second.as<bool>();
       } else {
         Logger::Warning("Unrecognized %s parameter: '%s'", sid.c_str(), param_name.c_str());
       }

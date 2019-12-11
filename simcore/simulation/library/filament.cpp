@@ -50,6 +50,7 @@ void Filament::SetParameters() {
   flagella_amplitude_ = sparams_->flagella_amplitude;
   /* Default site in optical trap is the tail */
   trapped_site_ = 0;
+  custom_set_tail_ = sparams_->custom_set_tail;
 
   /* Refine parameters */
   if (dynamic_instability_flag_) {
@@ -228,7 +229,16 @@ void Filament::InsertAt(const double *const new_pos, const double *const u) {
   Logger::Trace("Inserting filament at [%2.1f, %2.1f, %2.1f] with orientation"
                 "[%2.1f, %2.1f, %2.1f]",
                 new_pos[0], new_pos[1], new_pos[2], u[0], u[1], u[2]);
-  RelocateMesh(new_pos, u);
+  if (custom_set_tail_) {
+    std::copy(new_pos, new_pos + n_dim_, position_);
+    for (int i = 0; i < n_dim_; ++i) {
+      position_[i] += u[i] * length_ * .5;
+    }
+    Logger::Trace("Insert file locations are the locations of tails");
+    RelocateMesh(position_, u);
+  } else {
+    RelocateMesh(new_pos, u);
+  }
   UpdatePrevPositions();
   CalculateAngles();
   SetDiffusion();
@@ -347,7 +357,7 @@ void Filament::UpdatePosition(bool midstep) {
   Integrate();
   UpdateAvgPosition();
   DynamicInstability();
-  //eq_steps_count_++;
+  // eq_steps_count_++;
 }
 
 /*******************************************************************************
@@ -849,12 +859,12 @@ void Filament::UpdateSitePositions() {
         sites_[i_site].SetPosition(r_diff);
       }
     } else {
-      for (int i_site = n_sites_-1; i_site > 0; --i_site) {
+      for (int i_site = n_sites_ - 1; i_site > 0; --i_site) {
         double const *const r_site1 = sites_[i_site].GetPosition();
-        double const *const u_site1 = sites_[i_site-1].GetOrientation();
+        double const *const u_site1 = sites_[i_site - 1].GetOrientation();
         for (int i = 0; i < n_dim_; ++i)
           r_diff[i] = r_site1[i] - bond_length_ * u_site1[i];
-        sites_[i_site-1].SetPosition(r_diff);
+        sites_[i_site - 1].SetPosition(r_diff);
       }
     }
   }

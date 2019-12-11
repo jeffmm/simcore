@@ -21,6 +21,8 @@ void Anchor::Init(crosslink_parameters *sparams) {
   diffuse_ = sparams_->diffusion_flag;
   f_stall_ = sparams_->f_stall;
   force_dep_vel_flag_ = sparams_->force_dep_vel_flag;
+  polar_affinity_ = sparams_->polar_affinity;
+  assert(polar_affinity_ >= 0 && polar_affinity_ <= 1);
   SetDiffusion();
 }
 
@@ -88,7 +90,6 @@ bool Anchor::CalcBondLambda() {
       return false;
     }
   } else if (bond_lambda_ > bond_length_) {
-    printf("bond_length_ = %f\n", bond_length_);
     Bond *bond = bond_->GetNeighborBond(1);
     if (bond) {
       bond_ = bond;
@@ -250,6 +251,19 @@ void Anchor::UpdateAnchorPositionToBond() {
                    (0.5 * bond_length_ - bond_lambda_) * bond_orientation[i];
   }
   UpdatePeriodic();
+}
+/*Creates Vector that has different binding rates for parallel and anti-parallel
+ * bonds*/
+void Anchor::CalculatePolarAffinity(std::vector<double> &doubly_binding_rates) {
+  double const *const orientation = bond_->GetOrientation();
+  for (int i = 0; i < doubly_binding_rates.size(); ++i) {
+    Object *obj = neighbors_.GetNeighbor(i);
+    double const *const i_orientation = obj->GetOrientation();
+    double alignment = dot_product(n_dim_, orientation, i_orientation);
+    if (alignment < 0) {
+      doubly_binding_rates[i] *= polar_affinity_;
+    }
+  }
 }
 
 void Anchor::Draw(std::vector<graph_struct *> &graph_array) {

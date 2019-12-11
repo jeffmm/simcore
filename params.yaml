@@ -41,7 +41,7 @@ filament:
 
 crosslink:
   - name: filamen
-    concentration: 0.001
+    concentration: 0.01
     insertion_type: random
     diameter: 1
     walker_flag: false
