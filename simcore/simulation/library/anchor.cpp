@@ -21,6 +21,8 @@ void Anchor::Init(crosslink_parameters *sparams) {
   diffuse_ = sparams_->diffusion_flag;
   f_stall_ = sparams_->f_stall;
   force_dep_vel_flag_ = sparams_->force_dep_vel_flag;
+  polar_affinity_ = sparams_->polar_affinity;
+  assert(polar_affinity_ >= 0 && polar_affinity_ <= 1);
   SetDiffusion();
 }
 
@@ -87,7 +89,6 @@ bool Anchor::CalcBondLambda() {
       return false;
     }
   } else if (bond_lambda_ > bond_length_) {
-    printf("bond_length_ = %f\n", bond_length_);
     Bond *bond = bond_->GetNeighborBond(1);
     if (bond) {
       bond_ = bond;
@@ -155,16 +156,13 @@ void Anchor::Deactivate() {
 
 void Anchor::Walk() {
   if (force_dep_vel_flag_) {
-    double const *const bond_orientation = bond_->GetOrientation();
-    double fmag_para = 0.0;
-    for (int i = 0; i < n_dim_; ++i) {
-      fmag_para += step_direction_ * force_[i] * bond_orientation[i];
-    }
-    // fmag = sqrt(fmag);
+    // Only consider projected force in direction of stepping
+    double const force_proj =
+        step_direction_ * dot_product(n_dim_, force_, orientation_);
     // Linear force-velocity relationship
-    double fdep = 1. + (fmag_para / f_stall_);
-    if (fdep > 1.) {
-      fdep = 1.;
+    double fdep = 1 + force_proj / f_stall_;
+    if (fdep > 1) {
+      fdep = 1;
     } else if (fdep < 0) {
       fdep = 0.;
     }
@@ -220,7 +218,23 @@ void Anchor::Unbind() {
 
 void Anchor::Diffuse() {
   double kick = rng_.RandomUniform() - 0.5;
-  double dr = kick * diffusion_ * delta_ / diameter_;
+  double vel = kick * diffusion_ / diameter_;
+  if (force_dep_vel_flag_) {
+    double force_proj = dot_product(n_dim_, force_, orientation_);
+    // Add force-velocity relationship to diffusion
+    if (SIGNOF(force_proj) != SIGNOF(vel)) {
+      double fdep = 1 - force_proj / f_stall_;
+      // TODO Check whether the force can cause the motor to reverse
+      // For now, assume that diffusion can be biased in either direction
+      // if (fdep > 1) {
+      // fdep = 1;
+      //} else if (fdep < 0) {
+      // fdep = 0;
+      //}
+      vel *= fdep;
+    }
+  }
+  double dr = vel * delta_;
   mesh_lambda_ += dr;
 }
 
@@ -236,6 +250,19 @@ void Anchor::UpdateAnchorPositionToBond() {
                    (0.5 * bond_length_ - bond_lambda_) * bond_orientation[i];
   }
   UpdatePeriodic();
+}
+/*Creates Vector that has different binding rates for parallel and anti-parallel
+ * bonds*/
+void Anchor::CalculatePolarAffinity(std::vector<double> &doubly_binding_rates) {
+  double const *const orientation = bond_->GetOrientation();
+  for (int i = 0; i < doubly_binding_rates.size(); ++i) {
+    Object *obj = neighbors_.GetNeighbor(i);
+    double const *const i_orientation = obj->GetOrientation();
+    double alignment = dot_product(n_dim_, orientation, i_orientation);
+    if (alignment < 0) {
+      doubly_binding_rates[i] *= polar_affinity_;
+    }
+  }
 }
 
 void Anchor::Draw(std::vector<graph_struct *> &graph_array) {
@@ -368,7 +395,7 @@ void Anchor::WriteSpec(std::fstream &ospec) {
     ospec.write(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
   ospec.write(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
-  int attached_mesh_id = bound_ ? mesh_->GetMeshID() : -1;
+  int attached_mesh_id = mesh_ != nullptr ? mesh_->GetMeshID() : -1;
   ospec.write(reinterpret_cast<char *>(&attached_mesh_id), sizeof(int));
 }
 

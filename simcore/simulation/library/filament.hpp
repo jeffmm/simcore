@@ -24,6 +24,7 @@ class Filament : public Mesh {
   int n_step_ = 0;
   int eq_steps_;
   int eq_steps_count_ = 0;
+  bool custom_set_tail_;
   double min_length_;
   double max_length_;
   double max_bond_length_;

@@ -19,12 +19,14 @@ class Crosslink : public Object {
   bind_state state_;
   LookupTable *lut_;
   std::vector<int> kmc_filter_;
-  bool static_flag_;
+  bool static_flag_ = false;
+  bool anisotropic_spring_flag_ = false;
   double k_on_;
   double k_on_d_;
   double k_off_;
   double k_off_d_;
   double k_spring_;
+  double k2_spring_;
   double k_align_;
   double rest_length_;
   double rcapture_;

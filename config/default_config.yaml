@@ -271,6 +271,8 @@ filament:                            # Parameters unique to filament class of ob
                                     # generates output file giving number of flocking filaments as
                                     # well as number of exterior and interior flocking filaments.
   polydispersity_flag: [false, bool] # if > 0, assign length from exponential distribution
+  custom_set_tail: [false, bool]          # If custom set tail is true then the locations provided in the insert file
+                                    # are the locations of the tails instead of the centers 
 
 br_bead:
   driving_factor: [0, double]
@@ -315,9 +317,11 @@ crosslink:                          # Parameters specific to crosslinks.
   k_off_d: [2, double]              # Off-rate for doubly bound to singly bound crosslinks.
   force_dep_factor: [1, double]     # Scalar in exponential force-dependent off-rate of doubly-
                                     # bound crosslinks when under a load.
-  polar_affinity: [0, double]       # Affinity for crosslinks to remain bound to aligned filaments.
-                                    # Positive implies aligned, negative implies anti-aligned.
-  k_spring: [10, double]            # Spring constant of tension forces of doubly-bound crosslinks.
+  polar_affinity: [1, double]       # Ratio of (probability of binding for antiparallel)/(probability 
+                                    # of binding parallel)  
+  k_spring: [10, double]            # Spring constant of doubly-bound crosslinks.
+  k2_spring: [0, double]            # Spring constant for compression if anisotropic_spring_flag.
+  anisotropic_spring_flag: [false, bool] # Use k2_spring for compressive forces
   f_stall: [100, double]            # Tether forces above f_stall cause bound crosslink heads to
                                     # cease walking.
   force_dep_vel_flag: [true, bool]  # Flag that causes walking crosslink heads to have force-
@@ -332,5 +336,5 @@ crosslink:                          # Parameters specific to crosslinks.
   end_pausing: [false, bool]        # If 0, diffusing or walking crosslinks that move off the
                                     # filament automatically unbind. If 1, crosslinks that try to
                                     # do so will remain at the filament tip until unbinding.
-  r_capture: [5, double]            # Maximum distance at which to consider binding singly bound to
-                                    # doubly bound crosslink.
+  r_capture: [5, double]            # Max range allowed for singly to doubly bound crosslink.
+                                    # Calculated using k_spring, rest_length. User input ignored.

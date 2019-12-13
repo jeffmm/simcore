@@ -1,4 +1,5 @@
 #include "crosslink.hpp"
+#include <iostream>
 
 Crosslink::Crosslink(unsigned long seed) : Object(seed) {
   SetSID(species_id::crosslink);
@@ -12,11 +13,15 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   draw_ = draw_type::_from_string(sparams_->tether_draw_type.c_str());
   rest_length_ = sparams_->rest_length;
   static_flag_ = sparams_->static_flag;
-  k_on_ = sparams_->k_on;        // k_on for unbound to singly
-  k_off_ = sparams_->k_off;      // k_off for singly to unbound
-  k_on_d_ = sparams_->k_on_d;    // k_on for singly to doubly
-  k_off_d_ = sparams_->k_off_d;  // k_off for doubly to singly
+  k_on_ = sparams_->k_on;       // k_on for unbound to singly
+  k_off_ = sparams_->k_off;     // k_off for singly to unbound
+  k_on_d_ = sparams_->k_on_d;   // k_on for singly to doubly
+  k_off_d_ = sparams_->k_off_d; // k_off for doubly to singly
   k_spring_ = sparams_->k_spring;
+  k2_spring_ = sparams_->k2_spring; // spring const for compression if
+                                    // anisotropic_spring_flag is true
+  anisotropic_spring_flag_ = sparams_->anisotropic_spring_flag;
+  static_flag_ = sparams_->static_flag;
   k_align_ = sparams_->k_align;
   // rcapture_ = sparams_->r_capture;
   bind_site_density_ = sparams_->bind_site_density;
@@ -40,7 +45,8 @@ void Crosslink::InitInteractionEnvironment(LookupTable *lut) { lut_ = lut; }
 void Crosslink::UpdatePosition() {}
 
 void Crosslink::GetAnchors(std::vector<Object *> &ixors) {
-  if (IsUnbound()) return;
+  if (IsUnbound())
+    return;
   if (!static_flag_) {
     ixors.push_back(&anchors_[0]);
   }
@@ -74,6 +80,9 @@ void Crosslink::SinglyKMC() {
 
   std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_prime);
   if (n_neighbors > 0) {
+    if (polar_affinity_ < 1) {
+      anchors_[0].CalculatePolarAffinity(kmc_bind_factor);
+    }
     kmc_bind.CalcTotProbsSD(anchors_[0].GetNeighborListMem(), kmc_filter,
                             anchors_[0].GetBoundOID(), 0, k_spring_, 1.0,
                             rest_length_, kmc_bind_factor);
@@ -94,11 +103,10 @@ void Crosslink::SinglyKMC() {
     double bind_lambda;
     /* Find out which rod we are binding to */
     int i_bind = kmc_bind.whichRodBindSD(bind_lambda, roll);
-    if (i_bind < 0) {  // || bind_lambda < 0) {
+    if (i_bind < 0) { // || bind_lambda < 0) {
       printf("i_bind = %d\nbind_lambda = %2.2f\n", i_bind, bind_lambda);
-      Logger::Error(
-          "kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
-          " returned an invalid result!");
+      Logger::Error("kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
+                    " returned an invalid result!");
     }
     Object *bind_obj = anchors_[0].GetNeighbor(i_bind);
     double obj_length = bind_obj->GetLength();
@@ -125,8 +133,13 @@ void Crosslink::SinglyKMC() {
 void Crosslink::DoublyKMC() {
   /* Calculate force-dependent unbinding for each head */
   double tether_stretch = length_ - rest_length_;
-  tether_stretch = (tether_stretch > 0 ? tether_stretch : 0);
-  double fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
+  double fdep;
+  // For anisotropic springs apply second spring constant for compression
+  if (anisotropic_spring_flag_ && tether_stretch < 0) {
+    fdep = fdep_factor_ * 0.5 * k2_spring_ * SQR(tether_stretch);
+  } else {
+    fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
+  }
   double unbind_prob = k_off_d_ * delta_ * exp(fdep);
   double roll = rng_.RandomUniform();
   int head_activate = -1;
@@ -182,7 +195,8 @@ void Crosslink::UpdateAnchorPositions() {
 }
 
 void Crosslink::ApplyTetherForces() {
-  if (!IsDoubly()) return;
+  if (!IsDoubly())
+    return;
   anchors_[0].ApplyAnchorForces();
   anchors_[1].ApplyAnchorForces();
 }
@@ -232,7 +246,8 @@ void Crosslink::ZeroForce() {
 
 void Crosslink::CalculateTetherForces() {
   ZeroForce();
-  if (!IsDoubly()) return;
+  if (!IsDoubly())
+    return;
   Interaction ix(&anchors_[0], &anchors_[1]);
   MinimumDistance mindist;
   mindist.ObjectObject(ix);
@@ -327,7 +342,8 @@ void Crosslink::WriteSpec(std::fstream &ospec) {
 }
 
 void Crosslink::ReadSpec(std::fstream &ispec) {
-  if (ispec.eof()) return;
+  if (ispec.eof())
+    return;
   SetSingly();
   bool is_doubly;
   ispec.read(reinterpret_cast<char *>(&is_doubly), sizeof(bool));

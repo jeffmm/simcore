@@ -191,7 +191,12 @@ void Simulation::InitGraphics() {
   // Initialize graphics structures
   graphics_.Init(&graph_array_, space_.GetStruct(), background_color,
                  params_.draw_boundary, params_.auto_graph);
-  graphics_.DrawLoop();
+  
+  //This line was interferring with graphics on Windows, and removing it did no harm
+  #ifndef WINGRAPH
+    graphics_.DrawLoop();
+  #endif
+
 #endif
   // Initialize directory for grabbed images
   params_.movie_directory.append("/");

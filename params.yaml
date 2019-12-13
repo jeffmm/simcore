@@ -1,6 +1,6 @@
-seed: 134262633418933
+seed: 11782311791392
 
-run_name: parameter_sweep
+run_name: test_run
 n_dim: 3
 n_periodic: 3
 delta: 0.0001
@@ -8,33 +8,32 @@ n_steps: 1000000
 boundary: 0
 
 graph_flag: true
-n_graph: 100
-movie_flag: true
-insert_radius: 50
+n_graph: 1000
+movie_flag: false
+insert_radius: 5
 
-system_radius: 300
+system_radius: 50
 potential: soft
 soft_potential_mag: 1000
 f_cutoff: 100000
 thermo_flag: true
 n_thermo: 100
 like_like_interactions: true
-interaction_flag: false
-
+interaction_flag: true
 checkpoint_flag: true
 n_checkpoint: 1000
 
 filament:
   - name: actin
-    num: 300
+    num: 2
     insertion_type: random_nematic
     draw_type: fixed
     color: 2
     diameter: 1
-    overlap: false
+    overlap: true
     length: 36
     min_bond_length: 2
-    polydispersity_flag: true
+    polydispersity_flag: false
     persistence_length: 3400
     spec_flag: true
     n_spec: 100
@@ -42,27 +41,29 @@ filament:
 
 crosslink:
   - name: filamen
-    concentration: 0
+    concentration: 0.01
     insertion_type: random
     diameter: 1
     walker_flag: false
     velocity: 0
-    diffusion_flag: false
-    draw_type: fixed
+    diffusion_flag: true
+    draw_type: bw
     color: 4.67
     k_on: 50
     k_off: 5
     k_on_d: 50
-    k_off_d: 5
+    k_off_d: 0
     force_dep_factor: 0
     polar_affinity: 0
     k_spring: 50
+    k2_spring: 0
+    anisotropic_spring_flag: true
     f_stall: 100
-    force_dep_vel_flag: false
+    force_dep_vel_flag: true
     k_align: 0
     rest_length: 10
     step_direction: -1
-    tether_draw_type: fixed
+    tether_draw_type: bw
     tether_diameter: 0.1
     tether_color: 4.67
     end_pausing: false

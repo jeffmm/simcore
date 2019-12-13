@@ -61,7 +61,6 @@ void Site::RemoveOutgoingBonds() {
 }
 
 directed_bond Site::GetOtherDirectedBond(int bond_oid) {
-  std::cout << "n_bonds:" << n_bonds_ << std::endl;
   if (n_bonds_ <= 1) {
     // there are no other bonds
     return std::make_pair(nullptr, NONE);

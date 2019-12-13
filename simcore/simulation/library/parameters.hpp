@@ -78,6 +78,8 @@ struct species_parameters<species_id::filament>
   double flagella_amplitude = 1;
   bool flocking_analysis = false;
   bool polydispersity_flag = false;
+  int polydispersity_warn_on_truncate = 0;
+  bool custom_set_tail = false;
 };
 typedef species_parameters<species_id::filament> filament_parameters;
 
@@ -126,8 +128,10 @@ struct species_parameters<species_id::crosslink>
   double k_on_d = 10;
   double k_off_d = 2;
   double force_dep_factor = 1;
-  double polar_affinity = 0;
+  double polar_affinity = 1;
   double k_spring = 10;
+  double k2_spring = 0;
+  bool anisotropic_spring_flag = false;
   double f_stall = 100;
   bool force_dep_vel_flag = true;
   double k_align = 0;

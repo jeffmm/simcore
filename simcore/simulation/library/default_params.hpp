@@ -57,6 +57,8 @@
   default_config["filament"]["flagella_amplitude"] = "1";
   default_config["filament"]["flocking_analysis"] = "false";
   default_config["filament"]["polydispersity_flag"] = "false";
+  default_config["filament"]["polydispersity_warn_on_truncate"] = "0";
+  default_config["filament"]["custom_set_tail"] = "false";
   default_config["br_bead"]["driving_factor"] = "0";
   default_config["br_bead"]["packing_fraction"] = "-1";
   default_config["spherocylinder"]["diffusion_analysis"] = "false";
@@ -81,8 +83,10 @@
   default_config["crosslink"]["k_on_d"] = "10";
   default_config["crosslink"]["k_off_d"] = "2";
   default_config["crosslink"]["force_dep_factor"] = "1";
-  default_config["crosslink"]["polar_affinity"] = "0";
+  default_config["crosslink"]["polar_affinity"] = "1";
   default_config["crosslink"]["k_spring"] = "10";
+  default_config["crosslink"]["k2_spring"] = "0";
+  default_config["crosslink"]["anisotropic_spring_flag"] = "false";
   default_config["crosslink"]["f_stall"] = "100";
   default_config["crosslink"]["force_dep_vel_flag"] = "true";
   default_config["crosslink"]["k_align"] = "0";

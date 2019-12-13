@@ -49,6 +49,7 @@ void Filament::SetParameters() {
   flagella_amplitude_ = sparams_->flagella_amplitude;
   /* Default site in optical trap is the tail */
   trapped_site_ = 0;
+  custom_set_tail_ = sparams_->custom_set_tail;
 
   /* Refine parameters */
   if (dynamic_instability_flag_) {
@@ -231,7 +232,16 @@ void Filament::InsertAt(const double *const new_pos, const double *const u) {
       "Inserting filament at [%2.1f, %2.1f, %2.1f] with orientation"
       "[%2.1f, %2.1f, %2.1f]",
       new_pos[0], new_pos[1], new_pos[2], u[0], u[1], u[2]);
-  RelocateMesh(new_pos, u);
+  if (custom_set_tail_) {
+    std::copy(new_pos, new_pos + n_dim_, position_);
+    for (int i = 0; i < n_dim_; ++i) {
+      position_[i] += u[i] * length_ * .5;
+    }
+    Logger::Trace("Insert file locations are the locations of tails");
+    RelocateMesh(position_, u);
+  } else {
+    RelocateMesh(new_pos, u);
+  }
   UpdatePrevPositions();
   CalculateAngles();
   SetDiffusion();
