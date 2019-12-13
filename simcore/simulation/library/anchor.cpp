@@ -158,15 +158,15 @@ void Anchor::Walk() {
     double const *const bond_orientation = bond_->GetOrientation();
     double fmag_para = 0.0;
     for (int i = 0; i < n_dim_; ++i) {
-      fmag_para += force_[i] * bond_orientation[i];
+      fmag_para += step_direction_ * force_[i] * bond_orientation[i];
     }
     // fmag = sqrt(fmag);
     // Linear force-velocity relationship
-    double fdep = 1. + fmag_para / f_stall_;
-    if (fdep > 1) {
-      fdep = 1;
+    double fdep = 1. + (fmag_para / f_stall_);
+    if (fdep > 1.) {
+      fdep = 1.;
     } else if (fdep < 0) {
-      fdep = 0;
+      fdep = 0.;
     }
     velocity_ = max_velocity_ * fdep;
   }

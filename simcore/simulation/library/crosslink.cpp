@@ -18,7 +18,7 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   k_off_d_ = sparams_->k_off_d;  // k_off for doubly to singly
   k_spring_ = sparams_->k_spring;
   k_align_ = sparams_->k_align;
-  rcapture_ = sparams_->r_capture;
+  // rcapture_ = sparams_->r_capture;
   bind_site_density_ = sparams_->bind_site_density;
   fdep_factor_ = sparams_->force_dep_factor;
   polar_affinity_ = sparams_->polar_affinity;
@@ -63,18 +63,14 @@ void Crosslink::SinglyKMC() {
   int n_neighbors = anchors_[0].GetNNeighbors();
   std::vector<int> kmc_filter(n_neighbors, 1);
   /* Initialize KMC calculation */
-  KMC<Object> kmc_bind(anchors_[0].pos, n_neighbors, rcapture_, delta_, lut_);
+  KMC<Object> kmc_bind(anchors_[0].pos, n_neighbors, delta_, lut_);
 
   /* Initialize periodic boundary conditions */
   kmc_bind.SetPBCs(n_dim_, space_->n_periodic, space_->unit_cell);
 
   /* Calculate probability to bind */
   double kmc_bind_prob = 0;
-  /* Effective concentration of one anchor in a sphere of
-   * rcaputre_ radius
-   */
-  double eff_concentration = .75 / (M_PI * CUBE(rcapture_));
-  double k_on_d_prime = k_on_d_ * eff_concentration * bind_site_density_;
+  double k_on_d_prime = k_on_d_ * bind_site_density_;
 
   std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_prime);
   if (n_neighbors > 0) {
