@@ -107,8 +107,8 @@ void InteractionManager::CheckUpdateXlinks() {
         "Updating interactions due to crosslink update. %d steps "
         "since last update",
         i_update_);
-    const double doubly_bound_num = xlink_.GetDoublyBoundCrosslinkNumber();
-    printf("doubly_bound_num = %f\n", doubly_bound_num);
+    const int doubly_bound_num = xlink_.GetDoublyBoundCrosslinkNumber();
+    printf("doubly_bound_num = %d\n", doubly_bound_num);
     UpdateInteractions();
     return;
   }

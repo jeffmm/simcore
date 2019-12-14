@@ -39,7 +39,7 @@ class CrosslinkManager {
   void InitSpecies(sid_label &slab, ParamsParser &parser, unsigned long seed);
   void LoadCrosslinksFromCheckpoints(std::string run_name,
                                      std::string checkpoint_run_name);
-  const double GetDoublyBoundCrosslinkNumber() const;
+  const int GetDoublyBoundCrosslinkNumber() const;
   void ZeroDrTot();
   const double GetDrMax();
   void ReadInputs();

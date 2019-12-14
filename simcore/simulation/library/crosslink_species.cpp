@@ -396,8 +396,8 @@ void CrosslinkSpecies::ReadSpecs() {
   }
 }
 
-const double CrosslinkSpecies::GetDoublyBoundCrosslinkNumber() const {
-  double num = 0;
+const int CrosslinkSpecies::GetDoublyBoundCrosslinkNumber() const {
+  int num = 0;
   for (const auto &xl : members_) {
     if (xl.IsDoubly()) ++num;
   }

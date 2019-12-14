@@ -111,8 +111,8 @@ void CrosslinkManager::ZeroDrTot() {
   }
 }
 
-const double CrosslinkManager::GetDoublyBoundCrosslinkNumber() const {
-  double num = 0;
+const int CrosslinkManager::GetDoublyBoundCrosslinkNumber() const {
+  int num = 0;
   for (const auto &xl_spec : xlink_species_) {
     num += xl_spec->GetDoublyBoundCrosslinkNumber();
   }
