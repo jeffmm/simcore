@@ -396,6 +396,14 @@ void CrosslinkSpecies::ReadSpecs() {
   }
 }
 
+const double CrosslinkSpecies::GetDoublyBoundCrosslinkNumber() const {
+  double num = 0;
+  for (const auto &xl : members_) {
+    if (xl.IsDoubly()) ++num;
+  }
+  return num;
+}
+
 const double CrosslinkSpecies::GetConcentration() const {
   return sparams_.concentration;
 }

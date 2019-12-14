@@ -12,17 +12,17 @@ class CrosslinkOutputManager : public OutputManagerBase<CrosslinkSpecies> {
 };
 
 class CrosslinkManager {
-private:
+ private:
   system_parameters *params_;
   CrosslinkOutputManager output_mgr_;
   double obj_volume_;
-  double rcutoff_ = 0; // Cutoff for binding any crosslink and bond
+  double rcutoff_ = 0;  // Cutoff for binding any crosslink and bond
   bool update_;
   std::vector<CrosslinkSpecies *> xlink_species_;
   std::vector<Object *> *objs_;
   space_struct *space_;
 
-public:
+ public:
   void Init(system_parameters *params, space_struct *space,
             std::vector<Object *> *objs);
   void GetInteractors(std::vector<Object *> &ixors);
@@ -39,6 +39,7 @@ public:
   void InitSpecies(sid_label &slab, ParamsParser &parser, unsigned long seed);
   void LoadCrosslinksFromCheckpoints(std::string run_name,
                                      std::string checkpoint_run_name);
+  const double GetDoublyBoundCrosslinkNumber() const;
   void ZeroDrTot();
   const double GetDrMax();
   void ReadInputs();

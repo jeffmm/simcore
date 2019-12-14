@@ -13,13 +13,13 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   draw_ = draw_type::_from_string(sparams_->tether_draw_type.c_str());
   rest_length_ = sparams_->rest_length;
   static_flag_ = sparams_->static_flag;
-  k_on_ = sparams_->k_on;       // k_on for unbound to singly
-  k_off_ = sparams_->k_off;     // k_off for singly to unbound
-  k_on_d_ = sparams_->k_on_d;   // k_on for singly to doubly
-  k_off_d_ = sparams_->k_off_d; // k_off for doubly to singly
+  k_on_ = sparams_->k_on;        // k_on for unbound to singly
+  k_off_ = sparams_->k_off;      // k_off for singly to unbound
+  k_on_d_ = sparams_->k_on_d;    // k_on for singly to doubly
+  k_off_d_ = sparams_->k_off_d;  // k_off for doubly to singly
   k_spring_ = sparams_->k_spring;
-  k2_spring_ = sparams_->k2_spring; // spring const for compression if
-                                    // anisotropic_spring_flag is true
+  k2_spring_ = sparams_->k2_spring;  // spring const for compression if
+                                     // anisotropic_spring_flag is true
   anisotropic_spring_flag_ = sparams_->anisotropic_spring_flag;
   static_flag_ = sparams_->static_flag;
   k_align_ = sparams_->k_align;
@@ -45,8 +45,7 @@ void Crosslink::InitInteractionEnvironment(LookupTable *lut) { lut_ = lut; }
 void Crosslink::UpdatePosition() {}
 
 void Crosslink::GetAnchors(std::vector<Object *> &ixors) {
-  if (IsUnbound())
-    return;
+  if (IsUnbound()) return;
   if (!static_flag_) {
     ixors.push_back(&anchors_[0]);
   }
@@ -103,10 +102,11 @@ void Crosslink::SinglyKMC() {
     double bind_lambda;
     /* Find out which rod we are binding to */
     int i_bind = kmc_bind.whichRodBindSD(bind_lambda, roll);
-    if (i_bind < 0) { // || bind_lambda < 0) {
+    if (i_bind < 0) {  // || bind_lambda < 0) {
       printf("i_bind = %d\nbind_lambda = %2.2f\n", i_bind, bind_lambda);
-      Logger::Error("kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
-                    " returned an invalid result!");
+      Logger::Error(
+          "kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
+          " returned an invalid result!");
     }
     Object *bind_obj = anchors_[0].GetNeighbor(i_bind);
     double obj_length = bind_obj->GetLength();
@@ -195,8 +195,7 @@ void Crosslink::UpdateAnchorPositions() {
 }
 
 void Crosslink::ApplyTetherForces() {
-  if (!IsDoubly())
-    return;
+  if (!IsDoubly()) return;
   anchors_[0].ApplyAnchorForces();
   anchors_[1].ApplyAnchorForces();
 }
@@ -246,8 +245,7 @@ void Crosslink::ZeroForce() {
 
 void Crosslink::CalculateTetherForces() {
   ZeroForce();
-  if (!IsDoubly())
-    return;
+  if (!IsDoubly()) return;
   Interaction ix(&anchors_[0], &anchors_[1]);
   MinimumDistance mindist;
   mindist.ObjectObject(ix);
@@ -342,8 +340,7 @@ void Crosslink::WriteSpec(std::fstream &ospec) {
 }
 
 void Crosslink::ReadSpec(std::fstream &ispec) {
-  if (ispec.eof())
-    return;
+  if (ispec.eof()) return;
   SetSingly();
   bool is_doubly;
   ispec.read(reinterpret_cast<char *>(&is_doubly), sizeof(bool));
