@@ -160,14 +160,14 @@ void Anchor::Walk() {
   if (force_dep_vel_flag_) {
     // Only consider projected force
     double force_proj = dot_product(n_dim_, force_, orientation_);
-    // Linear force-velocity relationship
-    double fdep = 1 - force_proj / f_stall_;
-    if (fdep > 1) {
-      fdep = 1;
-    } else if (fdep < 0) {
-      fdep = 0;
+    // Linear force-velocity relationship if force opposes step direction
+    if (SIGNOF(step_direction_) != SIGNOF(force_proj)) {
+      double fdep = 1 - ABS(force_proj) / f_stall_;
+      if (fdep < 0) {
+        fdep = 0;
+      }
+      velocity_ = max_velocity_ * fdep;
     }
-    velocity_ = max_velocity_ * fdep;
   }
   double dr = step_direction_ * velocity_ * delta_;
   mesh_lambda_ += dr;
@@ -222,16 +222,13 @@ void Anchor::Diffuse() {
   double vel = kick * diffusion_ / diameter_;
   if (force_dep_vel_flag_) {
     double force_proj = dot_product(n_dim_, force_, orientation_);
-    // Add force-velocity relationship to diffusion
+    /* Add force-velocity relationship to diffusion if force opposes direction
+       of diffusion */
     if (SIGNOF(force_proj) != SIGNOF(vel)) {
       double fdep = 1 - ABS(force_proj) / f_stall_;
-      // TODO Check whether the force can cause the motor to reverse
-      // For now, assume that diffusion can be biased in either direction
-      // if (fdep > 1) {
-      // fdep = 1;
-      //} else if (fdep < 0) {
-      // fdep = 0;
-      //}
+      if (fdep < 0) {
+        fdep = 0;
+      }
       vel *= fdep;
     }
   }
