@@ -224,7 +224,7 @@ void Anchor::Diffuse() {
     double force_proj = dot_product(n_dim_, force_, orientation_);
     // Add force-velocity relationship to diffusion
     if (SIGNOF(force_proj) != SIGNOF(vel)) {
-      double fdep = 1 - force_proj / f_stall_;
+      double fdep = 1 - ABS(force_proj) / f_stall_;
       // TODO Check whether the force can cause the motor to reverse
       // For now, assume that diffusion can be biased in either direction
       // if (fdep > 1) {
