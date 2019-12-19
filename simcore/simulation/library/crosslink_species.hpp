@@ -50,6 +50,7 @@ class CrosslinkSpecies : public Species<Crosslink, species_id::crosslink> {
   void GetAnchorInteractors(std::vector<Object *> &ixors);
   void ReadSpecs();
   void InsertCrosslinks();
+  const int GetDoublyBoundCrosslinkNumber() const;
   const double GetConcentration() const;
   const double GetRCutoff() const;
 };

@@ -7,12 +7,12 @@ typedef std::vector<Bond>::iterator bond_iterator;
 typedef std::vector<Site>::iterator site_iterator;
 
 class Mesh : public Object {
-private:
+ private:
   static int _next_mesh_id_;
   static std::mutex _mesh_mtx_;
   void InitMeshID();
 
-protected:
+ protected:
   bool anchored_ = false;
   bool midstep_ = true;
   bool posits_only_ = false;
@@ -33,7 +33,7 @@ protected:
   void AddSite(Site s);
   void AddBond(Site *s1, Site *s2);
 
-public:
+ public:
   Mesh(unsigned long seed);
   void InitSiteAt(double *new_pos, double d);
   void InitBondAt(double *new_pos, double *u, double l, double d);
@@ -89,4 +89,4 @@ public:
   virtual const double GetTrueLength() const;
 };
 
-#endif // _SIMCORE_MESH_H_
+#endif  // _SIMCORE_MESH_H_

@@ -110,6 +110,15 @@ void CrosslinkManager::ZeroDrTot() {
     (*it)->ZeroDrTot();
   }
 }
+
+const int CrosslinkManager::GetDoublyBoundCrosslinkNumber() const {
+  int num = 0;
+  for (const auto &xl_spec : xlink_species_) {
+    num += xl_spec->GetDoublyBoundCrosslinkNumber();
+  }
+  return num;
+}
+
 const double CrosslinkManager::GetDrMax() {
   double dr_max = 0;
   for (auto it = xlink_species_.begin(); it != xlink_species_.end(); ++it) {

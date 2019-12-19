@@ -111,6 +111,7 @@ void InteractionManager::CheckUpdateXlinks() {
     return;
   }
 }
+
 void InteractionManager::ForceUpdate() {
   Logger::Trace("Forcing update in interaction manager");
   UpdateInteractors();

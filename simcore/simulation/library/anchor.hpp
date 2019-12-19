@@ -7,7 +7,7 @@
 /* Class for bound crosslink heads (called anchors). Tracks and updates its
    absolute position in space and relative position to its bound object. */
 class Anchor : public Object {
-private:
+ private:
   bool bound_;
   bool walker_;
   bool diffuse_;
@@ -42,7 +42,7 @@ private:
   bool CheckMesh();
   bool CalcBondLambda();
 
-public:
+ public:
   Anchor(unsigned long seed);
   void Init(crosslink_parameters *sparams);
   bool IsBound();
@@ -52,7 +52,6 @@ public:
   void ApplyAnchorForces();
   void UpdateAnchorPositionToMesh();
   void SetDiffusion();
-  void SetWalker(int dir, double walk_v);
   void AttachObjRandom(Object *o);
   void AttachObjLambda(Object *o, double lambda);
   void AttachObjMeshLambda(Object *o, double mesh_lambda);
