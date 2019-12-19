@@ -40,9 +40,9 @@ void Anchor::SetWalker(int dir, double walk_v) {
     Logger::Error("Walker direction must be set to +/- 1");
   }
   walker_ = true;
-  velocity_ = walk_v;
-  max_velocity_ = velocity_;
-  step_direction_ = dir;
+  // velocity_ = walk_v;
+  // max_velocity_ = velocity_;
+  // step_direction_ = dir;
 }
 
 void Anchor::UpdateAnchorPositionToMesh() {
@@ -155,20 +155,21 @@ void Anchor::Deactivate() {
 }
 
 void Anchor::Walk() {
+  double vel;
   if (force_dep_vel_flag_) {
     // Only consider projected force in direction of stepping
     double const force_proj =
         step_direction_ * dot_product(n_dim_, force_, orientation_);
     // Linear force-velocity relationship
-    double fdep = 1 + force_proj / f_stall_;
+    double fdep = 1. + (force_proj / f_stall_);
     if (fdep > 1) {
       fdep = 1;
     } else if (fdep < 0) {
       fdep = 0.;
     }
-    velocity_ = max_velocity_ * fdep;
+    vel = max_velocity_ * fdep;
   }
-  double dr = step_direction_ * velocity_ * delta_;
+  double dr = step_direction_ * vel * delta_;
   mesh_lambda_ += dr;
 }
 
@@ -223,7 +224,7 @@ void Anchor::Diffuse() {
     double force_proj = dot_product(n_dim_, force_, orientation_);
     // Add force-velocity relationship to diffusion
     if (SIGNOF(force_proj) != SIGNOF(vel)) {
-      double fdep = 1 - force_proj / f_stall_;
+      double fdep = 1. - force_proj / f_stall_;
       // TODO Check whether the force can cause the motor to reverse
       // For now, assume that diffusion can be biased in either direction
       // if (fdep > 1) {
