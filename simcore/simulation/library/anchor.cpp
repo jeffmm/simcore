@@ -35,16 +35,6 @@ void Anchor::SetMeshLambda(double ml) { mesh_lambda_ = ml; }
 
 void Anchor::SetDiffusion() { diffusion_ = sqrt(24.0 * diameter_ / delta_); }
 
-void Anchor::SetWalker(int dir, double walk_v) {
-  if (ABS(dir) != 1) {
-    Logger::Error("Walker direction must be set to +/- 1");
-  }
-  walker_ = true;
-  // velocity_ = walk_v;
-  // max_velocity_ = velocity_;
-  // step_direction_ = dir;
-}
-
 void Anchor::UpdateAnchorPositionToMesh() {
   if (!bound_ || static_flag_) return;
   if (!bond_ || !mesh_) {
@@ -155,7 +145,7 @@ void Anchor::Deactivate() {
 }
 
 void Anchor::Walk() {
-  double vel;
+  double vel = 0;
   if (force_dep_vel_flag_) {
     // Only consider projected force in direction of stepping
     double const force_proj =
@@ -222,18 +212,7 @@ void Anchor::Diffuse() {
   double vel = kick * diffusion_ / diameter_;
   if (force_dep_vel_flag_) {
     double force_proj = dot_product(n_dim_, force_, orientation_);
-    // Add force-velocity relationship to diffusion
-    if (SIGNOF(force_proj) != SIGNOF(vel)) {
-      double fdep = 1. - force_proj / f_stall_;
-      // TODO Check whether the force can cause the motor to reverse
-      // For now, assume that diffusion can be biased in either direction
-      // if (fdep > 1) {
-      // fdep = 1;
-      //} else if (fdep < 0) {
-      // fdep = 0;
-      //}
-      vel *= fdep;
-    }
+    vel += diffusion_ * force_proj;
   }
   double dr = vel * delta_;
   mesh_lambda_ += dr;
