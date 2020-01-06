@@ -82,7 +82,7 @@ void Simulation::PrintComplete() {
 /* Update the positions of all objects in the system using numerical
  * integration for one time step defined by the delta parameter. */
 void Simulation::Integrate() {
-  Logger::Debug("Updating object positions");
+  Logger::Trace("Updating object positions");
   for (auto it = species_.begin(); it != species_.end(); ++it) {
     (*it)->UpdatePositions();
   }
@@ -90,7 +90,7 @@ void Simulation::Integrate() {
 
 /* Calculate interaction forces between all objects if necessary. */
 void Simulation::Interact() {
-  Logger::Debug("Calculating object interactions");
+  Logger::Trace("Calculating object interactions");
   ix_mgr_.Interact();
 }
 

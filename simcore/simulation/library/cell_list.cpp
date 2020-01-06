@@ -33,14 +33,34 @@ void CellList::Init(int n_dim, int n_periodic, double system_radius) {
     }
   }
 #endif
+  if (_n_cells_1d_ < 0) {
+    /* Give debugging details if we have bad parameters and throw error. Note
+       that _n_cells_1d_ can be 0 if the interaction distance is greater than
+       the system diameter */
+    Logger::Debug("n_cells_1d: %d, min_cell_length: %2.6f, system_radius:"
+                  " %2.2f",
+                  _n_cells_1d_, _min_cell_length_, system_radius);
+    Logger::Error("Cell list received bad initialization parameters!");
+  } else if (_n_dim_ == _n_periodic_ && _n_cells_1d_ <= 3) {
+    /* Warn users that we will be effectively doing all-pair interactions. If we
+       have periodic BCs, 3 cells per side will result in all pairs */
+    Logger::Warning("Cell list initialized with 3 cells or fewer. Calculating"
+                    " all-pair interactions");
+    // Fewer than three cells will have equivalent behavior
+    _n_cells_1d_ = 3;
+  } else if (_n_cells_1d_ <= 2) {
+    /* If we do not have periodic BCs, this warning should only apply when we
+       have 2 cells per side*/
+    Logger::Warning("Cell list initialized with 2 cells or fewer. Calculating"
+                    " all-pair interactions");
+    // Fewer than 2 cells will have equivalent behavior
+    _n_cells_1d_ = 2;
+  }
   _cell_length_ = (double)2 * system_radius / _n_cells_1d_;
   _n_dim_ = n_dim;
   _n_periodic_ = n_periodic;
   Logger::Debug("Cell list initialized with %d cells per side of length %2.2f",
                 _n_cells_1d_, _cell_length_);
-  if (_n_cells_1d_ < 1 || _cell_length_ < 0) {
-    Logger::Error("Cell list received bad initialization parameters!");
-  }
 }
 
 void CellList::BuildCellList() {
