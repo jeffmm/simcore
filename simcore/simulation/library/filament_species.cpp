@@ -344,11 +344,11 @@ void FilamentSpecies::InitMse2eAnalysis() {
   double dr = it->GetDriving();
   double nspec = GetNSpec();
   double theory;
-  if (params_->n_dim == 2) {
-    theory = l * pl * 4.0 - 8.0 * pl * pl * (1 - exp(-0.5 * l / pl));
-  } else {
-    theory = l * pl * 2.0 - 2.0 * pl * pl * (1 - exp(-l / pl));
-  }
+  //if (params_->n_dim == 2) {
+    //theory = l * pl * 4.0 - 8.0 * pl * pl * (1 - exp(-0.5 * l / pl));
+  //} else {
+  theory = l * pl * 2.0 - 2.0 * pl * pl * (1 - exp(-l / pl));
+  //}
   mse2e_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << " "
               << params_->n_dim << " " << params_->n_steps << " " << nspec
               << " " << params_->delta << " " << theory << "\n";
