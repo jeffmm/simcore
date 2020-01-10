@@ -23,6 +23,7 @@ class FilamentSpecies : public Species<Filament, species_id::filament> {
   double *polar_order_vector_;
   int **theta_histogram_;
   int *polar_order_histogram_;
+  int *flock_states_;
   int time_;
   int n_bins_;
   int n_bins_1d_;

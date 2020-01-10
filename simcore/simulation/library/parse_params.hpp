@@ -315,6 +315,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.spiral_number_fail_condition = jt->second.as<double>();
       } else if (param_name.compare("driving_factor")==0) {
       params.driving_factor = jt->second.as<double>();
+      } else if (param_name.compare("peclet_number")==0) {
+      params.peclet_number = jt->second.as<double>();
       } else if (param_name.compare("friction_ratio")==0) {
       params.friction_ratio = jt->second.as<double>();
       } else if (param_name.compare("dynamic_instability_flag")==0) {
@@ -381,8 +383,6 @@ species_base_parameters *parse_species_params(std::string sid,
       params.flocking_analysis = jt->second.as<bool>();
       } else if (param_name.compare("polydispersity_flag")==0) {
       params.polydispersity_flag = jt->second.as<bool>();
-      } else if (param_name.compare("polydispersity_warn_on_truncate")==0) {
-      params.polydispersity_warn_on_truncate = jt->second.as<int>();
       } else if (param_name.compare("custom_set_tail")==0) {
       params.custom_set_tail = jt->second.as<bool>();
       } else {

@@ -30,6 +30,14 @@ void Filament::SetParameters() {
   v_depoly_ = sparams_->v_depoly;
   v_poly_ = sparams_->v_poly;
   driving_factor_ = sparams_->driving_factor;
+  peclet_number_ = sparams_->peclet_number;
+  if (dynamic_instability_flag_ && peclet_number_ > 0) {
+    /* Dynamic instability and Peclet number do not mix because a Peclet number
+       assumes a fixed length, and the driving factor should not change as a
+       filament grows or shrinks */
+    Logger::Error("Dynamic instability and Peclet number are not compatible");
+  }
+  driving_factor_ = sparams_->driving_factor;
   friction_ratio_ = sparams_->friction_ratio;
   stoch_flag_ = params_->stoch_flag; // include thermal forces
   eq_steps_ = sparams_->n_equil;
@@ -146,6 +154,9 @@ void Filament::InitFilamentLength() {
                 " %d",
                 length_, n_bonds_, GetMeshID());
   true_length_ = length_;
+  if (peclet_number_ > 0) {
+    driving_factor_ = peclet_number_ / SQR(length_);
+  }
 }
 
 void Filament::Reserve() {
@@ -1148,10 +1159,10 @@ void Filament::CheckFlocking() {
     }
     if (avg_contact_number >= params_->flock_contact_min) {
       // Filament is in flock interior
-      in_flock_ = 1;
+      in_flock_ = 2;
     } else {
       // Filament is in flock exterior
-      in_flock_ = 2;
+      in_flock_ = 1;
     }
   } else if (in_flock_prev > 0) {
     // Filament left flock this timestep

@@ -93,7 +93,7 @@ reload_reduce_switch: [false, bool]  # If a reduction is performed before a relo
                                      # run_name_reload_yy_reduced_xx_params.yaml.
 flock_polar_min: [0.5, double]       # Polar order cutoff used for determining whether an object 
                                      # is in a flocking state.
-flock_contact_min: [1.5, double]     # Contact number cutoff used for flocking determination.
+flock_contact_min: [0.5, double]     # Contact number cutoff used for flocking determination.
 highlight_flock: [false, bool]       # Flag that adds highlighting to high polar order objects
                                      # in post-process graphics and movies.
 flock_color_ext: [1.57, double]      # Color of flocking objects at the flock exterior. Uses same
@@ -212,6 +212,8 @@ filament:                            # Parameters unique to filament class of ob
   spiral_number_fail_condition: [0, double] # when spiral flag is on, terminates simulation when the
                                             # spiral number of a filament is less than this value.
   driving_factor: [0, double]        # force density used to propel active filaments.
+  peclet_number: [-1, double]        # ratio of active transport to diffusive transport. changes
+                                     # driving factor if positive.
   friction_ratio: [2, double]        # ratio of filament friction, perpendicular / parallel.
   dynamic_instability_flag : [false, bool] # flag for modeling dynamic instability of filaments. filaments
                                      # will polymerize at a rate of v_poly and depolymerize at a 
@@ -238,16 +240,16 @@ filament:                            # Parameters unique to filament class of ob
   f_pause_to_shrink : [0.0, double]
   f_grow_to_pause : [0.0, double]
   f_grow_to_shrink : [0.00554, double]
-  v_poly : [0.44, double]            # speed of filament lengthening when filament is in grow state.
-  v_depoly : [0.793, double]         # speed of shortening when filament is in shrink state.
-  theta_analysis: [false, bool]      # run post-process analysis of filament conformation for testing
-                                     # persistence length. outputs histogram of angle distributions
-                                     # between neighboring bonds to compare to theory.
-  lp_analysis: [false, bool]         # test persistence length by measuring mean-square end-to-end
-                                     # distance of filament in post-process analysis. outputs mse2e
-                                     # file that measures mean-square end-to-end distance and variance.
+  v_poly : [0.44, double]           # speed of filament lengthening when filament is in grow state.
+  v_depoly : [0.793, double]        # speed of shortening when filament is in shrink state.
+  theta_analysis: [false, bool]     # run post-process analysis of filament conformation for testing
+                                    # persistence length. outputs histogram of angle distributions
+                                    # between neighboring bonds to compare to theory.
+  lp_analysis: [false, bool]        # test persistence length by measuring mean-square end-to-end
+                                    # distance of filament in post-process analysis. outputs mse2e
+                                    # file that measures mean-square end-to-end distance and variance.
   global_order_analysis: [false, bool] # post-process analysis of global order parameters, such as global
-                                    # polar order, global nematic order, global spiral number, etc.
+                                       # polar order, global nematic order, global spiral number, etc.
   packing_fraction: [-1, double]    # if num > 0, and packing fraction > 0, filaments are inserted
                                     # until the ratio filament to system volumes match this value.
   perlen_ratio: [-1, double]        # if perlen ratio >= 0, sets the persistence length of filaments
@@ -258,20 +260,20 @@ filament:                            # Parameters unique to filament class of ob
   n_equil: [0, int]                 # internal filament parameter used for shuffling.
   orientation_corr_analysis: [false, bool] # post-process analysis of orientation correlation function.
   orientation_corr_n_steps: [1000, int] # number of steps to measure orientation correlation, defines
-                                       # interval over which to average.
+                                        # interval over which to average.
   crossing_analysis: [false, bool]  # apply post-process analysis of filament crossing events.
   intrinsic_curvature: [0, double]  # curvature per unit length to apply on filament. defines the
                                     # curvature of zero bending energy. positive is right-handed.
-  flagella_flag: [false, bool]           # applies a sinusoidal, time-varying intrinsic curvature along 
+  flagella_flag: [false, bool]      # applies a sinusoidal, time-varying intrinsic curvature along 
                                     # filament.
   flagella_freq: [1, double]        # frequency at which to oscillate intrinsic curvature of flagella.
   flagella_period: [2, double]      # period of sinusoid to apply along filament length.
   flagella_amplitude: [1, double]   # defines amplitude of sinuosoid to apply along filament length.
-  flocking_analysis: [false, bool]       # post-process analysis of measuring flocking filaments.
+  flocking_analysis: [false, bool]  # post-process analysis of measuring flocking filaments.
                                     # generates output file giving number of flocking filaments as
                                     # well as number of exterior and interior flocking filaments.
   polydispersity_flag: [false, bool] # if > 0, assign length from exponential distribution
-  custom_set_tail: [false, bool]          # If custom set tail is true then the locations provided in the insert file
+  custom_set_tail: [false, bool]    # If custom set tail is true then the locations provided in the insert file
                                     # are the locations of the tails instead of the centers 
 
 br_bead:

@@ -24,6 +24,7 @@
   default_config["filament"]["spiral_flag"] = "false";
   default_config["filament"]["spiral_number_fail_condition"] = "0";
   default_config["filament"]["driving_factor"] = "0";
+  default_config["filament"]["peclet_number"] = "-1";
   default_config["filament"]["friction_ratio"] = "2";
   default_config["filament"]["dynamic_instability_flag"] = "false";
   default_config["filament"]["force_induced_catastrophe_flag"] = "false";
@@ -57,7 +58,6 @@
   default_config["filament"]["flagella_amplitude"] = "1";
   default_config["filament"]["flocking_analysis"] = "false";
   default_config["filament"]["polydispersity_flag"] = "false";
-  default_config["filament"]["polydispersity_warn_on_truncate"] = "0";
   default_config["filament"]["custom_set_tail"] = "false";
   default_config["br_bead"]["driving_factor"] = "0";
   default_config["br_bead"]["packing_fraction"] = "-1";

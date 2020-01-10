@@ -45,6 +45,7 @@ struct species_parameters<species_id::filament>
   bool spiral_flag = false;
   double spiral_number_fail_condition = 0;
   double driving_factor = 0;
+  double peclet_number = -1;
   double friction_ratio = 2;
   bool dynamic_instability_flag = false;
   bool force_induced_catastrophe_flag = false;
@@ -78,7 +79,6 @@ struct species_parameters<species_id::filament>
   double flagella_amplitude = 1;
   bool flocking_analysis = false;
   bool polydispersity_flag = false;
-  int polydispersity_warn_on_truncate = 0;
   bool custom_set_tail = false;
 };
 typedef species_parameters<species_id::filament> filament_parameters;

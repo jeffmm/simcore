@@ -48,6 +48,7 @@ class Filament : public Mesh {
   double p_g2s_;
   double p_g2p_;
   double driving_factor_;
+  double peclet_number_;
   double fic_factor_;
   double curvature_ = 0;
   double spiral_number_;
