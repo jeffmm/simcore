@@ -103,6 +103,14 @@ void RNG::RandomCoordinate(const space_struct *const s, double *vec,
       }
       break;
     }
+    // For wall, insert wherever
+    case +boundary_type::wall:
+    {
+      for (int i = 0; i < n_dim; ++i) {
+        vec[i] = (2.0 * gsl_rng_uniform_pos(rng_) - 1.0) * (R - buffer);
+      }
+      break;
+    }
     default:
       Logger::Error("Boundary type unrecognized in RandomCoordinate");
   }
