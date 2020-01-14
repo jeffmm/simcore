@@ -214,6 +214,7 @@ filament:                            # Parameters unique to filament class of ob
   driving_factor: [0, double]        # force density used to propel active filaments.
   peclet_number: [-1, double]        # ratio of active transport to diffusive transport. changes
                                      # driving factor if positive.
+  flexure_number: [-1, double]       # considers perlen ratio and length to determine activity
   friction_ratio: [2, double]        # ratio of filament friction, perpendicular / parallel.
   dynamic_instability_flag : [false, bool] # flag for modeling dynamic instability of filaments. filaments
                                      # will polymerize at a rate of v_poly and depolymerize at a 
@@ -242,6 +243,8 @@ filament:                            # Parameters unique to filament class of ob
   f_grow_to_shrink : [0.00554, double]
   v_poly : [0.44, double]           # speed of filament lengthening when filament is in grow state.
   v_depoly : [0.793, double]        # speed of shortening when filament is in shrink state.
+  error_analysis: [false, bool]     # output a file logging steps between renormalizations
+                                    # during normal simulation operation
   theta_analysis: [false, bool]     # run post-process analysis of filament conformation for testing
                                     # persistence length. outputs histogram of angle distributions
                                     # between neighboring bonds to compare to theory.

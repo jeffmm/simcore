@@ -49,6 +49,13 @@ void FilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
   }
 }
 
+void FilamentSpecies::CleanUp() {
+  Species::CleanUp();
+  if (error_file_.is_open()) {
+    error_file_.close();
+  }
+}
+
 void FilamentSpecies::UpdatePositions() {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
@@ -76,6 +83,31 @@ void FilamentSpecies::UpdatePositions() {
 #endif
 
   midstep_ = !midstep_;
+  if (sparams_.error_analysis) {
+    if (!error_file_.is_open()) {
+      std::string fname = params_->run_name;
+      fname.append("_filament.error");
+      error_file_.open(fname, std::ios::out);
+      if (!error_file_.is_open()) {
+        Logger::Error("Filament error analysis file %s failed to open!",
+                      fname.c_str());
+      }
+      error_file_ << "n_dim delta length persistence_length bond_length "
+                     "driving\n";
+      error_file_ << params_->n_dim << " " << params_->delta << " "
+                  << sparams_.length << " " << sparams_.persistence_length
+                  << " " << members_[0].GetBondLength() << " "
+                  << members_[0].GetDriving() << "\n";
+      error_file_ << "steps_to_renorm\n";
+    }
+
+    std::vector<int> error_rates;
+    for (filament_iterator it = members_.begin(); it != members_.end(); ++it)
+      it->GetErrorRates(error_rates);
+    for (auto it = error_rates.begin(); it != error_rates.end(); ++it) {
+      error_file_ << *it << "\n";
+    }
+  }
 }
 
 void FilamentSpecies::Reserve() {
@@ -735,7 +767,7 @@ void FilamentSpecies::RunFlockingAnalysis() {
   if (flock_file_.is_open()) {
     flock_file_ << time_ << " " << n_flocking << " " << n_exterior << " "
                 << n_interior << " " << n_joined << " " << n_left;
-    for (int i=0; i<members_.size(); ++i) {
+    for (int i = 0; i < members_.size(); ++i) {
       flock_file_ << " " << flock_states_[i];
     }
     flock_file_ << "\n";

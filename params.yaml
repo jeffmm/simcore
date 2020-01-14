@@ -1,18 +1,18 @@
 seed: 11782311791392
 
-run_name: wall_bc
-n_dim: 2
-n_periodic: 2
-delta: 0.0001
+run_name: filament_error_analysis
+n_dim: [V, 2, 3]
+n_periodic: 0
+delta: [V, 0.0003, 0.0001, 0.00003, 0.00001, 0.000003, 0.000001, 0.0000003, 0.0000001]
 n_steps: 1000000
-boundary: 4
+boundary: 0
 
 graph_flag: true
-n_graph: 1000
+n_graph: 10
 movie_flag: false
 insert_radius: 900
 
-system_radius: 1000
+system_radius: 100
 potential: wca
 soft_potential_mag: 1000
 f_cutoff: 100000
@@ -22,21 +22,24 @@ like_like_interactions: false
 interaction_flag: false
 checkpoint_flag: false
 n_checkpoint: 10000
+stoch_flag: true
 
 filament:
   - name: generic
-    num: 1
-    packing_fraction: 0.01
+    num: 100
+    packing_fraction: -1
     insertion_type: random
     draw_type: fixed
     color: 2
     diameter: 1
     overlap: true
     length: 50
-    min_bond_length: 3
-    peclet_number: 100000
+    min_bond_length: [V, 1, 2, 3, 4, 5]
+    peclet_number: [V, 0, 1000, 10000, 100000, 1000000]
+    #flexure_number: 1000000
     polydispersity_flag: false
-    perlen_ratio: 100
-    spec_flag: true
+    perlen_ratio: [V, 1, 3, 10, 30, 100, 300, 1000, 3000]
+    spec_flag: false
     n_spec: 1000
     n_equil: 0
+    error_analysis: true

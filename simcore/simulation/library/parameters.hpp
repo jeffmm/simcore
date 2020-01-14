@@ -46,6 +46,7 @@ struct species_parameters<species_id::filament>
   double spiral_number_fail_condition = 0;
   double driving_factor = 0;
   double peclet_number = -1;
+  double flexure_number = -1;
   double friction_ratio = 2;
   bool dynamic_instability_flag = false;
   bool force_induced_catastrophe_flag = false;
@@ -62,6 +63,7 @@ struct species_parameters<species_id::filament>
   double f_grow_to_shrink = 0.00554;
   double v_poly = 0.44;
   double v_depoly = 0.793;
+  bool error_analysis = false;
   bool theta_analysis = false;
   bool lp_analysis = false;
   bool global_order_analysis = false;
@@ -215,7 +217,7 @@ struct system_parameters {
   bool reduced = false;
   bool reload_reduce_switch = false;
   double flock_polar_min = 0.5;
-  double flock_contact_min = 1.5;
+  double flock_contact_min = 0.5;
   bool highlight_flock = false;
   double flock_color_ext = 1.57;
   double flock_color_int = 4.71;

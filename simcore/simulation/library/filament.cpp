@@ -31,7 +31,9 @@ void Filament::SetParameters() {
   v_poly_ = sparams_->v_poly;
   driving_factor_ = sparams_->driving_factor;
   peclet_number_ = sparams_->peclet_number;
-  if (dynamic_instability_flag_ && peclet_number_ > 0) {
+  flexure_number_ = sparams_->flexure_number;
+  if (dynamic_instability_flag_ &&
+      (peclet_number_ > 0 || flexure_number_ > 0)) {
     /* Dynamic instability and Peclet number do not mix because a Peclet number
        assumes a fixed length, and the driving factor should not change as a
        filament grows or shrinks */
@@ -61,6 +63,7 @@ void Filament::SetParameters() {
   /* Default site in optical trap is the tail */
   trapped_site_ = 0;
   custom_set_tail_ = sparams_->custom_set_tail;
+  error_analysis_ = sparams_->error_analysis;
 
   /* Refine parameters */
   if (dynamic_instability_flag_) {
@@ -154,6 +157,9 @@ void Filament::InitFilamentLength() {
                 " %d",
                 length_, n_bonds_, GetMeshID());
   true_length_ = length_;
+  if (flexure_number_ > 0) {
+    peclet_number_ = flexure_number_ * persistence_length_ / length_;
+  }
   if (peclet_number_ > 0) {
     driving_factor_ = peclet_number_ / SQR(length_);
   }
@@ -308,11 +314,19 @@ void Filament::InitSpiral2D() {
 }
 
 void Filament::SetDiffusion() {
-  double logLD = log(length_ / diameter_);
+  // double eps = 1.0/log(2.0*length_ / diameter_);
   // double gamma_0 = 4.0/3.0*eps*((1+0.64*eps)/(1-1.15*eps) + 1.659 *
-  // SQR(eps)); friction_perp_ = bond_length_ * gamma_0;
-  friction_perp_ = 4.0 * length_ / (3.0 * n_sites_ * logLD);
-  friction_par_ = friction_perp_ / friction_ratio_;
+  // SQR(eps)); friction_perp_ = bond_length_ * gamma_0; friction_perp_ = 4.0 *
+  // length_ / (3.0 * n_sites_ * logLD); friction_par_ = friction_perp_ /
+  // friction_ratio_;
+  double a = length_ / diameter_ + 1;
+  double lna = log(a);
+  friction_par_ =
+      2.0 / 3.0 * (bond_length_ + 1) / (lna - 0.207 + 0.980 / a - 0.133 / (a * a));
+  friction_perp_ =
+      4.0 / 3.0 * (length_ + 1) / (lna + 0.839 + 0.185 / a + 0.233 / (a * a));
+  friction_par_ *= bond_length_ / length_;
+  friction_perp_ *= bond_length_ / length_;
   rand_sigma_perp_ = sqrt(24.0 * friction_perp_ / delta_);
   rand_sigma_par_ = sqrt(24.0 * friction_par_ / delta_);
 }
@@ -861,9 +875,15 @@ void Filament::UpdateSitePositions() {
   // Finally, normalize site positions, making sure the sites are still
   // rod-length apart
   if (CheckBondLengths()) {
+    Logger::Debug("Renormalizing bond lengths: %d steps since last renormalization",
+        n_normalize_);
+    if (error_analysis_) {
+      error_rates_.push_back(n_normalize_);
+    }
     normalize_switch_ = !normalize_switch_;
-    n_normalize_++;
+    n_normalize_ = 0;
     if (normalize_switch_) {
+      // Normalize from tail to head
       for (int i_site = 1; i_site < n_sites_; ++i_site) {
         double const *const r_site1 = sites_[i_site - 1].GetPosition();
         double const *const u_site1 = sites_[i_site - 1].GetOrientation();
@@ -872,6 +892,7 @@ void Filament::UpdateSitePositions() {
         sites_[i_site].SetPosition(r_diff);
       }
     } else {
+      // Normalize from head to tail
       for (int i_site = n_sites_ - 1; i_site > 0; --i_site) {
         double const *const r_site1 = sites_[i_site].GetPosition();
         double const *const u_site1 = sites_[i_site - 1].GetOrientation();
@@ -881,6 +902,12 @@ void Filament::UpdateSitePositions() {
       }
     }
   }
+  n_normalize_++;
+}
+
+void Filament::GetErrorRates(std::vector<int> &rates) {
+  rates.insert(rates.end(), error_rates_.begin(), error_rates_.end());
+  error_rates_.clear();
 }
 
 bool Filament::CheckBondLengths() {

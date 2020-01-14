@@ -29,6 +29,7 @@ class FilamentSpecies : public Species<Filament, species_id::filament> {
   int n_bins_1d_;
   int n_samples_;
   int orientation_corr_n_steps_;
+  std::fstream error_file_;
   std::fstream spiral_file_;
   std::fstream flock_file_;
   std::fstream theta_file_;
@@ -50,6 +51,7 @@ class FilamentSpecies : public Species<Filament, species_id::filament> {
 
   void Reserve();
   void UpdatePositions();
+  void CleanUp();
   // Redundant for filaments.
   virtual void CenteredOrientedArrangement() {}
 
