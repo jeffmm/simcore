@@ -21,6 +21,10 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   k2_spring_ = sparams_->k2_spring;  // spring const for compression if
                                      // anisotropic_spring_flag is true
   anisotropic_spring_flag_ = sparams_->anisotropic_spring_flag;
+  if (anisotropic_spring_flag_) {
+    Logger::Warning("anistropic_spring_flag is not currently implemented for"
+        " crosslinkers");
+  }
   static_flag_ = sparams_->static_flag;
   k_align_ = sparams_->k_align;
   // rcapture_ = sparams_->r_capture;
@@ -134,12 +138,13 @@ void Crosslink::DoublyKMC() {
   /* Calculate force-dependent unbinding for each head */
   double tether_stretch = length_ - rest_length_;
   double fdep;
+  // TODO: anisotropic springs in tethers
   // For anisotropic springs apply second spring constant for compression
-  if (anisotropic_spring_flag_ && tether_stretch < 0) {
-    fdep = fdep_factor_ * 0.5 * k2_spring_ * SQR(tether_stretch);
-  } else {
-    fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
-  }
+  //if (anisotropic_spring_flag_ && tether_stretch < 0) {
+    //fdep = fdep_factor_ * 0.5 * k2_spring_ * SQR(tether_stretch);
+  //} else {
+  fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
+  //}
   double unbind_prob = k_off_d_ * delta_ * exp(fdep);
   double roll = rng_.RandomUniform();
   int head_activate = -1;
@@ -258,14 +263,13 @@ void Crosslink::CalculateTetherForces() {
     orientation_[i] = ix.dr[i] / length_;
     position_[i] = ix.midpoint[i];
   }
-  if (stretch > 0) {
-    tether_force_ = k_spring_ * stretch;
-    for (int i = 0; i < params_->n_dim; ++i) {
-      force_[i] = tether_force_ * orientation_[i];
-    }
-    anchors_[0].AddForce(force_);
-    anchors_[1].SubForce(force_);
+  // TODO: When we add anisotropic springs, add option here.
+  tether_force_ = k_spring_ * stretch;
+  for (int i = 0; i < params_->n_dim; ++i) {
+    force_[i] = tether_force_ * orientation_[i];
   }
+  anchors_[0].AddForce(force_);
+  anchors_[1].SubForce(force_);
   // Update xlink's position (for drawing)
   UpdatePeriodic();
 }
