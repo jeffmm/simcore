@@ -1,5 +1,4 @@
 #include "rigid_filament.hpp"
-#include "function_headers.hpp"
 
 RigidFilament::RigidFilament(unsigned long seed) : Mesh(seed) {
   std::fill(body_frame_, body_frame_ + 6, 0.0);
