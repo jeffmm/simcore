@@ -174,14 +174,25 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
    relative to rod. */
 void RigidFilament::Integrate() {
   // Explicit calculation of Xi.F_s
-  double dr[3] = {0, 0, 0};
+  double fric_mat[9] = {};  // Friction matrix for filament
+  double mob_mat[9] = {};   // Mobility matrix for filament
+  // Construct mobility matrix
+  for (int i = 0; i < n_dim_; ++i) {
+    for (int j = i + 1; j < n_dim_; ++j) {
+      fric_mat[i * n_dim_ + j] = fric_mat[j * n_dim_ + i] =
+          (gamma_par_ - gamma_perp_) * orientation_[i] * orientation_[j];
+    }
+    fric_mat[i * n_dim_ + i] += gamma_perp_;
+  }
+  if (n_dim_ == 2)
+    invert_sym_2d_matrix(fric_mat, mob_mat);
+  else if (n_dim_ == 3)
+    invert_sym_3d_matrix(fric_mat, mob_mat);
+
   for (int i = 0; i < n_dim_; ++i) {
     for (int j = 0; j < n_dim_; ++j) {
-      dr[i] +=
-          gamma_par_ * orientation_[i] * orientation_[j] * force_[j] * delta_;
+      position_[i] += mob_mat[i * n_dim_ + j] * force_[j] * delta_;
     }
-    dr[i] += force_[i] * gamma_perp_ * delta_;
-    position_[i] += dr[i];
   }
   // Reorientation due to external torques
   double du[3];
@@ -541,7 +552,8 @@ void RigidFilament::ApplyInteractionForces() {
 //  if (poly_ == +poly_state::shrink) {
 //    p_norm = p_s2g_ + p_s2p_;
 //    if (p_norm > 1.0)
-//      poly_ = (roll < p_s2g_ / p_norm ? poly_state::grow : poly_state::pause);
+//      poly_ = (roll < p_s2g_ / p_norm ? poly_state::grow :
+//      poly_state::pause);
 //    else {
 //      if (roll < p_s2g_)
 //        poly_ = poly_state::grow;
@@ -657,10 +669,9 @@ void RigidFilament::ReportAll() {
   // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", cos_thetas_[i]);
   // printf("}\n");
   // printf("g_mat_lower:\n  {");
-  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", g_mat_lower_[i]);
-  // printf("}\n");
-  // printf("g_mat_upper:\n  {");
-  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", g_mat_upper_[i]);
+  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ",
+  // g_mat_lower_[i]); printf("}\n"); printf("g_mat_upper:\n  {"); for (int i
+  // = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", g_mat_upper_[i]);
   // printf("}\n");
   // printf("g_mat_diag:\n  {");
   // for (int i = 0; i < n_sites_ - 1; ++i) printf(" %5.5f ", g_mat_diag_[i]);
@@ -675,10 +686,9 @@ void RigidFilament::ReportAll() {
   // for (int i = 0; i < n_sites_ - 1; ++i) printf(" %5.5f ", h_mat_diag_[i]);
   // printf("}\n");
   // printf("h_mat_upper:\n  {");
-  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", h_mat_upper_[i]);
-  // printf("}\n");
-  // printf("h_mat_lower:\n  {");
-  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", h_mat_lower_[i]);
+  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ",
+  // h_mat_upper_[i]); printf("}\n"); printf("h_mat_lower:\n  {"); for (int i
+  // = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", h_mat_lower_[i]);
   // printf("}\n");
   // printf("k_eff:\n  {");
   // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", k_eff_[i]);
@@ -720,9 +730,9 @@ void RigidFilament::WriteSpec(std::fstream &ospec) {
 void RigidFilament::ReadSpec(std::fstream &ispec) {
   if (ispec.eof()) return;
   Mesh::ReadSpec(ispec);
-  // ispec.read(reinterpret_cast<char *>(&persistence_length_), sizeof(double));
-  // ispec.read(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
-  // CalculateAngles();
+  // ispec.read(reinterpret_cast<char *>(&persistence_length_),
+  // sizeof(double)); ispec.read(reinterpret_cast<char *>(&poly_),
+  // sizeof(unsigned char)); CalculateAngles();
 }
 
 /* double[3] avg_pos
