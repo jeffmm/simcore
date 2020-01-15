@@ -322,7 +322,7 @@ void Filament::SetDiffusion() {
   double a = length_ / diameter_ + 1;
   double lna = log(a);
   friction_par_ =
-      2.0 / 3.0 * (bond_length_ + 1) / (lna - 0.207 + 0.980 / a - 0.133 / (a * a));
+      2.0 / 3.0 * (length_ + 1) / (lna - 0.207 + 0.980 / a - 0.133 / (a * a));
   friction_perp_ =
       4.0 / 3.0 * (length_ + 1) / (lna + 0.839 + 0.185 / a + 0.233 / (a * a));
   friction_par_ *= bond_length_ / length_;
