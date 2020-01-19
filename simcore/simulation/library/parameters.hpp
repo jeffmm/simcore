@@ -82,6 +82,7 @@ struct species_parameters<species_id::filament>
   bool flocking_analysis = false;
   bool polydispersity_flag = false;
   bool custom_set_tail = false;
+  bool reference_frame_flag = false;
 };
 typedef species_parameters<species_id::filament> filament_parameters;
 

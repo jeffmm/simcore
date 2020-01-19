@@ -64,7 +64,11 @@ void Filament::SetParameters() {
   trapped_site_ = 0;
   custom_set_tail_ = sparams_->custom_set_tail;
   error_analysis_ = sparams_->error_analysis;
-
+  if (error_analysis_ && sparams_->reference_frame_flag) {
+    Logger::Warning("Filament errors will be inflated due to rotation of site "
+        "positions into filament reference frame. Errors should be viewed only"
+        " in this context.");
+  }
   /* Refine parameters */
   if (dynamic_instability_flag_) {
     /* Since dynamic instability requires a bond number that is a power of two,
@@ -157,10 +161,10 @@ void Filament::InitFilamentLength() {
                 " %d",
                 length_, n_bonds_, GetMeshID());
   true_length_ = length_;
-  if (flexure_number_ > 0) {
+  if (flexure_number_ >= 0) {
     peclet_number_ = flexure_number_ * persistence_length_ / length_;
   }
-  if (peclet_number_ > 0) {
+  if (peclet_number_ >= 0) {
     driving_factor_ = peclet_number_ / SQR(length_);
   }
 }
@@ -314,19 +318,31 @@ void Filament::InitSpiral2D() {
 }
 
 void Filament::SetDiffusion() {
-  // double eps = 1.0/log(2.0*length_ / diameter_);
-  // double gamma_0 = 4.0/3.0*eps*((1+0.64*eps)/(1-1.15*eps) + 1.659 *
-  // SQR(eps)); friction_perp_ = bond_length_ * gamma_0; friction_perp_ = 4.0 *
-  // length_ / (3.0 * n_sites_ * logLD); friction_par_ = friction_perp_ /
-  // friction_ratio_;
-  double a = length_ / diameter_ + 1;
-  double lna = log(a);
-  friction_par_ =
-      2.0 / 3.0 * (length_ + 1) / (lna - 0.207 + 0.980 / a - 0.133 / (a * a));
-  friction_perp_ =
-      4.0 / 3.0 * (length_ + 1) / (lna + 0.839 + 0.185 / a + 0.233 / (a * a));
-  friction_par_ *= bond_length_ / length_;
-  friction_perp_ *= bond_length_ / length_;
+  /* Using the friction parameters of Montesi et al. for slender filaments.
+     Gives good results for MSD, but not for VCF. */
+  // double eps = 1.0 / log(2.0 * length_ / diameter_);
+  // double gamma_0 = 4.0 / 3.0 * eps *
+  //                 ((1 + 0.64 * eps) / (1 - 1.15 * eps) + 1.659 * SQR(eps));
+  // friction_perp_ = bond_length_ * gamma_0;
+  // friction_par_ = friction_perp_ / friction_ratio_;
+  /* Using the friction coefficients given by Doi & Edwards, 1987. Derived from
+     the Smoluchowski eqn by the Kirkwood theory. Gives expected results for MSD
+     and VCF. */
+  double logLD = log(length_ / diameter_);
+  friction_perp_ = 4.0 * length_ / (3.0 * n_sites_ * logLD);
+  friction_par_ = friction_perp_ / friction_ratio_;
+  /* Using the friction parameters of HSK et al. The MSD agrees with theory but
+     the VCF does not. The rotational diffusion of the filament appears to be
+     artificially inflated by a factor of 10 or so. The friction ratio here is
+     fixed to be 2. */
+  // double a = length_ / diameter_ + 1;// + 1;
+  // double lna = log(a);
+  // friction_par_ =
+  // 2.0 / 3.0 * (length_ + 1) / (lna - 0.207 + 0.980 / a - 0.133 / (a * a));
+  // friction_perp_ =
+  // 4.0 / 3.0 * (length_ + 1) / (lna + 0.839 + 0.185 / a + 0.233 / (a * a));
+  // friction_par_ /= n_sites_;
+  // friction_perp_ /= n_sites_;
   rand_sigma_perp_ = sqrt(24.0 * friction_perp_ / delta_);
   rand_sigma_par_ = sqrt(24.0 * friction_par_ / delta_);
 }
@@ -405,6 +421,10 @@ void Filament::Integrate() {
   CalculateTensions();
   UpdateSitePositions();
   UpdateBondPositions();
+  if (sparams_->reference_frame_flag) {
+    /* Rotate/translate filament into COM reference frame coordinates */
+    RotateToReferenceFrame();
+  }
 }
 
 void Filament::CalculateAngles() {
@@ -875,7 +895,8 @@ void Filament::UpdateSitePositions() {
   // Finally, normalize site positions, making sure the sites are still
   // rod-length apart
   if (CheckBondLengths()) {
-    Logger::Debug("Renormalizing bond lengths: %d steps since last renormalization",
+    Logger::Debug(
+        "Renormalizing bond lengths: %d steps since last renormalization",
         n_normalize_);
     if (error_analysis_) {
       error_rates_.push_back(n_normalize_);
@@ -1390,4 +1411,60 @@ void Filament::WriteCheckpoint(std::fstream &ocheck) {
 
 void Filament::ReadCheckpoint(std::fstream &icheck) {
   Mesh::ReadCheckpoint(icheck);
+}
+
+void Filament::RotateToReferenceFrame() {
+  /* Rotates filament site positions relative filament COM and translates filament
+     to COM coordinates*/
+  if (n_dim_ != 2)
+    // TODO: Add 3D reference frame 
+    Logger::Error("Reference frame does not work for 3D"
+                  " filaments yet!");
+  /* If we have an even number of sites, then find the center bond and rotate
+     filament relative to bond orientation and center filament on bond */
+  double u0[3] = {0};
+  double r0[3] = {0};
+  if (n_sites_ % 2 == 0) {
+    double const *const u = bonds_[n_sites_ / 2 - 1].GetOrientation();
+    double const *const r = bonds_[n_sites_ / 2 - 1].GetPosition();
+    std::copy(u, u + 3, u0);
+    std::copy(r, r + 3, r0);
+  } else {
+    /* If we have an odd number of sites, center filament with respect to middle
+       site and rotate filament relative to vector tangent to site */
+    sites_[n_sites_ / 2].CalcTangent();
+    double const *const u = sites_[n_sites_ / 2].GetTangent();
+    double const *const r = sites_[n_sites_ / 2].GetPosition();
+    std::copy(u, u + 3, u0);
+    std::copy(r, r + 3, r0);
+  }
+  double new_pos[3] = {0};
+  /* Only 2D rotation for now */
+  for (auto site = sites_.begin(); site != sites_.end(); ++site) {
+    const double *const pos = site->GetPosition();
+    new_pos[0] = u0[1] * (pos[0] - r0[0]) - u0[0] * (pos[1] - r0[1]);
+    new_pos[1] = u0[0] * (pos[0] - r0[0]) + u0[1] * (pos[1] - r0[1]);
+    new_pos[2] = 0;
+    site->SetPosition(new_pos);
+  }
+
+  /* Now update site orientation vectors */
+  double u_mag, r_diff[3];
+  for (int i_site = 0; i_site < n_sites_ - 1; ++i_site) {
+    double const *const r_site1 = sites_[i_site].GetPosition();
+    double const *const r_site2 = sites_[i_site + 1].GetPosition();
+    u_mag = 0.0;
+    for (int i = 0; i < n_dim_; ++i) {
+      r_diff[i] = r_site2[i] - r_site1[i];
+      u_mag += SQR(r_diff[i]);
+    }
+    u_mag = sqrt(u_mag);
+    for (int i = 0; i < n_dim_; ++i)
+      r_diff[i] /= u_mag;
+    sites_[i_site].SetOrientation(r_diff);
+  }
+  sites_[n_sites_ - 1].SetOrientation(sites_[n_sites_ - 2].GetOrientation());
+
+  /* Finally, update bond positions for visualization */
+  UpdateBondPositions();
 }

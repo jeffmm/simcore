@@ -61,6 +61,7 @@
   default_config["filament"]["flocking_analysis"] = "false";
   default_config["filament"]["polydispersity_flag"] = "false";
   default_config["filament"]["custom_set_tail"] = "false";
+  default_config["filament"]["reference_frame_flag"] = "false";
   default_config["br_bead"]["driving_factor"] = "0";
   default_config["br_bead"]["packing_fraction"] = "-1";
   default_config["spherocylinder"]["diffusion_analysis"] = "false";

@@ -1,14 +1,14 @@
 seed: 11782311791392
 
-run_name: filament_error_analysis
-n_dim: [V, 2, 3]
-n_periodic: 0
-delta: [V, 0.0003, 0.0001, 0.00003, 0.00001, 0.000003, 0.000001, 0.0000003, 0.0000001]
-n_steps: 1000000
+run_name: filament_undulation
+n_dim: 2
+n_periodic: 2
+delta: 0.0001
+n_steps: 500000
 boundary: 0
 
-graph_flag: true
-n_graph: 10
+graph_flag: false
+n_graph: 100
 movie_flag: false
 insert_radius: 900
 
@@ -26,20 +26,23 @@ stoch_flag: true
 
 filament:
   - name: generic
-    num: 100
+    num: 10
     packing_fraction: -1
     insertion_type: random
     draw_type: fixed
     color: 2
     diameter: 1
     overlap: true
-    length: 50
-    min_bond_length: [V, 1, 2, 3, 4, 5]
-    peclet_number: [V, 0, 1000, 10000, 100000, 1000000]
+    length: 60
+    min_bond_length: 1.5
+    driving_factor: [V, 0, 0.3, 3, 30]
+    #peclet_number: 100000
     #flexure_number: 1000000
     polydispersity_flag: false
-    perlen_ratio: [V, 1, 3, 10, 30, 100, 300, 1000, 3000]
-    spec_flag: false
-    n_spec: 1000
+    perlen_ratio: [V, 5, 20]
+    spec_flag: true
+    n_spec: 100
+    #posit_flag: true
+    #n_posit: 1000
     n_equil: 0
     error_analysis: true

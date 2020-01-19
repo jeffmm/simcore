@@ -85,6 +85,7 @@ class Filament : public Mesh {
   void CalculateBendingForces();
   void CalculateTensions();
   void UpdateSitePositions();
+  void RotateToReferenceFrame();
   void ApplyForcesTorques();
   void ApplyInteractionForces();
   void SetParameters();

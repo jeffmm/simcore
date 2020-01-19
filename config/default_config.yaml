@@ -278,6 +278,8 @@ filament:                            # Parameters unique to filament class of ob
   polydispersity_flag: [false, bool] # if > 0, assign length from exponential distribution
   custom_set_tail: [false, bool]    # If custom set tail is true then the locations provided in the insert file
                                     # are the locations of the tails instead of the centers 
+  reference_frame_flag: [false, bool] # rotate filament into filament reference frame for bending
+                                      # analysis and visualization
 
 br_bead:
   driving_factor: [0, double]
