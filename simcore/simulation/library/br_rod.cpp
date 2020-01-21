@@ -58,10 +58,9 @@ void BrRod::Integrate() {
   else if (n_dim_ == 3)
     invert_sym_3d_matrix(fric_mat, mob_mat);
 
-  double dr[3] = {0, 0, 0};
   for (int i = 0; i < n_dim_; ++i) {
     for (int j = 0; j < n_dim_; ++j) {
-      dr[i] += mob_mat[i * n_dim_ + j] * force_[j] * delta_;
+      position_[i] += mob_mat[i * n_dim_ + j] * force_[j] * delta_;
     }
   }
 
