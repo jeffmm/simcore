@@ -33,7 +33,7 @@ double const Anchor::GetBondLambda() { return bond_lambda_; }
 void Anchor::SetBondLambda(double l) { bond_lambda_ = l; }
 void Anchor::SetMeshLambda(double ml) { mesh_lambda_ = ml; }
 
-void Anchor::SetDiffusion() { diffusion_ = sqrt(24.0 * diameter_ / delta_); }
+void Anchor::SetDiffusion() { kick_amplitude = sqrt(24.0 / (diameter_*delta_)); }
 
 void Anchor::UpdateAnchorPositionToMesh() {
   if (!bound_ || static_flag_) return;
@@ -209,10 +209,10 @@ void Anchor::Unbind() {
 
 void Anchor::Diffuse() {
   double kick = rng_.RandomUniform() - 0.5;
-  double vel = kick * diffusion_ / diameter_;
+  double vel = kick * kick_amplitude;
   if (force_dep_vel_flag_) {
     double force_proj = dot_product(n_dim_, force_, orientation_);
-    vel += diffusion_ * force_proj;
+    vel += force_proj / diameter_;
   }
   double dr = vel * delta_;
   mesh_lambda_ += dr;
