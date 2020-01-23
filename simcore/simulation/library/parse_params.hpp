@@ -381,8 +381,6 @@ species_base_parameters *parse_species_params(std::string sid,
       params.flocking_analysis = jt->second.as<bool>();
       } else if (param_name.compare("polydispersity_flag")==0) {
       params.polydispersity_flag = jt->second.as<bool>();
-      } else if (param_name.compare("polydispersity_warn_on_truncate")==0) {
-      params.polydispersity_warn_on_truncate = jt->second.as<int>();
       } else if (param_name.compare("custom_set_tail")==0) {
       params.custom_set_tail = jt->second.as<bool>();
       } else {
@@ -559,6 +557,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.n_spec = jt->second.as<int>();
       } else if (param_name.compare("concentration")==0) {
       params.concentration = jt->second.as<double>();
+      } else if (param_name.compare("use_binding_volume")==0) {
+      params.use_binding_volume = jt->second.as<bool>();
       } else if (param_name.compare("infinite_reservoir_flag")==0) {
       params.infinite_reservoir_flag = jt->second.as<bool>();
       } else if (param_name.compare("bind_site_density")==0) {

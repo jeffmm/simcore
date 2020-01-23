@@ -78,7 +78,6 @@ struct species_parameters<species_id::filament>
   double flagella_amplitude = 1;
   bool flocking_analysis = false;
   bool polydispersity_flag = false;
-  int polydispersity_warn_on_truncate = 0;
   bool custom_set_tail = false;
 };
 typedef species_parameters<species_id::filament> filament_parameters;
@@ -117,6 +116,7 @@ template <>
 struct species_parameters<species_id::crosslink>
     : public species_base_parameters {
   double concentration = 0;
+  bool use_binding_volume = true;
   bool infinite_reservoir_flag = false;
   double bind_site_density = 1;
   bool walker_flag = false;
