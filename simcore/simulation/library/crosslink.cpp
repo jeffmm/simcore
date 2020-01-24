@@ -22,7 +22,8 @@ void Crosslink::Init(crosslink_parameters *sparams) {
                                      // anisotropic_spring_flag is true
   anisotropic_spring_flag_ = sparams_->anisotropic_spring_flag;
   if (anisotropic_spring_flag_) {
-    Logger::Warning("anistropic_spring_flag is not currently implemented for"
+    Logger::Warning(
+        "anistropic_spring_flag is not currently implemented for"
         " crosslinkers");
   }
   static_flag_ = sparams_->static_flag;
@@ -86,9 +87,8 @@ void Crosslink::SinglyKMC() {
     if (!static_flag_ && polar_affinity_ < 1) {
       anchors_[0].CalculatePolarAffinity(kmc_bind_factor);
     }
-    kmc_bind.CalcTotProbsSD(anchors_[0].GetNeighborListMem(), kmc_filter,
-                            anchors_[0].GetBoundOID(), 0, k_spring_, 1.0,
-                            rest_length_, kmc_bind_factor);
+    kmc_bind.LUCalcTotProbsSD(anchors_[0].GetNeighborListMem(), kmc_filter,
+                              anchors_[0].GetBoundOID(), kmc_bind_factor);
     kmc_bind_prob = kmc_bind.getTotProb();
   }
   // Find out whether we bind, unbind, or neither.
@@ -140,8 +140,8 @@ void Crosslink::DoublyKMC() {
   double fdep;
   // TODO: anisotropic springs in tethers
   // For anisotropic springs apply second spring constant for compression
-  //if (anisotropic_spring_flag_ && tether_stretch < 0) {
-    //fdep = fdep_factor_ * 0.5 * k2_spring_ * SQR(tether_stretch);
+  // if (anisotropic_spring_flag_ && tether_stretch < 0) {
+  // fdep = fdep_factor_ * 0.5 * k2_spring_ * SQR(tether_stretch);
   //} else {
   fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
   //}
