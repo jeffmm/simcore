@@ -22,12 +22,23 @@ class Anchor : public Object {
   double mesh_length_;
   double mesh_lambda_;
   double velocity_;
-  double max_velocity_, diffusion_;
-  double k_off_;
+  double max_velocity_;
+  double max_velocity_s_;
+  double max_velocity_d_;
+  double diffusion_;
+  double diffusion_s_;
+  double diffusion_d_;
+  double k_on_;
+  double k_on_s_;
   double k_on_d_;
+  double k_off_;
+  double k_off_s_;
+  double k_off_d_;
   double polar_affinity_;
   double f_stall_;
   double force_dep_vel_flag_;
+
+  bind_state state_;
 
   NeighborList neighbors_;
 

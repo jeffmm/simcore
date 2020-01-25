@@ -7,7 +7,7 @@
 #include "anchor.hpp"
 #include "minimum_distance.hpp"
 
-enum xstate { unbound, singly, doubly };
+// enum xstate { unbound, singly, doubly };
 
 /* Class that represents a two-headed crosslink that can create tethers between
  * two objects in the simulation. Governs binding and unbinding of crosslink
@@ -22,8 +22,10 @@ class Crosslink : public Object {
   bool static_flag_ = false;
   bool anisotropic_spring_flag_ = false;
   double k_on_;
+  double k_on_s_;
   double k_on_d_;
   double k_off_;
+  double k_off_s_;
   double k_off_d_;
   double k_spring_;
   double k2_spring_;
