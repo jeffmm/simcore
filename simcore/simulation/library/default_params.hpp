@@ -77,9 +77,16 @@
   default_config["crosslink"]["walker_flag"] = "false";
   default_config["crosslink"]["static_flag"] = "false";
   default_config["crosslink"]["diffusion_flag"] = "false";
+  default_config["crosslink"]["diffusion"] = "1";
+  default_config["crosslink"]["diffusion_s"] = "1";
+  default_config["crosslink"]["diffusion_d"] = "1";
   default_config["crosslink"]["velocity"] = "1";
+  default_config["crosslink"]["velocity_s"] = "1";
+  default_config["crosslink"]["velocity_d"] = "1";
   default_config["crosslink"]["k_on"] = "10";
   default_config["crosslink"]["k_off"] = "2";
+  default_config["crosslink"]["k_on_s"] = "10";
+  default_config["crosslink"]["k_off_s"] = "2";
   default_config["crosslink"]["k_on_d"] = "10";
   default_config["crosslink"]["k_off_d"] = "2";
   default_config["crosslink"]["force_dep_factor"] = "1";

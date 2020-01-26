@@ -9,8 +9,6 @@
 class Anchor : public Object {
  private:
   bool bound_;
-  bool walker_;
-  bool diffuse_;
   bool static_flag_;
   bool active_;
   bool end_pausing_;
@@ -21,17 +19,14 @@ class Anchor : public Object {
   double bond_lambda_;
   double mesh_length_;
   double mesh_lambda_;
-  double velocity_;
-  double max_velocity_;
   double max_velocity_s_;
   double max_velocity_d_;
-  double diffusion_;
   double diffusion_s_;
   double diffusion_d_;
-  double k_on_;
+  double noise_coeff_s_;
+  double noise_coeff_d_;
   double k_on_s_;
   double k_on_d_;
-  double k_off_;
   double k_off_s_;
   double k_off_d_;
   double polar_affinity_;
@@ -66,8 +61,6 @@ class Anchor : public Object {
   void AttachObjRandom(Object *o);
   void AttachObjLambda(Object *o, double lambda);
   void AttachObjMeshLambda(Object *o, double mesh_lambda);
-  double const GetMeshLambda();
-  double const GetBondLambda();
   void CalculatePolarAffinity(std::vector<double> &doubly_binding_rates);
   void SetBondLambda(double l);
   void SetMeshLambda(double ml);
@@ -78,13 +71,21 @@ class Anchor : public Object {
   void AddNeighbor(Object *neighbor);
   void ClearNeighbors();
   const Object *const *GetNeighborListMem();
-  Object *GetNeighbor(int i_neighbor);
-  const int GetNNeighbors() const;
   void WriteSpec(std::fstream &ospec);
   void ReadSpec(std::fstream &ispec);
   void BindToPosition(double *bind_pos);
   void SetStatic(bool static_flag);
   void SetState(bind_state state);
+
+  double const GetMeshLambda();
+  double const GetBondLambda();
+  Object *GetNeighbor(int i_neighbor);
+  const int GetNNeighbors() const;
+  const double GetOnRate() const;
+  const double GetOffRate() const;
+  const double GetMaxVelocity() const;
+  const double GetDiffusionConst() const;
+  const double GetNoiseCoeff() const;
 };
 
 #endif

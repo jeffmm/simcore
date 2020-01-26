@@ -122,9 +122,16 @@ struct species_parameters<species_id::crosslink>
   bool walker_flag = false;
   bool static_flag = false;
   bool diffusion_flag = false;
+  double diffusion = 1;
+  double diffusion_s = 1;
+  double diffusion_d = 1;
   double velocity = 1;
+  double velocity_s = 1;
+  double velocity_d = 1;
   double k_on = 10;
   double k_off = 2;
+  double k_on_s = 10;
+  double k_off_s = 2;
   double k_on_d = 10;
   double k_off_d = 2;
   double force_dep_factor = 1;
