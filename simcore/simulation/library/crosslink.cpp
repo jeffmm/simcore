@@ -313,11 +313,25 @@ void Crosslink::Draw(std::vector<graph_struct *> &graph_array) {
   }
 }
 
-void Crosslink::SetDoubly() { state_ = bind_state::doubly; }
+void Crosslink::SetDoubly() {
+  state_ = bind_state::doubly;
+  SetAnchorStates();
+}
 
-void Crosslink::SetSingly() { state_ = bind_state::singly; }
+void Crosslink::SetSingly() {
+  state_ = bind_state::singly;
+  SetAnchorStates();
+}
 
-void Crosslink::SetUnbound() { state_ = bind_state::unbound; }
+void Crosslink::SetUnbound() {
+  state_ = bind_state::unbound;
+  SetAnchorStates();
+}
+
+void Crosslink::SetAnchorStates() {
+  anchors_[0].SetState(state_);
+  anchors_[1].SetState(state_);
+};
 
 const bool Crosslink::IsDoubly() const { return state_ == +bind_state::doubly; }
 const bool Crosslink::IsSingly() const { return state_ == +bind_state::singly; }

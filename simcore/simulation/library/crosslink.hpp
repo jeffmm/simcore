@@ -58,6 +58,7 @@ class Crosslink : public Object {
   void SetDoubly();
   void SetSingly();
   void SetUnbound();
+  void SetAnchorStates();
   const bool IsDoubly() const;
   const bool IsUnbound() const;
   const bool IsSingly() const;

@@ -397,3 +397,4 @@ void Anchor::ReadSpec(std::fstream &ispec) {
 }
 
 void Anchor::SetStatic(bool static_flag) { static_flag_ = static_flag; }
+void Anchor::SetState(bind_state state) { state_ = state; }

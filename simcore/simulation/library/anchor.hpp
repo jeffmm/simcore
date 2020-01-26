@@ -84,6 +84,7 @@ class Anchor : public Object {
   void ReadSpec(std::fstream &ispec);
   void BindToPosition(double *bind_pos);
   void SetStatic(bool static_flag);
+  void SetState(bind_state state);
 };
 
 #endif
