@@ -11,14 +11,17 @@ void Anchor::Init(crosslink_parameters *sparams) {
   draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
   static_flag_ = false;  // Must be explicitly set to true by Crosslink
   Unbind();
-  walker_ = sparams_->walker_flag;
   step_direction_ =
       (sparams_->step_direction == 0 ? 0 : SIGNOF(sparams_->step_direction));
-  velocity_ = sparams_->velocity;
-  max_velocity_ = velocity_;
-  k_off_ = sparams_->k_off;
+  max_velocity_s_ = sparams->velocity_s;
+  max_velocity_d_ = sparams->velocity_d;
+  diffusion_s_ = sparams->diffusion_s;
+  diffusion_d_ = sparams->diffusion_d;
+  k_on_s_ = sparams_->k_on_s;
+  k_on_d_ = sparams_->k_on_d;
+  k_off_s_ = sparams_->k_off_s;
+  k_off_d_ = sparams_->k_off_d;
   end_pausing_ = sparams_->end_pausing;
-  diffuse_ = sparams_->diffusion_flag;
   f_stall_ = sparams_->f_stall;
   force_dep_vel_flag_ = sparams_->force_dep_vel_flag;
   polar_affinity_ = sparams_->polar_affinity;
@@ -33,7 +36,11 @@ double const Anchor::GetBondLambda() { return bond_lambda_; }
 void Anchor::SetBondLambda(double l) { bond_lambda_ = l; }
 void Anchor::SetMeshLambda(double ml) { mesh_lambda_ = ml; }
 
-void Anchor::SetDiffusion() { kick_amplitude = sqrt(24.0 / (diameter_*delta_)); }
+void Anchor::SetDiffusion() {
+  // Solve them now so you do not have to keep taking sqrts
+  kick_amp_s_ = sqrt(2. * diffusion_s_ * delta_);
+  kick_amp_d_ = sqrt(2. * diffusion_d_ * delta_);
+}
 
 void Anchor::UpdateAnchorPositionToMesh() {
   if (!bound_ || static_flag_) return;
@@ -104,15 +111,17 @@ bool Anchor::CalcBondLambda() {
 }
 void Anchor::UpdatePosition() {
   // Currently only bound anchors diffuse/walk (no explicit unbound anchors)
-  if (!bound_ || static_flag_ || (!diffuse_ && !walker_)) {
+  bool diffuse = GetDiffusionConst() > 0 ? true : false;
+  bool walker = GetMaxVelocity() > 0 ? true : false;
+  if (!bound_ || static_flag_ || (!diffuse && !walker)) {
     return;
   }
   // Diffuse or walk along the mesh, updating mesh_lambda
-  if (diffuse_) {
+  if (diffuse) {
     Diffuse();
     if (!CheckMesh()) return;
   }
-  if (walker_) {
+  if (walker) {
     Walk();
     CheckMesh();
   }
@@ -145,7 +154,7 @@ void Anchor::Deactivate() {
 }
 
 void Anchor::Walk() {
-  double vel = 0;
+  double vel = GetMaxVelocity();
   if (force_dep_vel_flag_) {
     // Only consider projected force in direction of stepping
     double const force_proj =
@@ -157,7 +166,7 @@ void Anchor::Walk() {
     } else if (fdep < 0) {
       fdep = 0.;
     }
-    vel = max_velocity_ * fdep;
+    vel *= fdep;
   }
   double dr = step_direction_ * vel * delta_;
   mesh_lambda_ += dr;
@@ -208,13 +217,15 @@ void Anchor::Unbind() {
 }
 
 void Anchor::Diffuse() {
-  double kick = rng_.RandomUniform() - 0.5;
-  double vel = kick * kick_amplitude;
+  // Motion from thermal kicks
+  double dr = GetKickAmplitude() * rng_.RandomNormal(1);
+
+  // Force dependence diffusion depends on the mobility (D/kBT) and the force
+  // applied along the direction of the filament.
   if (force_dep_vel_flag_) {
     double force_proj = dot_product(n_dim_, force_, orientation_);
-    vel += force_proj / diameter_;
+    dr += GetDiffusionConst() * force_proj * delta_;
   }
-  double dr = vel * delta_;
   mesh_lambda_ += dr;
 }
 
@@ -397,3 +408,103 @@ void Anchor::ReadSpec(std::fstream &ispec) {
 }
 
 void Anchor::SetStatic(bool static_flag) { static_flag_ = static_flag; }
+void Anchor::SetState(bind_state state) { state_ = state; }
+
+const double Anchor::GetOnRate() const {
+  switch (state_) {
+    case +bind_state::unbound:
+      return k_on_s_;
+      break;
+    case +bind_state::singly:
+      return k_on_d_;
+      break;
+    case +bind_state::doubly:
+      Logger::Error(
+          "Crosslinker is already doubly bound. No on rate exists because both "
+          "anchors are bound");
+      return 0;
+      break;
+    default:
+      Logger::Error("State of anchor is not a bind_state enum.");
+      return 0;
+  }
+}
+
+const double Anchor::GetOffRate() const {
+  switch (state_) {
+    case +bind_state::singly:
+      return k_off_s_;
+      break;
+    case +bind_state::doubly:
+      return k_off_d_;
+      break;
+    case +bind_state::unbound:
+      Logger::Error(
+          "Crosslinker is already unbound. No off rate exists because "
+          "both anchors are off filament");
+      return 0;
+      break;
+    default:
+      Logger::Error("State of anchor is not a bind_state enum.");
+      return 0;
+  }
+}
+
+const double Anchor::GetMaxVelocity() const {
+  switch (state_) {
+    case +bind_state::singly:
+      return max_velocity_s_;
+      break;
+    case +bind_state::doubly:
+      return max_velocity_d_;
+      break;
+    case +bind_state::unbound:
+      Logger::Error(
+          "Crosslinker is unbound. Anchors cannot walk if not attached.");
+      return 0;
+      break;
+    default:
+      Logger::Error("State of anchor is not a bind_state enum.");
+      return 0;
+  }
+}
+
+const double Anchor::GetDiffusionConst() const {
+  switch (state_) {
+    case +bind_state::singly:
+      return diffusion_s_;
+      break;
+    case +bind_state::doubly:
+      return diffusion_d_;
+      break;
+    case +bind_state::unbound:
+      Logger::Error(
+          "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
+          "attached.");
+      return 0;
+      break;
+    default:
+      Logger::Error("State of anchor is not a bind_state enum.");
+      return 0;
+  }
+}
+
+const double Anchor::GetKickAmplitude() const {
+  switch (state_) {
+    case +bind_state::singly:
+      return kick_amp_s_;
+      break;
+    case +bind_state::doubly:
+      return kick_amp_d_;
+      break;
+    case +bind_state::unbound:
+      Logger::Error(
+          "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
+          "attached.");
+      return 0;
+      break;
+    default:
+      Logger::Error("State of anchor is not a bind_state enum.");
+      return 0;
+  }
+}
