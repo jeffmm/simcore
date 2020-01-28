@@ -5,8 +5,7 @@ CrosslinkSpecies::CrosslinkSpecies(unsigned long seed) : Species(seed) {
 }
 void CrosslinkSpecies::Init(std::string spec_name, ParamsParser &parser) {
   Species::Init(spec_name, parser);
-  k_on_ = sparams_.k_on;
-  k_off_ = sparams_.k_off;
+  k_on_ = sparams_.k_on_s;
   bind_site_density_ = sparams_.bind_site_density;
   xlink_concentration_ = sparams_.concentration;
   infinite_reservoir_flag_ = sparams_.infinite_reservoir_flag;

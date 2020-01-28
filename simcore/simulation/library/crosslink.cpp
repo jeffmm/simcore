@@ -13,10 +13,6 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   draw_ = draw_type::_from_string(sparams_->tether_draw_type.c_str());
   rest_length_ = sparams_->rest_length;
   static_flag_ = sparams_->static_flag;
-  k_on_ = sparams_->k_on;        // k_on for unbound to singly
-  k_off_ = sparams_->k_off;      // k_off for singly to unbound
-  k_on_d_ = sparams_->k_on_d;    // k_on for singly to doubly
-  k_off_d_ = sparams_->k_off_d;  // k_off for doubly to singly
   k_spring_ = sparams_->k_spring;
   k2_spring_ = sparams_->k2_spring;  // spring const for compression if
                                      // anisotropic_spring_flag is true
@@ -64,7 +60,7 @@ void Crosslink::SinglyKMC() {
   double roll = rng_.RandomUniform();
   int head_bound = 0;
   // Set up KMC objects and calculate probabilities
-  double unbind_prob = k_off_ * delta_;
+  double unbind_prob = anchors_[0].GetOffRate() * delta_;
   if (static_flag_) {
     unbind_prob = 0;
   }
@@ -80,7 +76,7 @@ void Crosslink::SinglyKMC() {
 
   /* Calculate probability to bind */
   double kmc_bind_prob = 0;
-  double k_on_d_prime = k_on_d_ * bind_site_density_;
+  double k_on_d_prime = anchors_[1].GetOnRate() * bind_site_density_;
 
   std::vector<double> kmc_bind_factor(n_neighbors, k_on_d_prime);
   if (n_neighbors > 0) {
@@ -145,7 +141,8 @@ void Crosslink::DoublyKMC() {
   //} else {
   fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
   //}
-  double unbind_prob = k_off_d_ * delta_ * exp(fdep);
+  /* TODO: Change when heads have different off rates <25-01-20, ARL> */
+  double unbind_prob = anchors_[0].GetOffRate() * delta_ * exp(fdep);
   double roll = rng_.RandomUniform();
   int head_activate = -1;
   if (static_flag_) {
@@ -313,11 +310,25 @@ void Crosslink::Draw(std::vector<graph_struct *> &graph_array) {
   }
 }
 
-void Crosslink::SetDoubly() { state_ = bind_state::doubly; }
+void Crosslink::SetDoubly() {
+  state_ = bind_state::doubly;
+  SetAnchorStates();
+}
 
-void Crosslink::SetSingly() { state_ = bind_state::singly; }
+void Crosslink::SetSingly() {
+  state_ = bind_state::singly;
+  SetAnchorStates();
+}
 
-void Crosslink::SetUnbound() { state_ = bind_state::unbound; }
+void Crosslink::SetUnbound() {
+  state_ = bind_state::unbound;
+  SetAnchorStates();
+}
+
+void Crosslink::SetAnchorStates() {
+  anchors_[0].SetState(state_);
+  anchors_[1].SetState(state_);
+};
 
 const bool Crosslink::IsDoubly() const { return state_ == +bind_state::doubly; }
 const bool Crosslink::IsSingly() const { return state_ == +bind_state::singly; }
