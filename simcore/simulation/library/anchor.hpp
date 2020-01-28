@@ -16,7 +16,8 @@ class Anchor : public Object {
   bool end_pausing_;
   crosslink_parameters *sparams_;
   int step_direction_;
-
+   
+  double kick_amplitude;
   double bond_length_;
   double bond_lambda_;
   double mesh_length_;

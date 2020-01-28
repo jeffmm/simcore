@@ -303,6 +303,10 @@ crosslink:                          # Parameters specific to crosslinks.
                                     # Units in #/area or #/vol in 2D or 3D for free xlinks. In
                                     # #/area for grid spacing. In #/length or #/area for 2D or 3D
                                     # boundaries.
+  use_binding_volume: [true, bool]  # Calculate concentration of unbound head of 
+                                    # singly bound protein by finding a binding 
+                                    # volume in which it is statistically likely
+                                    # to exist.
   infinite_reservoir_flag: [false, bool] # Do crosslinks bind from an infinite
                                          # reservoir when going from unbound to
                                          # singly bound.  Only applicable for

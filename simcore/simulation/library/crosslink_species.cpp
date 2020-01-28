@@ -27,8 +27,7 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
   update_ = update;
   /* TODO Lookup table only works for filament objects. Generalize? */
   lut_.Init(sparams_.k_spring * .5, sparams_.rest_length, 1);
-  // printf("sparams_.rest_length = %f\n", sparams_.rest_length);
-  // printf("max_force = %f\n", sparams_.k_spring * lut_.getLUCutoff());
+  if (sparams_.use_binding_volume) lut_.calcBindVol();
 }
 
 void CrosslinkSpecies::InsertCrosslinks() {
