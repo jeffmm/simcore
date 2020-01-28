@@ -57,7 +57,6 @@
   default_config["filament"]["flagella_amplitude"] = "1";
   default_config["filament"]["flocking_analysis"] = "false";
   default_config["filament"]["polydispersity_flag"] = "false";
-  default_config["filament"]["polydispersity_warn_on_truncate"] = "0";
   default_config["filament"]["custom_set_tail"] = "false";
   default_config["br_bead"]["driving_factor"] = "0";
   default_config["br_bead"]["packing_fraction"] = "-1";
@@ -72,6 +71,7 @@
   default_config["spindle"]["spring_length"] = "0";
   default_config["spindle"]["spb_diameter"] = "5";
   default_config["crosslink"]["concentration"] = "0";
+  default_config["crosslink"]["use_binding_volume"] = "true";
   default_config["crosslink"]["infinite_reservoir_flag"] = "false";
   default_config["crosslink"]["bind_site_density"] = "1";
   default_config["crosslink"]["walker_flag"] = "false";
