@@ -23,8 +23,8 @@ class Anchor : public Object {
   double max_velocity_d_;
   double diffusion_s_;
   double diffusion_d_;
-  double noise_coeff_s_;
-  double noise_coeff_d_;
+  double kick_amp_s_;
+  double kick_amp_d_;
   double k_on_s_;
   double k_on_d_;
   double k_off_s_;
@@ -85,7 +85,7 @@ class Anchor : public Object {
   const double GetOffRate() const;
   const double GetMaxVelocity() const;
   const double GetDiffusionConst() const;
-  const double GetNoiseCoeff() const;
+  const double GetKickAmplitude() const;
 };
 
 #endif

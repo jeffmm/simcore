@@ -36,8 +36,8 @@ void Anchor::SetMeshLambda(double ml) { mesh_lambda_ = ml; }
 
 void Anchor::SetDiffusion() {
   // Solve them now so you do not have to keep taking sqrts
-  noise_coeff_s_ = sqrt(2. * diffusion_s_);
-  noise_coeff_d_ = sqrt(2. * diffusion_d_);
+  kick_amp_s_ = sqrt(2. * diffusion_s_);
+  kick_amp_d_ = sqrt(2. * diffusion_d_);
   // diffusion_ = sqrt(24.0 * diameter_ / delta_);
 }
 
@@ -217,7 +217,7 @@ void Anchor::Unbind() {
 
 void Anchor::Diffuse() {
   // Motion from thermal kicks
-  double vel = GetNoiseCoeff() * rng_.RandomNormal(1);
+  double vel = GetKickAmplitude() * rng_.RandomNormal(1);
 
   // Force dependence diffusion depends on the mobility (D/kBT) and the force
   // applied along the direction of the filament.
@@ -490,13 +490,13 @@ const double Anchor::GetDiffusionConst() const {
   }
 }
 
-const double Anchor::GetNoiseCoeff() const {
+const double Anchor::GetKickAmplitude() const {
   switch (state_) {
     case +bind_state::singly:
-      return noise_coeff_s_;
+      return kick_amp_s_;
       break;
     case +bind_state::doubly:
-      return noise_coeff_d_;
+      return kick_amp_d_;
       break;
     case +bind_state::unbound:
       Logger::Error(
