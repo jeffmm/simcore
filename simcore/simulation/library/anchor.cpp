@@ -437,7 +437,7 @@ const double Anchor::GetOffRate() const {
       return k_off_s_;
       break;
     case +bind_state::doubly:
-      return k_on_d_;
+      return k_off_d_;
       break;
     case +bind_state::unbound:
       Logger::Error(
