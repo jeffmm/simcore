@@ -120,6 +120,7 @@ template <>
 struct species_parameters<species_id::crosslink>
     : public species_base_parameters {
   double concentration = 0;
+  bool use_binding_volume = true;
   bool infinite_reservoir_flag = false;
   double bind_site_density = 1;
   bool walker_flag = false;

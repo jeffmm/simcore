@@ -43,15 +43,27 @@ void BrRod::InsertRod(std::string insertion_type, double buffer) {
    relative to rod. */
 void BrRod::Integrate() {
   // Explicit calculation of Xi.F_s
-  double dr[3] = {0, 0, 0};
+  double fric_mat[9] = {};  // Friction matrix for filament
+  double mob_mat[9] = {};   // Mobility matrix for filament
+  // Construct mobility matrix
+  for (int i = 0; i < n_dim_; ++i) {
+    for (int j = i + 1; j < n_dim_; ++j) {
+      fric_mat[i * n_dim_ + j] = fric_mat[j * n_dim_ + i] =
+          (gamma_par_ - gamma_perp_) * orientation_[i] * orientation_[j];
+    }
+    fric_mat[i * n_dim_ + i] += gamma_perp_;
+  }
+  if (n_dim_ == 2)
+    invert_sym_2d_matrix(fric_mat, mob_mat);
+  else if (n_dim_ == 3)
+    invert_sym_3d_matrix(fric_mat, mob_mat);
+
   for (int i = 0; i < n_dim_; ++i) {
     for (int j = 0; j < n_dim_; ++j) {
-      dr[i] +=
-          gamma_par_ * orientation_[i] * orientation_[j] * force_[j] * delta_;
+      position_[i] += mob_mat[i * n_dim_ + j] * force_[j] * delta_;
     }
-    dr[i] += force_[i] * gamma_perp_ * delta_;
-    position_[i] += dr[i];
   }
+
   // Reorientation due to external torques
   double du[3];
   cross_product(torque_, orientation_, du, 3);  // ndim=3 since torques

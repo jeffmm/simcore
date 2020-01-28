@@ -75,6 +75,7 @@
   default_config["spindle"]["spring_length"] = "0";
   default_config["spindle"]["spb_diameter"] = "5";
   default_config["crosslink"]["concentration"] = "0";
+  default_config["crosslink"]["use_binding_volume"] = "true";
   default_config["crosslink"]["infinite_reservoir_flag"] = "false";
   default_config["crosslink"]["bind_site_density"] = "1";
   default_config["crosslink"]["walker_flag"] = "false";
