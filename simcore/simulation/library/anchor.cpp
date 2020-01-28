@@ -15,6 +15,8 @@ void Anchor::Init(crosslink_parameters *sparams) {
       (sparams_->step_direction == 0 ? 0 : SIGNOF(sparams_->step_direction));
   max_velocity_s_ = sparams->velocity_s;
   max_velocity_d_ = sparams->velocity_d;
+  diffusion_s_ = sparams->diffusion_s;
+  diffusion_d_ = sparams->diffusion_d;
   k_on_s_ = sparams_->k_on_s;
   k_on_d_ = sparams_->k_on_d;
   k_off_s_ = sparams_->k_off_s;
@@ -36,9 +38,8 @@ void Anchor::SetMeshLambda(double ml) { mesh_lambda_ = ml; }
 
 void Anchor::SetDiffusion() {
   // Solve them now so you do not have to keep taking sqrts
-  kick_amp_s_ = sqrt(2. * diffusion_s_);
-  kick_amp_d_ = sqrt(2. * diffusion_d_);
-  // diffusion_ = sqrt(24.0 * diameter_ / delta_);
+  kick_amp_s_ = sqrt(2. * diffusion_s_ * delta_);
+  kick_amp_d_ = sqrt(2. * diffusion_d_ * delta_);
 }
 
 void Anchor::UpdateAnchorPositionToMesh() {
@@ -217,16 +218,14 @@ void Anchor::Unbind() {
 
 void Anchor::Diffuse() {
   // Motion from thermal kicks
-  double vel = GetKickAmplitude() * rng_.RandomNormal(1);
+  double dr = GetKickAmplitude() * rng_.RandomNormal(1);
 
   // Force dependence diffusion depends on the mobility (D/kBT) and the force
   // applied along the direction of the filament.
   if (force_dep_vel_flag_) {
     double force_proj = dot_product(n_dim_, force_, orientation_);
-    vel += GetDiffusionConst() * force_proj;
+    dr += GetDiffusionConst() * force_proj * delta_;
   }
-
-  double dr = vel * delta_;
   mesh_lambda_ += dr;
 }
 
