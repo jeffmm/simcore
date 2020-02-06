@@ -459,8 +459,8 @@ const double Anchor::GetMaxVelocity() const {
       return max_velocity_d_;
       break;
     case +bind_state::unbound:
-      Logger::Error(
-          "Crosslinker is unbound. Anchors cannot walk if not attached.");
+      // Logger::Error(
+      //    "Crosslinker is unbound. Anchors cannot walk if not attached.");
       return 0;
       break;
     default:
@@ -478,9 +478,9 @@ const double Anchor::GetDiffusionConst() const {
       return diffusion_d_;
       break;
     case +bind_state::unbound:
-      Logger::Error(
-          "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
-          "attached.");
+      // Logger::Error(
+      //    "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
+      //    "attached.");
       return 0;
       break;
     default:
@@ -498,9 +498,9 @@ const double Anchor::GetKickAmplitude() const {
       return kick_amp_d_;
       break;
     case +bind_state::unbound:
-      Logger::Error(
-          "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
-          "attached.");
+      // Logger::Error(
+      //    "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
+      //    "attached.");
       return 0;
       break;
     default:
