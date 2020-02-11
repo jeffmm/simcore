@@ -83,11 +83,12 @@
   default_config["crosslink"]["k_off_s"] = "2";
   default_config["crosslink"]["k_on_d"] = "10";
   default_config["crosslink"]["k_off_d"] = "2";
-  default_config["crosslink"]["force_dep_factor"] = "1";
+  default_config["crosslink"]["energy_dep_factor"] = "0";
+  default_config["crosslink"]["force_dep_length"] = "0";
   default_config["crosslink"]["polar_affinity"] = "1";
   default_config["crosslink"]["k_spring"] = "10";
   default_config["crosslink"]["k2_spring"] = "0";
-  default_config["crosslink"]["anisotropic_spring_flag"] = "false";
+  default_config["crosslink"]["asymmetric_spring_flag"] = "false";
   default_config["crosslink"]["f_stall"] = "100";
   default_config["crosslink"]["force_dep_vel_flag"] = "true";
   default_config["crosslink"]["k_align"] = "0";
@@ -98,6 +99,7 @@
   default_config["crosslink"]["tether_color"] = "3.1416";
   default_config["crosslink"]["end_pausing"] = "false";
   default_config["crosslink"]["r_capture"] = "5";
+  default_config["crosslink"]["lut_grid_num"] = "256";
   default_config["seed"] = "7859459105545";
   default_config["n_runs"] = "1";
   default_config["n_random"] = "1";

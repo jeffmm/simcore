@@ -21,9 +21,11 @@ class CrosslinkSpecies : public Species<Crosslink, species_id::crosslink> {
   double k_spring_;
   double k2_spring_;
   bool static_flag_;
-  bool anisotropic_spring_flag_;
+  bool asymmetric_spring_flag_;
   LookupTable lut_;
   std::vector<Object *> *objs_;
+
+  LUTFiller *MakeLUTFiller();
   void CalculateBindingFree();
   void BindCrosslink();
   void UpdateBoundCrosslinks();

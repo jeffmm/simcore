@@ -25,8 +25,29 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
   obj_volume_ = obj_vol;  // Technically a length
   update_ = update;
   /* TODO Lookup table only works for filament objects. Generalize? */
-  lut_.Init(sparams_.k_spring * .5, sparams_.rest_length, 1);
-  if (sparams_.use_binding_volume) lut_.calcBindVol();
+  // LUTFiller *lut_filler = new LUTFiller;
+  // LUTFillerEdep lut_filler(256, 256);
+  // lut_filler_ptr->Init(sparams_.k_spring * .5, sparams_.rest_length, 1);
+  LUTFiller *lut_filler_ptr = MakeLUTFiller();
+  lut_ = LookupTable(lut_filler_ptr);
+  if (sparams_.use_binding_volume)
+    lut_.setBindVol(lut_filler_ptr->getBindingVolume());
+  delete lut_filler_ptr;
+}
+
+LUTFiller *CrosslinkSpecies::MakeLUTFiller() {
+  int grid_num = sparams_.lut_grid_num;
+  if (sparams_.force_dep_length == 0) {
+    LUTFillerEdep *lut_filler_ptr = new LUTFillerEdep(grid_num, grid_num);
+    lut_filler_ptr->Init(k_spring_ * .5 * (1. - sparams_.energy_dep_factor),
+                         sparams_.rest_length, 1);
+    return lut_filler_ptr;
+  } else {
+    LUTFillerFdep *lut_filler_ptr = new LUTFillerFdep(grid_num, grid_num);
+    lut_filler_ptr->Init(k_spring_, sparams_.energy_dep_factor,
+                         sparams_.force_dep_length, sparams_.rest_length, 1);
+    return lut_filler_ptr;
+  }
 }
 
 void CrosslinkSpecies::InsertCrosslinks() {
