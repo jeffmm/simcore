@@ -8,9 +8,9 @@ void Filament::SetParameters() {
   color_ = sparams_->color;
   draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
   length_ = sparams_->length;
-  persistence_length_ = sparams_->persistence_length;
-  bending_stiffness_ =
-      (n_dim_ == 3 ? persistence_length_ : 0.5 * persistence_length_);
+  /* Bending_stiffness = persistence_length*kT. Bending_stiffness is used in
+     equations below for clarity. */
+  bending_stiffness_ = sparams_->persistence_length;
   diameter_ = sparams_->diameter;
   max_length_ = sparams_->max_length;
   min_length_ = sparams_->min_length;
@@ -1297,22 +1297,20 @@ void Filament::ReportAll() {
 }
 
 /* The spec output for one filament is:
-    diameter
-    length
-    persistence_length (added 1/17/2017)
-    friction_par (added 1/17/2017)
-    friction_perp (added 1/17/2017)
-    bond_length
-    n_bonds,
-    position of first site
-    position of last site
-    all bond orientations
+   (from Mesh::WriteSpec)
+   double diameter
+   double length
+   double bond_length
+   int n_sites
+   double[3*n_sites] site_positions
+   (from Filament::WriteSpec)
+   double bending_stiffness
+   uchar polymerization_state
     */
-
 void Filament::WriteSpec(std::fstream &ospec) {
   Logger::Trace("Writing filament specs, object id: %d", GetOID());
   Mesh::WriteSpec(ospec);
-  ospec.write(reinterpret_cast<char *>(&persistence_length_), sizeof(double));
+  ospec.write(reinterpret_cast<char *>(&bending_stiffness_), sizeof(double));
   ospec.write(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
 }
 
@@ -1331,10 +1329,8 @@ void Filament::ReadSpec(std::fstream &ispec) {
   if (ispec.eof())
     return;
   Mesh::ReadSpec(ispec);
-  ispec.read(reinterpret_cast<char *>(&persistence_length_), sizeof(double));
+  ispec.read(reinterpret_cast<char *>(&bending_stiffness_), sizeof(double));
   ispec.read(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
-  bending_stiffness_ =
-      (n_dim_ == 3 ? persistence_length_ : 0.5 * persistence_length_);
   CalculateAngles();
 }
 
