@@ -313,12 +313,14 @@ crosslink:                          # Parameters specific to crosslinks.
                                          # crosslinks in solution.
   bind_site_density: [1, double]    # The linear binding site density along
                                     # filament that crosslinker ends bind to
-  walker_flag: [false, bool]        # Flag for setting directed motion of crosslink heads.
   static_flag: [false, bool]        # Flag for setting one crosslinker head to be fixed in space
-  diffusion_flag: [false, bool]     # Flag allowing bound crosslink heads to diffuse.
-  velocity: [1, double]             # Bound crosslink head velocities when walkers.
-  k_on: [10, double]                # On-rate for binding crosslinks from solution to bonds.
-  k_off: [2, double]                # Off-rate for bound crosslinks to go from bound to solution.
+  diffusion_s: [0, double]          # Diffusion coefficient for singly bound crosslinks
+  diffusion_d: [0, double]          # Diffusion coefficient for doubly bound crosslinks
+  #velocity: [1, double]             # Bound crosslink head velocities when walkers.
+  velocity_s: [0, double]           # Bound crosslink head velocities when walkers are singly bound.
+  velocity_d: [0, double]           # Bound crosslink head velocities when walkers are doubly bound.
+  k_on_s: [10, double]              # On-rate for binding crosslinks from solution to bonds.
+  k_off_s: [2, double]              # Off-rate for bound crosslinks to go from bound to solution.
   k_on_d: [10, double]              # On-rate for singly bound to doubly bound crosslinks.
   k_off_d: [2, double]              # Off-rate for doubly bound to singly bound crosslinks.
   force_dep_factor: [1, double]     # Scalar in exponential force-dependent off-rate of doubly-

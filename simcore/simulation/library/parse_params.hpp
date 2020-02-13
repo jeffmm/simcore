@@ -565,18 +565,20 @@ species_base_parameters *parse_species_params(std::string sid,
       params.infinite_reservoir_flag = jt->second.as<bool>();
       } else if (param_name.compare("bind_site_density")==0) {
       params.bind_site_density = jt->second.as<double>();
-      } else if (param_name.compare("walker_flag")==0) {
-      params.walker_flag = jt->second.as<bool>();
       } else if (param_name.compare("static_flag")==0) {
       params.static_flag = jt->second.as<bool>();
-      } else if (param_name.compare("diffusion_flag")==0) {
-      params.diffusion_flag = jt->second.as<bool>();
-      } else if (param_name.compare("velocity")==0) {
-      params.velocity = jt->second.as<double>();
-      } else if (param_name.compare("k_on")==0) {
-      params.k_on = jt->second.as<double>();
-      } else if (param_name.compare("k_off")==0) {
-      params.k_off = jt->second.as<double>();
+      } else if (param_name.compare("diffusion_s")==0) {
+      params.diffusion_s = jt->second.as<double>();
+      } else if (param_name.compare("diffusion_d")==0) {
+      params.diffusion_d = jt->second.as<double>();
+      } else if (param_name.compare("velocity_s")==0) {
+      params.velocity_s = jt->second.as<double>();
+      } else if (param_name.compare("velocity_d")==0) {
+      params.velocity_d = jt->second.as<double>();
+      } else if (param_name.compare("k_on_s")==0) {
+      params.k_on_s = jt->second.as<double>();
+      } else if (param_name.compare("k_off_s")==0) {
+      params.k_off_s = jt->second.as<double>();
       } else if (param_name.compare("k_on_d")==0) {
       params.k_on_d = jt->second.as<double>();
       } else if (param_name.compare("k_off_d")==0) {

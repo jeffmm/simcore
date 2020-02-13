@@ -18,9 +18,6 @@ class CrosslinkSpecies : public Species<Crosslink, species_id::crosslink> {
   double bind_site_density_;
   bool infinite_reservoir_flag_;
   double k_on_;
-  double k_off_;
-  double k_on_d_;
-  double k_off_d_;
   double k_spring_;
   double k2_spring_;
   bool static_flag_;
