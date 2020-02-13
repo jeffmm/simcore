@@ -18,4 +18,5 @@ ci_cpp() {
     make test && cd ..
 }
 
-ci_python && ci_cpp
+#ci_python && ci_cpp
+ci_cpp
