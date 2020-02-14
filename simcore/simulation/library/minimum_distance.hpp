@@ -5,7 +5,7 @@
 #include "object.hpp"
 
 class MinimumDistance {
- private:
+private:
   static int n_dim_;
   static int n_periodic_;
   static double *unit_cell_;
@@ -50,7 +50,14 @@ class MinimumDistance {
                        double const length, double *dr, double *dr_mag2,
                        double *r_contact, double buffer);
 
- public:
+  void PointWallBC(double const *const r, double const *const s, double *dr,
+                   double *dr_mag2, double buffer);
+  void SpheroWallBC(double const *const r, double const *const s,
+                    double const *const u, double const length,
+                    double *r_contact, double *dr, double *dr_mag2,
+                    double buffer);
+
+public:
   MinimumDistance() {}
   static void Init(space_struct *space, double boundary_cutoff_sq);
   void ObjectObject(Interaction &ix);

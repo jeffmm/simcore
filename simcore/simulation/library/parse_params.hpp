@@ -315,6 +315,10 @@ species_base_parameters *parse_species_params(std::string sid,
       params.spiral_number_fail_condition = jt->second.as<double>();
       } else if (param_name.compare("driving_factor")==0) {
       params.driving_factor = jt->second.as<double>();
+      } else if (param_name.compare("peclet_number")==0) {
+      params.peclet_number = jt->second.as<double>();
+      } else if (param_name.compare("flexure_number")==0) {
+      params.flexure_number = jt->second.as<double>();
       } else if (param_name.compare("friction_ratio")==0) {
       params.friction_ratio = jt->second.as<double>();
       } else if (param_name.compare("dynamic_instability_flag")==0) {
@@ -347,6 +351,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.v_poly = jt->second.as<double>();
       } else if (param_name.compare("v_depoly")==0) {
       params.v_depoly = jt->second.as<double>();
+      } else if (param_name.compare("error_analysis")==0) {
+      params.error_analysis = jt->second.as<bool>();
       } else if (param_name.compare("theta_analysis")==0) {
       params.theta_analysis = jt->second.as<bool>();
       } else if (param_name.compare("lp_analysis")==0) {
@@ -383,6 +389,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.polydispersity_flag = jt->second.as<bool>();
       } else if (param_name.compare("custom_set_tail")==0) {
       params.custom_set_tail = jt->second.as<bool>();
+      } else if (param_name.compare("reference_frame_flag")==0) {
+      params.reference_frame_flag = jt->second.as<bool>();
       } else {
         Logger::Warning("Unrecognized %s parameter: '%s'", sid.c_str(), param_name.c_str());
       }

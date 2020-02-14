@@ -1,7 +1,7 @@
 #include "struct_analysis.hpp"
 
 // Assumes 2d for now. In the future, could do 2d projections of 3d data
-void StructAnalysis::Init(system_parameters* params) {
+void StructAnalysis::Init(system_parameters *params) {
   count_ = 0;
   n_objs_ = 0;
   n_overlaps_ = 0;
@@ -32,7 +32,7 @@ void StructAnalysis::Init(system_parameters* params) {
     /* Issue a RAM warning if the arrays are very large */
     if (6.0 * n_bins_ * 4.0 / 1e9 > 1) {
       Logger::Warning("Local structure content to exceed %2.2f GB of RAM!",
-              6.0 * n_bins_ * 4.0 / 1e9);
+                      6.0 * n_bins_ * 4.0 / 1e9);
     }
     /* initialize arrays */
     pdf_array_ = new float[n_bins_];
@@ -62,11 +62,12 @@ void StructAnalysis::Init(system_parameters* params) {
     /* Issue a RAM warning if the arrays are very large */
     if (6.0 * n_bins_ * 4.0 / 1e9 > 1) {
       Logger::Warning("Local structure content to exceed %2.2f GB of RAM!",
-              6.0 * n_bins_ * 4.0 / 1e9);
+                      6.0 * n_bins_ * 4.0 / 1e9);
     }
     /* initialize arrays */
-    density_array_ = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * n_bins_);
-    fft_array_ = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * n_bins_);
+    density_array_ =
+        (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * n_bins_);
+    fft_array_ = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * n_bins_);
     ZeroDensityArray();
     fft_plan =
         fftw_plan_dft_2d(density_bins_1d_, density_bins_1d_, density_array_,
@@ -85,8 +86,8 @@ void StructAnalysis::Init(system_parameters* params) {
 void StructAnalysis::ZeroDensityArray() {
   for (int i = 0; i < density_bins_1d_; ++i) {
     for (int j = 0; j < density_bins_1d_; ++j) {
-      density_array_[i * density_bins_1d_ + j][0] = 0;  // real value
-      density_array_[i * density_bins_1d_ + j][1] = 0;  // complex value
+      density_array_[i * density_bins_1d_ + j][0] = 0; // real value
+      density_array_[i * density_bins_1d_ + j][1] = 0; // complex value
     }
   }
 }
@@ -187,8 +188,7 @@ void StructAnalysis::WriteStructData() {
 
 void StructAnalysis::WriteDensityData() {
   if (count_ < 1 || n_objs_ < 1) {
-    Logger::Warning(
-        "Time average count and/or object number not initialized\
+    Logger::Warning("Time average count and/or object number not initialized\
         in StructAnalysis. Skipping density output.");
     return;
   }
@@ -229,8 +229,8 @@ void StructAnalysis::CalculatePolarOrderPair(
   }
   double dr2 = pix->dr_mag2;
   double expdr2 = exp(-dr2);
-  double const* const u1 = obj1->GetInteractorOrientation();
-  double const* const u2 = obj2->GetInteractorOrientation();
+  double const *const u1 = obj1->GetInteractorOrientation();
+  double const *const u2 = obj2->GetInteractorOrientation();
   double u1_dot_u2 = dot_product(n_dim_, u1, u2);
   // if (u1_dot_u2 > 1 || u1_dot_u2 < -1) {
   // std::cout << "error 1: " << u1_dot_u2 << "\n";
@@ -243,9 +243,9 @@ void StructAnalysis::CalculatePolarOrderPair(
   // obj2->AddContactNumber(expdr2);
 }
 
-void StructAnalysis::BinDensity(Object* obj) {
-  double const* const r1 = obj->GetInteractorScaledPosition();
-  double const* const u1 = obj->GetInteractorOrientation();
+void StructAnalysis::BinDensity(Object *obj) {
+  double const *const r1 = obj->GetInteractorScaledPosition();
+  double const *const u1 = obj->GetInteractorOrientation();
   double const l1 = obj->GetInteractorLength();
 
   /* Check to see if we are only interested in COMs of objects */
@@ -282,10 +282,10 @@ void StructAnalysis::CalculateLocalOrderPair(
     return;
   }
 
-  double const* const r1 = obj1->GetInteractorPosition();
-  double const* const r2 = obj2->GetInteractorPosition();
-  double const* const u1 = obj1->GetInteractorOrientation();
-  double const* const u2 = obj2->GetInteractorOrientation();
+  double const *const r1 = obj1->GetInteractorPosition();
+  double const *const r2 = obj2->GetInteractorPosition();
+  double const *const u1 = obj1->GetInteractorOrientation();
+  double const *const u2 = obj2->GetInteractorOrientation();
   double const l1 = obj1->GetInteractorLength();
   double const l2 = obj2->GetInteractorLength();
 
@@ -364,7 +364,7 @@ void StructAnalysis::CalculateLocalOrderPair(
 /* PopulateLine uses Bresenham line drawing algorithm to
    populate the bins that define a line joining site1 and
    site2 in a discretized (pixelized) space */
-void StructAnalysis::PopulateLineLocal(double* site1, double* site2,
+void StructAnalysis::PopulateLineLocal(double *site1, double *site2,
                                        double dotprod) {
   // Convert positions into bin numbers
   int index1[2], index2[2];
@@ -380,7 +380,7 @@ void StructAnalysis::PopulateLineLocal(double* site1, double* site2,
 /* PopulateLine uses Bresenham line drawing algorithm to
    populate the bins that define a line joining site1 and
    site2 in a discretized (pixelized) space */
-void StructAnalysis::PopulateLineDensity(double* site1, double* site2) {
+void StructAnalysis::PopulateLineDensity(double *site1, double *site2) {
   // Convert positions into bin numbers
   int index1[2], index2[2];
   for (int i = 0; i < 2; ++i) {
@@ -472,10 +472,14 @@ void StructAnalysis::BinArray(int x, int y, double dotprod, bool is_local) {
   /* If the coordinate is out of range of our region of interest
      for whatever reason, ignore the coordinate */
   n_bins_1d_ = (is_local ? local_bins_1d_ : density_bins_1d_);
-  if (x < 0) x += n_bins_1d_;
-  if (y < 0) y += n_bins_1d_;
-  if (x > n_bins_1d_ - 1) x -= n_bins_1d_;
-  if (y > n_bins_1d_ - 1) y -= n_bins_1d_;
+  if (x < 0)
+    x += n_bins_1d_;
+  if (y < 0)
+    y += n_bins_1d_;
+  if (x > n_bins_1d_ - 1)
+    x -= n_bins_1d_;
+  if (y > n_bins_1d_ - 1)
+    y -= n_bins_1d_;
   if (x < 0 || y < 0 || x > n_bins_1d_ - 1 || y > n_bins_1d_ - 1) {
     Logger::Warning("Invalid value found in BinArray in struct_analysis.cpp");
     return;
@@ -506,8 +510,8 @@ void StructAnalysis::AverageStructure() {
   }
   if (overlap_analysis_) {
     crossing_list_.CompareLists(&n_crossings_init_, &n_crossings_complete_);
-    overlap_file_ << ((params_->i_step) * params_->delta) << " " << n_overlaps_ << " "
-                  << 0.5 * n_crossings_init_ << " "
+    overlap_file_ << ((params_->i_step) * params_->delta) << " " << n_overlaps_
+                  << " " << 0.5 * n_crossings_init_ << " "
                   << 0.5 * n_crossings_complete_ << "\n";
     n_overlaps_ = 0;
   }

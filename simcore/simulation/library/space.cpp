@@ -71,6 +71,9 @@ void Space::Init(system_parameters *params) {
       }
       boundary_ = boundary_type::budding;
       break;
+    case 4:
+      boundary_ = boundary_type::wall;
+      break;
     default:
       Logger::Error("Boundary type %d not recognized!", params_->boundary);
   }
@@ -303,6 +306,17 @@ void Space::CalculateVolume() {
           R * sqrt(1 - SQR((SQR(R) + SQR(d) - SQR(r)) / (2 * d * R)));
       break;
     }
+    case 4:
+      v_ratio_ = 0;
+      neck_height_ = 0;
+      neck_radius_ = 0;
+      // FIXME This is not correct for cell lists with periodic boundary. Should
+      // not hurt calculations though, just not efficient.
+      if (n_dim_ == 2)
+        volume_ = SQR(2 * radius_);
+      else
+        volume_ = CUBE(2 * radius_);
+      break;
     default:
       break;
   }

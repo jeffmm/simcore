@@ -19,6 +19,7 @@ obj
 *.filament
 *.thermo
 *.mse2e
+*.error
 *.theta
 *.spec
 *.checkpoint

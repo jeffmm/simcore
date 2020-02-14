@@ -24,6 +24,8 @@
   default_config["filament"]["spiral_flag"] = "false";
   default_config["filament"]["spiral_number_fail_condition"] = "0";
   default_config["filament"]["driving_factor"] = "0";
+  default_config["filament"]["peclet_number"] = "-1";
+  default_config["filament"]["flexure_number"] = "-1";
   default_config["filament"]["friction_ratio"] = "2";
   default_config["filament"]["dynamic_instability_flag"] = "false";
   default_config["filament"]["force_induced_catastrophe_flag"] = "false";
@@ -40,6 +42,7 @@
   default_config["filament"]["f_grow_to_shrink"] = "0.00554";
   default_config["filament"]["v_poly"] = "0.44";
   default_config["filament"]["v_depoly"] = "0.793";
+  default_config["filament"]["error_analysis"] = "false";
   default_config["filament"]["theta_analysis"] = "false";
   default_config["filament"]["lp_analysis"] = "false";
   default_config["filament"]["global_order_analysis"] = "false";
@@ -58,6 +61,7 @@
   default_config["filament"]["flocking_analysis"] = "false";
   default_config["filament"]["polydispersity_flag"] = "false";
   default_config["filament"]["custom_set_tail"] = "false";
+  default_config["filament"]["reference_frame_flag"] = "false";
   default_config["br_bead"]["driving_factor"] = "0";
   default_config["br_bead"]["packing_fraction"] = "-1";
   default_config["spherocylinder"]["diffusion_analysis"] = "false";
@@ -167,7 +171,7 @@
   default_config["reduced"] = "false";
   default_config["reload_reduce_switch"] = "false";
   default_config["flock_polar_min"] = "0.5";
-  default_config["flock_contact_min"] = "1.5";
+  default_config["flock_contact_min"] = "0.5";
   default_config["highlight_flock"] = "false";
   default_config["flock_color_ext"] = "1.57";
   default_config["flock_color_int"] = "4.71";
