@@ -183,7 +183,7 @@ void Graphics::Init(std::vector<graph_struct *> *graph_array,
   unit_cell_ = space_->unit_cell;
   auto_graph_ = auto_graph;
   // ScalePositions();
-  if (draw_boundary == 0) {
+  if (draw_boundary == 0 || space_->type == +boundary_type::wall) {
     boundary_ = boundary_type::none;
   } else {
     boundary_ = space_->type;

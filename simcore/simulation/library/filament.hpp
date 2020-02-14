@@ -30,6 +30,7 @@ class Filament : public Mesh {
   double max_bond_length_;
   double min_bond_length_;
   double persistence_length_;
+  double bending_stiffness_;
   double friction_ratio_;  // friction_par/friction_perp
   double friction_par_;
   double friction_perp_;
@@ -47,6 +48,8 @@ class Filament : public Mesh {
   double p_g2s_;
   double p_g2p_;
   double driving_factor_;
+  double peclet_number_;
+  double flexure_number_;
   double fic_factor_;
   double curvature_ = 0;
   double spiral_number_;
@@ -55,6 +58,8 @@ class Filament : public Mesh {
   double optical_trap_pos_[3];
   double optical_trap_pos2_[3];
   double polydispersity_factor_;
+  bool error_analysis_;
+  std::vector<int> error_rates_;
   std::vector<double> gamma_inverse_;
   std::vector<double> tensions_;       // n_sites-1
   std::vector<double> g_mat_lower_;    // n_sites-2
@@ -80,6 +85,7 @@ class Filament : public Mesh {
   void CalculateBendingForces();
   void CalculateTensions();
   void UpdateSitePositions();
+  void RotateToReferenceFrame();
   void ApplyForcesTorques();
   void ApplyInteractionForces();
   void SetParameters();
@@ -95,7 +101,6 @@ class Filament : public Mesh {
   void ReportAll();
   void CalculateBinding();
   bool CheckBondLengths();
-
  public:
   Filament(unsigned long seed);
   virtual void Init(filament_parameters *sparams);
@@ -123,6 +128,7 @@ class Filament : public Mesh {
   double const *const GetTailOrientation() {
     return sites_[0].GetOrientation();
   }
+  void GetErrorRates(std::vector<int> &rates);
   void AddTorqueTail(double *t) { bonds_[0].AddTorque(t); }
   void AddForceTail(double *f) { sites_[0].AddForce(f); }
   void WritePosit(std::fstream &oposit);

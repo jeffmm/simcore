@@ -48,6 +48,7 @@ void InteractionManager::InitInteractions() {
   CellList::SetMinCellLength(sqrt(potentials_.GetRCut2()));
 
   CellList::Init(params_->n_dim, params_->n_periodic, params_->system_radius);
+  Logger::Info("Constructing cell list data structure");
   clist_.BuildCellList();
 
   dr_update_ = 0.25 * CellList::GetCellLength() * CellList::GetCellLength();

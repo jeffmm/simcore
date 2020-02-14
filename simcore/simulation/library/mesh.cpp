@@ -25,10 +25,9 @@ Site *Mesh::GetSite(int i) { return &(sites_[i]); }
 Bond *Mesh::GetBond(int i) { return &(bonds_[i]); }
 void Mesh::AddSite(Site s) {
   if (n_sites_ == n_bonds_max_ + 1) {
-    Logger::Error(
-        "Attempting to add site beyond allocated maximum.\n"
-        "n_bonds_max_: %d , n_sites_: %d",
-        n_bonds_max_, n_sites_);
+    Logger::Error("Attempting to add site beyond allocated maximum.\n"
+                  "n_bonds_max_: %d , n_sites_: %d",
+                  n_bonds_max_, n_sites_);
   }
   sites_.push_back(s);
   sites_.back().SetColor(color_, draw_);
@@ -76,7 +75,8 @@ void Mesh::Clear() {
 }
 
 void Mesh::RemoveBondFromTip() {
-  if (n_bonds_ == 0) return;
+  if (n_bonds_ == 0)
+    return;
   sites_.pop_back();
   n_sites_--;
   sites_.back().RemoveBond(bonds_.back().GetOID());
@@ -90,10 +90,10 @@ void Mesh::RemoveBondFromTip() {
 // Doubles number of bonds in graph while keeping same shape
 // currently only works for linear objects like filaments
 void Mesh::DoubleGranularityLinear() {
-  Logger::Trace(
-      "Mesh %d doubling bonds for dynamic instability, n_bonds: %d ->"
-      " %d, bond_length: %2.2f -> %2.2f",
-      GetMeshID(), n_bonds_, 2 * n_bonds_, bond_length_, 0.5 * bond_length_);
+  Logger::Trace("Mesh %d doubling bonds for dynamic instability, n_bonds: %d ->"
+                " %d, bond_length: %2.2f -> %2.2f",
+                GetMeshID(), n_bonds_, 2 * n_bonds_, bond_length_,
+                0.5 * bond_length_);
   int n_bonds_old = n_bonds_;
   bond_length_ /= 2;
   // First record positions of currently existing graph
@@ -121,10 +121,10 @@ void Mesh::HalfGranularityLinear() {
         "HalfGranularityLinear called on mesh with odd number of bonds: %d",
         n_bonds_);
   }
-  Logger::Trace(
-      "Mesh %d halving bonds for dynamic instability, n_bonds: %d ->"
-      " %d, bond_length: %2.2f -> %2.2f",
-      GetMeshID(), n_bonds_, n_bonds_ / 2, bond_length_, 2 * bond_length_);
+  Logger::Trace("Mesh %d halving bonds for dynamic instability, n_bonds: %d ->"
+                " %d, bond_length: %2.2f -> %2.2f",
+                GetMeshID(), n_bonds_, n_bonds_ / 2, bond_length_,
+                2 * bond_length_);
 
   int n_bonds_new = n_bonds_ / 2;
   bond_length_ *= 2;
@@ -304,10 +304,9 @@ void Mesh::AddBondToTip(double *u, double l) {
 }
 
 void Mesh::AddBondToSite(double *u, double l, int i_site) {
-  Logger::Trace(
-      "Adding bond of length %2.2f and orientation [%2.2f %2.2f %2.2f"
-      "] to site number %d ",
-      l, u[0], u[1], u[2], i_site);
+  Logger::Trace("Adding bond of length %2.2f and orientation [%2.2f %2.2f %2.2f"
+                "] to site number %d ",
+                l, u[0], u[1], u[2], i_site);
 
   if (i_site > n_sites_ || i_site < 0) {
     Logger::Error("Site index out of range in AddBondToSite!\n");
@@ -407,8 +406,10 @@ void Mesh::ReadPosit(std::fstream &ip) {
   sites_.resize(size, s);
   ip.read(reinterpret_cast<char *>(&size), sizeof(size));
   bonds_.resize(size, b);
-  for (auto &s : sites_) s.ReadPosit(ip);
-  for (auto &b : bonds_) b.ReadPosit(ip);
+  for (auto &s : sites_)
+    s.ReadPosit(ip);
+  for (auto &b : bonds_)
+    b.ReadPosit(ip);
 }
 
 void Mesh::WritePosit(std::fstream &op) {
@@ -417,8 +418,10 @@ void Mesh::WritePosit(std::fstream &op) {
   op.write(reinterpret_cast<char *>(&size), sizeof(size));
   size = bonds_.size();
   op.write(reinterpret_cast<char *>(&size), sizeof(size));
-  for (auto &s : sites_) s.WritePosit(op);
-  for (auto &b : bonds_) b.WritePosit(op);
+  for (auto &s : sites_)
+    s.WritePosit(op);
+  for (auto &b : bonds_)
+    b.WritePosit(op);
 }
 
 void Mesh::ReadSpec(std::fstream &ip) {
@@ -451,9 +454,8 @@ void Mesh::ReadSpec(std::fstream &ip) {
       InitSiteAt(position_, diameter_);
     }
     if (n_sites_ != nsites || n_sites_ < 2) {
-      Logger::Error(
-          "Improper number of site positions read in"
-          " Mesh::ReadSpec");
+      Logger::Error("Improper number of site positions read in"
+                    " Mesh::ReadSpec");
     }
     for (int i = 0; i < n_sites_ - 1; ++i) {
       AddBond(&sites_[i], &sites_[i + 1]);
@@ -464,6 +466,13 @@ void Mesh::ReadSpec(std::fstream &ip) {
   }
 }
 
+/* Spec output for mesh is:
+   double diameter
+   double length
+   double bond_length
+   int n_sites
+   double[3*n_sites] site_positions
+   */
 void Mesh::WriteSpec(std::fstream &op) {
   Logger::Trace("Writing specs for mesh id %d", GetMeshID());
   op.write(reinterpret_cast<char *>(&diameter_), sizeof(diameter_));
@@ -559,11 +568,14 @@ void Mesh::GetAvgPosition(double *ap) {
   int size = 0;
   for (auto it = sites_.begin(); it != sites_.end(); ++it) {
     double const *const p = it->GetPosition();
-    for (int i = 0; i < n_dim_; ++i) avg_p[i] += p[i];
+    for (int i = 0; i < n_dim_; ++i)
+      avg_p[i] += p[i];
     size++;
   }
-  if (size == 0) Logger::Error("Something went wrong in GetAvgPosition!");
-  for (int i = 0; i < n_dim_; ++i) avg_p[i] /= size;
+  if (size == 0)
+    Logger::Error("Something went wrong in GetAvgPosition!");
+  for (int i = 0; i < n_dim_; ++i)
+    avg_p[i] /= size;
   std::copy(avg_p, avg_p + 3, ap);
 }
 
@@ -572,7 +584,8 @@ void Mesh::GetAvgOrientation(double *au) {
   int size = 0;
   for (auto it = sites_.begin(); it != sites_.end(); ++it) {
     double const *const u = it->GetOrientation();
-    for (int i = 0; i < n_dim_; ++i) avg_u[i] += u[i];
+    for (int i = 0; i < n_dim_; ++i)
+      avg_u[i] += u[i];
   }
   normalize_vector(avg_u, n_dim_);
   std::copy(avg_u, avg_u + 3, au);

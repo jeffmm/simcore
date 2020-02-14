@@ -671,12 +671,76 @@ void MinimumDistance::PointSphereBC(double const *const r, double *dr,
     *dr_mag2 += dr[i] * dr[i];
   }
 }
+void MinimumDistance::SpheroWallBC(double const *const r, double const *const s,
+                                   double const *const u, double const length,
+                                   double *dr, double *dr_mag2,
+                                   double *r_contact, double buffer) {
+  /* For a spherocylinder with spherical BCs, the minimum distance will
+     always be at one of the endpoints */
+  double r_min[3] = {0, 0, 0};
+  /* Check which site is closest to the boundary. If the sphero is on the right
+     side of the box, check if the orientation is toward or away from the box,
+     and vice versa */
+  int sign;
+  double wall;
+  if (s[0] > 0) {
+    sign = (u[0] > 0 ? 1 : -1);
+    wall = 0.5;
+  } else {
+    sign = (u[0] < 0 ? 1 : -1);
+    wall = -0.5;
+  }
+  double ds[3] = {0, 0, 0};
+  ds[0] = wall - s[0];
+  for (int i = 0; i < n_periodic_; ++i) {
+    ds[i] -= NINT(ds[i]);
+  }
+  for (int i = 0; i < n_periodic_; ++i) {
+    dr[i] = 0.0;
+    for (int j = 0; j < n_periodic_; ++j) {
+      dr[i] += unit_cell_[n_dim_ * i + j] * ds[j];
+    }
+  }
+  // Then handle free subspace
+  if (n_periodic_ == 0) {
+    dr[0] = - space_->radius - r[0];
+  }
+  for (int i = 0; i < n_dim_; ++i) {
+    r_contact[i] = sign * 0.5 * length * u[i];
+    r_min[i] = r[i] + r_contact[i];
+  }
+  sign = (s[0] > 0 ? 1 : -1);
+  dr[0] -= sign * ABS(r_min[0] - r[0]);
+  *dr_mag2 = dr[0] * dr[0];
+}
+
+void MinimumDistance::PointWallBC(double const *const r, double const *const s,
+                                  double *dr, double *dr_mag2, double buffer) {
+  /* Check which site is closest to the boundary. If the sphero is on the right
+     side of the box, check if the orientation is toward or away from the box,
+     and vice versa */
+  if (n_periodic_ > 0) {
+    double ds[3] = {0, 0, 0};
+    ds[0] = -s[0];
+    for (int i = 0; i < n_periodic_; ++i) {
+      dr[i] = 0.0;
+      for (int j = 0; j < n_periodic_; ++j) {
+        dr[i] += unit_cell_[n_dim_ * i + j] * ds[j];
+      }
+    }
+  } else {
+    dr[0] = -r[0];
+  }
+  *dr_mag2 = 0.0;
+  for (int i = 0; i < n_dim_; ++i) {
+    *dr_mag2 += SQR(dr[i]);
+  }
+}
 
 void MinimumDistance::SpheroSphereBC(double const *const r,
                                      double const *const u, double const length,
                                      double *dr, double *dr_mag2,
                                      double *r_contact, double buffer) {
-
   /* For a spherocylinder with spherical BCs, the minimum distance will
      always be at one of the endpoints */
   double r_min[3] = {0, 0, 0};
@@ -819,6 +883,7 @@ bool MinimumDistance::CheckBoundaryInteraction(Interaction &ix) {
       space_->type == +boundary_type::none)
     return false;
   double const *const r1 = ix.obj1->GetInteractorPosition();
+  double const *const s1 = ix.obj1->GetInteractorScaledPosition();
   double const *const u1 = ix.obj1->GetInteractorOrientation();
   double const l1 = ix.obj1->GetInteractorLength();
   double const d1 = ix.obj1->GetInteractorDiameter();
@@ -841,6 +906,13 @@ bool MinimumDistance::CheckBoundaryInteraction(Interaction &ix) {
       SpheroBuddingBC(r1, u1, l1, ix.dr, &(ix.dr_mag2), ix.contact1,
                       ix.buffer_mag);
     }
+  } else if (space_->type == +boundary_type::wall) {
+    if (l1 == 0) {
+      PointWallBC(r1, s1, ix.dr, &(ix.dr_mag2), ix.buffer_mag);
+    } else {
+      SpheroWallBC(r1, s1, u1, l1, ix.dr, &(ix.dr_mag2), ix.contact1,
+                   ix.buffer_mag);
+    }
   }
   if (ix.dr_mag2 < boundary_cut2_) {
     return true;
@@ -849,7 +921,7 @@ bool MinimumDistance::CheckBoundaryInteraction(Interaction &ix) {
 }
 
 bool MinimumDistance::CheckOutsideBoundary(Object &obj) {
-  if (space_->type == +boundary_type::none)
+  if (space_->type == +boundary_type::none || +boundary_type::wall)
     return false;
   double const *const r = obj.GetInteractorPosition();
   double const *const u = obj.GetInteractorOrientation();
