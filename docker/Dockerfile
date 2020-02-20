@@ -15,6 +15,7 @@ RUN apt-get update -qq && \
         libyaml-cpp-dev \
         libgsl-dev \
         libfftw3-dev \
+        libopenmpi-dev \
         libboost-math1.67-dev &&\
         rm -rf ~/.cache
 RUN git clone --recursive --single-branch --branch jmm/directory_tree_refactor https://github.com/jeffmm/simcore.git . &&\
@@ -22,6 +23,7 @@ RUN git clone --recursive --single-branch --branch jmm/directory_tree_refactor h
     cd build &&\
     cmake -DTESTS=TRUE .. &&\
     make -j4 &&\
+    make test &&\
     make install
 RUN rm -rf /build
 WORKDIR /mnt
