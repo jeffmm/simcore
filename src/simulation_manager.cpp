@@ -1,4 +1,4 @@
-#include <simcore/simulation_manager.hpp>
+#include "simcore/simulation_manager.hpp"
 
 bool early_exit;
 
@@ -167,7 +167,7 @@ void SimulationManager::AppendParams(YAML::Node app_node) {
    *************************************/
 void SimulationManager::LoadDefaultParams() {
   // YAML::Node defaults = YAML::LoadFile(params_.default_param_file);
-#include <simcore/default_params.hpp>
+#include "simcore/default_params.hpp"
   for (YAML::const_iterator it = default_config.begin();
        it != default_config.end(); ++it) {
     std::string param_name = it->first.as<std::string>();
@@ -551,7 +551,7 @@ void SimulationManager::RunSimulations() {
    simulation parameters. Uses parse_params.h which is generated
    automatically using simcore_config.
    *************************************/
-//#include <simcore/parse_params.hpp>
+//#include "simcore/parse_params.hpp"
 // void SimulationManager::ParseParams(std::string file_name) {
 // YAML::Node node = YAML::LoadFile(file_name);
 // YAML::Emitter out;

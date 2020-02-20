@@ -1,5 +1,5 @@
 
-#include <simcore/simulation.hpp>
+#include "simcore/simulation.hpp"
 
 /* Initialize simulation parameters and run simulation */
 void Simulation::Run(YAML::Node sim_params) {

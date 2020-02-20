@@ -1,4 +1,4 @@
-#include <simcore/object.hpp>
+#include "simcore/object.hpp"
 
 Object::Object(unsigned long seed) : rng_(seed) {
   // Initialize object ID, guaranteeing thread safety

@@ -1,4 +1,4 @@
-#include <simcore/br_bead.hpp>
+#include "simcore/br_bead.hpp"
 
 BrBead::BrBead(unsigned long seed) : Object(seed) {
   SetSID(species_id::br_bead);

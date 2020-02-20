@@ -1,7 +1,7 @@
 #ifndef NOGRAPH
 
-#include <simcore/writebmp.hpp>
-#include <simcore/graphics.hpp>
+#include "simcore/writebmp.hpp"
+#include "simcore/graphics.hpp"
 
 /* Local Functions */
 void write_bmp24(FILE *fp, int width, int height, GLvoid *pixels);

@@ -1,4 +1,4 @@
-#include <simcore/species_base.hpp>
+#include "simcore/species_base.hpp"
 
 
 SpeciesBase::SpeciesBase(unsigned long seed) : rng_(seed) {}

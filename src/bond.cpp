@@ -1,4 +1,4 @@
-#include <simcore/bond.hpp>
+#include "simcore/bond.hpp"
 
 /**************************
 ** Bond member functions **

@@ -1,4 +1,4 @@
-#include <simcore/anchor.hpp>
+#include "simcore/anchor.hpp"
 
 Anchor::Anchor(unsigned long seed) : Object(seed) {
   SetSID(species_id::crosslink);

@@ -1,4 +1,4 @@
-#include <simcore/auxiliary.hpp>
+#include "simcore/auxiliary.hpp"
 
 double dot_product(int n_dim, double const *const a, double const *const b) {
   double mag = 0.0;

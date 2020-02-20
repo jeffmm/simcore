@@ -1,4 +1,4 @@
-#include <simcore/spherocylinder_species.hpp>
+#include "simcore/spherocylinder_species.hpp"
 
 SpherocylinderSpecies::SpherocylinderSpecies(unsigned long seed)
     : Species(seed) {

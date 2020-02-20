@@ -1,4 +1,4 @@
-#include <simcore/mesh.hpp>
+#include "simcore/mesh.hpp"
 
 /**************************
 ** Mesh member functions **

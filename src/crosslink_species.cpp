@@ -1,4 +1,4 @@
-#include <simcore/crosslink_species.hpp>
+#include "simcore/crosslink_species.hpp"
 
 CrosslinkSpecies::CrosslinkSpecies(unsigned long seed) : Species(seed) {
   SetSID(species_id::crosslink);

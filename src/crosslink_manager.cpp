@@ -1,4 +1,4 @@
-#include <simcore/crosslink_manager.hpp>
+#include "simcore/crosslink_manager.hpp"
 
 void CrosslinkManager::Init(system_parameters *params, space_struct *space,
                             std::vector<Object *> *objs) {

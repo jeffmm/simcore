@@ -1,4 +1,4 @@
-#include <simcore/cell_list.hpp>
+#include "simcore/cell_list.hpp"
 
 double CellList::_min_cell_length_ = -1;
 int CellList::_n_dim_ = -1;

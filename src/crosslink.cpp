@@ -1,4 +1,4 @@
-#include <simcore/crosslink.hpp>
+#include "simcore/crosslink.hpp"
 #include <iostream>
 
 Crosslink::Crosslink(unsigned long seed) : Object(seed) {

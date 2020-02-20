@@ -1,4 +1,4 @@
-#include <simcore/struct_analysis.hpp>
+#include "simcore/struct_analysis.hpp"
 
 // Assumes 2d for now. In the future, could do 2d projections of 3d data
 void StructAnalysis::Init(system_parameters *params) {

@@ -1,4 +1,4 @@
-#include <simcore/br_rod.hpp>
+#include "simcore/br_rod.hpp"
 
 BrRod::BrRod(unsigned long seed) : Object(seed) {
   std::fill(body_frame_, body_frame_ + 6, 0.0);

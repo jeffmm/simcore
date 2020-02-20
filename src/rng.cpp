@@ -1,4 +1,4 @@
-#include <simcore/rng.hpp>
+#include "simcore/rng.hpp"
 
 RNG::RNG(unsigned long seed) {
   gsl_rng_env_setup();

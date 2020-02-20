@@ -1,4 +1,4 @@
-#include <simcore/spherocylinder.hpp>
+#include "simcore/spherocylinder.hpp"
 
 Spherocylinder::Spherocylinder(unsigned long seed) : BrRod(seed) {
   SetSID(species_id::spherocylinder);

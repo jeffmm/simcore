@@ -1,4 +1,4 @@
-#include <simcore/spindle.hpp>
+#include "simcore/spindle.hpp"
 
 Spindle::Spindle(unsigned long seed) : BrRod(seed) {
   SetSID(species_id::spindle);

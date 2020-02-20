@@ -1,12 +1,12 @@
 #ifndef NOGRAPH
 
-#include <simcore/graphics.hpp>
+#include "simcore/graphics.hpp"
 #include <stdarg.h>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include <simcore/macros.hpp>
+#include "simcore/macros.hpp"
 
 static void key_callback2d(GLFWwindow *window, int key, int scancode,
                            int action, int mods) {

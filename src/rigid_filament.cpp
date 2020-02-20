@@ -1,4 +1,4 @@
-#include <simcore/rigid_filament.hpp>
+#include "simcore/rigid_filament.hpp"
 
 RigidFilament::RigidFilament(unsigned long seed) : Mesh(seed) {
   std::fill(body_frame_, body_frame_ + 6, 0.0);

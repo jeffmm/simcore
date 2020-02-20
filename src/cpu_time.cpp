@@ -6,7 +6,7 @@
 
    output: elapsed cpu time in seconds (return value) */
 
-#include <simcore/auxiliary.hpp>
+#include "simcore/auxiliary.hpp"
 
 #include <stdio.h>
 #include <sys/resource.h>

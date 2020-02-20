@@ -1,4 +1,4 @@
-#include <simcore/rigid_filament_species.hpp>
+#include "simcore/rigid_filament_species.hpp"
 
 RigidFilamentSpecies::RigidFilamentSpecies(unsigned long seed) : Species(seed) {
   SetSID(species_id::rigid_filament);

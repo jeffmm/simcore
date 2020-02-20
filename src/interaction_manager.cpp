@@ -1,5 +1,5 @@
 
-#include <simcore/interaction_manager.hpp>
+#include "simcore/interaction_manager.hpp"
 
 void InteractionManager::Init(system_parameters *params,
                               std::vector<SpeciesBase *> *species,
