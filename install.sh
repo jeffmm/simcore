@@ -28,7 +28,7 @@ clean_cmake_files() {
 
 show_help() {
     echo "USAGE:"
-    echo "  $0 [-hcgwodtbx]"
+    echo "  $0 [-hcIgwodtbx]"
     echo "OPTIONS:"
     echo "  -h      show this menu"
     echo "  -c      clean build directory"
@@ -49,7 +49,7 @@ CMAKE_FLAGS="-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 build_docs=false
 run_tests=false
 install_packages=false
-while getopts "h?cgwodtDT:" opt; do
+while getopts "h?cIgwodtDT:" opt; do
     case "$opt" in
     h|\?)
         show_help

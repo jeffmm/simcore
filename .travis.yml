@@ -4,9 +4,7 @@ language: cpp
 services:
   - docker
 
-before_script:
-  - docker build -t jeffmm/simcore docker
-
+# Tests are handled in Docker image
 script:
-  - docker run --rm -v ${PWD}:/mnt jeffmm/simcore bash -c "./scripts/ci.sh"
+  - docker build -t jeffmm/simcore docker
 ...

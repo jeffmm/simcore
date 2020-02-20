@@ -29,9 +29,7 @@ RUN wget https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.6.0.tar.gz &&\
 
 RUN git clone --recursive --single-branch --branch jmm/directory_tree_refactor https://github.com/jeffmm/simcore.git &&\
     cd simcore &&\
-    mkdir build &&\
-    cd build &&\
-    cmake -DTESTS=TRUE .. && make -j4 && make test && make install
+    ./install.sh -tI
 
 RUN rm -rf /build
 WORKDIR /mnt
