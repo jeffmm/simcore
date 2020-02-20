@@ -20,7 +20,7 @@ class Crosslink : public Object {
   LookupTable *lut_;
   std::vector<int> kmc_filter_;
   bool static_flag_ = false;
-  bool anisotropic_spring_flag_ = false;
+  bool asymmetric_spring_flag_ = false;
   double k_spring_;
   double k2_spring_;
   double k_align_;
@@ -28,7 +28,8 @@ class Crosslink : public Object {
   double rcapture_;
   double bind_site_density_;
   double tether_force_;
-  double fdep_factor_;
+  double e_dep_factor_;
+  double fdep_length_;
   double polar_affinity_;
   std::vector<Anchor> anchors_;
   void CalculateTetherForces();

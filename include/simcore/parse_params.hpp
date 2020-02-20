@@ -589,16 +589,18 @@ species_base_parameters *parse_species_params(std::string sid,
       params.k_on_d = jt->second.as<double>();
       } else if (param_name.compare("k_off_d")==0) {
       params.k_off_d = jt->second.as<double>();
-      } else if (param_name.compare("force_dep_factor")==0) {
-      params.force_dep_factor = jt->second.as<double>();
+      } else if (param_name.compare("energy_dep_factor")==0) {
+      params.energy_dep_factor = jt->second.as<double>();
+      } else if (param_name.compare("force_dep_length")==0) {
+      params.force_dep_length = jt->second.as<double>();
       } else if (param_name.compare("polar_affinity")==0) {
       params.polar_affinity = jt->second.as<double>();
       } else if (param_name.compare("k_spring")==0) {
       params.k_spring = jt->second.as<double>();
       } else if (param_name.compare("k2_spring")==0) {
       params.k2_spring = jt->second.as<double>();
-      } else if (param_name.compare("anisotropic_spring_flag")==0) {
-      params.anisotropic_spring_flag = jt->second.as<bool>();
+      } else if (param_name.compare("asymmetric_spring_flag")==0) {
+      params.asymmetric_spring_flag = jt->second.as<bool>();
       } else if (param_name.compare("f_stall")==0) {
       params.f_stall = jt->second.as<double>();
       } else if (param_name.compare("force_dep_vel_flag")==0) {
@@ -619,6 +621,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.end_pausing = jt->second.as<bool>();
       } else if (param_name.compare("r_capture")==0) {
       params.r_capture = jt->second.as<double>();
+      } else if (param_name.compare("lut_grid_num")==0) {
+      params.lut_grid_num = jt->second.as<int>();
       } else {
         Logger::Warning("Unrecognized %s parameter: '%s'", sid.c_str(), param_name.c_str());
       }

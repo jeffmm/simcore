@@ -15,18 +15,19 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   static_flag_ = sparams_->static_flag;
   k_spring_ = sparams_->k_spring;
   k2_spring_ = sparams_->k2_spring;  // spring const for compression if
-                                     // anisotropic_spring_flag is true
-  anisotropic_spring_flag_ = sparams_->anisotropic_spring_flag;
-  if (anisotropic_spring_flag_) {
+                                     // asymmetric_spring_flag is true
+  asymmetric_spring_flag_ = sparams_->asymmetric_spring_flag;
+  if (asymmetric_spring_flag_) {
     Logger::Warning(
-        "anistropic_spring_flag is not currently implemented for"
+        "asymmetric_spring_flag is not currently implemented for"
         " crosslinkers");
   }
   static_flag_ = sparams_->static_flag;
   k_align_ = sparams_->k_align;
   // rcapture_ = sparams_->r_capture;
   bind_site_density_ = sparams_->bind_site_density;
-  fdep_factor_ = sparams_->force_dep_factor;
+  e_dep_factor_ = sparams_->energy_dep_factor;
+  fdep_length_ = sparams_->force_dep_length;
   polar_affinity_ = sparams_->polar_affinity;
   /* TODO generalize crosslinks to more than two anchors */
   Anchor anchor1(rng_.GetSeed());
@@ -133,16 +134,15 @@ void Crosslink::SinglyKMC() {
 void Crosslink::DoublyKMC() {
   /* Calculate force-dependent unbinding for each head */
   double tether_stretch = length_ - rest_length_;
-  double fdep;
-  // TODO: anisotropic springs in tethers
-  // For anisotropic springs apply second spring constant for compression
-  // if (anisotropic_spring_flag_ && tether_stretch < 0) {
+  // TODO: asymmetric springs in tethers
+  // For asymmetric springs apply second spring constant for compression
+  // if (asymmetric_spring_flag_ && tether_stretch < 0) {
   // fdep = fdep_factor_ * 0.5 * k2_spring_ * SQR(tether_stretch);
   //} else {
-  fdep = fdep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
+  double e_dep = e_dep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
   //}
-  /* TODO: Change when heads have different off rates <25-01-20, ARL> */
-  double unbind_prob = anchors_[0].GetOffRate() * delta_ * exp(fdep);
+  double f_dep = fdep_length_ * k_spring_ * tether_stretch;
+  double unbind_prob = anchors_[0].GetOffRate() * delta_ * exp(e_dep + f_dep);
   double roll = rng_.RandomUniform();
   int head_activate = -1;
   if (static_flag_) {
@@ -260,7 +260,7 @@ void Crosslink::CalculateTetherForces() {
     orientation_[i] = ix.dr[i] / length_;
     position_[i] = ix.midpoint[i];
   }
-  // TODO: When we add anisotropic springs, add option here.
+  // TODO: When we add asymmetric springs, add option here.
   tether_force_ = k_spring_ * stretch;
   for (int i = 0; i < params_->n_dim; ++i) {
     force_[i] = tether_force_ * orientation_[i];

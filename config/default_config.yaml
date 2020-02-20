@@ -321,20 +321,23 @@ crosslink:                          # Parameters specific to crosslinks.
   static_flag: [false, bool]        # Flag for setting one crosslinker head to be fixed in space
   diffusion_s: [0, double]          # Diffusion coefficient for singly bound crosslinks
   diffusion_d: [0, double]          # Diffusion coefficient for doubly bound crosslinks
-  #velocity: [1, double]             # Bound crosslink head velocities when walkers.
   velocity_s: [0, double]           # Bound crosslink head velocities when walkers are singly bound.
   velocity_d: [0, double]           # Bound crosslink head velocities when walkers are doubly bound.
   k_on_s: [10, double]              # On-rate for binding crosslinks from solution to bonds.
   k_off_s: [2, double]              # Off-rate for bound crosslinks to go from bound to solution.
   k_on_d: [10, double]              # On-rate for singly bound to doubly bound crosslinks.
   k_off_d: [2, double]              # Off-rate for doubly bound to singly bound crosslinks.
-  force_dep_factor: [1, double]     # Scalar in exponential force-dependent off-rate of doubly-
+  energy_dep_factor: [0, double]    # Scalar in exponential force-dependent off-rate of doubly-
                                     # bound crosslinks when under a load.
+  force_dep_length: [0, double]     # Characteristic length (x_c) used in 
+                                    # force-dependent off-rate of doubly-bound 
+                                    # crosslinks when under a load. 
+                                    # (x_c > 0 = slip bond, x_c < 0 = catch bond)
   polar_affinity: [1, double]       # Ratio of (probability of binding for antiparallel)/(probability 
                                     # of binding parallel)  
   k_spring: [10, double]            # Spring constant of doubly-bound crosslinks.
-  k2_spring: [0, double]            # Spring constant for compression if anisotropic_spring_flag.
-  anisotropic_spring_flag: [false, bool] # Use k2_spring for compressive forces
+  k2_spring: [0, double]            # Spring constant for compression if asymmetric_spring_flag.
+  asymmetric_spring_flag: [false, bool] # Use k2_spring for compressive forces
   f_stall: [100, double]            # Tether forces above f_stall cause bound crosslink heads to
                                     # cease walking.
   force_dep_vel_flag: [true, bool]  # Flag that causes walking crosslink heads to have force-
@@ -351,3 +354,5 @@ crosslink:                          # Parameters specific to crosslinks.
                                     # do so will remain at the filament tip until unbinding.
   r_capture: [5, double]            # Max range allowed for singly to doubly bound crosslink.
                                     # Calculated using k_spring, rest_length. User input ignored.
+  lut_grid_num: [256, int]          # Number of grid points used in one dimension of the the lookup table (LUT).
+                                    # Total entries go as the square of this number e.g. 256 x 256

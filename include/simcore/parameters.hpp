@@ -132,11 +132,12 @@ struct species_parameters<species_id::crosslink>
   double k_off_s = 2;
   double k_on_d = 10;
   double k_off_d = 2;
-  double force_dep_factor = 1;
+  double energy_dep_factor = 0;
+  double force_dep_length = 0;
   double polar_affinity = 1;
   double k_spring = 10;
   double k2_spring = 0;
-  bool anisotropic_spring_flag = false;
+  bool asymmetric_spring_flag = false;
   double f_stall = 100;
   bool force_dep_vel_flag = true;
   double k_align = 0;
@@ -147,6 +148,7 @@ struct species_parameters<species_id::crosslink>
   double tether_color = 3.1416;
   bool end_pausing = false;
   double r_capture = 5;
+  int lut_grid_num = 256;
 };
 typedef species_parameters<species_id::crosslink> crosslink_parameters;
 
