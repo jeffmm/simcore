@@ -6,11 +6,6 @@ A modular, object-oriented program for coarse-grained physics simulations, using
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2571982.svg)](https://doi.org/10.5281/zenodo.2571982)
 
-## About simcore
-
-simcore is written in C++ and designed for coarse-grained physics simulations with modularity and scalability in mind. All objects in the simulation are representable as a composite of what I call "simple" objects (points, spheres, rigid cylinders, and 2d polygon surfaces would all qualify). For short-range interactions, simcore uses cell and neighbor lists for improved performance and OpenMP for parallelization.
-
-Although simcore is meant to be a generalized molecular/Brownian dynamics simulation engine, thanks to the narrow focus of my PhD research, it has up until now almost exclusively been used to model semiflexible filaments, and for that reason has come closer to resembling single-purpose software. It's still quite easy, for example, to use simcore for basic molecular dynamics simulations of interacting point-like particles. Modularity is still there in the basic design, so in the future I may add more object types, but as far as pre-written object types go, _it's all about the filaments_.
 
 ![A simulation using simcore](figs/simcore_snapshot.png "A simulation using simcore")
 
@@ -340,6 +335,63 @@ For a new species analysis method, the analysis routines should be defined in th
 
 For example, the RunSpiralAnalysis routine is called by the RunAnalysis method in FilamentSpecies, which uses the Filament .spec file as an input to do the necessary analysis, whose results are placed into a new file ending in filament.spiral. See Filament and FilamentSpecies for examples of how analyses can be initialized, processed, etc.
 
-## Disclaimer
+## About simcore
 
-simcore was written for my personal academic use and in its current state is not intended to be used by the general public. If you are insane (and somehow also patient) and would like to run simcore for whatever reason, you can contact me for help and (if I have time) I will do what I can to offer assistance. In addition, the README provided here is in no way a complete documentation of the software. The simcore software is covered by the MIT license.
+simcore is written in C++ and designed for coarse-grained physics simulations with modularity and scalability in mind. All objects in the simulation are representable as a composite of what I call "simple" objects (points, spheres, rigid cylinders, and 2d polygon surfaces would all qualify). For short-range interactions, simcore uses cell and neighbor lists for improved performance and OpenMP for parallelization.
+
+Although simcore is meant to be a generalized molecular/Brownian dynamics simulation engine, thanks to the narrow focus of my PhD research, it has up until now almost exclusively been used to model semiflexible filaments, and for that reason has come closer to resembling single-purpose software. It's still quite easy, for example, to use simcore for basic molecular dynamics simulations of interacting point-like particles. Modularity is still there in the basic design, so in the future I may add more object types, but as far as pre-written object types go, _it's all about the filaments_.
+
+simcore was written for my personal academic use and in its current state is not intended to be used by the general public. If you are insane and would like to run simcore for whatever reason, feel free contact me for help and if I have time I can try to offer assistance. 
+
+## Directory structure
+The directory structure is as follows:
+
+```bash
+simcore
+├── include
+│   └── simcore
+│       └── (header files)
+├── src
+│   ├── CMakeLists.txt
+│   ├── executable
+│   │   ├── CMakeLists.txt
+│   │   └── simcore_main.cpp
+│   ├── configurator
+│   │   ├── CMakeLists.txt
+│   │   └── configurator.cpp
+│   └── (source files)
+├── config
+│   └── default_config.yaml
+├── analysis
+│   └── (Python analysis files)
+├── scripts
+│   └── (utility files)
+├── examples
+│   └── (parameter file examples)
+├── docker
+│   └── Dockerfile
+├── extern
+│   └── KMC
+├── tests
+│   ├── CMakeLists.txt
+│   ├── catch2
+│   │   └── catch.hpp
+│   └── (simcore unit tests)
+├── docs
+│   ├── CMakeLists.txt
+│   └── main.md
+├── figs
+│   └── (example simulation figures)
+├── README.md
+├── LICENSE
+├── CMakeLists.txt
+├── install.sh
+├── launch_docker.sh
+├── .travis.yml
+└── .gitignore
+```
+
+
+## License
+
+This software is licensed under the terms of the BSD-3 license. See the `LICENSE` for more details.

@@ -1,6 +1,7 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
-#include <simcore.hpp>
+
+#ifndef TESTS
+#define TESTS
+#endif
 
 #include "simulation_manager_test.hpp"
-

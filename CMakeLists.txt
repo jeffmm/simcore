@@ -1,22 +1,17 @@
-cmake_minimum_required(VERSION 3.7)
-project(simcore)
+cmake_minimum_required (VERSION 3.7)
+project (simcore
+    VERSION 0.1.0
+    DESCRIPTION "A C++ project using CMake"
+    LANGUAGES CXX
+)
 
-# Set binary output directory to build directory
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-# Require C++11
+## Require C++11
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-# For submodule docs — non-Makefile generators (e.g. XCode) will complain
-set(ALLOW_DUPLICATE_CUSTOM_TARGETS TRUE)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/.CMake_Modules")
 
-#set(GXX_COVERAGE_COMPILE_FLAGS "-Wunused-value -Wreturn-type")
-#add_definitions(${GXX_COVERAGE_COMPILE_FLAGS})
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/.CMake_FFTW")
-
-if(DEBUG OR UNIT_TESTS)
+if(DEBUG OR TESTS)
   set(CMAKE_BUILD_TYPE "Debug")
 else()
   set(CMAKE_BUILD_TYPE "Release")
@@ -35,38 +30,27 @@ if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
-# Add external libraries
-add_subdirectory("extern")
+## Add external dependencies here, e.g.:
+add_subdirectory(extern/KMC)
 
-# Compile simcore library
-add_subdirectory("simcore")
+## The directory for the library
+add_subdirectory(src)
 
-# Configure unit tests
-if (UNIT_TESTS)
-    message("Building unit tests")
-    enable_testing()
-    add_subdirectory("tests")
+## Only build documentation if this is the main project, and not if it is included through add_subdirectory
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    ## Docs only available if this is the main project
+    find_package(Doxygen QUIET)
+    if(Doxygen_FOUND)
+        add_subdirectory(docs)
+    else()
+        message(STATUS "Doxygen not found, not building docs")
+    endif()
+    ## The example executable is only available for main project
+    #add_subdirectory(examples)
 endif()
 
-# Build the documentation
-# check if Doxygen is installed
-find_package(Doxygen)
-if (DOXYGEN_FOUND)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-  # set input and output files
-  set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile)
-  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-
-  # configure the file
-  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-  message("Adding Doxygen build target")
-
-  # Can build docs-only with the `make docs` target
-  add_custom_target( docs
-      COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMENT "Generating documentation with Doxygen"
-      VERBATIM )
-else (DOXYGEN_FOUND)
-  message("Doxygen need to be installed to generate the documentation")
-endif (DOXYGEN_FOUND)
+## Allow testing for main and subprojects if -DTESTS=TRUE
+if(TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

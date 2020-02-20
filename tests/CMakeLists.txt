@@ -1,6 +1,6 @@
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
-include_directories(../thirdparty/catch2)
+
 add_executable(test_simcore.exe test_simcore.cpp)
 
 if (GRAPH)
@@ -12,12 +12,10 @@ set(INCLUDES ${INCLUDES} ${GLEW_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS} ${OPENGL_INC
 else()
   add_definitions(-DNOGRAPH=TRUE)
 endif()
-add_definitions(-DUNIT_TESTS=TRUE)
-add_definitions(-DTRACE=TRUE)
 add_definitions(-DDEBUG=TRUE)
+add_definitions(-DTRACE=TRUE)
+add_definitions(-DTESTS=TRUE)
 
 target_link_libraries(test_simcore.exe PRIVATE simcore)
-#include(CTest)
-#include(Catch)
-#catch_discover_tests(test_simcore.exe)
-add_test(NAME simcore COMMAND test_simcore.exe)
+
+add_test(NAME simcore_test COMMAND test_simcore.exe)
