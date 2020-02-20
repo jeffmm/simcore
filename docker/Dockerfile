@@ -17,7 +17,7 @@ RUN apt-get update -qq && \
         libfftw3-dev \
         libopenmpi-dev \
         libboost-math1.67-dev &&\
-        rm -rf ~/.cache
+    rm -rf ~/.cache
 RUN git clone --recursive --single-branch --branch jmm/directory_tree_refactor https://github.com/jeffmm/simcore.git . &&\
     mkdir build &&\
     cd build &&\
