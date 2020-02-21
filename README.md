@@ -11,127 +11,159 @@ A modular, object-oriented program for coarse-grained physics simulations, using
 
 ## Installation
 
-First clone the repo, and initialize the external submodules.
+First clone the repo, including submodule dependencies.
 ```
-git clone https://github.com/jeffmm/simcore
+git clone --recursive https://github.com/jeffmm/simcore
 cd simcore
-git submodule update --init --recursive
 ```
-Simcore can either be run in a container using Docker, or be built manually using CMake.
+simcore can either be run in a container using Docker or Singularity, or be built from source using CMake.
 
-### Running with Docker 
+### Running with Docker
 
-To run simcore in Docker, one can do
-```
-docker pull jeffmm/simcore:latest
-bash run_docker.sh
-```
-which will mount the simcore directory into a container named `simcore-executer` that will run in the background. To build simcore, run
+A pre-built image of simcore is available as a [Docker](https://www.docker.com/) image. To download the image, run
 
-```
-docker exec simcore-executer bash install.sh build
+```bash
+docker pull jeffmm/simcore
 ```
 
-and to execute simcore, run
+To use the image, run the provided script to launch a Docker container named `simcore_dev` in the background
 
-```
-docker exec simcore-executer ./simcore.exe [additional-flags] [parameter-files]
+```bash
+./launch_docker.sh
 ```
 
-If you want to run on multiple threads, replace `build` with `omp` in the install command, and ensure that the environment variable `OMP_NUM_THREADS` is set to the number of threads you want to use.
+You may also build the Docker image yourself by providing the launch script with the `build` argument.
+
+To launch simcore, run
+
+```bash
+docker exec simcore_dev simcore.exe [optional-flags] [parameter-file]
+```
 
 ### Running with Singularity
 
-If you have Singularity installed, you can run simcore inside a singularity image. First pull the image by running
+If you are using Singularity, simcore is also available as a Singularity image. The command
 
-```
-singularity pull shub://jeffmm/simcore:latest
-```
-
-which will create an image file `simcore_latest.sif`. You may then run
-
-```
-singularity exec simcore_latest.sif bash install.sh build
+```bash
+singularity pull shub://jeffmm/simcore
 ```
 
-As with the Docker image, if you want to use multithreading, replace `build` with `omp`. Then you can execute simcore with the command
+will create a local file named `simcore_latest.sif`. You may then run
 
-```
-singularity exec simcore_latest.sif ./simcore.exe [flags] [parameter_file]
-```
-
-### Manual installation with cmake
-
-For manual installation, make sure you have the following installed:
-
-  * cmake
-  * your favorite C++11 compiler
-  * yaml-cpp (https://github.com/jbeder/yaml-cpp)
-  * gsl
-  * openmp libraries
-  * fftw
-  * boost (specifically libboost-math1.67-dev or newer)
-  * openGL framework (if you want graphics)
-  * glew (if you want graphics)
-  * glfw3 (if you want graphics)
-
-Included is a handy bash script for building simcore with cmake. Simply call
-
-```
-bash ./install.sh build
+```bash
+singularity exec simcore_latest.sif simcore.exe [optional-flags] [parameter-file]
 ```
 
-Running install.sh without the build variable will list other installation options, such as debug mode, compiling graphics (not recommended due to cross-platform compatibility issues), etc.
+### Building from source
+
+simcore is ready to be built from source using CMake, provided several dependencies are installed:
+  * CMake (version 3.13+)
+  * [libyaml-cpp](https://github.com/jbeder/yaml-cpp)
+  * libgsl-dev
+  * libopenmpi-dev
+  * libfftw3-dev
+  * libboost-math1.67-dev
+
+Included is a script for building simcore with CMake. To build simcore (without graphics or parallelization) run
+
+```bash
+./install.sh
+```
+
+There are additional flags for building with OpenMP, building with graphics, installing simcore in `/usr/local`, etc. To see a menu of options, run 
+
+```bash
+./install.sh -h
+```
+
+### Building with graphics
+
+simcore is available with graphics for Mac OSX. To install on Mac OSX, you will need the glew and glfw3 libraries, both of which can be installed using [Homebrew](https://brew.sh/).
+
+```bash
+brew install glew
+brew install glfw
+```
+
+You may also need to help CMake find your OpenGL Framework libraries.
+
+Several other libraries are required for running simcore with graphics on Linux or in WSL. See the `src/CMakeLists.txt` file for a comprehensive list of libraries passed to the compiler when building simcore with graphics on WSL.
 
 ## Running simcore
 
-The simcore binary is run with
+The simcore executable is run as
 
 ```
-./simcore.exe --flag1 --flag2 ... params_file 
+simcore.exe [optional-flags] [parameter-file] 
 ```
 
 The following flags are available:
 
-* --help (-h)
-  * show the help menu which gives short descriptions about each of the flags as well as binary usage
-* --debug (-d)
-  * run the simulation while setting the debug_trace flag, which is a global flag that can be used to output debug info or run unit tests 
-* --run-name rname (-r rname)
-  * overwrites the parameter "run_name" with rname which serves as a prefix for all outputs 
-* --n-runs num (-n num)
-  * overwrites the parameter "n_runs" with num, which tells the simulation how many times to run the given parameter set with different random number generator seeds.
-* --movie (-m)
-  * uses the parameters file params_file to load any output files that were generated from previous runs of the simulation to replay the graphics and record the frames as bitmaps into the directory specified with the "movie_directory" parameter.
-* --posit (-p)
-  * makes simcore use the position (.posit) files instead of species (.spec) files to run analyses or make movies. Useful for simple object types (like spheres) that don't require more than position, orientation, length, diameter, etc, or in case you don't need fine-grained visualization of more complicated objects.
-* --analysis (-a)
-  * loads posit/spec files into simulation for analysis in the same manner as the movie flag.
-* --reduce reduce_factor (-R reduce_factor)
-  * Reads in output files and writes new output files that are smaller by a factor of reduce_factor, effectively reducing time resolution of output data.
-* --load (-l)
-  * specifies to load any checkpoint files corresponding to the given parameter file, which can be used to continue a simulation that ended prematurely. New simulation will be given the name old_simulation_name_reload00n where n is the number of reloads performed on that simulation.
-* --with-reloads (-w)
-  * If running analyses or making movies, simcore will look for parameter files that have the same run name but with the reload00n addendum and attempt to open the corresponding output files whenever it reached EOF while reading an output file.
-* --blank (-b)
-  * generates all relevant parameter files using the SimulationManager without running the simulations. Useful for generating many parameter files from parameter sets (discussed below) and deploying simulations on different processors and/or machines.
-* --single-frame (-M)
-  * Still draws the graphics to the OpenGL window, but only records a bitmap of the last frame. Useful for generating final-state snapshots without creating a large amount of bitmaps used in making movies.
-* --auto-graph (-G)
-  * Does not wait for user input (usually the ESC key) when drawing the simulation output using OpenGL
-
-## Parameters
-
-There are three parameter types, but only two are necessary: global and species. Global parameters are seen by the entire system and species parameters are unique to the specified species. There is also an optional "global species" parameter type that affects every species.
-
-What do I mean by species? simcore assumes that any given simulation will likely have many copies of one kind of thing, which I call a species, perhaps interacting with other species of other kinds. In a system of interacting spheres, the species is 'sphere.' In a system of interacting semiflexible filaments, the species is 'filament.' Simulations can have many types of species all interacting with each other with different species-species interaction potentials.
-  
-The parameter file must be in the YAML file format and is set up in the following way:
-
 ```
+--help, -h
+    Show the help menu which gives short descriptions about each of the flags
+    as well as binary usage
+ 
+ --run-name rname, -r rname 
+    Overwrites the parameter "run_name" with rname which serves as a prefix for
+    all outputs 
+
+--n-runs num, -n num
+    Overwrites the parameter "n_runs" with num, which tells the simulation how
+    many times to run the given parameter set with different random number
+    generator seeds.
+
+--movie, -m
+    Uses the parameters file params_file to load any output files that were
+    generated from previous runs of the simulation to replay the graphics and
+    record the frames as bitmaps into the directory specified with the
+    "movie_directory" parameter
+
+--analysis, -a
+    Loads posit/spec files into the simulation for analysis in the same manner
+    as the movie flag
+
+-reduce reduce_factor, -R reduce_factor
+    Reads in output files and writes new output files that are smaller by a
+    factor of reduce_factor, effectively reducing time resolution of output
+    data.
+
+--load, -l
+    Specifies to load any checkpoint files corresponding to the given parameter
+    file, which can be used to continue a simulation that ended prematurely.
+    New simulation will be given the name old_simulation_name_reload00n where n
+    is the number of reloads performed on that simulation.
+
+--with-reloads, -w
+    If running analyses or making movies, simcore will look for parameter files
+    that have the same run name but with the reload00n addendum and attempt to
+    open the corresponding output files whenever it reached EOF while reading
+    an output file.
+
+--blank, -b
+    Generates all relevant parameter files using the SimulationManager without
+    running the simulations. Useful for generating many parameter files from
+    parameter sets (discussed below) and deploying simulations on different
+    processors and/or machines.
+
+--auto-graph, -G
+    By default, simcore will wait for the user to press the ESC key in the
+    OpenGL graphics window before starting to run the simulation. Providing
+    this flag will cause the simulation to begin immediately without user
+    input. Goes great with the -m flag for creating multiple movies without
+    input from the user.
+```
+
+## Parameter files
+
+All parameters used in the simulation, along with their default values and data types, are specified in the `default_config.yaml` file in the `config` folder.
+
+The parameter file is a YAML file and looks like:
+
+```yaml
 global_param_1: gp1_value
 global_param_2: gp2_value
-species: # This is the global species parameter
+species:
     global_species_param_1: gsp1_value
     global_species_param_2: gsp2_value
 specific_species_name:
@@ -139,49 +171,93 @@ specific_species_name:
     species_param_2: sp2_value
 ```
 
-The "global species" parameter type houses parameters that are shared by every species, such as "num" which specifies how many items of each species to insert into the system, "insertion_type" which specifies how to insert them, "posit_flag" which instructs whether to output position files, etc. These do not have to be specified using the global species parameter, however, and may instead be specified by each specific species.  
+See the `examples` folder for examples of parameter files.
 
-If any parameter is not specified in the parameter file, any instance of that parameter in the simulation will assume its default value specified in the config_params.yaml file.
+Notice that there are three parameter types: global parameters, global species parameters, and species parameters. Global parameters are parameters that are common to the entire system, such system size, integration time step, etc. Species parameters are unique to the specified species, such as `filament`. There is also an optional global species parameter type that affects every species, such as the frequency to write to output files.
 
-Some important global parameters to consider are:
+What do I mean by species? simcore assumes that any given simulation will likely have many copies of one kind of thing, which I call a species, perhaps interacting with other species of other kinds. In a system of interacting spheres, the species is 'sphere.' In a system of interacting semiflexible filaments, the species is 'filament.' Simulations can have many types of species all interacting with each other with different species-species interaction potentials.
+ 
+If any parameter is not specified in the parameter file, any instance of that parameter in the simulation will assume its default value specified in the `config/default_config.yaml` file.
 
-* seed: simulation seed to use with random number generator 
-* run_name: prefix for all output files
-* n_runs: number of individual runs of each parameter type
-* n_random: number of samples from a random parameter space (see more below)
-* n_dim: number of dimensions of simulation
-* n_periodic: number of periodic dimensions of simulation
-* delta: simulation time step
-* n_steps: total number of steps in each simulation
-* system_radius: "box radius" of system
-* graph_flag: run with graphics enabled
-* n_graph: how many simulation steps to take between updating graphics
-* movie_flag: whether to record the graphics frames into bitmaps
-* movie_directory: local directory used to save the recorded bitmaps
-* cell_length: linear size of cells used by cell lists (used by interactions)
-* n_update_cells: how often to update the cell lists
-* f_cutoff: maximum force to apply between pair interactions
-* thermo_flag: whether to output thermodynamics outputs (stress tensors, etc)
-* n_thermo: how often to output the thermodynamics outputs
-* wca_eps/wca_sig/ss_a/ss_rs/ss_eps: interaction potential parameters
+Some important global parameters are:
 
-Some important species parameters to consider are:
+```
+seed
+    simulation seed to use with random number generator 
+run_name
+    prefix for all output files
+n_runs
+    number of individual runs of each parameter type
+n_random
+    number of samples from a random parameter space (see more below)
+n_dim
+    number of dimensions of simulation
+n_periodic
+    number of periodic dimensions of simulation
+delta   
+    simulation time step
+n_steps
+    total number of steps in each simulation
+system_radius
+    "box radius" of system
+graph_flag
+    run with graphics enabled
+n_graph
+    how many simulation steps to take between updating graphics
+movie_flag
+    whether to record the graphics frames into bitmaps
+movie_directory
+    local directory used to save the recorded bitmaps
+thermo_flag
+    whether to output thermodynamics outputs (stress tensors, etc)
+n_thermo
+    how often to output the thermodynamics outputs
+potential_type
+    can be 'wca' or 'soft' for now
+```
 
-* num: how many to insert into system
-* insertion_type: how to insert object into system (e.g. random)
-* overlap: whether species can overlap (should be 0 with interactions)
-* draw_type: (orientation or flat) whether to color by orientation or not
-* color: a double that specifies the flat rgb value of the object
-* posit_flag: whether to output position files
-* n_posit: how often to output position files
-* spec_flag: whether to output species files
-* n_spec: how often to output species files
-* checkpoint_flag: whether to output checkpoint files
-* n_checkpoint: how often to output checkpoint files
+Some important global species parameters are:
 
-All parameters used in the simulation, along with their default values and data types, are specified in the `default_config.yaml` file in the `config` folder.
+```
+num
+    how many to insert into system
+insertion_type
+    how to insert object into system (e.g. random)
+overlap
+    whether species can overlap at initiation
+draw_type
+    (orientation, fixed, or bw) how to color the object
+color
+    a double that specifies the RGB value of the object
+posit_flag
+    whether to output position files
+n_posit
+    how often to output position files
+spec_flag
+    whether to output species files
+n_spec
+    how often to output species files
+checkpoint_flag
+    whether to output checkpoint files
+n_checkpoint
+    how often to output checkpoint files
+```
 
-## Adding new parameters
+## Advanced usage
+
+### Running unit tests
+
+One may run simcore's unit tests by passing `-DTESTS=TRUE` to CMake
+
+```bash
+mkdir build
+cd build
+cmake -DTESTS=TRUE ..
+make
+make test
+```
+
+### Adding new parameters
 
 simcore comes with it's own parameter initialization tool, `configure_simcore.exe`, which is installed automatically along with the simcore binary using CMake. The configurator makes it easy to add new parameters to the simulation without mucking around in the source code. Just add your new parameter to `config/default_config.yaml` file using the following format: 
 
@@ -203,15 +279,15 @@ Using parameter sets, it becomes easier to run many simulations over a given par
 
 #### Defined parameter sets
   
-Defined parameter sets are used in this way in the parameter file:
+Defined parameter sets are specified by the `V` prefix in the parameter file:
 
 ```
 seed: 4916819461895
 run_name: defined_set
 n_runs: N
 parameter_name1: param_value1
-parameter_name2: [param_value2, param_value3]
-parameter_name3: [param_value4, param_value5]
+parameter_name2: [V, param_value2, param_value3]
+parameter_name3: [V, param_value4, param_value5]
 ```
 
 Parameters specified in this way (as lists of parameters) will be iterated over until every possible combination of parameters has been run. In this example, simcore will run N simulations each of the following 4 parameter sets:
@@ -264,7 +340,7 @@ Given this parameter file, simcore will run N simulations each of M random param
 
 In this example, the sampled parameter space has dimensionality of n=3, since there are only three parameters we are sampling over. Each parameter set will have a random real number for parameter_name2 in the the range (A,B), a random integer in the range [C,D] for parameter_name3, and will set parameter_name4 to 10^K for random real number K in the range (F,G).  simcore will then run each parameter set N times each with a unique seed, and repeat this random process M times. It will therefore take N samples of M random points in the n-dimensional parameter space.  
 
-## Interactions
+### Interactions
   
 The InteractionEngine in simcore was written with short-range interactions in mind. For this reason, interactions are treated by considering pair-wise interactions between neighboring interactor-elements that make up a composite object (e.g. small, rigid segments that compose a flexible filament). For this reason, interactions use cell lists to improve performance. Furthermore, simulating large objects in simcore requires representing the object as a composite of smaller, simple objects (thus, SIMple Composite Object REpresentation). An example of how a large object should be decomposed into simple objects is done in the Filament class.
 
@@ -272,7 +348,7 @@ The InteractionEngine in simcore was written with short-range interactions in mi
   
 simcore is designed to be able to use interchangable potentials for various objects. However, potentials need to be added manually as a subclass of PotentialBase, included in PotentialManager, and a corresponding potential_type added to definitions.h for lookup purposes (see the InitPotentials method in PotentialManager.h for examples).
 
-## Outputs
+### Outputs
   
 simcore has four output types. Three are species specific (posit, spec, checkpoint), and the fourth is the statistical information file (thermo). All files are written in binary.
 
@@ -315,7 +391,7 @@ double volume
 
 Where the pressure is the isometric pressure, and the pressure tensor is calculated from the time-averaged stress tensor.
 
-## Data analysis
+### Data analysis
   
 If analysis operations of output files are already defined for your species, as is the case for the Filament species, analyzing outputs is a simple matter. First, make sure the desired analysis flag is set in the species parameters for that species.
 
@@ -335,18 +411,10 @@ For a new species analysis method, the analysis routines should be defined in th
 
 For example, the RunSpiralAnalysis routine is called by the RunAnalysis method in FilamentSpecies, which uses the Filament .spec file as an input to do the necessary analysis, whose results are placed into a new file ending in filament.spiral. See Filament and FilamentSpecies for examples of how analyses can be initialized, processed, etc.
 
-## About simcore
-
-simcore is written in C++ and designed for coarse-grained physics simulations with modularity and scalability in mind. All objects in the simulation are representable as a composite of what I call "simple" objects (points, spheres, rigid cylinders, and 2d polygon surfaces would all qualify). For short-range interactions, simcore uses cell and neighbor lists for improved performance and OpenMP for parallelization.
-
-Although simcore is meant to be a generalized molecular/Brownian dynamics simulation engine, thanks to the narrow focus of my PhD research, it has up until now almost exclusively been used to model semiflexible filaments, and for that reason has come closer to resembling single-purpose software. It's still quite easy, for example, to use simcore for basic molecular dynamics simulations of interacting point-like particles. Modularity is still there in the basic design, so in the future I may add more object types, but as far as pre-written object types go, _it's all about the filaments_.
-
-simcore was written for my personal academic use and in its current state is not intended to be used by the general public. If you are insane and would like to run simcore for whatever reason, feel free contact me for help and if I have time I can try to offer assistance. 
-
 ## Directory structure
 The directory structure is as follows:
 
-```bash
+```
 simcore
 ├── include
 │   └── simcore
@@ -391,7 +459,14 @@ simcore
 └── .gitignore
 ```
 
+## About simcore
+
+simcore is written in C++ and designed for coarse-grained physics simulations with modularity and scalability in mind. All objects in the simulation are representable as a composite of what I call "simple" objects (points, spheres, rigid cylinders, and 2d polygon surfaces would all qualify). For short-range interactions, simcore uses cell and neighbor lists for improved performance and OpenMP for parallelization.
+
+Although simcore is meant to be a generalized molecular/Brownian dynamics simulation engine, thanks to the narrow focus of my PhD research, it has up until now almost exclusively been used to model semiflexible filaments, and for that reason has come closer to resembling single-purpose software. It's still quite easy, for example, to use simcore for basic molecular dynamics simulations of interacting point-like particles. Modularity is still there in the basic design, so in the future I may add more object types, but as far as pre-written object types go, _it's all about the filaments_.
+
+simcore was written for my personal academic use and in its current state is not intended to be used by the general public. If you are insane and would like to run simcore for whatever reason, feel free contact me for help and if I have time I can try to offer assistance. 
 
 ## License
 
-This software is licensed under the terms of the BSD-3 license. See the `LICENSE` for more details.
+This software is licensed under the terms of the BSD-3 Clause license. See the `LICENSE` for more details.
