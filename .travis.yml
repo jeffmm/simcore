@@ -4,7 +4,10 @@ language: cpp
 services:
   - docker
 
-# Tests are handled in Docker image
+before_script:
+  - docker build -f Dockerfile_base -t jeffmm/simcore_base docker
+
+# Tests are handled during Docker image build
 script:
   - docker build -t jeffmm/simcore docker
 ...
