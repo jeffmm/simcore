@@ -38,7 +38,7 @@ filament:
 
 crosslink:
   - name: k560
-    concentration: 0.3
+    concentration: 0.03
     insertion_type: random_grid
     diameter: 0.5
     diffusion_s: 1

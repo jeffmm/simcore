@@ -7,7 +7,7 @@
 # If 'build' argument was provided, rebuild image
 if [ "$1" == "build" ]; then
   echo "Building docker image"
-  docker build -t jeffmm/simcore docker
+  docker build --no-cache -t jeffmm/simcore docker
 # Otherwise, just start up the containers
 else
   echo "Running docker container"
