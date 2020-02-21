@@ -7,7 +7,7 @@ delta: 0.000025
 n_steps: 1000000
 boundary: 0
 
-graph_flag: false
+graph_flag: true
 n_graph: 100
 movie_flag: false
 insert_radius: -1
