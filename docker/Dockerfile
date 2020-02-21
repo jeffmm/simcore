@@ -19,7 +19,7 @@ RUN apt-get update -qq && \
         libboost-math1.67-dev &&\
     rm -rf ~/.cache
 RUN git clone --recursive --single-branch --branch jmm/directory_tree_refactor https://github.com/jeffmm/simcore.git . &&\
-    ./install.sh -tI
+    ./install.sh -otI
 RUN rm -rf /build
 WORKDIR /mnt
 ENTRYPOINT []
