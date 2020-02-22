@@ -326,3 +326,179 @@ class PositReader:
             raise FileNotFoundError(
                 "Could not find human readable file:{}".format(self.output_file)
             )
+
+
+class FileRenamer:
+    """Rename simcore parameter and output files and run_name-type parameters
+
+    Replaces a substring in a parameter file and associated output files with a format
+    specified by the user.  Creates a new parameter file with updated run_name,
+    load_name, etc parameters, and renames all associated output files (e.g. spec files,
+    analysis files, etc) using the replacement substring.
+
+    By default, the renamer will display the renaming strategy and ask for confirmation
+    before proceeding.
+
+    Example:
+    >>> from simcore_tools import FileRenamer
+    >>> # Substring of original file name as a regex (e.g. replaces v000_r000)
+    >>> substring_to_replace = "v[0-9]+_r[0-9]+"
+    >>> # Python style formatter (e.g. v000_r000 -> pf0.1_sp005_lp0005)
+    >>> replacement = "pf{}_sp{:03d}_lp{:04d}"
+    >>> # List of yaml keys to extract contents from parameter file for formatter, with
+    >>> # ':' delimitting sub nodes (e.g. yaml_node['filament']['packing_fraction'] for
+    >>> # 'pf{}' formatter, etc)
+    >>> formatter_contents = ['filament:packing_fraction', 'soft_potential_mag',
+    >>>                       'filament:perlen_ratio']
+    >>> renamer = FileRenamer(substring_to_replace, replacement, formatter_contents)
+    >>> renamer.rename("activeff_v000_r000_reload001_params.yaml")
+
+    """
+
+    def __init__(self, original_substring, replacement_string, format_contents=[]):
+        """Initialize FileRenamer with renaming options.
+
+        Args:
+            original_substring (str): Regex of substring to replace in original filename
+                (e.g. v[0-9]+_r[0-9]+)
+            replacement_string (str): Python-style formatter string (e.g.
+                'foo{}_bar{:03d}')
+            format_contents (list of str, optional): List of yaml keys to use for '{}'
+                in replacement string. The delimitter ':' can be used to denote
+                susbtrings (e.g. ['node', 'node:subnode']).  Defaults to no formatting.
+
+        """
+
+        self.original = original_substring
+        self.replacement = replacement_string
+        self.formatter = format_contents
+        self.regex = None
+        self.new_substring = None
+        num_curly = self.replacement.count("{")
+        if len(self.formatter) != num_curly:
+            raise ValueError(
+                "Formatter contents should have as many replacement values "
+                "as the number of formatters in the replacement string"
+            )
+
+    def rename(self, param_file_name, confirm=True):
+        """Rename parameter file and associated output files using initialized renamer rules.
+
+        Args:
+            param_file_name (str or Path): Full path to parameter file (colocated with
+                output files to rename)
+            confirm (bool, optional): Show rename strategy and ask for confirmation
+                before renaming files. Default to True.
+
+        """
+
+        param_file = Path(param_file_name)
+        if not param_file.is_file():
+            raise ValueError("Could not locate file: {}".format(param_file))
+        if param_file.name.find("_params.yaml") == -1:
+            raise ValueError(
+                "Parameter file must be named in the usual way: 'run-name_params.yaml'"
+            )
+        rel_path = param_file.parent
+        prefix = param_file.name.partition("_params.yaml")[0]
+
+        # Get files corresponding to this parameter file
+        files = sorted(list(rel_path.glob(prefix + "?[!params]*")))
+
+        # Read parameter file and find appropriate replacement contents
+        try:
+            self._set_rename_params(param_file_name)
+        except ValueError as err:
+            raise err
+
+        if not confirm or self._confirm_rename_strategy(param_file, files):
+            # Rename all files
+            for file in files:
+                self._rename_file(file, confirm=False)
+            # Create new parameter file with changes filename values
+            with open(param_file_name, "r") as pfile:
+                lines = pfile.readlines()
+            new_param_file_name = re.sub(
+                self.regex, self.new_substring, param_file.name
+            )
+            with open(rel_path.joinpath(new_param_file_name), "w") as pfile:
+                for line in lines:
+                    pfile.write(re.sub(self.regex, self.new_substring, line))
+
+    def _set_rename_params(self, param_file_name):
+        """Set internal rename parameters, such as formatter parameter values.
+
+        Loads parameter yaml file and finds associated values from keys listed formatter
+            contents. Currently only looks at the first subspecies in a species subnode.
+
+        Args:
+            param_file_name (str or Path): original parameter file used to find
+                parameter values
+
+        """
+        rep_map = []
+        # Load yaml file and find keys given by formatter contents
+        with open(param_file_name) as pfile:
+            yfile = yaml.safe_load(pfile)
+            for item in self.formatter:
+                try:
+                    item = item.split(":")
+                    if len(item) > 1:
+                        temp = yfile[item[0]]
+                        #  TODO: allow this to work for multiple filament etc types,
+                        #  right now we are only picking first subspecies in list
+                        if isinstance(temp, list):
+                            temp = temp[0]
+                        rep_map.append(temp[item[1]])
+                    else:
+                        rep_map.append(yfile[item[0]])
+                except Exception:
+                    raise ValueError(
+                        "Parameter file does not have key given by formatter:"
+                        "{}, {}".format(param_file_name, item),
+                    )
+            self.regex = re.compile(self.original)
+            self.new_substring = self.replacement.format(*rep_map)
+
+    def _confirm_rename_strategy(self, param_file, files):
+        """Print files that will be renamed and confirm with user to execute rename
+
+        Args:
+            param_file (Path): Parameter file
+            files (List of Paths): Files corresponding to param_file
+
+        Returns:
+            (bool): True if user confirms rename strategy, else False
+
+        """
+        print("Renaming strategy:")
+        new_param_file_name = re.sub(
+            self.regex, self.new_substring, param_file.name
+        )
+        print(
+            "  Create new parameter file:\n   ",
+            param_file.parent.joinpath(new_param_file_name),
+        )
+        if len(files) > 0:
+            print("  Rename files:")
+        # Print rename strategy
+        for file in files:
+            self._rename_file(file, confirm=True)
+        # Request user confirmation
+        user = input("Proceed with renaming? (y/N) ")
+        if user == "y" or user == "Y":
+            print("Renaming files")
+            return True
+        else:
+            print("Aborting rename")
+            return False
+
+    def _rename_file(self, file, confirm=True):
+        """Rename file fname using internal replacement rules."""
+        new_fname = re.sub(self.regex, self.new_substring, file.name)
+        new_fname = file.parent.joinpath(new_fname)
+        # Only print the renaming rules if we are confirming
+        if confirm:
+            print("   ", file, "->", new_fname)
+        else:
+            file.rename(new_fname)
