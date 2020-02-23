@@ -64,7 +64,7 @@ crosslink:
     f_stall: 100
     force_dep_vel_flag: true
     k_align: 0
-    rest_length: 5
+    rest_length: 6
     step_direction: -1
     tether_draw_type: bw
     tether_diameter: 0.1
