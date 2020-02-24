@@ -215,7 +215,8 @@ template <class T> void OutputManagerBase<T>::ReadInputs() {
     } else if (!posits_only_ && (*spec)->GetSpecFlag() &&
                params_->i_step % (*spec)->GetNSpec() == 0) {
       (*spec)->ReadSpecs();
-      if (params_->checkpoint_from_spec) {
+      if (params_->checkpoint_from_spec && params_->i_step %
+          (*spec)->GetNCheckpoint() == 0) {
         (*spec)->WriteCheckpoints();
       }
     }
