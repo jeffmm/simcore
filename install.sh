@@ -3,92 +3,21 @@
 do_build() {
     mkdir build
     cd build || exit 1
-    cmake ..
+    cmake ${CMAKE_FLAGS} ..
     make -j8
+    if $build_docs; then
+        make docs
+    fi
+    if $run_tests; then
+        make test
+    fi
+    if $install_packages; then
+        make install
+    fi
     cd ..
 }
 
-do_omp_build() {
-    mkdir build
-    cd build || exit 1
-    cmake -DOMP=1 ..
-    make -j8
-    cd ..
-}
-
-do_graph_omp_build() {
-    mkdir build
-    cd build || exit 1
-    cmake -DGRAPH=1 -DOMP=1 ..
-    make -j8
-    cd ..
-}
-
-do_graph_build() {
-    mkdir build
-    cd build || exit 1
-    cmake -DGRAPH=1 ..
-    make -j8
-    cd ..
-}
-
-do_windows_graph_build() {
-    mkdir build
-    cd build || exit 1
-    cmake -DGRAPH=1 -DWINDOWS=1 ..
-    make -j8
-    cd ..
-}
-
-do_test_build() {
-    mkdir build
-    cd build || exit 1
-    cmake -DUNIT_TESTS=1 ..
-    make -j8
-    make test && cd ..
-}
-
-do_debug_build() {
-    mkdir build
-    cd build || exit 1
-    cmake -DDEBUG=1 ..
-    make -j8
-    cd ..
-}
-
-do_debug_graph_build() {
-    mkdir build
-    cd build || exit 1
-    cmake -DDEBUG=1 -DGRAPH=1 ..
-    make -j8
-    cd ..
-}
-
-do_trace_build() {
-    mkdir build
-    cd build || exit 1
-    cmake -DDEBUG=1 -DTRACE=1 ..
-    make -j8
-    cd ..
-}
-
-do_trace_graph_build() {
-    mkdir build
-    cd build || exit 1
-    cmake -DDEBUG=1 -DTRACE=1 -DGRAPH=1 ..
-    make -j8
-    cd ..
-}
-
-do_docs_build() {
-    mkdir build
-    cd build || exit 1
-    cmake ..
-    make docs
-    cd ..
-}
-
-do_clean() {
+clean_cmake_files() {
     rm -rf build/CMake*
     rm -rf build/Makefile
     rm -rf build/cmake_install.cmake
@@ -97,61 +26,62 @@ do_clean() {
     rm -rf build/tests
 }
 
-do_usage() {
-    echo "Usage: $0 [arg]"
-    echo "arg must be one of:"
-    echo "  clean   - remove temporary installation files"
-    echo "  build   - build simcore without graphics"
-    echo "  gbuild  - build simcore with graphics"
-    echo "  omp     - build simcore with openmp without graphics"
-    echo "  gomp    - build simcore with openmp with graphics"
-    echo "  debug   - build simcore in debug mode without graphics"
-    echo "  gdebug  - build simcore in debug mode with graphics"
-    echo "  gwin    - build simcore in windows with graphics"
-    echo "  trace   - build simcore in trace mode (verbose logging)"
-    echo "  gtrace  - build simcore in trace mode with graphics (verbose logging)"
-    echo "  test    - build simcore and run unit tests"
-    echo "  docs    - build Doxygen documentation"
+show_help() {
+    echo "USAGE:"
+    echo "  $0 [-hcIgwodtbx]"
+    echo "OPTIONS:"
+    echo "  -h      show this menu"
+    echo "  -c      clean build directory"
+    echo "  -I      install simcore locally after building"
+    echo "  -g      build simcore with graphics"
+    echo "  -w      build simcore in Windows"
+    echo "  -o      build simcore with OpenMP parallelization"
+    echo "  -d      build Doxygen documentation"
+    echo "  -t      build and run simcore unit tests"
+    echo "  -b      build simcore in Debug mode"
+    echo "  -x      build simcore in Trace mode (verbose logging)"
 }
 
-case $1 in
-clean)
-    do_clean
-    ;;
-gwin)
-    do_windows_graph_build
-    ;;
-build)
-    do_build
-    ;;
-debug)
-    do_debug_build
-    ;;
-omp)
-    do_omp_build
-    ;;
-gomp)
-    do_graph_omp_build
-    ;;
-gbuild)
-    do_graph_build
-    ;;
-gdebug)
-    do_debug_graph_build
-    ;;
-test)
-    do_test_build
-    ;;
-docs)
-    do_docs_build
-    ;;
-trace)
-    do_trace_build
-    ;;
-gtrace)
-    do_trace_graph_build
-    ;;
-*)
-    do_usage
-    ;;
-esac
+# A POSIX variable
+OPTIND=1         # Reset in case getopts has been used previously in the shell.
+
+CMAKE_FLAGS="-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+build_docs=false
+run_tests=false
+install_packages=false
+while getopts "h?cIgwodtDT:" opt; do
+    case "$opt" in
+    h|\?)
+        show_help
+        exit 0
+        ;;
+    c)  
+        clean_cmake_files
+        exit 0
+        ;;
+    I)  install_packages=true
+        ;;
+    g)  CMAKE_FLAGS="${CMAKE_FLAGS} -DGRAPH=TRUE"
+        ;;
+    w)  CMAKE_FLAGS="${CMAKE_FLAGS} -DWINDOWS_MODE=TRUE"
+        ;;
+    o)  CMAKE_FLAGS="${CMAKE_FLAGS} -DOMP=TRUE"
+        ;;
+    d)  build_docs=true
+        ;;
+    t)  
+        run_tests=true
+        CMAKE_FLAGS="${CMAKE_FLAGS} -DTESTS=TRUE"
+        ;;
+    D)  CMAKE_FLAGS="${CMAKE_FLAGS} -DDEBUG=TRUE"
+        ;;
+    T)  CMAKE_FLAGS="${CMAKE_FLAGS} -DTRACE=TRUE"
+        ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+[ "${1:-}" = "--" ] && shift
+
+do_build

@@ -289,7 +289,7 @@ spherocylinder:
   n_diffusion_samples: [1, int]
   midstep: [false, bool]
 spindle:
-  n_filaments_bud: [1, int]
+  n_filaments_bud: [0, int]
   n_filaments_mother: [0, int]
   alignment_potential: [false, bool]
   k_spring: [1000, double]

@@ -1,4 +1,10 @@
-#include <catch2/catch.hpp>
+// Enable unit testing always
+#ifndef TESTS
+#define TESTS
+#endif
+
+#include <simcore/simulation_manager.hpp>
+#include "catch.hpp"
 
 template <> class UnitTest<SimulationManager> {
 private:

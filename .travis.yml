@@ -5,8 +5,9 @@ services:
   - docker
 
 before_script:
-  - docker build -t jeffmm/simcore docker
+  - docker build -f docker/Dockerfile_base -t jeffmm/simcore_base docker
 
+# Tests are handled during Docker image build
 script:
-  - docker run --rm -v ${PWD}:/mnt jeffmm/simcore bash -c "./scripts/ci.sh"
+  - docker build -t jeffmm/simcore docker
 ...
