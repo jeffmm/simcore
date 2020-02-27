@@ -40,7 +40,11 @@ if (TESTS)
     add_definitions(-DTESTS=TRUE)
 endif()
 
-
+# Generate version definition from git sha1. This
+# needs to be configured before the cpp files are
+# GLOB'd into the SOURCES variable or explicitly
+# appended to the SOURCES list
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/version_generator.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/version_generator.cpp" @ONLY)
 
 # Find all headers in the project include folder
 file(GLOB HEADERS CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/simcore/*.hpp")
