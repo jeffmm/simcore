@@ -1,2 +1,2 @@
 Bootstrap: docker
-From: jeffmm/simcore:experimental
+From: jeffmm/simcore:latest
