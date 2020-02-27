@@ -1,28 +1,34 @@
 seed: 11782311791392
 
-run_name: explicit_test
+run_name: active_xlinked
 n_dim: 2
 n_periodic: 2
-delta: 0.000025
+delta: 0.0001
 n_steps: 1000000
 boundary: 0
 
 graph_flag: true
-n_graph: 100
+n_graph: 1000
 movie_flag: false
 insert_radius: -1
 
-system_radius: 100
-potential: wca
+system_radius: 200
+potential: soft
+soft_potential_mag: 1000
 f_cutoff: 100000
 thermo_flag: true
 n_thermo: 1000
 checkpoint_flag: true
 n_checkpoint: 10000
+species:
+  spec_flag: true
+  n_spec: 1000
+
 
 filament:
   - name: mt
-    num: 30
+    num: 1
+    packing_fraction: 0.05
     insertion_type: random
     draw_type: fixed
     color: 2
@@ -32,19 +38,18 @@ filament:
     min_bond_length: 2
     polydispersity_flag: true
     persistence_length: 3000
-    spec_flag: true
-    n_spec: 1000
-    n_equil: 1000
+    driving_factor: 3
+    error_analysis: true
 
 crosslink:
-  - name: k560
-    concentration: 0.03
-    insertion_type: random_grid
+  - name: passive
+    concentration: 0.1
+    insertion_type: random
     diameter: 0.5
     diffusion_s: 1
     diffusion_d: 1
-    velocity_s: 40
-    velocity_d: 40
+    velocity_s: 0
+    velocity_d: 0
     draw_type: bw
     color: 4.67
     k_on_s: 50
@@ -52,19 +57,17 @@ crosslink:
     k_on_d: 50
     k_off_d: 5
     force_dep_factor: 0.1
-    polar_affinity: 0
+    polar_affinity: 1
     k_spring: 50
     k2_spring: 0
     anisotropic_spring_flag: false
     f_stall: 100
     force_dep_vel_flag: true
     k_align: 0
-    rest_length: 2
+    rest_length: 6
     step_direction: -1
     tether_draw_type: bw
     tether_diameter: 0.1
     tether_color: 4.67
     end_pausing: false
     r_capture: 30
-    spec_flag: true
-    n_spec: 1000
