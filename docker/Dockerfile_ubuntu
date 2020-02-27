@@ -27,7 +27,7 @@ RUN wget https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.6.0.tar.gz &&\
     cd yaml-cpp-yaml-cpp-0.6.0 &&\
     mkdir build && cd build && cmake .. && make -j4  && make install
 
-RUN git clone --recursive --single-branch --branch jmm/directory_tree_refactor https://github.com/jeffmm/simcore.git &&\
+RUN git clone --recursive --single-branch --branch master https://github.com/jeffmm/simcore.git &&\
     cd simcore &&\
     ./install.sh -tI
 

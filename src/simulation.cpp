@@ -17,7 +17,7 @@ void Simulation::Run(YAML::Node sim_params) {
 }
 
 /* Continuously loop over object data structures, solving their equations of
- * motion using Runge-Kutta-like integration schemes for n_steps time steps. */
+ * motion using symplectic integration schemes for n_steps time steps. */
 void Simulation::RunSimulation() {
 #ifdef ENABLE_OPENMP
   Logger::Info("Running simulation %s on %d threads", run_name_.c_str(),
