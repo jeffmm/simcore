@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
@@ -51,9 +53,22 @@ public:
   void ConfigureSimcore();
 };
 
+struct stat info;
+
 int main(int argc, char *argv[]) {
   if (argc == 1) {
     return parse_error();
+  }
+
+  char pathname[] = "include/simcore";
+  if (stat(pathname, &info) != 0) {
+    printf("Cannot find %s: Are you in the project's root directory?\n", pathname);
+    exit(1);
+  } else if (info.st_mode & S_IFDIR) {
+    printf("Configuring simcore parameters\n");
+  } else {
+    printf("%s is not a directory.\n", pathname);
+    exit(1);
   }
   try {
     Configurator config(argv[1]);
