@@ -41,11 +41,9 @@ private:
 
 public:
   Configurator(std::string default_config_file)
-      : parse_params_("simcore/simulation/library/parse_params.hpp",
-                      std::ios_base::out),
-        parameters_("simcore/simulation/library/parameters.hpp",
-                    std::ios_base::out),
-        default_config_("simcore/simulation/library/default_params.hpp",
+      : parse_params_("include/simcore/parse_params.hpp", std::ios_base::out),
+        parameters_("include/simcore/parameters.hpp", std::ios_base::out),
+        default_config_("include/simcore/default_params.hpp",
                         std::ios_base::out) {
     node_ = YAML::LoadFile(default_config_file);
   }

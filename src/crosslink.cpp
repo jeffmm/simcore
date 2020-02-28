@@ -14,14 +14,10 @@ void Crosslink::Init(crosslink_parameters *sparams) {
   rest_length_ = sparams_->rest_length;
   static_flag_ = sparams_->static_flag;
   k_spring_ = sparams_->k_spring;
-  k2_spring_ = sparams_->k2_spring;  // spring const for compression if
-                                     // asymmetric_spring_flag is true
-  asymmetric_spring_flag_ = sparams_->asymmetric_spring_flag;
-  if (asymmetric_spring_flag_) {
-    Logger::Warning(
-        "asymmetric_spring_flag is not currently implemented for"
-        " crosslinkers");
-  }
+  k_spring_compress_ =
+      sparams_->k_spring_compress; // spring const for compression if
+                                   // asymmetric_spring_flag is true
+  // asymmetric_spring_flag_ = sparams_->asymmetric_spring_flag;
   static_flag_ = sparams_->static_flag;
   k_align_ = sparams_->k_align;
   // rcapture_ = sparams_->r_capture;
@@ -47,7 +43,8 @@ void Crosslink::InitInteractionEnvironment(LookupTable *lut) { lut_ = lut; }
 void Crosslink::UpdatePosition() {}
 
 void Crosslink::GetAnchors(std::vector<Object *> &ixors) {
-  if (IsUnbound()) return;
+  if (IsUnbound())
+    return;
   if (!static_flag_) {
     ixors.push_back(&anchors_[0]);
   }
@@ -103,11 +100,10 @@ void Crosslink::SinglyKMC() {
     double bind_lambda;
     /* Find out which rod we are binding to */
     int i_bind = kmc_bind.whichRodBindSD(bind_lambda, roll);
-    if (i_bind < 0) {  // || bind_lambda < 0) {
+    if (i_bind < 0) { // || bind_lambda < 0) {
       printf("i_bind = %d\nbind_lambda = %2.2f\n", i_bind, bind_lambda);
-      Logger::Error(
-          "kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
-          " returned an invalid result!");
+      Logger::Error("kmc_bind.whichRodBindSD in Crosslink::SinglyKMC"
+                    " returned an invalid result!");
     }
     Object *bind_obj = anchors_[0].GetNeighbor(i_bind);
     double obj_length = bind_obj->GetLength();
@@ -134,14 +130,16 @@ void Crosslink::SinglyKMC() {
 void Crosslink::DoublyKMC() {
   /* Calculate force-dependent unbinding for each head */
   double tether_stretch = length_ - rest_length_;
-  // TODO: asymmetric springs in tethers
   // For asymmetric springs apply second spring constant for compression
-  // if (asymmetric_spring_flag_ && tether_stretch < 0) {
-  // fdep = fdep_factor_ * 0.5 * k2_spring_ * SQR(tether_stretch);
-  //} else {
-  double e_dep = e_dep_factor_ * 0.5 * k_spring_ * SQR(tether_stretch);
-  //}
-  double f_dep = fdep_length_ * k_spring_ * tether_stretch;
+  double e_dep = e_dep_factor_;
+  double f_dep = fdep_length_;
+  if (k_spring_compress_ >= 0 && tether_stretch < 0) {
+    e_dep *= 0.5 * k_spring_compress_ * SQR(tether_stretch);
+    f_dep *= k_spring_compress_ * tether_stretch;
+  } else {
+    e_dep = k_spring_ * SQR(tether_stretch);
+    f_dep = k_spring_ * tether_stretch;
+  }
   double unbind_prob = anchors_[0].GetOffRate() * delta_ * exp(e_dep + f_dep);
   double roll = rng_.RandomUniform();
   int head_activate = -1;
@@ -197,7 +195,8 @@ void Crosslink::UpdateAnchorPositions() {
 }
 
 void Crosslink::ApplyTetherForces() {
-  if (!IsDoubly()) return;
+  if (!IsDoubly())
+    return;
   anchors_[0].ApplyAnchorForces();
   anchors_[1].ApplyAnchorForces();
 }
@@ -247,21 +246,26 @@ void Crosslink::ZeroForce() {
 
 void Crosslink::CalculateTetherForces() {
   ZeroForce();
-  if (!IsDoubly()) return;
+  if (!IsDoubly())
+    return;
   Interaction ix(&anchors_[0], &anchors_[1]);
   MinimumDistance mindist;
   mindist.ObjectObject(ix);
-  /* Check stretch of tether. No penalty for having a stretch < rest_length. ie
-   * the spring does not resist compression. */
+  /* Check stretch of tether. No penalty for having a stretch < rest_length.
+   * ie the spring does not resist compression. */
   length_ = sqrt(ix.dr_mag2);
   double stretch = length_ - rest_length_;
-  // We also update the tether's position etc, stored in the xlink position etc
+  // We also update the tether's position etc, stored in the xlink position
+  // etc
   for (int i = 0; i < params_->n_dim; ++i) {
     orientation_[i] = ix.dr[i] / length_;
     position_[i] = ix.midpoint[i];
   }
-  // TODO: When we add asymmetric springs, add option here.
-  tether_force_ = k_spring_ * stretch;
+  if (k_spring_compress_ >= 0 && stretch < 0)
+    tether_force_ = k_spring_compress_ * stretch;
+  else
+    tether_force_ = k_spring_ * stretch;
+
   for (int i = 0; i < params_->n_dim; ++i) {
     force_[i] = tether_force_ * orientation_[i];
   }
@@ -355,7 +359,8 @@ void Crosslink::WriteSpec(std::fstream &ospec) {
 }
 
 void Crosslink::ReadSpec(std::fstream &ispec) {
-  if (ispec.eof()) return;
+  if (ispec.eof())
+    return;
   SetSingly();
   bool is_doubly;
   ispec.read(reinterpret_cast<char *>(&is_doubly), sizeof(bool));

@@ -106,7 +106,7 @@ typedef species_parameters<species_id::spherocylinder> spherocylinder_parameters
 template <>
 struct species_parameters<species_id::spindle>
     : public species_base_parameters {
-  int n_filaments_bud = 1;
+  int n_filaments_bud = 0;
   int n_filaments_mother = 0;
   bool alignment_potential = false;
   double k_spring = 1000;
@@ -136,8 +136,7 @@ struct species_parameters<species_id::crosslink>
   double force_dep_length = 0;
   double polar_affinity = 1;
   double k_spring = 10;
-  double k2_spring = 0;
-  bool asymmetric_spring_flag = false;
+  double k_spring_compress = -1.;
   double f_stall = 100;
   bool force_dep_vel_flag = true;
   double k_align = 0;
