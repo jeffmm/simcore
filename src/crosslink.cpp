@@ -137,8 +137,8 @@ void Crosslink::DoublyKMC() {
     e_dep *= 0.5 * k_spring_compress_ * SQR(tether_stretch);
     f_dep *= k_spring_compress_ * tether_stretch;
   } else {
-    e_dep = k_spring_ * SQR(tether_stretch);
-    f_dep = k_spring_ * tether_stretch;
+    e_dep *= k_spring_ * SQR(tether_stretch);
+    f_dep *= k_spring_ * tether_stretch;
   }
   double unbind_prob = anchors_[0].GetOffRate() * delta_ * exp(e_dep + f_dep);
   double roll = rng_.RandomUniform();
@@ -251,16 +251,13 @@ void Crosslink::CalculateTetherForces() {
   Interaction ix(&anchors_[0], &anchors_[1]);
   MinimumDistance mindist;
   mindist.ObjectObject(ix);
-  /* Check stretch of tether. No penalty for having a stretch < rest_length.
-   * ie the spring does not resist compression. */
   length_ = sqrt(ix.dr_mag2);
   double stretch = length_ - rest_length_;
-  // We also update the tether's position etc, stored in the xlink position
-  // etc
   for (int i = 0; i < params_->n_dim; ++i) {
     orientation_[i] = ix.dr[i] / length_;
     position_[i] = ix.midpoint[i];
   }
+  // If compression spring constant is set, use that when spring is compressed.
   if (k_spring_compress_ >= 0 && stretch < 0)
     tether_force_ = k_spring_compress_ * stretch;
   else
