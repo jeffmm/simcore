@@ -49,7 +49,7 @@ CMAKE_FLAGS="-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 build_docs=false
 run_tests=false
 install_packages=false
-while getopts "h?cIgwodtDT:" opt; do
+while getopts "h?cIgwodtDT" opt; do
     case "$opt" in
     h|\?)
         show_help

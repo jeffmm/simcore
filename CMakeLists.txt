@@ -11,6 +11,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/.CMake_Modules")
 
+# Create a version number for the software from the git sha1 of the current commit
+# Can be referenced as "@GIT_SHA1@" in a header file from a compiler definition
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+#add_definitions(-DSC_VERSION="${GIT_SHA1}")
+
 if(DEBUG OR TRACE)
   set(CMAKE_BUILD_TYPE "Debug")
 else()

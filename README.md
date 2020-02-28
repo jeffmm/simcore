@@ -26,18 +26,18 @@ A pre-built image of simcore is available as a [Docker](https://www.docker.com/)
 docker pull jeffmm/simcore
 ```
 
-To use the image, run the provided script to launch a Docker container named `simcore_dev` in the background
+To use the image, run the provided script to launch a Docker container named `simcore_latest` in the background
 
 ```bash
 ./launch_docker.sh
 ```
 
-You may also build the Docker image yourself by providing the launch script with the `build` argument.
+You may also build the Docker image yourself by providing the launch script with the `-b` flag.
 
 To launch simcore, run
 
 ```bash
-docker exec simcore_dev simcore.exe [optional-flags] [parameter-file]
+docker exec simcore_latest simcore.exe [optional-flags] [parameter-file]
 ```
 
 ### Running with Singularity

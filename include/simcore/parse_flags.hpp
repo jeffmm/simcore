@@ -1,9 +1,11 @@
 #ifndef _SIMCORE_PARSE_FLAGS_H_
 #define _SIMCORE_PARSE_FLAGS_H_
+
 #include <getopt.h>
 #include <iostream>
 #include <string>
 #include <vector>
+#include "version_generator.hpp"
 
 // Run parameters that needs to be carried forward should be stored here.
 struct run_options {
@@ -32,8 +34,9 @@ struct run_options {
    string array below when adding new flags. */
 
 // Define flags here
-static const int n_flags = 14;
+static const int n_flags = 15;
 static struct option long_options[] = {{"help", no_argument, 0, 'h'},
+                                       {"version", no_argument, 0, 'v'},
                                        {"debug", no_argument, 0, 'd'},
                                        {"run-name", required_argument, 0, 'r'},
                                        {"n-runs", required_argument, 0, 'n'},
@@ -52,6 +55,7 @@ static struct option long_options[] = {{"help", no_argument, 0, 'h'},
 // Descriptions for flags
 static const std::string desc[n_flags][2] = {
     {"show this menu", "none"},
+    {"show simcore version number", "none"},
     {"run program in debug mode", "none"},
     {"where rname is the name of a run session (for organizing batch jobs)",
      "rname"},
@@ -103,6 +107,10 @@ static void show_help_info(std::string progname) {
   }
 }
 
+static void show_version_info() {
+  std::cout << "simcore version no. " << simcore_version << "\n";
+}
+
 /*************************
    PARSE_OPTS
     New flag switches should be added below, as well as any information that
@@ -120,7 +128,7 @@ static run_options parse_opts(int argc, char *argv[]) {
   int tmp;
   while (1) {
     int option_index = 0;
-    tmp = getopt_long(argc, argv, "hdmaplwbMGg:r:n:R:", long_options,
+    tmp = getopt_long(argc, argv, "hvdmaplwbMGg:r:n:R:", long_options,
                       &option_index);
     if (tmp == -1)
       break;
@@ -129,6 +137,9 @@ static run_options parse_opts(int argc, char *argv[]) {
       break;
     case 'h':
       show_help_info(argv[0]);
+      exit(0);
+    case 'v':
+      show_version_info();
       exit(0);
     case 'd':
       std::cout << "  Running in debug mode\n";
