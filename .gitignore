@@ -50,3 +50,4 @@ build*
 201*
 !CMake*
 *__pycache__*
+version_generator.cpp
