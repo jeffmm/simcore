@@ -77,6 +77,7 @@ class Mesh : public Object {
   virtual std::vector<Interaction *> *GetInteractions();
   virtual void ClearInteractions();
   virtual void GetAvgPosition(double *ap);
+  virtual void GetAvgScaledPosition(double *asp);
   virtual void GetAvgOrientation(double *au);
   virtual void SetAvgPosition();
   virtual void GetContactNumbers(std::vector<double> *cn);

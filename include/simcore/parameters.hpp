@@ -83,6 +83,9 @@ struct species_parameters<species_id::filament>
   bool polydispersity_flag = false;
   bool custom_set_tail = false;
   bool reference_frame_flag = false;
+  bool number_fluctuation_analysis = false;
+  int number_fluctuation_boxes = 6;
+  int number_fluctuation_centers = 10;
 };
 typedef species_parameters<species_id::filament> filament_parameters;
 
@@ -106,7 +109,7 @@ typedef species_parameters<species_id::spherocylinder> spherocylinder_parameters
 template <>
 struct species_parameters<species_id::spindle>
     : public species_base_parameters {
-  int n_filaments_bud = 1;
+  int n_filaments_bud = 0;
   int n_filaments_mother = 0;
   bool alignment_potential = false;
   double k_spring = 1000;

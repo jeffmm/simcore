@@ -563,7 +563,17 @@ void Mesh::ClearInteractions() {
   }
 }
 
+
+void Mesh::GetAvgScaledPosition(double *asp) {
+  GetAvgPosition(asp);
+  std::copy(asp, asp + 3, position_);
+  UpdatePeriodic();
+  std::copy(scaled_position_, scaled_position_ + 3, asp);
+}
+
+
 void Mesh::GetAvgPosition(double *ap) {
+
   double avg_p[3] = {0.0, 0.0, 0.0};
   int size = 0;
   for (auto it = sites_.begin(); it != sites_.end(); ++it) {
