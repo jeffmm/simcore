@@ -9,5 +9,5 @@ before_script:
 
 # Tests are handled during Docker image build
 script:
-  - docker build -t jeffmm/simcore docker
+  - docker build -t jeffmm/simcore:latest docker
 ...
