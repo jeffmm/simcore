@@ -2,10 +2,10 @@
 #define _SIMCORE_CROSSLINK_H_
 
 //#include "species.hpp"
-#include <KMC/kmc.hpp>
-#include <KMC/kmc_choose.hpp>
 #include "anchor.hpp"
 #include "minimum_distance.hpp"
+#include <KMC/kmc.hpp>
+#include <KMC/kmc_choose.hpp>
 
 // enum xstate { unbound, singly, doubly };
 
@@ -13,7 +13,7 @@
  * two objects in the simulation. Governs binding and unbinding of crosslink
  * heads, and tether forces between bound heads. */
 class Crosslink : public Object {
- private:
+private:
   crosslink_parameters *sparams_;
   draw_type draw_;
   bind_state state_;
@@ -22,7 +22,7 @@ class Crosslink : public Object {
   bool static_flag_ = false;
   bool asymmetric_spring_flag_ = false;
   double k_spring_;
-  double k2_spring_;
+  double k_spring_compress_;
   double k_align_;
   double rest_length_;
   double rcapture_;
@@ -40,7 +40,7 @@ class Crosslink : public Object {
   void UpdateAnchorPositions();
   void UpdateXlinkState();
 
- public:
+public:
   Crosslink(unsigned long seed);
   void Init(crosslink_parameters *sparams);
   void InitInteractionEnvironment(LookupTable *lut);

@@ -67,7 +67,7 @@
   default_config["spherocylinder"]["diffusion_analysis"] = "false";
   default_config["spherocylinder"]["n_diffusion_samples"] = "1";
   default_config["spherocylinder"]["midstep"] = "false";
-  default_config["spindle"]["n_filaments_bud"] = "1";
+  default_config["spindle"]["n_filaments_bud"] = "0";
   default_config["spindle"]["n_filaments_mother"] = "0";
   default_config["spindle"]["alignment_potential"] = "false";
   default_config["spindle"]["k_spring"] = "1000";
@@ -91,8 +91,7 @@
   default_config["crosslink"]["force_dep_length"] = "0";
   default_config["crosslink"]["polar_affinity"] = "1";
   default_config["crosslink"]["k_spring"] = "10";
-  default_config["crosslink"]["k2_spring"] = "0";
-  default_config["crosslink"]["asymmetric_spring_flag"] = "false";
+  default_config["crosslink"]["k_spring_compress"] = "-1.";
   default_config["crosslink"]["f_stall"] = "100";
   default_config["crosslink"]["force_dep_vel_flag"] = "true";
   default_config["crosslink"]["k_align"] = "0";
