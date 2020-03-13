@@ -338,12 +338,12 @@ crosslink:                          # Parameters specific to crosslinks.
   polar_affinity: [1, double]       # Ratio of (probability of binding for antiparallel)/(probability 
                                     # of binding parallel)  
   k_spring: [10, double]            # Spring constant of doubly-bound crosslinks.
-  k2_spring: [0, double]            # Spring constant for compression if asymmetric_spring_flag.
-  asymmetric_spring_flag: [false, bool] # Use k2_spring for compressive forces
-  f_stall: [100, double]            # Tether forces above f_stall cause bound crosslink heads to
-                                    # cease walking.
-  force_dep_vel_flag: [true, bool]  # Flag that causes walking crosslink heads to have force-
-                                    # dependent velocity.
+  k_spring_compress: [-1., double]  # Spring constant for compression. 
+                                    # If negative just use k_spring instead.
+  f_stall: [100, double]            # Tether forces above f_stall cause bound
+                                    # crosslink heads to cease walking.
+  force_dep_vel_flag: [true, bool]  # Flag that causes walking crosslink heads 
+                                    # to have force-dependent velocity.
   k_align: [0, double]              # Torsion spring constant for alignment of crosslink.
   rest_length: [0, double]          # Spring rest length of crosslink tether.
   step_direction: [0, int]          # Sets walker direction. If negative, walks toward filament
