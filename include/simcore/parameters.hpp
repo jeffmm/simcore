@@ -197,6 +197,9 @@ struct system_parameters {
   int n_thermo = 1000;
   double insert_radius = -1;
   bool interaction_flag = true;
+  bool remove_duplicate_interactions = true;
+  bool coarse_grained_mesh_interactions = false;
+  int mesh_coarsening = 2;
   int species_insertion_failure_threshold = 10000;
   int species_insertion_reattempt_threshold = 10;
   bool uniform_crystal = false;

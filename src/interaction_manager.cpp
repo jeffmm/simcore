@@ -276,6 +276,9 @@ void InteractionManager::CheckUpdateObjects() {
         i_update_);
     ForceUpdate();
     xlink_.UpdateObjsVolume();
+    // XXX This has to be run before the first FlagDuplicateInteractions() call if
+    // we check for overlaps at the beginning of the simulation...
+    ClearObjectInteractions();
   }
 }
 
@@ -337,6 +340,12 @@ void InteractionManager::ProcessPairInteraction(ix_iterator ix) {
   // interact...
   // ...so do not interact if same species
   if (!params_->like_like_interactions && obj1->GetSID() == obj2->GetSID()) {
+    ix->no_interaction = true;
+    return;
+  }
+
+  /* If one of the objects are not prime interactors, don't interact */
+  if (!obj1->IsInteractor() && !obj2->IsInteractor()) {
     ix->no_interaction = true;
     return;
   }
@@ -445,6 +454,38 @@ void InteractionManager::CalculateBoundaryInteractions() {
 #endif
 }
 
+void InteractionManager::ClearObjectInteractions() {
+#ifdef ENABLE_OPENMP
+    int max_threads = omp_get_max_threads();
+    std::vector<std::pair<std::vector<Object *>::iterator,
+                          std::vector<Object *>::iterator>>
+        chunks;
+    chunks.reserve(max_threads);
+    size_t chunk_size = interactors_.size() / max_threads;
+    auto cur_iter = interactors_.begin();
+    for (int i = 0; i < max_threads - 1; ++i) {
+      auto last_iter = cur_iter;
+      std::advance(cur_iter, chunk_size);
+      chunks.push_back(std::make_pair(last_iter, cur_iter));
+    }
+    chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
+#pragma omp parallel shared(chunks)
+    {
+#pragma omp for
+      for (int i = 0; i < max_threads; ++i) {
+        for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
+          (*it)->ClearInteractions();
+        }
+      }
+    }
+#else
+    for (auto it = interactors_.begin(); it != interactors_.end(); ++it) {
+      (*it)->ClearInteractions();
+    }
+#endif
+
+}
+
 void InteractionManager::CalculatePairInteractions() {
 #ifdef ENABLE_OPENMP
   int max_threads = omp_get_max_threads();
@@ -464,20 +505,30 @@ void InteractionManager::CalculatePairInteractions() {
 #pragma omp for
     for (int i = 0; i < max_threads; ++i) {
       for (auto ix = chunks[i].first; ix != chunks[i].second; ++ix) {
+        ix->pause_interaction = false;
         ProcessPairInteraction(ix);
         // Do torque crossproducts
         cross_product(ix->contact1, ix->force, ix->t1, 3);
         cross_product(ix->contact2, ix->force, ix->t2, 3);
+        object_interaction oix1 = std::make_pair(&(*ix), true);
+        object_interaction oix2 = std::make_pair(&(*ix), false);
+        ix->obj1->GiveInteraction(oix1);
+        ix->obj2->GiveInteraction(oix2);
       }
     }
   }
 #else
   for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
        ++ix) {
+    ix->pause_interaction = false;
     ProcessPairInteraction(ix);
     // Do torque crossproducts
     cross_product(ix->contact1, ix->force, ix->t1, 3);
     cross_product(ix->contact2, ix->force, ix->t2, 3);
+    object_interaction oix1 = std::make_pair(&(*ix), true);
+    object_interaction oix2 = std::make_pair(&(*ix), false);
+    ix->obj1->GiveInteraction(oix1);
+    ix->obj2->GiveInteraction(oix2);
   }
 #endif
   /* After interaction update, remove pairs of interactors who can never
@@ -497,20 +548,85 @@ void InteractionManager::CalculatePairInteractions() {
   }
 }
 
+void InteractionManager::FlagDuplicateInteractions() {
+#ifdef ENABLE_OPENMP
+    int max_threads = omp_get_max_threads();
+    std::vector<std::pair<std::vector<Object *>::iterator,
+                          std::vector<Object *>::iterator>>
+        chunks;
+    chunks.reserve(max_threads);
+    size_t chunk_size = interactors_.size() / max_threads;
+    auto cur_iter = interactors_.begin();
+    for (int i = 0; i < max_threads - 1; ++i) {
+      auto last_iter = cur_iter;
+      std::advance(cur_iter, chunk_size);
+      chunks.push_back(std::make_pair(last_iter, cur_iter));
+    }
+    chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
+#pragma omp parallel shared(chunks)
+    {
+#pragma omp for
+      for (int i = 0; i < max_threads; ++i) {
+        for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
+          (*it)->FlagDuplicateInteractions();
+        }
+      }
+    }
+#else
+    for (auto it = interactors_.begin(); it != interactors_.end(); ++it) {
+      (*it)->FlagDuplicateInteractions();
+    }
+#endif
+}
+
 void InteractionManager::ApplyPairInteractions() {
-  for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
-       ++ix) {
-    Object *obj1 = ix->obj1;
-    Object *obj2 = ix->obj2;
-    obj1->AddForce(ix->force);
-    obj2->SubForce(ix->force);
-    obj1->AddTorque(ix->t1);
-    obj2->SubTorque(ix->t2);
-    obj1->AddPotential(ix->pote);
-    obj2->AddPotential(ix->pote);
-    for (int i = 0; i < n_dim_; ++i) {
-      for (int j = 0; j < n_dim_; ++j) {
-        stress_[n_dim_ * i + j] += ix->stress[n_dim_ * i + j];
+  if (params_->remove_duplicate_interactions) {
+    FlagDuplicateInteractions();
+  }
+#ifdef ENABLE_OPENMP
+    int max_threads = omp_get_max_threads();
+    std::vector<std::pair<std::vector<Object *>::iterator,
+                          std::vector<Object *>::iterator>>
+        chunks;
+    chunks.reserve(max_threads);
+    size_t chunk_size = interactors_.size() / max_threads;
+    auto cur_iter = interactors_.begin();
+    for (int i = 0; i < max_threads - 1; ++i) {
+      auto last_iter = cur_iter;
+      std::advance(cur_iter, chunk_size);
+      chunks.push_back(std::make_pair(last_iter, cur_iter));
+    }
+    chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
+#pragma omp parallel shared(chunks)
+    {
+#pragma omp for
+      for (int i = 0; i < max_threads; ++i) {
+        for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
+          (*it)->ApplyInteractions();
+        }
+      }
+    }
+#else
+    for (auto it = interactors_.begin(); it != interactors_.end(); ++it) {
+      (*it)->ApplyInteractions();
+    }
+#endif
+  if (params_->thermo_flag) {
+    for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
+         ++ix) {
+    //Object *obj1 = ix->obj1;
+    //Object *obj2 = ix->obj2;
+    //obj1->AddForce(ix->force);
+    //obj2->SubForce(ix->force);
+    //obj1->AddTorque(ix->t1);
+    //obj2->SubTorque(ix->t2);
+    //obj1->AddPotential(ix->pote);
+    //obj2->AddPotential(ix->pote);
+      if (ix->pause_interaction) continue;
+      for (int i = 0; i < n_dim_; ++i) {
+        for (int j = 0; j < n_dim_; ++j) {
+          stress_[n_dim_ * i + j] += ix->stress[n_dim_ * i + j];
+        }
       }
     }
   }
@@ -567,6 +683,7 @@ bool InteractionManager::CheckOverlap(std::vector<Object *> &ixors) {
     CalculatePairInteractions();
     if (overlap_) break;
   }
+  ClearObjectInteractions();
   return overlap_;
 }
 

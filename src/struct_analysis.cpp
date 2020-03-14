@@ -237,6 +237,11 @@ void StructAnalysis::CalculatePolarOrderPair(
   //}
   pix->polar_order = u1_dot_u2 * expdr2;
   pix->contact_number = expdr2;
+  if (pix->polar_order != pix->polar_order ||
+      pix->contact_number != pix->contact_number) {
+    fprintf(stderr, "%2.2f %2.2f %2.2f %2.2f %2.2f %2.2f %2.2f\n",
+        u1[0], u1[1], u2[0], u2[1], dr2, u1_dot_u2, expdr2);
+  }
   // obj1->AddPolarOrder(u1_dot_u2*expdr2);
   // obj2->AddPolarOrder(u1_dot_u2*expdr2);
   // obj1->AddContactNumber(expdr2);

@@ -96,6 +96,12 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.insert_radius = it->second.as<double>();
     } else if (param_name.compare("interaction_flag")==0) {
     params.interaction_flag = it->second.as<bool>();
+    } else if (param_name.compare("remove_duplicate_interactions")==0) {
+    params.remove_duplicate_interactions = it->second.as<bool>();
+    } else if (param_name.compare("coarse_grained_mesh_interactions")==0) {
+    params.coarse_grained_mesh_interactions = it->second.as<bool>();
+    } else if (param_name.compare("mesh_coarsening")==0) {
+    params.mesh_coarsening = it->second.as<int>();
     } else if (param_name.compare("species_insertion_failure_threshold")==0) {
     params.species_insertion_failure_threshold = it->second.as<int>();
     } else if (param_name.compare("species_insertion_reattempt_threshold")==0) {

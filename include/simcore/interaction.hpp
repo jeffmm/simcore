@@ -30,6 +30,10 @@ public:
   double polar_order = 0;    // local polar order contribution
   double contact_number = 0; // contact number contribution
   bool no_interaction = false; // true for objects that do not interact
+  bool pause_interaction = false; // no interaction this update
 };
+
+//typedef std::pair<int, Interaction*> object_interaction;
+typedef std::pair<Interaction*, bool> object_interaction;
 
 #endif

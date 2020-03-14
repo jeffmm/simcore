@@ -40,6 +40,7 @@ class Bond : public Object {
   void SetMeshPtr(Object *obj_ptr);
   Object *GetMeshPtr() { return mesh_ptr_; }
   void SetMeshLambda(double lambda) { mesh_lambda_ = lambda; }
+  //const double GetInteractorLength();
   const double GetMeshLambda() const { return mesh_lambda_; }
 };
 

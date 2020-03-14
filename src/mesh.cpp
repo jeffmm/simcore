@@ -382,8 +382,19 @@ void Mesh::ZeroForce() {
 
 void Mesh::UpdateInteractors() {
   interactors_.clear();
-  for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
-    interactors_.push_back(&(*it));
+  if (params_->coarse_grained_mesh_interactions) {
+    int mc = params_->mesh_coarsening;
+    int n = 0;
+    for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+      it->SetInteractor((n++)%mc==0);
+      interactors_.push_back(&(*it));
+    }
+    interactors_.back()->SetInteractor(true);
+  } else {
+    for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+      //it->SetInteractor(true);
+      interactors_.push_back(&(*it));
+    }
   }
 }
 
@@ -549,13 +560,13 @@ double const Mesh::GetDrTot() {
   return dr_tot_;
 }
 
-std::vector<Interaction *> *Mesh::GetInteractions() {
-  for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
-    std::vector<Interaction *> *bond_ixs = bond->GetInteractions();
-    ixs_.insert(ixs_.end(), bond_ixs->begin(), bond_ixs->end());
-  }
-  return &ixs_;
-}
+//std::vector<Interaction *> *Mesh::GetInteractions() {
+  //for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
+    //std::vector<Interaction *> *bond_ixs = bond->GetInteractions();
+    //ixs_.insert(ixs_.end(), bond_ixs->begin(), bond_ixs->end());
+  //}
+  //return &ixs_;
+//}
 
 void Mesh::ClearInteractions() {
   for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {

@@ -12,11 +12,10 @@ void Bond::Init(Site *s1, Site *s2) {
   sites_[1] = s2;
   ReInit();
   SetEquilLength(length_);
-  Logger::Trace(
-      "Initializing bond at [%2.2f %2.2f %2.2f] with orientation "
-      "[%2.2f %2.2f %2.2f] and length %2.2f",
-      position_[0], position_[1], position_[2], orientation_[0],
-      orientation_[1], orientation_[2], length_);
+  Logger::Trace("Initializing bond at [%2.2f %2.2f %2.2f] with orientation "
+                "[%2.2f %2.2f %2.2f] and length %2.2f",
+                position_[0], position_[1], position_[2], orientation_[0],
+                orientation_[1], orientation_[2], length_);
 }
 
 void Bond::ReInit() {
@@ -127,4 +126,6 @@ double const Bond::GetOrientationCorrelation() {
 void Bond::ZeroOrientationCorrelation() {
   std::copy(orientation_, orientation_ + 3, orientation_0_);
 }
-
+//double const Bond::GetInteractorLength() {
+  //return length_ < 0.35 ? 0.1 : length_ - 0.25;
+//}

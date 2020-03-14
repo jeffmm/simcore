@@ -62,7 +62,9 @@ class InteractionManager {
   void ZeroDrTot();
   int CountSpecies();
   void PairBondCrosslinks();
+  void FlagDuplicateInteractions();
   bool CheckBondAnchorPair(Object *anchor, Object *bond);
+  void ClearObjectInteractions();
 
  public:
   InteractionManager() {}

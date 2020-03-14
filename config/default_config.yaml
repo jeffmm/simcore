@@ -49,6 +49,13 @@ thermo_flag: [false, bool]           # Output stress tensor and pressure/volume 
 n_thermo: [1000, int]                # How often to output thermo info.
 insert_radius: [-1, double]          # Insert species into subvolume with radius insert_radius
 interaction_flag: [true, bool]       # If zero, skips checking for particle interactions.
+remove_duplicate_interactions: [true, bool]  # Don't allow more than one interaction from a
+                                             # given mesh_id per object
+coarse_grained_mesh_interactions: [false, bool]  # Only allow every N bonds in a mesh to trigger
+                                                 # an interaction, with N corresponding to
+                                                 # mesh_coarsening parameter (head and tail will
+                                                 # always trigger interactions)
+mesh_coarsening: [2, int]  #  Coarsening parameter to use for coarse_grained_mesh_interactions
 species_insertion_failure_threshold: [10000, int] # Threshold used during species insertion for
                                                  # triggering a re-insertion of all species
 species_insertion_reattempt_threshold: [10, int] # Maximum number of attempts to reinsert all

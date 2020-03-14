@@ -22,7 +22,7 @@ Object::Object(unsigned long seed) : rng_(seed) {
   diameter_ = 1;
   length_ = 0;
   p_energy_ = 0;
-  interacting_ = false;
+  interacting_ = true;
   is_mesh_ = false;
   dr_tot_ = 0;
   mesh_id_ = 0;
@@ -292,8 +292,50 @@ bool Object::HasNeighbor(int other_oid) {
   // Generic objects are not assumed to have neighbors
   return false;
 }
-void Object::GiveInteraction(Interaction *ix) { ixs_.push_back(ix); }
-std::vector<Interaction *> *Object::GetInteractions() { return &ixs_; }
+void Object::GiveInteraction(object_interaction ix) {
+  std::lock_guard<std::mutex> lk(_obj_mtx_);
+  ixs_.push_back(ix);
+}
+
+void Object::ApplyInteractions() {
+  for (auto ix=ixs_.begin(); ix!=ixs_.end(); ++ix) {
+    if (ix->first->pause_interaction) continue;
+    if (ix->second) {
+      AddForce(ix->first->force);
+      AddTorque(ix->first->t1);
+      AddPotential(ix->first->pote);
+    } else {
+      SubForce(ix->first->force);
+      SubTorque(ix->first->t2);
+      AddPotential(ix->first->pote);
+    }
+  }
+  ixs_.clear();
+}
+
+void Object::FlagDuplicateInteractions() {
+  int n_interactions = ixs_.size();
+  for (int i=0; i<n_interactions-1; ++i) {
+    int other_mid = ixs_[i].second ? 
+      ixs_[i].first->obj1->GetMeshID() :
+      ixs_[i].first->obj2->GetMeshID();
+    for (int j=i+1; j<n_interactions; ++j) {
+      int other_mid2 = ixs_[j].second ? 
+        ixs_[j].first->obj1->GetMeshID() :
+        ixs_[j].first->obj2->GetMeshID();
+
+      if (other_mid == other_mid2) {
+        if (ixs_[i].first->dr_mag2 < ixs_[j].first->dr_mag2) {
+          ixs_[j].first->pause_interaction = true;
+        } else {
+          ixs_[i].first->pause_interaction = true;
+        }
+      }
+    }
+  }
+}
+
+//std::vector<Interaction *> *Object::GetInteractions() { return &ixs_; }
 void Object::ClearInteractions() { ixs_.clear(); }
 void Object::Cleanup() {}
 

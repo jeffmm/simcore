@@ -38,8 +38,8 @@ show_help() {
     echo "  -o      build simcore with OpenMP parallelization"
     echo "  -d      build Doxygen documentation"
     echo "  -t      build and run simcore unit tests"
-    echo "  -b      build simcore in Debug mode"
-    echo "  -x      build simcore in Trace mode (verbose logging)"
+    echo "  -D      build simcore in Debug mode"
+    echo "  -T      build simcore in Trace mode (verbose logging)"
 }
 
 # A POSIX variable

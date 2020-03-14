@@ -49,7 +49,7 @@ protected:
   bool interactor_update_;
 
   std::vector<Object *> interactors_;
-  std::vector<Interaction *> ixs_;
+  std::vector<object_interaction> ixs_;
   void UpdateKMC();
 
 public:
@@ -145,8 +145,10 @@ public:
   virtual const double GetDrTot();
   virtual void ZeroDrTot();
   virtual bool HasNeighbor(int other_id);
-  virtual void GiveInteraction(Interaction *ix);
-  virtual std::vector<Interaction *> *GetInteractions();
+  virtual void GiveInteraction(object_interaction ix);
+  virtual void ApplyInteractions();
+  virtual void FlagDuplicateInteractions();
+  // virtual std::vector<Interaction *> *GetInteractions();
   virtual void ClearInteractions();
   virtual void Cleanup();
   // virtual void BindAnchor(anchor *ix);
