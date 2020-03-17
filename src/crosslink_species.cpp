@@ -22,7 +22,7 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
                                                   double *obj_vol,
                                                   bool *update) {
   objs_ = objs;
-  obj_volume_ = obj_vol;  // Technically a length
+  obj_volume_ = obj_vol; // Technically a length
   update_ = update;
   /* TODO Lookup table only works for filament objects. Generalize? */
   // LUTFiller *lut_filler = new LUTFiller;
@@ -37,11 +37,20 @@ void CrosslinkSpecies::InitInteractionEnvironment(std::vector<Object *> *objs,
 
 LUTFiller *CrosslinkSpecies::MakeLUTFiller() {
   int grid_num = sparams_.lut_grid_num;
-  if (sparams_.force_dep_length == 0) {
+  if (sparams_.k_spring_compress >= 0) {
+    Logger::Warning("!!!Asymmetric springs are being used. This has not been "
+                    "fully tested. Use at your own risk!");
+    LUTFillerAsym *lut_filler_ptr = new LUTFillerAsym(grid_num, grid_num);
+    lut_filler_ptr->Init(sparams_.k_spring_compress, sparams_.k_spring,
+                         sparams_.energy_dep_factor, sparams_.force_dep_length,
+                         sparams_.rest_length, 1);
+    return lut_filler_ptr;
+
+  } else if (sparams_.force_dep_length == 0) {
     LUTFillerEdep *lut_filler_ptr = new LUTFillerEdep(grid_num, grid_num);
-    lut_filler_ptr->Init(
-        sparams_.k_spring * .5 * (1. - sparams_.energy_dep_factor),
-        sparams_.rest_length, 1);
+    lut_filler_ptr->Init(sparams_.k_spring * .5 *
+                             (1. - sparams_.energy_dep_factor),
+                         sparams_.rest_length, 1);
     return lut_filler_ptr;
   } else {
     LUTFillerFdep *lut_filler_ptr = new LUTFillerFdep(grid_num, grid_num);
@@ -109,9 +118,8 @@ void CrosslinkSpecies::InsertCrosslinks() {
   } else if (sparams_.insertion_type.compare("random_boundary") == 0) {
     sparams_.infinite_reservoir_flag = false;
     if (space_->type == +boundary_type::none) {
-      Logger::Error(
-          "Crosslinker insertion type \"random boundary\" requires a"
-          " boundary for species insertion.");
+      Logger::Error("Crosslinker insertion type \"random boundary\" requires a"
+                    " boundary for species insertion.");
     } else if (space_->type == +boundary_type::sphere) {
       if (params_->n_dim == 2) {
         sparams_.num =
@@ -149,10 +157,10 @@ void CrosslinkSpecies::CalculateBindingFree() {
   }
   /* Check crosslink binding */
   double free_concentration;
-  if (infinite_reservoir_flag_) {  // Have a constant concentration of
-                                   // crosslinkers binding from solution
+  if (infinite_reservoir_flag_) { // Have a constant concentration of
+                                  // crosslinkers binding from solution
     free_concentration = xlink_concentration_;
-  } else {  // Have a constant number of crosslinkers in a space
+  } else { // Have a constant number of crosslinkers in a space
     free_concentration = (sparams_.num - n_members_) / space_->volume;
   }
   int bind_num = rng_.RandomPoisson(bind_site_density_ * free_concentration *
@@ -419,7 +427,8 @@ void CrosslinkSpecies::ReadSpecs() {
 const int CrosslinkSpecies::GetDoublyBoundCrosslinkNumber() const {
   int num = 0;
   for (const auto &xl : members_) {
-    if (xl.IsDoubly()) ++num;
+    if (xl.IsDoubly())
+      ++num;
   }
   return num;
 }

@@ -94,8 +94,7 @@
   default_config["crosslink"]["force_dep_length"] = "0";
   default_config["crosslink"]["polar_affinity"] = "1";
   default_config["crosslink"]["k_spring"] = "10";
-  default_config["crosslink"]["k2_spring"] = "0";
-  default_config["crosslink"]["asymmetric_spring_flag"] = "false";
+  default_config["crosslink"]["k_spring_compress"] = "-1.";
   default_config["crosslink"]["f_stall"] = "100";
   default_config["crosslink"]["force_dep_vel_flag"] = "true";
   default_config["crosslink"]["k_align"] = "0";
