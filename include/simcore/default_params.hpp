@@ -148,7 +148,7 @@
   default_config["n_thermo"] = "1000";
   default_config["insert_radius"] = "-1";
   default_config["interaction_flag"] = "true";
-  default_config["remove_duplicate_interactions"] = "true";
+  default_config["remove_duplicate_interactions"] = "false";
   default_config["coarse_grained_mesh_interactions"] = "false";
   default_config["mesh_coarsening"] = "2";
   default_config["species_insertion_failure_threshold"] = "10000";
