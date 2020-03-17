@@ -207,40 +207,33 @@ void StructAnalysis::WriteDensityData() {
 }
 
 void StructAnalysis::CalculateStructurePair(
-    std::vector<Interaction>::iterator pix) {
+    Interaction &ix) {
   if (local_order_analysis_) {
-    CalculateLocalOrderPair(pix);
+    CalculateLocalOrderPair(ix);
   }
   if (polar_order_analysis_) {
-    CalculatePolarOrderPair(pix);
+    CalculatePolarOrderPair(ix);
   }
   if (overlap_analysis_) {
-    CountOverlap(pix);
+    CountOverlap(ix);
   }
 }
 
 void StructAnalysis::CalculatePolarOrderPair(
-    std::vector<Interaction>::iterator pix) {
-  Object *obj1 = pix->obj1;
-  Object *obj2 = pix->obj2;
+    Interaction &ix) {
+  Object *obj1 = ix.obj1;
+  Object *obj2 = ix.obj2;
   /* For now, ignore intra-filament correlations */
   if (obj1->GetMeshID() == obj2->GetMeshID()) {
     return;
   }
-  double dr2 = pix->dr_mag2;
+  double dr2 = ix.dr_mag2;
   double expdr2 = exp(-dr2);
   double const *const u1 = obj1->GetInteractorOrientation();
   double const *const u2 = obj2->GetInteractorOrientation();
   double u1_dot_u2 = dot_product(n_dim_, u1, u2);
-  // if (u1_dot_u2 > 1 || u1_dot_u2 < -1) {
-  // std::cout << "error 1: " << u1_dot_u2 << "\n";
-  //}
-  pix->polar_order = u1_dot_u2 * expdr2;
-  pix->contact_number = expdr2;
-  // obj1->AddPolarOrder(u1_dot_u2*expdr2);
-  // obj2->AddPolarOrder(u1_dot_u2*expdr2);
-  // obj1->AddContactNumber(expdr2);
-  // obj2->AddContactNumber(expdr2);
+  ix.polar_order = u1_dot_u2 * expdr2;
+  ix.contact_number = expdr2;
 }
 
 void StructAnalysis::BinDensity(Object *obj) {
@@ -273,9 +266,9 @@ void StructAnalysis::BinDensity(Object *obj) {
 }
 
 void StructAnalysis::CalculateLocalOrderPair(
-    std::vector<Interaction>::iterator pix) {
-  Object *obj1 = pix->obj1;
-  Object *obj2 = pix->obj2;
+    Interaction &ix) {
+  Object *obj1 = ix.obj1;
+  Object *obj2 = ix.obj2;
 
   /* For now, ignore intra-filament correlations */
   if (obj1->GetMeshID() == obj2->GetMeshID()) {
@@ -541,13 +534,13 @@ void StructAnalysis::AverageStructure() {
  * the tails of the two objects. If these objects point in opposite (relative)
  * directions (e.g. if their dot product is negative) then the filaments must
  * be crossing each other */
-void StructAnalysis::CountOverlap(std::vector<Interaction>::iterator pix) {
-  Object *obj1 = pix->obj1;
-  Object *obj2 = pix->obj2;
+void StructAnalysis::CountOverlap(Interaction &ix) {
+  Object *obj1 = ix.obj1;
+  Object *obj2 = ix.obj2;
   if (obj1->GetMeshID() == obj2->GetMeshID()) {
     return;
   }
-  if (ABS(pix->dr_mag2) < 1e-8) {
+  if (ABS(ix.dr_mag2) < 1e-8) {
     obj1->HasOverlap(true);
     obj2->HasOverlap(true);
     AddOverlap();

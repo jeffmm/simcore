@@ -16,7 +16,6 @@ class Filament : public Mesh {
   bool flagella_flag_;
   bool optical_trap_flag_;
   bool cilia_trap_flag_;
-  bool polydispersity_flag_;
   bool normalize_switch_ = true;
   int n_normalize_ = 0;
   int optical_trap_fixed_;
