@@ -206,8 +206,7 @@ void StructAnalysis::WriteDensityData() {
   structure_file_.close();
 }
 
-void StructAnalysis::CalculateStructurePair(
-    Interaction &ix) {
+void StructAnalysis::CalculateStructurePair(Interaction &ix) {
   if (local_order_analysis_) {
     CalculateLocalOrderPair(ix);
   }
@@ -219,8 +218,7 @@ void StructAnalysis::CalculateStructurePair(
   }
 }
 
-void StructAnalysis::CalculatePolarOrderPair(
-    Interaction &ix) {
+void StructAnalysis::CalculatePolarOrderPair(Interaction &ix) {
   Object *obj1 = ix.obj1;
   Object *obj2 = ix.obj2;
   /* For now, ignore intra-filament correlations */
@@ -265,8 +263,7 @@ void StructAnalysis::BinDensity(Object *obj) {
   }
 }
 
-void StructAnalysis::CalculateLocalOrderPair(
-    Interaction &ix) {
+void StructAnalysis::CalculateLocalOrderPair(Interaction &ix) {
   Object *obj1 = ix.obj1;
   Object *obj2 = ix.obj2;
 
