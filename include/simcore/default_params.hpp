@@ -24,6 +24,8 @@
   default_config["filament"]["spiral_flag"] = "false";
   default_config["filament"]["spiral_number_fail_condition"] = "0";
   default_config["filament"]["driving_factor"] = "0";
+  default_config["filament"]["nematic_driving"] = "false";
+  default_config["filament"]["nematic_driving_freq"] = "0";
   default_config["filament"]["peclet_number"] = "-1";
   default_config["filament"]["flexure_number"] = "-1";
   default_config["filament"]["friction_ratio"] = "2";
@@ -54,6 +56,7 @@
   default_config["filament"]["orientation_corr_n_steps"] = "1000";
   default_config["filament"]["crossing_analysis"] = "false";
   default_config["filament"]["intrinsic_curvature"] = "0";
+  default_config["filament"]["intrinsic_curvature_sig"] = "0";
   default_config["filament"]["flagella_flag"] = "false";
   default_config["filament"]["flagella_freq"] = "1";
   default_config["filament"]["flagella_period"] = "2";

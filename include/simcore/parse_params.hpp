@@ -321,6 +321,10 @@ species_base_parameters *parse_species_params(std::string sid,
       params.spiral_number_fail_condition = jt->second.as<double>();
       } else if (param_name.compare("driving_factor")==0) {
       params.driving_factor = jt->second.as<double>();
+      } else if (param_name.compare("nematic_driving")==0) {
+      params.nematic_driving = jt->second.as<bool>();
+      } else if (param_name.compare("nematic_driving_freq")==0) {
+      params.nematic_driving_freq = jt->second.as<double>();
       } else if (param_name.compare("peclet_number")==0) {
       params.peclet_number = jt->second.as<double>();
       } else if (param_name.compare("flexure_number")==0) {
@@ -381,6 +385,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.crossing_analysis = jt->second.as<bool>();
       } else if (param_name.compare("intrinsic_curvature")==0) {
       params.intrinsic_curvature = jt->second.as<double>();
+      } else if (param_name.compare("intrinsic_curvature_sig")==0) {
+      params.intrinsic_curvature_sig = jt->second.as<double>();
       } else if (param_name.compare("flagella_flag")==0) {
       params.flagella_flag = jt->second.as<bool>();
       } else if (param_name.compare("flagella_freq")==0) {

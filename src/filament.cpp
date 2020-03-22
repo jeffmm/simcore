@@ -30,6 +30,8 @@ void Filament::SetParameters() {
   v_depoly_ = sparams_->v_depoly;
   v_poly_ = sparams_->v_poly;
   driving_factor_ = sparams_->driving_factor;
+  nematic_driving_ = sparams_->nematic_driving;
+  p_driving_switch_ = sparams_->nematic_driving_freq * delta_;
   peclet_number_ = sparams_->peclet_number;
   flexure_number_ = sparams_->flexure_number;
   if (dynamic_instability_flag_ &&
@@ -55,7 +57,11 @@ void Filament::SetParameters() {
      bond_length_. The additional factor of 1/2 is due to the fact that
      curvature is the adjusted angle for each bond when calculating the bending
      forces */
-  curvature_ = 0.5 * sparams_->intrinsic_curvature;
+  curvature_ = 0.5 * (sparams_->intrinsic_curvature +
+                      rng_.RandomNormal(sparams_->intrinsic_curvature_sig));
+  if (curvature_ < 0.5 * 1e-3 * sparams_->intrinsic_curvature) {
+    curvature_ = 0.5 * 1e-3 * sparams_->intrinsic_curvature;
+  }
   flagella_flag_ = sparams_->flagella_flag;
   flagella_freq_ = sparams_->flagella_freq;
   flagella_period_ = sparams_->flagella_period;
@@ -65,7 +71,8 @@ void Filament::SetParameters() {
   custom_set_tail_ = sparams_->custom_set_tail;
   error_analysis_ = sparams_->error_analysis;
   if (error_analysis_ && sparams_->reference_frame_flag) {
-    Logger::Warning("Filament errors will be inflated due to rotation of site "
+    Logger::Warning(
+        "Filament errors will be inflated due to rotation of site "
         "positions into filament reference frame. Errors should be viewed only"
         " in this context.");
   }
@@ -393,9 +400,9 @@ double const Filament::GetVolume() {
 
 void Filament::UpdatePosition(bool midstep) {
   midstep_ = midstep;
-  if (eq_steps_count_++ < eq_steps_) {
-    return;
-  }
+  //if (eq_steps_count_++ < eq_steps_) {
+    //return;
+  //}
   ApplyForcesTorques();
   Integrate();
   UpdateAvgPosition();
@@ -997,6 +1004,9 @@ void Filament::ApplyInteractionForces() {
     // Driving originating from the site tangents
     CalculateTangents();
   }
+  if (nematic_driving_ && rng_.RandomUniform() < p_driving_switch_) {
+    driving_factor_ = -driving_factor_;
+  }
   for (int i = 0; i < n_bonds_; ++i) {
     double const *const f = bonds_[i].GetForce();
     double const *const t = bonds_[i].GetTorque();
@@ -1033,7 +1043,7 @@ void Filament::ApplyInteractionForces() {
       } else {
         // Driving from sites
         double const *const u_tan1 = sites_[i].GetTangent();
-        double const *const u_tan2 = sites_[i+1].GetTangent();
+        double const *const u_tan2 = sites_[i + 1].GetTangent();
         for (int j = 0; j < n_dim_; ++j) {
           f_dr[j] = mag * u_tan1[j];
         }
@@ -1041,10 +1051,11 @@ void Filament::ApplyInteractionForces() {
         for (int j = 0; j < n_dim_; ++j) {
           f_dr[j] = mag * u_tan2[j];
         }
-        sites_[i+1].AddForce(f_dr);
+        sites_[i + 1].AddForce(f_dr);
       }
     }
   }
+  eq_steps_count_++;
 }
 
 void Filament::DynamicInstability() {
@@ -1315,6 +1326,7 @@ void Filament::WriteSpec(std::fstream &ospec) {
   Logger::Trace("Writing filament specs, object id: %d", GetOID());
   Mesh::WriteSpec(ospec);
   ospec.write(reinterpret_cast<char *>(&bending_stiffness_), sizeof(double));
+  ospec.write(reinterpret_cast<char *>(&curvature_), sizeof(double));
   ospec.write(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
 }
 
@@ -1334,6 +1346,7 @@ void Filament::ReadSpec(std::fstream &ispec) {
     return;
   Mesh::ReadSpec(ispec);
   ispec.read(reinterpret_cast<char *>(&bending_stiffness_), sizeof(double));
+  ispec.read(reinterpret_cast<char *>(&curvature_), sizeof(double));
   ispec.read(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
   CalculateAngles();
 }
@@ -1414,10 +1427,10 @@ void Filament::ReadCheckpoint(std::fstream &icheck) {
 }
 
 void Filament::RotateToReferenceFrame() {
-  /* Rotates filament site positions relative filament COM and translates filament
-     to COM coordinates*/
+  /* Rotates filament site positions relative filament COM and translates
+     filament to COM coordinates*/
   if (n_dim_ != 2)
-    // TODO: Add 3D reference frame 
+    // TODO: Add 3D reference frame
     Logger::Error("Reference frame does not work for 3D"
                   " filaments yet!");
   /* If we have an even number of sites, then find the center bond and rotate

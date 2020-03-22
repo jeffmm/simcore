@@ -8,22 +8,23 @@
 class Filament : public Mesh {
  private:
   filament_parameters *sparams_;
-  bool force_induced_catastrophe_flag_;
-  bool theta_validation_run_flag_;
-  bool diffusion_validation_run_flag_;
-  bool spiral_flag_;
-  bool stoch_flag_;
-  bool flagella_flag_;
-  bool optical_trap_flag_;
-  bool cilia_trap_flag_;
+  bool force_induced_catastrophe_flag_ = false;
+  bool theta_validation_run_flag_ = false;
+  bool diffusion_validation_run_flag_ = false;
+  bool spiral_flag_ = false;
+  bool stoch_flag_ = true;
+  bool flagella_flag_ = false;
+  bool optical_trap_flag_ = false;
+  bool cilia_trap_flag_ = false;
   bool normalize_switch_ = true;
+  bool nematic_driving_ = false;
+  bool custom_set_tail_ = false;
   int n_normalize_ = 0;
-  int optical_trap_fixed_;
-  int trapped_site_;
+  int optical_trap_fixed_ = 0;
+  int trapped_site_ = 0;
   int n_step_ = 0;
-  int eq_steps_;
+  int eq_steps_ = 0;
   int eq_steps_count_ = 0;
-  bool custom_set_tail_;
   double min_length_;
   double max_length_;
   double max_bond_length_;
@@ -37,6 +38,7 @@ class Filament : public Mesh {
   double flagella_freq_;
   double flagella_period_;
   double flagella_amplitude_;
+  double p_driving_switch_ = 0;
   double v_poly_;
   double v_depoly_;
   double p_s2g_;
@@ -45,7 +47,7 @@ class Filament : public Mesh {
   double p_p2g_;
   double p_g2s_;
   double p_g2p_;
-  double driving_factor_;
+  double driving_factor_ = 0;
   double peclet_number_;
   double flexure_number_;
   double fic_factor_;

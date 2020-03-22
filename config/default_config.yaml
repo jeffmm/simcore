@@ -219,6 +219,8 @@ filament:                            # Parameters unique to filament class of ob
   spiral_number_fail_condition: [0, double] # when spiral flag is on, terminates simulation when the
                                             # spiral number of a filament is less than this value.
   driving_factor: [0, double]        # force density used to propel active filaments.
+  nematic_driving: [false, bool]     # oscillate driving in a nematic fashion
+  nematic_driving_freq: [0, double]  # Frequency to use for driving oscillations
   peclet_number: [-1, double]        # ratio of active transport to diffusive transport. changes
                                      # driving factor if positive.
   flexure_number: [-1, double]       # considers perlen ratio and length to determine activity
@@ -274,6 +276,7 @@ filament:                            # Parameters unique to filament class of ob
   crossing_analysis: [false, bool]  # apply post-process analysis of filament crossing events.
   intrinsic_curvature: [0, double]  # curvature per unit length to apply on filament. defines the
                                     # curvature of zero bending energy. positive is right-handed.
+  intrinsic_curvature_sig: [0, double] # std_dev of intrinsic curvature from normal dist
   flagella_flag: [false, bool]      # applies a sinusoidal, time-varying intrinsic curvature along 
                                     # filament.
   flagella_freq: [1, double]        # frequency at which to oscillate intrinsic curvature of flagella.

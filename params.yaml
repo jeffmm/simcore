@@ -1,24 +1,26 @@
-seed: 88391573913763
+seed: 87611597911552
 
-run_name: feature_test4
+run_name: activeic
 n_dim: 2
 n_periodic: 2
-delta: 0.0001
+delta: 0.00005
 n_steps: 10000000
+n_steps_equil: 10000
 boundary: 0
 
-graph_flag: false
+graph_flag: true
 auto_graph: true
 n_graph: 1000
 movie_flag: false
 insert_radius: -1
 stoch_flag: true
 
-system_radius: 600
+system_radius: 20
 potential: soft
-soft_potential_mag: 200
+soft_potential_mag: 1000
 f_cutoff: 1000000
-coarse_grained_mesh_interactions: true
+remove_duplicate_interactions: true
+coarse_grained_mesh_interactions: false
 mesh_coarsening: 2
 thermo_flag: false
 n_thermo: 1000
@@ -26,26 +28,32 @@ checkpoint_flag: true
 n_checkpoint: 10000
 species:
   spec_flag: true
-  n_spec: 10000
+  n_spec: 1000
 
 
 filament:
   - name: mt
     num: 1
-    packing_fraction: 0.1
+    packing_fraction: 0.5
     insertion_type: random_nematic
     draw_type: orientation
     color: 2
     diameter: 1
     overlap: false
-    length: 60
-    min_bond_length: 2.5
+    length: 10
+    min_length: 5
+    max_length: 20
+    min_bond_length: 1.2
     polydispersity_flag: false
-    persistence_length: 10
-    perlen_ratio: 200
-    driving_factor: 30
+    persistence_length: [V, 1000, 2000, 5000]
+    #perlen_ratio: 500
+    driving_factor: 10
+    n_equil: 20000
+    nematic_driving: false
+    nematic_driving_freq: 50
     error_analysis: false
     spiral_flag: false
     spiral_number_fail_condition: -1
-    intrinsic_curvature: 0
+    intrinsic_curvature: 0.2
+    intrinsic_curvature_sig: 0.1
     drive_from_bond_center: true

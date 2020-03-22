@@ -45,6 +45,8 @@ struct species_parameters<species_id::filament>
   bool spiral_flag = false;
   double spiral_number_fail_condition = 0;
   double driving_factor = 0;
+  bool nematic_driving = false;
+  double nematic_driving_freq = 0;
   double peclet_number = -1;
   double flexure_number = -1;
   double friction_ratio = 2;
@@ -75,6 +77,7 @@ struct species_parameters<species_id::filament>
   int orientation_corr_n_steps = 1000;
   bool crossing_analysis = false;
   double intrinsic_curvature = 0;
+  double intrinsic_curvature_sig = 0;
   bool flagella_flag = false;
   double flagella_freq = 1;
   double flagella_period = 2;
