@@ -59,8 +59,12 @@ void Filament::SetParameters() {
      forces */
   curvature_ = 0.5 * (sparams_->intrinsic_curvature +
                       rng_.RandomNormal(sparams_->intrinsic_curvature_sig));
-  if (curvature_ < 0.5 * 1e-3 * sparams_->intrinsic_curvature) {
-    curvature_ = 0.5 * 1e-3 * sparams_->intrinsic_curvature;
+  if (sparams_->randomize_intrinsic_curvature_handedness) {
+    int sign = (rng_.RandomUniform() < 0.5 ? -1 : 1);
+    curvature_ = sign * curvature_;
+  }
+  if (ABS(curvature_) < 0.5 * sparams_->intrinsic_curvature_min) {
+    curvature_ = SIGNOF(curvature_) * 0.5 * sparams_->intrinsic_curvature_min;
   }
   flagella_flag_ = sparams_->flagella_flag;
   flagella_freq_ = sparams_->flagella_freq;
