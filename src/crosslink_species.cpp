@@ -221,7 +221,6 @@ void CrosslinkSpecies::UpdatePositions() {
   if (params_->no_midstep) {
     UpdateBoundCrosslinks();
     CalculateBindingFree();
-    ApplyCrosslinkTetherForces();
   } else if (params_->i_step % 2 == 0) {
     /* First update bound crosslinks state and positions */
     UpdateBoundCrosslinks();

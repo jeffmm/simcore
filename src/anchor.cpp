@@ -9,7 +9,7 @@ void Anchor::Init(crosslink_parameters *sparams) {
   diameter_ = sparams_->diameter;
   color_ = sparams_->color;
   draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
-  static_flag_ = false;  // Must be explicitly set to true by Crosslink
+  static_flag_ = false; // Must be explicitly set to true by Crosslink
   Unbind();
   step_direction_ =
       (sparams_->step_direction == 0 ? 0 : SIGNOF(sparams_->step_direction));
@@ -43,7 +43,8 @@ void Anchor::SetDiffusion() {
 }
 
 void Anchor::UpdateAnchorPositionToMesh() {
-  if (!bound_ || static_flag_) return;
+  if (!bound_ || static_flag_)
+    return;
   if (!bond_ || !mesh_) {
     Logger::Error("Anchor tried to update position to nullptr bond or mesh");
   }
@@ -53,7 +54,8 @@ void Anchor::UpdateAnchorPositionToMesh() {
   mesh_length_ = mesh_->GetTrueLength();
   /* Use current position along mesh (mesh_lambda) to determine whether the
      anchor fell off the mesh due to dynamic instability */
-  if (!CheckMesh()) return;
+  if (!CheckMesh())
+    return;
   // Now figure out which bond we are on in the mesh according to mesh_lambda
   bond_ = mesh_->GetBondAtLambda(mesh_lambda_);
 
@@ -67,9 +69,8 @@ void Anchor::UpdateAnchorPositionToMesh() {
 
 bool Anchor::CalcBondLambda() {
   if (!bond_) {
-    Logger::Error(
-        "Attempted to calculate bond lambda when not attached to"
-        " bond!");
+    Logger::Error("Attempted to calculate bond lambda when not attached to"
+                  " bond!");
   }
   bond_lambda_ = mesh_lambda_ - bond_->GetMeshLambda();
   bond_length_ = bond_->GetLength();
@@ -119,7 +120,8 @@ void Anchor::UpdatePosition() {
   // Diffuse or walk along the mesh, updating mesh_lambda
   if (diffuse) {
     Diffuse();
-    if (!CheckMesh()) return;
+    if (!CheckMesh())
+      return;
   }
   if (walker) {
     Walk();
@@ -170,6 +172,7 @@ void Anchor::Walk() {
   }
   double dr = step_direction_ * vel * delta_;
   mesh_lambda_ += dr;
+  // Should this also add to bond lambda?
 }
 
 // Check that the anchor is still located on the filament mesh
@@ -227,6 +230,7 @@ void Anchor::Diffuse() {
     dr += GetDiffusionConst() * force_proj * delta_;
   }
   mesh_lambda_ += dr;
+  // Should this also add to bond lambda?
 }
 
 void Anchor::UpdateAnchorPositionToBond() {
@@ -257,7 +261,8 @@ void Anchor::CalculatePolarAffinity(std::vector<double> &doubly_binding_rates) {
 }
 
 void Anchor::Draw(std::vector<graph_struct *> &graph_array) {
-  if (!bound_) return;
+  if (!bound_)
+    return;
   std::copy(scaled_position_, scaled_position_ + 3, g_.r);
   for (int i = space_->n_periodic; i < n_dim_; ++i) {
     g_.r[i] = position_[i];
@@ -297,10 +302,9 @@ void Anchor::AttachObjLambda(Object *o, double lambda) {
 
   if (bond_lambda_ < 0 || bond_lambda_ > bond_length_) {
     printf("bond_lambda: %2.2f\n", bond_lambda_);
-    Logger::Error(
-        "Lambda passed to anchor does not match length of "
-        "corresponding bond! lambda: %2.2f, bond_length: %2.2f ",
-        bond_lambda_, bond_length_);
+    Logger::Error("Lambda passed to anchor does not match length of "
+                  "corresponding bond! lambda: %2.2f, bond_length: %2.2f ",
+                  bond_lambda_, bond_length_);
   }
 
   /* Distance anchor is relative to entire mesh length */
@@ -401,10 +405,11 @@ void Anchor::ReadSpec(std::fstream &ispec) {
     ispec.read(reinterpret_cast<char *>(&orientation_[i]), sizeof(double));
   }
   ispec.read(reinterpret_cast<char *>(&mesh_lambda_), sizeof(double));
-  int attached_mesh_id = -1;  // Just a place holder at the moment
+  int attached_mesh_id = -1; // Just a place holder at the moment
   ispec.read(reinterpret_cast<char *>(&attached_mesh_id), sizeof(int));
   UpdatePeriodic();
-  if (active_) step_direction_ = -sparams_->step_direction;
+  if (active_)
+    step_direction_ = -sparams_->step_direction;
 }
 
 void Anchor::SetStatic(bool static_flag) { static_flag_ = static_flag; }
@@ -412,99 +417,98 @@ void Anchor::SetState(bind_state state) { state_ = state; }
 
 const double Anchor::GetOnRate() const {
   switch (state_) {
-    case +bind_state::unbound:
-      return k_on_s_;
-      break;
-    case +bind_state::singly:
-      return k_on_d_;
-      break;
-    case +bind_state::doubly:
-      Logger::Error(
-          "Crosslinker is already doubly bound. No on rate exists because both "
-          "anchors are bound");
-      return 0;
-      break;
-    default:
-      Logger::Error("State of anchor is not a bind_state enum.");
-      return 0;
+  case +bind_state::unbound:
+    return k_on_s_;
+    break;
+  case +bind_state::singly:
+    return k_on_d_;
+    break;
+  case +bind_state::doubly:
+    Logger::Error(
+        "Crosslinker is already doubly bound. No on rate exists because both "
+        "anchors are bound");
+    return 0;
+    break;
+  default:
+    Logger::Error("State of anchor is not a bind_state enum.");
+    return 0;
   }
 }
 
 const double Anchor::GetOffRate() const {
   switch (state_) {
-    case +bind_state::singly:
-      return k_off_s_;
-      break;
-    case +bind_state::doubly:
-      return k_off_d_;
-      break;
-    case +bind_state::unbound:
-      Logger::Error(
-          "Crosslinker is already unbound. No off rate exists because "
-          "both anchors are off filament");
-      return 0;
-      break;
-    default:
-      Logger::Error("State of anchor is not a bind_state enum.");
-      return 0;
+  case +bind_state::singly:
+    return k_off_s_;
+    break;
+  case +bind_state::doubly:
+    return k_off_d_;
+    break;
+  case +bind_state::unbound:
+    Logger::Error("Crosslinker is already unbound. No off rate exists because "
+                  "both anchors are off filament");
+    return 0;
+    break;
+  default:
+    Logger::Error("State of anchor is not a bind_state enum.");
+    return 0;
   }
 }
 
 const double Anchor::GetMaxVelocity() const {
   switch (state_) {
-    case +bind_state::singly:
-      return max_velocity_s_;
-      break;
-    case +bind_state::doubly:
-      return max_velocity_d_;
-      break;
-    case +bind_state::unbound:
-      // Logger::Error(
-      //    "Crosslinker is unbound. Anchors cannot walk if not attached.");
-      return 0;
-      break;
-    default:
-      Logger::Error("State of anchor is not a bind_state enum.");
-      return 0;
+  case +bind_state::singly:
+    return max_velocity_s_;
+    break;
+  case +bind_state::doubly:
+    return max_velocity_d_;
+    break;
+  case +bind_state::unbound:
+    // Logger::Error(
+    //    "Crosslinker is unbound. Anchors cannot walk if not attached.");
+    return 0;
+    break;
+  default:
+    Logger::Error("State of anchor is not a bind_state enum.");
+    return 0;
   }
 }
 
 const double Anchor::GetDiffusionConst() const {
   switch (state_) {
-    case +bind_state::singly:
-      return diffusion_s_;
-      break;
-    case +bind_state::doubly:
-      return diffusion_d_;
-      break;
-    case +bind_state::unbound:
-      // Logger::Error(
-      //    "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
-      //    "attached.");
-      return 0;
-      break;
-    default:
-      Logger::Error("State of anchor is not a bind_state enum.");
-      return 0;
+  case +bind_state::singly:
+    return diffusion_s_;
+    break;
+  case +bind_state::doubly:
+    return diffusion_d_;
+    break;
+  case +bind_state::unbound:
+    // Logger::Error(
+    //    "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
+    //    "attached.");
+    return 0;
+    break;
+  default:
+    Logger::Error("State of anchor is not a bind_state enum.");
+    return 0;
   }
 }
 
 const double Anchor::GetKickAmplitude() const {
   switch (state_) {
-    case +bind_state::singly:
-      return kick_amp_s_;
-      break;
-    case +bind_state::doubly:
-      return kick_amp_d_;
-      break;
-    case +bind_state::unbound:
-      // Logger::Error(
-      //    "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
-      //    "attached.");
-      return 0;
-      break;
-    default:
-      Logger::Error("State of anchor is not a bind_state enum.");
-      return 0;
+  case +bind_state::singly:
+    return kick_amp_s_;
+    break;
+  case +bind_state::doubly:
+    return kick_amp_d_;
+    break;
+  case +bind_state::unbound:
+    // Logger::Error(
+    //    "Crosslinker is unbound. Anchors cannot diffuse on objects if not "
+    //    "attached.");
+    return 0;
+    break;
+  default:
+    Logger::Error("State of anchor is not a bind_state enum.");
+    return 0;
   }
 }
