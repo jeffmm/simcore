@@ -139,6 +139,9 @@ rigid_filament:
   stationary_flag: [false, bool]     # If true, rigid_filaments will not move regardless of forces on them.
                                      # number of bonds used to discretize filament may change while
                                      # filament is growing or shrinking to stay in range.
+  constrain_motion_flag: [false, bool] # If true, rigid filaments will move in planes such that two filaments
+                                       # will never physically overlap if they do not begin overlapping.
+                                       # This only works for two filaments. Warning will be thrown otherwise.
   #driving_factor: [0, double]        # force density used to propel active filaments.
   #friction_ratio: [2, double]        # ratio of filament friction, perpendicular / parallel.
   #dynamic_instability_flag : [false, bool] # flag for modeling dynamic instability of filaments. filaments

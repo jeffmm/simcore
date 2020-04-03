@@ -13,7 +13,7 @@ void RigidFilament::SetParameters() {
   diameter_ = sparams_->diameter;
   max_length_ = sparams_->max_length;
   min_length_ = sparams_->min_length;
-  stoch_flag_ = params_->stoch_flag;  // include thermal forces
+  stoch_flag_ = params_->stoch_flag; // include thermal forces
   // driving_factor_ = sparams_->driving_factor;
   // eq_steps_ = sparams_->n_equil;
   eq_steps_count_ = 0;
@@ -174,8 +174,24 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
    relative to rod. */
 void RigidFilament::Integrate() {
   // Explicit calculation of Xi.F_s
-  double fric_mat[9] = {};  // Friction matrix for filament
-  double mob_mat[9] = {};   // Mobility matrix for filament
+  double fric_mat[9] = {}; // Friction matrix for filament
+  double mob_mat[9] = {};  // Mobility matrix for filament
+  double force_eff[3];
+  double torque_eff[3];
+  std::copy(force_eff, force_eff + 3, force_);
+  std::copy(torque_eff, torque_eff + 3, torque_);
+
+  // Constrain the motion of filaments to a plane defined by constrain_vec_
+  // by subtracting force components out of the plane and keeping torque
+  // components only along constrain_vec_ direction.
+  if (sparams_->constrain_motion_flag) {
+    double f_dot_u = dot_product(3, force_, constrain_vec_);
+    double t_dot_u = dot_product(3, torque_, constrain_vec_);
+    for (int i = 0; i < 3; ++i) {
+      force_eff[i] -= f_dot_u * constrain_vec_[i];
+      torque_eff[i] = t_dot_u * constrain_vec_[i];
+    }
+  }
   // Construct mobility matrix
   for (int i = 0; i < n_dim_; ++i) {
     for (int j = i + 1; j < n_dim_; ++j) {
@@ -191,12 +207,12 @@ void RigidFilament::Integrate() {
 
   for (int i = 0; i < n_dim_; ++i) {
     for (int j = 0; j < n_dim_; ++j) {
-      position_[i] += mob_mat[i * n_dim_ + j] * force_[j] * delta_;
+      position_[i] += mob_mat[i * n_dim_ + j] * force_eff[j] * delta_;
     }
   }
   // Reorientation due to external torques
   double du[3];
-  cross_product(torque_, orientation_, du, 3);  // ndim=3 since torques
+  cross_product(torque_eff, orientation_, du, 3); // ndim=3 since torques
   for (int i = 0; i < n_dim_; ++i) {
     orientation_[i] += du[i] * delta_ / gamma_rot_;
   }
@@ -224,7 +240,8 @@ void RigidFilament::AddRandomDisplacement() {
   GetBodyFrame();
   // First handle the parallel component
   double mag = rng_.RandomNormal(diffusion_par_);
-  for (int i = 0; i < n_dim_; ++i) position_[i] += mag * orientation_[i];
+  for (int i = 0; i < n_dim_; ++i)
+    position_[i] += mag * orientation_[i];
   // Then the perpendicular component(s)
   for (int j = 0; j < n_dim_ - 1; ++j) {
     mag = rng_.RandomNormal(diffusion_perp_);
@@ -329,7 +346,8 @@ double const RigidFilament::GetVolume() {
 
 void RigidFilament::UpdatePosition() {
   ApplyForcesTorques();
-  if (!sparams_->stationary_flag) Integrate();
+  if (!sparams_->stationary_flag)
+    Integrate();
   // UpdateAvgPosition();
   // DynamicInstability();
   eq_steps_count_++;
@@ -478,7 +496,8 @@ void RigidFilament::ApplyInteractionForces() {
     // Add translational forces and pure torque forces at bond ends
     sites_[i].AddForce(site_force);
     sites_[i].AddForce(pure_torque);
-    for (int j = 0; j < n_dim_; ++j) pure_torque[j] *= -1;
+    for (int j = 0; j < n_dim_; ++j)
+      pure_torque[j] *= -1;
     sites_[i + 1].AddForce(site_force);
     sites_[i + 1].AddForce(pure_torque);
     // The driving factor is a force per unit length,
@@ -728,7 +747,8 @@ void RigidFilament::WriteSpec(std::fstream &ospec) {
    double[n_bonds*3] bond_orientations
 */
 void RigidFilament::ReadSpec(std::fstream &ispec) {
-  if (ispec.eof()) return;
+  if (ispec.eof())
+    return;
   Mesh::ReadSpec(ispec);
   // ispec.read(reinterpret_cast<char *>(&persistence_length_),
   // sizeof(double)); ispec.read(reinterpret_cast<char *>(&poly_),
@@ -762,7 +782,8 @@ void RigidFilament::WritePosit(std::fstream &oposit) {
    double length
 */
 void RigidFilament::ReadPosit(std::fstream &iposit) {
-  if (iposit.eof()) return;
+  if (iposit.eof())
+    return;
   posits_only_ = true;
   // double avg_pos[3], avg_u[3], s_pos[3];
   for (int i = 0; i < 3; ++i)

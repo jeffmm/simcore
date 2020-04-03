@@ -6,7 +6,7 @@
 #include "mesh.hpp"
 
 class RigidFilament : public Mesh {
- private:
+private:
   rigid_filament_parameters *sparams_;
   double gamma_par_ = 0;
   double gamma_perp_ = 0;
@@ -17,6 +17,9 @@ class RigidFilament : public Mesh {
   double body_frame_[6];
   double min_length_;
   double max_length_;
+
+  double constrain_vec_[3] = {}; // Rigid filaments move only in plane defined
+                                 // by this unit vector.
 
   // bool force_induced_catastrophe_flag_;
   // bool diffusion_validation_run_flag_;
@@ -76,13 +79,13 @@ class RigidFilament : public Mesh {
   void CalculateBinding();
   // bool CheckBondLengths();
 
- protected:
+protected:
   void InsertRigidFilament(std::string insertion_type, double buffer = -1);
   void GetBodyFrame();
   void AddRandomDisplacement();
   void AddRandomReorientation();
 
- public:
+public:
   RigidFilament(unsigned long seed);
   virtual void Init(rigid_filament_parameters *sparams);
   virtual void InsertAt(const double *const new_pos, const double *const u);
@@ -120,4 +123,4 @@ typedef std::vector<std::pair<std::vector<RigidFilament>::iterator,
                               std::vector<RigidFilament>::iterator>>
     rigid_filament_chunk_vector;
 
-#endif  // _SIMCORE_RIGID_FILAMENT_H_
+#endif // _SIMCORE_RIGID_FILAMENT_H_
