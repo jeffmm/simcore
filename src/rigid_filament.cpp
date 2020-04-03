@@ -178,8 +178,8 @@ void RigidFilament::Integrate() {
   double mob_mat[9] = {};  // Mobility matrix for filament
   double force_eff[3];
   double torque_eff[3];
-  std::copy(force_eff, force_eff + 3, force_);
-  std::copy(torque_eff, torque_eff + 3, torque_);
+  std::copy(force_, force_ + 3, force_eff);
+  std::copy(torque_, torque_ + 3, torque_eff);
 
   // Constrain the motion of filaments to a plane defined by constrain_vec_
   // by subtracting force components out of the plane and keeping torque

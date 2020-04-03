@@ -40,17 +40,46 @@ void RigidFilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
 void RigidFilamentSpecies::CustomInsert() {
   Species::CustomInsert();
   if (sparams_.constrain_motion_flag) {
-    std::cout << " Constraining motion of rigid rods." << std::endl;
     if (n_members_ == 2) {
-      std::cout << " There are two rigid filaments" << std::endl;
-      double r_min[3], r_min_mag2, lambda, mu;
-      // Find min distance unit vector between carrier lines
-      MinimumDistance::CarrierLines(
-          members_[0].GetPosition(), members_[0].GetScaledPosition(),
-          members_[0].GetOrientation(), members_[1].GetPosition(),
-          members_[1].GetScaledPosition(), members_[1].GetOrientation(), r_min,
-          &r_min_mag2, &lambda, &mu);
-      normalize_vector(r_min, params_->n_dim);
+
+      // Variables to store
+      double r_min[3], lambda, mu;
+      double dr[3] = {};
+      double n_dim = params_->n_dim;
+      // Find min distance unit vector between carrier lines to use as
+      // constraining vector
+      const double *r_1 = members_[0].GetPosition();
+      const double *u_1 = members_[0].GetOrientation();
+      const double *r_2 = members_[1].GetPosition();
+      const double *u_2 = members_[1].GetOrientation();
+      for (int i = 0; i < n_dim; ++i) {
+        dr[i] = r_2[i] - r_1[i];
+      }
+      double dr_dot_u_1 = dot_product(n_dim, dr, u_1);
+      double dr_dot_u_2 = dot_product(n_dim, dr, u_2);
+      double u_1_dot_u_2 = dot_product(n_dim, u_1, u_2);
+      double denom = 1.0 - SQR(u_1_dot_u_2);
+      if (denom < 1.0e-12) {
+        lambda = dr_dot_u_1 / 2.0;
+        mu = -dr_dot_u_2 / 2.0;
+      } else {
+        lambda = (dr_dot_u_1 - u_1_dot_u_2 * dr_dot_u_2) / denom;
+        mu = (-dr_dot_u_2 + u_1_dot_u_2 * dr_dot_u_1) / denom;
+      }
+
+      /* Calculate minimum distance between two lines. */
+      double r_min_mag2 = 0.0;
+      for (int i = 0; i < n_dim; ++i) {
+        r_min[i] = dr[i] - lambda * u_1[i] + mu * u_2[i];
+        r_min_mag2 += SQR(r_min[i]);
+      }
+
+      normalize_vector(r_min, n_dim);
+      Logger::Info("Constraining motion of rigid rods to plane with vector = "
+                   "%f, %f, %f \n",
+                   r_min[0], r_min[1], r_min[2]);
+      //" << std::endl;
+      // printf("r_min_vec = %f, %f, %f \n", r_min[0], r_min[1], r_min[2]);
 
       members_[0].SetConstrainVec(r_min);
       members_[1].SetConstrainVec(r_min);

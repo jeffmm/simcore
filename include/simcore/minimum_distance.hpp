@@ -46,6 +46,10 @@ private:
   void SpheroBuddingBC(double const *const r, double const *const u,
                        double const length, double *dr, double *dr_mag2,
                        double *r_contact, double buffer);
+  void CarrierLines(const double *r_1, const double *s_1, const double *u_1,
+                    const double *r_2, const double *s_2, const double *u_2,
+                    double *r_min, double *r_min_mag2, double *lambda,
+                    double *mu);
 
   void PointWallBC(double const *const r, double const *const s, double *dr,
                    double *dr_mag2, double buffer);
@@ -66,10 +70,11 @@ public:
 
   // Needed for constraining rigid rods to plane. Not being used otherwise.
   // Does not modify MinimumDistance class nor should it!
-  static void CarrierLines(const double *r_1, const double *s_1,
-                           const double *u_1, const double *r_2,
-                           const double *s_2, const double *u_2, double *r_min,
-                           double *r_min_mag2, double *lambda, double *mu);
+  // static void CarrierLines(const double *r_1, const double *s_1,
+  //                         const double *u_1, const double *r_2,
+  //                         const double *s_2, const double *u_2, double
+  //                         *r_min, double *r_min_mag2, double *lambda, double
+  //                         *mu);
 };
 
 #endif
