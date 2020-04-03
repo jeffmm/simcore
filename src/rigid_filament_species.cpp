@@ -9,11 +9,10 @@ void RigidFilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
   packing_fraction_ = sparams_.packing_fraction;
 #ifdef TRACE
   if (packing_fraction_ > 0) {
-    Logger::Warning(
-        "Simulation run in trace mode with a potentially large "
-        "number of objects in species %s (packing fraction ="
-        " %2.4f)",
-        GetSID()._to_string(), packing_fraction_);
+    Logger::Warning("Simulation run in trace mode with a potentially large "
+                    "number of objects in species %s (packing fraction ="
+                    " %2.4f)",
+                    GetSID()._to_string(), packing_fraction_);
     fprintf(stderr, "Continue anyway? (y/N) ");
     char c;
     if (std::cin.peek() != 'y') {
@@ -36,6 +35,31 @@ void RigidFilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
   //      sparams_.length, min_length, min_length);
   //  sparams_.length = min_length;
   //}
+}
+
+void RigidFilamentSpecies::CustomInsert() {
+  Species::CustomInsert();
+  if (sparams_.constrain_motion_flag) {
+    std::cout << " Constraining motion of rigid rods." << std::endl;
+    if (n_members_ == 2) {
+      std::cout << " There are two rigid filaments" << std::endl;
+      double r_min[3], r_min_mag2, lambda, mu;
+      // Find min distance unit vector between carrier lines
+      MinimumDistance::CarrierLines(
+          members_[0].GetPosition(), members_[0].GetScaledPosition(),
+          members_[0].GetOrientation(), members_[1].GetPosition(),
+          members_[1].GetScaledPosition(), members_[1].GetOrientation(), r_min,
+          &r_min_mag2, &lambda, &mu);
+      normalize_vector(r_min, params_->n_dim);
+
+      members_[0].SetConstrainVec(r_min);
+      members_[1].SetConstrainVec(r_min);
+    } else {
+      Logger::Warning("Cannot constrain motion of more than two filaments. "
+                      "Constraint not applied!");
+      sparams_.constrain_motion_flag = false;
+    }
+  }
 }
 
 void RigidFilamentSpecies::UpdatePositions() {
@@ -179,10 +203,10 @@ void RigidFilamentSpecies::PopMember() {
 //  global_order_file_ << "global_order_analysis_file\n";
 //  global_order_file_
 //      << "time polar_order_x polar_order_y polar_order_z nematic_order_xx "
-//         "nematic_order_xy nematic_order_xz nematic_order_yx nematic_order_yy
-//         " "nematic_order_yz nematic_order_zx nematic_order_zy
-//         nematic_order_zz " "spiral_order signed_spiral_order n_spooling "
-//         "avg_spool_spiral_number\n";
+//         "nematic_order_xy nematic_order_xz nematic_order_yx
+//         nematic_order_yy " "nematic_order_yz nematic_order_zx
+//         nematic_order_zy nematic_order_zz " "spiral_order
+//         signed_spiral_order n_spooling " "avg_spool_spiral_number\n";
 //  nematic_order_tensor_ = new double[9];
 //  polar_order_vector_ = new double[3];
 //  std::fill(nematic_order_tensor_, nematic_order_tensor_ + 9, 0.0);
@@ -246,7 +270,8 @@ void RigidFilamentSpecies::PopMember() {
 //  }
 //  po_avg_ /= po.size();
 //  cn_avg_ /= cn.size();
-//  polar_order_avg_file_ << time_ << " " << po_avg_ << " " << cn_avg_ << "\n";
+//  polar_order_avg_file_ << time_ << " " << po_avg_ << " " << cn_avg_ <<
+//  "\n";
 //}
 
 // void RigidFilamentSpecies::InitOrientationCorrelationAnalysis() {
@@ -322,7 +347,8 @@ void RigidFilamentSpecies::PopMember() {
 //  fname.append("_filament.mse2e");
 //  mse2e_file_.open(fname, std::ios::out);
 //  mse2e_file_ << "mse2e_analysis_file\n";
-//  mse2e_file_ << "length diameter bond_length persistence_length driving ndim
+//  mse2e_file_ << "length diameter bond_length persistence_length driving
+//  ndim
 //  "
 //                 "nsteps nspec delta theory\n";
 //  auto it = members_.begin();
@@ -361,12 +387,15 @@ void RigidFilamentSpecies::PopMember() {
 //    double pl = it->GetPersistenceLength();
 //    double dr = it->GetDriving();
 //    double nspec = GetNSpec();
-//    spiral_file_ << l << " " << d << " " << cl << " " << pl << " " << dr << "
+//    spiral_file_ << l << " " << d << " " << cl << " " << pl << " " << dr <<
 //    "
-//                 << params_->n_steps << " " << nspec << " " << params_->delta
+//    "
+//                 << params_->n_steps << " " << nspec << " " <<
+//                 params_->delta
 //                 << "\n";
 //  }
-//  spiral_file_ << "time angle_sum E_bend tip_z_proj spiral_number head_pos_x "
+//  spiral_file_ << "time angle_sum E_bend tip_z_proj spiral_number head_pos_x
+//  "
 //                  "head_pos_y tail_pos_x tail_pos_y\n";
 //}
 
@@ -379,7 +408,8 @@ void RigidFilamentSpecies::PopMember() {
 //  theta_file_.open(fname, std::ios::out);
 //  theta_file_ << "theta_analysis_file\n";
 //  theta_file_
-//      << "length diameter bond_length persistence_length driving n_filaments "
+//      << "length diameter bond_length persistence_length driving n_filaments
+//      "
 //         "n_bonds n_steps n_spec delta n_dim \n";
 //  double l, cl, pl, dr, d;
 //  int nbonds;
@@ -672,7 +702,8 @@ void RigidFilamentSpecies::PopMember() {
 //  fname.append("_filament.flock");
 //  flock_file_.open(fname, std::ios::out);
 //  flock_file_ << "flock_analysis_file\n";
-//  flock_file_ << "length diameter bond_length persistence_length umax driving
+//  flock_file_ << "length diameter bond_length persistence_length umax
+//  driving
 //  "
 //                 "nsteps nspec delta\n";
 //  auto it = members_.begin();

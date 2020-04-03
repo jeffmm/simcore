@@ -104,6 +104,9 @@ public:
   double const *const GetHeadPosition() {
     return sites_[n_sites_ - 1].GetPosition();
   }
+  void SetConstrainVec(const double *constrain_vec) {
+    std::copy(constrain_vec_, constrain_vec_ + 3, constrain_vec);
+  }
   // double const *const GetTailPosition() { return sites_[0].GetPosition(); }
   // double const *const GetTailOrientation() {
   //  return sites_[0].GetOrientation();

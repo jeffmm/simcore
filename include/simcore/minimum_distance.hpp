@@ -36,9 +36,6 @@ private:
   void SpheroPlane(double *r_bond, double *u_bond, double length,
                    double *r_plane, double *n_plane, double *lambda,
                    double *r_min_mag2, double *r_min);
-  void CarrierLines(double *r_1, double *s_1, double *u_1, double *r_2,
-                    double *s_2, double *u_2, double *r_min, double *r_min_mag2,
-                    double *lambda, double *mu);
   void PointSphereBC(double const *const r, double *dr, double *dr_mag2,
                      double buffer);
   void SpheroSphereBC(double const *const r, double const *const u,
@@ -66,6 +63,13 @@ public:
 
   // XXX
   int GetNDim() { return n_dim_; }
+
+  // Needed for constraining rigid rods to plane. Not being used otherwise.
+  // Does not modify MinimumDistance class nor should it!
+  static void CarrierLines(const double *r_1, const double *s_1,
+                           const double *u_1, const double *r_2,
+                           const double *s_2, const double *u_2, double *r_min,
+                           double *r_min_mag2, double *lambda, double *mu);
 };
 
 #endif
