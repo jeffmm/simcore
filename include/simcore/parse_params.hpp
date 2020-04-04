@@ -397,6 +397,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.randomize_intrinsic_curvature_handedness = jt->second.as<bool>();
       } else if (param_name.compare("intrinsic_curvature_min")==0) {
       params.intrinsic_curvature_min = jt->second.as<double>();
+      } else if (param_name.compare("highlight_handedness")==0) {
+      params.highlight_handedness = jt->second.as<bool>();
       } else if (param_name.compare("flagella_flag")==0) {
       params.flagella_flag = jt->second.as<bool>();
       } else if (param_name.compare("flagella_freq")==0) {

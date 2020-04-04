@@ -80,6 +80,7 @@ struct species_parameters<species_id::filament>
   double intrinsic_curvature_sig = 0;
   bool randomize_intrinsic_curvature_handedness = false;
   double intrinsic_curvature_min = 0;
+  bool highlight_handedness = false;
   bool flagella_flag = false;
   double flagella_freq = 1;
   double flagella_period = 2;

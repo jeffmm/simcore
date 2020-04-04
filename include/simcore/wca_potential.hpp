@@ -6,10 +6,10 @@
 #include "potential_base.hpp"
 
 class WCAPotential : public PotentialBase {
- protected:
+protected:
   double eps_, sigma_, c12_, c6_, shift_;
 
- public:
+public:
   WCAPotential() {}
   void CalcPotential(Interaction &ix) {
     double rmag = sqrt(ix.dr_mag2);
@@ -41,8 +41,7 @@ class WCAPotential : public PotentialBase {
     // For WCAPotential potentials, the rcutoff is
     // restricted to be at 2^(1/6)sigma
 
-    //rcut_ = pow(2.0, 1.0 / 6.0) * sigma_;
-    rcut_ = 3;
+    rcut_ = pow(2.0, 1.0 / 6.0) * sigma_;
     rcut2_ = rcut_ * rcut_;
     c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
     c6_ = 4.0 * eps_ * pow(sigma_, 6.0);

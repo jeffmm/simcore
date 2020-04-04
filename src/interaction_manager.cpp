@@ -695,6 +695,9 @@ bool InteractionManager::CheckOverlap(std::vector<Object *> &ixors) {
     if (overlap_) break;
   }
   ClearObjectInteractions();
+  if (potentials_.CheckMaxForce()) {
+    return true;
+  }
   return overlap_;
 }
 

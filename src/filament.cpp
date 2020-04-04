@@ -95,6 +95,10 @@ void Filament::SetParameters() {
      * the min bond length */
     max_bond_length_ = 1.5 * min_bond_length_;
   }
+  if (sparams_->highlight_handedness) {
+    draw_ = draw_type::fixed;
+    color_ = (curvature_ > 0 ? color_ : color_ + M_PI);
+  }
 }
 
 void Filament::Init(filament_parameters *sparams) {
@@ -154,7 +158,7 @@ void Filament::InitFilamentLength() {
       bond_length_ = length_ / n_bonds_;
     }
   } else {
-    n_bonds_ = (int)floor(length_ / max_bond_length_);
+    n_bonds_ = (int)floor(length_ / min_bond_length_);
     /* Minimum number of bonds must be 2 */
     n_bonds_ = (n_bonds_ == 1 ? 2 : n_bonds_);
     bond_length_ = length_ / n_bonds_;

@@ -59,6 +59,7 @@
   default_config["filament"]["intrinsic_curvature_sig"] = "0";
   default_config["filament"]["randomize_intrinsic_curvature_handedness"] = "false";
   default_config["filament"]["intrinsic_curvature_min"] = "0";
+  default_config["filament"]["highlight_handedness"] = "false";
   default_config["filament"]["flagella_flag"] = "false";
   default_config["filament"]["flagella_freq"] = "1";
   default_config["filament"]["flagella_period"] = "2";

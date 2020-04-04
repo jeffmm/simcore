@@ -282,6 +282,7 @@ filament:                            # Parameters unique to filament class of ob
   intrinsic_curvature_sig: [0, double] # std_dev of intrinsic curvature from normal dist
   randomize_intrinsic_curvature_handedness: [false, bool] # randomize handedness of curvature for each fil
   intrinsic_curvature_min: [0, double] # will apply if magnitude of intrinsic curvature is below
+  highlight_handedness: [false, bool]  # color filament by intrinsic curvature handedness
   flagella_flag: [false, bool]      # applies a sinusoidal, time-varying intrinsic curvature along 
                                     # filament.
   flagella_freq: [1, double]        # frequency at which to oscillate intrinsic curvature of flagella.

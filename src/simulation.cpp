@@ -64,8 +64,13 @@ void Simulation::RunSimulation() {
       }
       midstep = true;
       Object::SetDelta(0.5 * Object::GetDelta());
-      Logger::Debug("Decreasing timestep to %2.10f", Object::GetDelta());
       delta_diff = params_.delta - Object::GetDelta();
+      if (Object::GetDelta() < 1e-16) {
+        Logger::Warning("Dynamic delta has become ridiculously tiny! (%2.18f) Likely an"
+            " interaction error occurred. Triggering an early exit.",
+            Object::GetDelta());
+        return;
+      }
       continue;
     } else if (params_.dynamic_timestep && Object::GetDelta() < params_.delta) {
       Object::SetDelta(Object::GetDelta() +
@@ -285,7 +290,7 @@ void Simulation::InitSpecies() {
       double spec_length = species_.back()->GetSpecLength();
       double spec_d = species_.back()->GetSpecDiameter();
       spec_length = (spec_d > spec_length ? spec_d : spec_length);
-      CellList::SetMinCellLength(spec_length);
+      CellList::SetMinCellLength(1.5 * spec_length);
     } else {
       species_.back()->CleanUp();
       delete species_.back();
