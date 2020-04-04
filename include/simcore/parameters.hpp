@@ -170,7 +170,10 @@ struct system_parameters {
   double system_radius = 100;
   int n_steps = 1000000;
   int i_step = 0;
+  int prev_step = 0;
   double delta = 0.001;
+  bool dynamic_timestep = false;
+  double dynamic_timestep_ramp = 0.001;
   bool graph_flag = false;
   int n_graph = 1000;
   double graph_diameter = 0;

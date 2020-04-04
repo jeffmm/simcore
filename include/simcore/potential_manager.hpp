@@ -44,13 +44,20 @@ class PotentialManager {
      *  are overlapping. This can be very dangerous
      *  for infinite potentials, so enforce a cutoff.
      */
-    if (ix.dr_mag2 < 1e-12 && pot_type_ == +potential_type::wca) {
-      max_.CalcPotential(ix);
-      return;
-    }
+    //if (ix.dr_mag2 < 1e-12 && pot_type_ == +potential_type::wca) {
+      //max_.CalcPotential(ix);
+      //return;
+    //}
     pot_->CalcPotential(ix);
   }
   double GetRCut2() { return pot_->GetRCut2(); }
+  bool CheckMaxForce() {
+    if (pot_->CheckFcutViolation()) {
+      pot_->ResetFcutViolation();
+      return true;
+    }
+    return false;
+  }
 };
 
 #endif

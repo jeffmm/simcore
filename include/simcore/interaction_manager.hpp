@@ -22,6 +22,7 @@ class InteractionManager {
   bool no_init_ = true;
   bool processing_ = false;
   bool in_out_flag_ = false;
+  bool decrease_dynamic_timestep_ = false;
   int n_dim_;
   int n_periodic_;
   int n_objs_;
@@ -82,6 +83,7 @@ class InteractionManager {
   void CalculateStructure();
   void ForceUpdate();
   void CheckUpdateObjects();
+  bool CheckDynamicTimestep();
   void DrawInteractions(std::vector<graph_struct *> &graph_array);
   void WriteOutputs();
   void InitOutputs(bool reading_inputs = false,

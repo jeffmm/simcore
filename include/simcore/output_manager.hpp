@@ -113,15 +113,15 @@ template <class T> void OutputManagerBase<T>::WriteOutputs() {
   if (posit_flag_ && (params_->i_step % n_posit_ == 0)) {
     WritePosits();
   }
-  if (spec_flag_ && (params_->i_step % n_spec_ == 0)) {
+  if (spec_flag_ && params_->i_step != params_->prev_step && (params_->i_step % n_spec_ == 0)) {
     Logger::Debug("Writing spec files");
     WriteSpecs();
   }
-  if (checkpoint_flag_ && (params_->i_step % n_checkpoint_ == 0)) {
+  if (checkpoint_flag_ && params_->i_step != params_->prev_step && (params_->i_step % n_checkpoint_ == 0)) {
     Logger::Debug("Writing checkpoint files");
     WriteCheckpoints();
   }
-  if (thermo_flag_ && (params_->i_step % n_thermo_ == 0)) {
+  if (thermo_flag_ && params_->i_step != params_->prev_step && (params_->i_step % n_thermo_ == 0)) {
     Logger::Debug("Writing thermo file");
     WriteThermo();
   }
@@ -130,6 +130,7 @@ template <class T> void OutputManagerBase<T>::WriteOutputs() {
 template <class T> void OutputManagerBase<T>::WritePosits() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if ((*spec)->GetPositFlag() &&
+        params_->i_step != params_->prev_step &&
         params_->i_step % (*spec)->GetNPosit() == 0) {
       (*spec)->WritePosits();
     }
@@ -138,7 +139,7 @@ template <class T> void OutputManagerBase<T>::WritePosits() {
 
 template <class T> void OutputManagerBase<T>::WriteSpecs() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
-    if ((*spec)->GetSpecFlag() && params_->i_step % (*spec)->GetNSpec() == 0) {
+    if ((*spec)->GetSpecFlag() && params_->i_step != params_->prev_step && params_->i_step % (*spec)->GetNSpec() == 0) {
       (*spec)->WriteSpecs();
     }
   }
@@ -147,6 +148,7 @@ template <class T> void OutputManagerBase<T>::WriteSpecs() {
 template <class T> void OutputManagerBase<T>::WriteCheckpoints() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if ((*spec)->GetCheckpointFlag() &&
+        params_->i_step != params_->prev_step &&
         params_->i_step % (*spec)->GetNCheckpoint() == 0) {
       (*spec)->WriteCheckpoints();
     }
@@ -203,6 +205,7 @@ template <class T> void OutputManagerBase<T>::ReadInputs() {
   //}
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if (posits_only_ && (*spec)->GetPositFlag() &&
+        params_->i_step != params_->prev_step &&
         params_->i_step % (*spec)->GetNPosit() == 0) {
       (*spec)->ReadPosits();
     }
@@ -210,13 +213,16 @@ template <class T> void OutputManagerBase<T>::ReadInputs() {
     // files, use specs to read average positions
     else if (posits_only_ && !(*spec)->GetPositFlag() &&
              (*spec)->GetSpecFlag() &&
+             params_->i_step != params_->prev_step &&
              params_->i_step % (*spec)->GetNSpec() == 0) {
       (*spec)->ReadPositsFromSpecs();
     } else if (!posits_only_ && (*spec)->GetSpecFlag() &&
+             params_->i_step != params_->prev_step &&
                params_->i_step % (*spec)->GetNSpec() == 0) {
       (*spec)->ReadSpecs();
       if (params_->checkpoint_from_spec && params_->i_step %
-          (*spec)->GetNCheckpoint() == 0) {
+          (*spec)->GetNCheckpoint() == 0 &&
+          params_->i_step != params_->prev_step) {
         (*spec)->WriteCheckpoints();
       }
     }
@@ -232,15 +238,17 @@ template <class T> void OutputManagerBase<T>::ReadInputs() {
 template <class T> void OutputManagerBase<T>::WriteReduce() {
   for (auto spec = species_->begin(); spec != species_->end(); ++spec) {
     if ((*spec)->GetPositFlag() &&
+        params_->i_step != params_->prev_step &&
         params_->i_step % (reduce_factor_ * (*spec)->GetNPosit()) == 0) {
       (*spec)->WritePosits();
     }
     if (!posits_only_ && (*spec)->GetSpecFlag() &&
+        params_->i_step != params_->prev_step &&
         params_->i_step % (reduce_factor_ * (*spec)->GetNSpec()) == 0) {
       (*spec)->WriteSpecs();
     }
   }
-  if (thermo_flag_ && params_->i_step % (reduce_factor_ * n_thermo_) == 0) {
+  if (thermo_flag_ && params_->i_step != params_->prev_step && params_->i_step % (reduce_factor_ * n_thermo_) == 0) {
     WriteThermo();
   }
 }

@@ -12,6 +12,7 @@ typedef std::vector<Crosslink>::iterator xlink_iterator;
 class CrosslinkSpecies : public Species<Crosslink, species_id::crosslink> {
  private:
   bool *update_;
+  bool midstep_ = true;
   std::string checkpoint_file_;
   double *obj_volume_;  // Total length of all the objects in the system
   double xlink_concentration_;

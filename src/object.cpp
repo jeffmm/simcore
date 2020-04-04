@@ -53,6 +53,7 @@ void Object::SetParams(system_parameters *params) { params_ = params; }
 void Object::SetSpace(space_struct *space) { space_ = space; }
 void Object::SetNDim(int n_dim) { n_dim_ = n_dim; }
 void Object::SetDelta(double delta) { delta_ = delta; }
+const double Object::GetDelta() { return delta_; }
 void Object::SetNextOID(const int next_oid) { _next_oid_ = next_oid; }
 const int Object::GetNextOID() { return _next_oid_; }
 // Trivial Get/Set functions
@@ -71,6 +72,10 @@ void Object::SetPrevPosition(double const *const ppos) {
 }
 void Object::SetPrevOrientation(double const *const pu) {
   std::copy(pu, pu + n_dim_, prev_orientation_);
+}
+void Object::ResetPreviousPosition() {
+  SetPosition(GetPrevPosition());
+  SetOrientation(GetPrevOrientation());
 }
 void Object::SetDiameter(double new_diameter) { diameter_ = new_diameter; }
 void Object::SetLength(double new_length) { length_ = new_length; }
@@ -117,6 +122,7 @@ void Object::ZeroPolarOrder() {
 void Object::SetInteractor(bool ix) { interacting_ = ix; }
 double const *const Object::GetPosition() { return position_; }
 double const *const Object::GetPrevPosition() { return prev_position_; }
+double const *const Object::GetPrevOrientation() { return prev_orientation_; }
 double const *const Object::GetScaledPosition() { return scaled_position_; }
 double const *const Object::GetOrientation() { return orientation_; }
 double const *const Object::GetForce() { return force_; }

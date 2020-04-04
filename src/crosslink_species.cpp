@@ -222,7 +222,7 @@ void CrosslinkSpecies::UpdatePositions() {
     UpdateBoundCrosslinks();
     CalculateBindingFree();
     ApplyCrosslinkTetherForces();
-  } else if (params_->i_step % 2 == 0) {
+  } else if (!midstep_) {
     /* First update bound crosslinks state and positions */
     UpdateBoundCrosslinks();
     /* Calculate implicit binding of crosslinks from solution */
@@ -230,9 +230,10 @@ void CrosslinkSpecies::UpdatePositions() {
   } else {
     /* Apply tether forces from doubly-bound crosslinks onto anchored objects.
        We do this every half step only, because the fullstep tether forces are
-       handled by the crosslink update on even steps */
+       handled by the crosslink update on the full step */
     ApplyCrosslinkTetherForces();
   }
+  midstep_ = !midstep_;
   // for (auto it=members_.begin(); it!=members_.end(); ++it) {
   // it->SanityCheck();
   //}

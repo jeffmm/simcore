@@ -152,6 +152,11 @@ void FilamentSpecies::PopMember() {
   Species::PopMember();
 }
 
+void FilamentSpecies::ResetPreviousPositions() {
+  Species::ResetPreviousPositions();
+  midstep_ = true;
+}
+
 const double FilamentSpecies::GetSpecLength() const {
   if (sparams_.dynamic_instability_flag) {
     return 2 * sparams_.min_bond_length;

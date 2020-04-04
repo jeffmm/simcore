@@ -52,6 +52,7 @@ class Mesh : public Object {
   void SubReport();
   void UpdateBondPositions();
   void UpdatePrevPositions();
+  virtual void ResetPreviousPosition();
   virtual void Draw(std::vector<graph_struct *> &graph_array);
   virtual void Reserve();
   void Clear();

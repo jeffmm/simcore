@@ -20,7 +20,7 @@ class WCAPotential : public PotentialBase {
     double ffac = -(12.0 * c12_ * r6 - 6.0 * c6_) * r6 * rinv;
     // Cut off the force at fcut
     if (ABS(ffac) > fcut_) {
-      ffac = SIGNOF(ffac) * fcut_;
+      fcut_violation_ = true;
     }
     for (int i = 0; i < n_dim_; ++i) {
       ix.force[i] = ffac * dr[i] * rinv;
@@ -41,7 +41,8 @@ class WCAPotential : public PotentialBase {
     // For WCAPotential potentials, the rcutoff is
     // restricted to be at 2^(1/6)sigma
 
-    rcut_ = pow(2.0, 1.0 / 6.0) * sigma_;
+    //rcut_ = pow(2.0, 1.0 / 6.0) * sigma_;
+    rcut_ = 3;
     rcut2_ = rcut_ * rcut_;
     c12_ = 4.0 * eps_ * pow(sigma_, 12.0);
     c6_ = 4.0 * eps_ * pow(sigma_, 6.0);

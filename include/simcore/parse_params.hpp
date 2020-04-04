@@ -32,8 +32,14 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.n_steps = it->second.as<int>();
     } else if (param_name.compare("i_step")==0) {
     params.i_step = it->second.as<int>();
+    } else if (param_name.compare("prev_step")==0) {
+    params.prev_step = it->second.as<int>();
     } else if (param_name.compare("delta")==0) {
     params.delta = it->second.as<double>();
+    } else if (param_name.compare("dynamic_timestep")==0) {
+    params.dynamic_timestep = it->second.as<bool>();
+    } else if (param_name.compare("dynamic_timestep_ramp")==0) {
+    params.dynamic_timestep_ramp = it->second.as<double>();
     } else if (param_name.compare("graph_flag")==0) {
     params.graph_flag = it->second.as<bool>();
     } else if (param_name.compare("n_graph")==0) {

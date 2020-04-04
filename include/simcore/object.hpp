@@ -67,6 +67,7 @@ public:
   static void SetSpace(space_struct *space);
   static void SetNDim(int n_dim);
   static void SetDelta(double delta);
+  static const double GetDelta();
   static const int GetNextOID();
   static void SetNextOID(const int next_oid);
   // Trivial Set/Get functions
@@ -98,6 +99,7 @@ public:
   const int GetMeshID() const;
   const double *const GetPosition();
   const double *const GetPrevPosition();
+  const double *const GetPrevOrientation();
   const double *const GetScaledPosition();
   const double *const GetOrientation();
   virtual void GetAvgPosition(double *ap);
@@ -129,6 +131,7 @@ public:
   virtual void ZeroForce();
   virtual void UpdatePeriodic();
   virtual void UpdatePosition() {}
+  virtual void ResetPreviousPosition();
   virtual void Draw(std::vector<graph_struct *> &graph_array);
   virtual void SetColor(const double c, draw_type dtype);
   virtual void ScalePosition();

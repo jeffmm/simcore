@@ -321,6 +321,14 @@ void Mesh::AddBondToSite(double *u, double l, int i_site) {
   AddBond(&sites_[i_site], &sites_[n_sites_ - 1]);
 }
 
+void Mesh::ResetPreviousPosition() {
+  for (auto site = sites_.begin(); site != sites_.end(); ++site) {
+    site->SetPosition(site->GetPrevPosition());
+  }
+  UpdateBondPositions();
+  midstep_ = true;
+}
+
 void Mesh::UpdateBondPositions() {
   true_length_ = 0;
   for (bond_iterator it = bonds_.begin(); it != bonds_.end(); ++it) {
@@ -542,9 +550,9 @@ Bond *Mesh::GetRandomBond() {
 }
 
 void Mesh::UpdateDrTot() {
-  if (midstep_) {
-    return;
-  }
+  //if (midstep_) {
+    //return;
+  //}
   for (site_iterator site = sites_.begin(); site != sites_.end(); ++site) {
     site->UpdateDrTot();
     double const dr = site->GetDrTot();

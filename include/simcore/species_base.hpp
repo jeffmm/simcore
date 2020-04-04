@@ -36,6 +36,7 @@ public:
   virtual void ScalePositions() {}
   virtual void AddMember() {}
   virtual void SetLastMemberPosition(double const *const pos) {}
+  virtual void ResetPreviousPositions() {}
   virtual void PopMember() {}
   virtual void PopAll() {}
   virtual const double GetSpecDiameter() const { return -1; }

@@ -15,7 +15,10 @@ boundary : [0, int]                  # 0: No boundary condition constraints.
 system_radius : [100, double]        # Sets system volume. 1D system length is 2 x system_radius.
 n_steps : [1000000, int]             # Number of steps to run simulation before completion.
 i_step: [0, int]                     # Internal parameter used for tracking simulation iteration.
+prev_step: [0, int]                  # Internal parameter, previous simulation iteration.
 delta : [0.001, double]              # Simulation time duration between each simulation step.
+dynamic_timestep : [false, bool]     # Change timestep if necessary to avoid unphysical forces
+dynamic_timestep_ramp : [0.001, double]  # How quickly to return to default timestep
 graph_flag : [false, bool]           # Whether to run simulation with live graphics.
 n_graph : [1000, int]                # Number of simulation steps between refreshing graphics.
 graph_diameter : [0, double]         # If > 0, draws particles with a diameter of graph_diameter.

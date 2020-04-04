@@ -121,7 +121,10 @@
   default_config["system_radius"] = "100";
   default_config["n_steps"] = "1000000";
   default_config["i_step"] = "0";
+  default_config["prev_step"] = "0";
   default_config["delta"] = "0.001";
+  default_config["dynamic_timestep"] = "false";
+  default_config["dynamic_timestep_ramp"] = "0.001";
   default_config["graph_flag"] = "false";
   default_config["n_graph"] = "1000";
   default_config["graph_diameter"] = "0";

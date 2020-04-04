@@ -5,15 +5,18 @@
 #include "interaction.hpp"
 
 class PotentialBase {
- protected:
+protected:
   int n_dim_;
   double fcut_, rcut_, rcut2_;
+  bool fcut_violation_ = false;
 
- public:
+public:
   PotentialBase() {}
   double GetRCut2() { return rcut2_; }
+  bool CheckFcutViolation() { return fcut_violation_; }
   virtual void CalcPotential(Interaction &ix) {}
   virtual void Init(system_parameters *params) {}
+  virtual void ResetFcutViolation() { fcut_violation_ = false; }
 };
 
 #endif

@@ -1,21 +1,23 @@
 seed: 2996705641
-run_name: activeic_v036
+run_name: test_ic
 n_dim: 2
 n_periodic: 2
-delta: 0.00005
+delta: 0.0001
+dynamic_timestep: true
+dynamic_timestep_ramp: 0.0001
 n_steps: 10000000
-n_steps_equil: 10000
+n_steps_equil: 0
 boundary: 0
 graph_flag: true
 auto_graph: true
-n_graph: 10000
+n_graph: 1000
 movie_flag: false
 insert_radius: -1
 stoch_flag: true
 system_radius: 20
-potential: soft
-soft_potential_mag: 1000
-f_cutoff: 1000000
+potential: wca
+soft_potential_mag: 100
+f_cutoff: 100000
 remove_duplicate_interactions: true
 coarse_grained_mesh_interactions: false
 mesh_coarsening: 2
@@ -39,7 +41,7 @@ species:
   n_posit: 100
 filament:
   - name: mt
-    num: 30
+    num: 70
     packing_fraction: -1
     insertion_type: random_nematic
     draw_type: orientation
@@ -53,7 +55,7 @@ filament:
     polydispersity_flag: false
     persistence_length: 1000
     driving_factor: 10
-    n_equil: 20000
+    n_equil: 0
     nematic_driving: false
     nematic_driving_freq: 50
     error_analysis: false
@@ -164,8 +166,8 @@ time_analysis: false
 bud_height: 680
 bud_radius: 300
 lj_epsilon: 1
-wca_eps: 1
-wca_sig: 1
+wca_eps: 10
+wca_sig: 1.1
 ss_a: 1
 ss_rs: 1.5
 ss_eps: 1

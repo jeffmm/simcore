@@ -70,6 +70,7 @@ void InteractionManager::Interact() {
   xlink_.UpdateCrosslinks();
   // Check if we need to update crosslink interactors
   CheckUpdateXlinks();
+  //UpdateInteractions();
   CheckUpdateInteractions();
 
   /* Update anchors and crosslinks */
@@ -79,6 +80,10 @@ void InteractionManager::Interact() {
   }
   CalculateBoundaryInteractions();
   // Apply forces, torques, and potentials in serial
+  if (params_->dynamic_timestep && potentials_.CheckMaxForce()) {
+    decrease_dynamic_timestep_ = true;
+    return;
+  }
   if (!no_interactions_) {
     ApplyPairInteractions();
   }
@@ -285,6 +290,12 @@ void InteractionManager::CheckUpdateObjects() {
 void InteractionManager::ResetCellList() { clist_.ResetNeighbors(); }
 
 void InteractionManager::CheckUpdateInteractions() {
+  /* Check if we dynamically changed the timestep last step, if so, always
+     update */
+  if (decrease_dynamic_timestep_) {
+    decrease_dynamic_timestep_ = false;
+    UpdateInteractions();
+  }
   /* we update nearest neighbors if any particle
      has moved a distance further than dr_update_ */
   double dr_max = GetDrMax();
@@ -857,3 +868,14 @@ void InteractionManager::LoadCrosslinksFromCheckpoints(
 }
 
 void InteractionManager::InsertCrosslinks() { xlink_.InsertCrosslinks(); }
+
+bool InteractionManager::CheckDynamicTimestep() {
+  if (decrease_dynamic_timestep_) {
+    for (auto spec_it = species_->begin(); spec_it != species_->end();
+         ++spec_it) {
+      (*spec_it)->ResetPreviousPositions();
+    }
+    return true;
+  }
+  return false;
+}

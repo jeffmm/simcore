@@ -34,17 +34,43 @@ void Simulation::RunSimulation() {
    sane step frequency functions (e.g. n_graph, n_thermo, etc) are even numbers,
    we want these to represent filaments in their fullstep configurations. We
    also update other objects' positions on every even step too (e.g. xlinks). */
-  for (i_step_ = 1; i_step_ < params_.n_steps + 1; ++i_step_) {
-    params_.i_step = i_step_;
+  double delta_diff = 0;
+  bool midstep = true;
+  time_ = 0;
+  params_.i_step = 0;
+  for (i_step_ = 1; params_.i_step < params_.n_steps + 1; ++i_step_) {
     /* Assuming halfstep algorithm, each step only moves the simulation forward
        by 1/2 delta */
-    time_ = i_step_ * 0.5 * params_.delta;
+    time_ += 0.5 * Object::GetDelta();
+    params_.prev_step = params_.i_step;
+    params_.i_step = i_step_;
+    if (params_.dynamic_timestep) {
+      // Calculate nominal timestep
+      params_.i_step = (int) round(time_ / (0.5 * params_.delta));
+    }
     // Output progress
     PrintComplete();
     /* Zero the force_ array on all objects for bookkeeping */
     ZeroForces();
     /* Calculate forces between objects in system */
     Interact();
+    if (params_.dynamic_timestep && ix_mgr_.CheckDynamicTimestep()) {
+      if (midstep) {
+        time_ -= Object::GetDelta();
+        i_step_ -= 2;
+      } else {
+        time_ -= 0.5 * Object::GetDelta();
+        i_step_ -= 1;
+      }
+      midstep = true;
+      Object::SetDelta(0.5 * Object::GetDelta());
+      Logger::Debug("Decreasing timestep to %2.10f", Object::GetDelta());
+      delta_diff = params_.delta - Object::GetDelta();
+      continue;
+    } else if (params_.dynamic_timestep && Object::GetDelta() < params_.delta) {
+      Object::SetDelta(Object::GetDelta() +
+                       params_.dynamic_timestep_ramp * delta_diff);
+    }
     /* Integrate EOM on all objects to update positions, etc */
     Integrate();
     /* Update system pressure, volume, etc if necessary */
@@ -59,6 +85,8 @@ void Simulation::RunSimulation() {
     }
     /* Generate all output files */
     WriteOutputs();
+
+    midstep = !midstep;
   }
 }
 
@@ -67,14 +95,22 @@ void Simulation::RunSimulation() {
  * which can be useful for logging. Otherwise, the progress will be refreshed
  * in a single line printed to standard output. */
 void Simulation::PrintComplete() {
-  long iteration = i_step_ * 10;
+  long iteration = params_.i_step * 10;
   long steps = params_.n_steps;
   if (iteration % steps == 0) {
     Logger::Info("%d%% complete", 10 * iteration / steps);
+    if (params_.dynamic_timestep) {
+      Logger::Info("Current simulation time: %2.8f", time_);
+      Logger::Info("Current timestep: %2.10f", Object::GetDelta());
+    }
   }
   if (i_step_ == log_interval_ + 1) {
     Logger::Info("%d steps completed", log_interval_);
     log_interval_ = (int)floor(2 * log_interval_);
+    if (params_.dynamic_timestep) {
+      Logger::Info("Current simulation time: %2.8f", time_);
+      Logger::Info("Current timestep: %2.10f", Object::GetDelta());
+    }
   }
   Logger::Trace("*****Step %d*****", i_step_);
 }
@@ -106,7 +142,8 @@ void Simulation::ZeroForces() {
 /* Update system pressure, volume and rescale system size if necessary,
  * handling periodic boundaries in a sane way. */
 void Simulation::Statistics() {
-  if (i_step_ % params_.n_thermo == 0 && i_step_ > 0) {
+  if (params_.i_step % params_.n_thermo == 0 && params_.i_step !=
+      params_.prev_step && params_.i_step > 0) {
     Logger::Debug("Calculating system pressure and volume");
     /* Calculate system pressure from stress tensor */
     Logger::Debug("Calculating system thermodynamics");
@@ -191,11 +228,12 @@ void Simulation::InitGraphics() {
   // Initialize graphics structures
   graphics_.Init(&graph_array_, space_.GetStruct(), background_color,
                  params_.draw_boundary, params_.auto_graph);
-  
-  //This line was interferring with graphics on Windows, and removing it did no harm
-  #ifndef WINGRAPH
-    graphics_.DrawLoop();
-  #endif
+
+// This line was interferring with graphics on Windows, and removing it did no
+// harm
+#ifndef WINGRAPH
+  graphics_.DrawLoop();
+#endif
 
 #endif
   // Initialize directory for grabbed images
@@ -206,7 +244,7 @@ void Simulation::InitGraphics() {
   if (params_.movie_flag) {
     // Record bmp image of frame into movie_directory
     grabber(graphics_.windx_, graphics_.windy_, params_.movie_directory,
-            (int)i_step_ / params_.n_graph);
+            (int)params_.i_step / params_.n_graph);
   }
 #endif
 }
@@ -228,10 +266,9 @@ void Simulation::InitSpecies() {
     if (species_.back()->GetNInsert() > 0) {
 #ifdef TRACE
       if (species_.back()->GetNInsert() > 20) {
-        Logger::Warning(
-            "Simulation run in trace mode with a large number of "
-            "objects in species %s (%d).",
-            sid._to_string(), species_.back()->GetNInsert());
+        Logger::Warning("Simulation run in trace mode with a large number of "
+                        "objects in species %s (%d).",
+                        sid._to_string(), species_.back()->GetNInsert());
         fprintf(stderr, "Continue anyway? (y/N) ");
         char c;
         if (std::cin.peek() != 'y') {
@@ -303,10 +340,9 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
           }
         }
         if (num_failures > params_.species_insertion_failure_threshold) {
-          Logger::Warning(
-              "Too many insertion failures have occurred: managed "
-              "to insert %2.1f%% of objects",
-              100.0 * inserted / (float)num);
+          Logger::Warning("Too many insertion failures have occurred: managed "
+                          "to insert %2.1f%% of objects",
+                          100.0 * inserted / (float)num);
           break;
         }
       }
@@ -361,23 +397,22 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
             inserted++;
             ix_mgr_.AddInteractors(last_ixors);
           }
-          if (inserted == num) break;
+          if (inserted == num)
+            break;
         }
         delete[] grid_index;
       }
       if (num != inserted) {
-        Logger::Warning(
-            "Species insertion failure threshold of %d reached. "
-            "Reattempting insertion.\n",
-            params_.species_insertion_failure_threshold);
+        Logger::Warning("Species insertion failure threshold of %d reached. "
+                        "Reattempting insertion.\n",
+                        params_.species_insertion_failure_threshold);
         (*spec)->PopAll();
         ix_mgr_.Reset();
       }
       if (++num_attempts > params_.species_insertion_reattempt_threshold) {
-        Logger::Error(
-            "Unable to insert species randomly within the reattempt "
-            "threshold of %d.\n",
-            params_.species_insertion_reattempt_threshold);
+        Logger::Error("Unable to insert species randomly within the reattempt "
+                      "threshold of %d.\n",
+                      params_.species_insertion_reattempt_threshold);
       }
     }
     if (!processing) {
@@ -397,10 +432,10 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
                                           params_.checkpoint_run_name);
   }
 
-  ix_mgr_.ResetCellList();  // Forces rebuild cell list without redundancy
+  ix_mgr_.ResetCellList(); // Forces rebuild cell list without redundancy
   ix_mgr_.Reset();
   // if (!processing) {
-  ix_mgr_.CheckUpdateObjects();  // Forces update as well
+  ix_mgr_.CheckUpdateObjects(); // Forces update as well
   //}
 }
 
@@ -432,7 +467,8 @@ void Simulation::ClearSpecies() {
 /* Update the OpenGL graphics window */
 void Simulation::Draw(bool single_frame) {
 #ifndef NOGRAPH
-  if (params_.graph_flag && i_step_ % params_.n_graph == 0) {
+  if (params_.graph_flag && params_.i_step % params_.n_graph == 0 &&
+      params_.i_step != params_.prev_step) {
     Logger::Trace("Drawing graphable objects");
     /* Get updated object positions and orientations */
     GetGraphicsStructure();
@@ -483,7 +519,7 @@ void Simulation::WriteOutputs() {
   ix_mgr_.WriteOutputs();
   /* If we are analyzing run time and this is the last step, record final time
    * here. */
-  if (params_.time_analysis && i_step_ == params_.n_steps) {
+  if (params_.time_analysis && params_.i_step == params_.n_steps) {
     double cpu_final_time = cpu_time();
     double cpu_time = cpu_final_time - cpu_init_time_;
     Logger::Info("CPU Time for Initialization: %2.6f", cpu_init_time_);
@@ -548,6 +584,8 @@ void Simulation::RunProcessing(run_options run_opts) {
   int last_step =
       (run_opts.with_reloads ? params_.n_steps - 1 : 2 * params_.n_steps);
   bool run_analyses = run_opts.analysis_flag;
+  // No need to worry about dynamic timestep in post processing
+  params_.dynamic_timestep = false;
   for (i_step_ = 1; true; ++i_step_) {
     params_.i_step = i_step_;
     time_ = (i_step_)*params_.delta;

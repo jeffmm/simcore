@@ -50,7 +50,7 @@ class FilamentSpecies : public Species<Filament, species_id::filament> {
   FilamentSpecies(unsigned long seed);
   void Init(std::string spec_name, ParamsParser &parser);
   void PopMember();
-
+  void ResetPreviousPositions();
   void AddMember();
 
   void Reserve();
