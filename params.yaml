@@ -55,7 +55,7 @@ filament:
     polydispersity_flag: false
     persistence_length: 1000
     driving_factor: 10
-    n_equil: 0
+    n_equil: 10000
     nematic_driving: false
     nematic_driving_freq: 50
     error_analysis: false

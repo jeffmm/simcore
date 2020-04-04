@@ -45,7 +45,10 @@ void Filament::SetParameters() {
   friction_ratio_ = sparams_->friction_ratio;
   stoch_flag_ = params_->stoch_flag; // include thermal forces
   eq_steps_ = sparams_->n_equil;
-  eq_steps_count_ = 0;
+  // Don't bother with equilibriating if this is a reloaded simulation
+  if (params_->n_load > 0) {
+    eq_steps_ = 0;
+  }
   optical_trap_spring_ = sparams_->optical_trap_spring;
   optical_trap_flag_ = sparams_->optical_trap_flag;
   optical_trap_fixed_ = sparams_->optical_trap_fixed;
@@ -404,14 +407,10 @@ double const Filament::GetVolume() {
 
 void Filament::UpdatePosition(bool midstep) {
   midstep_ = midstep;
-  //if (eq_steps_count_++ < eq_steps_) {
-    //return;
-  //}
   ApplyForcesTorques();
   Integrate();
   UpdateAvgPosition();
   DynamicInstability();
-  // eq_steps_count_++;
 }
 
 /*******************************************************************************
@@ -1035,7 +1034,7 @@ void Filament::ApplyInteractionForces() {
     sites_[i + 1].AddForce(pure_torque);
     // The driving factor is a force per unit length,
     // so need to multiply by bond length to get f_dr on bond
-    if (eq_steps_count_ > eq_steps_) {
+    if (params_->i_step > eq_steps_) {
       double f_dr[3] = {};
       double mag = 0.5 * driving_factor_ * bond_length_;
       if (sparams_->drive_from_bond_center) {
@@ -1059,7 +1058,6 @@ void Filament::ApplyInteractionForces() {
       }
     }
   }
-  eq_steps_count_++;
 }
 
 void Filament::DynamicInstability() {
