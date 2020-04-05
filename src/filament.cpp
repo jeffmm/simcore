@@ -97,7 +97,7 @@ void Filament::SetParameters() {
   }
   if (sparams_->highlight_handedness) {
     draw_ = draw_type::fixed;
-    color_ = (curvature_ > 0 ? color_ : color_ + M_PI);
+    color_ = (curvature_ > 0 ? sparams_->color : sparams_->color + M_PI);
   }
 }
 
@@ -1354,6 +1354,13 @@ void Filament::ReadSpec(std::fstream &ispec) {
   ispec.read(reinterpret_cast<char *>(&bending_stiffness_), sizeof(double));
   ispec.read(reinterpret_cast<char *>(&curvature_), sizeof(double));
   ispec.read(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
+  if (sparams_->highlight_handedness) {
+    draw_ = draw_type::fixed;
+    color_ = (curvature_ > 0 ? sparams_->color : sparams_->color + M_PI);
+    for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
+      bond->SetColor(color_, draw_);
+    }
+  }
   CalculateAngles();
 }
 
