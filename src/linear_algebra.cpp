@@ -202,8 +202,10 @@ void rotate_vector(double *v, double *k, double theta, int n_dim) {
   double cos_theta = cos(theta);
   double sin_theta = sin(theta);
   if (n_dim == 2) {
-    v[0] = v[0] * cos_theta - v[1] * sin_theta;
-    v[1] = v[0] * sin_theta + v[1] * cos_theta;
+    double temp1 = v[0] * cos_theta - v[1] * sin_theta;
+    double temp2 = v[0] * sin_theta + v[1] * cos_theta;
+    v[0] = temp1;
+    v[1] = temp2;
   } else {
     double k_dot_v = k[0] * v[0] + k[1] * v[1] + k[2] * v[2];
     double t[3];
