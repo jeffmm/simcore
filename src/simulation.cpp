@@ -598,6 +598,7 @@ void Simulation::RunProcessing(run_options run_opts) {
     output_mgr_.ReadInputs();
     ix_mgr_.ReadInputs();
     if (early_exit) {
+      Draw(run_opts.single_frame);
       early_exit = false;
       Logger::Info("Early exit triggered. Ending simulation.");
       if (run_analyses && i_step_ > params_.n_steps_equil) {
@@ -607,7 +608,7 @@ void Simulation::RunProcessing(run_options run_opts) {
       }
       return;
     }
-    if (i_step_ <= params_.n_steps_equil) {
+    if (i_step_ <= params_.n_steps_equil && !run_opts.single_frame) {
       Draw(run_opts.single_frame);
       continue;
     } else if (i_step_ == params_.n_steps_equil + 1 && run_analyses) {
@@ -640,7 +641,9 @@ void Simulation::RunProcessing(run_options run_opts) {
         }
       }
     }
-    Draw(run_opts.single_frame);
+    //if (!run_opts.single_frame) {
+      Draw(run_opts.single_frame);
+    //}
   }
   if (run_analyses) {
     for (auto it = species_.begin(); it != species_.end(); ++it) {

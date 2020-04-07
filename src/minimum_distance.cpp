@@ -921,7 +921,7 @@ bool MinimumDistance::CheckBoundaryInteraction(Interaction &ix) {
 }
 
 bool MinimumDistance::CheckOutsideBoundary(Object &obj) {
-  if (space_->type == +boundary_type::none || +boundary_type::wall)
+  if (space_->type == +boundary_type::none)
     return false;
   double const *const r = obj.GetInteractorPosition();
   double const *const u = obj.GetInteractorOrientation();
@@ -931,12 +931,11 @@ bool MinimumDistance::CheckOutsideBoundary(Object &obj) {
   double z0 = 0.0;
   double r_boundary = space_->radius;
   int sign = (l > 0 ? SIGNOF(dot_product(n_dim_, r, u)) : 0);
-  if (space_->type == +boundary_type::box) {
-    if (space_->n_periodic == n_dim_)
-      return false;
-    for (int j = space_->n_periodic; j < n_dim_; ++j) {
+  if (space_->type == +boundary_type::box ||
+      space_->type == +boundary_type::wall) {
+    for (int j = 0; j < n_dim_; ++j) {
       double r_far = r[j] + sign * 0.5 * l * u[j];
-      if (ABS(r_far) > (r_boundary - 0.5 * d))
+      if (ABS(r_far) > (r_boundary - d))
         return true;
     }
     return false;
