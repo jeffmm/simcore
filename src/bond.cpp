@@ -93,7 +93,7 @@ void Bond::Draw(std::vector<graph_struct *> &graph_array) {
   g_.draw = draw_;
   if (has_overlap_ && params_->highlight_overlaps) {
     g_.draw = draw_type::bw;
-    g_.diameter = 2 * diameter_;
+    g_.diameter = 1.1 * diameter_;
   }
   int flock_type = GetFlockType();
   if (flock_type && params_->highlight_flock) {
@@ -107,7 +107,7 @@ void Bond::Draw(std::vector<graph_struct *> &graph_array) {
     } else {
       Logger::Warning("Unexpected flock parameter value in Bond::Draw");
     }
-    g_.diameter = 2 * diameter_;
+    g_.diameter = 1.1 * diameter_;
     SetFlockType(0);
   }
   graph_array.push_back(&g_);

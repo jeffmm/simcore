@@ -60,6 +60,9 @@ void Filament::SetParameters() {
      bond_length_. The additional factor of 1/2 is due to the fact that
      curvature is the adjusted angle for each bond when calculating the bending
      forces */
+  if (sparams_->radius_of_curvature > 0) {
+    sparams_->intrinsic_curvature = 1.0 / sparams_->radius_of_curvature;
+  }
   curvature_ = 0.5 * (sparams_->intrinsic_curvature +
                       rng_.RandomNormal(sparams_->intrinsic_curvature_sig));
   if (sparams_->randomize_intrinsic_curvature_handedness) {
@@ -1043,6 +1046,12 @@ void Filament::ApplyInteractionForces() {
       double mag = 0.5 * driving_factor_ * bond_length_;
       if (sparams_->drive_from_bond_center) {
         // Add driving (originating from the com of the bond)
+        // Driving toward filament center (for fun)
+        // if (i >= n_bonds_/2) {
+        // mag *= -1;
+        //} else if (n_bonds_%2!=0 && i == floor(n_bonds_/2)) {
+        // mag = 0;
+        //}
         for (int j = 0; j < n_dim_; ++j)
           f_dr[j] = mag * u[j];
         sites_[i].AddForce(f_dr);
@@ -1326,6 +1335,7 @@ void Filament::ReportAll() {
    double[3*n_sites] site_positions
    (from Filament::WriteSpec)
    double bending_stiffness
+   double curvature (half the intrinsic curvature)
    uchar polymerization_state
     */
 void Filament::WriteSpec(std::fstream &ospec) {
@@ -1336,17 +1346,6 @@ void Filament::WriteSpec(std::fstream &ospec) {
   ospec.write(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
 }
 
-/* double diameter
-   double length
-   double persistence length
-   double friction_par
-   double friction_perp
-   double bond_length
-   double n_bonds
-   double[3] pos_tail
-   double[3] pos_head
-   double[n_bonds*3] bond_orientations
-*/
 void Filament::ReadSpec(std::fstream &ispec) {
   if (ispec.eof())
     return;
@@ -1354,14 +1353,29 @@ void Filament::ReadSpec(std::fstream &ispec) {
   ispec.read(reinterpret_cast<char *>(&bending_stiffness_), sizeof(double));
   ispec.read(reinterpret_cast<char *>(&curvature_), sizeof(double));
   ispec.read(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
-  if (sparams_->highlight_handedness) {
+  CalculateAngles();
+  if (sparams_->highlight_curvature) {
+    draw_ = draw_type::fixed;
+    color_ = sparams_->color + M_PI;
+    double avg_cos_theta = 0;
+    // Average over bond angles
+    for (int i=0; i<n_bonds_-1; ++i) {
+      avg_cos_theta += cos_thetas_[i];
+    }
+    avg_cos_theta /= n_bonds_-1;
+    double scale = 4 * M_PI;
+    double nominal_cos_theta = cos(2 * curvature_ * bond_length_);
+    double color_diff = scale * (avg_cos_theta - nominal_cos_theta);
+    for (int i = 0; i < n_bonds_; ++i) {
+      bonds_[i].SetColor(color_ + color_diff, draw_);
+    }
+  } else if (sparams_->highlight_handedness) {
     draw_ = draw_type::fixed;
     color_ = (curvature_ > 0 ? sparams_->color : sparams_->color + M_PI);
     for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
       bond->SetColor(color_, draw_);
     }
   }
-  CalculateAngles();
 }
 
 /* double[3] avg_pos

@@ -55,11 +55,13 @@
   default_config["filament"]["orientation_corr_analysis"] = "false";
   default_config["filament"]["orientation_corr_n_steps"] = "1000";
   default_config["filament"]["crossing_analysis"] = "false";
+  default_config["filament"]["radius_of_curvature"] = "-1";
   default_config["filament"]["intrinsic_curvature"] = "0";
   default_config["filament"]["intrinsic_curvature_sig"] = "0";
   default_config["filament"]["randomize_intrinsic_curvature_handedness"] = "false";
   default_config["filament"]["intrinsic_curvature_min"] = "0";
   default_config["filament"]["highlight_handedness"] = "false";
+  default_config["filament"]["highlight_curvature"] = "false";
   default_config["filament"]["flagella_flag"] = "false";
   default_config["filament"]["flagella_freq"] = "1";
   default_config["filament"]["flagella_period"] = "2";

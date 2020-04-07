@@ -57,6 +57,10 @@ void Mesh::AddBond(Site *site1, Site *site2) {
   bonds_.back().SetMeshLambda(true_length_);
   bonds_.back().SetEquilLength(bond_length_);
   bonds_.back().Init(site1, site2);
+  /* Initialize site orientations */
+  site1->SetOrientation(bonds_.back().GetOrientation());
+  site2->SetOrientation(bonds_.back().GetOrientation());
+
   true_length_ += bonds_.back().GetLength();
   n_bonds_++;
   Logger::Trace("Added bond number %d, id: %d", n_bonds_,
@@ -460,12 +464,7 @@ void Mesh::ReadSpec(std::fstream &ip) {
     for (auto it = sites_.begin(); it != sites_.end(); ++it) {
       it->ReadSpec(ip);
     }
-    true_length_ = 0;
-    for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
-      it->ReInit();
-      it->SetMeshLambda(true_length_);
-      true_length_ += it->GetLength();
-    }
+    UpdateBondPositions();
   } else {
     Clear();
     if (!dynamic_instability_flag_) {
@@ -485,6 +484,7 @@ void Mesh::ReadSpec(std::fstream &ip) {
     for (int i = 0; i < n_sites_ - 1; ++i) {
       AddBond(&sites_[i], &sites_[i + 1]);
     }
+    UpdateBondPositions();
   }
   if (n_bonds_ != n_sites_ - 1) {
     Logger::Error("Incorrect number of bonds initialized in Mesh::ReadSpec");

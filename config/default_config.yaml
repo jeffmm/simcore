@@ -277,12 +277,14 @@ filament:                            # Parameters unique to filament class of ob
   orientation_corr_n_steps: [1000, int] # number of steps to measure orientation correlation, defines
                                         # interval over which to average.
   crossing_analysis: [false, bool]  # apply post-process analysis of filament crossing events.
+  radius_of_curvature: [-1, double] # used to specify intrinsic curvature, optional
   intrinsic_curvature: [0, double]  # curvature per unit length to apply on filament. defines the
                                     # curvature of zero bending energy. positive is right-handed.
   intrinsic_curvature_sig: [0, double] # std_dev of intrinsic curvature from normal dist
   randomize_intrinsic_curvature_handedness: [false, bool] # randomize handedness of curvature for each fil
   intrinsic_curvature_min: [0, double] # will apply if magnitude of intrinsic curvature is below
   highlight_handedness: [false, bool]  # color filament by intrinsic curvature handedness
+  highlight_curvature: [false, bool]  # Applies color to filament bonds that are bent away from ic
   flagella_flag: [false, bool]      # applies a sinusoidal, time-varying intrinsic curvature along 
                                     # filament.
   flagella_freq: [1, double]        # frequency at which to oscillate intrinsic curvature of flagella.

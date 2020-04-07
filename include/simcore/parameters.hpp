@@ -76,11 +76,13 @@ struct species_parameters<species_id::filament>
   bool orientation_corr_analysis = false;
   int orientation_corr_n_steps = 1000;
   bool crossing_analysis = false;
+  double radius_of_curvature = -1;
   double intrinsic_curvature = 0;
   double intrinsic_curvature_sig = 0;
   bool randomize_intrinsic_curvature_handedness = false;
   double intrinsic_curvature_min = 0;
   bool highlight_handedness = false;
+  bool highlight_curvature = false;
   bool flagella_flag = false;
   double flagella_freq = 1;
   double flagella_period = 2;

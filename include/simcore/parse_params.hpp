@@ -389,6 +389,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.orientation_corr_n_steps = jt->second.as<int>();
       } else if (param_name.compare("crossing_analysis")==0) {
       params.crossing_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("radius_of_curvature")==0) {
+      params.radius_of_curvature = jt->second.as<double>();
       } else if (param_name.compare("intrinsic_curvature")==0) {
       params.intrinsic_curvature = jt->second.as<double>();
       } else if (param_name.compare("intrinsic_curvature_sig")==0) {
@@ -399,6 +401,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.intrinsic_curvature_min = jt->second.as<double>();
       } else if (param_name.compare("highlight_handedness")==0) {
       params.highlight_handedness = jt->second.as<bool>();
+      } else if (param_name.compare("highlight_curvature")==0) {
+      params.highlight_curvature = jt->second.as<bool>();
       } else if (param_name.compare("flagella_flag")==0) {
       params.flagella_flag = jt->second.as<bool>();
       } else if (param_name.compare("flagella_freq")==0) {
