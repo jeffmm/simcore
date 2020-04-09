@@ -190,6 +190,7 @@ Object *CrosslinkSpecies::GetRandomObject() {
     }
   }
   Logger::Error("CrosslinkSpecies::GetRandomObject should never get here!");
+  return nullptr;
 }
 
 /* A crosslink binds to an object from solution */

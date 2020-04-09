@@ -273,9 +273,9 @@ double SimulationManager::GetRandomParam(std::string rtype, double min,
     return (min + rng_->RandomInt(max - min));
   } else if (rtype.compare("RLOG") == 0) {
     return pow(10.0, min + (max - min) * rng_->RandomUniform());
-  } else {
-    Logger::Error("Parameter randomization type not recognized.");
   }
+  Logger::Error("Parameter randomization type not recognized.");
+  return -1;
 }
 
 /****************************************
