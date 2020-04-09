@@ -92,8 +92,8 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.pressure_time = it->second.as<int>();
     } else if (param_name.compare("compressibility")==0) {
     params.compressibility = it->second.as<double>();
-    } else if (param_name.compare("stoch_flag")==0) {
-    params.stoch_flag = it->second.as<bool>();
+    } else if (param_name.compare("zero_temperature")==0) {
+    params.zero_temperature = it->second.as<bool>();
     } else if (param_name.compare("thermo_flag")==0) {
     params.thermo_flag = it->second.as<bool>();
     } else if (param_name.compare("n_thermo")==0) {
@@ -132,12 +132,6 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.like_like_interactions = it->second.as<bool>();
     } else if (param_name.compare("auto_graph")==0) {
     params.auto_graph = it->second.as<bool>();
-    } else if (param_name.compare("polar_order_analysis")==0) {
-    params.polar_order_analysis = it->second.as<bool>();
-    } else if (param_name.compare("polar_order_n_bins")==0) {
-    params.polar_order_n_bins = it->second.as<int>();
-    } else if (param_name.compare("polar_order_contact_cutoff")==0) {
-    params.polar_order_contact_cutoff = it->second.as<double>();
     } else if (param_name.compare("local_order_analysis")==0) {
     params.local_order_analysis = it->second.as<bool>();
     } else if (param_name.compare("local_order_width")==0) {
@@ -160,8 +154,6 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.reduced = it->second.as<bool>();
     } else if (param_name.compare("reload_reduce_switch")==0) {
     params.reload_reduce_switch = it->second.as<bool>();
-    } else if (param_name.compare("in_out_flag")==0) {
-    params.in_out_flag = it->second.as<bool>();
     } else if (param_name.compare("checkpoint_flag")==0) {
     params.checkpoint_flag = it->second.as<bool>();
     } else if (param_name.compare("n_checkpoint")==0) {
@@ -353,10 +345,20 @@ species_base_parameters *parse_species_params(std::string sid,
       params.lp_analysis = jt->second.as<bool>();
       } else if (param_name.compare("global_order_analysis")==0) {
       params.global_order_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("polar_order_analysis")==0) {
+      params.polar_order_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("polar_order_n_bins")==0) {
+      params.polar_order_n_bins = jt->second.as<int>();
+      } else if (param_name.compare("polar_order_contact_cutoff")==0) {
+      params.polar_order_contact_cutoff = jt->second.as<double>();
+      } else if (param_name.compare("polar_order_width")==0) {
+      params.polar_order_width = jt->second.as<double>();
       } else if (param_name.compare("curvature_cluster_analysis")==0) {
       params.curvature_cluster_analysis = jt->second.as<bool>();
-      } else if (param_name.compare("spiral_flag")==0) {
-      params.spiral_flag = jt->second.as<bool>();
+      } else if (param_name.compare("spiral_init_flag")==0) {
+      params.spiral_init_flag = jt->second.as<bool>();
+      } else if (param_name.compare("spiral_analysis")==0) {
+      params.spiral_analysis = jt->second.as<bool>();
       } else if (param_name.compare("spiral_number_fail_condition")==0) {
       params.spiral_number_fail_condition = jt->second.as<double>();
       } else if (param_name.compare("orientation_corr_analysis")==0) {
@@ -383,6 +385,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.number_fluctuation_boxes = jt->second.as<int>();
       } else if (param_name.compare("number_fluctuation_centers")==0) {
       params.number_fluctuation_centers = jt->second.as<int>();
+      } else if (param_name.compare("in_out_analysis")==0) {
+      params.in_out_analysis = jt->second.as<bool>();
       } else if (param_name.compare("drive_from_bond_center")==0) {
       params.drive_from_bond_center = jt->second.as<bool>();
       } else if (param_name.compare("flagella_flag")==0) {

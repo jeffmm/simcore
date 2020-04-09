@@ -51,12 +51,13 @@ void FilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
                       "instead.");
     } else {
       sparams_.peclet_number = sparams_.flexure_number *
-        sparams_.persistence_length / sparams_.length;
+                               sparams_.persistence_length / sparams_.length;
     }
   }
   if (sparams_.peclet_number >= 0) {
     if (sparams_.dynamic_instability_flag) {
-      Logger::Error("Dynamic instability and Peclet/Flexure numbers are not compatible");
+      Logger::Error(
+          "Dynamic instability and Peclet/Flexure numbers are not compatible");
     }
     if (sparams_.polydispersity_flag) {
       Logger::Warning("Peclet number parameter is set with "
@@ -66,7 +67,7 @@ void FilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
       sparams_.driving_factor = sparams_.peclet_number / SQR(sparams_.length);
     }
   }
-  if (sparams_.spiral_flag && sparams_.spiral_number_fail_condition <= 0) {
+  if (sparams_.spiral_init_flag && sparams_.spiral_number_fail_condition <= 0) {
     Logger::Warning("Spiral simulation will not end on spiral failure due to"
                     " nonpositive spiral_number_fail_condition");
   }
@@ -75,7 +76,8 @@ void FilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
     if (sparams_.reference_frame_flag) {
       Logger::Warning(
           "Filament errors will be inflated due to rotation of site "
-          "positions into filament reference frame. Errors should be viewed only"
+          "positions into filament reference frame. Errors should be viewed "
+          "only"
           " in this context.");
     }
     InitErrorAnalysis();
@@ -118,6 +120,19 @@ void FilamentSpecies::UpdatePositions() {
   midstep_ = !midstep_;
   if (sparams_.error_analysis) {
     RunErrorAnalysis();
+  }
+  if (sparams_.spiral_init_flag && sparams_.spiral_number_fail_condition >= 0) {
+    int n_failed_spirals = 0;
+    for (auto it = members_.begin(); it != members_.end(); ++it) {
+      if (ABS(it->GetSpiralNumber()) < sparams_.spiral_number_fail_condition) {
+        // Failed spiral
+        n_failed_spirals++;
+      }
+    }
+    // If all spirals have failed, end simulation early
+    if (n_failed_spirals == n_members_) {
+      early_exit = true;
+    }
   }
 }
 
@@ -209,13 +224,19 @@ void FilamentSpecies::LoadAnalysis() {
     FilamentAnalysis *ccluster = new CurvatureClusterAnalysis;
     analysis_.push_back(ccluster);
   }
-  if (sparams_.spiral_flag) {
+  if (sparams_.spiral_analysis) {
     FilamentAnalysis *spiral = new SpiralAnalysis;
     analysis_.push_back(spiral);
   }
   if (sparams_.theta_analysis) {
     FilamentAnalysis *theta = new AngleDistributionAnalysis;
     analysis_.push_back(theta);
+  }
+  /* PolarOrderAnalysis before FlockingAnalysis, so we can calculate polar order
+     only once if both analyses are being done  */
+  if (sparams_.polar_order_analysis) {
+    FilamentAnalysis *polar_order = new PolarOrderAnalysis;
+    analysis_.push_back(polar_order);
   }
   if (sparams_.flocking_analysis) {
     FilamentAnalysis *flock = new FlockingAnalysis;
@@ -229,10 +250,6 @@ void FilamentSpecies::LoadAnalysis() {
     FilamentAnalysis *global_order = new GlobalOrderAnalysis;
     analysis_.push_back(global_order);
   }
-  if (params_->polar_order_analysis) {
-    FilamentAnalysis *polar_order = new PolarOrderAnalysis;
-    analysis_.push_back(polar_order);
-  }
   if (sparams_.number_fluctuation_analysis) {
     FilamentAnalysis *gnf = new GiantNumberFluctuationAnalysis;
     analysis_.push_back(gnf);
@@ -241,7 +258,7 @@ void FilamentSpecies::LoadAnalysis() {
     FilamentAnalysis *mse2e = new EndToEndFluctuationAnalysis;
     analysis_.push_back(mse2e);
   }
-  if (params_->in_out_flag) {
+  if (sparams_.in_out_analysis) {
     FilamentAnalysis *in_out = new IncomingOutgoingAngleAnalysis;
     analysis_.push_back(in_out);
   }

@@ -559,6 +559,7 @@ void Simulation::InitProcessing(run_options run_opts) {
   params_.dynamic_timestep = false;
   // Do not coarse-grain mesh interactions during analysis
   params_.coarse_grained_mesh_interactions = false;
+  params_.remove_duplicate_interactions = false;
 
   /* Ensure that we are not trying to load any checkpoints when processing
      outputs */
@@ -568,20 +569,20 @@ void Simulation::InitProcessing(run_options run_opts) {
   InitObjects();
   ix_mgr_.Init(&params_, &species_, space_.GetStruct(), true);
   InitSpecies();
-  ix_mgr_.InitInteractions();
+  // ix_mgr_.InitInteractions();
   InsertSpecies(true, true);
   InitInputs(run_opts);
   if (run_opts.analysis_flag) {
     for (auto it = species_.begin(); it != species_.end(); ++it) {
       (*it)->InitAnalysis();
-      //if ((*it)->CheckInteractionAnalysis()) {
-        //ix_mgr_.SetInteractionAnalysis(true);
-      //}
+      if ((*it)->CheckInteractionAnalysis()) {
+        ix_mgr_.SetInteractionAnalysis(true);
+      }
     }
   }
-  //ix_mgr_.InitInteractions();
-  //ix_mgr_.ResetCellList();
-  //ix_mgr_.Reset();
+  ix_mgr_.InitInteractions();
+  ix_mgr_.ResetCellList();
+  ix_mgr_.Reset();
   if (run_opts.graphics_flag || run_opts.make_movie) {
     params_.graph_flag = true;
     if (run_opts.use_posits && params_.n_graph < output_mgr_.GetNPosit()) {
@@ -603,10 +604,6 @@ void Simulation::InitProcessing(run_options run_opts) {
  * generation, etc. */
 void Simulation::RunProcessing(run_options run_opts) {
   Logger::Info("Processing outputs for %s", run_name_.c_str());
-  bool local_order =
-      (params_.local_order_analysis || params_.polar_order_analysis ||
-       params_.overlap_analysis || params_.density_analysis);
-
   for (i_step_ = 0; true; ++i_step_) {
     params_.i_step = i_step_;
     time_ = params_.i_step * params_.delta;
@@ -619,22 +616,22 @@ void Simulation::RunProcessing(run_options run_opts) {
       /* Check if we are running any species analysis to determine whether we
        * run structure analysis */
       for (auto it = species_.begin(); it != species_.end(); ++it) {
-        if (((*it)->GetPositFlag() && params_.i_step % (*it)->GetNPosit() == 0) ||
+        if (((*it)->GetPositFlag() &&
+             params_.i_step % (*it)->GetNPosit() == 0) ||
             ((*it)->GetSpecFlag() && params_.i_step % (*it)->GetNSpec() == 0)) {
           struct_update = true;
           break;
         }
       }
-      // Do structure analysis first
-      if (struct_update && local_order &&
-          i_step_ % params_.local_order_n_analysis == 0) {
-        ix_mgr_.StructureAnalysis();
-      }
-      // Now do species analyses
-      for (auto it = species_.begin(); it != species_.end(); ++it) {
-        if (((*it)->GetPositFlag() && params_.i_step % (*it)->GetNPosit() == 0) ||
-            ((*it)->GetSpecFlag() && params_.i_step % (*it)->GetNSpec() == 0)) {
-          (*it)->RunAnalysis();
+      if (struct_update) {
+        ix_mgr_.InteractionAnalysis();
+        for (auto it = species_.begin(); it != species_.end(); ++it) {
+          if (((*it)->GetPositFlag() &&
+               params_.i_step % (*it)->GetNPosit() == 0) ||
+              ((*it)->GetSpecFlag() &&
+               params_.i_step % (*it)->GetNSpec() == 0)) {
+            (*it)->RunAnalysis();
+          }
         }
       }
     }

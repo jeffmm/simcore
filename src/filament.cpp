@@ -19,7 +19,7 @@ void Filament::SetParameters() {
     min_length_ = 2 * min_bond_length_;
   dynamic_instability_flag_ = sparams_->dynamic_instability_flag;
   polydispersity_flag_ = sparams_->polydispersity_flag;
-  spiral_flag_ = sparams_->spiral_flag;
+  spiral_init_flag_ = sparams_->spiral_init_flag;
   force_induced_catastrophe_flag_ = sparams_->force_induced_catastrophe_flag;
   p_g2s_ = sparams_->f_grow_to_shrink * delta_;
   p_g2p_ = sparams_->f_grow_to_pause * delta_;
@@ -43,7 +43,7 @@ void Filament::SetParameters() {
   }
   driving_factor_ = sparams_->driving_factor;
   friction_ratio_ = sparams_->friction_ratio;
-  stoch_flag_ = params_->stoch_flag; // include thermal forces
+  zero_temperature_ = params_->zero_temperature; // don't include thermal forces
   eq_steps_ = sparams_->n_equil;
   // Don't bother with equilibriating if this is a reloaded simulation
   if (params_->n_load > 0) {
@@ -255,7 +255,7 @@ void Filament::InsertFilament() {
   for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
     bond->SetColor(color_, draw_);
   }
-  if (spiral_flag_) {
+  if (spiral_init_flag_) {
     InitSpiral2D();
   }
   UpdateBondPositions();
@@ -444,7 +444,7 @@ void Filament::CalculateAngles() {
     double cos_angle = dot_product(n_dim_, u1, u2);
     cos_thetas_[i_site] = cos_angle;
   }
-  if (spiral_flag_) {
+  if (spiral_init_flag_) {
     CalculateSpiralNumber();
   }
 }
@@ -489,11 +489,6 @@ void Filament::CalculateSpiralNumber() {
     }
     spiral_number_ += sign * angle;
   }
-  // Failed spiral (waiting until the filament straightens)
-  if (spiral_flag_ &&
-      ABS(GetSpiralNumber()) < sparams_->spiral_number_fail_condition) {
-    early_exit = true;
-  }
 }
 
 double Filament::GetSpiralNumber() { return 0.5 * spiral_number_ / M_PI; }
@@ -534,7 +529,7 @@ void Filament::ConstructUnprojectedRandomForces() {
   // uncorrelated and randomly distributed uniformly between -0.5 and 0.5,
   // xi_term is the outer product of the tangent vector u_tan_i u_tan_i acting
   // on the vector xi
-  if (!stoch_flag_)
+  if (zero_temperature_)
     return;
   double xi[3], xi_term[3], f_rand[3];
   for (int i_site = 0; i_site < n_sites_; ++i_site) {
@@ -561,7 +556,7 @@ void Filament::ConstructUnprojectedRandomForces() {
 }
 
 void Filament::GeometricallyProjectRandomForces() {
-  if (!stoch_flag_)
+  if (zero_temperature_)
     return;
   double f_rand_temp[3];
   for (int i_site = 0; i_site < n_sites_ - 1; ++i_site) {
@@ -612,7 +607,7 @@ void Filament::GeometricallyProjectRandomForces() {
 }
 
 void Filament::AddRandomForces() {
-  if (!stoch_flag_)
+  if (zero_temperature_)
     return;
   for (auto site = sites_.begin(); site != sites_.end(); ++site)
     site->AddRandomForce();
@@ -1209,7 +1204,11 @@ void Filament::UpdatePolyState() {
 }
 
 void Filament::CheckFlocking() {
-  //CalcPolarOrder();
+  if (!sparams_->polar_order_analysis) {
+    /* Only need to call if we aren't calculating polar order in
+       PolarOrderAnalysis*/
+    CalcPolarOrder();
+  }
   double avg_polar_order = 0;
   double avg_contact_number = 0;
   for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
@@ -1246,8 +1245,8 @@ void Filament::CheckFlocking() {
 }
 
 void Filament::Draw(std::vector<graph_struct *> &graph_array) {
-  if (sparams_->highlight_flock && params_->polar_order_analysis &&
-      sparams_->flocking_analysis) {
+  if (sparams_->highlight_flock && !sparams_->flocking_analysis) {
+    // We already call this during FlockingAnalysis, so don't call if unnecessary
     CheckFlocking();
   }
   if (sparams_->highlight_curvature) {
@@ -1443,6 +1442,10 @@ void Filament::ReadSpec(std::fstream &ispec) {
   ispec.read(reinterpret_cast<char *>(&curvature_), sizeof(double));
   ispec.read(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
   CalculateAngles();
+  if (sparams_->highlight_handedness) {
+    draw_ = draw_type::fixed;
+    color_ = (curvature_ > 0 ? sparams_->color : sparams_->color + M_PI);
+  }
 }
 
 /* double[3] avg_pos

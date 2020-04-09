@@ -107,38 +107,40 @@ void Object::AddContactNumber(double const cn) {
   contact_number_ += cn;
 }
 void Object::CalcPolarOrder() {
-  //polar_order_ = 0;
-  //contact_number_ = 0;
-  //for (auto ix = ixs_.begin(); ix != ixs_.end(); ++ix) {
-    //if (ix->first->obj1->GetMeshID() == ix->first->obj2->GetMeshID())
-      //continue;
-    ////if (ix->first->pause_interaction)
-      ////continue;
-    //double dr2 = ix->first->dr_mag2;
-    //if (dr2 < 0)
-      //Logger::Error("Object received an interaction that was not parsed");
-    //double expdr2 = exp(-dr2);
-    //double const *const u1 = ix->first->obj1->GetInteractorOrientation();
-    //double const *const u2 = ix->first->obj2->GetInteractorOrientation();
-    //double u1_dot_u2 = dot_product(n_dim_, u1, u2);
-    //polar_order_ += u1_dot_u2 * expdr2;
-    //contact_number_ += expdr2;
-  //}
+  polar_order_ = 0;
+  contact_number_ = 0;
+  for (auto ix = ixs_.begin(); ix != ixs_.end(); ++ix) {
+    // Ignore intrafilament bonds
+    if (ix->first->obj1->GetMeshID() == ix->first->obj2->GetMeshID())
+      continue;
+    // if (ix->first->pause_interaction)
+    // continue;
+    double dr2 = ix->first->dr_mag2;
+    if (dr2 < 0) {
+      Logger::Error("Object received an interaction that was not parsed");
+    }
+    double expdr2 = exp(-dr2);
+    double const *const u1 = ix->first->obj1->GetInteractorOrientation();
+    double const *const u2 = ix->first->obj2->GetInteractorOrientation();
+    double u1_dot_u2 = dot_product(n_dim_, u1, u2);
+    polar_order_ += u1_dot_u2 * expdr2;
+    contact_number_ += expdr2;
+  }
 
   if (contact_number_ > 1e-16) {
     polar_order_ /= contact_number_;
   } else {
     polar_order_ = 0;
   }
-  //if (polar_order_ >= 0.5) {
-    //draw_ = draw_type::fixed;
-    //color_ = 4.7;
-    //if (contact_number_ >= 0.5) {
-      //draw_ = draw_type::fixed;
-      //color_ = 1.5;
-    //} else {
-      //draw_ = draw_type::bw;
-    //}
+  // if (polar_order_ >= 0.5) {
+  // draw_ = draw_type::fixed;
+  // color_ = 4.7;
+  // if (contact_number_ >= 0.5) {
+  // draw_ = draw_type::fixed;
+  // color_ = 1.5;
+  //} else {
+  // draw_ = draw_type::bw;
+  //}
   //}
 }
 void Object::ZeroPolarOrder() {
@@ -336,9 +338,10 @@ void Object::ApplyInteractions() {
       AddPotential(ix->first->pote);
     }
   }
-  //CalcPolarOrder();
-  // Moved to global ClearObjectInteractions() function in InteractionManager
-   ixs_.clear();
+  /* Moved clearing responsibility to global ClearObjectInteractions() function
+   in InteractionManager so Objects have an opportunity to inspect their
+   interactions (for analysis or other reasons) */
+  // ixs_.clear();
 }
 
 void Object::FlagDuplicateInteractions() {

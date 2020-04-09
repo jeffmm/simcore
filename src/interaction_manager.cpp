@@ -22,25 +22,14 @@ void InteractionManager::Init(system_parameters *params,
 
   // Update dr distance should be half the cell length, and we are comparing the
   // squares of the trajectory distances
-  bool local_order =
-      (params_->local_order_analysis || params_->polar_order_analysis ||
-       params_->overlap_analysis || params_->density_analysis);
-
-  if (local_order && processing_) {
-    struct_analysis_.Init(params);
-  }
   xlink_.Init(params_, space_, &ix_objects_);
   no_boundaries_ = false;
-  if (space_->type == +boundary_type::none) no_boundaries_ = true;
+  if (space_->type == +boundary_type::none)
+    no_boundaries_ = true;
 }
 
 void InteractionManager::InitInteractions() {
-  bool local_order =
-      (params_->local_order_analysis || params_->polar_order_analysis ||
-       params_->overlap_analysis || params_->density_analysis);
-  if (processing_ && local_order) {
-    CellList::SetMinCellLength(0.5 * params_->local_order_width);
-  } else if (processing_) {
+  if (processing_ && !run_interaction_analysis_) {
     return;
   }
   CellList::SetMinCellLength(xlink_.GetRCutoff());
@@ -55,47 +44,48 @@ void InteractionManager::InitInteractions() {
   MinimumDistance::Init(space_, 2 * dr_update_);
 }
 
+void InteractionManager::CalculateInteractions() {
+  ClearObjectInteractions();
+  if (!no_interactions_) {
+    CalculatePairInteractions();
+  }
+  CalculateBoundaryInteractions();
+}
+
+void InteractionManager::ApplyInteractions() {
+  if (!no_interactions_) {
+    ApplyPairInteractions();
+  }
+  ApplyBoundaryInteractions();
+}
+
 /****************************************
   INTERACT: Loop through interactions and
     apply WCA potential (for now)
 *****************************************/
 
 void InteractionManager::Interact() {
-  n_interactions_ = 0;
   // First check if we need to interact
-  if (no_interactions_ && no_boundaries_) return;
+  if (no_interactions_ && no_boundaries_)
+    return;
   // Check if we need to update objects in cell list
   CheckUpdateObjects();
   // Update crosslinks
   xlink_.UpdateCrosslinks();
   // Check if we need to update crosslink interactors
   CheckUpdateXlinks();
-  //UpdateInteractions();
+  // Check if we need to update pair interactions
   CheckUpdateInteractions();
-
-  /* Update anchors and crosslinks */
-  // Loop through and calculate interactions
-  if (!no_interactions_) {
-    CalculatePairInteractions();
-  }
-  CalculateBoundaryInteractions();
-  // Apply forces, torques, and potentials in serial
+  // Calculate interactions from potentials and assign interactions to objects
+  CalculateInteractions();
+  /* Check if forces exceed predetermined limits and if so, abort and reduce
+     time step */
   if (params_->dynamic_timestep && potentials_.CheckMaxForce()) {
     decrease_dynamic_timestep_ = true;
     return;
   }
-  if (!no_interactions_) {
-    ApplyPairInteractions();
-  }
-  ApplyBoundaryInteractions();
-
-  if (params_->in_out_flag) {
-    if (n_interactions_ == 0 && in_out_flag_) {
-      early_exit = true;
-    } else if (n_interactions_ > 0 && !in_out_flag_) {
-      in_out_flag_ = true;
-    }
-  }
+  // Apply forces, torques, and energies on objects
+  ApplyInteractions();
   i_update_++;
 }
 
@@ -109,10 +99,9 @@ void InteractionManager::CheckUpdateXlinks() {
     std::vector<Object *> xlinks;
     xlink_.GetInteractors(xlinks);
     interactors_.insert(interactors_.end(), xlinks.begin(), xlinks.end());
-    Logger::Debug(
-        "Updating interactions due to crosslink update. %d steps "
-        "since last update",
-        i_update_);
+    Logger::Debug("Updating interactions due to crosslink update. %d steps "
+                  "since last update",
+                  i_update_);
     UpdateInteractions();
     return;
   }
@@ -150,9 +139,8 @@ bool InteractionManager::CheckBondAnchorPair(Object *anchor, Object *bond) {
   if (anchor->GetMeshID() == bond->GetMeshID()) {
     Anchor *a = dynamic_cast<Anchor *>(anchor);
     if (a == nullptr) {
-      Logger::Error(
-          "Object pointer was unsuccessfully dynamically cast to an "
-          "Anchor pointer in CheckBondAnchorPair!");
+      Logger::Error("Object pointer was unsuccessfully dynamically cast to an "
+                    "Anchor pointer in CheckBondAnchorPair!");
     }
     if (bond->GetType() != +obj_type::bond) {
       Logger::Error(
@@ -222,7 +210,8 @@ void InteractionManager::UpdateInteractions() {
 }
 
 void InteractionManager::UpdatePairInteractions() {
-  if (no_interactions_) return;
+  if (no_interactions_)
+    return;
 #ifdef TRACE
   int nix = pair_interactions_.size();
 #endif
@@ -236,7 +225,8 @@ void InteractionManager::UpdatePairInteractions() {
 }
 
 void InteractionManager::UpdateBoundaryInteractions() {
-  if (no_boundaries_) return;
+  if (no_boundaries_)
+    return;
   boundary_interactions_.clear();
   for (auto ixor = interactors_.begin(); ixor != interactors_.end(); ++ixor) {
     Interaction ix(*ixor);
@@ -268,22 +258,23 @@ void InteractionManager::CheckUpdateObjects() {
   /* First check to see if any objects were added to the system;
      If static_pnumber_ is flagged, we know that particle numbers
      never change, so we don't bother counting particles and move on */
-  if (processing_) return;
-  if (static_pnumber_) return;
+  if (processing_)
+    return;
+  if (static_pnumber_)
+    return;
   bool ix_update = CheckSpeciesInteractorUpdate();
   int obj_count = CountSpecies();
   if (obj_count != n_objs_ || ix_update) {
     // reset update count and update number of objects to track
     n_objs_ = obj_count;
-    Logger::Debug(
-        "Updating interactions due to object update. %d steps since"
-        " last update",
-        i_update_);
+    Logger::Debug("Updating interactions due to object update. %d steps since"
+                  " last update",
+                  i_update_);
     ForceUpdate();
     xlink_.UpdateObjsVolume();
-    // XXX This has to be run before the first FlagDuplicateInteractions() call if
-    // we check for overlaps at the beginning of the simulation...
-    ClearObjectInteractions();
+    // XXX This has to be run before the first FlagDuplicateInteractions() call
+    // if we check for overlaps at the beginning of the simulation...
+    // ClearObjectInteractions();
   }
 }
 
@@ -300,10 +291,9 @@ void InteractionManager::CheckUpdateInteractions() {
      has moved a distance further than dr_update_ */
   double dr_max = GetDrMax();
   if (dr_max > dr_update_) {
-    Logger::Debug(
-        "Updating interactions due to dr of objects. %d steps since"
-        " last update, dr_max = %2.2f",
-        i_update_, dr_max);
+    Logger::Debug("Updating interactions due to dr of objects. %d steps since"
+                  " last update, dr_max = %2.2f",
+                  i_update_, dr_max);
     UpdateInteractions();
   }
 }
@@ -335,6 +325,15 @@ void InteractionManager::ZeroDrTot() {
 }
 
 void InteractionManager::ProcessPairInteraction(ix_iterator ix) {
+  if (processing_ ) {
+    mindist_.ObjectObject(*ix);
+     //Check to see if particles are not close enough to interact
+    if (ix->dr_mag2 > potentials_.GetRCut2())
+      return;
+     //Calculates forces from the potential defined during initialization
+    potentials_.CalcPotential(*ix);
+    return;
+  }
   // Avoid certain types of interactions
   Object *obj1 = ix->obj1;
   Object *obj2 = ix->obj2;
@@ -394,36 +393,27 @@ void InteractionManager::ProcessPairInteraction(ix_iterator ix) {
     xlink_.AddNeighborToAnchor(obj2, obj1);
     return;
   }
-
-  // We have an interaction:
-  if (obj1->GetMeshID() != obj2->GetMeshID()) {
-    n_interactions_++;
-  }
-  if (obj1->GetSID() == +species_id::crosslink ||
-      obj2->GetSID() == +species_id::crosslink) {
-  }
-
   mindist_.ObjectObject(*ix);
 
-  // XXX Don't interact if we have an overlap. This should eventually go to a
-  // max force routine
+  // Check for particle overlaps
   if (ix->dr_mag2 < 0.25 * SQR(obj1->GetDiameter() + obj2->GetDiameter())) {
     overlap_ = true;
   }
   /* Check to see if particles are not close enough to interact */
-  if (ix->dr_mag2 > potentials_.GetRCut2()) return;
+  if (ix->dr_mag2 > potentials_.GetRCut2())
+    return;
   /* Calculates forces from the potential defined during initialization */
   potentials_.CalcPotential(*ix);
 }
 
 void InteractionManager::ProcessBoundaryInteraction(ix_iterator ix) {
   mindist_.CheckBoundaryInteraction(*ix);
-  // XXX Don't interact if we have an overlap. This should eventually go to a
-  // max force routine
+  // Check for particle overlapping with boundary edge
   if (ix->dr_mag2 < 0.25 * SQR(ix->obj1->GetDiameter())) {
     overlap_ = true;
   }
-  if (ix->dr_mag2 > potentials_.GetRCut2()) return;
+  if (ix->dr_mag2 > potentials_.GetRCut2())
+    return;
   potentials_.CalcPotential(*ix);
 }
 
@@ -467,34 +457,33 @@ void InteractionManager::CalculateBoundaryInteractions() {
 
 void InteractionManager::ClearObjectInteractions() {
 #ifdef ENABLE_OPENMP
-    int max_threads = omp_get_max_threads();
-    std::vector<std::pair<std::vector<Object *>::iterator,
-                          std::vector<Object *>::iterator>>
-        chunks;
-    chunks.reserve(max_threads);
-    size_t chunk_size = interactors_.size() / max_threads;
-    auto cur_iter = interactors_.begin();
-    for (int i = 0; i < max_threads - 1; ++i) {
-      auto last_iter = cur_iter;
-      std::advance(cur_iter, chunk_size);
-      chunks.push_back(std::make_pair(last_iter, cur_iter));
-    }
-    chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
+  int max_threads = omp_get_max_threads();
+  std::vector<std::pair<std::vector<Object *>::iterator,
+                        std::vector<Object *>::iterator>>
+      chunks;
+  chunks.reserve(max_threads);
+  size_t chunk_size = interactors_.size() / max_threads;
+  auto cur_iter = interactors_.begin();
+  for (int i = 0; i < max_threads - 1; ++i) {
+    auto last_iter = cur_iter;
+    std::advance(cur_iter, chunk_size);
+    chunks.push_back(std::make_pair(last_iter, cur_iter));
+  }
+  chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
 #pragma omp parallel shared(chunks)
-    {
+  {
 #pragma omp for
-      for (int i = 0; i < max_threads; ++i) {
-        for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
-          (*it)->ClearInteractions();
-        }
+    for (int i = 0; i < max_threads; ++i) {
+      for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
+        (*it)->ClearInteractions();
       }
     }
+  }
 #else
-    for (auto it = interactors_.begin(); it != interactors_.end(); ++it) {
-      (*it)->ClearInteractions();
-    }
+  for (auto it = interactors_.begin(); it != interactors_.end(); ++it) {
+    (*it)->ClearInteractions();
+  }
 #endif
-
 }
 
 void InteractionManager::CalculatePairInteractions() {
@@ -519,7 +508,8 @@ void InteractionManager::CalculatePairInteractions() {
         ix->pause_interaction = false;
         ProcessPairInteraction(ix);
         // Do torque crossproducts
-        if (ix->no_interaction) continue;
+        if (ix->no_interaction)
+          continue;
         cross_product(ix->contact1, ix->force, ix->t1, 3);
         cross_product(ix->contact2, ix->force, ix->t2, 3);
         object_interaction oix1 = std::make_pair(&(*ix), true);
@@ -535,7 +525,8 @@ void InteractionManager::CalculatePairInteractions() {
     ix->pause_interaction = false;
     ProcessPairInteraction(ix);
     // Do torque crossproducts
-    if (ix->no_interaction) continue;
+    if (ix->no_interaction)
+      continue;
     cross_product(ix->contact1, ix->force, ix->t1, 3);
     cross_product(ix->contact2, ix->force, ix->t2, 3);
     object_interaction oix1 = std::make_pair(&(*ix), true);
@@ -563,32 +554,32 @@ void InteractionManager::CalculatePairInteractions() {
 
 void InteractionManager::FlagDuplicateInteractions() {
 #ifdef ENABLE_OPENMP
-    int max_threads = omp_get_max_threads();
-    std::vector<std::pair<std::vector<Object *>::iterator,
-                          std::vector<Object *>::iterator>>
-        chunks;
-    chunks.reserve(max_threads);
-    size_t chunk_size = interactors_.size() / max_threads;
-    auto cur_iter = interactors_.begin();
-    for (int i = 0; i < max_threads - 1; ++i) {
-      auto last_iter = cur_iter;
-      std::advance(cur_iter, chunk_size);
-      chunks.push_back(std::make_pair(last_iter, cur_iter));
-    }
-    chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
+  int max_threads = omp_get_max_threads();
+  std::vector<std::pair<std::vector<Object *>::iterator,
+                        std::vector<Object *>::iterator>>
+      chunks;
+  chunks.reserve(max_threads);
+  size_t chunk_size = interactors_.size() / max_threads;
+  auto cur_iter = interactors_.begin();
+  for (int i = 0; i < max_threads - 1; ++i) {
+    auto last_iter = cur_iter;
+    std::advance(cur_iter, chunk_size);
+    chunks.push_back(std::make_pair(last_iter, cur_iter));
+  }
+  chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
 #pragma omp parallel shared(chunks)
-    {
+  {
 #pragma omp for
-      for (int i = 0; i < max_threads; ++i) {
-        for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
-          (*it)->FlagDuplicateInteractions();
-        }
+    for (int i = 0; i < max_threads; ++i) {
+      for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
+        (*it)->FlagDuplicateInteractions();
       }
     }
+  }
 #else
-    for (auto it = interactors_.begin(); it != interactors_.end(); ++it) {
-      (*it)->FlagDuplicateInteractions();
-    }
+  for (auto it = interactors_.begin(); it != interactors_.end(); ++it) {
+    (*it)->FlagDuplicateInteractions();
+  }
 #endif
 }
 
@@ -597,37 +588,38 @@ void InteractionManager::ApplyPairInteractions() {
     FlagDuplicateInteractions();
   }
 #ifdef ENABLE_OPENMP
-    int max_threads = omp_get_max_threads();
-    std::vector<std::pair<std::vector<Object *>::iterator,
-                          std::vector<Object *>::iterator>>
-        chunks;
-    chunks.reserve(max_threads);
-    size_t chunk_size = interactors_.size() / max_threads;
-    auto cur_iter = interactors_.begin();
-    for (int i = 0; i < max_threads - 1; ++i) {
-      auto last_iter = cur_iter;
-      std::advance(cur_iter, chunk_size);
-      chunks.push_back(std::make_pair(last_iter, cur_iter));
-    }
-    chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
+  int max_threads = omp_get_max_threads();
+  std::vector<std::pair<std::vector<Object *>::iterator,
+                        std::vector<Object *>::iterator>>
+      chunks;
+  chunks.reserve(max_threads);
+  size_t chunk_size = interactors_.size() / max_threads;
+  auto cur_iter = interactors_.begin();
+  for (int i = 0; i < max_threads - 1; ++i) {
+    auto last_iter = cur_iter;
+    std::advance(cur_iter, chunk_size);
+    chunks.push_back(std::make_pair(last_iter, cur_iter));
+  }
+  chunks.push_back(std::make_pair(cur_iter, interactors_.end()));
 #pragma omp parallel shared(chunks)
-    {
+  {
 #pragma omp for
-      for (int i = 0; i < max_threads; ++i) {
-        for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
-          (*it)->ApplyInteractions();
-        }
+    for (int i = 0; i < max_threads; ++i) {
+      for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
+        (*it)->ApplyInteractions();
       }
     }
+  }
 #else
-    for (auto it = interactors_.begin(); it != interactors_.end(); ++it) {
-      (*it)->ApplyInteractions();
-    }
+  for (auto it = interactors_.begin(); it != interactors_.end(); ++it) {
+    (*it)->ApplyInteractions();
+  }
 #endif
   if (params_->thermo_flag) {
     for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
          ++ix) {
-      if (ix->pause_interaction) continue;
+      if (ix->pause_interaction)
+        continue;
       for (int i = 0; i < n_dim_; ++i) {
         for (int j = 0; j < n_dim_; ++j) {
           stress_[n_dim_ * i + j] += ix->stress[n_dim_ * i + j];
@@ -686,7 +678,8 @@ bool InteractionManager::CheckOverlap(std::vector<Object *> &ixors) {
     pair_interactions_.clear();
     clist_.PairSingleObject(**ixor, pair_interactions_);
     CalculatePairInteractions();
-    if (overlap_) break;
+    if (overlap_)
+      break;
   }
   ClearObjectInteractions();
   if (potentials_.CheckMaxForce()) {
@@ -707,119 +700,17 @@ bool InteractionManager::CheckBoundaryConditions(std::vector<Object *> &ixors) {
 
 /* Here, I want to calculate P(r, phi), which tells me the probability
    of finding an object at a position (r, phi) in its reference frame. */
-void InteractionManager::StructureAnalysis() {
-  ForceUpdate();
-  CalculateStructure();
-}
-
-void InteractionManager::CalculateStructure() {
-  /* Only consider objects (not crosslinks) for structure analysis */
-  if (struct_analysis_.GetNumObjs() == 0) {
-    int nobj = CountSpecies();
-    struct_analysis_.SetNumObjs(nobj);
-  }
-  struct_analysis_.IncrementCount();
-  if (params_->polar_order_analysis) {
-    for (auto it = ix_objects_.begin(); it != ix_objects_.end(); ++it) {
-      (*it)->ZeroPolarOrder();
-    }
-  }
-  if (!no_interactions_) {
-#ifdef ENABLE_OPENMP
-    int max_threads = omp_get_max_threads();
-    std::vector<std::pair<ix_iterator, ix_iterator>> chunks;
-    chunks.reserve(max_threads);
-    size_t chunk_size = pair_interactions_.size() / max_threads;
-    auto cur_iter = pair_interactions_.begin();
-    for (int i = 0; i < max_threads - 1; ++i) {
-      auto last_iter = cur_iter;
-      std::advance(cur_iter, chunk_size);
-      chunks.push_back(std::make_pair(last_iter, cur_iter));
-    }
-    chunks.push_back(std::make_pair(cur_iter, pair_interactions_.end()));
-#pragma omp parallel shared(chunks)
-    {
-#pragma omp for
-      for (int i = 0; i < max_threads; ++i) {
-        for (auto ix = chunks[i].first; ix != chunks[i].second; ++ix) {
-          if (params_->polar_order_analysis || params_->overlap_analysis) {
-            mindist_.ObjectObject(*ix);
-          }
-          struct_analysis_.CalculateStructurePair(*ix);
-        }
-      }
-    }
-#else
-    for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
-         ++ix) {
-      if (params_->polar_order_analysis || params_->overlap_analysis) {
-        mindist_.ObjectObject(*ix);
-      }
-      struct_analysis_.CalculateStructurePair(*ix);
-    }
-#endif
-  }
-  // if (params_->overlap_analysis) {
-  // for(auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
-  // ++ix) { struct_analysis_.CountOverlap(*ix);
-  //}
-  //}
-  struct_analysis_.AverageStructure();
-  if (params_->polar_order_analysis) {
-    for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
-         ++ix) {
-      Object *obj1 = ix->obj1;
-      Object *obj2 = ix->obj2;
-      obj1->AddPolarOrder(ix->polar_order);
-      obj2->AddPolarOrder(ix->polar_order);
-      obj1->AddContactNumber(ix->contact_number);
-      obj2->AddContactNumber(ix->contact_number);
-    }
-    for (auto it = ix_objects_.begin(); it != ix_objects_.end(); ++it) {
-      (*it)->CalcPolarOrder();
-    }
-  }
-  if (params_->density_analysis) {
-#ifdef ENABLE_OPENMP
-    int max_threads = omp_get_max_threads();
-    std::vector<std::pair<std::vector<Object *>::iterator,
-                          std::vector<Object *>::iterator>>
-        chunks;
-    chunks.reserve(max_threads);
-    size_t chunk_size = ix_objects_.size() / max_threads;
-    auto cur_iter = ix_objects_.begin();
-    for (int i = 0; i < max_threads - 1; ++i) {
-      auto last_iter = cur_iter;
-      std::advance(cur_iter, chunk_size);
-      chunks.push_back(std::make_pair(last_iter, cur_iter));
-    }
-    chunks.push_back(std::make_pair(cur_iter, ix_objects_.end()));
-#pragma omp parallel shared(chunks)
-    {
-#pragma omp for
-      for (int i = 0; i < max_threads; ++i) {
-        for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
-          struct_analysis_.BinDensity(*it);
-        }
-      }
-    }
-#else
-    for (auto it = ix_objects_.begin(); it != ix_objects_.end(); ++it) {
-      struct_analysis_.BinDensity(*it);
-    }
-#endif
+void InteractionManager::InteractionAnalysis() {
+  if (run_interaction_analysis_) {
+    ForceUpdate();
+    CalculateInteractions();
   }
 }
 
 void InteractionManager::Clear() {
-  if (no_init_) return;
+  if (no_init_)
+    return;
   clist_.Clear();
-  bool local_order =
-      (params_->local_order_analysis || params_->polar_order_analysis ||
-       params_->overlap_analysis || params_->density_analysis);
-  if (local_order && processing_) {
-    struct_analysis_.Clear();
-  }
   xlink_.Clear();
 }
 

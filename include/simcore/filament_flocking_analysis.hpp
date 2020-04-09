@@ -13,10 +13,6 @@ protected:
     Analysis::InitOutput();
   }
   void InitAnalysis() {
-    if (!params_->polar_order_analysis) {
-      Logger::Error("FlockingAnalysis requires polar_order_analysis to be"
-          " enabled");
-    }
     output_ << "length diameter bond_length persistence_length umax driving "
                "nsteps nspec delta\n";
     auto it = members_->begin();

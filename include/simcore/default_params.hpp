@@ -42,8 +42,13 @@
   default_config["filament"]["theta_analysis"] = "false";
   default_config["filament"]["lp_analysis"] = "false";
   default_config["filament"]["global_order_analysis"] = "false";
+  default_config["filament"]["polar_order_analysis"] = "false";
+  default_config["filament"]["polar_order_n_bins"] = "100";
+  default_config["filament"]["polar_order_contact_cutoff"] = "3";
+  default_config["filament"]["polar_order_width"] = "10";
   default_config["filament"]["curvature_cluster_analysis"] = "false";
-  default_config["filament"]["spiral_flag"] = "false";
+  default_config["filament"]["spiral_init_flag"] = "false";
+  default_config["filament"]["spiral_analysis"] = "false";
   default_config["filament"]["spiral_number_fail_condition"] = "0";
   default_config["filament"]["orientation_corr_analysis"] = "false";
   default_config["filament"]["orientation_corr_n_steps"] = "1000";
@@ -57,6 +62,7 @@
   default_config["filament"]["number_fluctuation_analysis"] = "false";
   default_config["filament"]["number_fluctuation_boxes"] = "6";
   default_config["filament"]["number_fluctuation_centers"] = "10";
+  default_config["filament"]["in_out_analysis"] = "false";
   default_config["filament"]["drive_from_bond_center"] = "true";
   default_config["filament"]["flagella_flag"] = "false";
   default_config["filament"]["flagella_freq"] = "1";
@@ -161,7 +167,7 @@
   default_config["target_radius"] = "100";
   default_config["pressure_time"] = "100";
   default_config["compressibility"] = "1";
-  default_config["stoch_flag"] = "true";
+  default_config["zero_temperature"] = "false";
   default_config["thermo_flag"] = "false";
   default_config["n_thermo"] = "1000";
   default_config["insert_radius"] = "-1";
@@ -181,9 +187,6 @@
   default_config["soft_potential_mag_target"] = "-1";
   default_config["like_like_interactions"] = "true";
   default_config["auto_graph"] = "false";
-  default_config["polar_order_analysis"] = "false";
-  default_config["polar_order_n_bins"] = "100";
-  default_config["polar_order_contact_cutoff"] = "3";
   default_config["local_order_analysis"] = "false";
   default_config["local_order_width"] = "50";
   default_config["local_order_bin_width"] = "0.5";
@@ -195,7 +198,6 @@
   default_config["highlight_overlaps"] = "false";
   default_config["reduced"] = "false";
   default_config["reload_reduce_switch"] = "false";
-  default_config["in_out_flag"] = "false";
   default_config["checkpoint_flag"] = "false";
   default_config["n_checkpoint"] = "10000";
   default_config["no_midstep"] = "false";

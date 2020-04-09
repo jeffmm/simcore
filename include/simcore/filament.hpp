@@ -11,8 +11,8 @@ class Filament : public Mesh {
   bool force_induced_catastrophe_flag_ = false;
   bool theta_validation_run_flag_ = false;
   bool diffusion_validation_run_flag_ = false;
-  bool spiral_flag_ = false;
-  bool stoch_flag_ = true;
+  bool spiral_init_flag_ = false;
+  bool zero_temperature_ = false;
   bool flagella_flag_ = false;
   bool optical_trap_flag_ = false;
   bool cilia_trap_flag_ = false;
@@ -27,40 +27,40 @@ class Filament : public Mesh {
   int in_flock_ = 0;           // 0 if not in flock, 1 if interior, 2 if exterior
   int flock_change_state_ = 0; // 0 if same as previous step, 1 if joined flock, 2
                                // if left flock
-  double min_length_;
-  double max_length_;
-  double max_bond_length_;
-  double min_bond_length_;
-  double bending_stiffness_;
-  double friction_ratio_;  // friction_par/friction_perp
-  double friction_par_;
-  double friction_perp_;
-  double rand_sigma_par_;
-  double rand_sigma_perp_;
-  double flagella_freq_;
-  double flagella_period_;
-  double flagella_amplitude_;
+  double min_length_ = 0;
+  double max_length_ = 1000;
+  double max_bond_length_ = 4;
+  double min_bond_length_ = 2;
+  double bending_stiffness_ = -1;
+  double friction_ratio_ = -1;  // friction_par/friction_perp
+  double friction_par_ = -1;
+  double friction_perp_ = -1;
+  double rand_sigma_par_ = -1;
+  double rand_sigma_perp_ = -1;
+  double flagella_freq_ = -1;
+  double flagella_period_ = -1;
+  double flagella_amplitude_ = -1;
   double p_driving_switch_ = 0;
-  double v_poly_;
-  double v_depoly_;
-  double p_s2g_;
-  double p_s2p_;
-  double p_p2s_;
-  double p_p2g_;
-  double p_g2s_;
-  double p_g2p_;
+  double v_poly_ = -1;
+  double v_depoly_ = -1;
+  double p_s2g_ = -1;
+  double p_s2p_ = -1;
+  double p_p2s_ = -1;
+  double p_p2g_ = -1;
+  double p_g2s_ = -1;
+  double p_g2p_ = -1;
   double driving_factor_ = 0;
-  double peclet_number_;
-  double flexure_number_;
-  double fic_factor_;
+  double peclet_number_ = -1;
+  double flexure_number_ = -1;
+  double fic_factor_ = -1;
   double curvature_ = 0;
-  double spiral_number_;
-  double tip_force_;
-  double optical_trap_spring_;
+  double spiral_number_ = -1;
+  double tip_force_ = -1;
+  double optical_trap_spring_ = -1;
   double optical_trap_pos_[3];
   double optical_trap_pos2_[3];
-  double polydispersity_factor_;
-  bool error_analysis_;
+  double polydispersity_factor_ = -1;
+  bool error_analysis_ = false;
   std::vector<int> error_rates_;
   std::vector<double> gamma_inverse_;
   std::vector<double> tensions_;       // n_sites-1

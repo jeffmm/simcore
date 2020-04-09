@@ -46,7 +46,7 @@ target_pressure: [0, double]         # Target pressure for constant pressure.
 target_radius: [100, double]         # Target volume for constant volume.
 pressure_time: [100, int]            # No. steps to reach target pressure in constant pressure sim.
 compressibility: [1, double]         # Scaling param for unit cell updates for constant pressure.
-stoch_flag: [true, bool]             # Flag for toggling Brownian motion in various species.
+zero_temperature: [false, bool]      # Flag for toggling Brownian motion in various species.
 thermo_flag: [false, bool]           # Output stress tensor and pressure/volume information every
                                      # n_thermo steps.
 n_thermo: [1000, int]                # How often to output thermo info.
@@ -79,12 +79,6 @@ soft_potential_mag_target: [-1, double] # If >= 0, rescales GEM-8 energy to meet
 like_like_interactions: [true, bool] # If false, particles of the same species do not interact.
 auto_graph: [false, bool]            # If > 0 and graph_flag > 0, graphics window does not wait
                                      # for user to hit ESC before running. Useful for movies.
-polar_order_analysis: [false, bool]  # Flag for post-process analysis of polar order parameter.
-                                     # Used for quantifying flocking-like behavior of objects.
-polar_order_n_bins: [100, int]       # Bin size to use for polar order parameter histogram.
-polar_order_contact_cutoff: [3, double] # Sets x-axis scale of polar order parameter histogram,
-                                        # and ranges from contact number of 0 to the cutoff.
-
 local_order_analysis: [false, bool]  # Flag for post-process analysis of local order parameters in
                                      # 2D. Measures average order parameters as a function of r,
                                      # distance. Returns 2D heat map of order parameter magnitude.
@@ -102,8 +96,6 @@ reload_reduce_switch: [false, bool]  # If a reduction is performed before a relo
                                      # tells simcore to look for the proper file name, e.g.
                                      # run_name_reduced_xx_reload_yy_params.yaml instead of
                                      # run_name_reload_yy_reduced_xx_params.yaml.
-in_out_flag: [false, bool]           # Post-process analysis of incoming vs outgoing angle of 
-                                     # colliding filaments.
 checkpoint_flag: [false, bool]       # Generate a checkpoint file every n_checkpoint steps that 
                                      # allows users to resume previous simulations. Contains 
                                      # most recent instance of RNG state and spec file data.
@@ -183,11 +175,18 @@ filament:                            # Parameters unique to filament class of ob
                                     # file that measures mean-square end-to-end distance and variance.
   global_order_analysis: [false, bool] # post-process analysis of global order parameters, such as global
                                        # polar order, global nematic order, global spiral number, etc.
+  polar_order_analysis: [false, bool]  # Flag for post-process analysis of polar order parameter.
+                                       # Used for quantifying flocking-like behavior of objects.
+  polar_order_n_bins: [100, int]       # Bin size to use for polar order parameter histogram.
+  polar_order_contact_cutoff: [3, double] # Sets x-axis scale of polar order parameter histogram,
+                                          # and ranges from contact number of 0 to the cutoff.
+  polar_order_width: [10, double]  # Minimum cell size to use for polar order analysis
   curvature_cluster_analysis: [false, bool] # center of radius clustering for curved filaments
-  spiral_flag: [false, bool]         # initializes filaments in an archimedean spiral centered at
+  spiral_init_flag: [false, bool]    # initializes filaments in an archimedean spiral centered at
                                      # system origin.
-  spiral_number_fail_condition: [0, double] # when spiral flag is on, terminates simulation when the
-                                            # spiral number of a filament is less than this value.
+  spiral_analysis: [false, bool]  # runs analysis on spiral filaments in analysis mode
+  spiral_number_fail_condition: [0, double] # when spiral_init_flag is on, terminates simulation 
+                                            # when spiral number of a filament is < value.
 
   orientation_corr_analysis: [false, bool] # post-process analysis of orientation correlation function.
   orientation_corr_n_steps: [1000, int] # number of steps to measure orientation correlation, defines
@@ -208,6 +207,9 @@ filament:                            # Parameters unique to filament class of ob
   number_fluctuation_analysis: [false, bool]
   number_fluctuation_boxes: [6, int]
   number_fluctuation_centers: [10, int]
+  in_out_analysis: [false, bool]    # Post-process analysis of incoming vs outgoing angle of 
+                                    # colliding filaments.
+
   drive_from_bond_center: [true, bool] # if true, driving forces are centered on bonds, and propulsion 
                                     # forces are directed along bond orientation. otherwise, driving forces
                                     # are centered on sites and forces are directed tangent to sites.

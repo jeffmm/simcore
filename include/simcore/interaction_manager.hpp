@@ -23,7 +23,7 @@ class InteractionManager {
   bool processing_ = false;
   bool in_out_flag_ = false;
   bool decrease_dynamic_timestep_ = false;
-  //bool run_interaction_analysis_ = false;
+  bool run_interaction_analysis_ = false;
   int n_dim_;
   int n_periodic_;
   int n_objs_;
@@ -37,7 +37,6 @@ class InteractionManager {
   std::vector<SpeciesBase *> *species_;
 
   MinimumDistance mindist_;
-  StructAnalysis struct_analysis_;
 
   std::vector<Interaction> pair_interactions_;
   std::vector<Interaction> boundary_interactions_;
@@ -67,6 +66,8 @@ class InteractionManager {
   void FlagDuplicateInteractions();
   bool CheckBondAnchorPair(Object *anchor, Object *bond);
   void ClearObjectInteractions();
+  void ApplyInteractions();
+  void CalculateInteractions();
 
  public:
   InteractionManager() {}
@@ -80,7 +81,7 @@ class InteractionManager {
   void AddInteractors(std::vector<Object *> &ixs);
   void Reset();
   void Clear();
-  void StructureAnalysis();
+  void InteractionAnalysis();
   void CalculateStructure();
   void ForceUpdate();
   void CheckUpdateObjects();
@@ -96,7 +97,7 @@ class InteractionManager {
   void LoadCrosslinksFromCheckpoints(std::string run_name,
                                      std::string checkpoint_run_name);
   void InsertCrosslinks();
-  //void SetInteractionAnalysis(bool set) { run_interaction_analysis_ = set; }
+  void SetInteractionAnalysis(bool set) { run_interaction_analysis_ = set; }
 };
 
 #endif

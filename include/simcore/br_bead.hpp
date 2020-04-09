@@ -6,7 +6,7 @@
 class BrBead : public Object {
 protected:
   br_bead_parameters *sparams_;
-  bool stoch_flag_;
+  bool zero_temperature_;
   double gamma_trans_;
   double gamma_rot_;
   double diffusion_;

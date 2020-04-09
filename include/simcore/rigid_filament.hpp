@@ -15,12 +15,12 @@ class RigidFilament : public Mesh {
   double diffusion_perp_ = 0;
   double diffusion_rot_ = 0;
   double body_frame_[6];
-  double min_length_;
-  double max_length_;
+  double min_length_ = 0;
+  double max_length_ = 1000;
 
-  bool stoch_flag_;
+  bool zero_temperature_ = false;
   int n_step_ = 0;
-  int eq_steps_;
+  int eq_steps_ = 0;
   int eq_steps_count_ = 0;
 
 

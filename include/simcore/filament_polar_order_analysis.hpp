@@ -27,8 +27,8 @@ protected:
     output_avg_.open(file_name, std::ios::out);
   }
   void InitAnalysis() {
-    //CellList::SetMinCellLength(10);
-    n_bins_1d_ = params_->polar_order_n_bins;
+    CellList::SetMinCellLength(sparams_->polar_order_width);
+    n_bins_1d_ = sparams_->polar_order_n_bins;
     // Ensure n_bins_1d_ is even, to avoid headaches
     if (n_bins_1d_ % 2 != 0) {
       n_bins_1d_++;
@@ -36,7 +36,7 @@ protected:
     n_bins_ = SQR(n_bins_1d_);
     histogram_ = new int[n_bins_];
     std::fill(histogram_, histogram_ + n_bins_, 0.0);
-    contact_cut_ = params_->polar_order_contact_cutoff;
+    contact_cut_ = sparams_->polar_order_contact_cutoff;
     contact_bin_width_ = contact_cut_ / n_bins_1d_;
     polar_bin_width_ = 2.0 / n_bins_1d_;
     output_ << "2D histogram: x-axis: contact_number, y-axis: local_polar_order\n";
@@ -47,7 +47,7 @@ protected:
     std::vector<double> po;
     std::vector<double> cn;
     for (auto it = members_->begin(); it != members_->end(); ++it) {
-      //it->CalcPolarOrder();
+      it->CalcPolarOrder();
       it->GetPolarOrders(po);
       it->GetContactNumbers(cn);
     }

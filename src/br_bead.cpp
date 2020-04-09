@@ -10,7 +10,7 @@ void BrBead::Init(br_bead_parameters *sparams) {
   draw_ = draw_type::_from_string(sparams_->draw_type.c_str());
   diameter_ = sparams_->diameter;
   driving_factor_ = sparams_->driving_factor;
-  stoch_flag_ = params_->stoch_flag; // flag for thermal forces
+  zero_temperature_ = params_->zero_temperature;
   SetDiffusion();
   InsertBrBead();
 }
@@ -49,7 +49,7 @@ void BrBead::UpdatePosition() {
 
 void BrBead::ApplyForcesTorques() {
   // Add random thermal kick to the bead
-  if (stoch_flag_) {
+  if (!zero_temperature_) {
     for (int i = 0; i < n_dim_; ++i) {
       double kick = rng_.RandomUniform() - 0.5;
       force_[i] += kick * diffusion_;

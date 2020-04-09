@@ -13,7 +13,7 @@ void RigidFilament::SetParameters() {
   diameter_ = sparams_->diameter;
   max_length_ = sparams_->max_length;
   min_length_ = sparams_->min_length;
-  stoch_flag_ = params_->stoch_flag;  // include thermal forces
+  zero_temperature_ = params_->zero_temperature;  // include thermal forces
   eq_steps_count_ = 0;
 
   /* Refine parameters */
@@ -125,7 +125,7 @@ void RigidFilament::Integrate() {
   for (int i = 0; i < n_dim_; ++i) {
     orientation_[i] += du[i] * delta_ / gamma_rot_;
   }
-  if (stoch_flag_) {
+  if (!zero_temperature_) {
     // Add the random displacement dr(t)
     AddRandomDisplacement();
     // Update the orientation due to torques and random rotation

@@ -63,8 +63,13 @@ struct species_parameters<species_id::filament>
   bool theta_analysis = false;
   bool lp_analysis = false;
   bool global_order_analysis = false;
+  bool polar_order_analysis = false;
+  int polar_order_n_bins = 100;
+  double polar_order_contact_cutoff = 3;
+  double polar_order_width = 10;
   bool curvature_cluster_analysis = false;
-  bool spiral_flag = false;
+  bool spiral_init_flag = false;
+  bool spiral_analysis = false;
   double spiral_number_fail_condition = 0;
   bool orientation_corr_analysis = false;
   int orientation_corr_n_steps = 1000;
@@ -78,6 +83,7 @@ struct species_parameters<species_id::filament>
   bool number_fluctuation_analysis = false;
   int number_fluctuation_boxes = 6;
   int number_fluctuation_centers = 10;
+  bool in_out_analysis = false;
   bool drive_from_bond_center = true;
   bool flagella_flag = false;
   double flagella_freq = 1;
@@ -210,7 +216,7 @@ struct system_parameters {
   double target_radius = 100;
   int pressure_time = 100;
   double compressibility = 1;
-  bool stoch_flag = true;
+  bool zero_temperature = false;
   bool thermo_flag = false;
   int n_thermo = 1000;
   double insert_radius = -1;
@@ -230,9 +236,6 @@ struct system_parameters {
   double soft_potential_mag_target = -1;
   bool like_like_interactions = true;
   bool auto_graph = false;
-  bool polar_order_analysis = false;
-  int polar_order_n_bins = 100;
-  double polar_order_contact_cutoff = 3;
   bool local_order_analysis = false;
   double local_order_width = 50;
   double local_order_bin_width = 0.5;
@@ -244,7 +247,6 @@ struct system_parameters {
   bool highlight_overlaps = false;
   bool reduced = false;
   bool reload_reduce_switch = false;
-  bool in_out_flag = false;
   bool checkpoint_flag = false;
   int n_checkpoint = 10000;
   bool no_midstep = false;
