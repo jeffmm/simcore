@@ -14,29 +14,7 @@ void RigidFilament::SetParameters() {
   max_length_ = sparams_->max_length;
   min_length_ = sparams_->min_length;
   stoch_flag_ = params_->stoch_flag;  // include thermal forces
-  // driving_factor_ = sparams_->driving_factor;
-  // eq_steps_ = sparams_->n_equil;
   eq_steps_count_ = 0;
-
-  // dynamic_instability_flag_ = sparams_->dynamic_instability_flag;
-  // polydispersity_flag_ = sparams_->polydispersity_flag;
-  // force_induced_catastrophe_flag_ = sparams_->force_induced_catastrophe_flag;
-  // p_g2s_ = sparams_->f_grow_to_shrink * delta_;
-  // p_g2p_ = sparams_->f_grow_to_pause * delta_;
-  // p_s2p_ = sparams_->f_shrink_to_pause * delta_;
-  // p_s2g_ = sparams_->f_shrink_to_grow * delta_;
-  // p_p2s_ = sparams_->f_pause_to_shrink * delta_;
-  // p_p2g_ = sparams_->f_pause_to_grow * delta_;
-  // v_depoly_ = sparams_->v_depoly;
-  // v_poly_ = sparams_->v_poly;
-
-  // optical_trap_spring_ = sparams_->optical_trap_spring;
-  // optical_trap_flag_ = sparams_->optical_trap_flag;
-  // optical_trap_fixed_ = sparams_->optical_trap_fixed;
-  // fic_factor_ = sparams_->fic_factor;
-  // tip_force_ = 0.0;
-  /* Default site in optical trap is the tail */
-  // trapped_site_ = 0;
 
   /* Refine parameters */
 }
@@ -49,13 +27,6 @@ void RigidFilament::Init(rigid_filament_parameters *sparams) {
   InsertRigidFilament(sparams_->insertion_type, -1);
   SetDiffusion();
 
-  // if (optical_trap_flag_) {
-  //  double const *const r0 = sites_[0].GetPosition();
-  //  std::copy(r0, r0 + 3, optical_trap_pos_);
-  //  double const *const r1 = sites_[1].GetPosition();
-  //  std::copy(r1, r1 + 3, optical_trap_pos2_);
-  //}
-  // poly_ = poly_state::grow;
 }
 
 /* Returns number of bonds to initialize */
@@ -67,19 +38,6 @@ void RigidFilament::InitRigidFilamentLength() {
     max_length_ = min_length_;
   }
 
-  // if (polydispersity_flag_) {
-  //  ExponentialDist expon;
-  //  expon.Init(length_, min_length_, max_length_);
-  //  double roll = rng_.RandomUniform();
-  //  length_ = expon.Rand(roll);
-  //  if (length_ > max_length_ + 1e-6 || length_ < min_length_ - 1e-6) {
-  //    Logger::Error(
-  //        "RigidFilament polydispersity distribution returned a value out of "
-  //        "range:\nAttempted length: %2.2f, Min length: %2.2f, Max length: "
-  //        "%2.2f",
-  //        length_, min_length_, max_length_);
-  //  }
-  //}
   if (length_ > max_length_) {
     Logger::Warning(
         "RigidFilament length larger than max length -- setting length = "
@@ -91,32 +49,6 @@ void RigidFilament::InitRigidFilamentLength() {
         "min_length");
     length_ = min_length_;
   }
-  /* Calculate number of bonds in filament at initialization */
-  // if (dynamic_instability_flag_) {
-  //  n_bonds_ = 2;
-  //  bond_length_ = length_ / n_bonds_;
-  //  while (dynamic_instability_flag_ && bond_length_ > max_bond_length_) {
-  //    n_bonds_ *= 2;
-  //    bond_length_ = length_ / n_bonds_;
-  //  }
-  //} else {
-  //  n_bonds_ = (int)floor(length_ / max_bond_length_);
-  //  [> Minimum number of bonds must be 2 <]
-  //  n_bonds_ = (n_bonds_ == 1 ? 2 : n_bonds_);
-  //  bond_length_ = length_ / n_bonds_;
-  //}
-  //[> Determine maximum number of bonds we may have <]
-  // if (dynamic_instability_flag_) {
-  //  int max_bonds = (int)ceil(max_length_ / min_bond_length_);
-  //  n_bonds_max_ = 2;
-  //  while (n_bonds_max_ < max_bonds) {
-  //    n_bonds_max_ *= 2;
-  //  }
-  //} else {
-  //  [> Static bond number <]
-  //  n_bonds_max_ = n_bonds_;
-  //}
-
   Logger::Trace(
       "RigidFilament initialized with length %2.2f with %d bonds, mesh_id:"
       " %d",
@@ -145,13 +77,6 @@ void RigidFilament::InsertRigidFilament(std::string insertion_type,
     SetPosition(bonds_.back().GetPosition());
     SetOrientation(bonds_.back().GetOrientation());
     UpdateBondPositions();
-    //} else if (insertion_type.compare("centered_random") == 0) {
-    //  std::fill(position_, position_ + 3, 0.0);
-    //  rng_.RandomUnitVector(n_dim_, orientation_);
-    //} else if (insertion_type.compare("centered_oriented") == 0) {
-    //  std::fill(position_, position_ + 3, 0.0);
-    //  std::fill(orientation_, orientation_ + 3, 0.0);
-    //  orientation_[n_dim_ - 1] = 1.0;
   } else {
     Logger::Error("Rigid Filament insertion type not recognized!");
   }
@@ -277,32 +202,7 @@ void RigidFilament::InsertAt(const double *const new_pos,
       new_pos[0], new_pos[1], new_pos[2], u[0], u[1], u[2]);
   RelocateMesh(new_pos, u);
   std::copy(new_pos, new_pos + 3, position_);
-  // UpdatePrevPositions();
-  // AddRandomBondAnywhere(length_, diameter_);
-  // SetPosition(bonds_.back().GetPosition());
-  // SetOrientation(bonds_.back().GetOrientation());
-  // UpdateBondPositions();
-  // CalculateAngles();
   SetDiffusion();
-  // if (optical_trap_flag_) {
-  //  trapped_site_ = 0;
-  /* For cilia flag, if filament is oriented along a negative
-   * dimension, assume the filament needs to be fixed at the plus
-   * end */
-  //  if (cilia_trap_flag_) {
-  //    for (int i = 0; i < n_dim_; ++i) {
-  //      if (u[i] < 0) {
-  //        trapped_site_ = n_sites_ - 1;
-  //      }
-  //    }
-  //  }
-  //  int trapped_2 = (trapped_site_ == 0 ? 1 : n_sites_ - 2);
-  //  const double *const r0 = sites_[trapped_site_].GetPosition();
-  //  const double *const r1 = sites_[trapped_2].GetPosition();
-  //  std::copy(r0, r0 + 3, optical_trap_pos_);
-  //  std::copy(r1, r1 + 3, optical_trap_pos2_);
-  //}
-  // poly_ = poly_state::grow;
 }
 
 void RigidFilament::SetDiffusion() {
@@ -330,16 +230,8 @@ double const RigidFilament::GetVolume() {
 void RigidFilament::UpdatePosition() {
   ApplyForcesTorques();
   if (!sparams_->stationary_flag) Integrate();
-  // UpdateAvgPosition();
-  // DynamicInstability();
   eq_steps_count_++;
 }
-
-// void RigidFilament::CalculateTangents() {
-//  for (auto it = sites_.begin(); it != sites_.end(); ++it) {
-//    it->CalcTangent();
-//  }
-//}
 
 void RigidFilament::GetNematicOrder(double *nematic_order_tensor) {
   for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
@@ -371,12 +263,6 @@ void RigidFilament::GetPolarOrder(double *polar_order_vector) {
   }
 }
 
-// void RigidFilament::AddRandomForces() {
-//  if (!stoch_flag_) return;
-//  for (auto site = sites_.begin(); site != sites_.end(); ++site)
-//    site->AddRandomForce();
-//}
-
 void RigidFilament::UpdateSitePositions() {
   double s0_pos[3] = {0};
   double s1_pos[3] = {0};
@@ -388,42 +274,6 @@ void RigidFilament::UpdateSitePositions() {
   sites_[1].SetPosition(s1_pos);
 }
 
-// bool RigidFilament::CheckBondLengths() {
-//  bool renormalize = false;
-//  for (int i_site = 1; i_site < n_sites_; ++i_site) {
-//    double const *const r_site1 = sites_[i_site - 1].GetPosition();
-//    double const *const r_site2 = sites_[i_site].GetPosition();
-//    double a = 0.0;
-//    for (int i = 0; i < n_dim_; ++i) {
-//      double temp = r_site2[i] - r_site1[i];
-//      a += temp * temp;
-//    }
-//    a = sqrt(a);
-//    double err = ABS(bond_length_ - a) / bond_length_;
-//    if (err > 1e-3) {
-//      renormalize = true;
-//    }
-//  }
-//  return renormalize;
-//}
-
-// void RigidFilament::UpdateAvgPosition() {
-// std::fill(position_, position_ + 3, 0.0);
-// std::fill(orientation_, orientation_ + 3, 0.0);
-// for (auto site_it = sites_.begin(); site_it != sites_.end(); ++site_it) {
-// double const *const site_pos = site_it->GetPosition();
-// double const *const site_u = site_it->GetOrientation();
-// for (int i = 0; i < n_dim_; ++i) {
-// position_[i] += site_pos[i];
-// orientation_[i] += site_u[i];
-//}
-//}
-// normalize_vector(orientation_, n_dim_);
-// for (int i = 0; i < n_dim_; ++i) {
-// position_[i] /= n_sites_;
-//}
-//}
-
 void RigidFilament::ApplyForcesTorques() {
   const double *force = bonds_.back().GetForce();
   const double *torque = bonds_.back().GetTorque();
@@ -431,42 +281,16 @@ void RigidFilament::ApplyForcesTorques() {
     force_[i] = force[i];
     torque_[i] = torque[i];
   }
-  // ApplyInteractionForces();
-  // if (optical_trap_flag_) {
-  //  double f_trap1[3] = {0};
-  //  double f_trap2[3] = {0};
-  //  double const *const r0 = sites_[trapped_site_].GetPosition();
-  //  int trap2 = (trapped_site_ == 0 ? 1 : n_sites_ - 2);
-  //  double const *const r1 = sites_[trap2].GetPosition();
-  //  for (int i = 0; i < n_dim_; ++i) {
-  //    f_trap1[i] = optical_trap_spring_ * (optical_trap_pos_[i] - r0[i]);
-  //    if (optical_trap_fixed_) {
-  //      f_trap2[i] = optical_trap_spring_ * (optical_trap_pos2_[i] - r1[i]);
-  //    }
-  //  }
-  //  sites_[trapped_site_].AddForce(f_trap1);
-  //  if (optical_trap_fixed_) {
-  //    sites_[trap2].AddForce(f_trap2);
-  //  }
-  //}
-  // if (anchored_) ApplyAnchorForces();
 }
 
 void RigidFilament::ApplyInteractionForces() {
   double pure_torque[3] = {0, 0, 0};
   double site_force[3] = {0, 0, 0};
   double linv = 1.0 / bond_length_;
-  // if (!sparams_->drive_from_bond_center) {
-  //  // Driving originating from the site tangents
-  //  CalculateTangents();
-  //}
   for (int i = 0; i < n_bonds_; ++i) {
     double const *const f = bonds_[i].GetForce();
     double const *const t = bonds_[i].GetTorque();
     double const *const u = sites_[i].GetOrientation();
-    // if (i == n_bonds_ - 1) {
-    //  tip_force_ = -dot_product(n_dim_, u, f);
-    //}
     AddPotential(bonds_[i].GetPotentialEnergy());
     // Convert torques into forces at bond ends
     // u x t / bond_length = pure torque force at tail of bond
@@ -481,158 +305,11 @@ void RigidFilament::ApplyInteractionForces() {
     for (int j = 0; j < n_dim_; ++j) pure_torque[j] *= -1;
     sites_[i + 1].AddForce(site_force);
     sites_[i + 1].AddForce(pure_torque);
-    // The driving factor is a force per unit length,
-    // so need to multiply by bond length to get f_dr on bond
-    // if (eq_steps_count_ > eq_steps_) {
-    //  double f_dr[3] = {};
-    //  if (sparams_->drive_from_bond_center) {
-    //    // Add driving (originating from the com of the bond)
-    //    double mag = 0.5 * driving_factor_ * bond_length_;
-    //    for (int j = 0; j < n_dim_; ++j) f_dr[j] = mag * u[j];
-    //    sites_[i].AddForce(f_dr);
-    //    sites_[i + 1].AddForce(f_dr);
-    //  } else {
-    //    // Driving from sites
-    //    double mag = length_ * driving_factor_ / n_sites_;
-    //    double const *const u_tan = sites_[i].GetTangent();
-    //    for (int j = 0; j < n_dim_; ++j) {
-    //      f_dr[j] = mag * u_tan[j];
-    //    }
-    //    sites_[i].AddForce(f_dr);
-    //  }
-    //}
-    //}
   }
 }
 
-// void RigidFilament::DynamicInstability() {
-//  if (midstep_ || !dynamic_instability_flag_) return;
-//  UpdatePolyState();
-//  GrowRigidFilament();
-//  SetDiffusion();
-//}
-
-// void RigidFilament::GrowRigidFilament() {
-//  // If the filament is paused, do nothing
-//  if (poly_ == +poly_state::pause) return;
-//  // Otherwise, adjust filament length due to polymerization
-//  double delta_length = 0;
-//  if (poly_ == +poly_state::grow) {
-//    delta_length = v_poly_ * delta_;
-//  } else if (poly_ == +poly_state::shrink) {
-//    if (n_bonds_ == 2 && bond_length_ <= min_bond_length_) {
-//      return;
-//    }
-//    delta_length = -v_depoly_ * delta_;
-//  }
-//  length_ += delta_length;
-//  RescaleBonds();
-//  if (bond_length_ > max_bond_length_) {
-//    DoubleGranularityLinear();
-//    // RebindMotors();
-//  } else if (bond_length_ < min_bond_length_ && n_bonds_ > 2) {
-//    HalfGranularityLinear();
-//    // RebindMotors();
-//  }
-//}
-
-// void RigidFilament::UpdatePolyState() {
-//  double p_g2s = p_g2s_;
-//  double p_p2s = p_p2s_;
-//  double roll = rng_.RandomUniform();
-//  double p_norm;
-//  // Modify catastrophe probabilities if the end of the filament is under a
-//  // load
-//  if (force_induced_catastrophe_flag_ && tip_force_ > 0) {
-//    double p_factor = exp(fic_factor_ * tip_force_);
-//    p_g2s = (p_g2s + p_g2p_) * p_factor;
-//    p_p2s = p_p2s * p_factor;
-//  }
-//  // RigidFilament shrinking
-//  if (poly_ == +poly_state::shrink) {
-//    p_norm = p_s2g_ + p_s2p_;
-//    if (p_norm > 1.0)
-//      poly_ = (roll < p_s2g_ / p_norm ? poly_state::grow :
-//      poly_state::pause);
-//    else {
-//      if (roll < p_s2g_)
-//        poly_ = poly_state::grow;
-//      else if (roll < (p_s2g_ + p_s2p_))
-//        poly_ = poly_state::pause;
-//    }
-//  }
-//  // RigidFilament growing
-//  else if (poly_ == +poly_state::grow) {
-//    p_norm = p_g2s + p_g2p_;
-//    if (p_norm > 1.0)
-//      poly_ = (roll < p_g2s / p_norm ? poly_state::shrink :
-//      poly_state::pause);
-//    else {
-//      if (roll < p_g2s)
-//        poly_ = poly_state::shrink;
-//      else if (roll < (p_g2s + p_g2p_))
-//        poly_ = poly_state::pause;
-//    }
-//  }
-//  // RigidFilament paused
-//  else if (poly_ == +poly_state::pause) {
-//    p_norm = p_p2g_ + p_p2s;
-//    if (p_norm > 1)
-//      poly_ = (roll < p_p2g_ / p_norm ? poly_state::grow :
-//      poly_state::shrink);
-//    else {
-//      if (roll < p_p2g_)
-//        poly_ = poly_state::grow;
-//      else if (roll < (p_p2g_ + p_p2s))
-//        poly_ = poly_state::shrink;
-//    }
-//  }
-//  // Check to make sure the filament lengths stay in the correct ranges
-//  if (length_ < min_length_)
-//    poly_ = poly_state::grow;
-//  else if (length_ > max_length_)
-//    poly_ = poly_state::shrink;
-//}
-
-// void RigidFilament::CheckFlocking() {
-//  double avg_polar_order = 0;
-//  double avg_contact_number = 0;
-//  for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
-//    [> Check if filament satisfies the flock condition by checking whether
-//       the average bond polar order is above cutoff. Also see whether the
-//       average contact number exceeds the cutoff for interior/exterior
-//       filament. */
-//    avg_polar_order += bond->GetPolarOrder();
-//    avg_contact_number += bond->GetContactNumber();
-//  }
-//  avg_polar_order /= n_bonds_;
-//  avg_contact_number /= n_bonds_;
-
-//  int in_flock_prev = in_flock_;
-//  in_flock_ = 0;
-//  flock_change_state_ = 0;
-//  if (avg_polar_order >= params_->flock_polar_min) {
-//    // RigidFilament is in a flock
-//    if (in_flock_prev == 0) {
-//      // RigidFilament joined flock this timestep
-//      flock_change_state_ = 1;
-//    }
-//    if (avg_contact_number >= params_->flock_contact_min) {
-//      // RigidFilament is in flock interior
-//      in_flock_ = 1;
-//    } else {
-//      // RigidFilament is in flock exterior
-//      in_flock_ = 2;
-//    }
-//  } else if (in_flock_prev > 0) {
-//    // RigidFilament left flock this timestep
-//    flock_change_state_ = 2;
-//  }
-//}
-
 void RigidFilament::Draw(std::vector<graph_struct *> &graph_array) {
   for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
-    bond->SetFlockType(in_flock_);
     bond->Draw(graph_array);
   }
 }
@@ -662,77 +339,16 @@ void RigidFilament::ScalePosition() {
 }
 
 void RigidFilament::ReportAll() {
-  // printf("tensions:\n  {");
-  // for (int i = 0; i < n_sites_ - 1; ++i) printf(" %5.5f ", tensions_[i]);
-  // printf("}\n");
-  // printf("cos_thetas:\n  {");
-  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", cos_thetas_[i]);
-  // printf("}\n");
-  // printf("g_mat_lower:\n  {");
-  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ",
-  // g_mat_lower_[i]); printf("}\n"); printf("g_mat_upper:\n  {"); for (int i
-  // = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", g_mat_upper_[i]);
-  // printf("}\n");
-  // printf("g_mat_diag:\n  {");
-  // for (int i = 0; i < n_sites_ - 1; ++i) printf(" %5.5f ", g_mat_diag_[i]);
-  // printf("}\n");
-  // printf("det_t_mat:\n  {");
-  // for (int i = 0; i < n_sites_ + 1; ++i) printf(" %5.5f ", det_t_mat_[i]);
-  // printf("}\n");
-  // printf("det_b_mat:\n  {");
-  // for (int i = 0; i < n_sites_ + 1; ++i) printf(" %5.5f ", det_b_mat_[i]);
-  // printf("}\n");
-  // printf("h_mat_diag:\n  {");
-  // for (int i = 0; i < n_sites_ - 1; ++i) printf(" %5.5f ", h_mat_diag_[i]);
-  // printf("}\n");
-  // printf("h_mat_upper:\n  {");
-  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ",
-  // h_mat_upper_[i]); printf("}\n"); printf("h_mat_lower:\n  {"); for (int i
-  // = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", h_mat_lower_[i]);
-  // printf("}\n");
-  // printf("k_eff:\n  {");
-  // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", k_eff_[i]);
-  // printf("}\n\n\n");
 }
-
-/* The spec output for one filament is:
-    diameter
-    length
-    persistence_length (added 1/17/2017)
-    friction_par (added 1/17/2017)
-    friction_perp (added 1/17/2017)
-    bond_length
-    n_bonds,
-    position of first site
-    position of last site
-    all bond orientations
-    */
 
 void RigidFilament::WriteSpec(std::fstream &ospec) {
   Logger::Trace("Writing rigid filament specs, object id: %d", GetOID());
   Mesh::WriteSpec(ospec);
-  // ospec.write(reinterpret_cast<char *>(&persistence_length_),
-  // sizeof(double)); ospec.write(reinterpret_cast<char *>(&poly_),
-  // sizeof(unsigned char));
 }
 
-/* double diameter
-   double length
-   double persistence length
-   double friction_par
-   double friction_perp
-   double bond_length
-   double n_bonds
-   double[3] pos_tail
-   double[3] pos_head
-   double[n_bonds*3] bond_orientations
-*/
 void RigidFilament::ReadSpec(std::fstream &ispec) {
   if (ispec.eof()) return;
   Mesh::ReadSpec(ispec);
-  // ispec.read(reinterpret_cast<char *>(&persistence_length_),
-  // sizeof(double)); ispec.read(reinterpret_cast<char *>(&poly_),
-  // sizeof(unsigned char)); CalculateAngles();
 }
 
 /* double[3] avg_pos
@@ -764,7 +380,6 @@ void RigidFilament::WritePosit(std::fstream &oposit) {
 void RigidFilament::ReadPosit(std::fstream &iposit) {
   if (iposit.eof()) return;
   posits_only_ = true;
-  // double avg_pos[3], avg_u[3], s_pos[3];
   for (int i = 0; i < 3; ++i)
     iposit.read(reinterpret_cast<char *>(&position_[i]), sizeof(double));
   for (int i = 0; i < 3; ++i)
@@ -777,30 +392,6 @@ void RigidFilament::ReadPosit(std::fstream &iposit) {
   iposit.read(reinterpret_cast<char *>(mesh_id), sizeof(int));
   SetMeshID(mesh_id);
   UpdateBondPositions();
-  // Initialize first bond position
-  // std::copy(avg_pos, avg_pos + 3, position_);
-  // for (int i = 0; i < n_dim_; ++i)
-  //  avg_pos[i] = avg_pos[i] - 0.5 * length_ * avg_u[i];
-  // for (int i_bond = 0; i_bond < n_bonds_; ++i_bond) {
-  //  sites_[i_bond].SetPosition(avg_pos);
-  //  sites_[i_bond].SetOrientation(avg_u);
-  //  for (int i = 0; i < n_dim_; ++i) {
-  //    avg_pos[i] += 0.5 * bond_length_ * avg_u[i];
-  //  }
-  //  bonds_[i_bond].SetPosition(avg_pos);
-  //  bonds_[i_bond].SetOrientation(avg_u);
-  //  bonds_[i_bond].SetDiameter(diameter_);
-  //  bonds_[i_bond].UpdatePeriodic();
-  //  // Set next bond position
-  //  for (int i = 0; i < n_dim_; ++i) {
-  //    avg_pos[i] += 0.5 * bond_length_ * avg_u[i];
-  //  }
-  //}
-  // sites_[n_bonds_].SetPosition(avg_pos);
-  // sites_[n_bonds_].SetOrientation(avg_u);
-  // SetOrientation(avg_u);
-  // UpdatePeriodic();
-  // CalculateAngles();
 }
 
 void RigidFilament::WriteCheckpoint(std::fstream &ocheck) {

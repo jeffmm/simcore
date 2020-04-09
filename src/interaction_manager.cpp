@@ -519,6 +519,7 @@ void InteractionManager::CalculatePairInteractions() {
         ix->pause_interaction = false;
         ProcessPairInteraction(ix);
         // Do torque crossproducts
+        if (ix->no_interaction) continue;
         cross_product(ix->contact1, ix->force, ix->t1, 3);
         cross_product(ix->contact2, ix->force, ix->t2, 3);
         object_interaction oix1 = std::make_pair(&(*ix), true);
@@ -534,6 +535,7 @@ void InteractionManager::CalculatePairInteractions() {
     ix->pause_interaction = false;
     ProcessPairInteraction(ix);
     // Do torque crossproducts
+    if (ix->no_interaction) continue;
     cross_product(ix->contact1, ix->force, ix->t1, 3);
     cross_product(ix->contact2, ix->force, ix->t2, 3);
     object_interaction oix1 = std::make_pair(&(*ix), true);
@@ -625,14 +627,6 @@ void InteractionManager::ApplyPairInteractions() {
   if (params_->thermo_flag) {
     for (auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
          ++ix) {
-    //Object *obj1 = ix->obj1;
-    //Object *obj2 = ix->obj2;
-    //obj1->AddForce(ix->force);
-    //obj2->SubForce(ix->force);
-    //obj1->AddTorque(ix->t1);
-    //obj2->SubTorque(ix->t2);
-    //obj1->AddPotential(ix->pote);
-    //obj2->AddPotential(ix->pote);
       if (ix->pause_interaction) continue;
       for (int i = 0; i < n_dim_; ++i) {
         for (int j = 0; j < n_dim_; ++j) {

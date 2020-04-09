@@ -24,7 +24,9 @@ class Filament : public Mesh {
   int trapped_site_ = 0;
   int n_step_ = 0;
   int eq_steps_ = 0;
-  int eq_steps_count_ = 0;
+  int in_flock_ = 0;           // 0 if not in flock, 1 if interior, 2 if exterior
+  int flock_change_state_ = 0; // 0 if same as previous step, 1 if joined flock, 2
+                               // if left flock
   double min_length_;
   double max_length_;
   double max_bond_length_;
@@ -114,10 +116,14 @@ class Filament : public Mesh {
   double const GetPersistenceLength() { return bending_stiffness_; }
   void Reserve();
   void CheckFlocking();
-  int const GetNBonds() { return n_bonds_; }
+  const int GetNBonds() { return n_bonds_; }
+  const int GetHandedness() { return SIGNOF(curvature_); }
+  const int GetFlockChangeState() { return flock_change_state_; }
+  const int GetFlockType() { return in_flock_; }
   std::vector<double> const *const GetThetas() { return &cos_thetas_; }
   void CalculateSpiralNumber();
   double GetSpiralNumber();
+  const double GetCenterOfCurvature(double *center);
   void GetNematicOrder(double *nematic_order_tensor);
   void GetPolarOrder(double *polar_order_vector);
   double GetTipZ() { return sites_[n_sites_ - 1].GetOrientation()[n_dim_ - 1]; }

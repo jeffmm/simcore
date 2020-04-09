@@ -35,7 +35,7 @@ void Filament::SetParameters() {
   peclet_number_ = sparams_->peclet_number;
   flexure_number_ = sparams_->flexure_number;
   if (dynamic_instability_flag_ &&
-      (peclet_number_ > 0 || flexure_number_ > 0)) {
+      (peclet_number_ >= 0 || flexure_number_ >= 0)) {
     /* Dynamic instability and Peclet number do not mix because a Peclet number
        assumes a fixed length, and the driving factor should not change as a
        filament grows or shrinks */
@@ -80,12 +80,6 @@ void Filament::SetParameters() {
   trapped_site_ = 0;
   custom_set_tail_ = sparams_->custom_set_tail;
   error_analysis_ = sparams_->error_analysis;
-  if (error_analysis_ && sparams_->reference_frame_flag) {
-    Logger::Warning(
-        "Filament errors will be inflated due to rotation of site "
-        "positions into filament reference frame. Errors should be viewed only"
-        " in this context.");
-  }
   /* Refine parameters */
   if (dynamic_instability_flag_) {
     /* Since dynamic instability requires a bond number that is a power of two,
@@ -426,7 +420,6 @@ void Filament::UpdatePosition(bool midstep) {
 ********************************************************************************/
 void Filament::Integrate() {
   CalculateAngles();
-  CalculateSpiralNumber();
   CalculateTangents();
   if (midstep_) {
     ConstructUnprojectedRandomForces();
@@ -450,6 +443,9 @@ void Filament::CalculateAngles() {
     double const *const u2 = sites_[i_site + 1].GetOrientation();
     double cos_angle = dot_product(n_dim_, u1, u2);
     cos_thetas_[i_site] = cos_angle;
+  }
+  if (spiral_flag_) {
+    CalculateSpiralNumber();
   }
 }
 
@@ -1213,6 +1209,7 @@ void Filament::UpdatePolyState() {
 }
 
 void Filament::CheckFlocking() {
+  //CalcPolarOrder();
   double avg_polar_order = 0;
   double avg_contact_number = 0;
   for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
@@ -1229,13 +1226,13 @@ void Filament::CheckFlocking() {
   int in_flock_prev = in_flock_;
   in_flock_ = 0;
   flock_change_state_ = 0;
-  if (avg_polar_order >= params_->flock_polar_min) {
+  if (avg_polar_order >= sparams_->flock_polar_min) {
     // Filament is in a flock
     if (in_flock_prev == 0) {
       // Filament joined flock this timestep
       flock_change_state_ = 1;
     }
-    if (avg_contact_number >= params_->flock_contact_min) {
+    if (avg_contact_number >= sparams_->flock_contact_min) {
       // Filament is in flock interior
       in_flock_ = 2;
     } else {
@@ -1249,9 +1246,55 @@ void Filament::CheckFlocking() {
 }
 
 void Filament::Draw(std::vector<graph_struct *> &graph_array) {
+  if (sparams_->highlight_flock && params_->polar_order_analysis &&
+      sparams_->flocking_analysis) {
+    CheckFlocking();
+  }
+  if (sparams_->highlight_curvature) {
+    draw_ = draw_type::fixed;
+    color_ = sparams_->color + M_PI;
+    double avg_cos_theta = 0;
+    // Average over bond angles
+    for (int i = 0; i < n_bonds_ - 1; ++i) {
+      avg_cos_theta += cos_thetas_[i];
+    }
+    avg_cos_theta /= n_bonds_ - 1;
+    double scale = 4 * M_PI;
+    double nominal_cos_theta = cos(2 * curvature_ * bond_length_);
+    double color_diff = scale * (avg_cos_theta - nominal_cos_theta);
+    for (int i = 0; i < n_bonds_; ++i) {
+      bonds_[i].SetColor(color_ + color_diff, draw_);
+    }
+  } else if (sparams_->highlight_flock) {
+    if (in_flock_ == 1) {
+      // Part of flock exterior
+      for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
+        bond->SetColor(sparams_->flock_color_ext, draw_type::fixed);
+      }
+    } else if (in_flock_ == 2) {
+      // Part of flock interior
+      for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
+        bond->SetColor(sparams_->flock_color_int, draw_type::fixed);
+      }
+    } else {
+      for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
+        bond->SetColor(color_, draw_);
+      }
+    }
+  }
   for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
-    bond->SetFlockType(in_flock_);
     bond->Draw(graph_array);
+  }
+  if (sparams_->draw_center_of_curvature) {
+    double pos[3] = {0, 0, 0};
+    double roc = GetCenterOfCurvature(pos);
+    std::copy(pos, pos + 3, g_.r);
+    std::copy(orientation_, orientation_ + 3, g_.u);
+    g_.color = sparams_->color;
+    g_.diameter = 0.5;
+    g_.length = 0;
+    g_.draw = draw_type::bw;
+    graph_array.push_back(&g_);
   }
 }
 
@@ -1277,6 +1320,52 @@ void Filament::ScalePosition() {
   }
   // update remaining bond positions
   UpdateBondPositions();
+}
+
+/* Returns average radius of curvature and position of center of curvature */
+const double Filament::GetCenterOfCurvature(double *center) {
+  std::fill(center, center + 3, 0.0);
+  double avg_theta = 0;
+  for (int i = 0; i < n_bonds_ - 1; ++i) {
+    avg_theta += acos(cos_thetas_[i]);
+  }
+  avg_theta /= (n_bonds_ - 1);
+  double avg_roc = bond_length_ / avg_theta;
+  if (avg_roc > params_->system_radius || avg_roc != avg_roc) {
+    avg_roc = 0;
+  }
+  // avg_roc = sparams_->radius_of_curvature;
+  double z_vec[3] = {0, 0, 1};
+  double mid_pos[3] = {0, 0, 0};
+  double mid_tan[3] = {0, 0, 0};
+  /* If odd number of sites, use middle site for center of filament, otherwise,
+     use center of middle bond */
+  if (n_sites_ % 2 != 0) {
+    int mid_site = (int)floor(n_sites_ / 2);
+    const double *const pos = sites_[mid_site].GetPosition();
+    sites_[mid_site].CalcTangent();
+    const double *const tan = sites_[mid_site].GetTangent();
+    std::copy(tan, tan + 3, mid_tan);
+    std::copy(pos, pos + 3, mid_pos);
+  } else {
+    int mid_bond = (int)floor(n_bonds_ / 2);
+    const double *const pos = bonds_[mid_bond].GetPosition();
+    const double *const tan = bonds_[mid_bond].GetOrientation();
+    std::copy(tan, tan + 3, mid_tan);
+    std::copy(pos, pos + 3, mid_pos);
+  }
+  /* Rotate vector 90 degrees toward the direction of curvature. Use the spiral
+     number to determine handedness of curvature */
+  CalculateSpiralNumber();
+  rotate_vector(mid_tan, z_vec, -0.5 * SIGNOF(GetSpiralNumber()) * M_PI,
+                n_dim_);
+  for (int i = 0; i < n_dim_; ++i) {
+    center[i] = mid_pos[i] + avg_roc * mid_tan[i];
+  }
+  std::copy(center, center + 3, position_);
+  UpdatePeriodic();
+  std::copy(scaled_position_, scaled_position_ + 3, center);
+  return avg_roc;
 }
 
 void Filament::ReportAll() {
@@ -1354,28 +1443,6 @@ void Filament::ReadSpec(std::fstream &ispec) {
   ispec.read(reinterpret_cast<char *>(&curvature_), sizeof(double));
   ispec.read(reinterpret_cast<char *>(&poly_), sizeof(unsigned char));
   CalculateAngles();
-  if (sparams_->highlight_curvature) {
-    draw_ = draw_type::fixed;
-    color_ = sparams_->color + M_PI;
-    double avg_cos_theta = 0;
-    // Average over bond angles
-    for (int i=0; i<n_bonds_-1; ++i) {
-      avg_cos_theta += cos_thetas_[i];
-    }
-    avg_cos_theta /= n_bonds_-1;
-    double scale = 4 * M_PI;
-    double nominal_cos_theta = cos(2 * curvature_ * bond_length_);
-    double color_diff = scale * (avg_cos_theta - nominal_cos_theta);
-    for (int i = 0; i < n_bonds_; ++i) {
-      bonds_[i].SetColor(color_ + color_diff, draw_);
-    }
-  } else if (sparams_->highlight_handedness) {
-    draw_ = draw_type::fixed;
-    color_ = (curvature_ > 0 ? sparams_->color : sparams_->color + M_PI);
-    for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
-      bond->SetColor(color_, draw_);
-    }
-  }
 }
 
 /* double[3] avg_pos

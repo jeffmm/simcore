@@ -56,6 +56,7 @@ public:
     return params_->checkpoint_flag;
   }
   virtual std::string GetInsertionType() const { return ""; }
+  virtual bool CheckInteractionAnalysis() { return false; }
   virtual int GetCount() const { return 0; }
   virtual void WriteOutputs(std::string run_name) {}
   virtual void WritePosits() {}

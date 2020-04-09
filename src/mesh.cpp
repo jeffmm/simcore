@@ -398,13 +398,13 @@ void Mesh::UpdateInteractors() {
     int mc = params_->mesh_coarsening;
     int n = 0;
     for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
-      it->SetInteractor((n++)%mc==0);
+      it->SetInteractor((n++) % mc == 0);
       interactors_.push_back(&(*it));
     }
     interactors_.back()->SetInteractor(true);
   } else {
     for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
-      //it->SetInteractor(true);
+      // it->SetInteractor(true);
       interactors_.push_back(&(*it));
     }
   }
@@ -550,8 +550,8 @@ Bond *Mesh::GetRandomBond() {
 }
 
 void Mesh::UpdateDrTot() {
-  //if (midstep_) {
-    //return;
+  // if (midstep_) {
+  // return;
   //}
   for (site_iterator site = sites_.begin(); site != sites_.end(); ++site) {
     site->UpdateDrTot();
@@ -574,12 +574,12 @@ double const Mesh::GetDrTot() {
   return dr_tot_;
 }
 
-//std::vector<Interaction *> *Mesh::GetInteractions() {
-  //for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
-    //std::vector<Interaction *> *bond_ixs = bond->GetInteractions();
-    //ixs_.insert(ixs_.end(), bond_ixs->begin(), bond_ixs->end());
-  //}
-  //return &ixs_;
+// std::vector<Interaction *> *Mesh::GetInteractions() {
+// for (bond_iterator bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
+// std::vector<Interaction *> *bond_ixs = bond->GetInteractions();
+// ixs_.insert(ixs_.end(), bond_ixs->begin(), bond_ixs->end());
+//}
+// return &ixs_;
 //}
 
 void Mesh::ClearInteractions() {
@@ -588,14 +588,12 @@ void Mesh::ClearInteractions() {
   }
 }
 
-
 void Mesh::GetAvgScaledPosition(double *asp) {
   GetAvgPosition(asp);
   std::copy(asp, asp + 3, position_);
   UpdatePeriodic();
   std::copy(scaled_position_, scaled_position_ + 3, asp);
 }
-
 
 void Mesh::GetAvgPosition(double *ap) {
 
@@ -656,15 +654,21 @@ void Mesh::SetAvgPosition() {
   UpdatePeriodic();
 }
 
-void Mesh::GetContactNumbers(std::vector<double> *cn) {
+void Mesh::GetContactNumbers(std::vector<double> &cn) {
   for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
-    cn->push_back(it->GetContactNumber());
+    cn.push_back(it->GetContactNumber());
   }
 }
 
-void Mesh::GetPolarOrders(std::vector<double> *po) {
+void Mesh::GetPolarOrders(std::vector<double> &po) {
   for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
-    po->push_back(it->GetPolarOrder());
+    po.push_back(it->GetPolarOrder());
+  }
+}
+
+void Mesh::CalcPolarOrder() {
+  for (auto it = bonds_.begin(); it != bonds_.end(); ++it) {
+    it->CalcPolarOrder();
   }
 }
 

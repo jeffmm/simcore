@@ -5,6 +5,7 @@ int CellList::_n_dim_ = -1;
 int CellList::_n_periodic_ = -1;
 int CellList::_n_cells_1d_ = -1;
 double CellList::_cell_length_ = -1;
+bool CellList::_no_init_ = true;
 
 void CellList::SetMinCellLength(double l) {
   if (l > _min_cell_length_) {
@@ -16,6 +17,7 @@ double CellList::GetCellLength() { return _cell_length_; }
 
 void CellList::Init(int n_dim, int n_periodic, double system_radius) {
   _n_cells_1d_ = (int)floor(2 * system_radius / _min_cell_length_);
+  _no_init_ = false;
 #ifdef TRACE
   if (_n_cells_1d_ > 20) {
     Logger::Warning("Simulation run in trace mode with a large number of "
@@ -89,6 +91,7 @@ void CellList::AllocateCells() {
 }
 
 void CellList::Clear() {
+  if (_no_init_) return;
   ClearCellObjects();
   ClearCellNeighbors();
   DeallocateCells();
@@ -108,9 +111,7 @@ void CellList::DeallocateCells() {
     }
     delete[] cell_[i];
   }
-  if (_n_dim_ == 3) {
-    delete[] cell_;
-  }
+  delete[] cell_;
 }
 
 void CellList::LabelCells() {

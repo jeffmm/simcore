@@ -82,8 +82,9 @@ class Mesh : public Object {
   virtual void GetAvgScaledPosition(double *asp);
   virtual void GetAvgOrientation(double *au);
   virtual void SetAvgPosition();
-  virtual void GetContactNumbers(std::vector<double> *cn);
-  virtual void GetPolarOrders(std::vector<double> *po);
+  virtual void GetContactNumbers(std::vector<double> &cn);
+  virtual void CalcPolarOrder();
+  virtual void GetPolarOrders(std::vector<double> &po);
   std::pair<double, double> GetAvgOrientationCorrelation();
   virtual void ZeroOrientationCorrelations();
   virtual const double GetBondLength() const;

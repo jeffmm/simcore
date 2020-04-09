@@ -46,7 +46,7 @@ void Simulation::RunSimulation() {
     params_.i_step = i_step_;
     if (params_.dynamic_timestep) {
       // Calculate nominal timestep
-      params_.i_step = (int) round(time_ / (0.5 * params_.delta));
+      params_.i_step = (int)round(time_ / (0.5 * params_.delta));
     }
     // Output progress
     PrintComplete();
@@ -66,7 +66,8 @@ void Simulation::RunSimulation() {
       Object::SetDelta(0.5 * Object::GetDelta());
       delta_diff = params_.delta - Object::GetDelta();
       if (Object::GetDelta() < 1e-16) {
-        Logger::Warning("Dynamic delta has become ridiculously tiny! (%2.18f) Likely an"
+        Logger::Warning(
+            "Dynamic delta has become ridiculously tiny! (%2.18f) Likely an"
             " interaction error occurred. Triggering an early exit.",
             Object::GetDelta());
         return;
@@ -147,8 +148,8 @@ void Simulation::ZeroForces() {
 /* Update system pressure, volume and rescale system size if necessary,
  * handling periodic boundaries in a sane way. */
 void Simulation::Statistics() {
-  if (params_.i_step % params_.n_thermo == 0 && params_.i_step !=
-      params_.prev_step && params_.i_step > 0) {
+  if (params_.i_step % params_.n_thermo == 0 &&
+      params_.i_step != params_.prev_step && params_.i_step > 0) {
     Logger::Debug("Calculating system pressure and volume");
     /* Calculate system pressure from stress tensor */
     Logger::Debug("Calculating system thermodynamics");
@@ -222,6 +223,8 @@ void Simulation::InitObjects() {
   Object::SetSpace(space_.GetStruct());
   SpeciesBase::SetParams(&params_);
   SpeciesBase::SetSpace(space_.GetStruct());
+  AnalysisBase::SetParams(&params_);
+  AnalysisBase::SetSpace(space_.GetStruct());
 }
 
 /* Generate graphics window and draw initial simulation setup */
@@ -515,6 +518,9 @@ void Simulation::InitOutputs() {
 void Simulation::InitInputs(run_options run_opts) {
   output_mgr_.Init(&params_, &species_, space_.GetStruct(), true, &run_opts);
   ix_mgr_.InitOutputs(true, &run_opts);
+  /* Initialize object positions from output files if post-processing */
+  output_mgr_.ReadInputs();
+  ix_mgr_.ReadInputs();
 }
 
 /* Write object positions, etc if necessary */
@@ -549,6 +555,11 @@ void Simulation::InitProcessing(run_options run_opts) {
   run_name_ = params_.run_name;
   rng_ = new RNG(params_.seed);
 
+  // No need to worry about dynamic timestep in post processing
+  params_.dynamic_timestep = false;
+  // Do not coarse-grain mesh interactions during analysis
+  params_.coarse_grained_mesh_interactions = false;
+
   /* Ensure that we are not trying to load any checkpoints when processing
      outputs */
   params_.load_checkpoint = 0;
@@ -560,6 +571,17 @@ void Simulation::InitProcessing(run_options run_opts) {
   ix_mgr_.InitInteractions();
   InsertSpecies(true, true);
   InitInputs(run_opts);
+  if (run_opts.analysis_flag) {
+    for (auto it = species_.begin(); it != species_.end(); ++it) {
+      (*it)->InitAnalysis();
+      //if ((*it)->CheckInteractionAnalysis()) {
+        //ix_mgr_.SetInteractionAnalysis(true);
+      //}
+    }
+  }
+  //ix_mgr_.InitInteractions();
+  //ix_mgr_.ResetCellList();
+  //ix_mgr_.Reset();
   if (run_opts.graphics_flag || run_opts.make_movie) {
     params_.graph_flag = true;
     if (run_opts.use_posits && params_.n_graph < output_mgr_.GetNPosit()) {
@@ -584,48 +606,23 @@ void Simulation::RunProcessing(run_options run_opts) {
   bool local_order =
       (params_.local_order_analysis || params_.polar_order_analysis ||
        params_.overlap_analysis || params_.density_analysis);
-  // Only step to n_steps-1 since we already read in one input at
-  // initialization
-  int last_step =
-      (run_opts.with_reloads ? params_.n_steps - 1 : 2 * params_.n_steps);
-  bool run_analyses = run_opts.analysis_flag;
-  // No need to worry about dynamic timestep in post processing
-  params_.dynamic_timestep = false;
-  for (i_step_ = 1; true; ++i_step_) {
+
+  for (i_step_ = 0; true; ++i_step_) {
     params_.i_step = i_step_;
-    time_ = (i_step_)*params_.delta;
+    time_ = params_.i_step * params_.delta;
     PrintComplete();
-    output_mgr_.ReadInputs();
-    ix_mgr_.ReadInputs();
     if (early_exit) {
-      Draw(run_opts.single_frame);
-      early_exit = false;
-      Logger::Info("Early exit triggered. Ending simulation.");
-      if (run_analyses && i_step_ > params_.n_steps_equil) {
-        for (auto it = species_.begin(); it != species_.end(); ++it) {
-          (*it)->FinalizeAnalysis();
-        }
-      }
-      return;
+      break;
     }
-    if (i_step_ <= params_.n_steps_equil && !run_opts.single_frame) {
-      Draw(run_opts.single_frame);
-      continue;
-    } else if (i_step_ == params_.n_steps_equil + 1 && run_analyses) {
-      // InitAnalysis initalizes and runs the first batch of analyses
-      for (auto it = species_.begin(); it != species_.end(); ++it) {
-        (*it)->InitAnalysis();
-      }
-      continue;
-    }
-    if (run_analyses) {
+    if (run_opts.analysis_flag && params_.i_step >= params_.n_steps_equil) {
       bool struct_update = false;
       /* Check if we are running any species analysis to determine whether we
        * run structure analysis */
       for (auto it = species_.begin(); it != species_.end(); ++it) {
-        if (((*it)->GetPositFlag() && i_step_ % (*it)->GetNPosit() == 0) ||
-            ((*it)->GetSpecFlag() && i_step_ % (*it)->GetNSpec() == 0)) {
+        if (((*it)->GetPositFlag() && params_.i_step % (*it)->GetNPosit() == 0) ||
+            ((*it)->GetSpecFlag() && params_.i_step % (*it)->GetNSpec() == 0)) {
           struct_update = true;
+          break;
         }
       }
       // Do structure analysis first
@@ -635,17 +632,20 @@ void Simulation::RunProcessing(run_options run_opts) {
       }
       // Now do species analyses
       for (auto it = species_.begin(); it != species_.end(); ++it) {
-        if (((*it)->GetPositFlag() && i_step_ % (*it)->GetNPosit() == 0) ||
-            ((*it)->GetSpecFlag() && i_step_ % (*it)->GetNSpec() == 0)) {
+        if (((*it)->GetPositFlag() && params_.i_step % (*it)->GetNPosit() == 0) ||
+            ((*it)->GetSpecFlag() && params_.i_step % (*it)->GetNSpec() == 0)) {
           (*it)->RunAnalysis();
         }
       }
     }
-    //if (!run_opts.single_frame) {
-      Draw(run_opts.single_frame);
-    //}
+    Draw(run_opts.single_frame);
+    output_mgr_.ReadInputs();
+    ix_mgr_.ReadInputs();
   }
-  if (run_analyses) {
+  Draw(run_opts.single_frame);
+  early_exit = false;
+  Logger::Info("Early exit triggered. Ending simulation.");
+  if (run_opts.analysis_flag && i_step_ > params_.n_steps_equil) {
     for (auto it = species_.begin(); it != species_.end(); ++it) {
       (*it)->FinalizeAnalysis();
     }

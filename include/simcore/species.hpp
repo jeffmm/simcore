@@ -6,11 +6,16 @@
 #ifdef ENABLE_OPENMP
 #include "omp.h"
 #endif
+#include "analysis.hpp"
 
 template <typename T, unsigned char S> class Species : public SpeciesBase {
 protected:
   std::vector<T> members_;
   species_parameters<S> sparams_;
+  std::vector<Analysis<T, S> *> analysis_;
+  virtual void LoadAnalysis() {
+    /* Check parameters for analyses and load them into analysis_ here */
+  }
 
 public:
   Species(unsigned long seed) : SpeciesBase(seed) {}
@@ -61,9 +66,6 @@ public:
   virtual void ReadSpecs();
   virtual void ReadCheckpoints();
   virtual void ScalePositions();
-  virtual void InitAnalysis() {}
-  virtual void RunAnalysis() {}
-  virtual void FinalizeAnalysis() {}
   virtual const std::vector<T> &GetMembers() { return members_; }
   virtual void CleanUp();
   virtual void Reserve();
@@ -72,6 +74,31 @@ public:
   virtual void ZeroDrTot();
   virtual void CustomInsert();
   virtual const bool CheckInteractorUpdate();
+  virtual void InitAnalysis() {
+    LoadAnalysis();
+    for (auto it = analysis_.begin(); it != analysis_.end(); ++it) {
+      (*it)->Init(members_, sparams_);
+    }
+  }
+  virtual void RunAnalysis() {
+    for (auto it = analysis_.begin(); it != analysis_.end(); ++it) {
+      (*it)->Run();
+    }
+  }
+  virtual void FinalizeAnalysis() {
+    for (auto it = analysis_.begin(); it != analysis_.end(); ++it) {
+      (*it)->End();
+      delete (*it);
+    }
+  }
+  virtual bool CheckInteractionAnalysis() {
+    for (auto it = analysis_.begin(); it != analysis_.end(); ++it) {
+      if ((*it)->CheckInteractionAnalysis()) {
+        return true;
+      }
+    }
+    return false;
+  }
 };
 
 template <typename T, unsigned char S> double const Species<T, S>::GetVolume() {
@@ -107,7 +134,7 @@ template <typename T, unsigned char S> double const Species<T, S>::GetDrMax() {
       max_dr = dr;
     }
   }
-  //if (max_dr > params_->system_radius * params_->system_radius) {
+  // if (max_dr > params_->system_radius * params_->system_radius) {
   if (max_dr > 10000) {
     Logger::Warning("Oddly large dr (%2.2f) in %s %s", max_dr,
                     GetSID()._to_string(), GetSpeciesName().c_str());
@@ -122,16 +149,14 @@ template <typename T, unsigned char S> void Species<T, S>::ZeroDrTot() {
   }
 }
 
-template <typename T, unsigned char S> void Species<T,
-         S>::ResetPreviousPositions() {
-  Logger::Trace("Resetting previous positions for species %s %s", GetSID()._to_string(),
-                GetSpeciesName().c_str());
+template <typename T, unsigned char S>
+void Species<T, S>::ResetPreviousPositions() {
+  Logger::Trace("Resetting previous positions for species %s %s",
+                GetSID()._to_string(), GetSpeciesName().c_str());
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->ResetPreviousPosition();
   }
 }
-
-
 
 template <typename T, unsigned char S> void Species<T, S>::AddMember(T newmem) {
   Logger::Trace("Adding preexisting member to %s %s", GetSID()._to_string(),

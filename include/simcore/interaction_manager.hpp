@@ -23,6 +23,7 @@ class InteractionManager {
   bool processing_ = false;
   bool in_out_flag_ = false;
   bool decrease_dynamic_timestep_ = false;
+  //bool run_interaction_analysis_ = false;
   int n_dim_;
   int n_periodic_;
   int n_objs_;
@@ -95,6 +96,7 @@ class InteractionManager {
   void LoadCrosslinksFromCheckpoints(std::string run_name,
                                      std::string checkpoint_run_name);
   void InsertCrosslinks();
+  //void SetInteractionAnalysis(bool set) { run_interaction_analysis_ = set; }
 };
 
 #endif

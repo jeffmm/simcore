@@ -18,47 +18,16 @@ class RigidFilament : public Mesh {
   double min_length_;
   double max_length_;
 
-  // bool force_induced_catastrophe_flag_;
-  // bool diffusion_validation_run_flag_;
   bool stoch_flag_;
-  // bool optical_trap_flag_;
-  // bool polydispersity_flag_;
-
-  // int optical_trap_fixed_;
-  // int trapped_site_;
   int n_step_ = 0;
   int eq_steps_;
   int eq_steps_count_ = 0;
 
-  // poly_state poly_;
-  // double v_poly_;
-  // double v_depoly_;
-  // double p_s2g_;
-  // double p_s2p_;
-  // double p_p2s_;
-  // double p_p2g_;
-  // double p_g2s_;
-  // double p_g2p_;
-
-  // double driving_factor_;
-  // double fic_factor_;
-  // double tip_force_;
-
-  // double optical_trap_spring_;
-  // double optical_trap_pos_[3];
-  // double optical_trap_pos2_[3];
-
-  // double polydispersity_factor_;
 
   void UpdateSiteBondPositions();
   void SetDiffusion();
   void GenerateProbableOrientation();
-  // void CalculateAngles();
-  // void CalculateTangents();
   void AddRandomForces();
-
-  // void ConstructUnprojectedRandomForces();  //?
-  // void GeometricallyProjectRandomForces();  //?
 
   void UpdateSitePositions();
 
@@ -74,7 +43,6 @@ class RigidFilament : public Mesh {
   void ReportAll();
 
   void CalculateBinding();
-  // bool CheckBondLengths();
 
  protected:
   void InsertRigidFilament(std::string insertion_type, double buffer = -1);
@@ -91,8 +59,6 @@ class RigidFilament : public Mesh {
   virtual void UpdatePosition();
   double const GetLength() { return length_; }
   double const GetTrueLength() const { return length_; }
-  // double const GetDriving() { return driving_factor_; }
-  // void Reserve();
   void CheckFlocking();
 
   void GetNematicOrder(double *nematic_order_tensor);
@@ -101,10 +67,6 @@ class RigidFilament : public Mesh {
   double const *const GetHeadPosition() {
     return sites_[n_sites_ - 1].GetPosition();
   }
-  // double const *const GetTailPosition() { return sites_[0].GetPosition(); }
-  // double const *const GetTailOrientation() {
-  //  return sites_[0].GetOrientation();
-  //}
   void WritePosit(std::fstream &oposit);
   void ReadPosit(std::fstream &iposit);
   void WriteSpec(std::fstream &ospec);

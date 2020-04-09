@@ -30,8 +30,6 @@ Object::Object(unsigned long seed) : rng_(seed) {
   contact_number_ = 0;
   n_contact_ = 0;
   has_overlap_ = false;
-  in_flock_ = 0;
-  flock_change_state_ = 0;
   gid = oid_;
   interactor_update_ = false;
 }
@@ -109,11 +107,39 @@ void Object::AddContactNumber(double const cn) {
   contact_number_ += cn;
 }
 void Object::CalcPolarOrder() {
+  //polar_order_ = 0;
+  //contact_number_ = 0;
+  //for (auto ix = ixs_.begin(); ix != ixs_.end(); ++ix) {
+    //if (ix->first->obj1->GetMeshID() == ix->first->obj2->GetMeshID())
+      //continue;
+    ////if (ix->first->pause_interaction)
+      ////continue;
+    //double dr2 = ix->first->dr_mag2;
+    //if (dr2 < 0)
+      //Logger::Error("Object received an interaction that was not parsed");
+    //double expdr2 = exp(-dr2);
+    //double const *const u1 = ix->first->obj1->GetInteractorOrientation();
+    //double const *const u2 = ix->first->obj2->GetInteractorOrientation();
+    //double u1_dot_u2 = dot_product(n_dim_, u1, u2);
+    //polar_order_ += u1_dot_u2 * expdr2;
+    //contact_number_ += expdr2;
+  //}
+
   if (contact_number_ > 1e-16) {
     polar_order_ /= contact_number_;
   } else {
     polar_order_ = 0;
   }
+  //if (polar_order_ >= 0.5) {
+    //draw_ = draw_type::fixed;
+    //color_ = 4.7;
+    //if (contact_number_ >= 0.5) {
+      //draw_ = draw_type::fixed;
+      //color_ = 1.5;
+    //} else {
+      //draw_ = draw_type::bw;
+    //}
+  //}
 }
 void Object::ZeroPolarOrder() {
   contact_number_ = 0;
@@ -142,10 +168,6 @@ bool const Object::CheckInteractorUpdate() {
   return false;
 }
 void Object::HasOverlap(bool overlap) { has_overlap_ = overlap; }
-void Object::SetFlockType(int in_flock) { in_flock_ = in_flock; }
-int Object::GetFlockType() { return in_flock_; }
-void Object::SetFlockChangeState(int fcs) { flock_change_state_ = fcs; }
-int Object::GetFlockChangeState() { return flock_change_state_; }
 int const Object::GetMeshID() const { return mesh_id_; }
 void Object::SetMeshID(int mid) { mesh_id_ = mid; }
 void Object::SetOID(int oid) { oid_ = oid; }
@@ -301,8 +323,9 @@ void Object::GiveInteraction(object_interaction ix) {
 }
 
 void Object::ApplyInteractions() {
-  for (auto ix=ixs_.begin(); ix!=ixs_.end(); ++ix) {
-    if (ix->first->pause_interaction) continue;
+  for (auto ix = ixs_.begin(); ix != ixs_.end(); ++ix) {
+    if (ix->first->pause_interaction)
+      continue;
     if (ix->second) {
       AddForce(ix->first->force);
       AddTorque(ix->first->t1);
@@ -313,19 +336,19 @@ void Object::ApplyInteractions() {
       AddPotential(ix->first->pote);
     }
   }
-  ixs_.clear();
+  //CalcPolarOrder();
+  // Moved to global ClearObjectInteractions() function in InteractionManager
+   ixs_.clear();
 }
 
 void Object::FlagDuplicateInteractions() {
   int n_interactions = ixs_.size();
-  for (int i=0; i<n_interactions-1; ++i) {
-    int other_mid = ixs_[i].second ? 
-      ixs_[i].first->obj1->GetMeshID() :
-      ixs_[i].first->obj2->GetMeshID();
-    for (int j=i+1; j<n_interactions; ++j) {
-      int other_mid2 = ixs_[j].second ? 
-        ixs_[j].first->obj1->GetMeshID() :
-        ixs_[j].first->obj2->GetMeshID();
+  for (int i = 0; i < n_interactions - 1; ++i) {
+    int other_mid = ixs_[i].second ? ixs_[i].first->obj1->GetMeshID()
+                                   : ixs_[i].first->obj2->GetMeshID();
+    for (int j = i + 1; j < n_interactions; ++j) {
+      int other_mid2 = ixs_[j].second ? ixs_[j].first->obj1->GetMeshID()
+                                      : ixs_[j].first->obj2->GetMeshID();
 
       if (other_mid == other_mid2) {
         if (ixs_[i].first->dr_mag2 < ixs_[j].first->dr_mag2) {
@@ -338,7 +361,10 @@ void Object::FlagDuplicateInteractions() {
   }
 }
 
-//std::vector<Interaction *> *Object::GetInteractions() { return &ixs_; }
+void Object::GetInteractions(std::vector<object_interaction> &ixs) {
+  ixs.insert(ixs.end(), ixs_.begin(), ixs_.end());
+}
+
 void Object::ClearInteractions() { ixs_.clear(); }
 void Object::Cleanup() {}
 

@@ -47,6 +47,7 @@ nohup.out
 *.gnf
 *.mov
 *.hr
+*.analysis
 build*
 201*
 !CMake*

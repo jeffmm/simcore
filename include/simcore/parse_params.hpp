@@ -132,6 +132,12 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.like_like_interactions = it->second.as<bool>();
     } else if (param_name.compare("auto_graph")==0) {
     params.auto_graph = it->second.as<bool>();
+    } else if (param_name.compare("polar_order_analysis")==0) {
+    params.polar_order_analysis = it->second.as<bool>();
+    } else if (param_name.compare("polar_order_n_bins")==0) {
+    params.polar_order_n_bins = it->second.as<int>();
+    } else if (param_name.compare("polar_order_contact_cutoff")==0) {
+    params.polar_order_contact_cutoff = it->second.as<double>();
     } else if (param_name.compare("local_order_analysis")==0) {
     params.local_order_analysis = it->second.as<bool>();
     } else if (param_name.compare("local_order_width")==0) {
@@ -146,12 +152,6 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.density_bin_width = it->second.as<double>();
     } else if (param_name.compare("density_com_only")==0) {
     params.density_com_only = it->second.as<bool>();
-    } else if (param_name.compare("polar_order_analysis")==0) {
-    params.polar_order_analysis = it->second.as<bool>();
-    } else if (param_name.compare("polar_order_n_bins")==0) {
-    params.polar_order_n_bins = it->second.as<int>();
-    } else if (param_name.compare("polar_order_contact_cutoff")==0) {
-    params.polar_order_contact_cutoff = it->second.as<double>();
     } else if (param_name.compare("overlap_analysis")==0) {
     params.overlap_analysis = it->second.as<bool>();
     } else if (param_name.compare("highlight_overlaps")==0) {
@@ -160,16 +160,6 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.reduced = it->second.as<bool>();
     } else if (param_name.compare("reload_reduce_switch")==0) {
     params.reload_reduce_switch = it->second.as<bool>();
-    } else if (param_name.compare("flock_polar_min")==0) {
-    params.flock_polar_min = it->second.as<double>();
-    } else if (param_name.compare("flock_contact_min")==0) {
-    params.flock_contact_min = it->second.as<double>();
-    } else if (param_name.compare("highlight_flock")==0) {
-    params.highlight_flock = it->second.as<bool>();
-    } else if (param_name.compare("flock_color_ext")==0) {
-    params.flock_color_ext = it->second.as<double>();
-    } else if (param_name.compare("flock_color_int")==0) {
-    params.flock_color_int = it->second.as<double>();
     } else if (param_name.compare("in_out_flag")==0) {
     params.in_out_flag = it->second.as<bool>();
     } else if (param_name.compare("checkpoint_flag")==0) {
@@ -313,20 +303,24 @@ species_base_parameters *parse_species_params(std::string sid,
       params.n_posit = jt->second.as<int>();
       } else if (param_name.compare("n_spec")==0) {
       params.n_spec = jt->second.as<int>();
+      } else if (param_name.compare("packing_fraction")==0) {
+      params.packing_fraction = jt->second.as<double>();
       } else if (param_name.compare("persistence_length")==0) {
       params.persistence_length = jt->second.as<double>();
+      } else if (param_name.compare("perlen_ratio")==0) {
+      params.perlen_ratio = jt->second.as<double>();
+      } else if (param_name.compare("polydispersity_flag")==0) {
+      params.polydispersity_flag = jt->second.as<bool>();
       } else if (param_name.compare("max_length")==0) {
       params.max_length = jt->second.as<double>();
       } else if (param_name.compare("min_length")==0) {
       params.min_length = jt->second.as<double>();
       } else if (param_name.compare("min_bond_length")==0) {
       params.min_bond_length = jt->second.as<double>();
-      } else if (param_name.compare("spiral_flag")==0) {
-      params.spiral_flag = jt->second.as<bool>();
-      } else if (param_name.compare("spiral_number_fail_condition")==0) {
-      params.spiral_number_fail_condition = jt->second.as<double>();
       } else if (param_name.compare("driving_factor")==0) {
       params.driving_factor = jt->second.as<double>();
+      } else if (param_name.compare("n_equil")==0) {
+      params.n_equil = jt->second.as<int>();
       } else if (param_name.compare("nematic_driving")==0) {
       params.nematic_driving = jt->second.as<bool>();
       } else if (param_name.compare("nematic_driving_freq")==0) {
@@ -335,6 +329,70 @@ species_base_parameters *parse_species_params(std::string sid,
       params.peclet_number = jt->second.as<double>();
       } else if (param_name.compare("flexure_number")==0) {
       params.flexure_number = jt->second.as<double>();
+      } else if (param_name.compare("radius_of_curvature")==0) {
+      params.radius_of_curvature = jt->second.as<double>();
+      } else if (param_name.compare("intrinsic_curvature")==0) {
+      params.intrinsic_curvature = jt->second.as<double>();
+      } else if (param_name.compare("intrinsic_curvature_sig")==0) {
+      params.intrinsic_curvature_sig = jt->second.as<double>();
+      } else if (param_name.compare("randomize_intrinsic_curvature_handedness")==0) {
+      params.randomize_intrinsic_curvature_handedness = jt->second.as<bool>();
+      } else if (param_name.compare("intrinsic_curvature_min")==0) {
+      params.intrinsic_curvature_min = jt->second.as<double>();
+      } else if (param_name.compare("highlight_handedness")==0) {
+      params.highlight_handedness = jt->second.as<bool>();
+      } else if (param_name.compare("highlight_curvature")==0) {
+      params.highlight_curvature = jt->second.as<bool>();
+      } else if (param_name.compare("draw_center_of_curvature")==0) {
+      params.draw_center_of_curvature = jt->second.as<bool>();
+      } else if (param_name.compare("error_analysis")==0) {
+      params.error_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("theta_analysis")==0) {
+      params.theta_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("lp_analysis")==0) {
+      params.lp_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("global_order_analysis")==0) {
+      params.global_order_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("curvature_cluster_analysis")==0) {
+      params.curvature_cluster_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("spiral_flag")==0) {
+      params.spiral_flag = jt->second.as<bool>();
+      } else if (param_name.compare("spiral_number_fail_condition")==0) {
+      params.spiral_number_fail_condition = jt->second.as<double>();
+      } else if (param_name.compare("orientation_corr_analysis")==0) {
+      params.orientation_corr_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("orientation_corr_n_steps")==0) {
+      params.orientation_corr_n_steps = jt->second.as<int>();
+      } else if (param_name.compare("crossing_analysis")==0) {
+      params.crossing_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("flocking_analysis")==0) {
+      params.flocking_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("flock_polar_min")==0) {
+      params.flock_polar_min = jt->second.as<double>();
+      } else if (param_name.compare("flock_contact_min")==0) {
+      params.flock_contact_min = jt->second.as<double>();
+      } else if (param_name.compare("highlight_flock")==0) {
+      params.highlight_flock = jt->second.as<bool>();
+      } else if (param_name.compare("flock_color_int")==0) {
+      params.flock_color_int = jt->second.as<double>();
+      } else if (param_name.compare("flock_color_ext")==0) {
+      params.flock_color_ext = jt->second.as<double>();
+      } else if (param_name.compare("number_fluctuation_analysis")==0) {
+      params.number_fluctuation_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("number_fluctuation_boxes")==0) {
+      params.number_fluctuation_boxes = jt->second.as<int>();
+      } else if (param_name.compare("number_fluctuation_centers")==0) {
+      params.number_fluctuation_centers = jt->second.as<int>();
+      } else if (param_name.compare("drive_from_bond_center")==0) {
+      params.drive_from_bond_center = jt->second.as<bool>();
+      } else if (param_name.compare("flagella_flag")==0) {
+      params.flagella_flag = jt->second.as<bool>();
+      } else if (param_name.compare("flagella_freq")==0) {
+      params.flagella_freq = jt->second.as<double>();
+      } else if (param_name.compare("flagella_period")==0) {
+      params.flagella_period = jt->second.as<double>();
+      } else if (param_name.compare("flagella_amplitude")==0) {
+      params.flagella_amplitude = jt->second.as<double>();
       } else if (param_name.compare("friction_ratio")==0) {
       params.friction_ratio = jt->second.as<double>();
       } else if (param_name.compare("dynamic_instability_flag")==0) {
@@ -367,64 +425,10 @@ species_base_parameters *parse_species_params(std::string sid,
       params.v_poly = jt->second.as<double>();
       } else if (param_name.compare("v_depoly")==0) {
       params.v_depoly = jt->second.as<double>();
-      } else if (param_name.compare("error_analysis")==0) {
-      params.error_analysis = jt->second.as<bool>();
-      } else if (param_name.compare("theta_analysis")==0) {
-      params.theta_analysis = jt->second.as<bool>();
-      } else if (param_name.compare("lp_analysis")==0) {
-      params.lp_analysis = jt->second.as<bool>();
-      } else if (param_name.compare("global_order_analysis")==0) {
-      params.global_order_analysis = jt->second.as<bool>();
-      } else if (param_name.compare("packing_fraction")==0) {
-      params.packing_fraction = jt->second.as<double>();
-      } else if (param_name.compare("perlen_ratio")==0) {
-      params.perlen_ratio = jt->second.as<double>();
-      } else if (param_name.compare("drive_from_bond_center")==0) {
-      params.drive_from_bond_center = jt->second.as<bool>();
-      } else if (param_name.compare("n_equil")==0) {
-      params.n_equil = jt->second.as<int>();
-      } else if (param_name.compare("orientation_corr_analysis")==0) {
-      params.orientation_corr_analysis = jt->second.as<bool>();
-      } else if (param_name.compare("orientation_corr_n_steps")==0) {
-      params.orientation_corr_n_steps = jt->second.as<int>();
-      } else if (param_name.compare("crossing_analysis")==0) {
-      params.crossing_analysis = jt->second.as<bool>();
-      } else if (param_name.compare("radius_of_curvature")==0) {
-      params.radius_of_curvature = jt->second.as<double>();
-      } else if (param_name.compare("intrinsic_curvature")==0) {
-      params.intrinsic_curvature = jt->second.as<double>();
-      } else if (param_name.compare("intrinsic_curvature_sig")==0) {
-      params.intrinsic_curvature_sig = jt->second.as<double>();
-      } else if (param_name.compare("randomize_intrinsic_curvature_handedness")==0) {
-      params.randomize_intrinsic_curvature_handedness = jt->second.as<bool>();
-      } else if (param_name.compare("intrinsic_curvature_min")==0) {
-      params.intrinsic_curvature_min = jt->second.as<double>();
-      } else if (param_name.compare("highlight_handedness")==0) {
-      params.highlight_handedness = jt->second.as<bool>();
-      } else if (param_name.compare("highlight_curvature")==0) {
-      params.highlight_curvature = jt->second.as<bool>();
-      } else if (param_name.compare("flagella_flag")==0) {
-      params.flagella_flag = jt->second.as<bool>();
-      } else if (param_name.compare("flagella_freq")==0) {
-      params.flagella_freq = jt->second.as<double>();
-      } else if (param_name.compare("flagella_period")==0) {
-      params.flagella_period = jt->second.as<double>();
-      } else if (param_name.compare("flagella_amplitude")==0) {
-      params.flagella_amplitude = jt->second.as<double>();
-      } else if (param_name.compare("flocking_analysis")==0) {
-      params.flocking_analysis = jt->second.as<bool>();
-      } else if (param_name.compare("polydispersity_flag")==0) {
-      params.polydispersity_flag = jt->second.as<bool>();
       } else if (param_name.compare("custom_set_tail")==0) {
       params.custom_set_tail = jt->second.as<bool>();
       } else if (param_name.compare("reference_frame_flag")==0) {
       params.reference_frame_flag = jt->second.as<bool>();
-      } else if (param_name.compare("number_fluctuation_analysis")==0) {
-      params.number_fluctuation_analysis = jt->second.as<bool>();
-      } else if (param_name.compare("number_fluctuation_boxes")==0) {
-      params.number_fluctuation_boxes = jt->second.as<int>();
-      } else if (param_name.compare("number_fluctuation_centers")==0) {
-      params.number_fluctuation_centers = jt->second.as<int>();
       } else {
         Logger::Warning("Unrecognized %s parameter: '%s'", sid.c_str(), param_name.c_str());
       }

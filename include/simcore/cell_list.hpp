@@ -12,6 +12,7 @@ private:
   static int _n_periodic_;
   static int _n_cells_1d_;
   static double _cell_length_;
+  static bool _no_init_;
   void AllocateCells();
   void DeallocateCells();
   void LabelCells();

@@ -25,9 +25,6 @@ protected:
   RNG rng_;
   draw_type draw_;
   int n_contact_;
-  int in_flock_;           // 0 if not in flock, 1 if interior, 2 if exterior
-  int flock_change_state_; // 0 if same as previous step, 1 if joined flock, 2
-                           // if left flock
   double position_[3];
   double prev_position_[3];
   double prev_orientation_[3];
@@ -91,8 +88,8 @@ public:
   void AddContactNumber(const double cn);
   void SetInteractor(bool ix);
   void ToggleIsMesh();
-  void CalcPolarOrder();
-  void ZeroPolarOrder();
+  virtual void CalcPolarOrder();
+  virtual void ZeroPolarOrder();
   species_id const GetSID();
   obj_type const GetType();
   const int GetOID() const;
@@ -116,10 +113,6 @@ public:
   const bool IsMesh();
   const bool CheckInteractorUpdate();
   void HasOverlap(bool overlap);
-  void SetFlockType(int in_flock);
-  void SetFlockChangeState(int fcs);
-  int GetFlockType();
-  int GetFlockChangeState();
   void SetOID(int oid);
   void SetMeshID(int mid);
 
@@ -151,7 +144,7 @@ public:
   virtual void GiveInteraction(object_interaction ix);
   virtual void ApplyInteractions();
   virtual void FlagDuplicateInteractions();
-  // virtual std::vector<Interaction *> *GetInteractions();
+  virtual void GetInteractions(std::vector<object_interaction> &ixs);
   virtual void ClearInteractions();
   virtual void Cleanup();
   // virtual void BindAnchor(anchor *ix);
