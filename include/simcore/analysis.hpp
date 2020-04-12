@@ -31,9 +31,8 @@ public:
       output_.close();
     }
   }
-  bool CheckInteractionAnalysis() {
-    return run_interaction_analysis_;
-  }
+  bool CheckInteractionAnalysis() { return run_interaction_analysis_; }
+  virtual void Draw(std::vector<graph_struct *> &graph_array) {}
 };
 
 template <typename T, unsigned char S> class Analysis : public AnalysisBase {

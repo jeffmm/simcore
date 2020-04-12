@@ -182,6 +182,8 @@ filament:                            # Parameters unique to filament class of ob
                                           # and ranges from contact number of 0 to the cutoff.
   polar_order_width: [10, double]  # Minimum cell size to use for polar order analysis
   curvature_cluster_analysis: [false, bool] # center of radius clustering for curved filaments
+  cluster_lifetime_min: [100, int]   # Min iterations cluster must persist before recording output
+  cluster_by_handedness: [false, bool] # Don't cluster filaments with diff. handedness
   spiral_init_flag: [false, bool]    # initializes filaments in an archimedean spiral centered at
                                      # system origin.
   spiral_analysis: [false, bool]  # runs analysis on spiral filaments in analysis mode

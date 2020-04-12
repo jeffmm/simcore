@@ -1245,11 +1245,12 @@ void Filament::CheckFlocking() {
 }
 
 void Filament::Draw(std::vector<graph_struct *> &graph_array) {
-  if (sparams_->highlight_flock && !sparams_->flocking_analysis) {
-    // We already call this during FlockingAnalysis, so don't call if unnecessary
-    CheckFlocking();
-  }
-  if (sparams_->highlight_curvature) {
+  if (sparams_->curvature_cluster_analysis && cluster_ > 0) {
+    double color = sparams_->color + cluster_*0.1*M_PI*M_PI;
+    for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
+      bond->SetColor(color, draw_type::fixed);
+    }
+  } else if (sparams_->highlight_curvature) {
     draw_ = draw_type::fixed;
     color_ = sparams_->color + M_PI;
     double avg_cos_theta = 0;
@@ -1261,10 +1262,14 @@ void Filament::Draw(std::vector<graph_struct *> &graph_array) {
     double scale = 4 * M_PI;
     double nominal_cos_theta = cos(2 * curvature_ * bond_length_);
     double color_diff = scale * (avg_cos_theta - nominal_cos_theta);
-    for (int i = 0; i < n_bonds_; ++i) {
-      bonds_[i].SetColor(color_ + color_diff, draw_);
+    for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
+      bond->SetColor(color_ + color_diff, draw_);
     }
   } else if (sparams_->highlight_flock) {
+    if (!sparams_->flocking_analysis) {
+      // We already call this during FlockingAnalysis
+      CheckFlocking();
+    }
     if (in_flock_ == 1) {
       // Part of flock exterior
       for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
@@ -1279,6 +1284,10 @@ void Filament::Draw(std::vector<graph_struct *> &graph_array) {
       for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
         bond->SetColor(color_, draw_);
       }
+    }
+  } else {
+    for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {
+      bond->SetColor(color_, draw_);
     }
   }
   for (auto bond = bonds_.begin(); bond != bonds_.end(); ++bond) {

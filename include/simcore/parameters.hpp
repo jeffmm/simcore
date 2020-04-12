@@ -68,6 +68,8 @@ struct species_parameters<species_id::filament>
   double polar_order_contact_cutoff = 3;
   double polar_order_width = 10;
   bool curvature_cluster_analysis = false;
+  int cluster_lifetime_min = 100;
+  bool cluster_by_handedness = false;
   bool spiral_init_flag = false;
   bool spiral_analysis = false;
   double spiral_number_fail_condition = 0;

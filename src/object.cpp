@@ -132,16 +132,6 @@ void Object::CalcPolarOrder() {
   } else {
     polar_order_ = 0;
   }
-  // if (polar_order_ >= 0.5) {
-  // draw_ = draw_type::fixed;
-  // color_ = 4.7;
-  // if (contact_number_ >= 0.5) {
-  // draw_ = draw_type::fixed;
-  // color_ = 1.5;
-  //} else {
-  // draw_ = draw_type::bw;
-  //}
-  //}
 }
 void Object::ZeroPolarOrder() {
   contact_number_ = 0;

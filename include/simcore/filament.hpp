@@ -6,7 +6,7 @@
 #include "mesh.hpp"
 
 class Filament : public Mesh {
- private:
+private:
   filament_parameters *sparams_;
   bool force_induced_catastrophe_flag_ = false;
   bool theta_validation_run_flag_ = false;
@@ -24,15 +24,17 @@ class Filament : public Mesh {
   int trapped_site_ = 0;
   int n_step_ = 0;
   int eq_steps_ = 0;
-  int in_flock_ = 0;           // 0 if not in flock, 1 if interior, 2 if exterior
-  int flock_change_state_ = 0; // 0 if same as previous step, 1 if joined flock, 2
-                               // if left flock
+  int in_flock_ = 0; // 0 if not in flock, 1 if interior, 2 if exterior
+  int flock_change_state_ = 0; // 0 if same as previous step, 1 if joined flock,
+                               // 2 if left flock
+  int cluster_ = 0;
+  int prev_cluster_ = 0;
   double min_length_ = 0;
   double max_length_ = 1000;
   double max_bond_length_ = 4;
   double min_bond_length_ = 2;
   double bending_stiffness_ = -1;
-  double friction_ratio_ = -1;  // friction_par/friction_perp
+  double friction_ratio_ = -1; // friction_par/friction_perp
   double friction_par_ = -1;
   double friction_perp_ = -1;
   double rand_sigma_par_ = -1;
@@ -63,17 +65,17 @@ class Filament : public Mesh {
   bool error_analysis_ = false;
   std::vector<int> error_rates_;
   std::vector<double> gamma_inverse_;
-  std::vector<double> tensions_;       // n_sites-1
-  std::vector<double> g_mat_lower_;    // n_sites-2
-  std::vector<double> g_mat_upper_;    // n_sites-2
-  std::vector<double> g_mat_diag_;     // n_sites-1
-  std::vector<double> det_t_mat_;      // n_sites+1
-  std::vector<double> det_b_mat_;      // n_sites+1
-  std::vector<double> g_mat_inverse_;  // n_sites-2
-  std::vector<double> k_eff_;          // n_sites-2
-  std::vector<double> h_mat_diag_;     // n_sites-1
-  std::vector<double> h_mat_upper_;    // n_sites-2
-  std::vector<double> h_mat_lower_;    // n_sites-2
+  std::vector<double> tensions_;      // n_sites-1
+  std::vector<double> g_mat_lower_;   // n_sites-2
+  std::vector<double> g_mat_upper_;   // n_sites-2
+  std::vector<double> g_mat_diag_;    // n_sites-1
+  std::vector<double> det_t_mat_;     // n_sites+1
+  std::vector<double> det_b_mat_;     // n_sites+1
+  std::vector<double> g_mat_inverse_; // n_sites-2
+  std::vector<double> k_eff_;         // n_sites-2
+  std::vector<double> h_mat_diag_;    // n_sites-1
+  std::vector<double> h_mat_upper_;   // n_sites-2
+  std::vector<double> h_mat_lower_;   // n_sites-2
   std::vector<double> cos_thetas_;
   poly_state poly_;
   void UpdateSiteBondPositions();
@@ -103,7 +105,8 @@ class Filament : public Mesh {
   void ReportAll();
   void CalculateBinding();
   bool CheckBondLengths();
- public:
+
+public:
   Filament(unsigned long seed);
   virtual void Init(filament_parameters *sparams);
   virtual void InsertAt(const double *const new_pos, const double *const u);
@@ -116,11 +119,11 @@ class Filament : public Mesh {
   double const GetPersistenceLength() { return bending_stiffness_; }
   void Reserve();
   void CheckFlocking();
-  const int GetNBonds() { return n_bonds_; }
-  const int GetHandedness() { return SIGNOF(curvature_); }
-  const int GetFlockChangeState() { return flock_change_state_; }
-  const int GetFlockType() { return in_flock_; }
-  std::vector<double> const *const GetThetas() { return &cos_thetas_; }
+  const int GetNBonds() const { return n_bonds_; }
+  const int GetHandedness() const { return SIGNOF(curvature_); }
+  const int GetFlockChangeState() const { return flock_change_state_; }
+  const int GetFlockType() const { return in_flock_; }
+  std::vector<double> const *const GetThetas() const { return &cos_thetas_; }
   void CalculateSpiralNumber();
   double GetSpiralNumber();
   const double GetCenterOfCurvature(double *center);
@@ -133,6 +136,13 @@ class Filament : public Mesh {
   double const *const GetTailPosition() { return sites_[0].GetPosition(); }
   double const *const GetTailOrientation() {
     return sites_[0].GetOrientation();
+  }
+  const int GetPrevCluster() const { return prev_cluster_; }
+  const int GetCluster() const { return cluster_; }
+  void AssignCluster(int cluster) { cluster_ = cluster; }
+  void ClearCluster() {
+    prev_cluster_ = cluster_;
+    cluster_ = 0;
   }
   void GetErrorRates(std::vector<int> &rates);
   void AddTorqueTail(double *t) { bonds_[0].AddTorque(t); }
@@ -153,4 +163,4 @@ typedef std::vector<
     std::pair<std::vector<Filament>::iterator, std::vector<Filament>::iterator>>
     filament_chunk_vector;
 
-#endif  // _SIMCORE_FILAMENT_H_
+#endif // _SIMCORE_FILAMENT_H_

@@ -11,6 +11,8 @@ private:
   static double *unit_cell_;
   static double boundary_cut2_;
   static space_struct *space_;
+public:
+
   void PointPoint(double const *const r1, double const *const s1,
                   double const *const r2, double const *const s2, double *dr,
                   double *dr_mag2, double *midpoint);
@@ -57,7 +59,6 @@ private:
                     double *r_contact, double *dr, double *dr_mag2,
                     double buffer);
 
-public:
   MinimumDistance() {}
   static void Init(space_struct *space, double boundary_cutoff_sq);
   void ObjectObject(Interaction &ix);

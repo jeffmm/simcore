@@ -219,6 +219,7 @@ const double FilamentSpecies::GetSpecLength() const {
     return 1.5 * sparams_.min_bond_length;
   }
 }
+
 void FilamentSpecies::LoadAnalysis() {
   if (sparams_.curvature_cluster_analysis) {
     FilamentAnalysis *ccluster = new CurvatureClusterAnalysis;

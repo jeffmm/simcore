@@ -355,6 +355,10 @@ species_base_parameters *parse_species_params(std::string sid,
       params.polar_order_width = jt->second.as<double>();
       } else if (param_name.compare("curvature_cluster_analysis")==0) {
       params.curvature_cluster_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("cluster_lifetime_min")==0) {
+      params.cluster_lifetime_min = jt->second.as<int>();
+      } else if (param_name.compare("cluster_by_handedness")==0) {
+      params.cluster_by_handedness = jt->second.as<bool>();
       } else if (param_name.compare("spiral_init_flag")==0) {
       params.spiral_init_flag = jt->second.as<bool>();
       } else if (param_name.compare("spiral_analysis")==0) {

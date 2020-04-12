@@ -185,6 +185,9 @@ void Species<T, S>::Draw(std::vector<graph_struct *> &graph_array) {
   for (auto it = members_.begin(); it != members_.end(); ++it) {
     it->Draw(graph_array);
   }
+  for (auto it = analysis_.begin(); it != analysis_.end(); ++it) {
+    (*it)->Draw(graph_array);
+  }
 }
 
 template <typename T, unsigned char S> void Species<T, S>::UpdatePositions() {
