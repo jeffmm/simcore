@@ -1,4 +1,5 @@
 FROM debian:10.2-slim
+WORKDIR /build
 RUN apt-get update -qq && \
     apt-get install -qqy --no-install-recommends \
         build-essential \
@@ -17,3 +18,4 @@ RUN apt-get update -qq && \
         libopenmpi-dev \
         libboost-math1.67-dev &&\
     rm -rf ~/.cache
+ENTRYPOINT []
