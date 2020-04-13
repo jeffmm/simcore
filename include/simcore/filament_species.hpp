@@ -14,6 +14,7 @@
 #include "filament_giant_number_fluctuation_analysis.hpp"
 #include "filament_barrier_crossing_analysis.hpp"
 #include "filament_incoming_outgoing_angle_analysis.hpp"
+#include "filament_mean_squared_displacement_analysis.hpp"
 
 typedef Analysis<Filament, species_id::filament> FilamentAnalysis;
 

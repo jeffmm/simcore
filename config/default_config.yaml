@@ -181,6 +181,7 @@ filament:                            # Parameters unique to filament class of ob
   polar_order_contact_cutoff: [3, double] # Sets x-axis scale of polar order parameter histogram,
                                           # and ranges from contact number of 0 to the cutoff.
   polar_order_width: [10, double]  # Minimum cell size to use for polar order analysis
+  msd_analysis: [false, bool] # Output avg positions, orientations of filaments for msd analysis
   curvature_cluster_analysis: [false, bool] # center of radius clustering for curved filaments
   cluster_lifetime_min: [100, int]   # Min iterations cluster must persist before recording output
   cluster_by_handedness: [false, bool] # Don't cluster filaments with diff. handedness

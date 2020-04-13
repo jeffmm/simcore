@@ -71,7 +71,9 @@ void FilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
     Logger::Warning("Spiral simulation will not end on spiral failure due to"
                     " nonpositive spiral_number_fail_condition");
   }
-
+  if (sparams_.radius_of_curvature > 0) {
+    sparams_.intrinsic_curvature = 1.0 / sparams_.radius_of_curvature;
+  }
   if (sparams_.error_analysis) {
     if (sparams_.reference_frame_flag) {
       Logger::Warning(
@@ -221,6 +223,10 @@ const double FilamentSpecies::GetSpecLength() const {
 }
 
 void FilamentSpecies::LoadAnalysis() {
+  if (sparams_.msd_analysis) {
+    FilamentAnalysis *msd = new MSDAnalysis;
+    analysis_.push_back(msd);
+  }
   if (sparams_.curvature_cluster_analysis) {
     FilamentAnalysis *ccluster = new CurvatureClusterAnalysis;
     analysis_.push_back(ccluster);

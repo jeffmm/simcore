@@ -46,6 +46,7 @@
   default_config["filament"]["polar_order_n_bins"] = "100";
   default_config["filament"]["polar_order_contact_cutoff"] = "3";
   default_config["filament"]["polar_order_width"] = "10";
+  default_config["filament"]["msd_analysis"] = "false";
   default_config["filament"]["curvature_cluster_analysis"] = "false";
   default_config["filament"]["cluster_lifetime_min"] = "100";
   default_config["filament"]["cluster_by_handedness"] = "false";

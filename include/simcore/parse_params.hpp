@@ -353,6 +353,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.polar_order_contact_cutoff = jt->second.as<double>();
       } else if (param_name.compare("polar_order_width")==0) {
       params.polar_order_width = jt->second.as<double>();
+      } else if (param_name.compare("msd_analysis")==0) {
+      params.msd_analysis = jt->second.as<bool>();
       } else if (param_name.compare("curvature_cluster_analysis")==0) {
       params.curvature_cluster_analysis = jt->second.as<bool>();
       } else if (param_name.compare("cluster_lifetime_min")==0) {

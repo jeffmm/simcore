@@ -59,10 +59,8 @@ void Filament::SetParameters() {
      arc length, then the angle between each bond must be d_theta/d_s *
      bond_length_. The additional factor of 1/2 is due to the fact that
      curvature is the adjusted angle for each bond when calculating the bending
-     forces */
-  if (sparams_->radius_of_curvature > 0) {
-    sparams_->intrinsic_curvature = 1.0 / sparams_->radius_of_curvature;
-  }
+     forces. If using radius of curvature, it should have already been converted
+     by filament species initialization*/
   curvature_ = 0.5 * (sparams_->intrinsic_curvature +
                       rng_.RandomNormal(sparams_->intrinsic_curvature_sig));
   if (sparams_->randomize_intrinsic_curvature_handedness) {
