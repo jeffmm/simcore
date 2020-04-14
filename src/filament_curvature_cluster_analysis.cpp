@@ -377,14 +377,15 @@ void CurvatureClusterAnalysis::GetClusterOutputs() {
 }
 
 void CurvatureClusterAnalysis::CheckClusterMerge() {
+  if (clusters_.size() < 2) {
+    return;
+  }
   MinimumDistance mindist;
   double dr[3] = {0};
   double mid[3] = {0};
   std::unordered_map<int, Cluster>::iterator it;
   std::unordered_map<int, Cluster>::iterator jt;
-  std::unordered_map<int, Cluster>::iterator endm1 = clusters_.end();
-  std::advance(endm1, -1);
-  for (it = clusters_.begin(); it != endm1; ++it) {
+  for (it = clusters_.begin(); it != clusters_.end(); ++it) {
     const double *const pos_i = it->second.GetPosition();
     double rad_i = it->second.GetAvgRadius();
     rad_i = SQR(rad_i);
