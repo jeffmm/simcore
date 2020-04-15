@@ -84,3 +84,6 @@ add_subdirectory("executable")
 
 # Add the configurator utility
 add_subdirectory("configurator")
+
+# Add analysis utilities
+add_subdirectory("analysis")

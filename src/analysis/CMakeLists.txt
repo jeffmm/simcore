@@ -1,0 +1,7 @@
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+find_package(yaml-cpp REQUIRED)
+include_directories(${YAML_CPP_INCLUDE_DIR})
+add_executable(van_hove_analysis.exe van_hove_analysis.cpp)
+target_link_libraries(van_hove_analysis.exe ${YAML_CPP_LIBRARIES})
+install(TARGETS van_hove_analysis.exe DESTINATION bin)
