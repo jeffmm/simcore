@@ -78,7 +78,24 @@ protected:
     output_ << std::flush;
   }
 
-  void EndAnalysis() {}
+  void EndAnalysis() {
+    /* output a handedness file if we have curved filaments */
+    if (use_center_of_curvature_) {
+      std::string file_name = params_->run_name + "_" + sid_._to_string() +
+                              "_" + sparams_->name + ".handedness.analysis";
+
+      Logger::Debug("Writing analysis output file %s", file_name.c_str());
+      std::ofstream hand_out(file_name);
+      hand_out << "n_filaments intrinsic_curvature\n";
+      hand_out << n_members_ << " " << sparams_->intrinsic_curvature << "\n";
+      hand_out << "handedness\n";
+      for (auto it=members_->begin(); it!=members_->end(); ++it) {
+        hand_out << it->GetHandedness() << " ";
+      }
+      hand_out << "\n";
+      hand_out.close();
+    }
+  }
 };
 
 #endif // _SIMCORE_FILAMENT_MSD_ANALYSIS_H_

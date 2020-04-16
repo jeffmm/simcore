@@ -24,6 +24,7 @@ public:
       Logger::Error("System parameters or space data structure are unset in "
                     "AnalysisBase");
     }
+    Logger::Info("Running %s analysis", analysis_name_.c_str());
   }
   virtual void Run() {}
   virtual void End() {
