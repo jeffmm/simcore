@@ -55,6 +55,11 @@ void Simulation::RunSimulation() {
     /* Calculate forces between objects in system */
     Interact();
     if (params_.dynamic_timestep && ix_mgr_.CheckDynamicTimestep()) {
+      if (i_step_ <= 1) {
+        /* We don't have a previous step to revert back to. */
+        Logger::Error(
+            "Dynamic timestep triggered on the first simulation step");
+      }
       if (midstep) {
         time_ -= Object::GetDelta();
         i_step_ -= 2;
@@ -65,11 +70,11 @@ void Simulation::RunSimulation() {
       midstep = true;
       Object::SetDelta(0.5 * Object::GetDelta());
       delta_diff = params_.delta - Object::GetDelta();
-      if (Object::GetDelta() < 1e-16) {
+      if (Object::GetDelta() < 1e-12) {
         Logger::Warning(
-            "Dynamic delta has become ridiculously tiny! (%2.18f) Likely an"
-            " interaction error occurred. Triggering an early exit.",
-            Object::GetDelta());
+            "Dynamic delta has become ridiculously tiny! (%2.14f) Likely an"
+            " interaction error occurred. Triggering an early exit. %d",
+            Object::GetDelta(), i_step_);
         return;
       }
       continue;
@@ -77,6 +82,12 @@ void Simulation::RunSimulation() {
       Object::SetDelta(Object::GetDelta() +
                        params_.dynamic_timestep_ramp * delta_diff);
     }
+    /* Generate all output files. The reason that this follows the Interact step
+       and precedes the Integrate step is so that we can detect whether the
+       timestep used in the Interact step was too large and adjust it
+       accordingly before writing the resulting positions from the Integrate
+       step. */
+    WriteOutputs();
     /* Integrate EOM on all objects to update positions, etc */
     Integrate();
     /* Update system pressure, volume, etc if necessary */
@@ -89,8 +100,6 @@ void Simulation::RunSimulation() {
       Logger::Info("Early exit triggered. Ending simulation.");
       return;
     }
-    /* Generate all output files */
-    WriteOutputs();
 
     midstep = !midstep;
   }
@@ -641,7 +650,8 @@ void Simulation::RunProcessing(run_options run_opts) {
   }
   Draw(run_opts.single_frame);
   early_exit = false;
-  Logger::Info("Early exit triggered. Ending simulation.");
+  Logger::Info("Early exit triggered on step %d. Ending simulation.",
+               params_.i_step);
   if (run_opts.analysis_flag && i_step_ > params_.n_steps_equil) {
     for (auto it = species_.begin(); it != species_.end(); ++it) {
       (*it)->FinalizeAnalysis();

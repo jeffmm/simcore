@@ -19,8 +19,8 @@ public:
     double r6 = rinv2 * rinv2 * rinv2;
     double ffac = -(12.0 * c12_ * r6 - 6.0 * c6_) * r6 * rinv;
     // Cut off the force at fcut
-    if (ABS(ffac) > fcut_) {
-      fcut_violation_ = true;
+    if (ABS(ffac) > max_force_) {
+      MaxForceViolation();
     }
     for (int i = 0; i < n_dim_; ++i) {
       ix.force[i] = ffac * dr[i] * rinv;
@@ -31,12 +31,10 @@ public:
     ix.pote = r6 * (c12_ * r6 - c6_) + eps_;
   }
 
-  void Init(system_parameters *params) {
+  void InitPotentialParams(system_parameters *params) {
     // Initialize potential params
-    n_dim_ = params->n_dim;
     eps_ = params->wca_eps;
     sigma_ = params->wca_sig;
-    fcut_ = params->f_cutoff;
 
     // For WCAPotential potentials, the rcutoff is
     // restricted to be at 2^(1/6)sigma

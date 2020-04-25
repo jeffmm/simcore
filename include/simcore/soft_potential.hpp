@@ -35,9 +35,10 @@ class SoftPotential : public PotentialBase {
      * the equation for the force here */
     double ffac = -8.0 * r6 * (exp1 * R8inv);
     double *dr = ix.dr;
-    /* Cut off the force at a maximum of fcut */
-    if (ABS(ffac) > fcut_) {
-      ffac = SIGNOF(ffac) * fcut_;
+    /* Cut off the force at a maximum of fmax */
+    if (ABS(ffac) > max_force_) {
+      MaxForceViolation();
+      ffac = SIGNOF(ffac) * max_force_;
     }
     double fmag = 0.0;
     for (int i = 0; i < n_dim_; ++i) {
@@ -53,11 +54,9 @@ class SoftPotential : public PotentialBase {
     ix.pote = exp1;
   }
 
-  void Init(system_parameters *params) {
+  void InitPotentialParams(system_parameters *params) {
     // Initialize potential params
-    n_dim_ = params->n_dim;
     eps_ = params->soft_potential_mag;
-    fcut_ = params->f_cutoff;
     eps_target_ = eps_;
     if (params->soft_potential_mag_target > 0) {
       eps_target_ = params->soft_potential_mag_target;

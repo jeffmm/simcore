@@ -16,18 +16,15 @@ class R2Potential : public PotentialBase {
     double *dr = ix.dr;
     double ffac = 0;
     double rinv2 = 0;
-    if (rmag > 0) {
-      rmag = sqrt(rmag);
-      double rinv = 1.0 / (rmag);
-      rinv2 = rinv * rinv;
-      double rinv3 = rinv2 * rinv;
-      ffac = -(2.0 * rinv3);
-    } else {
-      ffac = fcut_;
-    }
+    rmag = sqrt(rmag);
+    double rinv = 1.0 / (rmag);
+    rinv2 = rinv * rinv;
+    double rinv3 = rinv2 * rinv;
+    ffac = -(2.0 * rinv3);
     // Cut off the force at fcut
-    if (ABS(ffac) > fcut_) {
-      ffac = SIGNOF(ffac) * fcut_;
+    if (ABS(ffac) > max_force_) {
+      MaxForceViolation();
+      ffac = SIGNOF(ffac) * max_force_;
     }
     for (int i = 0; i < n_dim_; ++i) {
       ix.force[i] = ffac * dr[i] / rmag;
@@ -38,12 +35,9 @@ class R2Potential : public PotentialBase {
     ix.pote = rinv2 - eps_;
   }
 
-  void Init(system_parameters *params) {
+  void InitPotentialParams(system_parameters *params) {
     // Initialize potential params
-    n_dim_ = params->n_dim;
-    // eps_    = params->wca_eps;
     sigma_ = params->wca_sig;
-    fcut_ = params->f_cutoff;
 
     // For R2Potential potentials, the rcutoff is
     // restricted to be at 2^(1/6)sigma

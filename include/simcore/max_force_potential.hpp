@@ -6,7 +6,7 @@
 #include "potential_base.hpp"
 
 class MaxForcePotential : public PotentialBase {
- public:
+public:
   MaxForcePotential() {}
   void CalcPotential(Interaction &ix) {
     /* Check if we can generate a non-zero vector between
@@ -30,7 +30,7 @@ class MaxForcePotential : public PotentialBase {
     }
     double rinv = 1.0 / (rmag);
     for (int i = 0; i < n_dim_; ++i) {
-      ix.force[i] = fcut_ * dr[i] * rinv;
+      ix.force[i] = max_force_ * dr[i] * rinv;
     }
     for (int i = 0; i < n_dim_; ++i)
       for (int j = 0; j < n_dim_; ++j)
@@ -39,10 +39,8 @@ class MaxForcePotential : public PotentialBase {
     ix.pote = 0;
   }
 
-  void Init(system_parameters *params) {
-    // Initialize potential params
-    n_dim_ = params->n_dim;
-    fcut_ = params->f_cutoff;
+  void InitPotentialParams(system_parameters *params) {
+    // Initialize potential params: nothing to do
   }
 };
 

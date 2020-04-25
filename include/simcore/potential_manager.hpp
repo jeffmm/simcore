@@ -52,8 +52,8 @@ class PotentialManager {
   }
   double GetRCut2() { return pot_->GetRCut2(); }
   bool CheckMaxForce() {
-    if (pot_->CheckFcutViolation()) {
-      pot_->ResetFcutViolation();
+    if (pot_->CheckMaxForceViolation()) {
+      pot_->ResetMaxForceViolation();
       return true;
     }
     return false;

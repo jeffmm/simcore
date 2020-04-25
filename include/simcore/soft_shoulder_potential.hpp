@@ -22,8 +22,9 @@ class SoftShoulderPotential : public PotentialBase {
     double ffac = -8.0 * r7 * (exp1 * R8inv + exp2 * Rs8inv_);
     double *dr = ix.dr;
     // Cut off the force at fcut
-    if (ABS(ffac) > fcut_) {
-      ffac = SIGNOF(ffac) * fcut_;
+    if (ABS(ffac) > max_force_) {
+      MaxForceViolation();
+      ffac = SIGNOF(ffac) * max_force_;
     }
     for (int i = 0; i < n_dim_; ++i) {
       ix.force[i] = ffac * dr[i] / rmag;
@@ -34,13 +35,11 @@ class SoftShoulderPotential : public PotentialBase {
     ix.pote = exp1 + exp2;
   }
 
-  void Init(system_parameters *params) {
+  void InitPotentialParams(system_parameters *params) {
     // Initialize potential params
-    n_dim_ = params->n_dim;
     eps_ = params->ss_eps;
     a_ = params->ss_a;
     double Rs = params->ss_rs;
-    fcut_ = params->f_cutoff;
 
     // For SoftShoulderPotential potentials, the rcutoff is
     // restricted to be at 2^(1/6)sigma

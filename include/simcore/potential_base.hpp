@@ -6,17 +6,28 @@
 
 class PotentialBase {
 protected:
-  int n_dim_;
-  double fcut_, rcut_, rcut2_;
-  bool fcut_violation_ = false;
+  static int n_dim_;
+  static double max_force_;
+  static bool fmax_violation_;
+
+  double rcut_;
+  double rcut2_;
 
 public:
   PotentialBase() {}
-  double GetRCut2() { return rcut2_; }
-  bool CheckFcutViolation() { return fcut_violation_; }
-  virtual void CalcPotential(Interaction &ix) {}
-  virtual void Init(system_parameters *params) {}
-  virtual void ResetFcutViolation() { fcut_violation_ = false; }
-};
+  // Static functions
+  static void SetNDim(int ndim);
+  static bool CheckMaxForceViolation();
+  static void MaxForceViolation();
+  static void ResetMaxForceViolation();
+  static void SetMaxForce(double fmax);
+  static double GetMaxForce();
 
+  void Init(system_parameters *params);
+  double GetRCut2() { return rcut2_; }
+
+  // Virtual functions
+  virtual void CalcPotential(Interaction &ix) {}
+  virtual void InitPotentialParams(system_parameters *params) = 0;
+};
 #endif
