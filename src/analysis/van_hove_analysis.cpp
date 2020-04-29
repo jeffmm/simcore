@@ -399,7 +399,7 @@ void VanHove::RunCollectiveAnalysis() {
       for (int i = 0; i < n_filaments_ - 1; ++i) {
         float *r1 = &posits_[t0][2 * i];
         for (int j = i + 1; j < n_filaments_; ++j) {
-          if (CheckHandedness(i, j))
+          if (handedness_analysis_ && CheckHandedness(i, j))
             continue;
           float *r2 = &posits_[T][2 * j];
           BinDist(t, r1, r2, true);
