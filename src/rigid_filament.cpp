@@ -216,6 +216,7 @@ void RigidFilament::Integrate() {
   for (int i = 0; i < n_dim_; ++i) {
     orientation_[i] += du[i] * delta_ / gamma_rot_;
   }
+  normalize_vector(orientation_, n_dim_);
   if (stoch_flag_) {
     // Add the random displacement dr(t)
     AddRandomDisplacement();
