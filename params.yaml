@@ -1,50 +1,62 @@
-seed: 2996705641
+seed: 287941522014266
 run_name: test_ic
 n_dim: 2
 n_periodic: 2
 delta: 0.000025
 dynamic_timestep: true
 dynamic_timestep_ramp: 0.0001
-n_steps: 40000000
+n_steps: 10000000
 n_steps_equil: 0
 boundary: 0
 graph_flag: true
-auto_graph: true
+auto_graph: false
 n_graph: 1000
 movie_flag: false
-stoch_flag: true
-system_radius: 100
+zero_temperature: true
+system_radius: 15
 potential: wca
 wca_sig: 1
 wca_eps: 1
 f_cutoff: 1000000
-remove_duplicate_interactions: true
-coarse_grained_mesh_interactions: true
+remove_duplicate_interactions: false
+coarse_grained_mesh_interactions: false
 mesh_coarsening: 2
 checkpoint_flag: true
 n_checkpoint: 10000
 filament:
   - name: mt
     num: 1
-    packing_fraction: [V, 0.25, 0.5]
+    packing_fraction: 0.4
     insertion_type: random_nematic
-    draw_type: orientation
+    draw_type: bw
     color: 2
     diameter: 1
     overlap: false
     length: 10
     min_bond_length: 1.8
-    polydispersity_flag: [V, false, true]
-    min_length: 6
-    max_length: 14
-    persistence_length: [V, 100, 1000, 10000]
+    polydispersity_flag: false
+    min_length: 5
+    max_length: 20
+    persistence_length: 1000
     driving_factor: 10
-    n_equil: 50000
-    intrinsic_curvature: [V, 0, 0.05, 0.1, 0.2, 0.3, 0.4]
-    intrinsic_curvature_sig: [V, 0, 0.05]
+    n_equil: 0
+    radius_of_curvature: 5
+    #intrinsic_curvature: 0.314159
+    intrinsic_curvature_sig: 0
     intrinsic_curvature_min: 0
-    randomize_intrinsic_curvature_handedness: [V, false, true]
+    randomize_intrinsic_curvature_handedness: true
     highlight_handedness: true
+    highlight_curvature: false
+    highlight_flock: true
+    draw_center_of_curvature: false
     drive_from_bond_center: true
     spec_flag: true
     n_spec: 1000
+    error_analysis: false
+    number_fluctuation_analysis: false
+    flocking_analysis: true
+    curvature_cluster_analysis: true
+    crossing_analysis: false
+    lp_analysis: false
+    theta_analysis: false
+    global_order_analysis: false
