@@ -29,6 +29,7 @@ public:
   virtual void UpdatePositions() {}
   virtual void Draw(std::vector<graph_struct *> &graph_array) {}
   virtual void Init(std::string spec_name, ParamsParser &parser) {}
+  virtual void InitMembers() {}
   virtual void ZeroForces() {}
   virtual void GetInteractors(std::vector<Object *> &ix) {}
   virtual void GetLastInteractors(std::vector<Object *> &ix) {}

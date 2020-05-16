@@ -119,7 +119,21 @@ std::pair<double, double> Cluster::GetMeanSqrDistance() {
 void CurvatureClusterAnalysis::InitOutput() {
   SetAnalysisName("curve_cluster");
   Analysis::InitOutput();
+  SetAnalysisName("cluster_label");
+  std::string file_name = params_->run_name + "_" + sid_._to_string() + "_" +
+                          sparams_->name + "." + GetAnalysisName() +
+                          ".analysis";
+  Logger::Debug("Initializing analysis output file %s", file_name.c_str());
+  output_labels_.open(file_name, std::ios::out);
 }
+void CurvatureClusterAnalysis::InitLabels() {
+  output_labels_ << "time";
+  for (int i = 0; i < n_members_; ++i) {
+    output_labels_ << " filament_" << std::setfill('0') << std::setw(5) << i;
+  }
+  output_labels_ << "\n";
+}
+
 void CurvatureClusterAnalysis::InitAnalysis() {
   n_dim_ = space_->n_dim;
   Cluster::SetNDim(n_dim_);
@@ -144,6 +158,7 @@ void CurvatureClusterAnalysis::InitAnalysis() {
   output_
       << "time cluster_label n_filaments pos_x pos_y pos_z avg_radius"
          " max_radius handedness mean_sqr_distance mean_sqr_distance_stderr\n";
+  InitLabels();
 }
 void CurvatureClusterAnalysis::RunAnalysis() {
   if (params_->i_step < sparams_->n_equil) {
@@ -186,6 +201,11 @@ void CurvatureClusterAnalysis::RunAnalysis() {
   DeleteEmptyClusters();
   GetClusterOutputs();
   output_ << std::flush;
+  output_labels_ << time_;
+  for (int i = 0; i < n_members_; ++i) {
+    output_labels_ << " " << (*members_)[i].GetCluster();
+  }
+  output_labels_ << "\n";
 }
 
 void CurvatureClusterAnalysis::EndAnalysis() {
@@ -194,6 +214,9 @@ void CurvatureClusterAnalysis::EndAnalysis() {
   }
   delete[] curvature_centers_;
   delete[] curvature_radii_;
+  if (output_labels_.is_open()) {
+    output_labels_.close();
+  }
 }
 
 void CurvatureClusterAnalysis::CreateNewCluster(int i, int j) {
@@ -432,7 +455,9 @@ void CurvatureClusterAnalysis::CheckClusterMerge() {
 }
 
 void CurvatureClusterAnalysis::Draw(std::vector<graph_struct *> &graph_array) {
-  for (auto it = clusters_.begin(); it != clusters_.end(); ++it) {
-    it->second.Draw(graph_array);
+  if (sparams_->draw_center_of_curvature) {
+    for (auto it = clusters_.begin(); it != clusters_.end(); ++it) {
+      it->second.Draw(graph_array);
+    }
   }
 }

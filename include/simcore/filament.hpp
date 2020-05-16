@@ -119,6 +119,8 @@ public:
   double const GetPersistenceLength() { return bending_stiffness_; }
   void Reserve();
   void CheckFlocking();
+  const double GetCurvature() { return curvature_; }
+  void SetCurvature(double curv) { curvature_ = curv; }
   const int GetNBonds() const { return n_bonds_; }
   const int GetHandedness() const { return SIGNOF(curvature_); }
   const int GetFlockChangeState() const { return flock_change_state_; }

@@ -32,6 +32,7 @@ class FilamentSpecies : public Species<Filament, species_id::filament> {
  public:
   FilamentSpecies(unsigned long seed);
   void Init(std::string spec_name, ParamsParser &parser);
+  void InitMembers();
   void PopMember();
   void ResetPreviousPositions();
   void AddMember();

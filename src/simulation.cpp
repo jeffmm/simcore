@@ -433,6 +433,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
       }
     }
     if (!processing) {
+      (*spec)->InitMembers();
       if ((*spec)->GetInsertionType().find("random") == std::string::npos) {
         (*spec)->ArrangeMembers();
       }

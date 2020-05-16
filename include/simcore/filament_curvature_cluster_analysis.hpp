@@ -67,6 +67,7 @@ class CurvatureClusterAnalysis
     : public Analysis<Filament, species_id::filament> {
 
 protected:
+  std::fstream output_labels_;
   bool debug_ = false; // For verbose debugging of outputs
   std::unordered_map<int, Cluster> clusters_;
   bool cluster_by_handedness_;
@@ -78,6 +79,7 @@ protected:
   int n_dim_ = -1;
 
   void InitOutput();
+  void InitLabels();
   void InitAnalysis();
   void RunAnalysis();
   void EndAnalysis();

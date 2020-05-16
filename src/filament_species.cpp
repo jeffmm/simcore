@@ -86,6 +86,37 @@ void FilamentSpecies::Init(std::string spec_name, ParamsParser &parser) {
   }
 }
 
+void FilamentSpecies::InitMembers() {
+  return;
+  if ((sparams_.radius_of_curvature > 0 || sparams_.intrinsic_curvature != 0) &&
+      sparams_.randomize_intrinsic_curvature_handedness) {
+    int n_neg = n_members_ / 2;
+    if (n_members_ % 2 == 1 && rng_.RandomUniform() > 0.5) {
+      n_neg += 1;
+    }
+    int *neg = new int[n_members_];
+    for (int i = 0; i < n_members_; ++i) {
+      if (i >= n_neg)
+        neg[i] = 0;
+      else
+        neg[i] = 1;
+    }
+    rng_.Shuffle<int>(neg, n_members_);
+    int k = 0;
+
+    for (int i = 0; i < n_members_; ++i) {
+      if (neg[i] > 0) {
+        k++;
+        const double c = members_[i].GetCurvature();
+        members_[i].SetCurvature(-c);
+        members_[i].SetColor(-c > 0 ? sparams_.color : sparams_.color + M_PI,
+                             draw_type::fixed);
+      }
+    }
+    delete[] neg;
+  }
+}
+
 void FilamentSpecies::CleanUp() {
   Species::CleanUp();
   if (error_file_.is_open()) {

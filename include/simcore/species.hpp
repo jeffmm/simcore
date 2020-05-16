@@ -45,6 +45,8 @@ public:
   virtual void AddMember(T newmem);
   virtual void PopMember();
   virtual void PopAll();
+  // For any post-species insertion operations
+  virtual void InitMembers() {}
   virtual void ArrangeMembers();
   virtual void CrystalArrangement();
   virtual void CenteredOrientedArrangement();
