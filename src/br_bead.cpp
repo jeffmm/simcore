@@ -11,6 +11,18 @@ void BrBead::Init(br_bead_parameters *sparams) {
   diameter_ = sparams_->diameter;
   driving_factor_ = sparams_->driving_factor;
   zero_temperature_ = params_->zero_temperature;
+  chiral_handedness_ = sparams_->chiral_handedness;
+  alignment_interaction_ = sparams_->alignment_interaction;
+  alignment_torque_ = sparams_->alignment_torque;
+  noise_factor_ = sparams_->noise_factor;
+  if (sparams_->randomize_handedness) {
+    chiral_handedness_ = (rng_.RandomUniform() > 0.5 ? 1 : -1);
+  }
+  if (sparams_->highlight_handedness) {
+    draw_ = draw_type::fixed;
+    color_ = (chiral_handedness_ > 0 ? sparams_->color : sparams_->color + M_PI);
+  }
+  driving_torque_ = sparams_->driving_torque;
   SetDiffusion();
   InsertBrBead();
 }
@@ -41,7 +53,8 @@ void BrBead::InsertBrBead() {
 }
 
 void BrBead::UpdatePosition() {
-  SetPrevPosition(position_);
+  SetPrevPosition(GetPosition());
+  SetPrevOrientation(GetOrientation());
   ApplyForcesTorques();
   Integrate();
   UpdatePeriodic();
@@ -54,10 +67,41 @@ void BrBead::ApplyForcesTorques() {
       double kick = rng_.RandomUniform() - 0.5;
       force_[i] += kick * diffusion_;
     }
+    if (n_dim_ == 2) {
+      double kick = rng_.RandomUniform() - 0.5;
+      torque_[2] += diffusion_rot_ * kick;
+    }
   }
   if (driving_factor_ > 0) {
     for (int i = 0; i < n_dim_; ++i) {
       force_[i] += driving_factor_ * orientation_[i];
+    }
+  }
+  if (driving_torque_ > 0) {
+    if (n_dim_ == 2) {
+      torque_[2] += chiral_handedness_ * driving_torque_;
+    }
+  }
+  if (alignment_interaction_) {
+    for (auto ix = ixs_.begin(); ix != ixs_.end(); ++ix) {
+      if (ix->first->pause_interaction)
+        continue;
+      double dr2 = ix->first->dr_mag2;
+      double cp[3] = {0, 0, 0};
+      double align_t = alignment_torque_;
+      if (ix->second) {
+        const double * const u = ix->first->obj2->GetOrientation();
+        cross_product(orientation_, u, cp, n_dim_);
+        int sign = SIGNOF(cp[2]);
+        align_t *= sign*0.5*(1 - dot_product(n_dim_, u, orientation_));
+      } else {
+        const double * const u = ix->first->obj1->GetOrientation();
+        cross_product(orientation_, u, cp, n_dim_);
+        int sign = SIGNOF(cp[2]);
+        align_t *= sign*0.5*(1 - dot_product(n_dim_, u, orientation_));
+      }
+      cp[2] = align_t/dr2;
+      AddTorque(cp);
     }
   }
 }
@@ -65,7 +109,8 @@ void BrBead::ApplyForcesTorques() {
 void BrBead::SetDiffusion() {
   gamma_trans_ = 1.0 / (diameter_);
   gamma_rot_ = 3.0 / CUBE(diameter_);
-  diffusion_ = sqrt(24.0 * diameter_ / delta_);
+  diffusion_ = noise_factor_ * sqrt(24.0 * diameter_ / delta_);
+  diffusion_rot_ = noise_factor_ * sqrt(8.0 * CUBE(diameter_) / delta_);
 }
 
 void BrBead::Translate() {
@@ -103,7 +148,7 @@ void BrBead::Rotate() {
 
 void BrBead::Integrate() {
   Translate();
-  // Rotate();
+  Rotate();
 }
 
 void BrBead::GetInteractors(std::vector<Object *> &ix) { ix.push_back(this); }
@@ -111,3 +156,19 @@ void BrBead::GetInteractors(std::vector<Object *> &ix) { ix.push_back(this); }
 void BrBead::Draw(std::vector<graph_struct *> &graph_array) {
   Object::Draw(graph_array);
 }
+void BrBead::WriteSpec(std::fstream &ospec) {
+  Logger::Trace("Writing br_bead specs, object id: %d", GetOID());
+  Object::WriteSpec(ospec);
+  ospec.write(reinterpret_cast<char *>(&chiral_handedness_), sizeof(int));
+}
+
+void BrBead::ReadSpec(std::fstream &ispec) {
+  Object::ReadSpec(ispec);
+  ispec.read(reinterpret_cast<char *>(&chiral_handedness_), sizeof(int));
+  if (sparams_->highlight_handedness) {
+    draw_ = draw_type::fixed;
+    color_ = (chiral_handedness_ > 0 ? sparams_->color : sparams_->color + M_PI);
+  }
+}
+
+

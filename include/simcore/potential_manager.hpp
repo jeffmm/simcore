@@ -2,6 +2,7 @@
 #define _SIMCORE_POTENTIAL_MANAGER_H_
 
 #include "max_force_potential.hpp"
+#include "lennard_jones_potential.hpp"
 #include "r2_potential.hpp"
 #include "soft_potential.hpp"
 #include "soft_shoulder_potential.hpp"
@@ -11,6 +12,7 @@ class PotentialManager {
  private:
   // Potentials
   WCAPotential wca_;
+  LennardJonesPotential lj_;
   SoftPotential soft_;
   MaxForcePotential max_;
   // R2Potential r2pot_;
@@ -35,6 +37,8 @@ class PotentialManager {
       max_.Init(params);
     } else if (pot_type_ == +potential_type::soft) {
       pot_ = &soft_;
+    } else if (pot_type_ == +potential_type::lj) {
+      pot_ = &lj_;
     }
     pot_->Init(params);
   }

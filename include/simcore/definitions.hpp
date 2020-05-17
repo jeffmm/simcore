@@ -13,7 +13,7 @@
 BETTER_ENUM(species_id, unsigned char, br_bead, filament, rigid_filament,
             spherocylinder, spindle, crosslink, none);
 BETTER_ENUM(draw_type, unsigned char, fixed, orientation, bw, none);
-BETTER_ENUM(potential_type, unsigned char, none, wca, soft);
+BETTER_ENUM(potential_type, unsigned char, none, wca, soft, lj);
 BETTER_ENUM(boundary_type, unsigned char, none = 0, box = 1, sphere = 2,
             budding = 3, wall = 4);
 BETTER_ENUM(poly_state, unsigned char, grow, shrink, pause);  // make these 0,

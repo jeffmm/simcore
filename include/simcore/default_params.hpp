@@ -90,6 +90,13 @@
   default_config["filament"]["custom_set_tail"] = "false";
   default_config["filament"]["reference_frame_flag"] = "false";
   default_config["br_bead"]["driving_factor"] = "0";
+  default_config["br_bead"]["driving_torque"] = "0";
+  default_config["br_bead"]["chiral_handedness"] = "0";
+  default_config["br_bead"]["randomize_handedness"] = "false";
+  default_config["br_bead"]["highlight_handedness"] = "false";
+  default_config["br_bead"]["alignment_interaction"] = "false";
+  default_config["br_bead"]["alignment_torque"] = "0";
+  default_config["br_bead"]["noise_factor"] = "1";
   default_config["br_bead"]["packing_fraction"] = "-1";
   default_config["spherocylinder"]["diffusion_analysis"] = "false";
   default_config["spherocylinder"]["n_diffusion_samples"] = "1";

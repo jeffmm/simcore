@@ -478,6 +478,20 @@ species_base_parameters *parse_species_params(std::string sid,
       params.n_spec = jt->second.as<int>();
       } else if (param_name.compare("driving_factor")==0) {
       params.driving_factor = jt->second.as<double>();
+      } else if (param_name.compare("driving_torque")==0) {
+      params.driving_torque = jt->second.as<double>();
+      } else if (param_name.compare("chiral_handedness")==0) {
+      params.chiral_handedness = jt->second.as<int>();
+      } else if (param_name.compare("randomize_handedness")==0) {
+      params.randomize_handedness = jt->second.as<bool>();
+      } else if (param_name.compare("highlight_handedness")==0) {
+      params.highlight_handedness = jt->second.as<bool>();
+      } else if (param_name.compare("alignment_interaction")==0) {
+      params.alignment_interaction = jt->second.as<bool>();
+      } else if (param_name.compare("alignment_torque")==0) {
+      params.alignment_torque = jt->second.as<double>();
+      } else if (param_name.compare("noise_factor")==0) {
+      params.noise_factor = jt->second.as<double>();
       } else if (param_name.compare("packing_fraction")==0) {
       params.packing_fraction = jt->second.as<double>();
       } else {

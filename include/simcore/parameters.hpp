@@ -117,6 +117,13 @@ template <>
 struct species_parameters<species_id::br_bead>
     : public species_base_parameters {
   double driving_factor = 0;
+  double driving_torque = 0;
+  int chiral_handedness = 0;
+  bool randomize_handedness = false;
+  bool highlight_handedness = false;
+  bool alignment_interaction = false;
+  double alignment_torque = 0;
+  double noise_factor = 1;
   double packing_fraction = -1;
 };
 typedef species_parameters<species_id::br_bead> br_bead_parameters;

@@ -257,6 +257,13 @@ filament:                            # Parameters unique to filament class of ob
 
 br_bead:
   driving_factor: [0, double]
+  driving_torque: [0, double]
+  chiral_handedness: [0, int]
+  randomize_handedness: [false, bool]
+  highlight_handedness: [false, bool]
+  alignment_interaction: [false, bool]
+  alignment_torque: [0, double]
+  noise_factor: [1, double]
   packing_fraction: [-1, double]
 spherocylinder:
   diffusion_analysis: [false, bool]

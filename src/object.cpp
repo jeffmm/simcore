@@ -74,6 +74,7 @@ void Object::SetPrevOrientation(double const *const pu) {
 void Object::ResetPreviousPosition() {
   SetPosition(GetPrevPosition());
   SetOrientation(GetPrevOrientation());
+  UpdatePeriodic();
 }
 void Object::SetDiameter(double new_diameter) { diameter_ = new_diameter; }
 void Object::SetLength(double new_length) { length_ = new_length; }
