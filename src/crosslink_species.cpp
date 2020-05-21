@@ -48,9 +48,7 @@ LUTFiller *CrosslinkSpecies::MakeLUTFiller() {
 
   } else if (sparams_.force_dep_length == 0) {
     LUTFillerEdep *lut_filler_ptr = new LUTFillerEdep(grid_num, grid_num);
-    lut_filler_ptr->Init(sparams_.k_spring * .5 *
-                             (1. - sparams_.energy_dep_factor),
-                         sparams_.rest_length, 1);
+    lut_filler_ptr->Init(sparams_.k_spring , sparams_.rest_length, 1);
     return lut_filler_ptr;
   } else {
     LUTFillerFdep *lut_filler_ptr = new LUTFillerFdep(grid_num, grid_num);
