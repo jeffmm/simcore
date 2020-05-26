@@ -1407,6 +1407,9 @@ void Filament::WriteCheckpoint(std::fstream &ocheck) {
 
 void Filament::ReadCheckpoint(std::fstream &icheck) {
   Mesh::ReadCheckpoint(icheck);
+  const double *const r0 = sites_[trapped_site_].GetPosition();
+  std::copy(r0, r0 + 3, optical_trap_pos_);
+
 }
 
 void Filament::RotateToReferenceFrame() {
