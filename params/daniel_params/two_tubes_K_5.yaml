@@ -1,0 +1,78 @@
+seed: 564
+
+run_name: testing_seperation_k_14
+n_dim: 2
+n_periodic: 0
+delta: 0.0001
+n_steps: 10000000
+boundary: 0
+
+
+graph_flag: true
+n_graph: 100
+movie_flag: false
+movie_directory: ~/simcore/params/daniel_params/movie
+checkpoint_flag: true
+
+system_radius: 55
+potential: wca
+wca_eps: 1
+soft_potential_mag: 300
+stoch_flag: false
+f_cutoff: 100000
+thermo_flag: false
+n_thermo: 100
+interaction_flag: true
+species_insertion_reattempt_threshold: 1000 
+
+filament:
+  num: 2
+  insertion_type: custom
+  draw_type: fixed
+  color: 3
+  insert_file: params/daniel_params/insert_files/two_tubes.yaml
+  diameter: 1
+  overlap: false
+  length: 30
+  persistence_length: 40000
+  dynamic_instability_flag: false
+  optical_trap_flag: true
+  optical_trap_fixed: false
+  min_bond_length: 3
+  min_length: 30
+  max_length: 30
+  spec_flag: true
+  n_spec: 1000
+  optical_trap_spring: 100
+  packing_fraction: -1
+
+crosslink:
+  concentration: .00033
+  diameter: .1
+  draw_type: bw
+  color: 0
+  bind_site_density: 2.5
+  k_off_d: .00178
+  k_off_s: 0.00356
+  k_on_d: 0.0178
+  k_on_s: 8.4
+  static_flag: false
+  polar_affinity: 11
+  k_spring: 45.72
+  k_spring_compress: 45.72
+  force_dep_vel_flag: true
+  rest_length: 3.12
+  step_direction: -1
+  tether_draw_type: orientation
+  tether_diameter: 0.3
+  tether_color: 3.1416
+  end_pausing: true
+  r_capture: 10
+  spec_flag: false
+  n_spec: 1000
+  diffusion_s: 5.76
+  diffusion_d: 5.76
+  velocity_d: 1000
+  velocity_s: .0712
+  f_stall: 30.48
+

@@ -1,0 +1,258 @@
+seed: 228312295723629
+run_name: bundle
+n_runs: 1
+boundary: 0
+n_periodic: 0
+n_dim: 3
+delta: 0.0001
+n_steps: 120000
+n_update_cells: 50
+cell_length: 6
+graph_flag: 1
+n_graph: 100
+graph_background: 0
+movie_flag: 1
+movie_directory: movie
+system_radius: 55
+potential: soft
+soft_potential_mag: 300
+stoch_flag: 1
+f_cutoff: 100000
+thermo_flag: 0
+n_thermo: 100
+interaction_flag: 1
+filament:
+  insert_file: params/bundle_unaligned.yaml
+  num: 26
+  insertion_type: custom
+  length: 55
+  draw_type: fixed
+  color: 3
+  polydispersity_flag: 1
+  overlap: 0
+  diameter: 1
+  polydispersity_factor: 50
+  persistence_length: 1000
+  dynamic_instability_flag: 0
+  min_bond_length: 3
+  min_length: 30
+  max_length: 80
+  spec_flag: 1
+  n_spec: 100
+  checkpoint_flag: 1
+  n_checkpoint: 100
+  optical_trap_flag: 1
+  optical_trap_spring: 101
+  packing_fraction: -1
+  custom_set_tail: 1
+  force_induced_catastrophe_flag: 0
+  polydispersity_warn_on_truncate: 0
+  spiral_flag: 0
+  spiral_number_fail_condition: 0
+  driving_factor: 0
+  friction_ratio: 2
+  optical_trap_fixed: 0
+  cilia_trap_flag: 0
+  fic_factor: 0.828
+  f_shrink_to_grow: 0.017
+  f_shrink_to_pause: 0.0
+  f_pause_to_grow: 0.0
+  f_pause_to_shrink: 0.0
+  f_grow_to_pause: 0.0
+  f_grow_to_shrink: 0.00554
+  metric_forces: 1
+  v_poly: 0.44
+  v_depoly: 0.793
+  theta_analysis: 0
+  lp_analysis: 0
+  global_order_analysis: 0
+  perlen_ratio: -1
+  n_bonds: -1
+  driving_method: 0
+  n_equil: 0
+  orientation_corr_analysis: 0
+  orientation_corr_n_steps: 1000
+  crossing_analysis: 0
+  intrinsic_curvature: 0
+  flagella_flag: 0
+  flagella_freq: 1
+  flagella_period: 2
+  flagella_amplitude: 1
+  flocking_analysis: 0
+n_random: 1
+crosslink:
+  color: 0
+  draw_type: bw
+  concentration: .0075
+  diameter: 1
+  walker: 0
+  velocity: 0
+  diffusion_flag: 1
+  k_off: 2.8
+  k_off_d: 1.4
+  polar_affinity: 3
+  k_spring: 31.55
+  rest_length: 1.28
+  step_direction: 1
+  tether_draw_type: orientation
+  tether_diameter: 0.3
+  tether_color: 3.1416
+  end_pausing: 1
+  r_capture: 10
+  spec_flag: 1
+  n_spec: 100
+  checkpoint_flag: 1
+  n_checkpoint: 100
+  k_on: 10
+  k_on_d: 10
+  force_dep_factor: 1
+  f_stall: 100
+  force_dep_vel_flag: 1
+  k_align: 0
+species:
+  insert_file: none
+  overlap: 0
+  draw_type: orientation
+  num: 0
+  insertion_type: random
+  color: 0
+  posit_flag: 0
+  spec_flag: 0
+  checkpoint_flag: 0
+  n_posit: 100
+  n_spec: 100
+  n_checkpoint: 10000
+passive_filament:
+  diameter: 1
+  length: -1
+  persistence_length: 400
+  max_length: 500
+  min_length: 1
+  max_bond_length: 5
+  min_bond_length: 1.5
+  driving_factor: 0
+  friction_ratio: 2
+  metric_forces: 1
+  theta_analysis: 0
+  lp_analysis: 0
+  packing_fraction: -1
+  perlen_ratio: -1
+  n_bonds: -1
+hard_rod:
+  diameter: 1
+  length: 40
+  min_length: 3
+  max_length: 300
+  max_bond_length: 5
+  driving_factor: 0
+br_bead:
+  diameter: 1
+  driving_factor: 0
+  packing_fraction: -1
+md_bead:
+  diameter: 1
+  mass: 1
+  driving_factor: 0
+centrosome:
+  diameter: 10
+  n_filaments_min: 0
+  n_filaments_max: 10
+  fixed_spacing: 0
+  alignment_potential: 0
+  k_spring: 1000
+  k_align: 0
+  spring_length: 0
+motor:
+  diameter: 3
+  walker: 0
+  step_direction: 0
+  k_off: 2
+  k_on: 10
+  concentration: 0
+  velocity: 1
+  diffusion_flag: 1
+  k_spring: 1000
+  f_spring_max: 100
+bead_spring:
+  diameter: 1
+  length: 40
+  persistence_length: 4000
+  max_bond_length: 1
+  bond_rest_length: 0.8
+  bond_spring: 100
+  driving_factor: 0
+  lp_analysis: 0
+  theta_analysis: 0
+  packing_fraction: -1
+spherocylinder:
+  diameter: 1
+  length: 5
+  diffusion_analysis: 0
+  n_diffusion_samples: 1
+  midstep: 0
+spindle:
+  diameter: 10
+  length: 20
+  n_filaments_bud: 1
+  n_filaments_mother: 0
+  alignment_potential: 0
+  k_spring: 1000
+  k_align: 0
+  spring_length: 0
+  spb_diameter: 5
+species_insertion_failure_threshold: 10000
+polar_order_color: 0
+i_step: 0
+graph_diameter: 0
+draw_boundary: 1
+load_checkpoint: 0
+checkpoint_run_name: sc
+n_load: 0
+print_complete: 0
+insertion_type: species
+time_analysis: 0
+bud_height: 680
+bud_radius: 300
+lj_epsilon: 1
+wca_eps: 1
+wca_sig: 1
+ss_a: 1
+ss_rs: 1.5
+ss_eps: 1
+max_overlap: 100000
+constant_pressure: 0
+constant_volume: 0
+target_pressure: 0
+target_radius: 100
+pressure_time: 100
+species_insertion_reattempt_threshold: 10
+compressibility: 1
+uniform_crystal: 0
+n_steps_equil: 0
+n_steps_target: 100000
+static_particle_number: 0
+checkpoint_from_spec: 0
+soft_potential_mag_target: -1
+like_like_interactions: 1
+auto_graph: 0
+local_order_analysis: 0
+local_order_width: 50
+local_order_bin_width: 0.5
+local_order_average: 1
+local_order_n_analysis: 100
+density_analysis: 0
+density_bin_width: 0.1
+density_com_only: 0
+polar_order_analysis: 0
+polar_order_n_bins: 100
+polar_order_contact_cutoff: 3
+overlap_analysis: 0
+highlight_overlaps: 0
+reduced: 0
+reload_reduce_switch: 0
+flock_polar_min: 0.5
+flock_contact_min: 1.5
+highlight_flock: 0
+flock_color_ext: 1.57
+flock_color_int: 4.71
+in_out_flag: 0

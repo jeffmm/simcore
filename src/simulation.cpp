@@ -388,6 +388,7 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
   }
   /* Initialize static crosslink positions */
   ix_mgr_.InsertCrosslinks();
+  
   /* Should do this all the time to force object counting */
   if (params_.load_checkpoint) {
     for (auto spec = species_.begin(); spec != species_.end(); ++spec) {
@@ -397,11 +398,25 @@ void Simulation::InsertSpecies(bool force_overlap, bool processing) {
                                           params_.checkpoint_run_name);
   }
 
+  /* Attaches crosslinks */
+  //ix_mgr_.BeginWithCrosslinks();
+  
   ix_mgr_.ResetCellList();  // Forces rebuild cell list without redundancy
+
   ix_mgr_.Reset();
   // if (!processing) {
   ix_mgr_.CheckUpdateObjects();  // Forces update as well
   //}
+  ix_mgr_.BeginWithCrosslinks();
+  //ix_mgr_.ResetCellList();  // Forces rebuild cell list without redundancy
+
+  //ix_mgr_.Reset();
+
+  //ix_mgr_.CheckUpdateObjects();
+ /* Attaches crosslinks */
+  //ix_mgr_.BeginWithCrosslinks();
+
+  //} 
 }
 
 /* Tear down data structures, e.g. cell lists, and close graphics window if

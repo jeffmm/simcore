@@ -316,6 +316,7 @@ crosslink:                          # Parameters specific to crosslinks.
                                          # reservoir when going from unbound to
                                          # singly bound.  Only applicable for
                                          # crosslinks in solution.
+  begin_with_crosslinks: [0, int]   # If > 0 simulation will start with crosslinkers attached
   bind_site_density: [1, double]    # The linear binding site density along
                                     # filament that crosslinker ends bind to
   static_flag: [false, bool]        # Flag for setting one crosslinker head to be fixed in space

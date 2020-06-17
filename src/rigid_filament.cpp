@@ -204,7 +204,7 @@ void RigidFilament::Integrate() {
     // Add the random displacement dr(t)
     AddRandomDisplacement();
     // Update the orientation due to torques and random rotation
-    AddRandomReorientation();
+    //AddRandomReorientation();
   }
   // double f_mag = sqrt(dot_product(n_dim_, force_, force_));
   // printf("f_mag = %f\n", f_mag);
@@ -224,8 +224,10 @@ void RigidFilament::AddRandomDisplacement() {
   GetBodyFrame();
   // First handle the parallel component
   double mag = rng_.RandomNormal(diffusion_par_);
-  for (int i = 0; i < n_dim_; ++i) position_[i] += mag * orientation_[i];
+  
+  //for (int i = 0; i < n_dim_; ++i) position_[i] += mag * orientation_[i];
   // Then the perpendicular component(s)
+   
   for (int j = 0; j < n_dim_ - 1; ++j) {
     mag = rng_.RandomNormal(diffusion_perp_);
     for (int i = 0; i < n_dim_; ++i)
@@ -428,8 +430,10 @@ void RigidFilament::ApplyForcesTorques() {
   const double *force = bonds_.back().GetForce();
   const double *torque = bonds_.back().GetTorque();
   for (int i = 0; i < 3; ++i) {
-    force_[i] = force[i];
-    torque_[i] = torque[i];
+  force_[1] = force[1];    
+  torque_[i] = 0;
+  //printf("force,%2.1f  {",force_[1]);
+
   }
   // ApplyInteractionForces();
   // if (optical_trap_flag_) {
@@ -685,7 +689,7 @@ void RigidFilament::ReportAll() {
   // printf("h_mat_diag:\n  {");
   // for (int i = 0; i < n_sites_ - 1; ++i) printf(" %5.5f ", h_mat_diag_[i]);
   // printf("}\n");
-  // printf("h_mat_upper:\n  {");
+  // printf("h_mat_upper:\n  {")i;
   // for (int i = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ",
   // h_mat_upper_[i]); printf("}\n"); printf("h_mat_lower:\n  {"); for (int i
   // = 0; i < n_sites_ - 2; ++i) printf(" %5.5f ", h_mat_lower_[i]);

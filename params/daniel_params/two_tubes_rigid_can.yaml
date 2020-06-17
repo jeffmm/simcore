@@ -1,0 +1,104 @@
+seed: [V,2352135,134234,34632,9876,36789]
+n_runs: 1
+graph_flag: true
+n_periodic: 0
+n_dim: 2
+run_name: filament_diffusion_.1
+soft_potential_mag: 300
+n_thermo: 100
+boundary: 0
+n_steps: 10000000
+thermo_flag: false
+n_graph: 10000
+delta: 0.0001
+movie_flag: false
+movie_directory: ~/simcore/params/daniel_params/movie
+checkpoint_flag: true
+system_radius: 55
+potential: wca
+interaction_flag: true
+wca_eps: 1
+f_cutoff: 100000
+stoch_flag: true
+rigid_filament:
+  insertion_type: custom
+  overlap: false
+  diameter: 1
+  insert_file: params/daniel_params/insert_files/two_tubes_stiff.yaml
+  color: 3
+  num: 2
+  draw_type: fixed
+  length: 30
+  min_length: 0
+  max_length: 110
+  spec_flag: true
+  n_spec: 1000
+  stationary_flag: false
+crosslink:
+  diameter: .1
+  tether_diameter: 0.3
+  begin_with_crosslinks: [V,1,5,10,15,20]
+  k_off_d: 0
+  rest_length: 2.28
+  concentration: .0075
+  k_off_s: 0
+  force_dep_vel_flag: true
+  draw_type: bw
+  num: 20
+  color: 0
+  infinite reservoir: false
+  r_capture: 10
+  k_on_d: 100
+  k_on_s: 0
+  static_flag: false
+  polar_affinity: 11
+  k_spring: .1
+  k_spring_compress: .1
+  tether_draw_type: orientation
+  end_pausing: true
+  step_direction: 0
+  tether_color: 3.1416
+  spec_flag: false
+  n_spec: 1000
+  diffusion_s: 5.76
+  diffusion_d: .39
+  use_binding_volume: true
+  infinite_reservoir_flag: false
+  bind_site_density: 1
+  velocity_s: 0
+  velocity_d: 10
+  energy_dep_factor: .5
+  force_dep_length: 0
+  f_stall: 100
+  k_align: 0
+  lut_grid_num: 256
+n_random: 1
+species:
+  length: 0
+  num: 0
+  diameter: 1
+  insertion_type: random
+  name: species
+  insert_file: none
+  overlap: false
+  draw_type: orientation
+  color: 0
+  posit_flag: false
+  spec_flag: false
+  n_posit: 100
+  n_spec: 100
+br_bead:
+  driving_factor: 0
+  packing_fraction: -1
+spherocylinder:
+  diffusion_analysis: false
+  n_diffusion_samples: 1
+  midstep: false
+spindle:
+  n_filaments_bud: 0
+  n_filaments_mother: 0
+  alignment_potential: false
+  k_spring: 1000
+  k_align: 0
+  spring_length: 0
+  spb_diameter: 5

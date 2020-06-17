@@ -1,0 +1,204 @@
+seed: [V,2322,9847,34234,13453]
+n_runs: 1
+graph_flag: true
+n_periodic: 0
+n_dim: 2
+run_name: five_crosslinks_v001
+soft_potential_mag: 300
+n_thermo: 100
+boundary: 0
+n_steps: 5000000
+thermo_flag: false
+n_graph: 100
+delta: 0.0001
+movie_flag: false
+movie_directory: ~/simcore/params/daniel_params/movie
+checkpoint_flag: true
+system_radius: 55
+potential: wca
+interaction_flag: true
+wca_eps: 1
+f_cutoff: 100000
+stoch_flag: false
+filament:
+  insertion_type: custom
+  dynamic_instability_flag: false
+  overlap: false
+  diameter: 1
+  insert_file: params/daniel_params/insert_files/two_tubes.yaml
+  color: 3
+  num: 2
+  optical_trap_flag: true
+  draw_type: fixed
+  length: 30
+  persistence_length: 40000
+  optical_trap_fixed: false
+  min_bond_length: 3
+  min_length: 0
+  max_length: 110
+  spec_flag: true
+  n_spec: 1000
+  optical_trap_spring: 100
+  packing_fraction: -1
+  spiral_flag: false
+  spiral_number_fail_condition: 0
+  driving_factor: 0
+  peclet_number: -1
+  flexure_number: -1
+  friction_ratio: 2
+  force_induced_catastrophe_flag: false
+  cilia_trap_flag: false
+  fic_factor: 0.828
+  f_shrink_to_grow: 0.017
+  f_shrink_to_pause: 0.0
+  f_pause_to_grow: 0.0
+  f_pause_to_shrink: 0.0
+  f_grow_to_pause: 0.0
+  f_grow_to_shrink: 0.00554
+  v_poly: 0.44
+  v_depoly: 0.793
+  error_analysis: false
+  theta_analysis: false
+  lp_analysis: false
+  global_order_analysis: false
+  perlen_ratio: -1
+  drive_from_bond_center: true
+  n_equil: 0
+  orientation_corr_analysis: false
+  orientation_corr_n_steps: 1000
+  crossing_analysis: false
+  intrinsic_curvature: 0
+  flagella_flag: false
+  flagella_freq: 1
+  flagella_period: 2
+  flagella_amplitude: 1
+  flocking_analysis: false
+  polydispersity_flag: false
+  custom_set_tail: false
+  reference_frame_flag: false
+species_insertion_reattempt_threshold: 1000
+crosslink:
+  diameter: .1
+  tether_diameter: 0.3
+  k_off_d: 0
+  rest_length: 2.28
+  concentration: .0075
+  k_off_s: 0
+  force_dep_vel_flag: true
+  draw_type: bw
+  color: 0
+  infinite reservoir: false
+  r_capture: 10
+  k_on_d: 0
+  k_on_s: 0
+  static_flag: false
+  polar_affinity: 11
+  k_spring: 31.55
+  k_spring_compress: 31.55
+  tether_draw_type: orientation
+  end_pausing: true
+  step_direction: 0
+  tether_color: 3.1416
+  spec_flag: false
+  n_spec: 1000
+  diffusion_s: 5.76
+  diffusion_d: .39
+  use_binding_volume: true
+  infinite_reservoir_flag: false
+  bind_site_density: 1
+  velocity_s: 0
+  velocity_d: 0
+  energy_dep_factor: .5
+  force_dep_length: 0
+  f_stall: 100
+  k_align: 0
+  lut_grid_num: 256
+rigid_filament:
+  max_length: 500
+  min_length: 5
+  stationary_flag: false
+  packing_fraction: -1
+  n_equil: 0
+n_random: 1
+species:
+  length: 0
+  num: 0
+  diameter: 1
+  insertion_type: random
+  name: species
+  insert_file: none
+  overlap: false
+  draw_type: orientation
+  color: 0
+  posit_flag: false
+  spec_flag: false
+  n_posit: 100
+  n_spec: 100
+br_bead:
+  driving_factor: 0
+  packing_fraction: -1
+spherocylinder:
+  diffusion_analysis: false
+  n_diffusion_samples: 1
+  midstep: false
+spindle:
+  n_filaments_bud: 0
+  n_filaments_mother: 0
+  alignment_potential: false
+  k_spring: 1000
+  k_align: 0
+  spring_length: 0
+  spb_diameter: 5
+i_step: 0
+graph_diameter: 0
+invert_background: false
+draw_boundary: true
+load_checkpoint: false
+checkpoint_run_name: sc
+n_load: 0
+time_analysis: false
+bud_height: 680
+bud_radius: 300
+lj_epsilon: 1
+wca_sig: 1
+ss_a: 1
+ss_rs: 1.5
+ss_eps: 1
+constant_pressure: false
+constant_volume: false
+target_pressure: 0
+target_radius: 100
+pressure_time: 100
+compressibility: 1
+insert_radius: -1
+species_insertion_failure_threshold: 10000
+uniform_crystal: false
+n_steps_equil: 0
+n_steps_target: 100000
+static_particle_number: false
+checkpoint_from_spec: false
+soft_potential_mag_target: -1
+like_like_interactions: true
+auto_graph: false
+local_order_analysis: false
+local_order_width: 50
+local_order_bin_width: 0.5
+local_order_n_analysis: 100
+density_analysis: 0
+density_bin_width: 0.1
+density_com_only: false
+polar_order_analysis: false
+polar_order_n_bins: 100
+polar_order_contact_cutoff: 3
+overlap_analysis: false
+highlight_overlaps: false
+reduced: false
+reload_reduce_switch: false
+flock_polar_min: 0.5
+flock_contact_min: 0.5
+highlight_flock: false
+flock_color_ext: 1.57
+flock_color_int: 4.71
+in_out_flag: false
+n_checkpoint: 10000
+no_midstep: false

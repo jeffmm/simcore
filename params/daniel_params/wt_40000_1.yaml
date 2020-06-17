@@ -1,0 +1,79 @@
+seed: 228312295723348
+
+run_name: bundle
+n_dim: 3
+n_periodic: 0
+delta: 0.0001
+n_steps: 300000
+boundary: 0
+n_update_cells: 50
+cell_length: 6
+
+graph_flag: 1
+n_graph: 100
+graph_background: 0
+movie_flag: 1
+movie_directory: wt_1000/movie
+
+
+system_radius: 55
+potential: soft
+soft_potential_mag: 300
+stoch_flag: 1
+f_cutoff: 100000
+thermo_flag: 0
+n_thermo: 100
+interaction_flag: 1
+
+filament:
+  num: 26
+  insertion_type: custom
+  draw_type: fixed
+  color: 3
+  insert_file: params/bundle_unaligned.yaml
+  diameter: 1
+  overlap: 0
+  length: 55
+  polydispersity_flag: 1
+  polydispersity_factor: 50 
+  persistence_length: 40000
+  dynamic_instability_flag: 0
+  min_bond_length: 3
+  min_length: 30
+  max_length: 80
+  spec_flag: 1
+  n_spec: 100
+  checkpoint_flag: 1
+  n_checkpoint: 100
+  optical_trap_flag: 1
+  optical_trap_spring: 101
+  packing_fraction: -1
+  custom_set_tail: 1
+
+crosslink:
+  concentration: .0075
+  diameter: 1
+  walker: 0
+  velocity: 0
+  diffusion_flag: 1
+  draw_type: bw
+  color: 0
+  k_off: 2.8
+  k_off_d: 1.4
+  force_dep_factor: 0
+  force_dep_vel_flag: 1
+  polar_affinity: 1
+  k_spring: 31.55
+  f_stall: 40000
+  rest_length: 1.28
+  step_direction: 1
+  tether_draw_type: orientation
+  tether_diameter: 0.3
+  tether_color: 3.1416
+  end_pausing: 1
+  r_capture: 10
+  spec_flag: 0
+  n_spec: 100
+  checkpoint_flag: 1
+  n_checkpoint: 100
+

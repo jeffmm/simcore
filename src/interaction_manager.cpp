@@ -264,7 +264,7 @@ void InteractionManager::CheckUpdateObjects() {
      If static_pnumber_ is flagged, we know that particle numbers
      never change, so we don't bother counting particles and move on */
   if (processing_) return;
-  if (static_pnumber_) return;
+  //if (static_pnumber_) return;
   bool ix_update = CheckSpeciesInteractorUpdate();
   int obj_count = CountSpecies();
   if (obj_count != n_objs_ || ix_update) {
@@ -740,3 +740,10 @@ void InteractionManager::LoadCrosslinksFromCheckpoints(
 }
 
 void InteractionManager::InsertCrosslinks() { xlink_.InsertCrosslinks(); }
+void InteractionManager::BeginWithCrosslinks() { 
+  xlink_.BeginWithCrosslinks();
+//Interact();
+  //PairBondCrosslinks();
+  ForceUpdate();
+}
+

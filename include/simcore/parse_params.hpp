@@ -14,6 +14,8 @@ system_parameters parse_system_params(YAML::Node &node) {
     if (false) {
     } else if (param_name.compare("seed")==0) {
     params.seed = it->second.as<long>();
+    } else if (param_name.compare("species_insertion_failure_threshold")==0) {
+    params.species_insertion_failure_threshold = it->second.as<int>();
     } else if (param_name.compare("n_runs")==0) {
     params.n_runs = it->second.as<int>();
     } else if (param_name.compare("n_random")==0) {
@@ -86,6 +88,8 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.pressure_time = it->second.as<int>();
     } else if (param_name.compare("compressibility")==0) {
     params.compressibility = it->second.as<double>();
+    } else if (param_name.compare("species_insertion_reattempt_threshold")==0) {
+    params.species_insertion_reattempt_threshold = it->second.as<int>();
     } else if (param_name.compare("stoch_flag")==0) {
     params.stoch_flag = it->second.as<bool>();
     } else if (param_name.compare("thermo_flag")==0) {
@@ -96,10 +100,6 @@ system_parameters parse_system_params(YAML::Node &node) {
     params.insert_radius = it->second.as<double>();
     } else if (param_name.compare("interaction_flag")==0) {
     params.interaction_flag = it->second.as<bool>();
-    } else if (param_name.compare("species_insertion_failure_threshold")==0) {
-    params.species_insertion_failure_threshold = it->second.as<int>();
-    } else if (param_name.compare("species_insertion_reattempt_threshold")==0) {
-    params.species_insertion_reattempt_threshold = it->second.as<int>();
     } else if (param_name.compare("uniform_crystal")==0) {
     params.uniform_crystal = it->second.as<bool>();
     } else if (param_name.compare("n_steps_equil")==0) {
@@ -185,10 +185,10 @@ void parse_species_base_params(species_base_parameters &params,
         if (false) {
         } else if (param_name.compare("name")==0) {
         params.name = jt->second.as<std::string>();
-        } else if (param_name.compare("num")==0) {
-        params.num = jt->second.as<int>();
         } else if (param_name.compare("diameter")==0) {
         params.diameter = jt->second.as<double>();
+        } else if (param_name.compare("num")==0) {
+        params.num = jt->second.as<int>();
         } else if (param_name.compare("length")==0) {
         params.length = jt->second.as<double>();
         } else if (param_name.compare("insertion_type")==0) {
@@ -230,10 +230,10 @@ species_base_parameters *parse_species_params(std::string sid,
       if (false) {
       } else if (param_name.compare("name")==0) {
       params.name = jt->second.as<std::string>();
-      } else if (param_name.compare("num")==0) {
-      params.num = jt->second.as<int>();
       } else if (param_name.compare("diameter")==0) {
       params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
       } else if (param_name.compare("length")==0) {
       params.length = jt->second.as<double>();
       } else if (param_name.compare("insertion_type")==0) {
@@ -277,10 +277,10 @@ species_base_parameters *parse_species_params(std::string sid,
       if (false) {
       } else if (param_name.compare("name")==0) {
       params.name = jt->second.as<std::string>();
-      } else if (param_name.compare("num")==0) {
-      params.num = jt->second.as<int>();
       } else if (param_name.compare("diameter")==0) {
       params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
       } else if (param_name.compare("length")==0) {
       params.length = jt->second.as<double>();
       } else if (param_name.compare("insertion_type")==0) {
@@ -301,10 +301,12 @@ species_base_parameters *parse_species_params(std::string sid,
       params.n_posit = jt->second.as<int>();
       } else if (param_name.compare("n_spec")==0) {
       params.n_spec = jt->second.as<int>();
-      } else if (param_name.compare("persistence_length")==0) {
-      params.persistence_length = jt->second.as<double>();
       } else if (param_name.compare("max_length")==0) {
       params.max_length = jt->second.as<double>();
+      } else if (param_name.compare("force_induced_catastrophe_flag")==0) {
+      params.force_induced_catastrophe_flag = jt->second.as<bool>();
+      } else if (param_name.compare("persistence_length")==0) {
+      params.persistence_length = jt->second.as<double>();
       } else if (param_name.compare("min_length")==0) {
       params.min_length = jt->second.as<double>();
       } else if (param_name.compare("min_bond_length")==0) {
@@ -323,8 +325,6 @@ species_base_parameters *parse_species_params(std::string sid,
       params.friction_ratio = jt->second.as<double>();
       } else if (param_name.compare("dynamic_instability_flag")==0) {
       params.dynamic_instability_flag = jt->second.as<bool>();
-      } else if (param_name.compare("force_induced_catastrophe_flag")==0) {
-      params.force_induced_catastrophe_flag = jt->second.as<bool>();
       } else if (param_name.compare("optical_trap_flag")==0) {
       params.optical_trap_flag = jt->second.as<bool>();
       } else if (param_name.compare("optical_trap_spring")==0) {
@@ -404,10 +404,10 @@ species_base_parameters *parse_species_params(std::string sid,
       if (false) {
       } else if (param_name.compare("name")==0) {
       params.name = jt->second.as<std::string>();
-      } else if (param_name.compare("num")==0) {
-      params.num = jt->second.as<int>();
       } else if (param_name.compare("diameter")==0) {
       params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
       } else if (param_name.compare("length")==0) {
       params.length = jt->second.as<double>();
       } else if (param_name.compare("insertion_type")==0) {
@@ -445,10 +445,10 @@ species_base_parameters *parse_species_params(std::string sid,
       if (false) {
       } else if (param_name.compare("name")==0) {
       params.name = jt->second.as<std::string>();
-      } else if (param_name.compare("num")==0) {
-      params.num = jt->second.as<int>();
       } else if (param_name.compare("diameter")==0) {
       params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
       } else if (param_name.compare("length")==0) {
       params.length = jt->second.as<double>();
       } else if (param_name.compare("insertion_type")==0) {
@@ -488,10 +488,10 @@ species_base_parameters *parse_species_params(std::string sid,
       if (false) {
       } else if (param_name.compare("name")==0) {
       params.name = jt->second.as<std::string>();
-      } else if (param_name.compare("num")==0) {
-      params.num = jt->second.as<int>();
       } else if (param_name.compare("diameter")==0) {
       params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
       } else if (param_name.compare("length")==0) {
       params.length = jt->second.as<double>();
       } else if (param_name.compare("insertion_type")==0) {
@@ -539,10 +539,10 @@ species_base_parameters *parse_species_params(std::string sid,
       if (false) {
       } else if (param_name.compare("name")==0) {
       params.name = jt->second.as<std::string>();
-      } else if (param_name.compare("num")==0) {
-      params.num = jt->second.as<int>();
       } else if (param_name.compare("diameter")==0) {
       params.diameter = jt->second.as<double>();
+      } else if (param_name.compare("num")==0) {
+      params.num = jt->second.as<int>();
       } else if (param_name.compare("length")==0) {
       params.length = jt->second.as<double>();
       } else if (param_name.compare("insertion_type")==0) {
@@ -569,6 +569,8 @@ species_base_parameters *parse_species_params(std::string sid,
       params.use_binding_volume = jt->second.as<bool>();
       } else if (param_name.compare("infinite_reservoir_flag")==0) {
       params.infinite_reservoir_flag = jt->second.as<bool>();
+      } else if (param_name.compare("begin_with_crosslinks")==0) {
+      params.begin_with_crosslinks = jt->second.as<int>();
       } else if (param_name.compare("bind_site_density")==0) {
       params.bind_site_density = jt->second.as<double>();
       } else if (param_name.compare("static_flag")==0) {

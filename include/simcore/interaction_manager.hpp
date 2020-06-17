@@ -61,7 +61,6 @@ class InteractionManager {
   double GetDrMax();
   void ZeroDrTot();
   int CountSpecies();
-  void PairBondCrosslinks();
   bool CheckBondAnchorPair(Object *anchor, Object *bond);
 
  public:
@@ -91,6 +90,9 @@ class InteractionManager {
   void LoadCrosslinksFromCheckpoints(std::string run_name,
                                      std::string checkpoint_run_name);
   void InsertCrosslinks();
+  void BeginWithCrosslinks();
+  void BindCrosslink();
+  void PairBondCrosslinks();
 };
 
 #endif

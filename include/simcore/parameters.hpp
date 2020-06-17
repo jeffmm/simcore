@@ -7,8 +7,8 @@
 
 template <unsigned char S> struct species_parameters {
   std::string name = "species";
-  int num = 0;
   double diameter = 1;
+  int num = 0;
   double length = 0;
   std::string insertion_type = "random";
   std::string insert_file = "none";
@@ -38,8 +38,9 @@ typedef species_parameters<species_id::rigid_filament> rigid_filament_parameters
 template <>
 struct species_parameters<species_id::filament>
     : public species_base_parameters {
-  double persistence_length = 400;
   double max_length = 500;
+  bool force_induced_catastrophe_flag = false;
+  double persistence_length = 400;
   double min_length = 5;
   double min_bond_length = 1.5;
   bool spiral_flag = false;
@@ -49,7 +50,6 @@ struct species_parameters<species_id::filament>
   double flexure_number = -1;
   double friction_ratio = 2;
   bool dynamic_instability_flag = false;
-  bool force_induced_catastrophe_flag = false;
   bool optical_trap_flag = false;
   double optical_trap_spring = 20;
   bool optical_trap_fixed = false;
@@ -122,6 +122,7 @@ struct species_parameters<species_id::crosslink>
   double concentration = 0;
   bool use_binding_volume = true;
   bool infinite_reservoir_flag = false;
+  int begin_with_crosslinks = 0;
   double bind_site_density = 1;
   bool static_flag = false;
   double diffusion_s = 0;
@@ -153,6 +154,7 @@ typedef species_parameters<species_id::crosslink> crosslink_parameters;
 
 struct system_parameters {
   long seed = 7859459105545;
+  int species_insertion_failure_threshold = 10000;
   int n_runs = 1;
   int n_random = 1;
   std::string run_name = "sc";
@@ -189,13 +191,12 @@ struct system_parameters {
   double target_radius = 100;
   int pressure_time = 100;
   double compressibility = 1;
+  int species_insertion_reattempt_threshold = 10;
   bool stoch_flag = true;
   bool thermo_flag = false;
   int n_thermo = 1000;
   double insert_radius = -1;
   bool interaction_flag = true;
-  int species_insertion_failure_threshold = 10000;
-  int species_insertion_reattempt_threshold = 10;
   bool uniform_crystal = false;
   int n_steps_equil = 0;
   int n_steps_target = 100000;

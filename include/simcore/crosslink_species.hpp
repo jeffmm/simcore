@@ -16,6 +16,7 @@ class CrosslinkSpecies : public Species<Crosslink, species_id::crosslink> {
   double *obj_volume_;  // Total length of all the objects in the system
   double xlink_concentration_;
   double bind_site_density_;
+  int begin_with_crosslinks_;
   bool infinite_reservoir_flag_;
   double k_on_;
   bool static_flag_;
@@ -46,6 +47,8 @@ class CrosslinkSpecies : public Species<Crosslink, species_id::crosslink> {
   void GetAnchorInteractors(std::vector<Object *> &ixors);
   void ReadSpecs();
   void InsertCrosslinks();
+  void BeginWithCrosslinks();
+  void BeginWithCrosslinkers();
   const int GetDoublyBoundCrosslinkNumber() const;
   const double GetConcentration() const;
   const double GetRCutoff() const;

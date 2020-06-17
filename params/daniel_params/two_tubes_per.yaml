@@ -1,0 +1,70 @@
+seed: 3457130475044
+
+run_name: bundle
+n_dim: 2
+n_periodic: 0
+delta: 0.0001
+n_steps: 5000000
+boundary: 0
+
+
+graph_flag: true
+n_graph: 100
+movie_flag: false
+movie_directory: params/daniel_params/movie
+checkpoint_flag: true
+
+system_radius: 55
+potential: wca
+wca_eps: 1
+soft_potential_mag: 300
+stoch_flag: true
+f_cutoff: 100000
+thermo_flag: false
+n_thermo: 100
+interaction_flag: true
+species_insertion_reattempt_threshold: 1000 
+
+rigid_filament:
+  num: 2
+  insertion_type: custom
+  draw_type: fixed
+  color: 3
+  insert_file: params/daniel_params/insert_files/two_tubes_stiff_per.yaml
+  diameter: 1
+  overlap: false
+  stationary_flag: false
+  length: 30
+  min_length: 30
+  max_length: 30
+  spec_flag: true
+  n_spec: 1000
+  packing_fraction: -1
+
+crosslink:
+  concentration: .0075
+  diameter: .1
+  diffusion_flag: true
+  draw_type: bw
+  color: 0
+  k_off_d: 1
+  k_on: 0
+  k_on_d: 0
+  static_flag: false
+  polar_affinity: 11
+  k_spring: 31.55
+  k_sping_compress: 31.55
+  force_dep_vel_flag: true
+  rest_length: 2
+  step_direction: 0
+  tether_draw_type: orientation
+  tether_diameter: 0.3
+  tether_color: 3.1416
+  end_pausing: true
+  r_capture: 10
+  spec_flag: true
+  n_spec: 1000
+  diffusion_s: 5.76
+  diffusion_d: .39
+
+
