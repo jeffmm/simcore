@@ -431,6 +431,12 @@ void Mesh::ReadSpec(std::fstream &ip) {
   ip.read(reinterpret_cast<char *>(&bond_length_), sizeof(bond_length_));
   ip.read(reinterpret_cast<char *>(&nsites), sizeof(int));
   true_length_ = length_;
+  if (polydispersity_flag_ && params_->i_step == 0) {
+    /* Force re-initialization if we have polydisperse filaments, prevents weird
+       bugs that occur due to matching n_sites_ from initialized filaments and
+       filament specs read from outputs */
+    n_sites_ = 0;
+  }
   if (nsites == n_sites_) {
     for (auto it = sites_.begin(); it != sites_.end(); ++it) {
       it->ReadSpec(ip);
@@ -563,7 +569,17 @@ void Mesh::ClearInteractions() {
   }
 }
 
+
+void Mesh::GetAvgScaledPosition(double *asp) {
+  GetAvgPosition(asp);
+  std::copy(asp, asp + 3, position_);
+  UpdatePeriodic();
+  std::copy(scaled_position_, scaled_position_ + 3, asp);
+}
+
+
 void Mesh::GetAvgPosition(double *ap) {
+
   double avg_p[3] = {0.0, 0.0, 0.0};
   int size = 0;
   for (auto it = sites_.begin(); it != sites_.end(); ++it) {

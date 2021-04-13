@@ -391,6 +391,12 @@ species_base_parameters *parse_species_params(std::string sid,
       params.custom_set_tail = jt->second.as<bool>();
       } else if (param_name.compare("reference_frame_flag")==0) {
       params.reference_frame_flag = jt->second.as<bool>();
+      } else if (param_name.compare("number_fluctuation_analysis")==0) {
+      params.number_fluctuation_analysis = jt->second.as<bool>();
+      } else if (param_name.compare("number_fluctuation_boxes")==0) {
+      params.number_fluctuation_boxes = jt->second.as<int>();
+      } else if (param_name.compare("number_fluctuation_centers")==0) {
+      params.number_fluctuation_centers = jt->second.as<int>();
       } else {
         Logger::Warning("Unrecognized %s parameter: '%s'", sid.c_str(), param_name.c_str());
       }

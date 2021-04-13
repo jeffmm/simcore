@@ -44,6 +44,7 @@ nohup.out
 *.polar_order_avg
 *.flock
 *.in_out
+*.gnf
 *.mov
 *.hr
 build*

@@ -16,7 +16,6 @@ class Filament : public Mesh {
   bool flagella_flag_;
   bool optical_trap_flag_;
   bool cilia_trap_flag_;
-  bool polydispersity_flag_;
   bool normalize_switch_ = true;
   int n_normalize_ = 0;
   int optical_trap_fixed_;
@@ -29,7 +28,6 @@ class Filament : public Mesh {
   double max_length_;
   double max_bond_length_;
   double min_bond_length_;
-  double persistence_length_;
   double bending_stiffness_;
   double friction_ratio_;  // friction_par/friction_perp
   double friction_par_;
@@ -111,7 +109,7 @@ class Filament : public Mesh {
   virtual void UpdatePosition(bool midstep);
   double const GetLength() { return length_; }
   double const GetDriving() { return driving_factor_; }
-  double const GetPersistenceLength() { return persistence_length_; }
+  double const GetPersistenceLength() { return bending_stiffness_; }
   void Reserve();
   void CheckFlocking();
   int const GetNBonds() { return n_bonds_; }

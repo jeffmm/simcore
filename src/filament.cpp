@@ -162,7 +162,7 @@ void Filament::InitFilamentLength() {
                 length_, n_bonds_, GetMeshID());
   true_length_ = length_;
   if (flexure_number_ >= 0) {
-    peclet_number_ = flexure_number_ * persistence_length_ / length_;
+    peclet_number_ = flexure_number_ * bending_stiffness_ / length_;
   }
   if (peclet_number_ >= 0) {
     driving_factor_ = peclet_number_ / SQR(length_);
@@ -1023,21 +1023,25 @@ void Filament::ApplyInteractionForces() {
     // so need to multiply by bond length to get f_dr on bond
     if (eq_steps_count_ > eq_steps_) {
       double f_dr[3] = {};
+      double mag = 0.5 * driving_factor_ * bond_length_;
       if (sparams_->drive_from_bond_center) {
         // Add driving (originating from the com of the bond)
-        double mag = 0.5 * driving_factor_ * bond_length_;
         for (int j = 0; j < n_dim_; ++j)
           f_dr[j] = mag * u[j];
         sites_[i].AddForce(f_dr);
         sites_[i + 1].AddForce(f_dr);
       } else {
         // Driving from sites
-        double mag = length_ * driving_factor_ / n_sites_;
-        double const *const u_tan = sites_[i].GetTangent();
+        double const *const u_tan1 = sites_[i].GetTangent();
+        double const *const u_tan2 = sites_[i+1].GetTangent();
         for (int j = 0; j < n_dim_; ++j) {
-          f_dr[j] = mag * u_tan[j];
+          f_dr[j] = mag * u_tan1[j];
         }
         sites_[i].AddForce(f_dr);
+        for (int j = 0; j < n_dim_; ++j) {
+          f_dr[j] = mag * u_tan2[j];
+        }
+        sites_[i+1].AddForce(f_dr);
       }
     }
   }

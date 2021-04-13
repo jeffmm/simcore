@@ -19,11 +19,14 @@ class FilamentSpecies : public Species<Filament, species_id::filament> {
   double contact_cut_;
   double po_avg_;
   double cn_avg_;
+  double gnf_box_radius_;
+  double gnf_box_increment_;
   double *nematic_order_tensor_;
   double *polar_order_vector_;
   int **theta_histogram_;
   int *polar_order_histogram_;
   int *flock_states_;
+  int *box_n_;
   int time_;
   int n_bins_;
   int n_bins_1d_;
@@ -40,6 +43,7 @@ class FilamentSpecies : public Species<Filament, species_id::filament> {
   std::fstream orientation_corr_file_;
   std::fstream crossing_file_;
   std::fstream polar_order_avg_file_;
+  std::fstream gnf_file_;
   std::fstream in_out_file_;
 
  public:
@@ -97,6 +101,11 @@ class FilamentSpecies : public Species<Filament, species_id::filament> {
   void InitFlockingAnalysis();
   void RunFlockingAnalysis();
   void FinalizeFlockingAnalysis();
+
+  void InitGNFAnalysis();
+  void RunGNFAnalysis();
+  void FinalizeGNFAnalysis();
+
 };
 
 #endif

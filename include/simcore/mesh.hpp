@@ -17,6 +17,7 @@ class Mesh : public Object {
   bool midstep_ = true;
   bool posits_only_ = false;
   bool dynamic_instability_flag_ = false;
+  bool polydispersity_flag_ = false;
   int n_sites_ = 0;
   int n_bonds_ = 0;
   int n_bonds_max_ = 0;
@@ -77,6 +78,7 @@ class Mesh : public Object {
   virtual std::vector<Interaction *> *GetInteractions();
   virtual void ClearInteractions();
   virtual void GetAvgPosition(double *ap);
+  virtual void GetAvgScaledPosition(double *asp);
   virtual void GetAvgOrientation(double *au);
   virtual void SetAvgPosition();
   virtual void GetContactNumbers(std::vector<double> *cn);

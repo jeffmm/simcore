@@ -620,7 +620,7 @@ void InteractionManager::CalculateStructure() {
           if (params_->polar_order_analysis || params_->overlap_analysis) {
             mindist_.ObjectObject(*ix);
           }
-          struct_analysis_.CalculateStructurePair(ix);
+          struct_analysis_.CalculateStructurePair(*ix);
         }
       }
     }
@@ -630,13 +630,13 @@ void InteractionManager::CalculateStructure() {
       if (params_->polar_order_analysis || params_->overlap_analysis) {
         mindist_.ObjectObject(*ix);
       }
-      struct_analysis_.CalculateStructurePair(ix);
+      struct_analysis_.CalculateStructurePair(*ix);
     }
 #endif
   }
   // if (params_->overlap_analysis) {
   // for(auto ix = pair_interactions_.begin(); ix != pair_interactions_.end();
-  // ++ix) { struct_analysis_.CountOverlap(ix);
+  // ++ix) { struct_analysis_.CountOverlap(*ix);
   //}
   //}
   struct_analysis_.AverageStructure();

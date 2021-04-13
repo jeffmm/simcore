@@ -108,7 +108,9 @@ void CellList::DeallocateCells() {
     }
     delete[] cell_[i];
   }
-  delete[] cell_;
+  if (_n_dim_ == 3) {
+    delete[] cell_;
+  }
 }
 
 void CellList::LabelCells() {

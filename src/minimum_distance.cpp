@@ -703,7 +703,7 @@ void MinimumDistance::SpheroWallBC(double const *const r, double const *const s,
   }
   // Then handle free subspace
   if (n_periodic_ == 0) {
-    dr[0] = - space_->radius - r[0];
+    dr[0] = -space_->radius - r[0];
   }
   for (int i = 0; i < n_dim_; ++i) {
     r_contact[i] = sign * 0.5 * length * u[i];

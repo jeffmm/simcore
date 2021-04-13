@@ -18,6 +18,49 @@ import numpy as np
 import pandas as pd
 
 
+def get_params_specs(spec_hr_file):
+    """Converts human-readable spec file into params and specs DataFrames
+
+    Args:
+        spec_hr_file (string or Path): Location of .spec.hr file
+    Returns:
+        (DataFrame, DataFrame): Pandas DataFrame of parameters from spec file header
+            and Pandas DataFrame of specs timeseries.
+    """
+    spec_hr_file = Path(spec_hr_file)
+    if not spec_hr_file.is_file():
+        raise FileNotFoundError(
+            "Human readable file not found: {}".format(spec_hr_file)
+        )
+    params = pd.read_csv(spec_hr_file, delim_whitespace=True, nrows=1)
+    specs = pd.read_csv(
+        spec_hr_file, skiprows=3, delim_whitespace=True, header=None
+    )
+    n_sites = params.n_sites[0]
+    n_fils = params.n_filaments[0]
+    fil_labels = [
+        i
+        for sub in [
+            ["fil{:03d}".format(i)] * 3 * n_sites for i in range(n_fils)
+        ]
+        for i in sub
+    ]
+    site_labels = [
+        i
+        for sub in [
+            ["site{:03d}".format(i)] * 3 for i in range(n_sites)
+        ] * n_fils
+        for i in sub
+    ]
+    arrays = [fil_labels, site_labels, ["x", "y", "z"] * n_sites * n_fils]
+    columns = pd.MultiIndex.from_arrays(
+        arrays, names=["filament", "site", "coord"]
+    )
+    specs.columns = columns
+    specs.index.name = "time"
+    return params, specs
+
+
 class SpecReader:
     """Convert simcore .spec files into human readable formats.
 

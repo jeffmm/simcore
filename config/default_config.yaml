@@ -280,7 +280,9 @@ filament:                            # Parameters unique to filament class of ob
                                     # are the locations of the tails instead of the centers 
   reference_frame_flag: [false, bool] # rotate filament into filament reference frame for bending
                                       # analysis and visualization
-
+  number_fluctuation_analysis: [false, bool]
+  number_fluctuation_boxes: [6, int]
+  number_fluctuation_centers: [10, int]
 br_bead:
   driving_factor: [0, double]
   packing_fraction: [-1, double]
